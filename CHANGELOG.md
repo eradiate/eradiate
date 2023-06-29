@@ -49,6 +49,8 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   ({ghpr}`324`). Instead, use ``eradiate data`` and ``eradiate show``.
 * The {class}`.KernelDictContext` class is renamed {class}`.KernelContext`
   ({ghpr}`324`).
+* The `absorption_dataset` parameter of `AFGL1986RadProfile` and 
+  `US76ApproxRadProfile` is now required ({ghpr}`334`).
 
 ### Deprecations and removals
 
