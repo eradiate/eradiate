@@ -260,14 +260,7 @@ class DistantMeasure(Measure, ABC):
         attrs.field(
             default=None,
             converter=attrs.converters.optional(Target.convert),
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(
-                    (
-                        TargetPoint,
-                        TargetRectangle,
-                    )
-                )
-            ),
+            validator=attrs.validators.optional(attrs.validators.instance_of(Target)),
             on_setattr=attrs.setters.pipe(
                 attrs.setters.convert, attrs.setters.validate
             ),
