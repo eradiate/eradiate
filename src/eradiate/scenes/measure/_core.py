@@ -205,6 +205,18 @@ class Measure(NodeSceneElement, ABC):
         default='"independent"',
     )
 
+    rfilter: str = documented(
+        attrs.field(
+            default="box",
+            validator=attrs.validators.in_({"box", "gaussian"}),
+        ),
+        doc="Reconstruction filter used to scatter samples on sensor pixels. "
+        "By default, using a box filter is recommended.",
+        type="str",
+        init_type='{"box", "gaussian"}',
+        default='"box"',
+    )
+
     spp: int = documented(
         attrs.field(default=1000, converter=int, validator=validators.is_positive),
         doc="Number of samples per pixel.",
