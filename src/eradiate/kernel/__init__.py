@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 # Internal constants
 _EXPECTED_MITSUBA_VERSION = "3.2.1"
-_EXPECTED_MITSUBA_PATCH_VERSION = "0.0.1"
+_EXPECTED_MITSUBA_PATCH_VERSION = "0.0.2"
 
 # Exported constants
 ERADIATE_MITSUBA_PACKAGE_VERSION = None

@@ -110,7 +110,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "rich": ("https://rich.readthedocs.io/en/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-    "xarray": ("https://xarray.pydata.org/en/stable/", None),
+    "xarray": ("https://docs.xarray.dev/en/stable/", None),
 }
 
 # -- Autodoc options -----------------------------------------------------------

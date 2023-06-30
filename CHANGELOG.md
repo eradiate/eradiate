@@ -28,7 +28,22 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 %
 % ### Internal changes
 
-## v0.23.2 (upcoming release)
+## v0.23.2 (8th July 2023)
+
+Release highlights:
+
+* Eradiate is now published on PyPI and can be installed using Pip. See the
+  [new installation instructions](https://eradiate.readthedocs.io/en/latest/rst/user_guide/install.html)
+  This is still experimental and feedback is welcome.
+* The spectral configuration of measures has changed. The new behaviour is
+  documented in the
+  [Spectral discretization guide](https://eradiate.readthedocs.io/en/latest/rst/user_guide/spectral_discretization.html).
+* A new {class}`.AstroObjectIllumination` model has been added. It models the
+  illumination by a distant celestial body with a finite apparent size in the
+  sky. Support for this illumination model is currently experimental.
+* The {class}`.DEMExperiment` now supports the spherical-shell geometry.
+* The command-line interface now uses the Typer framework for improved user
+  experience.
 
 ### Breaking changes
 
@@ -49,16 +64,16 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   ({ghpr}`324`). Instead, use ``eradiate data`` and ``eradiate show``.
 * The {class}`.KernelDictContext` class is renamed {class}`.KernelContext`
   ({ghpr}`324`).
-* The `absorption_dataset` parameter of `AFGL1986RadProfile` and 
+* The `absorption_dataset` parameter of `AFGL1986RadProfile` and
   `US76ApproxRadProfile` is now required ({ghpr}`334`).
 
 ### Deprecations and removals
 
-* Removed {class}`.SpectralContext` and subclasses ({ghpr}`311`).
-* Removed {class}`.MeasureSpectralConfig` and subclasses ({ghpr}`311`).
-* Removed the {meth}`.MultiDistantMeasure.from_viewing_angles` constructor
+* ⚠️ Removed {class}`.SpectralContext` and subclasses ({ghpr}`311`).
+* ⚠️ Removed {class}`.MeasureSpectralConfig` and subclasses ({ghpr}`311`).
+* ⚠️ Removed the {meth}`.MultiDistantMeasure.from_viewing_angles` constructor
   ({ghpr}`315`).
-* Removed ``ertdata`` and ``ertshow`` command-line entry points ({ghpr}`324`).
+* ⚠️ Removed ``ertdata`` and ``ertshow`` command-line entry points ({ghpr}`324`).
 
 ### Improvements and fixes
 
@@ -71,13 +86,13 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   {ghpr}`320`.
 * Fixed broken symmetry between {class}`.Spectrum` dictionary and object
   conversion protocols ({ghpr}`336`).
-* Provide an Eradiate Pypi package ({ghpr}`328`).
+* Provided an Eradiate PyPI package ({ghpr}`328`).
 * Added {class}`.AstroObjectIllumination` illumination type ({ghpr}`331`,
   {ghpr}`346`).
 * Fixed a bug where {class}`.Layout` constructors would not raise if passed
   invalid azimuth values (*i.e.* outside the [0, 180]° range) ({ghpr}`345`).
-* Added `wavelength_range` optional parameter to `MolecularAtmosphere.ussa_1976()` 
-  constructor to automatically open absorption datasets and restore working default 
+* Added `wavelength_range` optional parameter to `MolecularAtmosphere.ussa_1976()`
+  constructor to automatically open absorption datasets and restore working default
   constructor ({ghpr}`334`).
 
 ### Documentation
