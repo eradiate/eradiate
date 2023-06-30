@@ -28,7 +28,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 %
 % ### Internal changes
 
-## v0.23.2 (upcoming release)
+## v0.23.2 (30th June 2023)
 
 ### Breaking changes
 
@@ -49,7 +49,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   ({ghpr}`324`). Instead, use ``eradiate data`` and ``eradiate show``.
 * The {class}`.KernelDictContext` class is renamed {class}`.KernelContext`
   ({ghpr}`324`).
-* The `absorption_dataset` parameter of `AFGL1986RadProfile` and 
+* The `absorption_dataset` parameter of `AFGL1986RadProfile` and
   `US76ApproxRadProfile` is now required ({ghpr}`334`).
 
 ### Deprecations and removals
@@ -76,8 +76,8 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   {ghpr}`346`).
 * Fixed a bug where {class}`.Layout` constructors would not raise if passed
   invalid azimuth values (*i.e.* outside the [0, 180]° range) ({ghpr}`345`).
-* Added `wavelength_range` optional parameter to `MolecularAtmosphere.ussa_1976()` 
-  constructor to automatically open absorption datasets and restore working default 
+* Added `wavelength_range` optional parameter to `MolecularAtmosphere.ussa_1976()`
+  constructor to automatically open absorption datasets and restore working default
   constructor ({ghpr}`334`).
 
 ### Documentation
