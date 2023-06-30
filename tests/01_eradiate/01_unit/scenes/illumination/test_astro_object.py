@@ -13,7 +13,7 @@ from eradiate.test_tools.types import check_scene_element
     [({}, SolarIrradianceSpectrum, 1.0), ({"irradiance": 1.0}, UniformSpectrum, 2.0)],
     ids=["noargs", "from_scalar"],
 )
-def test_directional_construct(
+def test_astro_object_construct(
     modes_all, kwargs, expected_irradiance_type, angular_diameter
 ):
     # Construction without argument succeeds
@@ -29,28 +29,28 @@ def test_directional_construct(
         (
             0.0 * ureg.deg,
             0.0 * ureg.deg,
-            [0, 0, -1],
+            [0, 0, 1],
             [
                 [0, 1, 0, 0],
-                [1, 0, 0, 0],
-                [0, 0, -1, 0],
+                [-1, 0, 0, 0],
+                [0, 0, 1, 0],
                 [0, 0, 0, 1],
             ],
         ),
         (
             30 * ureg.deg,
             0.0 * ureg.deg,
-            [-0.5, 0.0, -np.sqrt(3) / 2],
+            [0.5, 0.0, np.sqrt(3) / 2],
             [
-                [0.0, np.sqrt(3) / 2, -0.5, 0.0],
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, -0.5, -np.sqrt(3) / 2, 0.0],
+                [0.0, np.sqrt(3) / 2, 0.5, 0.0],
+                [-1.0, 0.0, 0.0, 0.0],
+                [0.0, -0.5, np.sqrt(3) / 2, 0.0],
                 [0.0, 0.0, 0.0, 1.0],
             ],
         ),
     ],
 )
-def test_directional_to_world(mode_mono, zenith, azimuth, direction, to_world):
+def test_astro_object_to_world(mode_mono, zenith, azimuth, direction, to_world):
     """
     Direction is correctly converted to transformation matrix.
     """
@@ -59,7 +59,7 @@ def test_directional_to_world(mode_mono, zenith, azimuth, direction, to_world):
     np.testing.assert_allclose(illumination._to_world.matrix, to_world)
 
 
-def test_directional_kernel_dict(modes_all_double):
+def test_astro_object_kernel_dict(modes_all_double):
     # The associated kernel dict is correctly formed and can be loaded
     illumination = AstroObjectIllumination()
     check_scene_element(illumination, mi_cls=mi.Emitter)
@@ -71,17 +71,17 @@ COS_PI_4 = 0.5 * np.sqrt(2)
 @pytest.mark.parametrize(
     "azimuth_convention, expected",
     [
-        ("east_right", [0, -COS_PI_4, -COS_PI_4]),
-        ("east_left", [0, COS_PI_4, -COS_PI_4]),
-        ("north_right", [COS_PI_4, 0, -COS_PI_4]),
-        ("north_left", [-COS_PI_4, 0, -COS_PI_4]),
-        ("west_right", [0, COS_PI_4, -COS_PI_4]),
-        ("west_left", [0, -COS_PI_4, -COS_PI_4]),
-        ("south_right", [-COS_PI_4, 0, -COS_PI_4]),
-        ("south_left", [COS_PI_4, 0, -COS_PI_4]),
+        ("east_right", [0, COS_PI_4, COS_PI_4]),
+        ("east_left", [0, -COS_PI_4, COS_PI_4]),
+        ("north_right", [-COS_PI_4, 0, COS_PI_4]),
+        ("north_left", [COS_PI_4, 0, COS_PI_4]),
+        ("west_right", [0, -COS_PI_4, COS_PI_4]),
+        ("west_left", [0, COS_PI_4, COS_PI_4]),
+        ("south_right", [COS_PI_4, 0, COS_PI_4]),
+        ("south_left", [-COS_PI_4, 0, COS_PI_4]),
     ],
 )
-def test_directional_azimuth_convention(mode_mono, azimuth_convention, expected):
+def test_astro_object_azimuth_convention(mode_mono, azimuth_convention, expected):
     illumination = AstroObjectIllumination(
         zenith=45 * ureg.deg,
         azimuth=90 * ureg.deg,

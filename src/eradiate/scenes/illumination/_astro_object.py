@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import attrs
+import drjit as dr
+import mitsuba as mi
+import numpy as np
 import pint
 import pinttr
 
 from ._directional import DirectionalIllumination
 from ...attrs import documented, parse_docs
+from ...frame import angles_to_direction
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...validators import is_positive
@@ -22,6 +26,11 @@ class AstroObjectIllumination(DirectionalIllumination):
     portion of the sky such that it appears to the observer as a circle. Its
     size is defined by the apparent diameter of the circle, expressed in
     degrees.
+
+    Warnings
+    --------
+    This is an experimental feature. At the moment, using the
+    :class:`.DirectionalIllumination` is recommended.
 
     Notes
     -----
@@ -47,6 +56,17 @@ class AstroObjectIllumination(DirectionalIllumination):
         init_type="quantity or float",
         default="0.5358 deg",
     )
+
+    @property
+    def direction(self) -> np.ndarray:
+        """
+        Illumination direction as an array of shape (3,), pointing inwards.
+        """
+        return angles_to_direction(
+            [self.zenith.m_as(ureg.rad), self.azimuth.m_as(ureg.rad)],
+            azimuth_convention=self.azimuth_convention,
+            flip=False,
+        ).reshape((3,))
 
     @property
     def template(self) -> dict:
