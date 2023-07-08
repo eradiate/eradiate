@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import attrs
+import mitsuba as mi
 import pint
 
 from ._core import Atmosphere
@@ -9,11 +10,10 @@ from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelContext
-from ...kernel import InitParameter, UpdateParameter
+from ...kernel import InitParameter, TypeIdLookupStrategy, UpdateParameter
 from ...spectral.ckd import BinSet
 from ...spectral.index import SpectralIndex
 from ...spectral.mono import WavelengthSet
-from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...validators import has_quantity
 
@@ -222,10 +222,20 @@ class HomogeneousAtmosphere(Atmosphere):
                     uck.get("collision_coefficient")
                 ),
                 UpdateParameter.Flags.SPECTRAL,
+                lookup_strategy=TypeIdLookupStrategy(
+                    node_type=mi.Medium,
+                    node_id=self.medium_id,
+                    parameter_relpath="sigma_t.value.value",
+                ),
             ),
             "albedo.value.value": UpdateParameter(
                 lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo")),
                 UpdateParameter.Flags.SPECTRAL,
+                lookup_strategy=TypeIdLookupStrategy(
+                    node_type=mi.Medium,
+                    node_id=self.medium_id,
+                    parameter_relpath="albedo.value.value",
+                ),
             ),
         }
 
