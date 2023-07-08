@@ -39,12 +39,15 @@ def test_homogeneous_atmosphere_params(mode_mono):
         }
     )
 
-    # Phase function parameters are exposed at highest level
     _, umap_template = traverse(atmosphere)
-    assert "medium_atmosphere.phase_function.g" in umap_template
-
     mi_wrapper = check_scene_element(atmosphere)
+
+    # Phase function parameters are exposed at highest level
+    assert "medium_atmosphere.phase_function.g" in umap_template
     assert "medium_atmosphere.phase_function.g" in mi_wrapper.parameters.keys()
+    # Volume data source parameters are exposed at highest level
+    assert "medium_atmosphere.sigma_t.value.value" in umap_template
+    assert "medium_atmosphere.albedo.value.value" in umap_template
 
 
 @pytest.mark.parametrize(

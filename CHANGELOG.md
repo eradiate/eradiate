@@ -28,6 +28,19 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 %
 % ### Internal changes
 
+## v0.24.0 (upcoming release)
+
+% ### Deprecations and removals
+
+### Improvements and fixes
+
+* Added missing lookup strategy for participating medium parameters of the
+  {class}`.HomogeneousAtmosphere` ({ghpr}`352`).
+
+% ### Documentation
+
+% ### Internal changes
+
 ## v0.23.2 (8th July 2023)
 
 Release highlights:
