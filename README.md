@@ -2,10 +2,13 @@
 
 # Eradiate Radiative Transfer Model
 
+[![pypi][pypi-badge]][pypi-url]
 [![docs][rtd-badge]][rtd-url]
 [![black][black-badge]][black-url]
 [![ruff][ruff-badge]][ruff-url]
 
+[pypi-badge]: https://img.shields.io/pypi/v/eradiate?style=flat-square
+[pypi-url]: https://pypi.org/project/eradiate/
 [rtd-badge]: https://img.shields.io/readthedocs/eradiate?logo=readthedocs&logoColor=white&style=flat-square
 [rtd-url]: https://eradiate.readthedocs.io/en/latest/
 [black-badge]: https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square
