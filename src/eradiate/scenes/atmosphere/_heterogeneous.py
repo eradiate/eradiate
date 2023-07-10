@@ -129,7 +129,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         ),
         doc="A high-resolution layer altitude mesh on which the radiative "
         "properties of the components are interpolated. If unset, a default grid "
-        "grid with one layer per 100 m (or 10 layers if the atmosphere object "
+        "with one layer per 100 m (or 10 layers if the atmosphere object "
         "height is less than 100 m) is used.",
         type=".ZGrid",
         init_type=".ZGrid, optional",

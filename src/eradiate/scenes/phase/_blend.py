@@ -57,7 +57,7 @@ class BlendPhaseFunction(PhaseFunction):
         type="ndarray or list of callables",
         init_type="array-like or list of callables",
         doc="List of weights associated with each component. Weights may be "
-        "numerical values; in that case, they ust be of shape (n,) or (n, m), "
+        "numerical values; in that case, they must be of shape (n,) or (n, m), "
         "where n is the number of components and m the number of cells along "
         "the atmosphere's vertical axis. Alternatively, weights may be "
         "callables that take a :class:`.KernelContext` as argument and "

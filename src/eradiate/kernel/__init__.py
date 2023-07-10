@@ -48,7 +48,7 @@ if ERADIATE_KERNEL_VERSION != _EXPECTED_MITSUBA_VERSION:
 if ERADIATE_KERNEL_PATCH_VERSION != _EXPECTED_MITSUBA_PATCH_VERSION:
     raise ImportError(
         "Using an incompatible patch version of Mitsuba. Eradiate requires a "
-        f"Mitsuna kernel version {_EXPECTED_MITSUBA_VERSION}, with the patch "
+        f"Mitsuba kernel version {_EXPECTED_MITSUBA_VERSION}, with the patch "
         f"version {_EXPECTED_MITSUBA_PATCH_VERSION}. Found Mitsuba "
         f"{ERADIATE_KERNEL_VERSION} with the patch version"
         f" {ERADIATE_KERNEL_PATCH_VERSION}."

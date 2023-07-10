@@ -137,13 +137,13 @@ class Atmosphere(CompositeSceneElement, ABC):
 
         Notes
         -----
-        Typically, absorbing molecular atmosphere are characterised by an
+        Typically, absorbing molecular atmosphere are characterized by an
         absorption dataset which tabulates the absorption coefficient over
         some spectral set, e.g. wavelengths, CKD bin, etc.
         This property returns the spectral set associated with the absorption
         dataset.
         In experiments, the spectral set emitted by the atmosphere is given
-        highest priority, when creating the experiment's spectral set.
+        the highest priority when creating the experiment's spectral set.
         """
         pass
 
