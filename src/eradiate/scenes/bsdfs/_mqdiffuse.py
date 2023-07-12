@@ -116,6 +116,8 @@ class MQDiffuseBSDF(BSDF):
             .transpose("cos_theta_o", "phi_d", "cos_theta_i")
             .values
         )
+        # Add an extra row with φ_d = 0° data to ensure azimuthal periodicity
+        values = np.concatenate((values, values[:, [0], :]), axis=1)
         return mi.VolumeGrid(values.astype(np.float32))
 
     @property

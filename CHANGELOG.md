@@ -36,6 +36,8 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 
 * Added missing lookup strategy for participating medium parameters of the
   {class}`.HomogeneousAtmosphere` ({ghpr}`352`).
+* Fixed a bug where the kernel dictionary emitted by the {class}`.MQDiffuseBSDF`
+  wrapper would miss a data point on the azimuth dimension ({ghpr}`353`).
 
 % ### Documentation
 
