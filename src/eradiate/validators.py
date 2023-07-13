@@ -5,6 +5,8 @@ from numbers import Number
 
 import attrs
 import numpy as np
+import portion as P
+import xarray as xr
 
 from .attrs import AUTO
 from .units import PhysicalQuantity
@@ -224,3 +226,28 @@ def auto_or(*wrapped_validators):
             validator(instance, attribute, value)
 
     return f
+
+
+def validate_absorption_data(instance, attribute, value):
+    """Validate absorption data.
+
+    Raises
+    ------
+    TypeError
+        If the value is not a dict with keys of type :class:`portion.Interval`
+        and values of type :class:`xarray.Dataset`.
+    """
+    if isinstance(value, dict):
+        for k, v in value.items():
+            if not isinstance(k, P.Interval):
+                raise TypeError(
+                    f"{attribute.name} keys must be portion.Interval, "
+                    f"(got {type(k)})"
+                )
+            if not isinstance(v, xr.Dataset):
+                raise TypeError(
+                    f"{attribute.name} values must be xarray.Dataset, "
+                    f"(got {type(v)})"
+                )
+    else:
+        raise TypeError(f"{attribute.name} must be a dict, got {type(value)}")

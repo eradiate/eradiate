@@ -1,7 +1,7 @@
 import mitsuba as mi
 import numpy as np
 
-from eradiate.pipelines import Gather
+from eradiate.pipelines import GatherMono
 
 
 def test_pipeline_step_gather_mono(results_mono):
@@ -12,7 +12,7 @@ def test_pipeline_step_gather_mono(results_mono):
 
     # Configure this pipeline step according to the used sensor
     var = "radiance"
-    step = Gather(var=var)
+    step = GatherMono(var=var)
     result = step.transform(values)
 
     # Check that dimensions are those we expect
@@ -41,11 +41,11 @@ def test_pipeline_step_gather_ckd(results_ckd):
 
     # Configure this pipeline step according to the used sensor
     var = "radiance"
-    step = Gather(var=var)
+    step = GatherMono(var=var)
     result = step.transform(values)
 
     # Check that dimensions are those we expect
-    spectral_dims = {"bin": 1, "index": 2}  # 2 is the default value
+    spectral_dims = {"w": 1, "g": 1}  # 1 is the default value
     film_dims = {
         "y_index": 32,
         "x_index": 32,

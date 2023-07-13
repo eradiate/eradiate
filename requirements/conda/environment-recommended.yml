@@ -6,7 +6,6 @@ dependencies:
   # recommended
   - aabbtree
   - astropy
-  - iapws
   - ipython
   - ipywidgets
   - jupyterlab

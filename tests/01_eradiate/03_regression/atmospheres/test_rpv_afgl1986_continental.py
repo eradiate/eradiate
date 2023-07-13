@@ -61,7 +61,26 @@ def test_rpv_afgl1986_continental_brfpp(
         },
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": {"type": "molecular", "construct": "afgl_1986"},
+            "molecular_atmosphere": {
+                "type": "molecular",
+                "thermoprops": {
+                    "identifier": "afgl_1986-us_standard",
+                    "z": np.arange(0, 120.1, 0.1) * ureg.km,
+                    "additional_molecules": False,
+                },
+                "absorption_data": (
+                    "spectra/absorption/ckd/monotropa/monotropa-18100_18200.nc"
+                ),
+                "error_handler_config": {
+                    "x": {
+                        "missing": "ignore",
+                        "scalar": "ignore",
+                        "bounds": "raise",
+                    },
+                    "p": {"bounds": "ignore"},
+                    "t": {"bounds": "ignore"},
+                },
+            },
             "particle_layers": {
                 "type": "particle_layer",
                 "bottom": 1 * ureg.km,

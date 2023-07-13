@@ -11,7 +11,13 @@ from ._helpers import (
     surface_converter,
 )
 from ..attrs import documented, get_doc, parse_docs
-from ..scenes.atmosphere import Atmosphere, HomogeneousAtmosphere, atmosphere_factory
+from ..scenes.atmosphere import (
+    Atmosphere,
+    HeterogeneousAtmosphere,
+    HomogeneousAtmosphere,
+    MolecularAtmosphere,
+    atmosphere_factory,
+)
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import SceneElement
 from ..scenes.geometry import (
@@ -21,10 +27,9 @@ from ..scenes.geometry import (
 )
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import DistantMeasure, Measure, TargetPoint
-from ..scenes.shapes import RectangleShape, SphereShape
 from ..scenes.surface import BasicSurface
+from ..units import to_quantity
 from ..units import unit_context_config as ucc
-from ..units import unit_registry as ureg
 
 logger = logging.getLogger(__name__)
 
@@ -117,12 +122,67 @@ class AtmosphereExperiment(EarthObservationExperiment):
         self._normalize_atmosphere()
         self._normalize_measures()
 
+    def _check_geometry_comply_with_molecular_atmosphere(self, atmosphere):
+        """
+        Check that the experiment geometry is compatible with the molecular
+        atmosphere' vertical extent.
+
+        Parameters
+        ----------
+        atmosphere : MolecularAtmosphere
+            The molecular atmosphere to check.
+
+        Raises
+        ------
+        ValueError
+            If the geometry vertical extent exceeds the atmosphere vertical
+            extent.
+        """
+        z = to_quantity(atmosphere.thermoprops.z)
+        thermoprops_lower = z[0]
+        thermoprops_upper = z[-1]
+        suggested_solution = (
+            "Try to set the experiment geometry so that it does not go beyond "
+            "the vertical extent of the molecular atmosphere."
+        )
+        if self.geometry.zgrid.levels[0] < thermoprops_lower:
+            raise ValueError(
+                "Attribtues 'geometry' and 'atmosphere' are incompatible: "
+                f"'geometry.zgrid' lower bound ({self.geometry.zgrid.levels[0]}) "
+                f"exceeds lower bound of 'atmosphere.thermoprops' "
+                f"({thermoprops_lower}). {suggested_solution}"
+            )
+        if self.geometry.zgrid.levels[-1] > thermoprops_upper:
+            raise ValueError(
+                "Attribtues 'geometry' and 'atmosphere' are incompatible: "
+                f"'geometry.zgrid' upper bound ({self.geometry.zgrid.levels[-1]}) "
+                f"exceeds upper bound of 'atmosphere.thermoprops' "
+                f"({thermoprops_upper}). {suggested_solution}"
+            )
+
     def _normalize_atmosphere(self) -> None:
         """
-        Ensure consistency between the atmosphere and experiment geometries.
+        Enforce the experiment geometry on the atmosphere component(s).
         """
         if self.atmosphere is not None:
+            # Since 'MolecularAtmosphere' cannot evaluate outside of its
+            # vertical extent, we verify here that the experiment's geometry
+            # comply with the atmosphere's vertical extent.
+            if isinstance(self.atmosphere, MolecularAtmosphere):
+                self._check_geometry_comply_with_molecular_atmosphere(self.atmosphere)
+            if isinstance(self.atmosphere, HeterogeneousAtmosphere):
+                if self.atmosphere.molecular_atmosphere is not None:
+                    self._check_geometry_comply_with_molecular_atmosphere(
+                        self.atmosphere.molecular_atmosphere
+                    )
+
+            # Override atmosphere geometry with experiment geometry
             self.atmosphere.geometry = self.geometry
+
+            # The below call to update is required in the case of a
+            # HeterogeneousAtmosphere, as it will propagate the geometry
+            # override to its components.
+            self.atmosphere.update()
 
     def _normalize_measures(self) -> None:
         """

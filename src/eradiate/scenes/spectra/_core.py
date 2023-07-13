@@ -35,6 +35,7 @@ class SpectrumFactory(Factory):
 
           * ``"uniform"``;
           * ``"interpolated"``;
+          * ``"multi_delta"``;
 
         * otherwise, it forwards ``value`` to :meth:`.SpectrumFactory.convert`.
 

@@ -85,6 +85,9 @@ class HomogeneousAtmosphere(Atmosphere):
         # Inherit docstring
         self.phase.id = self.phase_id
 
+    def spectral_set(self, quad_spec: dict) -> None | BinSet | WavelengthSet:
+        return None
+
     # --------------------------------------------------------------------------
     #                               Properties
     # --------------------------------------------------------------------------
@@ -98,10 +101,6 @@ class HomogeneousAtmosphere(Atmosphere):
     def top(self) -> pint.Quantity:
         # Inherit docstring
         return self._top
-
-    @property
-    def spectral_set(self) -> None | BinSet | WavelengthSet:
-        return None
 
     @property
     def phase(self) -> PhaseFunction:

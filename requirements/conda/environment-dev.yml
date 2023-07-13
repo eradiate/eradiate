@@ -28,6 +28,7 @@ dependencies:
   - dessinemoi>=23.1.0
   - environ-config
   - importlib_resources
+  - joseki>=2.4.0
   - lazy_loader>=0.1
   - matplotlib>=3.3
   - netcdf4
@@ -46,7 +47,6 @@ dependencies:
   # recommended
   - aabbtree
   - astropy
-  - iapws
   - ipython
   - ipywidgets
   - jupyterlab

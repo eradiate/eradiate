@@ -7,11 +7,8 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.constants import EARTH_RADIUS
 from eradiate.experiments import DEMExperiment
-from eradiate.scenes.atmosphere import (
-    HeterogeneousAtmosphere,
-    HomogeneousAtmosphere,
-    MolecularAtmosphere,
-)
+from eradiate.scenes.atmosphere import HomogeneousAtmosphere
+from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.spectra import MultiDeltaSpectrum
@@ -54,14 +51,15 @@ def test_dem_experiment_construct_normalize_measures(mode_mono):
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
 
-def test_dem_experiment_ckd(mode_ckd):
+def test_dem_experiment_ckd(
+    mode_ckd,
+    us_standard_ckd_550nm,
+):
     """
     DEMExperiment with heterogeneous atmosphere in CKD mode can be created.
     """
     exp = DEMExperiment(
-        atmosphere=HeterogeneousAtmosphere(
-            molecular_atmosphere=MolecularAtmosphere.afgl_1986()
-        ),
+        atmosphere=us_standard_ckd_550nm,
         surface={"type": "lambertian"},
         measures={"type": "distant", "id": "distant_measure"},
     )
@@ -98,15 +96,16 @@ def test_dem_experiment_kernel_dict(modes_all_double):
 
 
 @pytest.mark.slow
-def test_dem_experiment_real_life(mode_mono):
+def test_dem_experiment_real_life(
+    mode_mono,
+    us_standard_mono,
+):
     # Construct with typical parameters
     exp = DEMExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "construct": "ussa_1976",
-            },
+            "molecular_atmosphere": us_standard_mono,
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
@@ -124,7 +123,10 @@ def test_dem_experiment_real_life(mode_mono):
     assert mi_wrapper.obj.sensors()[1].medium().id() == "medium_atmosphere"
 
 
-def test_dem_experiment_inconsistent_multiradiancemeter(mode_mono):
+def test_dem_experiment_inconsistent_multiradiancemeter(
+    mode_mono,
+    us_standard_mono,
+):
     # A MultiRadiancemeter measure must have all origins inside the atmosphere or none.
     # A mix of both will raise an error.
 
@@ -133,9 +135,7 @@ def test_dem_experiment_inconsistent_multiradiancemeter(mode_mono):
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "construct": "ussa_1976",
-            },
+            "molecular_atmosphere": us_standard_mono,
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
@@ -189,6 +189,8 @@ def test_dem_experiment_run_detailed(modes_all):
     # Check result dataset structure
     # Post-processing creates expected variables ...
     expected = {"irradiance", "brf", "brdf", "radiance", "spp"}
+    if eradiate.mode().is_ckd:
+        expected |= {"wbounds"}
 
     assert set(results.data_vars) == expected
 
@@ -198,13 +200,9 @@ def test_dem_experiment_run_detailed(modes_all):
 
     # ... and other coordinates
     expected_coords = {"sza", "saa", "vza", "vaa", "x", "y", "x_index", "y_index", "w"}
-    if eradiate.mode().is_ckd:
-        expected_coords |= {"bin", "bin_wmin", "bin_wmax"}
     assert set(results["radiance"].coords) == expected_coords
 
     expected_coords = {"sza", "saa", "w"}
-    if eradiate.mode().is_ckd:
-        expected_coords |= {"bin", "bin_wmin", "bin_wmax"}
     assert set(results["irradiance"].coords) == expected_coords
 
     # We just check that we record something as expected

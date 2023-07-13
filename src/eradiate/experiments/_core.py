@@ -14,10 +14,11 @@ import eradiate
 
 from .. import pipelines, validators
 from ..attrs import AUTO, documented, parse_docs
-from ..contexts import KernelContext
+from ..contexts import KernelContext, MultiGenerator
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
 from ..pipelines import Pipeline
 from ..rng import SeedState
+from ..scenes.atmosphere import AbstractHeterogeneousAtmosphere
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
 from ..scenes.illumination import (
     ConstantIllumination,
@@ -34,7 +35,7 @@ from ..scenes.measure import (
     measure_factory,
 )
 from ..scenes.spectra import InterpolatedSpectrum
-from ..spectral.ckd import BinSet
+from ..spectral.ckd import BinSet, QuadratureSpecifications
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..spectral.mono import WavelengthSet
 from ..util.misc import deduplicate_sorted, onedict_value
@@ -156,6 +157,12 @@ class Experiment(ABC):
     def spectral_set(self) -> WavelengthSet | BinSet:
         return self._spectral_set
 
+    quad_spec: QuadratureSpecifications = attrs.field(
+        default=QuadratureSpecifications(),
+        converter=QuadratureSpecifications.convert,
+        validator=attrs.validators.instance_of(QuadratureSpecifications),
+    )
+
     def __attrs_post_init__(self):
         self._normalize_spectral()
 
@@ -163,22 +170,17 @@ class Experiment(ABC):
         """
         Setup spectral set based on active mode.
         """
-
+        # default value for spectral set
         spectral_set = self.default_spectral_set
 
+        # if the atmosphere provides a spectral set, use it
         atmosphere = getattr(self, "atmosphere", None)
-        if atmosphere:
-            atmosphere_spectral_set = atmosphere.spectral_set
+        if atmosphere and isinstance(atmosphere, AbstractHeterogeneousAtmosphere):
+            atmosphere_spectral_set = atmosphere.spectral_set(quad_spec=self.quad_spec)
             if atmosphere_spectral_set is not None:
                 spectral_set = atmosphere_spectral_set
 
-        # try:
-        #    atmosphere = self.atmosphere
-        #    if atmosphere and atmosphere.spectral_set:
-        #        spectral_set = atmosphere.spectral_set
-        # except AttributeError:
-        #    pass
-
+        # finally, the spectral set is filtered by the SRF
         self._spectral_set = {
             i: measure.srf.select_in(spectral_set)
             for i, measure in enumerate(self.measures)
@@ -372,14 +374,27 @@ class EarthObservationExperiment(Experiment, ABC):
     def spectral_indices_ckd(self, measure_index: int) -> t.Generator[CKDSpectralIndex]:
         yield from self.spectral_set[measure_index].spectral_indices()
 
+    def _spectral_index_generator(self):
+        return MultiGenerator(
+            [self.spectral_indices(i) for i in range(len(self.measures))]
+        )
+
+    @property
+    def context_init(self):
+        return KernelContext(
+            si=self._spectral_index_generator().__next__(), kwargs=self._context_kwargs
+        )
+
+    def contexts(self):
+        return sorted(
+            KernelContext(si, self._context_kwargs)
+            for si in self._spectral_index_generator()
+        )
+
     @property
     @abstractmethod
     def _context_kwargs(self) -> dict[str, t.Any]:
         pass
-
-    @property
-    def context_init(self) -> KernelContext:
-        return KernelContext(si=self.contexts[0].si, kwargs=self._context_kwargs)
 
     @property
     def contexts(self) -> list[KernelContext]:
@@ -388,7 +403,7 @@ class EarthObservationExperiment(Experiment, ABC):
         # Collect contexts from all measures
         sis = []
 
-        for measure_index, measure in enumerate(self.measures):
+        for measure_index, _ in enumerate(self.measures):
             _si = list(self.spectral_indices(measure_index))
             sis.extend(_si)
 
@@ -424,7 +439,6 @@ class EarthObservationExperiment(Experiment, ABC):
         logger.info("Initializing kernel scene")
 
         kdict_template, umap_template = traverse(self.scene)
-
         try:
             self.mi_scene = mi_traverse(
                 mi.load_dict(kdict_template.render(ctx=self.context_init)),
@@ -496,22 +510,21 @@ class EarthObservationExperiment(Experiment, ABC):
         pipeline = pipelines.Pipeline()
 
         # Gather
-        pipeline.add(
-            "gather",
-            pipelines.Gather(var=measure.var),
-        )
-
-        # Aggregate
-        if eradiate.mode().is_ckd:
+        if eradiate.mode().is_mono:
             pipeline.add(
-                "aggregate_ckd_quad",
-                pipelines.AggregateCKDQuad(
-                    measure=measure,
+                "gather_mono",
+                pipelines.GatherMono(var=measure.var),
+            )
+        elif eradiate.mode().is_ckd:
+            pipeline.add(
+                "gather_ckd",
+                pipelines.GatherCKD(
+                    var=measure.var,
                     binset=self.spectral_set[measure_index],
-                    var=measure.var[0],
                 ),
             )
 
+        # Aggregate
         if isinstance(measure, (DistantFluxMeasure,)):
             pipeline.add(
                 "aggregate_radiosity",
@@ -533,7 +546,8 @@ class EarthObservationExperiment(Experiment, ABC):
 
         if isinstance(measure, DistantMeasure):
             pipeline.add(
-                "add_viewing_angles", pipelines.AddViewingAngles(measure=measure)
+                "add_viewing_angles",
+                pipelines.AddViewingAngles(measure=measure),
             )
 
         if isinstance(measure.srf, InterpolatedSpectrum):
@@ -554,7 +568,7 @@ class EarthObservationExperiment(Experiment, ABC):
                 ),
             )
 
-            if eradiate.mode().is_ckd and isinstance(measure.srf, InterpolatedSpectrum):
+            if isinstance(measure.srf, InterpolatedSpectrum):
                 pipeline.add(
                     "apply_srf",
                     pipelines.ApplySpectralResponseFunction(
