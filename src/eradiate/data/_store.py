@@ -65,7 +65,24 @@ def init_data_store(
                 path=config.download_dir / "resources" / "data",
             )
 
-    if not offline:
+    if offline:
+        data_store = MultiDataStore(
+            stores=OrderedDict(
+                [
+                    ("small_files", small_files),
+                    (
+                        "large_files_stable",
+                        BlindDirectoryDataStore(path=config.download_dir / "stable"),
+                    ),
+                    (
+                        "large_files_unstable",
+                        BlindDirectoryDataStore(path=config.download_dir / "unstable"),
+                    ),
+                ]
+            )
+        )
+
+    else:
         data_store = MultiDataStore(
             stores=OrderedDict(
                 [
@@ -83,23 +100,6 @@ def init_data_store(
                             base_url="/".join([config.data_store_url, "unstable"]),
                             path=config.download_dir / "unstable",
                         ),
-                    ),
-                ]
-            )
-        )
-
-    else:
-        data_store = MultiDataStore(
-            stores=OrderedDict(
-                [
-                    ("small_files", small_files),
-                    (
-                        "large_files_stable",
-                        BlindDirectoryDataStore(path=config.download_dir / "stable"),
-                    ),
-                    (
-                        "large_files_unstable",
-                        BlindDirectoryDataStore(path=config.download_dir / "unstable"),
                     ),
                 ]
             )

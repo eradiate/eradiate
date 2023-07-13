@@ -1,12 +1,11 @@
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import pytest
 from environ.exceptions import ConfigError, MissingEnvValueError
-from importlib.metadata import PackageNotFoundError, version
 
 from eradiate._config import EradiateConfig, ProgressLevel
 from eradiate.exceptions import ConfigWarning
-from environ.exceptions import ConfigError
 
 
 def eradiate_mitsuba_status(expect_installed=False):
@@ -23,7 +22,10 @@ def eradiate_mitsuba_status(expect_installed=False):
         return not expect_installed
 
 
-@pytest.mark.skipif(eradiate_mitsuba_status(True), reason='This is a production environment: eradiate-mitsuba is installed')
+@pytest.mark.skipif(
+    eradiate_mitsuba_status(True),
+    reason="This is a production environment: eradiate-mitsuba is installed",
+)
 def test_development_config(tmpdir):
     # Create an appropriate file tree for tests
     tmpdir_path = Path(tmpdir)
@@ -45,14 +47,15 @@ def test_development_config(tmpdir):
         EradiateConfig.from_environ({"ERADIATE_SOURCE_DIR": tmpdir_path})
 
 
-
-@pytest.mark.skipif(eradiate_mitsuba_status(), reason='This is not a production environment: eradiate-mitsuba is not installed')
+@pytest.mark.skipif(
+    eradiate_mitsuba_status(),
+    reason="This is not a production environment: eradiate-mitsuba is not installed",
+)
 def test_production_config(tmpdir):
     # Create an appropriate file tree for tests
     tmpdir_path = Path(tmpdir)
     (tmpdir_path / "eradiate/src/eradiate").mkdir(parents=True)
     (tmpdir_path / "eradiate/src/eradiate/__init__.py").touch()
-
 
     # Should not fail, should detect eradiate-mitsuba instead
     config = EradiateConfig.from_environ({})

@@ -62,8 +62,6 @@ fonttools==4.42.1
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
-iapws==1.5.3
-    # via -r requirements/pip/recommended.in
 idna==3.4
     # via
     #   anyio
@@ -180,7 +178,6 @@ numpy==1.24.4
     #   matplotlib
     #   pandas
     #   pyerfa
-    #   scipy
     #   seaborn
 overrides==7.4.0
     # via jupyter-server
@@ -272,8 +269,6 @@ rpds-py==0.10.3
     # via
     #   jsonschema
     #   referencing
-scipy==1.10.1
-    # via iapws
 seaborn==0.12.2
     # via -r requirements/pip/recommended.in
 send2trash==1.8.2

@@ -141,11 +141,9 @@ def test_canopy_experiment_run_detailed(modes_all_double):
             "brdf",
             "radiance",
             "spp",
+            "wbounds",
         }
         expected_coords_radiance = {
-            "bin",
-            "bin_wmin",
-            "bin_wmax",
             "sza",
             "saa",
             "vza",
@@ -160,9 +158,6 @@ def test_canopy_experiment_run_detailed(modes_all_double):
             "sza",
             "saa",
             "w",
-            "bin",
-            "bin_wmin",
-            "bin_wmax",
         }
 
     else:

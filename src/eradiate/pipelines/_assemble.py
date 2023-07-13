@@ -16,7 +16,6 @@ from ._core import PipelineStep
 from ..attrs import documented, parse_docs
 from ..exceptions import UnsupportedModeError
 from ..frame import angles_in_hplane
-from ..radprops._afgl1986 import G16
 from ..scenes.illumination import ConstantIllumination, DirectionalIllumination
 from ..scenes.measure import Measure
 from ..scenes.spectra import (
@@ -99,7 +98,7 @@ class AddIllumination(PipelineStep):
             elif eradiate.mode().is_ckd:
                 result = spectrum.eval_ckd(
                     w=results_wavelengths,
-                    g=G16,  # TODO: PR#311 hack
+                    g=[0, 1],
                 ).m_as(k_units)
 
                 # Reorder data by ascending wavelengths

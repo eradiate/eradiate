@@ -8,6 +8,8 @@ import numpy as np
 import pint
 import xarray as xr
 
+import eradiate
+
 from ..core import (
     CompositeSceneElement,
     SceneElement,
@@ -18,14 +20,17 @@ from ..phase import PhaseFunction
 from ..shapes import Shape
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
+from ...cfconventions import ATTRIBUTES
 from ...contexts import KernelContext
+from ...exceptions import UnsupportedModeError
 from ...kernel import (
     InitParameter,
     TypeIdLookupStrategy,
     UpdateParameter,
 )
+from ...quad import Quad
 from ...radprops import ZGrid
-from ...spectral.ckd import BinSet
+from ...spectral.ckd import BinSet, QuadratureSpecifications
 from ...spectral.index import SpectralIndex
 from ...spectral.mono import WavelengthSet
 from ...units import symbol
@@ -48,9 +53,9 @@ atmosphere_factory.register_lazy_batch(
             {},
         ),
         (
-            "_molecular_atmosphere.MolecularAtmosphere",
+            "_molecular.MolecularAtmosphere",
             "molecular",
-            {"dict_constructor": "afgl_1986"},
+            {},
         ),
         (
             "_particle_layer.ParticleLayer",
@@ -89,7 +94,13 @@ class Atmosphere(CompositeSceneElement, ABC):
             converter=SceneGeometry.convert,
             validator=attrs.validators.instance_of(SceneGeometry),
         ),
-        doc="Parameters defining the basic geometry of the scene.",
+        doc="Parameters defining the basic geometry of the scene."
+        "Note if the atmosphere is used in a simulation, the experiment has "
+        "all control over the atmosphere's geometry and is going to set it. "
+        "Therefore, in such a case it is best to define the geometry at the "
+        "experiment level. When the atmosphere is used standalone, care must "
+        "be taken to ensure that the geometry is consistent with the vertical "
+        "extent of the atmosphere.",
         type=".SceneGeometry",
         init_type=".SceneGeometry or dict or str, optional",
         default='"plane_parallel"',
@@ -131,6 +142,20 @@ class Atmosphere(CompositeSceneElement, ABC):
 
     @property
     @abstractmethod
+    def phase(self) -> PhaseFunction:
+        """
+        Returns
+        -------
+        .PhaseFunction
+            Phase function associated with the atmosphere.
+        """
+        pass
+
+    # --------------------------------------------------------------------------
+    #                           Spectral set
+    # --------------------------------------------------------------------------
+
+    @abstractmethod
     def spectral_set(self) -> None | BinSet | WavelengthSet:
         """
         The spectral set emitted by the atmosphere (optional).
@@ -144,17 +169,6 @@ class Atmosphere(CompositeSceneElement, ABC):
         dataset.
         In experiments, the spectral set emitted by the atmosphere is given
         the highest priority when creating the experiment's spectral set.
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def phase(self) -> PhaseFunction:
-        """
-        Returns
-        -------
-        .PhaseFunction
-            Phase function associated with the atmosphere.
         """
         pass
 
@@ -348,6 +362,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     scale: float | None = documented(
         attrs.field(
             default=None,
+            kw_only=True,
             converter=attrs.converters.optional(float),
             validator=attrs.validators.optional(attrs.validators.instance_of(float)),
         ),
@@ -576,6 +591,161 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         """
 
         pass
+
+    def eval_transmittance(
+        self,
+        si: SpectralIndex,
+        interaction: str = "extinction",
+    ) -> pint.Quantity:
+        """
+        Evaluate the atmosphere's transmittance with respect to specific
+        interaction.
+
+        Parameters
+        ----------
+        si : :class:`.SpectralIndex`
+            Spectral index.
+
+        interaction : str, optional, default: "extinction"
+            Interaction type. One of ``"extinction"``, ``"absorption"``,
+            ``"scattering"``.
+
+        Returns
+        -------
+        quantity
+            Total atmosphere transmittance.
+        """
+        eval_sigma = {
+            "extinction": self.eval_sigma_t,
+            "absorption": self.eval_sigma_a,
+            "scattering": self.eval_sigma_s,
+        }
+        try:
+            sigma = eval_sigma[interaction](si=si)
+        except KeyError:
+            raise ValueError(
+                f"invalid interaction type '{interaction}', "
+                f"supported: {list(eval_sigma.keys())}"
+            )
+        dz = np.diff(self.geometry.zgrid.levels)
+        tau = np.sum((sigma * dz).to("1"))
+        return np.exp(-tau)
+
+    def eval_transmittance_t(self, si: SpectralIndex) -> pint.Quantity:
+        return self.eval_transmittance(si=si, interaction="extinction")
+
+    def eval_transmittance_a(self, si: SpectralIndex) -> pint.Quantity:
+        return self.eval_transmittance(si=si, interaction="absorption")
+
+    def eval_transmittance_s(self, si: SpectralIndex) -> pint.Quantity:
+        return self.eval_transmittance(si=si, interaction="scattering")
+
+    def eval_transmittance_accross_spectral_set(
+        self,
+        interaction: str = "extinction",
+        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+    ) -> xr.DataArray:
+        """
+        Evaluate the atmosphere's transmittance with respect to extinction
+        accross the spectral set emitted by the atmosphere.
+
+        Parameters
+        ----------
+        quad_spec : :class:`.QuadratureSpecifications`, optional
+            Quadrature specifications.
+
+        Returns
+        -------
+        DataArray
+            Atmosphere's transmittance with respect to extinction tabulated
+            against the spectral coordinate.
+        """
+        if eradiate.mode().is_mono:
+            return self.eval_transmittance_accross_spectral_set_mono(
+                interaction=interaction,
+                quad_spec=quad_spec,
+            )
+        elif eradiate.mode().is_ckd:
+            return self.eval_transmittance_accross_spectral_set_ckd(
+                interaction=interaction,
+                quad_spec=quad_spec,
+            )
+        else:
+            raise UnsupportedModeError(supported=["mono", "ckd"])
+
+    def eval_transmittance_accross_spectral_set_mono(
+        self,
+        interaction: str = "extinction",
+        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+    ) -> xr.DataArray:
+        w = self.spectral_set.wavelengths
+        wunits = symbol(ucc.get("wavelength"))
+        transmittance = np.full(w.size, np.nan)
+        spectral_set = self.spectral_set(quad_spec=quad_spec)
+        for i, si in enumerate(spectral_set.spectral_indices()):
+            transmittance[i] = self.eval_transmittance(
+                si=si,
+                interaction=interaction,
+            )
+
+        return xr.DataArray(
+            transmittance,
+            dims=["w"],
+            coords={
+                "w": (
+                    "w",
+                    w.m_as(wunits),
+                    ATTRIBUTES["radiation_wavelength"],
+                )
+            },
+            attrs={"units": "1", "long_name": "transmittance"},
+        )
+
+    def eval_transmittance_accross_spectral_set_ckd(
+        self,
+        interaction: str = "extinction",
+        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+    ) -> xr.DataArray:
+        # compute transmittance at each spectral index
+        transmittance = {}
+        for si in self.spectral_set(quad_spec=quad_spec).spectral_indices():
+            transmittance[si.as_hashable] = self.eval_transmittance(
+                si=si,
+                interaction=interaction,
+            )
+
+        # gather transmittance values that belong to the same CKD bin and
+        # compute the quadrature
+        t_values = np.stack(list(transmittance.values())).m_as("1")
+        i = 0
+
+        integrated = []
+        binset = self.spectral_set(quad_spec=quad_spec)
+        for _bin in binset.bins:
+            ng = _bin.quad.weights.size  # number of quadrature g-points
+            integrated.append(
+                Quad.new("gauss_legendre", n=ng).integrate(
+                    t_values[i : i + ng],
+                    interval=[0, 1],  # range of g
+                )
+            )
+            i = i + ng
+
+        w = np.stack([bin.wcenter for bin in self.spectral_set().bins])
+        wunits = symbol(ucc.get("wavelength"))
+
+        return xr.DataArray(
+            integrated,
+            dims=["w"],
+            coords={
+                "w": (
+                    "w",
+                    w.m_as(wunits),
+                    ATTRIBUTES["radiation_wavelength"],
+                )
+            },
+            attrs={"units": "1", "long_name": "transmittance"},
+        )
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation

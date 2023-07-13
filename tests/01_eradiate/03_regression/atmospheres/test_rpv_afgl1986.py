@@ -59,7 +59,23 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
             "type": "heterogeneous",
             "molecular_atmosphere": {
                 "type": "molecular",
-                "construct": "afgl_1986",
+                "thermoprops": {
+                    "identifier": "afgl_1986-us_standard",
+                    "z": np.linspace(0, 120, 61) * ureg.km,
+                    "additional_molecules": False,
+                },
+                "absorption_data": (
+                    "spectra/absorption/ckd/monotropa/monotropa-18100_18200.nc"
+                ),
+                "error_handler_config": {
+                    "x": {
+                        "missing": "ignore",
+                        "scalar": "ignore",
+                        "bounds": "raise",
+                    },
+                    "p": {"bounds": "ignore"},
+                    "t": {"bounds": "ignore"},
+                },
             },
         },
     )

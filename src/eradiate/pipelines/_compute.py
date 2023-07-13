@@ -7,6 +7,8 @@ import attrs
 import numpy as np
 from pinttr.util import always_iterable
 
+import eradiate
+
 from ._core import PipelineStep
 from ..attrs import documented, parse_docs
 from ..scenes.measure import Measure
@@ -84,39 +86,45 @@ class ApplySpectralResponseFunction(PipelineStep):
     )
 
     def transform(self, x: t.Any) -> t.Any:
+        if eradiate.mode().is_ckd:
+            return self._transform_ckd(x)
+        elif eradiate.mode().is_mono:
+            return self._transform_mono(x)
+        else:
+            raise NotImplementedError
+
+    def _transform_ckd(self, x: t.Any):
         result = x.copy(deep=False)
 
-        if not {"bin_wmin", "bin_wmax"}.issubset(set(result.coords.keys())):
-            raise ValueError(
-                "input data is missing 'bin_wmin' and/or 'bin_wmax' coordinates"
-            )
+        if not "w" in result.coords:
+            raise ValueError("input data is missing a 'w' coordinate")
+        if not "wbounds" in result.data_vars:
+            raise ValueError("input data is missing a 'wbounds' data variable")
 
         measure = self.measure
 
         # Evaluate integral of spectral response function within selected interval
-        wmin = to_quantity(result.bin_wmin).min()
-        wmax = to_quantity(result.bin_wmax).max()
+        data_w = to_quantity(result.w)
+        w_units = data_w.units
+        wbounds = to_quantity(result.wbounds)
+        wmin, wmax = wbounds.min(), wbounds.max()
         srf = measure.srf
         srf_int = srf.integral(wmin, wmax)
 
         if isinstance(srf, InterpolatedSpectrum):
             srf_w = srf.wavelengths
-        elif isinstance(srf, UniformSpectrum):
-            srf_w = np.array([wmin.m_as(ureg.nm), wmax.m_as(ureg.nm)]) * ureg.nm
         else:
             raise TypeError(f"unhandled SRF type '{srf.__class__.__name__}'")
 
         for var in self.vars:
             # Evaluate integral of product of variable and SRF within selected interval
-            data_w = to_quantity(result.w)
 
             # Spectral grid is the finest between data and SRF grids
-            w_units = data_w.units
             w_m = np.array(sorted(set(data_w.m_as(w_units)) | set(srf_w.m_as(w_units))))
 
             # If data var has length 1 on spectral dimension, directly select
             # the value instead of using interpolation (it's a known scipy issue)
-            if len(result[var].w) == 1:
+            if result[var].w.size == 1:
                 # Note: The tricky thing is to recreate and extend the 'w'
                 # dimension with the same axis index as in the original data
                 var_values = (
@@ -149,7 +157,76 @@ class ApplySpectralResponseFunction(PipelineStep):
             if "standard_name" in attrs:
                 attrs["standard_name"] += "_srf"
             if "long_name" in attrs:
-                attrs["long_name"] += " (SRF applied)"
+                attrs["long_name"] += " (SRF-weighted)"
+            result[f"{var}_srf"].attrs = attrs
+
+        logger.debug("ApplySpectralResponseFunction pipeline step: end")
+
+        return result
+
+    def _transform_mono(self, x: t.Any) -> t.Any:
+        result = x.copy(deep=False)
+
+        if not {"w"}.issubset(set(result.coords.keys())):
+            raise ValueError("input data is missing a 'w' coordinate")
+
+        measure = self.measure
+
+        # Evaluate integral of spectral response function within selected interval
+        data_w = to_quantity(result.w)
+        w_units = data_w.units
+        wmin, wmax = data_w.min(), data_w.max()
+        srf = measure.srf
+
+        if isinstance(srf, InterpolatedSpectrum):
+            srf_w = srf.wavelengths
+        else:
+            raise TypeError(f"unhandled SRF type '{srf.__class__.__name__}'")
+
+        for var in self.vars:
+            # Evaluate integral of product of variable and SRF within selected
+            # interval
+
+            # Spectral grid is the finest between data and SRF grids
+            w_m = np.array(sorted(set(data_w.m_as(w_units)) | set(srf_w.m_as(w_units))))
+
+            # If data var has length 1 on spectral dimension, directly select
+            # the value instead of using interpolation (it's a known scipy
+            # issue)
+            if result[var].w.size == 1:
+                # Note: The tricky thing is to recreate and extend the 'w'
+                # dimension with the same axis index as in the original data
+                var_values = (
+                    result[var]
+                    .isel(w=0, drop=True)
+                    .expand_dims(w=w_m, axis=result[var].get_axis_num("w"))
+                )
+
+            # Otherwise, use nearest neighbour interpolation (we assume that var
+            # is constant over each spectral bin)
+            else:
+                var_values = result[var].interp(w=w_m, method="linear")
+
+            srf_values = (
+                srf.eval_mono(w_m * w_units)
+                .reshape([-1 if dim == "w" else 1 for dim in var_values.dims])
+                .magnitude
+            )
+            assert isinstance(srf_values, np.ndarray)  # Check for leftover bugs
+            var_srf_int = (var_values * srf_values).integrate("w")
+
+            # Apply SRF to variable and store result
+            dims = list(result[var].dims)
+            dims.remove("w")
+            srf_int = srf.integral(wmin, wmax)
+
+            result[f"{var}_srf"] = (dims, var_srf_int.values / srf_int.m_as(w_units))
+            attrs = result[var].attrs.copy()
+
+            if "standard_name" in attrs:
+                attrs["standard_name"] += "_srf"
+            if "long_name" in attrs:
+                attrs["long_name"] += " (SRF-weighted)"
             result[f"{var}_srf"].attrs = attrs
 
         logger.debug("ApplySpectralResponseFunction pipeline step: end")

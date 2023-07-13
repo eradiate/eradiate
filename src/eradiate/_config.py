@@ -132,7 +132,10 @@ class EradiateConfig:
     @source_dir.validator
     def _dir_validator(self, var, dir):
         if dir is None:
-            if not __import__("eradiate").kernel.ERADIATE_MITSUBA_PACKAGE:
+            # Import must be local and not use the lazy loader to avoid circular imports
+            from .kernel.versions import ERADIATE_MITSUBA_PACKAGE
+
+            if not ERADIATE_MITSUBA_PACKAGE:
                 raise ConfigError(
                     "Could not find a suitable production installation for the "
                     "Eradiate kernel. This is either because you are using Eradiate "

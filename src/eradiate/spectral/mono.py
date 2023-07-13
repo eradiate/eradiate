@@ -115,6 +115,34 @@ class WavelengthSet:
         )
 
     @classmethod
+    def from_srf(
+        cls,
+        srf: xr.Dataset,
+        step: pint.Quantity = 10.0 * ureg.nm,
+    ) -> WavelengthSet:
+        """
+        Generate a wavelength set with linearly spaced bins, that covers the
+        spectral range of a spectral response function.
+
+        Parameters
+        ----------
+        srf: Dataset
+            Spectral response function dataset.
+
+        step : quantity
+            Wavelength step.
+        """
+        wavelengths = to_quantity(srf.w)
+        wmin = wavelengths.min()
+        wmax = wavelengths.max()
+
+        return cls.arange(
+            start=wmin - step,
+            stop=wmax + step,
+            step=step,
+        )
+
+    @classmethod
     def default(cls) -> WavelengthSet:
         """
         Generate a default wavelength set, which covers Eradiate's default

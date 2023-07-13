@@ -24,26 +24,30 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
     Result symmetry
     ===============
 
-    This test case checks for result symmetry when using the ``OneDimSolverApp`` workflow.
+    This test case checks for result symmetry when using the
+    ``AtmosphereExperiment`` workflow.
 
     Rationale
     ---------
 
-    We use a scene with rotational symmetry where the directional illumination targets the
-    zenith direction.
+    We use a scene with rotational symmetry where the directional illumination
+    targets the zenith direction.
 
     * Geometry: Either a Lambertian or RPV surface.
-    * Illumination: Directional illumination from the zenith (default irradiance).
-    * Atmosphere: Either no atmosphere or a purely Rayleigh scattering homogeneous atmosphere.
-    * Sensor: Distant measure covering a plane (17 angular points, :math:`10^6` SPP) and
-      targeting (0, 0, 0).
+    * Illumination: Directional illumination from the zenith (default
+      irradiance).
+    * Atmosphere: Either no atmosphere or a purely Rayleigh scattering
+      homogeneous atmosphere.
+    * Sensor: Distant measure covering a plane (17 angular points, :math:`10^6`
+      SPP) and targeting (0, 0, 0).
       We take an odd number of angular points to ensure that the special value
       :math:`\theta = 0°` is included.
 
     Expected behaviour
     ------------------
 
-    The results on either side of the zenith must agree within a relative tolerance of 5e-3.
+    The results on either side of the zenith must agree within a relative
+    tolerance of 5e-3.
 
     Results
     -------
@@ -52,7 +56,8 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
     shown. On the left of each pair, the recorded leaving radiance is plotted
     against the viewing zenith angle on top of its mirror image for a visual
     inspection of the result symmetry. On the right of each pair the absolute
-    difference between these two curves is shown, for a more quantitative visualization.
+    difference between these two curves is shown, for a more quantitative
+    visualization.
 
     .. image:: generated/plots/test_symmetry_zenith_lambertian_none.png
        :width: 45%
@@ -85,7 +90,10 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
         }[surface],
         atmosphere={
             "none": None,
-            "homogeneous": {"type": "homogeneous", "sigma_s": 1.0e-2 * ureg.km**-1},
+            "homogeneous": {
+                "type": "homogeneous",
+                "sigma_s": 1.0e-2 * ureg.km**-1,
+            },
         }[atmosphere],
     )
     results = eradiate.run(exp)

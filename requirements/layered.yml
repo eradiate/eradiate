@@ -3,7 +3,7 @@ dependencies:
   includes:
     - main
   packages:
-    - "eradiate-mitsuba==0.0.2"
+    - "eradiate-mitsuba==0.1.0"
 
 main:
   constraints:
@@ -15,6 +15,7 @@ main:
     - "dessinemoi>=23.1.0"
     - "environ-config"
     - "importlib_resources"
+    - "joseki>=2.4.0"
     - "lazy_loader>=0.1"
     - "matplotlib>=3.3"
     - "netcdf4"
@@ -35,7 +36,6 @@ recommended:
   packages:
     - "aabbtree"  # Used by the leaf collision detection feature
     - "astropy"  # Used by the solar irradiance spectrum date-based scaling feature
-    - "iapws"  # Used by thermophysical property utilities
     - "ipython"
     - "ipywidgets"
     - "jupyterlab"
@@ -83,4 +83,4 @@ optional:
   includes:
     - dev
   packages:
-    - "eradiate-mitsuba==0.0.2"
+    - "eradiate-mitsuba==0.1.0"

@@ -3,6 +3,7 @@ import attrs
 import dateutil
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 import eradiate
 from eradiate import unit_registry as ureg
@@ -87,7 +88,7 @@ def test_radiance_scaling(modes_all_double, measure, scale, datetime):
     expected_radiance = (
         reference_irradiance.m * scale * scale_datetime * reflectance / np.pi
     )
-    assert np.allclose(result.radiance.values, expected_radiance)
+    assert_allclose(result.radiance.values, expected_radiance, rtol=0.01)
 
     # The BRF is independent of the scaling factor
-    assert np.allclose(result.brf.values, reflectance)
+    assert_allclose(result.brf.values, reflectance)

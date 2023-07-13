@@ -18,7 +18,8 @@ Gather step
 .. autosummary::
    :toctree: generated/autosummary/
 
-   Gather
+   GatherMono
+   GatherCKD
 
 Aggregate steps
 ---------------
