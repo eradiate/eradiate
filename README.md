@@ -40,14 +40,25 @@ equation.
   </summary>
   These are true monochromatic simulations (as opposed to narrow band
   simulations).
+  Eradiate provides monochromatic absorption datasets spanning the wavelength
+  range [250, 3125] nm.
+  It also supports user-defined absorption data provided it complies with the
+  dataset format specifications.
   </details>
 
   <details>
   <summary>
-  Correlated <em>k</em>-distribution band model (1 nm and 10 nm resolution)
+  Band simulation
   </summary>
-  This method achieves compromise between performance and accuracy for the
-  simulation of absorption by gases.
+  These simulations computes results in spectral bands.
+  The correlated <em>k</em>-distribution (CKD) method with configurable
+  quadrature rule is used. This method achieves a trade-off between performance
+  and accuracy for the simulation of absorption by gases.
+  Eradiate ships with absorption datasets suitable for use within the CKD
+  method in spectral bands of variable width (including 1 nm and 10 nm
+  wavelength bands and 100 cm^-1 wavenumber bands), from 250 nm up to 3125 nm.
+  It also supports user-defined absorption data provided it complies with the
+  dataset format specifications.
   </details>
   </li>
 
@@ -55,11 +66,10 @@ equation.
 
   <details>
   <summary>
-  One-dimensional atmospheric profiles (AFGL atmospheric constituent
-  profiles)
+  One-dimensional atmospheric profiles
   </summary>
-  These profiles are available in CKD mode only (the monochromatic mode uses
-  the simpler U.S. Standard Atmosphere (1976) model).
+  Both standard profiles, e.g. the AFGL (1986) profiles, and customized
+  profiles are supported.
   </details>
 
   <details>

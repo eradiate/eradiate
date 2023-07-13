@@ -46,7 +46,6 @@ Alphabetical list of modules
    spectral
    srf_tools
    test_tools
-   thermoprops
    units
    util
    validators

@@ -31,14 +31,14 @@ def test_select_with_multi_delta():
                 wavelengths=np.linspace(500.0, 600.0, 11) * ureg.nm,
                 values=np.array([0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0], dtype=float),
             ),
-            np.arange(500.0, 581.0, 1.0) * ureg.nm,
+            np.arange(499.0, 582.0, 1.0) * ureg.nm,
         ),
         (
             InterpolatedSpectrum(
                 wavelengths=np.linspace(500.5, 600.5, 11) * ureg.nm,
                 values=np.array([0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0], dtype=float),
             ),
-            np.arange(501.0, 581.0, 1.0) * ureg.nm,
+            np.arange(500.0, 582.0, 1.0) * ureg.nm,
         ),
         (
             InterpolatedSpectrum(
@@ -47,8 +47,8 @@ def test_select_with_multi_delta():
             ),
             np.concatenate(
                 [
-                    np.arange(500.0, 531.0, 1.0),
-                    np.arange(540.0, 581.0, 1.0),
+                    np.arange(499.0, 532.0, 1.0),
+                    np.arange(539.0, 582.0, 1.0),
                 ]
             )
             * ureg.nm,

@@ -1,149 +1,68 @@
+import joseki
 import numpy as np
 import pytest
-import xarray as xr
 
+from eradiate import data
 from eradiate import unit_registry as ureg
-from eradiate.radprops.absorption import compute_sigma_a
+from eradiate.radprops.absorption import (
+    eval_sigma_a_ckd_impl,
+    eval_sigma_a_mono_impl,
+    wrange_ckd,
+    wrange_mono,
+)
 from eradiate.units import to_quantity
 
 
-def test_compute_sigma_a_no_t_coord():
-    # data set with no t coordinate
-    ds = xr.Dataset(
-        data_vars={"xs": (("w", "p"), np.random.random((4, 3)), dict(units="cm^2"))},
-        coords={
-            "w": ("w", np.linspace(18000, 18010, 4), dict(units="cm^-1")),
-            "p": ("p", np.linspace(90000, 110000, 3), dict(units="Pa")),
-        },
+@pytest.mark.parametrize(
+    "w",
+    [
+        np.array([550.0]) * ureg.nm,
+        np.linspace(540.0, 560.0) * ureg.nm,
+    ],
+)
+def test_eval_sigma_a_mono_impl(w, error_handler_config):
+    """
+    The shape of the absorption coefficient array is consistent with the
+    wavelength (w) and altitude (z) arrays.
+    """
+    z = np.linspace(0.0, 10.0, 11) * ureg.km
+    thermoprops = joseki.make(
+        identifier="afgl_1986-us_standard",
+        z=z,
+        additional_molecules=False,
+    )
+    ds = data.load_dataset("spectra/absorption/mono/komodo/komodo.nc")
+    sigma_a = eval_sigma_a_mono_impl(
+        absorption_data={wrange_mono(ds): ds},
+        thermoprops=thermoprops,
+        w=w,
+        error_handler_config=error_handler_config,
     )
 
-    # returns a single absorption coefficient value when input pressure is
-    # a scalar
-    wl = ureg.Quantity(555.5, "nm")
-    x = compute_sigma_a(ds, wl=wl)
-    assert isinstance(x, ureg.Quantity)
-    assert x.check("[length]^-1")
-    assert len(x) == 1
+    # sigma_a should have a shape of (w, z)
+    assert sigma_a.shape == (w.size, z.size)
 
-    # handles multiple wavelength values
-    x = compute_sigma_a(ds, wl=ureg.Quantity(np.array([555.50, 555.51]), "nm"))
-    assert len(x) == 2
 
-    # does not raise when 'fill_value' is used
-    x = compute_sigma_a(
-        ds, wl=wl, p=ureg.Quantity(120000.0, "Pa"), fill_values=dict(pt=0.0)
+def test_eval_sigma_a_ckd_impl(error_handler_config):
+    """
+    The shape of the absorption coefficient array is consistent with the
+    wavelength (w) and altitude (z) arrays.
+    """
+    z = np.linspace(0.0, 10.0, 11) * ureg.km
+    thermoprops = joseki.make(
+        identifier="afgl_1986-us_standard",
+        z=z,
+        additional_molecules=False,
+    )
+    ds = data.load_dataset("spectra/absorption/ckd/monotropa/monotropa-18100_18200.nc")
+    wcenter = to_quantity(ds.w)
+    sigma_a = eval_sigma_a_ckd_impl(
+        absorption_data={wrange_ckd(ds): ds},
+        thermoprops=thermoprops,
+        w=wcenter,
+        g=0.5,
+        error_handler_config=error_handler_config,
     )
 
-    # raises when wavelength out of range
-    with pytest.raises(ValueError):
-        compute_sigma_a(ds, wl=ureg.Quantity(560.0, "nm"))
-
-    # raises when pressure out of range
-    with pytest.raises(ValueError):
-        compute_sigma_a(ds, wl=wl, p=ureg.Quantity(120000.0, "Pa"))
-
-    # returns an array of absorption coefficient values when input pressure is
-    # an array
-    ds_p = to_quantity(ds.p)
-    x = compute_sigma_a(ds=ds, wl=wl, p=np.linspace(ds_p.min(), ds_p.max(), num=10))
-    assert isinstance(x, ureg.Quantity)
-    assert x.check("[length]^-1")
-    assert len(x) == 10
-
-    # absorption coefficient scales with number density
-    x = compute_sigma_a(ds, wl=wl, n=ureg.Quantity(np.array([1.0, 2.0]), "m^-3"))
-    assert x[1] == 2 * x[0]
-
-    # dataset with no temperature coordinate is not interpolated on temperature
-    x = compute_sigma_a(
-        ds, wl=wl, t=ureg.Quantity(200.0, "K"), n=ureg.Quantity(1.0, "m^-3")
-    )
-    y = compute_sigma_a(
-        ds, wl=wl, t=ureg.Quantity(300.0, "K"), n=ureg.Quantity(1.0, "m^-3")
-    )
-    assert x == y
-
-
-def test_compute_sigma_a_t_coord():
-    # data set with t coordinate
-    ds = xr.Dataset(
-        data_vars={
-            "xs": (("w", "p", "t"), np.random.random((4, 3, 2)), dict(units="cm^2"))
-        },
-        coords={
-            "w": ("w", np.linspace(18000, 18010, 4), dict(units="cm^-1")),
-            "p": ("p", np.linspace(90000, 110000, 3), dict(units="Pa")),
-            "t": ("t", np.array([250, 300]), dict(units="K")),
-        },
-    )
-
-    # returns a single absorption coefficient value when input pressure
-    # and temperature are scalars
-    wl = ureg.Quantity(555.5, "nm")
-    x = compute_sigma_a(ds, wl=wl)
-    assert isinstance(x, ureg.Quantity)
-    assert x.check("[length]^-1")
-    assert len(x) == 1
-
-    # handles multiple wavelength values
-    x = compute_sigma_a(ds, wl=ureg.Quantity(np.array([555.50, 555.51]), "nm"))
-    assert len(x) == 2
-
-    # does not raise when 'fill_value' is used
-    x = compute_sigma_a(
-        ds, wl=wl, p=ureg.Quantity(120000.0, "Pa"), fill_values=dict(pt=0.0)
-    )
-
-    # raises when wavelength out of range
-    with pytest.raises(ValueError):
-        compute_sigma_a(ds, wl=ureg.Quantity(560.0, "nm"))
-
-    # raises when pressure out of range
-    with pytest.raises(ValueError):
-        compute_sigma_a(ds, wl=wl, p=ureg.Quantity(120000.0, "Pa"))
-
-    # returns an array of absorption coefficient values when input pressure is
-    # an array
-    ds_p = to_quantity(ds.p)
-    x = compute_sigma_a(ds=ds, wl=wl, p=np.linspace(ds_p.min(), ds_p.max(), num=10))
-    assert isinstance(x, ureg.Quantity)
-    assert x.check("[length]^-1")
-    assert len(x) == 10
-    assert not any(np.isnan(x.magnitude))
-
-    # returns a 1D array of absorption coefficient values when input pressure
-    # and temperature are arrays
-    ds_t = to_quantity(ds.t)
-    x = compute_sigma_a(
-        ds=ds,
-        wl=wl,
-        p=np.linspace(ds_p.min(), ds_p.max(), num=12),
-        t=np.linspace(ds_t.min(), ds_t.max(), num=12),
-    )
-    assert isinstance(x, ureg.Quantity)
-    assert x.check("[length]^-1")
-    assert len(x) == 12
-    assert not any(np.isnan(x.magnitude))
-
-    # raises when input pressure and temperature are arrays with different
-    # lengths
-    with pytest.raises(ValueError):
-        x = compute_sigma_a(
-            ds=ds,
-            wl=wl,
-            p=np.linspace(ds_p.min(), ds_p.max(), num=12),
-            t=np.linspace(ds_t.min(), ds_t.max(), num=11),
-        )
-
-    # absorption coefficient scales with number density
-    x = compute_sigma_a(ds, wl=wl, n=ureg.Quantity(np.array([1.0, 2.0]), "m^-3"))
-    assert x[1] == 2 * x[0]
-
-    # dataset with temperature coordinate is interpolated on temperature
-    x = compute_sigma_a(
-        ds, wl=wl, t=ureg.Quantity(260.0, "K"), n=ureg.Quantity(1.0, "m^-3")
-    )
-    y = compute_sigma_a(
-        ds, wl=wl, t=ureg.Quantity(280.0, "K"), n=ureg.Quantity(1.0, "m^-3")
-    )
-    assert x != y
+    # sigma_a should have a shape of (w, z)
+    assert sigma_a.shape == (1, z.size)

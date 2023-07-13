@@ -34,4 +34,3 @@ shape vertically:
 .. only:: not latex
 
    .. figure:: ../../fig/atmosphere_attributes.svg
-

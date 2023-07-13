@@ -32,4 +32,3 @@ Functions
 .. autofunction:: symbol
 
 .. autofunction:: to_quantity
-

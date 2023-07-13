@@ -21,7 +21,7 @@ from ...attrs import documented, parse_docs
 from ...contexts import KernelContext
 from ...kernel import UpdateParameter
 from ...radprops import ZGrid
-from ...spectral.ckd import BinSet
+from ...spectral.ckd import BinSet, QuadratureSpecifications
 from ...spectral.index import (
     CKDSpectralIndex,
     MonoSpectralIndex,
@@ -216,18 +216,26 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def _switch_validator(self, attribute, value):
         if not self.has_absorption and not self.has_scattering:
             raise ValueError(
-                f"while validating {attribute.name}: at least one of 'has_absorption' "
-                "and 'has_scattering' must be True"
+                f"while validating {attribute.name}: at least one of "
+                "'has_absorption' and 'has_scattering' must be True"
             )
 
-    _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
+    _phase: TabulatedPhaseFunction | None = attrs.field(
+        default=None,
+        init=False,
+    )
 
-    @property
-    def spectral_set(self) -> None | BinSet | WavelengthSet:
+    def spectral_set(
+        self,
+        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+    ) -> None | BinSet | WavelengthSet:
         return None
 
     def update(self) -> None:
-        self._phase = TabulatedPhaseFunction(id=self.phase_id, data=self.dataset.phase)
+        self._phase = TabulatedPhaseFunction(
+            id=self.phase_id,
+            data=self.dataset.phase,
+        )
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -256,17 +264,21 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
 
     @cache_by_id
-    def _eval_albedo_impl(self, w: pint.Quantity) -> pint.Quantity:
+    def _eval_albedo_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         # Return albedo from dataset (without accounting for bypass switches)
+        # This routine is vectorized and returns an array of shape
+        # (n_wavelengths, n_layers)
         ds = self.dataset
         wavelengths = w.m_as(ds.w.attrs["units"])
-        interpolated_albedo = ds.albedo.interp(w=wavelengths)
-        return to_quantity(interpolated_albedo)
+        interpolated = to_quantity(ds.albedo.interp(w=wavelengths))
+        where_present = np.reshape(self.eval_fractions(zgrid) > 0, (1, -1))
+        return interpolated * where_present
 
     @cache_by_id
     def _eval_sigma_t_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        # Return extinction coefficient from dataset (without accounting for bypass switches)
-        # This routine is vectorized and returns an array of shape (n_wavelengths, n_layers)
+        # Return extinction coefficient from dataset (without accounting
+        # for bypass switches). This routine is vectorized and returns an
+        # array of shape (n_wavelengths, n_layers)
 
         # Collect input data
         ds = self.dataset
@@ -291,14 +303,18 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return sigma_t
 
     def _eval_sigma_a_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        # Return absorption coefficient from dataset (without accounting for bypass switches)
-        # This routine is vectorized and returns an array of shape (n_wavelengths, n_layers)
-        return self._eval_sigma_t_impl(w, zgrid) * (1.0 - self._eval_albedo_impl(w).m)
+        # Return absorption coefficient from dataset (without accounting for
+        # bypass switches). This routine is vectorized and returns an array of
+        # shape (n_wavelengths, n_layers)
+        albedo = self._eval_albedo_impl(w, zgrid)
+        return self._eval_sigma_t_impl(w, zgrid) * (1.0 - albedo.m)
 
     def _eval_sigma_s_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        # Return scattering coefficient from dataset (without accounting for bypass switches)
-        # This routine is vectorized and returns an array of shape (n_wavelengths, n_layers)
-        return self._eval_sigma_t_impl(w, zgrid) * self._eval_albedo_impl(w)
+        # Return scattering coefficient from dataset (without accounting for
+        # bypass switches). This routine is vectorized and returns an array of
+        # shape (n_wavelengths, n_layers)
+        albedo = self._eval_albedo_impl(w, zgrid)
+        return self._eval_sigma_t_impl(w, zgrid) * albedo.m
 
     @singledispatchmethod
     def eval_albedo(
@@ -324,7 +340,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         if self.has_absorption and self.has_scattering:
-            albedo = self._eval_albedo_impl(w)
+            albedo = self._eval_albedo_impl(w, zgrid).squeeze()
 
         elif self.has_absorption and not self.has_scattering:
             albedo = 0.0 * ureg.dimensionless

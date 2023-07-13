@@ -3,6 +3,7 @@ Heterogeneous atmospheres.
 """
 from __future__ import annotations
 
+import logging
 from collections import abc as cabc
 
 import attrs
@@ -11,7 +12,7 @@ import numpy as np
 import pint
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
-from ._molecular_atmosphere import MolecularAtmosphere
+from ._molecular import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
 from ..core import traverse
 from ..phase import BlendPhaseFunction, PhaseFunction
@@ -19,12 +20,15 @@ from ...attrs import documented, parse_docs
 from ...contexts import KernelContext
 from ...kernel import TypeIdLookupStrategy
 from ...radprops import ZGrid
-from ...spectral.ckd import BinSet
+from ...spectral.ckd import BinSet, QuadratureSpecifications
 from ...spectral.index import SpectralIndex
 from ...spectral.mono import WavelengthSet
+from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
+
+logger = logging.getLogger(__name__)
 
 
 def _molecular_converter(value):
@@ -112,12 +116,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
-    @property
-    def spectral_set(self) -> None | BinSet | WavelengthSet:
-        # Below code assumes that ParticleLayer does not emit a spectral set
-        if self.molecular_atmosphere is not None:
-            return self.molecular_atmosphere.spectral_set
-
     _zgrid: ZGrid = documented(
         attrs.field(
             default=None,
@@ -149,14 +147,19 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     def update(self):
         # Inherit docstring
-
         if not self.components:
             raise ValueError("HeterogeneousAtmosphere must have at least one component")
 
         # Force component IDs and geometry
         for i, component in enumerate(self.components):
-            component.update()
+            component.update()  # TODO: check if this is necessary
             component.id = f"{self.id}_component_{i}"
+            logger.debug(
+                "Override the geometry of component '%s' to %s (was %s)",
+                component.id,
+                self.geometry,
+                component.geometry,
+            )
             component.geometry = self.geometry
 
     # --------------------------------------------------------------------------
@@ -178,20 +181,25 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         return max([component.top for component in self.components])
 
-    @property
-    def spectral_set(self) -> None | BinSet | WavelengthSet:
+    def spectral_set(
+        self,
+        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+    ) -> None | BinSet | WavelengthSet:
         components_with_spectral_set = [
             component
             for component in self.components
-            if component.spectral_set is not None
+            if component.spectral_set(quad_spec=quad_spec) is not None
         ]
 
         # at most one component is allowed to have a spectral set
         if len(components_with_spectral_set) > 1:
-            raise ValueError("at most one component is allowed to have a spectral set")
+            raise ValueError(
+                "at most one component is allowed to have a spectral set",
+                components_with_spectral_set,
+            )
 
         if len(components_with_spectral_set) == 1:
-            return components_with_spectral_set[0].spectral_set
+            return components_with_spectral_set[0].spectral_set(quad_spec=quad_spec)
 
         # Fall back
         return None
@@ -222,7 +230,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @cache_by_id
     def _eval_sigma_t_impl(self, si: SpectralIndex) -> pint.Quantity:
-        result = np.zeros((len(self.components), len(self.geometry.zgrid.layers)))
+        result = np.zeros((len(self.components), self.geometry.zgrid.n_layers))
         sigma_units = ucc.get("collision_coefficient")
 
         # Evaluate extinction for current component
@@ -251,7 +259,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @cache_by_id
     def _eval_sigma_s_impl(self, si: SpectralIndex) -> pint.Quantity:
-        result = np.zeros((len(self.components), len(self.geometry.zgrid.layers)))
+        result = np.zeros((len(self.components), self.geometry.zgrid.n_layers))
         sigma_units = ucc.get("collision_coefficient")
 
         # Evaluate scattering coefficient for current component

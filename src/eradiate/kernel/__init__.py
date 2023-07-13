@@ -52,7 +52,6 @@ if ERADIATE_KERNEL_PATCH_VERSION != _EXPECTED_MITSUBA_PATCH_VERSION:
         f"{ERADIATE_KERNEL_VERSION} with the patch version"
         f" {ERADIATE_KERNEL_PATCH_VERSION}."
     )
-
 import lazy_loader
 
 __getattr__, __dir__, __all__ = lazy_loader.attach_stub(__name__, __file__)
