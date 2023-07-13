@@ -40,7 +40,10 @@ def test_canopy_atmosphere_experiment_construct_measures(mode_mono):
 
 
 @pytest.mark.parametrize("padding", (0, 1))
-def test_canopy_atmosphere_experiment_construct_normalize_measures(mode_mono, padding):
+def test_canopy_atmosphere_experiment_construct_normalize_measures(
+    mode_mono,
+    padding,
+):
     # When canopy is not None, measure target matches canopy unit cell
     exp = CanopyAtmosphereExperiment(
         atmosphere=None,
@@ -85,7 +88,8 @@ def test_canopy_atmosphere_experiment_construct_normalize_measures(mode_mono, pa
 
 @pytest.mark.parametrize("padding", (0, 1))
 def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
-    # Surface width is appropriately inherited from canopy, when no atmosphere is present
+    # Surface width is appropriately inherited from canopy, when no atmosphere
+    # is present
     exp = CanopyAtmosphereExperiment(
         atmosphere=None,
         canopy=DiscreteCanopy.homogeneous(
@@ -172,18 +176,17 @@ def test_canopy_atmosphere_experiment_surface_adjustment(mode_mono):
 
 
 @pytest.mark.slow
-def test_canopy_atmosphere_experiment_real_life(mode_mono):
+def test_canopy_atmosphere_experiment_real_life(
+    mode_mono,
+    us_standard_mono,
+):
+
     # Construct with typical parameters
-    skipif_data_not_found(
-        "spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
-    )
     exp = CanopyAtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "construct": "ussa_1976",
-            },
+            "molecular_atmosphere": us_standard_mono,
         },
         canopy={
             "type": "discrete_canopy",
@@ -256,20 +259,19 @@ def test_canopy_atmosphere_experiment_run_detailed(mode_mono):
     assert np.all(results["radiance"].data > 0.0)
 
 
-def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(mode_mono):
+def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(
+    mode_mono,
+    us_standard_mono,
+):
     # A MultiRadiancemeter measure must have all origins inside the atmosphere
     # or none. A mix of both will raise an error.
-    skipif_data_not_found(
-        "spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
-    )
+
     # Construct with typical parameters
     exp = CanopyAtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "construct": "ussa_1976",
-            },
+            "molecular_atmosphere": us_standard_mono,
         },
         canopy={
             "type": "discrete_canopy",

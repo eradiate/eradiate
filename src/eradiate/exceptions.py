@@ -55,6 +55,34 @@ class DataError(Exception):
 class TraversalError(Exception):
     """Raised when an error is encountered during scene element traversal."""
 
+    pass
+
+
+class InterpolationError(Exception):
+    """Raised when encountering errors during interpolation."""
+
+    pass
+
+
+class MissingCoordinateError(InterpolationError):
+    """Raised when a dataset is being interpolated along a coordinate that it
+    does not have."""
+
+    pass
+
+
+class ScalarCoordinateError(InterpolationError):
+    """Raised when a dataset is being interpolated along a scalar coordinate."""
+
+    pass
+
+
+class OutOfBoundsCoordinateError(InterpolationError):
+    """Raised when a dataset is being interpolated along a coordinate with
+    out-of-bounds values."""
+
+    pass
+
 
 # ------------------------------------------------------------------------------
 #                                   Warnings

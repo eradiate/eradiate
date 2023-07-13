@@ -60,7 +60,7 @@ If the participating medium is uniform, then :eq:`radprops` reduces to:
 
 .. math::
 
-   x, y, z \longrightarrow p_0, \varpi_0, \sigma_{\mathrm{t}, 0}   
+   x, y, z \longrightarrow p_0, \varpi_0, \sigma_{\mathrm{t}, 0}
 
 where :math:`p_0`, :math:`\varpi_0`, :math:`\sigma_{\mathrm{t}, 0}`  are constants.
 
@@ -108,6 +108,6 @@ When working with particles, you must either:
 * use pre-defined particle radiative properties.
 
 .. note::
-   
+
    So far, two pre-defined particle radiative properties data sets are provided.
    We are currently working on adding more data sets.

@@ -2,6 +2,8 @@ import numpy as np
 import pytest
 
 import eradiate
+from eradiate import data
+from eradiate import unit_registry as ureg
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.test_tools.regression import Chi2Test
 
@@ -53,10 +55,26 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
                 "has_absorption": False,
                 "has_scattering": True,
                 "type": "molecular",
-                "construct": "afgl_1986",
-                "model": "us_standard",
-                "levels": [float(i) for i in range(121)],
-                "levels_units": "km",
+                "thermoprops": {
+                    "identifier": "afgl_1986-us_standard",
+                    "z": np.arange(0, 120.05, 0.05) * ureg.km,
+                },
+                "absorption_data": [
+                    data.open_dataset(
+                        f"spectra/absorption/ckd/monotropa/monotropa-"
+                        f"{int(w)}_{int(w+100)}.nc"
+                    )
+                    for w in np.arange(17100, 18700, 100)
+                ],
+                "error_handler_config": {
+                    "x": {
+                        "missing": "ignore",
+                        "scalar": "ignore",
+                        "bounds": "raise",
+                    },
+                    "p": {"bounds": "ignore"},
+                    "t": {"bounds": "ignore"},
+                },
             },
             "particle_layers": [
                 {
@@ -96,9 +114,15 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
     result = eradiate.run(exp)
 
     test = Chi2Test(
-        name=f"{session_timestamp:%Y%m%d-%H%M%S}-rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp",
+        name=(
+            f"{session_timestamp:%Y%m%d-%H%M%S}-"
+            "rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp"
+        ),
         value=result,
-        reference="tests/regression_test_references/rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp_ref.nc",
+        reference=(
+            "tests/regression_test_references/"
+            "rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp_ref.nc"
+        ),
         threshold=0.05,
         archive_dir=artefact_dir,
     )

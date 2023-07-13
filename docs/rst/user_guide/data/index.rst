@@ -10,7 +10,6 @@ Data guide
    absorption
    atmosphere_radprops
    atmosphere_thermoprops
-   ckd
    particle_radprops
    solar_irradiance
    srf

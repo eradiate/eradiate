@@ -5,6 +5,7 @@ from eradiate import unit_registry as ureg
 from eradiate.quad import Quad
 from eradiate.scenes.spectra import InterpolatedSpectrum, MultiDeltaSpectrum
 from eradiate.spectral import Bin, BinSet
+from eradiate.spectral.ckd import QuadratureSpecifications
 
 
 def test_ckd_bin():
@@ -229,3 +230,19 @@ def test_select_from_connex_interpolated_spectrum_misaligned():
     for bin, wmin in zip(selected.bins, wmin_expected):
         assert np.isclose(bin.wmin, wmin)
         assert np.isclose(bin.wmax, wmin + 10.0 * ureg.nm)
+
+
+def test_quadrature_specifications():
+    """
+    Unit tests for :class:`.QuadratureSpecifications`.
+    """
+    quad_spec = QuadratureSpecifications(
+        type="fixed",
+        params={"n": 8, "type": "gauss_lobato"},
+    )
+    assert quad_spec.type == "fixed"
+
+    with pytest.raises(ValueError):
+        quad_spec = QuadratureSpecifications(
+            type="invalid",
+        )

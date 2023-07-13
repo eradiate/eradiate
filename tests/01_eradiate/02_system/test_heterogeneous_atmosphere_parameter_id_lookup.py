@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 import eradiate
@@ -5,7 +6,12 @@ from eradiate import unit_registry as ureg
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
-def test_heterogeneous_parameter_lookup(modes_all_double, geometry):
+def test_heterogeneous_parameter_lookup(
+    modes_all_double,
+    geometry,
+    us_standard_mono,
+    us_standard_ckd_550nm,
+):
     """
     Kernel parameter lookup
     =======================
@@ -37,20 +43,11 @@ def test_heterogeneous_parameter_lookup(modes_all_double, geometry):
     parameter associated with the volume data buffer nested in the ``Medium`` has
     the sensor in its parent nodes rather than the atmosphere shape.
     """
+    atmosphere_mono = us_standard_mono
+    atmosphere_mono.update({"has_scattering": False})
 
-    atmosphere_kwargs = {
-        "type": "molecular",
-        "has_absorption": True,
-        "has_scattering": False,
-    }
-    atmosphere_mono = {
-        **atmosphere_kwargs,
-        "construct": "ussa_1976",
-    }
-    atmosphere_ckd = {
-        **atmosphere_kwargs,
-        "construct": "afgl_1986",
-    }
+    atmosphere_ckd = us_standard_ckd_550nm
+    atmosphere_ckd.update({"has_scattering": False})
 
     exp = eradiate.experiments.AtmosphereExperiment(
         geometry=geometry,
@@ -60,9 +57,10 @@ def test_heterogeneous_parameter_lookup(modes_all_double, geometry):
         measures={
             "type": "distant_flux",
             "id": "dflux",
-            "srf": eradiate.scenes.spectra.MultiDeltaSpectrum(
-                wavelengths=550.0 * ureg.nm
-            ),
+            "srf": {
+                "type": "multi_delta",
+                "wavelengths": 550.0 * ureg.nm,
+            },
             "ray_offset": 1.0 * ureg.m,
         },
     )

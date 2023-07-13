@@ -14,7 +14,12 @@ from eradiate import unit_registry as ureg
     ],
     ids=["default", "mol_nosc", "mol_noab"],
 )
-def test_heterogeneous_atm_flags(modes_all_double, atm_flags):
+def test_heterogeneous_atm_flags(
+    modes_all_double,
+    atm_flags,
+    us_standard_mono,
+    us_standard_ckd_550nm,
+):
     """
     Heterogeneous atmosphere component flags
     ========================================
@@ -24,21 +29,18 @@ def test_heterogeneous_atm_flags(modes_all_double, atm_flags):
     """
     # TODO: Recycle this test
     if eradiate.mode().is_mono:
-        atm_kwargs = {"construct": "ussa_1976"}
+        molecular = us_standard_mono
     elif eradiate.mode().is_ckd:
-        atm_kwargs = {"construct": "afgl_1986"}
+        molecular = us_standard_ckd_550nm
     else:
         raise NotImplementedError
 
+    molecular.update(atm_flags["molecular"])
     exp = eradiate.experiments.AtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "type": "molecular",
-                **atm_kwargs,
-                **atm_flags["molecular"],
-            },
+            "molecular_atmosphere": molecular,
             "particle_layers": {
                 "tau_ref": 0.2,
                 "bottom": 0.0,
