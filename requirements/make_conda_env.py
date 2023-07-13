@@ -1,9 +1,9 @@
 import os
 import sys
 from copy import deepcopy
-import networkx as nx
 
 import click
+import networkx as nx
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedSeq as CS
 
@@ -16,7 +16,9 @@ from ruamel.yaml.comments import CommentedSeq as CS
     help="Dependency sections to include in the produced environment.yml file. "
     "Default: 'dependencies,main,recommended,tests,dev,docs,optional'",
 )
-@click.option("-o", "--output-dir", default="requirements/conda", help="Path to output file.")
+@click.option(
+    "-o", "--output-dir", default="requirements/conda", help="Path to output file."
+)
 @click.option(
     "-l",
     "--layered-config",
@@ -37,7 +39,7 @@ from ruamel.yaml.comments import CommentedSeq as CS
     "--write-graphs",
     is_flag=True,
     default=False,
-    help="Write dependency graphs to Graphviz dot files. Default: False"
+    help="Write dependency graphs to Graphviz dot files. Default: False",
 )
 def cli(sections, output_dir, layered_config, pip_deps, quiet, write_graphs):
     """
@@ -69,8 +71,8 @@ def cli(sections, output_dir, layered_config, pip_deps, quiet, write_graphs):
             G.add_edge(section, include)
 
     if write_graphs:
-      path = os.path.join(output_dir, f"layer_graph.dot")
-      nx.drawing.nx_pydot.write_dot(G, path)
+        path = os.path.join(output_dir, f"layer_graph.dot")
+        nx.drawing.nx_pydot.write_dot(G, path)
 
     G.add_node("default", packages=set(dep_list))
     G.add_edge("main", "default")
@@ -141,6 +143,7 @@ def cli(sections, output_dir, layered_config, pip_deps, quiet, write_graphs):
                 subG = subG.copy()
                 subG.remove_node("default")
             nx.drawing.nx_pydot.write_dot(subG, path)
+
 
 if __name__ == "__main__":
     cli()

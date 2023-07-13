@@ -22,8 +22,7 @@ from ..units import unit_registry as ureg
 rad_profile_factory = Factory()
 rad_profile_factory.register_lazy_batch(
     [
-        ("_afgl1986.AFGL1986RadProfile", "afgl_1986", {}),
-        ("_us76_approx.US76ApproxRadProfile", "us76_approx", {}),
+        ("_atmosphere.AtmosphereRadProfile", "atmosphere", {}),
     ],
     cls_prefix="eradiate.radprops",
 )
@@ -76,7 +75,7 @@ def make_dataset(
         Atmosphere radiative properties data set.
     """
     if z_layer is None:
-        z_layer = (z_level[1:] + z_level[:-1]) / 2.0
+        z_layer = 0.5 * (z_level[1:] + z_level[:-1])
 
     if sigma_a is not None and sigma_s is not None:
         sigma_t = sigma_a + sigma_s
@@ -96,7 +95,7 @@ def make_dataset(
         data_vars={
             "sigma_a": (
                 ("w", "z_layer"),
-                sigma_a.reshape(1, len(z_layer)),
+                sigma_a.reshape(1, z_layer.size),
                 dict(
                     standard_name="absorption_coefficient",
                     units="km^-1",
@@ -105,7 +104,7 @@ def make_dataset(
             ),
             "sigma_s": (
                 ("w", "z_layer"),
-                sigma_s.reshape(1, len(z_layer)),
+                sigma_s.reshape(1, z_layer.size),
                 dict(
                     standard_name="scattering_coefficient",
                     units="km^-1",
@@ -114,7 +113,7 @@ def make_dataset(
             ),
             "sigma_t": (
                 ("w", "z_layer"),
-                sigma_t.reshape(1, len(z_layer)),
+                sigma_t.reshape(1, z_layer.size),
                 dict(
                     standard_name="extinction_coefficient",
                     units="km^-1",
@@ -123,7 +122,7 @@ def make_dataset(
             ),
             "albedo": (
                 ("w", "z_layer"),
-                albedo.reshape(1, len(z_layer)),
+                albedo.reshape(1, z_layer.size),
                 dict(
                     standard_name="albedo",
                     units="",
@@ -153,13 +152,17 @@ def make_dataset(
             "w": (
                 "w",
                 [wavelength],
-                dict(standard_name="wavelength", units="nm", long_name="wavelength"),
+                dict(
+                    standard_name="radiation_wavelength",
+                    units="nm",
+                    long_name="wavelength",
+                ),
             ),
         },
         attrs={
             "convention": "CF-1.8",
             "title": "Atmospheric monochromatic radiative properties",
-            "history": f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+            "history": f"{datetime.datetime.utcnow().replace(microsecond=0)} - "
             f"data set creation - "
             f"{__name__}.make_dataset",
             "source": f"eradiate, version {eradiate.__version__}",
@@ -430,7 +433,10 @@ class RadProfile(ABC):
         raise NotImplementedError
 
     def eval_sigma_a_ckd(
-        self, w: pint.Quantity, g: float, zgrid: ZGrid
+        self,
+        w: pint.Quantity,
+        g: float,
+        zgrid: ZGrid,
     ) -> pint.Quantity:
         """Evaluate absorption coefficient spectrum in CKD modes."""
         raise NotImplementedError

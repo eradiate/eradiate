@@ -59,6 +59,7 @@ class PhysicalQuantity(enum.Enum):
     TIME = "time"
     TRANSMITTANCE = "transmittance"
     WAVELENGTH = "wavelength"
+    WAVENUMBER = "wavenumber"
 
     @classmethod
     @lru_cache(maxsize=32)
@@ -100,6 +101,7 @@ def _make_unit_context():
         PhysicalQuantity.REFLECTANCE: pinttr.UnitGenerator(unit_registry.dimensionless),
         PhysicalQuantity.TRANSMITTANCE: pinttr.UnitGenerator(unit_registry.dimensionless),
         PhysicalQuantity.WAVELENGTH: pinttr.UnitGenerator(unit_registry.nm),
+        PhysicalQuantity.WAVENUMBER: pinttr.UnitGenerator(unit_registry.cm ** -1),
     }.items():
         uctx.register(key, value)
     # fmt: on

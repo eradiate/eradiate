@@ -1,18 +1,20 @@
+import numpy as np
 import pytest
 
 import eradiate
 from eradiate.experiments._helpers import measure_inside_atmosphere, surface_converter
-from eradiate.scenes.atmosphere import (
-    HeterogeneousAtmosphere,
-    MolecularAtmosphere,
-)
+from eradiate.scenes.atmosphere import HeterogeneousAtmosphere
 from eradiate.scenes.surface import BasicSurface
+from eradiate.units import unit_registry as ureg
 
 
-def test_helpers_measure_inside_atmosphere(mode_mono):
+def test_helpers_measure_inside_atmosphere(
+    mode_mono,
+    us_standard_mono,
+):
     atm = HeterogeneousAtmosphere(
         geometry="plane_parallel",
-        molecular_atmosphere=MolecularAtmosphere.afgl_1986(),
+        molecular_atmosphere=us_standard_mono,
     )
 
     s1 = eradiate.scenes.measure.MultiDistantMeasure()

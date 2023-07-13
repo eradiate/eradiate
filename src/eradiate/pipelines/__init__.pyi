@@ -18,4 +18,5 @@ from ._core import Pipeline as Pipeline  # isort: skip
 from ._core import PipelineStep as PipelineStep  # isort: skip
 
 # Gather step
-from ._gather import Gather as Gather
+from ._gather import GatherCKD as GatherCKD
+from ._gather import GatherMono as GatherMono

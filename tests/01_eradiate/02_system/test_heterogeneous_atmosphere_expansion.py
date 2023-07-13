@@ -84,9 +84,10 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
     np.testing.assert_equal(results1, results2)
 
 
-@pytest.mark.slow
 def test_heterogeneous_atmosphere_expansion_molecular_atmosphere(
-    mode_ckd_double, ert_seed_state
+    mode_ckd_double,
+    ert_seed_state,
+    us_standard_ckd_550nm,
 ):
     """
     Perfect single-component HeterogeneousAtmosphere expansion (molecular atmosphere)
@@ -119,12 +120,17 @@ def test_heterogeneous_atmosphere_expansion_molecular_atmosphere(
         "construct": "hplane",
         "zeniths": np.arange(-90, 90, 15),
         "azimuth": 0.0,
-        "srf": eradiate.scenes.spectra.MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
+        "srf": {
+            "type": "multi_delta",
+            "wavelengths": 550.0 * ureg.nm,
+        },
     }
 
     # Non-absorbing molecular atmosphere
+    molecular_atmosphere = us_standard_ckd_550nm
+    molecular_atmosphere.update({"has_absorption": False})
     exp1 = eradiate.experiments.AtmosphereExperiment(
-        atmosphere={"type": "molecular", "has_absorption": False},
+        atmosphere=molecular_atmosphere,
         measures=[measure],
     )
     ert_seed_state.reset()
@@ -135,7 +141,7 @@ def test_heterogeneous_atmosphere_expansion_molecular_atmosphere(
     exp2 = eradiate.experiments.AtmosphereExperiment(
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": {"type": "molecular", "has_absorption": False},
+            "molecular_atmosphere": molecular_atmosphere,
         },
         measures=[measure],
     )

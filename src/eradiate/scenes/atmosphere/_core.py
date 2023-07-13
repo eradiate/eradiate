@@ -48,9 +48,9 @@ atmosphere_factory.register_lazy_batch(
             {},
         ),
         (
-            "_molecular_atmosphere.MolecularAtmosphere",
+            "_molecular.MolecularAtmosphere",
             "molecular",
-            {"dict_constructor": "afgl_1986"},
+            {},
         ),
         (
             "_particle_layer.ParticleLayer",
@@ -131,6 +131,20 @@ class Atmosphere(CompositeSceneElement, ABC):
 
     @property
     @abstractmethod
+    def phase(self) -> PhaseFunction:
+        """
+        Returns
+        -------
+        .PhaseFunction
+            Phase function associated with the atmosphere.
+        """
+        pass
+
+    # --------------------------------------------------------------------------
+    #                           Spectral set
+    # --------------------------------------------------------------------------
+
+    @abstractmethod
     def spectral_set(self) -> None | BinSet | WavelengthSet:
         """
         The spectral set emitted by the atmosphere (optional).
@@ -144,17 +158,6 @@ class Atmosphere(CompositeSceneElement, ABC):
         dataset.
         In experiments, the spectral set emitted by the atmosphere is given
         the highest priority when creating the experiment's spectral set.
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def phase(self) -> PhaseFunction:
-        """
-        Returns
-        -------
-        .PhaseFunction
-            Phase function associated with the atmosphere.
         """
         pass
 
@@ -348,6 +351,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     scale: float | None = documented(
         attrs.field(
             default=None,
+            kw_only=True,
             converter=attrs.converters.optional(float),
             validator=attrs.validators.optional(attrs.validators.instance_of(float)),
         ),

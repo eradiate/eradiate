@@ -1,4 +1,6 @@
+import joseki
 import numpy as np
+import xarray as xr
 
 from eradiate import unit_registry as ureg
 from eradiate.radprops.rayleigh import (
@@ -44,14 +46,25 @@ def test_sigma_s_air_optical_thickness():
     air in a 100km high atmosphere. We compare the obtained result to the value
     given by :cite:`Hansen1974LightScatteringPlanetary` at page 544.
     """
-    from eradiate.thermoprops.us76 import make_profile
-
-    profile = make_profile(levels=np.linspace(0.0, 100000.0, 1001))
-    n = to_quantity(profile.n)
-    z = profile.z_level.values
-    dz = z[1:] - z[:-1]
+    thermoprops = joseki.make(
+        identifier="ussa_1976",
+        z=np.linspace(0.0, 100000.0, 1001) * ureg.m,
+    )
+    n = to_quantity(thermoprops.n)
+    z = to_quantity(thermoprops.z)
     sigma_s = compute_sigma_s_air(number_density=n)
-    optical_thickness = np.sum(sigma_s.to("m^-1").magnitude * dz)
+
+    sigma_s = xr.DataArray(
+        data=sigma_s.m_as("km^-1"),
+        dims=("z",),
+        coords={
+            "z": ("z", z.m_as("km")),
+        },
+        attrs=dict(units=sigma_s.units),
+    )
+    optical_thickness = sigma_s.integrate(coord="z")
+
+    # optical_thickness = np.sum(sigma_s.to("m^-1").magnitude * dz)
 
     assert np.isclose(optical_thickness, 0.0973, rtol=1e-2)
 

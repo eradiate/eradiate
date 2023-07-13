@@ -362,7 +362,19 @@ class InterpolatedSpectrum(Spectrum):
         i = i.apply(lambda x: (P.CLOSED, x.lower, x.upper, P.CLOSED))
 
         # select wavelengths that are included in the interval
-        selected = np.stack([w for w in wset.wavelengths if i.contains(w)])
+        w = wset.wavelengths
+        lwf = np.diff(w).max()  # largest wavelength difference
+
+        if i.atomic:  # fast (vectorized)
+            selected = w[(w - lwf <= i.upper) & (w + lwf >= i.lower)]
+        else:  # slow (for-loop)
+            selected = np.stack(
+                [
+                    w
+                    for w in wset.wavelengths
+                    if i.contains(w - lwf) or i.contains(w + lwf)
+                ]
+            )
 
         return WavelengthSet(selected)
 

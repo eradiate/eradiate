@@ -32,6 +32,72 @@ Emoji marks have the following meaning:
 % ### Changed
 %
 % ### Fixed
+%
+% ### Internal changes
+
+## v0.25.0 (upcoming release)
+
+### Breaking changes
+
+* `AFGL1986RadProfile`, `US76ApproxRadProfile` (replaced with
+  `AtmosphereRadProfile`) and corresponding `MolecularAtmosphere` constructors
+  `afgl_1986` and `ussa_1976` respectively have been removed ({ghpr}`344`).
+  The same configuration that was provided by these constructors can be
+  obtained by setting `MolecularAtmosphere.thermoprops` to
+  `{"identifier": "afgl_1986-us_standard"}` and `{"identifier": "ussa_1976"}`,
+  respectively. Refer to the API documentation for further details.
+* `thermoprops` package was removed and replaced by the (external)
+  [`joseki` package](https://github.com/nollety/joseki) ({ghpr}`344`).
+
+### Improvements and fixes
+
+* Added support for quadrature specifications ({ghpr}`344`).
+* Added support for custom absorption data (mono and ckd) ({ghpr}`344`).
+* Added support for custom atmospheric profiles ({ghpr}`344`).
+* Added module `radprops/absorption` to compute the air volume absorption
+  coefficient from absorption datasets (monochromatic or CKD) ({ghpr}`344`).
+
+### Documentation
+
+* The new dataset schema for atmosphere's thermophysical profiles is documented
+  [here](https://nollety.github.io/joseki/explanation/#dataset-schema)
+  ({ghpr}`344`).
+* The new dataset schema for atmosphere's absorption coefficient data is
+  updated in *User Guide / Data Guide / Absorption* ({ghpr}`344`).
+* Removed the obsolete pages *User Guide / Data Guide / ``us76_u86_4-spectra``*
+  and *User Guide / Data Guide / Correlated-k distribution (CKD)* ({ghpr}`344`).
+
+### Internal changes
+
+* Added `joseki>=2.1.0` as required dependency ({ghpr}`344`).
+* Removed `iapws` ({ghpr}`344`).
+* Added a `cfconventions.py` module to store variable attributes
+* Added converters `convert_thermoprops` and `convert_absorption_data` to
+  convert atmosphere's thermophysical profiles and absorption data
+  specifications, respectively ({ghpr}`344`).
+* Added a function `locate_absorption_data` to locate the absorption data on
+  the Eradiate online stable data store corresponding to a given codename
+  and wavelength range ({ghpr}`344`).
+* Added exceptions corresponding to different types of errors encountered
+  during interpolation ({ghpr}`344`).
+* Added a call to `atmosphere.update()` in `_normalize_atmosphere(self)` so
+  that the experiment scene geometry propagates down to each components of a
+  `HeterogeneousAtmosphere` ({ghpr}`344`).
+* Added a `quad_spec` attribute to Experiment ({ghpr}`344`).
+* Adapted the `AggregateCKDQuad` pipeline step to work with a `g` coordinate
+  instead of the previously used `index` coordinate ({ghpr}`344`).
+* Updated the reference dataset for regression test
+  `test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp.py` ({ghpr}`344`).
+* Renamed module `_molecular_atmosphere.py` to `_molecular.py` ({ghpr}`344`).
+* Modified `MolecularAtmosphere` to handle a `absorption_data` attribute
+  storing the air volume absorption coefficient data ({ghpr}`344`).
+* Modified `BinSet` classmethods to take into account quadrature specifications
+  ({ghpr}`344`).
+* Added wavenumber to the physical quantity definitions ({ghpr}`344`).
+* Defined two convenient pytest fixtures for molecular atmospheres:
+  `us_standard_mono` and `us_standard_ckd_550nm` ({ghpr}`344`).
+
+---
 
 ## v0.24.2 (31st August 2023)
 

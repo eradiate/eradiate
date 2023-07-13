@@ -26,7 +26,13 @@ def make_figure(fname_plot, brf_1, brf_2):
 
 
 @pytest.mark.slow
-def test(mode_mono_double, rayleigh_tab_phase, artefact_dir, ert_seed_state, request):
+def test(
+    mode_mono_double,
+    rayleigh_tab_phase,
+    artefact_dir,
+    ert_seed_state,
+    request,
+):
     r"""
     Equivalency of plugin and tabulated versions of Rayleigh phase function
     =======================================================================

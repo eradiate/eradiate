@@ -21,10 +21,8 @@ from ..scenes.geometry import (
 )
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import DistantMeasure, Measure, TargetPoint
-from ..scenes.shapes import RectangleShape, SphereShape
 from ..scenes.surface import BasicSurface
 from ..units import unit_context_config as ucc
-from ..units import unit_registry as ureg
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +121,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
         """
         if self.atmosphere is not None:
             self.atmosphere.geometry = self.geometry
+            self.atmosphere.update()
 
     def _normalize_measures(self) -> None:
         """
