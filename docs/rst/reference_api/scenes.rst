@@ -219,6 +219,7 @@
    MQDiffuseBSDF
    OpacityMaskBSDF
    RPVBSDF
+   RTLSBSDF
 
 ``eradiate.scenes.shapes``
 --------------------------

@@ -56,6 +56,8 @@ Emoji marks have the following meaning:
 * Added support for custom atmospheric profiles ({ghpr}`344`).
 * Added module `radprops/absorption` to compute the air volume absorption
   coefficient from absorption datasets (monochromatic or CKD) ({ghpr}`344`).
+* Added the RTLS BSDF class to interface with the corresponding kernel plugin
+  ({ghpr}`355`).
 
 ### Documentation
 
