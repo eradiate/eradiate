@@ -52,7 +52,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 ### Documentation
 
 * The new dataset schema for atmosphere's thermophysical profiles is documented
-  [here](https://nollety.github.io/joseki/explanation/#dataset-schema)
+  [here](https://nollety.github.io/joseki/2.2/explanation/#dataset-schema)
   ({ghpr}`344`).
 * The new dataset schema for atmosphere's absorption coefficient data is
   updated in *User Guide / Data Guide / Absorption* ({ghpr}`344`).
@@ -61,6 +61,7 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
 
 ### Internal changes
 
+* Bumped `joseki` from `2.1.0` to `2.2.0`.
 * Added `joseki>=2.1.0` as required dependency ({ghpr}`344`).
 * Removed `iapws` ({ghpr}`344`).
 * Added a `cfconventions.py` module to store variable attributes
