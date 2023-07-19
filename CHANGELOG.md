@@ -38,6 +38,8 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   {class}`.HomogeneousAtmosphere` ({ghpr}`352`).
 * Fixed a bug where the kernel dictionary emitted by the {class}`.MQDiffuseBSDF`
   wrapper would miss a data point on the azimuth dimension ({ghpr}`353`).
+* Fixed a bug where an incorrect flag field init type would raise a `TypeError`
+  on Python 3.11 ({ghpr}`358`).
 
 % ### Documentation
 

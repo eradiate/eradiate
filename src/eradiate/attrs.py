@@ -64,7 +64,7 @@ class DocFlags(enum.Flag):
     Extra flags used to pass information about docs.
     """
 
-    NOINIT = "noinit"
+    NOINIT = 0
 
 
 # ------------------------------------------------------------------------------
