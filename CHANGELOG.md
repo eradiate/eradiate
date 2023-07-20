@@ -1,38 +1,53 @@
 # Release notes
 
 ```{note}
-For now, Eradiate uses a
-"[Zero](https://0ver.org/)[Cal](https://calver.org/)Ver" versioning
-scheme. The ZeroVer part reflects the relative instability of our API:
-breaking changes may happen at any time. The CalVer part gives an idea of how
-fresh the version you are running is. We plan to switch to a versioning
-scheme more similar to SemVer in the future.
+For now, Eradiate uses a [ZeroVer](https://0ver.org) versioning
+scheme. It reflects the relative instability of our API: breaking changes may
+happen at any time. We plan to switch to a versioning scheme more similar to
+SemVer in the future.
 
 Updates are tracked in this change log. Every time you decide to update to a
 newer version, we recommend that you to go through the list of changes.
 We try hard to remain backward-compatible and warn in advance for deprecation
 when necessary—we also advise to not ignore `DeprecationWarning`s.
 
-Entries marked with a ︎⚠️ symbol require particular attention during upgrade.
+Emoji marks have the following meaning:
+
+* ︎⚠ Requires particular attention during upgrade or usage
+  (breaking change or experimental feature).
+* 🗎 Documentation-related change.
+* 🖳 This is a developer-facing change.
 ```
 
 % HEREAFTER IS A TEMPLATE FOR THE NEXT RELEASE
 %
 % ## vXX.YY.ZZ (upcoming release)
 %
-% ### Deprecations and removals
+% ### Deprecated
 %
-% ### Improvements and fixes
+% ### Removed
 %
-% ### Documentation
+% ### Added
 %
-% ### Internal changes
+% ### Changed
+%
+% ### Fixed
+%
 
 ## v0.24.0 (upcoming release)
 
-% ### Deprecations and removals
+% ### Deprecated
 
-### Improvements and fixes
+% ### Removed
+
+% ### Added
+
+### Changed
+
+* 🗎 Our change log now adheres [Keep a Changelog](https://keepachangelog.com).
+* Our versioning scheme now adheres [ZeroVer](https://0ver.org).
+
+### Fixed
 
 * Added missing lookup strategy for participating medium parameters of the
   {class}`.HomogeneousAtmosphere` ({ghpr}`352`).
@@ -40,10 +55,6 @@ Entries marked with a ︎⚠️ symbol require particular attention during upgra
   wrapper would miss a data point on the azimuth dimension ({ghpr}`353`).
 * Fixed a bug where an incorrect flag field init type would raise a `TypeError`
   on Python 3.11 ({ghpr}`358`).
-
-% ### Documentation
-
-% ### Internal changes
 
 ## v0.23.2 (8th July 2023)
 
@@ -86,11 +97,11 @@ Release highlights:
 
 ### Deprecations and removals
 
-* ⚠️ Removed {class}`.SpectralContext` and subclasses ({ghpr}`311`).
-* ⚠️ Removed {class}`.MeasureSpectralConfig` and subclasses ({ghpr}`311`).
-* ⚠️ Removed the {meth}`.MultiDistantMeasure.from_viewing_angles` constructor
+* ⚠ Removed {class}`.SpectralContext` and subclasses ({ghpr}`311`).
+* ⚠ Removed {class}`.MeasureSpectralConfig` and subclasses ({ghpr}`311`).
+* ⚠ Removed the {meth}`.MultiDistantMeasure.from_viewing_angles` constructor
   ({ghpr}`315`).
-* ⚠️ Removed ``ertdata`` and ``ertshow`` command-line entry points ({ghpr}`324`).
+* ⚠ Removed ``ertdata`` and ``ertshow`` command-line entry points ({ghpr}`324`).
 
 ### Improvements and fixes
 
@@ -151,7 +162,7 @@ Release highlights:
 
 * Added support for loading spectral response function data sets from custom
   paths ({ghpr}`270`).
-* ⚠️ Complete rewrite of the {class}`.MultiDistantMeasure` construction code
+* ⚠ Complete rewrite of the {class}`.MultiDistantMeasure` construction code
   ({ghpr}`274`, {ghpr}`281`). Previous functionality is preserved in the form of
   more specialized and simpler interfaces, and we now support a gridded coverage
   of the hemisphere specified as the Cartesian product of zenith and azimuth
@@ -174,7 +185,7 @@ Release highlights:
 * Added {class}`.MQDiffuseBSDF` reflection model ({ghpr}`286`).
 * Fixed a bug where the `bilambertian` BSDF plugin would produce incorrect
   results when used with LLVM Mitsuba variants ({ghpr}`297`).
-* ⚠️ Refactoring of the {class}`.Mode` infrastructure ({ghpr}`298`).
+* ⚠ Refactoring of the {class}`.Mode` infrastructure ({ghpr}`298`).
 * Added versions 1 and 2 and the full spectrum extension of the
   TSIS-1 HSRS solar irradiance spectra ({ghpr}`300`).
 * The `coddington_2021-1_nm` dataset is now the default solar irradiance
@@ -182,11 +193,11 @@ Release highlights:
 * Introduced the {class}`.DEMExperiment` to handle scenes with digital elevation
   models. At this point it only supports plane-parallel atmospheric geometries
   ({ghpr}`289`).
-* ⚠️ Rewrite of the kernel interface ({ghpr}`296`).
-* ⚠️ Updates to the scene type hierarchy ({ghpr}`296`).
-* ⚠️ All measures are now batch-computed at each iteration of the spectral loop
+* ⚠ Rewrite of the kernel interface ({ghpr}`296`).
+* ⚠ Updates to the scene type hierarchy ({ghpr}`296`).
+* ⚠ All measures are now batch-computed at each iteration of the spectral loop
   ({ghpr}`296`).
-* ⚠️ {class}`.Atmosphere` type hierarchy updates: altitude grid control, common
+* ⚠ {class}`.Atmosphere` type hierarchy updates: altitude grid control, common
   spectral evaluation interface ({ghpr}`296`).
 * {class}`.BlendPhaseFunction` code was transitioned from a recursive to an
   iterative loop-based implementation ({ghpr}`296`).
@@ -198,9 +209,9 @@ Release highlights:
   in Eradiate ({ghpr}`312`).
 * Added absorption and scattering bypass switches to the {class}`.ParticleLayer`
   class ({ghpr}`316`).
-* ⚠️ Moved Mitsuba logs to the `mitsuba` logger ({ghpr}`318`).
-* ⚠️ Centralized geometric information to `SceneGeometry` ({ghpr}`319`).
-* ⚠️ Made {class}`Atmosphere`'s `_params_*` properties abstract for improved
+* ⚠ Moved Mitsuba logs to the `mitsuba` logger ({ghpr}`318`).
+* ⚠ Centralized geometric information to `SceneGeometry` ({ghpr}`319`).
+* ⚠ Made {class}`Atmosphere`'s `_params_*` properties abstract for improved
   safety ({ghpr}`319`).
 * Fixed a major issue in volume definitions and parameter updates of
   {class}`BlendPhaseFunction` ({ghpr}`319`).
