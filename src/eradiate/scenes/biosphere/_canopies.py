@@ -32,6 +32,14 @@ def wellington_citrus_orchard(
         A dictionary suitable for keyword argument specification for the
         :class:`.CanopyExperiment` and :class:`CanopyAtmosphereExperiment`
         constructors. It contains the surface and canopy specifications.
+
+    Warnings
+    --------
+    * This is an experimental feature, please use with caution and report issues.
+    * The underlying data is sourced from the scene file archived distributed by
+      the DART team and post-processed to accommodate Eradiate-specific frame
+      conventions and formats. We do not recommend using it to run RAMI
+      benchmark cases.
     """
     spectrum_table = pd.read_csv(
         data.data_store.fetch("trees/citrus_sinensis/spectral.txt"),
