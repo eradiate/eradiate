@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 @parse_docs
 @attrs.define
 class ApplySpectralResponseFunction(PipelineStep):
-    """
+    r"""
     Apply spectral response function to specified variables.
 
     This post-processing pipeline step applies the spectral response function
@@ -32,6 +32,31 @@ class ApplySpectralResponseFunction(PipelineStep):
     The processed dataset is expected to have a ``bin`` coordinate, associated
     with bounds ``bin_wmin`` and ``bin_wmax``. If not, :meth:`transform` will
     raise an exception.
+
+    A common nomenclature practice refers to this process as "convolution"
+    :cite:`Burggraaff2020BiasesIncorrectReflectance`,
+    but we prefer to avoid this term as we consider it to refer to
+    another mathematical operation defined by:
+
+    .. math::
+
+        (f \ast g) \, (t) := \int_{-\infty}^{+\infty} f(\tau) \, g(t - \tau) \, d\tau
+
+    Instead, we adopt the term "spectral response weighted average" since the
+    operation is defined by:
+
+    .. math::
+
+        \overline{x} = \frac{\int x(\lambda) \, w(\lambda) \, d\lambda}
+                    {\int w(\lambda) \, d\lambda}
+
+    where
+
+    * :math:`x` is the variable to be weighted,
+    * :math:`w` is the spectral response function,
+
+    and which effectively translates into a weighted average in numerical form,
+    with the weights being the spectral response function values.
     """
 
     measure: Measure = documented(
