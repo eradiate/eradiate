@@ -59,6 +59,8 @@ Emoji marks have the following meaning:
   wrapper would miss a data point on the azimuth dimension ({ghpr}`353`).
 * Fixed a bug where an incorrect flag field init type would raise a `TypeError`
   on Python 3.11 ({ghpr}`358`).
+* Fixed a bug where the init context could fall out of the range covered by the
+  loaded spectral dataset ({ghpr}`360`).
 
 ## v0.23.2 (8th July 2023)
 

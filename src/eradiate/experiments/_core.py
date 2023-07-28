@@ -380,10 +380,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
     @property
     def context_init(self) -> KernelContext:
-        return KernelContext(
-            si=SpectralIndex.new(),
-            kwargs=self._context_kwargs,
-        )
+        return KernelContext(si=self.contexts[0].si, kwargs=self._context_kwargs)
 
     @property
     def contexts(self) -> list[KernelContext]:
