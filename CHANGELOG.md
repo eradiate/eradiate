@@ -283,7 +283,7 @@ Release highlights:
 * Allow mixing a purely absorbing `MolecularAtmosphere` with a `ParticleLayer`
   ({ghpr}`239`).
 * Change the `ExponentialParticleDistribution` formulation to rate-based; allow
-  scale-based parametrization for initialisation ({ghpr}`271`).
+  scale-based parametrization for initialization ({ghpr}`271`).
 * Fixed missing parameters in the `LeafCloud.sphere()` constructor
   ({ghpr}`272`).
 * Add spectral response function filtering utility ({ghpr}`269`).
@@ -341,7 +341,7 @@ Release highlights:
 * Various fixes to the `rpv` plugin, among which a missing PDF term in the
   `sample()` method ({ghpr}`240`).
 * Fix incorrect spectral indexing of result datasets in CKD mode ({ghpr}`241`).
-* Improve the Solar irradiance spectrum initialisation sequence ({ghpr}`242`).
+* Improve the Solar irradiance spectrum initialization sequence ({ghpr}`242`).
 * The `thuillier_2003_extrapolated` dataset is now the default Solar irradiance
   spectrum ({ghpr}`242`).
 
