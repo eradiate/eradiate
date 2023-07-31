@@ -19,19 +19,12 @@ class RTLSBSDF(BSDF):
     """
     RTLS BSDF [``rtls``].
 
-
+    This class implements the RossThick-LiSparse (RTLS) BRDF as described
+    by the MODIS BRDF/Albedo Product ATBD :cite:`BU-MODISBRDFAlbedoProductATBD1999`.
 
     See Also
     --------
     :ref:`plugin-bsdf-rtls`
-
-    Implements the Ross-Thick, Li-Sparse (RTLS) BRDF
-    :cite:`BU-MODISBRDFAlbedoProductATBD1999`.
-
-    The RTLS class exposes the 3 parameters :math:`f_{iso}`, :math:`f_{vol}` and
-    :math:`f_{geo}` configuring the linear combination the wreights of the
-    isometric, volumetric and geometric kernel values in the BSDF definition
-    respectively.
     """
 
     f_iso: Spectrum = documented(
@@ -44,7 +37,7 @@ class RTLSBSDF(BSDF):
             ],
         ),
         doc="Isotropic scattering kernel parameter. "
-        r"Defaults to the Mitsuba plugin default (equal to :math:`f_{iso}`).",
+        r"Defaults to :math:`f_{iso} = 0.209741`.",
         type=".Spectrum",
         init_type=".Spectrum or dict or float, optional",
         default="0.209741",
@@ -60,8 +53,7 @@ class RTLSBSDF(BSDF):
             ],
         ),
         doc="Volumetric scattering from horizontally homogeneous leaf canopies "
-        r"kernel parameter. Defaults to the Mitsuba plugin default "
-        r"(equal to :math:`f_{vol}`).",
+        r"kernel parameter. Defaults to :math:`f_{vol} = 0.004140`.",
         type=".Spectrum",
         init_type=".Spectrum or dict or float, optional",
         default="0.004140",
@@ -81,7 +73,7 @@ class RTLSBSDF(BSDF):
             ),
         ),
         doc="Geometric-optical surface scattering kernel parameter. "
-        r"Defaults to the Mitsuba plugin default (equal to :math:`f_{geo}`).",
+        r"Defaults to :math:`f_{geo} = 0.081384`.",
         type="float",
         init_type="float, optional",
         default="0.081384",
