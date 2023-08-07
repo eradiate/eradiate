@@ -1,5 +1,4 @@
 from importlib.metadata import PackageNotFoundError, version
-from unittest.mock import Mock
 
 # Internal constants
 _EXPECTED_MITSUBA_VERSION = "3.2.1"

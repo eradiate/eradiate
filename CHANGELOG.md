@@ -34,7 +34,14 @@ Emoji marks have the following meaning:
 % ### Fixed
 %
 
-## v0.24.0 (upcoming release)
+## v0.24.0 (7th August 2023)
+
+Release highlights:
+
+* This is mainly a fix release. Thanks to our users for raising issues!
+* An experimental interface to mesh-based preset canopies is added. The
+  currently distributed data is limited to the Wellington Citrus Orchard scene;
+  it will be expanded in the coming releases.
 
 % ### Deprecated
 
