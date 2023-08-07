@@ -24,3 +24,4 @@ Utility containers
    WavelengthSet
    Bin
    BinSet
+   QuadratureSpecifications

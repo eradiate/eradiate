@@ -15,7 +15,7 @@ import xarray as xr
 from .index import CKDSpectralIndex
 from ..attrs import documented, parse_docs
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
-from ..quad import Quad
+from ..quad import Quad, QuadType
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -118,88 +118,152 @@ class Bin:
 @parse_docs
 @attrs.define
 class QuadratureSpecifications:
-    """
+    r"""
     Quadrature rule specifications.
+
+    Notes
+    -----
+
+    .. list-table:: Quadrature specifications types
+       :widths: 30 30 30
+       :header-rows: 1
+
+       * - ``type``
+         - Description
+         - Parameters
+       * - ``"fixed"``
+         - Use a fixed number of quadrature points.
+         - ``n`` (``int``): number of quadrature points,
+           ``type`` (``str``): quadrature type (default: ``"gauss_legendre"``)
+       * - ``"minimize_error"``
+         - Find the number of quadrature points that minimizes the error on the
+           atmospheric transmittance.
+         - ``nmax`` (``int``): upper bound on the number of quadrature points
+       * - ``"error_below_threshold"``
+         - Find the number of quadrature points so that the error on the
+           atmospheric transmittance is below a specified threshold.
+         - ``threshold`` (``float``): error threshold value,
+           ``nmax`` (``int``): upper bound on the number of quadrature points.
     """
 
-    type: str = attrs.field(
+    type: str = documented(
+        attrs.field(
+            default="fixed",
+            converter=str,
+            validator=attrs.validators.in_(
+                {"fixed", "minimize_error", "error_below_threshold"}
+            ),
+        ),
+        doc="Algorithm to determine the number of quadrature points."
+        'Must be in {"fixed", "minimize_error", "error_below_threshold"}.'
+        "Each algorithm takes additional parameters (see ``params``).",
         default="fixed",
-        converter=str,
-        validator=attrs.validators.in_({"fixed", "minimum", "threshold"}),
+        type="str",
+        init_type="str",
     )
 
-    params: dict = attrs.field(
-        default={"type": "gauss_legendre", "n": 1},
-        converter=dict,
-        validator=attrs.validators.instance_of(dict),
+    params: dict = documented(
+        attrs.field(
+            default={"type": "gauss_legendre", "n": 1},
+            converter=dict,
+            validator=attrs.validators.instance_of(dict),
+        ),
+        doc="Parameters to the algorithm used to determine the number of "
+        "quadrature points."
+        "Refer to the notes section for the parameters corresponding to "
+        "each algorithm.",
+        default="{'type': 'gauss_legendre', 'n': 1}",
+        type="dict",
+        init_type="dict",
     )
 
     @type.validator
     @params.validator
     def _params_validator(self, attribute, value):
         # if type is "fixed", params must be a dict with keys "type" and "n"
-        # where type is a str and n an int
-        # elif type is "minimum", params must be a dict with key "maximum"
-        # where maximum is an int
-        # elif type is "threshold", params must be a dict with keys "threshold"
-        # and "maximum" where threshold is a float and maximum is an int
+        # where 'type' is a str and 'n' an int
+        # elif type is "minimize_error", params must be a dict with key "nmax"
+        # where 'nmax' is an int
+        # elif type is "threshold", params must be a dict with keys 'threshold'
+        # and 'nmax' where 'threshold' is a float and 'nmax' is an int
 
         if self.type == "fixed":
             if self.params.keys() != {"type", "n"}:
                 raise ValueError(
                     f"while validating {attribute.name}: "
-                    "params must be a dict with keys 'type' and 'n'"
+                    f"params must be a dict with keys 'type' and 'n'"
+                    f"(got {list(self.params.keys())})"
                 )
             if not isinstance(self.params["type"], str):
                 raise ValueError(
                     f"while validating {attribute.name}: "
-                    "params['type'] must be a str"
+                    f"params['type'] must be a str"
+                    f"(got {type(self.params['type'])})"
+                )
+            if not self.params["type"] in [x.value for x in QuadType]:
+                raise ValueError(
+                    f"while validating {attribute.name}: "
+                    f"params['type'] must be in {[x.value for x in QuadType]} "
+                    f"(got {self.params['type']})"
                 )
             if not isinstance(self.params["n"], int):
                 raise ValueError(
-                    f"while validating {attribute.name}: params['n'] must be an int"
+                    f"while validating {attribute.name}: "
+                    f"params['n'] must be an int"
+                    f"(got {type(self.params['n'])})"
                 )
 
-        elif self.type == "minimum":
-            if self.params.keys() != {"maximum"}:
+        elif self.type == "minimize_error":
+            if self.params.keys() != {"nmax"}:
                 raise ValueError(
                     f"while validating {attribute.name}: "
-                    "params must be a dict with key 'maximum'"
+                    f"params must be a dict with key 'nmax' "
+                    f"(got {list(self.params.keys())})"
                 )
-            if not isinstance(self.params["maximum"], int):
+            if not isinstance(self.params["nmax"], int):
                 raise ValueError(
                     f"while validating {attribute.name}: "
-                    "params['maximum'] must be an int"
+                    f"params['nmax'] must be an int"
+                    f"(got {type(self.params['nmax'])})"
                 )
 
-        elif self.type == "threshold":
-            if self.params.keys() != {"threshold", "maximum"}:
+        elif self.type == "error_below_threshold":
+            if self.params.keys() != {"threshold", "nmax"}:
                 raise ValueError(
                     f"while validating {attribute.name}: "
-                    "params must be a dict with keys 'threshold' and 'maximum'"
+                    f"params must be a dict with keys 'threshold' and 'nmax'"
+                    f"(got {list(self.params.keys())})"
                 )
             if not isinstance(self.params["threshold"], float):
                 raise ValueError(
                     f"while validating {attribute.name}: "
-                    "params['threshold'] must be a float"
+                    f"params['threshold'] must be a float"
+                    f"(got {type(self.params['threshold'])})"
                 )
-            if not isinstance(self.params["maximum"], int):
+            if not isinstance(self.params["nmax"], int):
                 raise ValueError(
                     f"while validating {attribute.name}: "
-                    "params['maximum'] must be an int"
+                    "params['nmax'] must be an int"
+                    f"(got {type(self.params['nmax'])})"
                 )
 
     @classmethod
-    def convert(cls, spec: QuadratureSpecifications | dict) -> QuadratureSpecifications:
-        if isinstance(spec, dict):
-            return cls.from_dict(spec)
-        elif isinstance(spec, QuadratureSpecifications):
-            return spec
+    def convert(
+        cls, value: QuadratureSpecifications | dict
+    ) -> QuadratureSpecifications:
+        if isinstance(value, dict):
+            return cls.from_dict(value)
+        elif isinstance(value, QuadratureSpecifications):
+            return value
         else:
             raise TypeError(
-                f"Unsupported type {type(spec)}; "
+                f"Unsupported type {type(value)}; "
                 f"expected dict or QuadratureSpecifications"
             )
+
+    @classmethod
+    def from_dict(cls, value: dict) -> QuadratureSpecifications:
+        return cls(**value)
 
     def make_quad(self, dataset: xr.Dataset) -> Quad:
         """
@@ -208,19 +272,22 @@ class QuadratureSpecifications:
         if self.type == "fixed":
             return Quad.new(**self.params)
 
-        elif self.type == "minimum":
-            n = ng_minimum(error=dataset.error, ng_max=self.params.get("maximum", None))
+        elif self.type == "minimize_error":
+            n = ng_minimum(
+                error=dataset.error,
+                ng_max=self.params.get("nmax", None),
+            )
             quad_type = dataset.ng.attrs.get(
                 "quadrature_type",
                 "gauss_legendre",
             )
             return Quad.new(type=quad_type, n=n)
 
-        elif self.type == "threshold":
+        elif self.type == "error_below_threshold":
             n = ng_threshold(
                 error=dataset.error,
                 threshold=self.params["threshold"],
-                ng_max=self.params.get("maximum", None),
+                ng_max=self.params.get("nmax", None),
             )
             quad_type = dataset.ng.attrs.get(
                 "quadrature_type",
@@ -233,11 +300,29 @@ class QuadratureSpecifications:
 
 
 def ng_minimum(error: xr.DataArray, ng_max: int | None = None):
+    """
+    Find the number of quadrature points that minimizes the error.
+
+    Parameters
+    ----------
+    error : DataArray
+        Error data.
+
+    ng_max : int, optional
+        Maximum number of quadrature points. If not provided, it will be
+        inferred from the error data.
+
+    Returns
+    -------
+    int
+        Number of quadrature points that minimizes the error.
+    """
 
     if ng_max is None:
         ng_max = int(error.ng.max())
 
-    ng_min = int(error.ng.where(error == error.min(), drop=True)[0])
+    error_w0 = error.isel(w=0)
+    ng_min = int(error.ng.where(error_w0 == error_w0.min(), drop=True)[0])
     return ng_max if ng_min > ng_max else ng_min
 
 
@@ -246,11 +331,33 @@ def ng_threshold(
     threshold: float,
     ng_max: int | None = None,
 ):
+    """
+    Find the number of quadrature points so that the error is (strictly) below
+    a specified threshold value.
+
+    Parameters
+    ----------
+    error : DataArray
+        Error data.
+
+    threshold : float
+        Error threshold.
+
+    ng_max : int, optional
+        Maximum number of quadrature points. If not provided, it will be
+        inferred from the error data.
+
+    Returns
+    -------
+    int
+        Number of quadrature points so that the error is below the threshold.
+    """
 
     if ng_max is None:
         ng_max = int(error.ng.max())
 
-    ng = error.ng.where(error < threshold, drop=True)
+    error_w0 = error.isel(w=0)
+    ng = error.ng.where(error_w0 < threshold, drop=True)
 
     if ng.size == 0:
         return ng_max
@@ -310,7 +417,7 @@ class BinSet:
 
         quad : .Quad, optional
             Quadrature rule (same for all bins in the set). Defaults to
-            a two-point Gauss-Legendre quadrature.
+            a one-point Gauss-Legendre quadrature.
 
         Returns
         -------

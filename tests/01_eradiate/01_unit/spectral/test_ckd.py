@@ -238,7 +238,7 @@ def test_quadrature_specifications():
     """
     quad_spec = QuadratureSpecifications(
         type="fixed",
-        params={"n": 8, "type": "gauss_lobato"},
+        params={"n": 8, "type": "gauss_lobatto"},
     )
     assert quad_spec.type == "fixed"
 
@@ -246,3 +246,34 @@ def test_quadrature_specifications():
         quad_spec = QuadratureSpecifications(
             type="invalid",
         )
+
+
+def test_quadrature_specifications():
+    """Default constructor builds QuadratureSpecifications object."""
+    q = QuadratureSpecifications(type="fixed", params={"n": 8, "type": "gauss_lobatto"})
+    assert isinstance(q, QuadratureSpecifications)
+
+
+@pytest.mark.parametrize(
+    "d",
+    [
+        {"type": "fixed", "params": {"n": 8, "type": "gauss_lobatto"}},
+        {
+            "type": "minimize_error",
+            "params": {
+                "nmax": 16,
+            },
+        },
+        {
+            "type": "error_below_threshold",
+            "params": {
+                "threshold": 1e-2,
+                "nmax": 16,
+            },
+        },
+    ],
+)
+def test_quadrature_specifications_from_dict(d):
+    """Valid dictionaries are converted to QuadratureSpecifications objects."""
+    q = QuadratureSpecifications.from_dict(d)
+    assert isinstance(q, QuadratureSpecifications)
