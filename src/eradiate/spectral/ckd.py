@@ -269,7 +269,7 @@ class QuadratureSpecifications:
         elif self.type == "minimize_error":
             n = ng_minimum(
                 error=dataset.error,
-                ng_max=self.params.get("maximum", None),
+                ng_max=self.params.get("nmax", None),
             )
             quad_type = dataset.ng.attrs.get(
                 "quadrature_type",
@@ -281,7 +281,7 @@ class QuadratureSpecifications:
             n = ng_threshold(
                 error=dataset.error,
                 threshold=self.params["threshold"],
-                ng_max=self.params.get("maximum", None),
+                ng_max=self.params.get("nmax", None),
             )
             quad_type = dataset.ng.attrs.get(
                 "quadrature_type",
