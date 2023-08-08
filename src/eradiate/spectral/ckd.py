@@ -315,7 +315,8 @@ def ng_minimum(error: xr.DataArray, ng_max: int | None = None):
     if ng_max is None:
         ng_max = int(error.ng.max())
 
-    ng_min = int(error.ng.where(error == error.min(), drop=True)[0])
+    error_w0 = error.isel(w=0)
+    ng_min = int(error.ng.where(error_w0 == error_w0.min(), drop=True)[0])
     return ng_max if ng_min > ng_max else ng_min
 
 
@@ -349,7 +350,8 @@ def ng_threshold(
     if ng_max is None:
         ng_max = int(error.ng.max())
 
-    ng = error.ng.where(error < threshold, drop=True)
+    error_w0 = error.isel(w=0)
+    ng = error.ng.where(error_w0 < threshold, drop=True)
 
     if ng.size == 0:
         return ng_max
