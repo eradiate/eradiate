@@ -115,3 +115,7 @@ CKD datasets
      - [250, 3125] nm
      - 1 nm
      - ``spectra/absorption/ckd/panellus/``
+   * - ``mycena``
+     - [250, 3120] nm
+     - 10 nm
+     - ``spectra/absorption/ckd/mycena/``
