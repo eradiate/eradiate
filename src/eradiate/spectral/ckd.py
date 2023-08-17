@@ -15,7 +15,7 @@ import xarray as xr
 from .index import CKDSpectralIndex
 from ..attrs import documented, parse_docs
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
-from ..quad import Quad
+from ..quad import Quad, QuadType
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -199,6 +199,12 @@ class QuadratureSpecifications:
                     f"while validating {attribute.name}: "
                     f"params['type'] must be a str"
                     f"(got {type(self.params['type'])})"
+                )
+            if not self.params["type"] in [x.value for x in QuadType]:
+                raise ValueError(
+                    f"while validating {attribute.name}: "
+                    f"params['type'] must be in {[x.value for x in QuadType]} "
+                    f"(got {self.params['type']})"
                 )
             if not isinstance(self.params["n"], int):
                 raise ValueError(
