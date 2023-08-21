@@ -165,13 +165,14 @@ class GatherCKD(PipelineStep):
         bins = self.binset.bins
         # sort bins by wavelength
         bins = sorted(bins, key=lambda b: b.wcenter)
+        items = list(x.items())
 
         for i, _bin in enumerate(bins):  # bin (w) loop
             ng = _bin.quad.weights.size
             _datasets = []
 
             for _ in range(ng):  # g loop
-                item = list(x.items())[ix]
+                item = items[ix]
                 siah, result_dict = item
                 w, g = siah  # wavelength, quantile pair
                 bitmap = result_dict["bitmap"]
