@@ -8,6 +8,8 @@ import numpy as np
 import pint
 import xarray as xr
 
+import eradiate
+
 from ..core import (
     CompositeSceneElement,
     SceneElement,
@@ -18,12 +20,15 @@ from ..phase import PhaseFunction
 from ..shapes import Shape
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
+from ...cfconventions import ATTRIBUTES
 from ...contexts import KernelContext
+from ...exceptions import UnsupportedModeError
 from ...kernel import (
     InitParameter,
     TypeIdLookupStrategy,
     UpdateParameter,
 )
+from ...quad import Quad
 from ...radprops import ZGrid
 from ...spectral.ckd import BinSet
 from ...spectral.index import SpectralIndex
@@ -580,6 +585,150 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         """
 
         pass
+
+    def eval_transmittance(
+        self,
+        si: SpectralIndex,
+        interaction: str = "extinction",
+    ) -> pint.Quantity:
+        """
+        Evaluate the atmosphere's transmittance with respect to specific
+        interaction.
+
+        Parameters
+        ----------
+        si : :class:`.SpectralIndex`
+            Spectral index.
+
+        interaction : str, optional, default: "extinction"
+            Interaction type. One of ``"extinction"``, ``"absorption"``,
+            ``"scattering"``.
+
+        Returns
+        -------
+        quantity
+            Total atmosphere transmittance.
+        """
+        eval_sigma = {
+            "extinction": self.eval_sigma_t,
+            "absorption": self.eval_sigma_a,
+            "scattering": self.eval_sigma_s,
+        }
+        try:
+            sigma = eval_sigma[interaction](si=si)
+        except KeyError:
+            raise ValueError(
+                f"invalid interaction type '{interaction}', "
+                f"supported: {list(eval_sigma.keys())}"
+            )
+        dz = np.diff(self.geometry.zgrid.levels)
+        tau = np.sum((sigma * dz).to("1"))
+        return np.exp(-tau)
+
+    def eval_transmittance_t(self, si: SpectralIndex) -> pint.Quantity:
+        return self.eval_transmittance(si=si, interaction="extinction")
+
+    def eval_transmittance_a(self, si: SpectralIndex) -> pint.Quantity:
+        return self.eval_transmittance(si=si, interaction="absorption")
+
+    def eval_transmittance_s(self, si: SpectralIndex) -> pint.Quantity:
+        return self.eval_transmittance(si=si, interaction="scattering")
+
+    def eval_transmittance_accross_spectral_set(
+        self,
+        interaction: str = "extinction",
+    ) -> xr.DataArray:
+        """
+        Evaluate the atmosphere's transmittance with respect to extinction
+        accross the spectral set emitted by the atmosphere.
+
+        Returns
+        -------
+        DataArray
+            Atmosphere's transmittance with respect to extinction tabulated
+            against the spectral coordinate.
+        """
+        if eradiate.mode().is_mono:
+            return self.eval_transmittance_accross_spectral_set_mono(
+                interaction=interaction,
+            )
+        elif eradiate.mode().is_ckd:
+            return self.eval_transmittance_accross_spectral_set_ckd(
+                interaction=interaction,
+            )
+        else:
+            raise UnsupportedModeError(supported=["mono", "ckd"])
+
+    def eval_transmittance_accross_spectral_set_mono(
+        self,
+        interaction: str = "extinction",
+    ) -> xr.DataArray:
+        w = self.spectral_set.wavelengths
+        wunits = symbol(ucc.get("wavelength"))
+        transmittance = np.full(w.size, np.nan)
+
+        for i, si in enumerate(self.spectral_set().spectral_indices()):
+            transmittance[i] = self.eval_transmittance(
+                si=si,
+                interaction=interaction,
+            )
+
+        return xr.DataArray(
+            transmittance,
+            dims=["w"],
+            coords={
+                "w": (
+                    "w",
+                    w.m_as(wunits),
+                    ATTRIBUTES["radiation_wavelength"],
+                )
+            },
+            attrs={"units": "1", "long_name": "transmittance"},
+        )
+
+    def eval_transmittance_accross_spectral_set_ckd(
+        self,
+        interaction: str = "extinction",
+    ) -> xr.DataArray:
+        # compute transmittance at each spectral index
+        transmittance = {}
+        for si in self.spectral_set().spectral_indices():
+            transmittance[si.as_hashable] = self.eval_transmittance(
+                si=si,
+                interaction=interaction,
+            )
+
+        # gather transmittance values that belong to the same CKD bin and
+        # compute the quadrature
+        t_values = np.stack(list(transmittance.values())).m_as("1")
+        i = 0
+
+        integrated = []
+        for _bin in self.spectral_set().bins:
+            ng = _bin.quad.weights.size  # number of quadrature g-points
+            integrated.append(
+                Quad.new("gauss_legendre", n=ng).integrate(
+                    t_values[i : i + ng],
+                    interval=[0, 1],  # range of g
+                )
+            )
+            i = i + ng
+
+        w = np.stack([bin.wcenter for bin in self.spectral_set().bins])
+        wunits = symbol(ucc.get("wavelength"))
+
+        return xr.DataArray(
+            integrated,
+            dims=["w"],
+            coords={
+                "w": (
+                    "w",
+                    w.m_as(wunits),
+                    ATTRIBUTES["radiation_wavelength"],
+                )
+            },
+            attrs={"units": "1", "long_name": "transmittance"},
+        )
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
