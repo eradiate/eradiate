@@ -134,16 +134,6 @@ class MonoSpectralIndex(SpectralIndex):
     """
     Monochromatic spectral index.
 
-    Parameters
-    ----------
-    wavelength : quantity
-        Wavelength.
-
-    Attributes
-    ----------
-    wavelength : quantity
-        Wavelength.
-
     See Also
     --------
     :class:`CKDSpectralIndex`
@@ -183,22 +173,6 @@ class MonoSpectralIndex(SpectralIndex):
 class CKDSpectralIndex(SpectralIndex):
     """
     CKD spectral index.
-
-    Parameters
-    ----------
-    w : quantity
-        Bin center wavelength.
-
-    g : float
-        g value.
-
-    Attributes
-    ----------
-    w : quantity
-        Bin center wavelength.
-
-    g : float
-        g value.
 
     See Also
     --------
