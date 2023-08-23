@@ -51,10 +51,10 @@ def deactivate_script():
     return dedent(f"""
         #!/bin/sh
         # Clean up PATH
-        match="${{ERADIATE_SOURCE_DIR}}/build/ext/mitsuba:"
+        match="${{ERADIATE_SOURCE_DIR}}/ext/mitsuba/build:"
         export PATH=${{PATH//$match/}}
         # Clean up PYTHONPATH
-        match="${{ERADIATE_SOURCE_DIR}}/build/ext/mitsuba/python:"
+        match="${{ERADIATE_SOURCE_DIR}}/ext/mitsuba/build/python:"
         export PYTHONPATH="${{PYTHONPATH//$match/}}"
         # Remove other environment variables
         unset ERADIATE_SOURCE_DIR
