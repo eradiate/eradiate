@@ -152,10 +152,10 @@ class MonoSpectralIndex(SpectralIndex):
     w: pint.Quantity = documented(
         pinttr.field(
             default=550.0 * ureg.nm,
-            units=ucc.deferred("length"),
+            units=ucc.deferred("wavelength"),
             on_setattr=None,
         ),
-        doc="Wavelength.\n\nUnit-enabled field (default: ucc[length]).",
+        doc="Wavelength.\n\nUnit-enabled field (default: ucc[wavelength]).",
         type="quantity",
         init_type="quantity or float",
         default="550.0 nm",
@@ -208,10 +208,10 @@ class CKDSpectralIndex(SpectralIndex):
     w: pint.Quantity = documented(
         pinttr.field(
             default=550.0 * ureg.nm,
-            units=ucc.deferred("length"),
+            units=ucc.deferred("wavelength"),
             on_setattr=None,
         ),
-        doc="Bin center wavelength.\n\nUnit-enabled field (default: ucc[length]).",
+        doc="Bin center wavelength.\n\nUnit-enabled field (default: ucc[wavelength]).",
         type="quantity",
         init_type="quantity or float",
         default="550.0 nm",
