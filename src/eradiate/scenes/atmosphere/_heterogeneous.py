@@ -318,7 +318,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         result = {}
 
         for uparam_key, uparam in umap.items():
-            result[f"phase_function.{uparam_key}"] = attrs.evolve(
+            result[uparam_key] = attrs.evolve(
                 uparam,
                 lookup_strategy=TypeIdLookupStrategy(
                     node_type=mi.Medium,
