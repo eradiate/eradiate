@@ -447,6 +447,45 @@ class BinSet:
         return cls(bins)
 
     @classmethod
+    def from_srf(
+        cls,
+        srf: xr.Dataset,
+        step: pint.Quantity = 10.0 * ureg.nm,
+        quad: Quad | None = None,
+    ) -> BinSet:
+        """
+        Generate a bin set with linearly spaced bins, that covers the spectral
+        range of a spectral response function.
+
+        Parameters
+        ----------
+        srf: Dataset
+            Spectral response function dataset.
+
+        step : quantity
+            Wavelength step.
+
+        quad : .Quad, optional
+            Quadrature rule (same for all bins in the set). Defaults to
+            a one-point Gauss-Legendre quadrature.
+
+        Returns
+        -------
+        :class:`.BinSet`
+            Generated bin set.
+        """
+        wavelengths = to_quantity(srf.w)
+        wmin = wavelengths.min()
+        wmax = wavelengths.max()
+
+        return cls.arange(
+            start=wmin - step,
+            stop=wmax + step,
+            step=step,
+            quad=quad,
+        )
+
+    @classmethod
     def from_wavelength_bounds(
         cls,
         wmin: pint.Quantity,
