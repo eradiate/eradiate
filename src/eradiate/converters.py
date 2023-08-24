@@ -25,6 +25,7 @@ from .data._util import locate_absorption_data
 from .exceptions import UnsupportedModeError
 from .radprops.absorption import wrange
 from .typing import PathLike
+from .units import to_quantity
 
 
 def on_quantity(
@@ -215,6 +216,12 @@ def convert_absorption_data(value) -> dict[P.Interval, xr.Dataset]:
     elif isinstance(value, tuple):
         codename = value[0]
         wavelength_range = value[1]
+
+        if isinstance(wavelength_range, xr.Dataset):
+            srf = wavelength_range
+            w = to_quantity(srf.w)
+            wavelength_range = w[:: w.size - 1]
+
         if eradiate.mode().is_mono:
             mode = "mono"
         elif eradiate.mode().is_ckd:
