@@ -94,7 +94,13 @@ class Atmosphere(CompositeSceneElement, ABC):
             converter=SceneGeometry.convert,
             validator=attrs.validators.instance_of(SceneGeometry),
         ),
-        doc="Parameters defining the basic geometry of the scene.",
+        doc="Parameters defining the basic geometry of the scene."
+        "Note if the atmosphere is used in a simulation, the experiment has "
+        "all control over the atmosphere's geometry and is going to set it. "
+        "Therefore, in such a case it is best to define the geometry at the "
+        "experiment level. When the atmosphere is used standalone, care must "
+        "be taken to ensure that the geometry is consistent with the vertical "
+        "extent of the atmosphere.",
         type=".SceneGeometry",
         init_type=".SceneGeometry or dict or str, optional",
         default='"plane_parallel"',

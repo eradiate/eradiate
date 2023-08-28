@@ -142,12 +142,6 @@ class SceneGeometry(ABC):
 
         return value
 
-    def update_with_thermoprops(self, thermoprops: xr.Dataset):
-        z = to_quantity(thermoprops.z)
-        self.toa_altitude = z[-1]
-        self.ground_altitude = z[0]
-        self.zgrid = ZGrid(z)
-
     @property
     @abstractmethod
     def atmosphere_shape(self) -> Shape:

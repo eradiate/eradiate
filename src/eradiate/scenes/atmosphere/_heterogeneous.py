@@ -23,6 +23,7 @@ from ...radprops import ZGrid
 from ...spectral.ckd import BinSet, QuadratureSpecifications
 from ...spectral.index import SpectralIndex
 from ...spectral.mono import WavelengthSet
+from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
@@ -146,14 +147,19 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     def update(self):
         # Inherit docstring
-
         if not self.components:
             raise ValueError("HeterogeneousAtmosphere must have at least one component")
 
         # Force component IDs and geometry
         for i, component in enumerate(self.components):
-            component.update()
+            component.update()  # TODO: check if this is necessary
             component.id = f"{self.id}_component_{i}"
+            logger.debug(
+                "Override the geometry of component '%s' to %s (was %s)",
+                component.id,
+                self.geometry,
+                component.geometry,
+            )
             component.geometry = self.geometry
 
     # --------------------------------------------------------------------------

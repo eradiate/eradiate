@@ -62,6 +62,11 @@ def test_molecular_atmosphere_kernel_dict(mode_ckd, error_handler_config):
             ]
         ],
         error_handler_config=error_handler_config,
+        geometry={
+            "type": "spherical_shell",
+            "ground_altitude": 0 * ureg.km,
+            "toa_altitude": 80 * ureg.km,
+        },
     )
 
     sig = atmosphere.spectral_set().spectral_indices()

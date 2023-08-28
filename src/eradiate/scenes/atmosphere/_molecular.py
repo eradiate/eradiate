@@ -236,8 +236,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             error_handler_config=self.error_handler_config,
         )
 
-        self.geometry.update_with_thermoprops(self.thermoprops)
-
     def spectral_set(
         self, quad_spec: QuadratureSpecifications = QuadratureSpecifications()
     ) -> None | BinSet | WavelengthSet:
