@@ -34,7 +34,7 @@ Emoji marks have the following meaning:
 % ### Fixed
 %
 
-## v0.25.0 (upcoming release)
+## v0.24.1 (upcoming release)
 
 % ### Deprecated
 
@@ -44,7 +44,7 @@ Emoji marks have the following meaning:
 
 % ### Changed
 
-% ### Fixed
+### Fixed
 
 * Set default units of the `*SpectralIndex.w` field to `ucc['wavelength']`
   ({ghpr}`362`).

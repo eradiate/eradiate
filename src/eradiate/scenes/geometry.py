@@ -27,10 +27,10 @@ class SceneGeometry(ABC):
 
     Warnings
     --------
-     If a ``zgrid`` value is passed to the constructor (instead of letting
-     the constructor set it automatically), its extent must be
-     [``ground_altitude``, ``toa_altitude``]. The constructor will raise
-     a :class:`ValueError` otherwise.
+    If a ``zgrid`` value is passed to the constructor (instead of letting
+    the constructor set it automatically), its extent must be
+    [``ground_altitude``, ``toa_altitude``]. The constructor will raise
+    a :class:`ValueError` otherwise.
     """
 
     toa_altitude: pint.Quantity = documented(
