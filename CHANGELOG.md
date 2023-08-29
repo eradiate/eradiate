@@ -49,6 +49,8 @@ Emoji marks have the following meaning:
 * Set default units of the `*SpectralIndex.w` field to `ucc['wavelength']`
   ({ghpr}`362`).
 
+---
+
 ## v0.24.0 (7th August 2023)
 
 Release highlights:
@@ -84,6 +86,8 @@ Release highlights:
 * Fixed a bug where the init context could fall out of the range covered by the
   loaded spectral dataset ({ghpr}`360`).
 * Fixed pinned dependency versions for the PyPI wheel ({ghpr}`364`).
+
+---
 
 ## v0.23.2 (8th July 2023)
 
@@ -164,6 +168,8 @@ Release highlights:
   spectral set ({ghpr}`311`).
 * Rewrote the CLI using the Typer framework ({ghpr}`326`).
 * Refactored {class}`.Layout` constructor code ({ghpr}`345`).
+
+---
 
 ## v0.23.1 (21 April 2023)
 
@@ -266,6 +272,8 @@ Release highlights:
 * Add {func}`.cache_by_id` to replace `@functools.lru_cache(maxsize=1)` when
   appropriate ({ghpr}`315`).
 * Clarify particle layer optical thickness computation ({ghpr}`321`).
+
+---
 
 ## v0.22.5 (17 October 2022)
 
