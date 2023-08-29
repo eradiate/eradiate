@@ -1,4 +1,4 @@
--c dev.txt
+-c dev.lock.txt
 aenum
 attrs>=22.2
 click

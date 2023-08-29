@@ -1,4 +1,4 @@
 -r main.in
--c dev.txt
+-c dev.lock.txt
 pytest
 pytest-json-report
