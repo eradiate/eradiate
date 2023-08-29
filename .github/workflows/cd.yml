@@ -28,7 +28,9 @@ jobs:
         python-version: '3.8'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip Click ruamel.yaml
+        mkdir -p build
+        python requirements/make_pip_txt_files.py --quiet
         pip install build
     - name: Build package
       run: python -m build
