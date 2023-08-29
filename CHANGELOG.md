@@ -83,6 +83,7 @@ Release highlights:
   on Python 3.11 ({ghpr}`358`).
 * Fixed a bug where the init context could fall out of the range covered by the
   loaded spectral dataset ({ghpr}`360`).
+* Fixed pinned dependency versions for the PyPI wheel ({ghpr}`364`).
 
 ## v0.23.2 (8th July 2023)
 

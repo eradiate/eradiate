@@ -26,17 +26,20 @@ pip-update-tools:
 pip-update-in-files:
 	python3 requirements/make_pip_in_files.py --quiet
 
+
+# Update .in files
+pip-update-txt-files:
+	python3 requirements/make_pip_txt_files.py --quiet
+
 # Lock pip dependencies
 # Dev must be compiled first because it constrains the others
 # No hashes: doesn't play nicely with RTD when running pip-compile on macOS
 pip-compile: pip-update-in-files
-	rm requirements/pip/dev.txt
-	touch requirements/pip/dev.txt
 
 	@for LAYER in dev dependencies main recommended tests docs optional; do \
-		echo "Compiling requirements/pip/$${LAYER}.in to requirements/pip/$${LAYER}.txt"; \
+		echo "Compiling requirements/pip/$${LAYER}.in to requirements/pip/$${LAYER}.lock.txt"; \
 		pip-compile --upgrade --resolver=backtracking --build-isolation --allow-unsafe \
-			--output-file requirements/pip/$${LAYER}.txt \
+			--output-file requirements/pip/$${LAYER}.lock.txt \
 			requirements/pip/$${LAYER}.in; \
 	done
 
@@ -45,7 +48,7 @@ pip-lock: pip-update-tools pip-compile
 
 # Initialise development environment
 pip-init:
-	pip install --upgrade -r requirements/pip/dev.txt
+	pip install --upgrade -r requirements/pip/dev.lock.txt
 	pip install --editable . --no-deps
 
 pip-update: pip-lock pip-init

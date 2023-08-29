@@ -8,15 +8,15 @@ from ruamel.yaml import YAML
 @click.option(
     "-s",
     "--sections",
-    default="dependencies,main,recommended,tests,dev,docs,optional",
+    default="dependencies,recommended",
     help="Dependency sections to include in the produced environment.yml file. "
-    "Default: 'dependencies,main,recommended,tests,dev,docs,optional'",
+    "Default: 'dependencies,recommended'",
 )
 @click.option(
     "-o",
     "--output-dir",
-    default="./requirements/pip",
-    help="Path to output directory. Default: ./requirements/pip",
+    default="./build",
+    help="Path to output directory. Default: ./build",
 )
 @click.option(
     "-l",
@@ -41,20 +41,18 @@ def cli(sections, output_dir, layered_config, quiet):
             print(f"Processing section '{section}'")
 
         packages = layered_yml[section].get("packages", [])
+        includes = layered_yml[section].get("includes", [])
+        for include in includes:
+            packages += layered_yml[include].get("packages", [])
+        constraints = layered_yml[section].get("constraints", [])
+        for constraint in constraints:
+            packages += layered_yml[constraint].get("packages", [])
 
         if not quiet:
-            print(f"Writing to {os.path.join(output_dir, f'{section}.in')}")
+            print(f"Writing to {os.path.join(output_dir, f'{section}.txt')}")
 
-        # Create .in file
-        with open(os.path.join(output_dir, f"{section}.in"), "w") as f:
-            # Prepend layered requirement includes
-            includes = layered_yml[section].get("includes", [])
-            for include in includes:
-                f.write(f"-r {include}.in\n")
-
-            constraints = layered_yml[section].get("constraints", [])
-            for constraint in constraints:
-                f.write(f"-c {constraint}.lock.txt\n")
+        # Create .txt file
+        with open(os.path.join(output_dir, f"{section}.txt"), "w") as f:
 
             f.write("\n".join(packages))
             f.write("\n")
