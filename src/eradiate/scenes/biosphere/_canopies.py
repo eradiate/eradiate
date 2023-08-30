@@ -3,7 +3,8 @@ import typing as t
 import numpy as np
 import pandas as pd
 
-from . import InstancedCanopyElement, MeshTree
+from ._core import InstancedCanopyElement
+from ._tree import MeshTree
 from ..spectra import InterpolatedSpectrum
 from ... import data
 from ...units import unit_registry as ureg
