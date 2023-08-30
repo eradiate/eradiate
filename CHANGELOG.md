@@ -32,22 +32,22 @@ Emoji marks have the following meaning:
 % ### Changed
 %
 % ### Fixed
-%
 
-## v0.24.1 (upcoming release)
+## v0.24.2 (30th August 2023)
 
-% ### Deprecated
-
-% ### Removed
-
-% ### Added
-
-% ### Changed
+This is a fix release which solves non-critical issues.
 
 ### Fixed
 
 * Set default units of the `*SpectralIndex.w` field to `ucc['wavelength']`
   ({ghpr}`362`).
+* Fixed pinned dependency versions for the PyPI wheel ({ghpr}`364`).
+
+---
+
+## v0.24.1 (30th August 2023)
+
+*Yanked release.*
 
 ---
 
@@ -85,7 +85,6 @@ Release highlights:
   on Python 3.11 ({ghpr}`358`).
 * Fixed a bug where the init context could fall out of the range covered by the
   loaded spectral dataset ({ghpr}`360`).
-* Fixed pinned dependency versions for the PyPI wheel ({ghpr}`364`).
 
 ---
 
