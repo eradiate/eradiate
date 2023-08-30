@@ -108,6 +108,13 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
                 "spp": 1000,
             }
         ],
+        "quad_spec": {
+            "type": "fixed",
+            "params": {
+                "type": "gauss_legendre",
+                "n": 16,
+            },
+        },
     }
 
     exp = AtmosphereExperiment(**config)
