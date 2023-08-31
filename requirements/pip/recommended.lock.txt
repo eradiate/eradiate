@@ -6,7 +6,7 @@
 #
 aabbtree==2.8.1
     # via -r requirements/pip/recommended.in
-anyio==3.7.1
+anyio==4.0.0
     # via jupyter-server
 argon2-cffi==23.1.0
     # via jupyter-server
@@ -62,8 +62,6 @@ fonttools==4.42.1
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
-iapws==1.5.3
-    # via -r requirements/pip/recommended.in
 idna==3.4
     # via
     #   anyio
@@ -112,7 +110,7 @@ jsonschema[format-nongpl]==4.19.0
     #   nbformat
 jsonschema-specifications==2023.7.1
     # via jsonschema
-jupyter-client==8.3.0
+jupyter-client==8.3.1
     # via
     #   ipykernel
     #   jupyter-server
@@ -130,7 +128,7 @@ jupyter-events==0.7.0
     # via jupyter-server
 jupyter-lsp==2.2.0
     # via jupyterlab
-jupyter-server==2.7.2
+jupyter-server==2.7.3
     # via
     #   jupyter-lsp
     #   jupyterlab
@@ -162,7 +160,7 @@ mistune==3.0.1
     # via nbconvert
 nbclient==0.8.0
     # via nbconvert
-nbconvert==7.7.4
+nbconvert==7.8.0
     # via jupyter-server
 nbformat==5.9.2
     # via
@@ -180,7 +178,6 @@ numpy==1.24.4
     #   matplotlib
     #   pandas
     #   pyerfa
-    #   scipy
     #   seaborn
 overrides==7.4.0
     # via jupyter-server
@@ -272,8 +269,6 @@ rpds-py==0.10.0
     # via
     #   jsonschema
     #   referencing
-scipy==1.10.1
-    # via iapws
 seaborn==0.12.2
     # via -r requirements/pip/recommended.in
 send2trash==1.8.2

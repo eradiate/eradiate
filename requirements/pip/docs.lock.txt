@@ -22,6 +22,7 @@ attrs==23.1.0
     #   -r requirements/pip/main.in
     #   dessinemoi
     #   environ-config
+    #   joseki
     #   jsonschema
     #   pinttrs
     #   referencing
@@ -60,7 +61,9 @@ click==8.1.7
     # via
     #   -c requirements/pip/dev.lock.txt
     #   -r requirements/pip/main.in
+    #   joseki
     #   typer
+    #   ussa1976
 colorama==0.4.6
     # via
     #   -c requirements/pip/dev.lock.txt
@@ -120,6 +123,7 @@ importlib-metadata==6.8.0
 importlib-resources==6.0.1
     # via
     #   -c requirements/pip/dev.lock.txt
+    #   joseki
     #   jsonschema
     #   jsonschema-specifications
     #   matplotlib
@@ -130,6 +134,10 @@ jinja2==3.1.2
     #   nbconvert
     #   nbsphinx
     #   sphinx
+joseki==2.4.0
+    # via
+    #   -c requirements/pip/dev.lock.txt
+    #   -r requirements/pip/main.in
 jsonschema==4.19.0
     # via
     #   -c requirements/pip/dev.lock.txt
@@ -222,16 +230,20 @@ netcdf4==1.6.4
     # via
     #   -c requirements/pip/dev.lock.txt
     #   -r requirements/pip/main.in
+    #   joseki
+    #   ussa1976
 numpy==1.24.4
     # via
     #   -c requirements/pip/dev.lock.txt
     #   -r requirements/pip/main.in
     #   cftime
     #   contourpy
+    #   joseki
     #   matplotlib
     #   netcdf4
     #   pandas
     #   scipy
+    #   ussa1976
     #   xarray
 packaging==23.1
     # via
@@ -245,6 +257,7 @@ packaging==23.1
 pandas==2.0.3
     # via
     #   -c requirements/pip/dev.lock.txt
+    #   joseki
     #   xarray
 pandocfilters==1.5.0
     # via
@@ -258,6 +271,7 @@ pint==0.21.1
     # via
     #   -c requirements/pip/dev.lock.txt
     #   -r requirements/pip/main.in
+    #   joseki
     #   pinttrs
 pinttrs==23.2.0
     # via
@@ -356,6 +370,8 @@ scipy==1.10.1
     # via
     #   -c requirements/pip/dev.lock.txt
     #   -r requirements/pip/main.in
+    #   joseki
+    #   ussa1976
 shellingham==1.5.3
     # via
     #   -c requirements/pip/dev.lock.txt
@@ -477,6 +493,10 @@ urllib3==1.26.16
     # via
     #   -c requirements/pip/dev.lock.txt
     #   requests
+ussa1976==0.3.4
+    # via
+    #   -c requirements/pip/dev.lock.txt
+    #   joseki
 webencodings==0.5.1
     # via
     #   -c requirements/pip/dev.lock.txt
@@ -486,6 +506,8 @@ xarray==2023.1.0
     # via
     #   -c requirements/pip/dev.lock.txt
     #   -r requirements/pip/main.in
+    #   joseki
+    #   ussa1976
 zipp==3.16.2
     # via
     #   -c requirements/pip/dev.lock.txt
