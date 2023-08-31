@@ -30,7 +30,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip Click ruamel.yaml
         mkdir -p build
-        python requirements/make_pip_txt_files.py --quiet
+        python requirements/make_pip_txt_files.py --quiet -o requirements/pip
         pip install build
     - name: Build package
       run: python -m build

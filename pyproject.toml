@@ -60,10 +60,10 @@ relative-imports-order = "closest-to-furthest"
 include-package-data = true  # Required because of package data
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["build/dependencies.txt"]}
+dependencies = {file = ["requirements/pip/dependencies.txt"]}
 
 [tool.setuptools.dynamic.optional-dependencies]
-recommended = {file = ['build/recommended.txt']}
+recommended = {file = ['requirements/pip/recommended.txt']}
 
 [tool.setuptools.package-data]
 # Required by PEP 561
