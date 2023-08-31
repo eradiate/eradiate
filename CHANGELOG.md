@@ -33,7 +33,17 @@ Emoji marks have the following meaning:
 %
 % ### Fixed
 
-## v0.24.2 (30th August 2023)
+## v0.24.2 (31th August 2023)
+
+This fix release corrected some circular imports
+
+### Fixed
+
+* Circular imports
+
+---
+
+## v0.24.1 (30th August 2023)
 
 This is a fix release which solves non-critical issues.
 
@@ -42,12 +52,6 @@ This is a fix release which solves non-critical issues.
 * Set default units of the `*SpectralIndex.w` field to `ucc['wavelength']`
   ({ghpr}`362`).
 * Fixed pinned dependency versions for the PyPI wheel ({ghpr}`364`).
-
----
-
-## v0.24.1 (30th August 2023)
-
-*Yanked release.*
 
 ---
 
