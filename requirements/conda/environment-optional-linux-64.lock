@@ -186,7 +186,7 @@ https://conda.anaconda.org/conda-forge/noarch/wheel-0.41.2-pyhd8ed1ab_0.conda#1c
 https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.8-pyhd8ed1ab_0.conda#2e9ebddf0b93d0fb203d0906b8052c4f
 https://conda.anaconda.org/conda-forge/noarch/zipp-3.16.2-pyhd8ed1ab_0.conda#2da0451b54c4563c32490cb1b7cf68a1
 https://conda.anaconda.org/conda-forge/noarch/accessible-pygments-0.0.4-pyhd8ed1ab_0.conda#46a2e6e3dfa718ce3492018d5a110dd6
-https://conda.anaconda.org/conda-forge/noarch/anyio-3.7.1-pyhd8ed1ab_0.conda#7b517e7a6f0790337906c055aa97ca49
+https://conda.anaconda.org/conda-forge/noarch/anyio-4.0.0-pyhd8ed1ab_0.conda#3c4e99d3ae4ec033d4dd99fb5220e540
 https://conda.anaconda.org/conda-forge/noarch/asttokens-2.2.1-pyhd8ed1ab_0.conda#bf7f54dd0f25c3f06ecb82a07341841a
 https://conda.anaconda.org/conda-forge/noarch/async-lru-2.0.4-pyhd8ed1ab_0.conda#3d081de3a6ea9f894bbb585e8e3a4dcb
 https://conda.anaconda.org/conda-forge/noarch/babel-2.12.1-pyhd8ed1ab_1.conda#ac432e732804a81ddcf29c92ead57cde
@@ -301,7 +301,7 @@ https://repo.anaconda.com/pkgs/main/linux-64/qtwebkit-5.212-h4eab89a_4.conda#731
 https://conda.anaconda.org/conda-forge/noarch/sphinx-5.0.0-pyh6c4a22f_1.tar.bz2#a7cc4b9c94548ff9a19b368f975e5404
 https://conda.anaconda.org/conda-forge/noarch/autodocsumm-0.2.11-pyhd8ed1ab_0.conda#547c48372c97c463c93af86d7f2c868c
 https://conda.anaconda.org/conda-forge/noarch/cachecontrol-with-filecache-0.13.1-pyhd8ed1ab_0.conda#8c4781ca0893cff3a64423954ce234a1
-https://conda.anaconda.org/conda-forge/noarch/jupyter_server-2.7.1-pyhd8ed1ab_0.conda#15b1fb7550cc44c8d487bc74d378ccf2
+https://conda.anaconda.org/conda-forge/noarch/jupyter_server-2.7.3-pyhd8ed1ab_0.conda#969249eb7c2f7a9b820520a355dc7d04
 https://conda.anaconda.org/conda-forge/noarch/myst-parser-0.18.1-pyhd8ed1ab_0.tar.bz2#bcfdf5c7d8bf5c6f6be7b4c66fff2eca
 https://conda.anaconda.org/conda-forge/noarch/nbconvert-pandoc-7.8.0-pyhd8ed1ab_0.conda#1dba1a577df2625a24667612a069e91c
 https://conda.anaconda.org/conda-forge/noarch/pydata-sphinx-theme-0.13.3-pyhd8ed1ab_0.conda#07aca5f2dea315dcc16680d6891e9056
