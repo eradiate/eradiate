@@ -6,7 +6,6 @@ requires = ["setuptools>=61", "setuptools_scm>=6.2"]
 authors = [
   {name = "The Eradiate Team"}
 ]
-
 description = "A radiative transfer model for the Earth observation community"
 dynamic = ["version", "dependencies", "optional-dependencies"]
 license = {text = "LGPLv3"}
@@ -58,7 +57,7 @@ src = ["src", "tests"]
 relative-imports-order = "closest-to-furthest"
 
 [tool.setuptools]
-include-package-data = true # Required because of package data
+include-package-data = true  # Required because of package data
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["build/dependencies.txt"]}
