@@ -7,16 +7,14 @@ version: 2
 build:
   os: ubuntu-22.04
   tools:
-    # Use Mamba for quicker setup
-    python: mambaforge-4.10
-
-conda:
-  # Setup Conda env with dev dependencies
-  environment: requirements/conda/environment-dev.yml
+    python: "3.8"
 
 python:
   # Install Eradiate package in Conda env
   install:
+    - requirements: requirements/pip/dependencies.lock.txt
+    - requirements: requirements/pip/docs.lock.txt
+    - requirements: requirements/pip/tests.lock.txt
     - method: pip
       path: .
 
