@@ -2,6 +2,8 @@ from __future__ import annotations
 
 __all__ = [
     "auto_or",
+    "convert_absorption_data",
+    "convert_thermoprops",
     "on_quantity",
     "to_dataset",
 ]
@@ -23,7 +25,6 @@ from .attrs import AUTO
 from .data import data_store
 from .data._util import locate_absorption_data
 from .exceptions import UnsupportedModeError
-from .radprops.absorption import wrange
 from .typing import PathLike
 from .units import to_quantity
 
@@ -200,6 +201,9 @@ def convert_thermoprops(value) -> xr.Dataset:
 def convert_absorption_data(value) -> dict[P.Interval, xr.Dataset]:
     """Converter for atmosphere absorption coefficient data."""
 
+    # Import must be local to avoid circular imports
+    from .radprops.absorption import wrange
+
     # dict: verify that keys are portion.Interval and values are xarray.Dataset
     if isinstance(value, dict):
         if all([isinstance(k, P.Interval) for k in value]) and all(
@@ -246,7 +250,6 @@ def convert_absorption_data(value) -> dict[P.Interval, xr.Dataset]:
 
     # Pathlike: try and load the file(s)
     elif isinstance(value, (os.PathLike, str)):
-
         if str(value).endswith(".nc"):  # single file
             path = data_store.fetch(value)
             ds = xr.open_dataset(path)

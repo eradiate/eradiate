@@ -3,7 +3,6 @@ Functions to compute monochromatic absorption.
 """
 from __future__ import annotations
 
-import enum
 import logging
 import warnings
 
@@ -26,7 +25,6 @@ from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
 logger = logging.getLogger(__name__)
-
 
 # ------------------------------------------------------------------------------
 #                       Interpolation errors handling
@@ -59,7 +57,6 @@ DEFAULT_HANDLER_CONFIG = {
     "p": DEFAULT_P_ERROR_HANDLER_CONFIG,
     "t": DEFAULT_T_ERROR_HANDLER_CONFIG,
 }
-
 
 ERROR_TYPE_TO_STR = {
     MissingCoordinateError: "missing",
@@ -428,7 +425,6 @@ def wrange_mono(ds: xr.Dataset) -> P.Interval[pint.Quantity]:
 
 
 def check_w_range_mono(ds: xr.Dataset, w: pint.Quantity):
-
     wrange = wrange_mono(ds=ds)
     wmin, wmax = wrange.lower, wrange.upper
 
