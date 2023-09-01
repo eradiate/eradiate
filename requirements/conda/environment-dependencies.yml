@@ -12,7 +12,7 @@ dependencies:
   - click
   - dessinemoi>=23.1.0
   - environ-config
-  - joseki>=2.2.0
+  - joseki>=2.4.0
   - lazy_loader>=0.1
   - matplotlib>=3.3
   - netcdf4
