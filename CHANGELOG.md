@@ -33,6 +33,12 @@ Emoji marks have the following meaning:
 %
 % ### Fixed
 
+## v0.24.3 (upcoming release)
+
+### Changed
+
+* Get unit registry from application ({ghpr}`366`).
+
 ## v0.24.2 (31st August 2023)
 
 This is a fix release.

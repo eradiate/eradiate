@@ -10,6 +10,7 @@ __all__ = [
 ]
 
 import enum
+import logging
 import typing as t
 from functools import lru_cache
 
@@ -19,27 +20,33 @@ import xarray
 from pinttr.exceptions import UnitsError
 from pinttr.util import units_compatible
 
+logger = logging.getLogger(__name__)
+
 # -- Global data members -------------------------------------------------------
 
 #: Unit registry common to all Eradiate components. All units used in Eradiate
 #: must be created using this registry. Aliased in :mod:`eradiate`.
-unit_registry = pint.UnitRegistry()
+unit_registry = pint.get_application_registry()
 
-unit_registry.define(
-    "dobson_unit = 2.687e20 * meter^-2 " "= du = dobson = dobson_units"  # aliases
-)
-"""IUPAC. Compendium of Chemical Terminology, 2nd ed. (the "Gold Book").
-Compiled by A. D. McNaught and A. Wilkinson. Blackwell Scientific Publications,
-Oxford (1997). Online version (2019-) created by S. J. Chalk. ISBN 0-9678550-9-8.
-https://doi.org/10.1351/goldbook."""
-
-unit_registry.define(
+definitions = [
+    "dobson_unit = 2.687e20 * meter^-2 " "= du = dobson = dobson_units",
+    # IUPAC. Compendium of Chemical Terminology, 2nd ed. (the "Gold Book").
+    # Compiled by A. D. McNaught and A. Wilkinson. Blackwell Scientific
+    # Publications, Oxford (1997). Online version (2019-) created by S. J.
+    # Chalk. ISBN 0-9678550-9-8. https://doi.org/10.1351/goldbook.
     "atmo_centimeter = 1000 * dobson_unit "
-    "= atm_cm = centimeter_atmosphere = centimeter_amagat"  # aliases
-)
-"""Chapter 1 Vertical Structure of an Atmosphere. In International Geophysics,
-22:1–45. Elsevier, 1978. https://doi.org/10.1016/S0074-6142(09)60038-3.
-"""
+    "= atm_cm = centimeter_atmosphere = centimeter_amagat",
+    # Chapter 1 Vertical Structure of an Atmosphere. In International
+    # Geophysics, 22:1–45. Elsevier, 1978.
+    # https://doi.org/10.1016/S0074-6142(09)60038-3.
+]
+
+for definition in definitions:
+    try:
+        print(definition)
+        unit_registry.define(definition)
+    except pint.RedefinitionError:
+        logger.warning("unit definition '%s' already exists", definition)
 
 
 class PhysicalQuantity(enum.Enum):
