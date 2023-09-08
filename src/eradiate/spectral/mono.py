@@ -124,7 +124,7 @@ class WavelengthSet:
         Generate a wavelength set with linearly spaced bins, that covers the
         spectral range of a spectral response function.
 
-        Paramaters
+        Parameters
         ----------
         srf: Dataset
             Spectral response function dataset.
