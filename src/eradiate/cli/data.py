@@ -120,9 +120,9 @@ def fetch(
             "retrieved from the data store. If unset, the list of "
             "files is read from a YAML file which can be specified by "
             "using the ``--from-file`` option and defaults to "
-            "``$ERADIATE_SOURCE_DIR/data/downloads.yml`` a production "
+            "``$ERADIATE_SOURCE_DIR/data/downloads_all.yml`` a production "
             "environment and "
-            "``$ERADIATE_SOURCE_DIR/data/downloads_development.yml`` in a "
+            "``$ERADIATE_SOURCE_DIR/data/downloads_minimal.yml`` in a "
             "development environment."
         ),
     ] = None,
@@ -131,8 +131,8 @@ def fetch(
         typer.Option(
             "--from-file",
             "-f",
-            help="Optional path to a file list (YAML format). If this option is set, "
-            "the FILES argument(s) will be ignored.",
+            help="Optional path to a file list (YAML format). If this option "
+            "is set, the FILES argument(s) will be ignored.",
         ),
     ] = None,
 ):
@@ -142,8 +142,8 @@ def fetch(
     if not file_list:
         if from_file is None:
             # TODO: fetch this list from online
-            from_file = files("eradiate") / "data" / "downloads.yml"
-            
+            from_file = files("eradiate") / "data" / "downloads_all.yml"
+
         console.print(f"Reading file list from '{from_file}'")
         yaml = YAML()
         file_list = yaml.load(from_file)
