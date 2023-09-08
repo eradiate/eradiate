@@ -76,6 +76,11 @@ def default_absorption_data() -> tuple:
 class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     """Molecular atmosphere scene element [``molecular``].
 
+    See Also
+    --------
+    :class:`~eradiate.scenes.atmosphere.ParticleLayer`,
+    :class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere`.
+
     Notes
     -----
     This is commonly referred to as a clear-sky
@@ -101,11 +106,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     The scattering phase function defaults to the Rayleigh scattering phase
     function but can be set to other values.
-
-    See Also
-    --------
-    :class:`~eradiate.scenes.atmosphere.ParticleLayer`,
-    :class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere`.
     """
 
     absorption_data: dict[P.Interval, xr.Dataset] = documented(
