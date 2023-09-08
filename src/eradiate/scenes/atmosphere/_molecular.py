@@ -74,7 +74,8 @@ def default_absorption_data() -> tuple:
 @parse_docs
 @attrs.define(eq=False, slots=False)
 class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
-    """Molecular atmosphere scene element [``molecular``].
+    """
+    Molecular atmosphere scene element [``molecular``].
 
     See Also
     --------
