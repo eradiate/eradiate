@@ -172,7 +172,7 @@ class AFGL1986RadProfile(RadProfile):
             (ds.bin.values, ds.index.values), names=("bin", "index")
         )
         ds = ds.drop_vars(("bin", "index"))
-        ds = ds.reindex({"bd": idx})
+        ds = ds.reindex({"bd": idx.values})
 
         # This table maps species to the function used to compute
         # corresponding physical quantities used for concentration rescaling
