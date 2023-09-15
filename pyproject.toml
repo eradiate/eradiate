@@ -86,4 +86,3 @@ git_describe_command = [
   "--match",
   "v[0-9]*"
 ]  # Redefined to avoid crashing with special build tags
-version_scheme = "no-guess-dev"  # Count commits since last tag, don't anticipate new version
