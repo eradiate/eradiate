@@ -33,6 +33,25 @@ Emoji marks have the following meaning:
 %
 % ### Fixed
 
+## v0.24.3 (upcoming release)
+
+% ### Deprecated
+%
+% ### Removed
+%
+% ### Added
+%
+% ### Changed
+%
+
+### Fixed
+
+* Fixed download list path in the data module CLI ({ghpr}`368`).
+* Added missing dependency `importlib-resources` to requirement list
+  ({ghpr}`368`).
+* Fixed xarray usage in {meth}`.AFGL1986RadProfile.eval_sigma_a_ckd` to allow
+  usage with recent xarray version (2023.8 and later) ({ghpr}`368`).
+
 ## v0.24.2 (31st August 2023)
 
 This is a fix release.
