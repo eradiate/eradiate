@@ -33,16 +33,10 @@ Emoji marks have the following meaning:
 %
 % ### Fixed
 
-## v0.24.3 (upcoming release)
+## v0.24.3 (18th September 2023)
 
-% ### Deprecated
-%
-% ### Removed
-%
-% ### Added
-%
-% ### Changed
-%
+This is a fix release. It ensures compatibility with current xarray versions
+(v2023.8 and later).
 
 ### Fixed
 
