@@ -6,6 +6,7 @@ command.
 This code is partly taken from `mitsuba.sys_info`.
 """
 
+import importlib
 import locale
 import platform
 import re
@@ -82,6 +83,14 @@ def show() -> dict:
         eradiate_mitsuba_version = "not installed (DEBUG)"
     result["eradiate_mitsuba_version"] = eradiate_mitsuba_version
     # result["mitsuba_compiler"] = import_module("mitsuba.config").CXX_COMPILER  # Commented until we bump mitsuba and drjit
+
+    # Python dependencies
+    for package in ["numpy", "scipy", "xarray"]:
+        try:
+            mod = importlib.import_module(package)
+            result[package] = mod.__version__
+        except PackageNotFoundError:
+            result[package] = "not found"
 
     return result
 

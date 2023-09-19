@@ -33,6 +33,22 @@ Emoji marks have the following meaning:
 %
 % ### Fixed
 
+## v0.24.4 (upcoming release)
+
+% ### Deprecated
+%
+% ### Removed
+%
+% ### Added
+%
+
+### Changed
+
+* The `eradiate show` command-line diagnostic tool now reports on dependency
+  versions.
+
+% ### Fixed
+
 ## v0.24.3 (18th September 2023)
 
 This is a fix release. It ensures compatibility with current xarray versions
