@@ -39,8 +39,10 @@ Emoji marks have the following meaning:
 %
 % ### Removed
 %
-% ### Added
-%
+
+### Added
+
+* All {class}`.Integrator` classes now have a `timeout` parameter ({ghpr}`370`).
 
 ### Changed
 
