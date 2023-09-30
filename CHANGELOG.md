@@ -37,7 +37,14 @@ Emoji marks have the following meaning:
 
 ## v0.25.0 (upcoming release)
 
-### Breaking changes
+% ### Deprecated
+%
+% ### Removed
+%
+
+### Added
+
+* All {class}`.Integrator` classes now have a `timeout` parameter ({ghpr}`370`).
 
 * `AFGL1986RadProfile`, `US76ApproxRadProfile` (replaced with
   `AtmosphereRadProfile`) and corresponding `MolecularAtmosphere` constructors

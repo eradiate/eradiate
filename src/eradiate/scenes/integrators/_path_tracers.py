@@ -52,6 +52,8 @@ class MonteCarloIntegrator(Integrator):
     def template(self) -> dict:
         result = {"type": self.kernel_type}
 
+        if self.timeout is not None:
+            result["timeout"] = self.timeout
         if self.max_depth is not None:
             result["max_depth"] = self.max_depth
         if self.rr_depth is not None:
