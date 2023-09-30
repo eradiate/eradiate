@@ -234,21 +234,21 @@ def test_canopy_atmosphere_experiment_run_detailed(mode_mono):
 
     # Post-processing creates expected variables ...
     assert set(results.data_vars) == {
-        "irradiance",
-        "brf",
         "brdf",
+        "brf",
+        "irradiance",
         "radiance",
         "spp",
     }
 
     # ... dimensions
-    assert set(results["radiance"].dims) == {"sza", "saa", "x_index", "y_index", "w"}
-    assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
+    assert set(results["radiance"].dims) == {"saa", "sza", "w", "x_index", "y_index"}
+    assert set(results["irradiance"].dims) == {"saa", "sza", "w"}
 
     # ... and other coordinates
-    expected_coords = {"sza", "saa", "vza", "vaa", "x", "x_index", "y", "y_index", "w"}
+    expected_coords = {"saa", "sza", "vaa", "vza", "x", "x_index", "y", "y_index", "w"}
     assert set(results["radiance"].coords) == expected_coords
-    assert set(results["irradiance"].coords) == {"sza", "saa", "w"}
+    assert set(results["irradiance"].coords) == {"saa", "sza", "w"}
 
     # We just check that we record something as expected
     assert np.all(results["radiance"].data > 0.0)

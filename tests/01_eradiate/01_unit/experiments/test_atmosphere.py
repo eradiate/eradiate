@@ -184,7 +184,7 @@ def test_atmosphere_experiment_run_basic(
 
 
 def test_atmosphere_experiment_run_detailed(
-    modes_all,
+    modes_all_double,
     us_standard_mono,
     us_standard_ckd_550nm,
 ):
@@ -215,20 +215,32 @@ def test_atmosphere_experiment_run_detailed(
 
     # Check result dataset structure
     # Post-processing creates expected variables ...
-    expected = {"irradiance", "brf", "brdf", "radiance", "spp"}
-    if eradiate.mode().is_ckd:
-        expected |= {"irradiance", "brf", "brdf", "radiance", "wbounds"}
+    expected = {"brdf", "brf", "irradiance", "radiance", "spp"}
     assert set(results.data_vars) == expected
 
-    # ... dimensions
-    assert set(results["radiance"].dims) == {"sza", "saa", "x_index", "y_index", "w"}
-    assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
+    # ... dimensions ...
+    assert set(results["radiance"].dims) == {"saa", "sza", "w", "x_index", "y_index"}
+    assert set(results["irradiance"].dims) == {"saa", "sza", "w"}
 
     # ... and other coordinates
-    expected_coords = {"sza", "saa", "vza", "vaa", "x", "y", "x_index", "y_index", "w"}
+    expected_coords = {
+        "saa",
+        "sza",
+        "vaa",
+        "vza",
+        "w",
+        "x",
+        "x_index",
+        "y",
+        "y_index",
+    }
+    if eradiate.mode().is_ckd:
+        expected_coords |= {"bin_wmin", "bin_wmax"}
     assert set(results["radiance"].coords) == expected_coords
 
-    expected_coords = {"sza", "saa", "w"}
+    expected_coords = {"saa", "sza", "w"}
+    if eradiate.mode().is_ckd:
+        expected_coords |= {"bin_wmin", "bin_wmax"}
     assert set(results["irradiance"].coords) == expected_coords
 
     # We just check that we record something as expected

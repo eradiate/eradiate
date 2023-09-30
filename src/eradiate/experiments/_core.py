@@ -9,14 +9,15 @@ import attrs
 import mitsuba as mi
 import pinttr
 import xarray as xr
+from hamilton.driver import Driver
 
 import eradiate
 
-from .. import pipelines, validators
+from .. import pipelines as pl
+from .. import validators
 from ..attrs import AUTO, documented, parse_docs
 from ..contexts import KernelContext, MultiGenerator
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
-from ..pipelines import Pipeline
 from ..rng import SeedState
 from ..scenes.atmosphere import AbstractHeterogeneousAtmosphere
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
@@ -27,17 +28,14 @@ from ..scenes.illumination import (
 )
 from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
 from ..scenes.measure import (
-    DistantFluxMeasure,
-    DistantMeasure,
-    HemisphericalDistantMeasure,
     Measure,
     MultiDistantMeasure,
     measure_factory,
 )
-from ..scenes.spectra import InterpolatedSpectrum
 from ..spectral.ckd import BinSet, QuadSpec
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..spectral.mono import WavelengthSet
+from ..units import unit_registry as ureg
 from ..util.misc import deduplicate_sorted, onedict_value
 
 logger = logging.getLogger(__name__)
@@ -155,7 +153,10 @@ class Experiment(ABC):
     _spectral_set = attrs.field(init=False, repr=False)
 
     @property
-    def spectral_set(self) -> WavelengthSet | BinSet:
+    def spectral_set(self) -> dict[int, WavelengthSet | BinSet]:
+        """
+        A dictionary mapping measure index to the associated spectral set.
+        """
         return self._spectral_set
 
     quad_spec: QuadSpec = attrs.field(
@@ -233,18 +234,18 @@ class Experiment(ABC):
         pass
 
     @abstractmethod
-    def pipeline(self, measure: Measure) -> Pipeline:
+    def pipeline(self, measure: Measure | int) -> Driver:
         """
         Return the post-processing pipeline for a given measure.
 
         Parameters
         ----------
-        measure : .Measure
-            Measure for which the pipeline is to be generated.
+        measure : .Measure or int
+            Measure for which the pipeline is generated.
 
         Returns
         -------
-        .Pipeline
+        hamilton.driver.Driver
         """
         pass
 
@@ -479,138 +480,38 @@ class EarthObservationExperiment(Experiment, ABC):
                     "spp": spp if spp > 0 else measure.spp,
                 }
 
-    def postprocess(self, pipeline_kwargs: dict | None = None) -> None:
+    def postprocess(self) -> None:
         # Inherit docstring
         logger.info("Post-processing results")
         measures = self.measures
 
-        if pipeline_kwargs is None:
-            pipeline_kwargs = {}
+        # Run pipelines
+        for i, measure in enumerate(measures):
+            drv: Driver = self.pipeline(measure)
+            inputs = self._pipeline_inputs(i)
+            outputs = pl.outputs(drv)
+            result = drv.execute(final_vars=outputs, inputs=inputs)
+            self.results[measure.id] = xr.Dataset({var: result[var] for var in outputs})
 
-        # Apply pipelines
-        for measure in measures:
-            pipeline = self.pipeline(measure)
+    def pipeline(self, measure: Measure | int) -> Driver:
+        # Inherit docstring
+        if isinstance(measure, int):
+            measure = self.measures[measure]
+        config = pl.config(measure)
+        return eradiate.pipelines.driver(config)
 
-            # Collect measure results
-            self._results[measure.id] = pipeline.transform(
-                measure.mi_results, **pipeline_kwargs
-            )
+    def _pipeline_inputs(self, i_measure: int):
+        # This convenience function collects pipeline inputs for a specific measure
+        measure = self.measures[i_measure]
+        result = {
+            "angles": measure.viewing_angles.m_as(ureg.deg),
+            "bitmaps": measure.mi_results,
+            "spectral_set": self.spectral_set[i_measure],
+            "illumination": self.illumination,
+            "srf": measure.srf,
+        }
 
-            # Apply additional metadata
-            self._results[measure.id].attrs.update(self._dataset_metadata(measure))
-
-    def pipeline(self, measure: Measure) -> Pipeline:
-        measure_index = self.measures.index(measure)
-
-        pipeline = pipelines.Pipeline()
-
-        # Gather
-        if eradiate.mode().is_mono:
-            pipeline.add(
-                "gather_mono",
-                pipelines.GatherMono(var=measure.var),
-            )
-        elif eradiate.mode().is_ckd:
-            pipeline.add(
-                "gather_ckd",
-                pipelines.GatherCKD(
-                    var=measure.var,
-                    binset=self.spectral_set[measure_index],
-                ),
-            )
-
-        # Aggregate
-        if isinstance(measure, (DistantFluxMeasure,)):
-            pipeline.add(
-                "aggregate_radiosity",
-                pipelines.AggregateRadiosity(
-                    sector_radiosity_var=measure.var[0],
-                    radiosity_var="radiosity",
-                ),
-            )
-
-        # Assemble
-        pipeline.add(
-            "add_illumination",
-            pipelines.AddIllumination(
-                illumination=self.illumination,
-                measure=measure,
-                irradiance_var="irradiance",
-            ),
-        )
-
-        if isinstance(measure, DistantMeasure):
-            pipeline.add(
-                "add_viewing_angles",
-                pipelines.AddViewingAngles(measure=measure),
-            )
-
-        if isinstance(measure.srf, InterpolatedSpectrum):
-            pipeline.add(
-                "add_srf",
-                pipelines.AddSpectralResponseFunction(measure=measure),
-            )
-
-        # Compute
-        if isinstance(measure, (MultiDistantMeasure, HemisphericalDistantMeasure)):
-            pipeline.add(
-                "compute_reflectance",
-                pipelines.ComputeReflectance(
-                    radiance_var="radiance",
-                    irradiance_var="irradiance",
-                    brdf_var="brdf",
-                    brf_var="brf",
-                ),
-            )
-
-            if isinstance(measure.srf, InterpolatedSpectrum):
-                pipeline.add(
-                    "apply_srf",
-                    pipelines.ApplySpectralResponseFunction(
-                        measure=measure,
-                        vars=["radiance", "irradiance"],
-                    ),
-                )
-
-                pipeline.add(
-                    "compute_reflectance_srf",
-                    pipelines.ComputeReflectance(
-                        radiance_var="radiance_srf",
-                        irradiance_var="irradiance_srf",
-                        brdf_var="brdf_srf",
-                        brf_var="brf_srf",
-                    ),
-                )
-
-        elif isinstance(measure, (DistantFluxMeasure,)):
-            pipeline.add(
-                "compute_albedo",
-                pipelines.ComputeAlbedo(
-                    radiosity_var="radiosity",
-                    irradiance_var="irradiance",
-                    albedo_var="albedo",
-                ),
-            )
-
-            if eradiate.mode().is_ckd and isinstance(measure.srf, InterpolatedSpectrum):
-                pipeline.add(
-                    "apply_srf",
-                    pipelines.ApplySpectralResponseFunction(
-                        measure=measure,
-                        vars=["radiosity", "irradiance"],
-                    ),
-                )
-
-                pipeline.add(
-                    "compute_albedo_srf",
-                    pipelines.ComputeAlbedo(
-                        radiosity_var="radiosity_srf",
-                        irradiance_var="irradiance_srf",
-                        albedo_var="albedo_srf",
-                    ),
-                )
-
-        return pipeline
+        return result
 
 
 # ------------------------------------------------------------------------------
