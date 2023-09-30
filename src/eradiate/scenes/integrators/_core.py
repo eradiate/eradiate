@@ -40,3 +40,15 @@ class Integrator(NodeSceneElement, ABC):
         init_type=get_doc(NodeSceneElement, "id", "init_type"),
         default='"integrator"',
     )
+
+    timeout: float | None = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(float),
+        ),
+        doc="Maximum amount of time to spend during a kernel render pass in "
+        "millisecond (excluding scene parsing).",
+        type="float or None",
+        init_type="float, optional",
+        default="None",
+    )
