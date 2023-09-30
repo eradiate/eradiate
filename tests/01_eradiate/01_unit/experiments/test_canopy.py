@@ -115,50 +115,48 @@ def test_canopy_experiment_run_detailed(modes_all_double):
     srf = MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm)
     if eradiate.mode().is_mono:
         expected_vars = {
-            "irradiance",
-            "brf",
             "brdf",
+            "brf",
+            "irradiance",
             "radiance",
             "spp",
         }
         expected_coords_radiance = {
-            "sza",
             "saa",
-            "vza",
+            "sza",
             "vaa",
+            "vza",
+            "w",
             "x_index",
             "x",
             "y_index",
             "y",
-            "w",
         }
-        expected_coords_irradiance = {"sza", "saa", "w"}
+        expected_coords_irradiance = {"saa", "sza", "w"}
 
     elif eradiate.mode().is_ckd:
         expected_vars = {
-            "irradiance",
-            "brf",
             "brdf",
+            "brf",
+            "irradiance",
             "radiance",
+            "radiance_raw",
             "spp",
-            "wbounds",
         }
         expected_coords_radiance = {
-            "sza",
+            "bin_wmin",
+            "bin_wmax",
             "saa",
-            "vza",
+            "sza",
             "vaa",
+            "vza",
+            "w",
             "x_index",
             "x",
             "y_index",
             "y",
-            "w",
         }
-        expected_coords_irradiance = {
-            "sza",
-            "saa",
-            "w",
-        }
+        expected_coords_irradiance = {"bin_wmin", "bin_wmax", "saa", "sza", "w"}
 
     else:
         raise UnsupportedModeError
@@ -181,8 +179,8 @@ def test_canopy_experiment_run_detailed(modes_all_double):
     assert set(results.data_vars) == expected_vars
 
     # ... dimensions
-    assert set(results["radiance"].dims) == {"sza", "saa", "x_index", "y_index", "w"}
-    assert set(results["irradiance"].dims) == {"sza", "saa", "w"}
+    assert set(results["radiance"].dims) == {"saa", "sza", "w", "x_index", "y_index"}
+    assert set(results["irradiance"].dims) == {"saa", "sza", "w"}
 
     # ... and other coordinates
     assert set(results["radiance"].coords) == expected_coords_radiance
