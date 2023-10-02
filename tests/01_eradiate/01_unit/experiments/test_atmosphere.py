@@ -13,6 +13,7 @@ from eradiate.scenes.shapes import RectangleShape
 from eradiate.scenes.spectra import MultiDeltaSpectrum
 from eradiate.test_tools.types import check_scene_element
 from eradiate.test_tools.util import skipif_data_not_found
+from eradiate.units import to_quantity
 
 
 def test_atmosphere_experiment_construct_default(modes_all_double):
@@ -229,6 +230,41 @@ def test_atmosphere_experiment_run_detailed(
 
     expected_coords = {"sza", "saa", "w"}
     assert set(results["irradiance"].coords) == expected_coords
+
+    # We just check that we record something as expected
+    assert np.all(results["radiance"].data > 0.0)
+
+
+def test_atmosphere_experiment_custom_atmosphere(mode_ckd, cams_lybia4_ckd_550nm):
+    """
+    Test that the AtmosphereExperiment can deal with a custom atmosphere (CAMS).
+    """
+    # Create a geometry compatible with the molecular atmosphere
+    zgrid = to_quantity(cams_lybia4_ckd_550nm["thermoprops"].z)
+    geometry = {
+        "type": "spherical_shell",
+        "zgrid": zgrid,
+        "toa_altitude": zgrid[-1],
+        "ground_altitude": zgrid[0],
+    }
+
+    # Create simple scene
+    exp = AtmosphereExperiment(
+        measures=[
+            {
+                "type": "hemispherical_distant",
+                "id": "toa_hsphere",
+                "film_resolution": (32, 32),
+                "spp": 100,
+                "srf": MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
+            },
+        ],
+        atmosphere=cams_lybia4_ckd_550nm,
+        geometry=geometry,
+    )
+
+    # Run RT simulation
+    results = eradiate.run(exp, spp=100)
 
     # We just check that we record something as expected
     assert np.all(results["radiance"].data > 0.0)

@@ -146,3 +146,28 @@ def us_standard_ckd_550nm():
         "absorption_data": ("monotropa", [549.5, 550.5] * ureg.nm),
         "error_handler_config": TEST_ERROR_HANDLER_CONFIG,
     }
+
+
+@pytest.fixture
+def cams_lybia4_ckd_550nm():
+    """
+    CAMS Lybia4 atmosphere with CKD absorption data.
+
+    Notes
+    -----
+    Molecules included are H2O, CO2, O3, N2O, CO, CH4, O2, NO2, NO, SO2.
+    Specified absorption data covers the CKD band associated with wavenumber
+    interval [18100, 18200] cm^-1, i.e. the wavelenght range
+    [549.45, 552.48] nm.
+    Altitude grid is regular with a 1 km step, from 0 to 120 km.
+    """
+    thermoprops = eradiate.data.load_dataset(
+        "tests/thermoprops/cams_lybia4_2005-04-01.nc"
+    )
+
+    return {
+        "type": "molecular",
+        "thermoprops": thermoprops,
+        "absorption_data": ("monotropa", [549.5, 550.5] * ureg.nm),
+        "error_handler_config": TEST_ERROR_HANDLER_CONFIG,
+    }
