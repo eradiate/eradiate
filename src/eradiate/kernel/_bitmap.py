@@ -7,9 +7,9 @@ import numpy as np
 import xarray as xr
 
 
-def bitmap_to_dataset(bmp: mi.Bitmap, dtype=float) -> xr.Dataset:
+def bitmap_to_dataarray(bmp: mi.Bitmap, dtype="float64") -> xr.DataArray:
     """
-    Format Mitsuba bitmap data as an xarray dataset.
+    Format Mitsuba bitmap data as an xarray data array.
 
     Parameters
     ----------
@@ -17,13 +17,13 @@ def bitmap_to_dataset(bmp: mi.Bitmap, dtype=float) -> xr.Dataset:
         Mitsuba bitmap to be converted to a dataset. A Numpy array can also be
         passed directly for compatibility (this feature is deprecated).
 
-    dtype : dtype
+    dtype : dtype, optional
         Data type, forwarded to :func:`numpy.array`.
 
     Returns
     -------
-    dataset : Dataset
-        Bitmap data as an xarray dataset.
+    da : DataArray
+        Bitmap data as an xarray array.
 
     Raises
     ------
@@ -59,13 +59,9 @@ def bitmap_to_dataset(bmp: mi.Bitmap, dtype=float) -> xr.Dataset:
     height = img.shape[0]
     width = img.shape[1]
 
-    result = xr.Dataset(
-        data_vars={
-            "img": (
-                ["y_index", "x_index", "channel"],
-                np.reshape(img, (height, width, -1)),
-            )
-        },
+    result = xr.DataArray(
+        data=np.reshape(img, (height, width, -1)),
+        dims=["y_index", "x_index", "channel"],
         coords={
             "y_index": (
                 "y_index",
@@ -92,3 +88,36 @@ def bitmap_to_dataset(bmp: mi.Bitmap, dtype=float) -> xr.Dataset:
     )
 
     return result
+
+
+def bitmap_to_dataset(bmp: mi.Bitmap, dtype="float64") -> xr.Dataset:
+    """
+    Format Mitsuba bitmap data as an xarray dataset.
+
+    Parameters
+    ----------
+    bmp : mitsuba.core.Bitmap or ndarray
+        Mitsuba bitmap to be converted to a dataset. A Numpy array can also be
+        passed directly for compatibility (this feature is deprecated).
+
+    dtype : dtype, optional
+        Data type, forwarded to :func:`numpy.array`.
+
+    Returns
+    -------
+    dataset : Dataset
+        Bitmap data as an xarray dataset.
+
+    See Also
+    --------
+    :func:`bitmap_to_dataarray`
+
+    Notes
+    -----
+    This function exists for backward compatibility purposes.
+    It calls :func:`bitmap_to_dataarray` and forwards its arguments to it, then
+    wraps the generated data array in a dataset with an ``img`` data variable.
+    """
+
+    da = bitmap_to_dataarray(bmp, dtype)
+    return xr.Dataset(data_vars={"img": da})

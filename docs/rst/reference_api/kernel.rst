@@ -37,6 +37,7 @@ Other helpers
 .. autosummary::
    :toctree: generated/autosummary/
 
+   bitmap_to_dataarray
    bitmap_to_dataset
    eval_bsdf
    install_logging
