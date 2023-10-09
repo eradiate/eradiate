@@ -54,13 +54,15 @@ class CheckerboardBSDF(BSDF):
 
     scale_pattern: float = documented(
         attrs.field(
-            default=2.0, converter=float, validator=attrs.validators.instance_of(float)
+            default=None,
+            converter=attrs.converters.optional(float),
+            validator=attrs.validators.optional(attrs.validators.instance_of(float)),
         ),
         doc="Scaling factor for the checkerboard pattern. The higher the value, "
         "the more checkerboard patterns will fit on the surface to which this "
         "reflection model is attached.",
-        type="float",
-        default="2.0",
+        type="float or None",
+        init_type="float, optional",
     )
 
     @property
@@ -71,6 +73,9 @@ class CheckerboardBSDF(BSDF):
 
         if self.id is not None:
             result["id"] = self.id
+
+        if self.scale_pattern is not None:
+            result["reflectance.to_uv"] = mi.ScalarTransform4f.scale(self.scale_pattern)
 
         for obj_key, obj_values in {
             "color0": traverse(self.reflectance_a)[0],

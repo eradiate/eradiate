@@ -49,7 +49,10 @@ Emoji marks have the following meaning:
 * The `eradiate show` command-line diagnostic tool now reports on dependency
   versions.
 
-% ### Fixed
+### Fixed
+
+* The {class}`.CheckerboardBSDF` class's `scale_pattern` parameter now
+  behaves as intended ({ghpr}`372`).
 
 ## v0.24.3 (18th September 2023)
 
