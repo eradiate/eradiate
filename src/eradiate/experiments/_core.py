@@ -15,7 +15,6 @@ import eradiate
 from .. import pipelines, validators
 from ..attrs import AUTO, documented, parse_docs
 from ..contexts import KernelContext
-from ..exceptions import UnsupportedModeError
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
 from ..pipelines import Pipeline
 from ..rng import SeedState
@@ -584,7 +583,7 @@ class EarthObservationExperiment(Experiment, ABC):
                 ),
             )
 
-            if eradiate.mode().is_ckd:  # TODO: apply SRF also in mono mode?
+            if eradiate.mode().is_ckd and isinstance(measure.srf, InterpolatedSpectrum):
                 pipeline.add(
                     "apply_srf",
                     pipelines.ApplySpectralResponseFunction(
