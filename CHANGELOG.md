@@ -53,6 +53,8 @@ Emoji marks have the following meaning:
 
 * The {class}`.CheckerboardBSDF` class's `scale_pattern` parameter now
   behaves as intended ({ghpr}`372`).
+* The post-processing pipeline now skips SRF weighting when using a multi-delta
+  SRF in CKD mode with a {class}`.DistantFluxMeasure` ({ghcommit}`fac33c`).
 
 ## v0.24.3 (18th September 2023)
 
