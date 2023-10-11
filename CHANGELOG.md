@@ -33,12 +33,10 @@ Emoji marks have the following meaning:
 %
 % ### Fixed
 
-## v0.24.4 (upcoming release)
+## v0.24.4 (11th October 2023)
 
-% ### Deprecated
-%
-% ### Removed
-%
+This is a minor feature release. Adds an option to set a timeout to radiometric
+kernel runs and fixes a few bugs.
 
 ### Added
 
