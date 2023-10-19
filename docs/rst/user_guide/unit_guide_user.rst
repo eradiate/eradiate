@@ -86,9 +86,21 @@ a user can override them if it seems more convenient in their context.
       <Quantity(100000.0, 'meter')>
 
 Fields specified as "unit-enabled" are stored as Pint :class:`~pint.Quantity`
-objects and can be passed as such. Eradiate ships its own unit registry
-(:data:`eradiate.unit_registry`, abbreviated as ``ureg``), which must be used to
-define units. Another way of initialising our 100 km-high atmosphere would then
+objects and can be passed as such. Eradiate uses Pint's
+`application unit registry <https://pint.readthedocs.io/en/stable/getting/pint-in-your-projects.html>`_
+and provides an internal variable pointing to it (:data:`eradiate.unit_registry`,
+abbreviated as ``ureg``), which must be used to define units.
+
+.. warning::
+   Eradiate uses Pint's current application registry at import time. This means that:
+
+   * if one is required, a custom application registry must be declared *before*
+     issuing ``import eradiate``;
+   * subsequent modifications of the application registry using
+     :func:`pint.set_application_registry` will not propagate to Eradiate and will
+     break Eradiate's unit support.
+
+Another way of initialising our 100 km-high atmosphere would then
 be
 
 .. doctest::

@@ -33,6 +33,18 @@ Emoji marks have the following meaning:
 %
 % ### Fixed
 
+## v0.24.5 (upcoming release)
+
+% ### Deprecated
+% ### Removed
+% ### Added
+
+### Changed
+
+* Get unit registry from application ({ghpr}`366`).
+
+% ### Fixed
+
 ## v0.24.4 (11th October 2023)
 
 This is a minor feature release. Adds an option to set a timeout to radiometric
