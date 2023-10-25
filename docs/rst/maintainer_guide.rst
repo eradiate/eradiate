@@ -187,7 +187,7 @@ Our system uses two tools (included in the development virtual environment):
 Basic principles
 ^^^^^^^^^^^^^^^^
 
-We categorize our dependencies in five layers:
+We categorize our dependencies in seven layers:
 
 * ``main``: minimal requirements for eradiate to run in development mode
 * ``recommended``: convenient optional dependencies included in the production package. Installable through PyPI.
@@ -320,7 +320,7 @@ As per the documented installation process, Conda environment setup is handled u
 the appropriate Makefile and Mitsuba build configuration is done using the CMake preset.
 No CI-specific build setup operations are required.
 
-The CI workflow uses caching for the compiled Mitsuba binaries. The cache is identified by the commit hash of the 
+The CI workflow uses caching for the compiled Mitsuba binaries. The cache is identified by the commit hash of the
 ``mitsuba`` submodule and the file hashes of all .cpp and .h files in ``src/plugins/src``.
 
 Since the entire pipeline takes more than one hour to complete, it is not triggered automatically.
