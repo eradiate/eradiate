@@ -71,7 +71,7 @@ Emoji marks have the following meaning:
 
 ### Internal changes
 
-* Bumped `joseki` from `2.1.0` to `2.2.0`.
+* Bumped `joseki` from `2.1.0` to `2.5.0` ({ghpr}`375`).
 * Added `joseki>=2.1.0` as required dependency ({ghpr}`344`).
 * Removed `iapws` ({ghpr}`344`).
 * Added a `cfconventions.py` module to store variable attributes
