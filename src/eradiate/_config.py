@@ -133,7 +133,7 @@ class EradiateConfig:
     def _dir_validator(self, var, dir):
         if dir is None:
             # Import must be local and not use the lazy loader to avoid circular imports
-            from .kernel.versions import ERADIATE_MITSUBA_PACKAGE
+            from .kernel import ERADIATE_MITSUBA_PACKAGE
 
             if not ERADIATE_MITSUBA_PACKAGE:
                 raise ConfigError(
