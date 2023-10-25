@@ -285,8 +285,8 @@ Updating lock files
 ^^^^^^^^^^^^^^^^^^^
 
 When you want to update pinned dependencies (*e.g.* because you added or changed
-a dependency in ``pyproject.toml`` or because a dependency must be updated), you
-need to update the lock file.
+a dependency in ``requirements/layered.yml`` or because a dependency must be
+updated), you need to update the lock file.
 
 **With Conda**, use the following command in your active virtual environment:
 
