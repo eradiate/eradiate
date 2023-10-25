@@ -55,8 +55,8 @@ equation.
   quadrature rule is used. This method achieves a trade-off between performance
   and accuracy for the simulation of absorption by gases.
   Eradiate ships with absorption datasets suitable for use within the CKD
-  method in 1 nm wavelength bands or in 100 cm^-1 wavenumber bands, from 250 nm
-  up to 3125 nm.
+  method in spectral bands of variable width (including 1 nm and 10 nm
+  wavelength bands and 100 cm^-1 wavenumber bands), from 250 nm up to 3125 nm.
   It also supports user-defined absorption data provided it complies with the
   dataset format specifications.
   </details>
