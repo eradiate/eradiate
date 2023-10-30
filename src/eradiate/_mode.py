@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import functools
 import typing as t
 
 import attrs
@@ -65,46 +66,46 @@ class MitsubaColorMode(Flag):
 #                              Mode definitions
 # ------------------------------------------------------------------------------
 
-# Map associating a mode ID string to the corresponding class
-# (aliased in public API section)
-_mode_registry: dict[str, dict] = {
-    "mono_single": {
-        "spectral_mode": SpectralMode.MONO,
-        "mi_backend": MitsubaBackend.SCALAR,
-        "mi_color_mode": MitsubaColorMode.MONO,
-        "mi_double_precision": False,
-        "mi_polarized": False,
-    },
-    "mono_double": {
-        "spectral_mode": SpectralMode.MONO,
-        "mi_backend": MitsubaBackend.SCALAR,
-        "mi_color_mode": MitsubaColorMode.MONO,
-        "mi_double_precision": True,
-        "mi_polarized": False,
-    },
-    "ckd_single": {
-        "spectral_mode": SpectralMode.CKD,
-        "mi_backend": MitsubaBackend.SCALAR,
-        "mi_color_mode": MitsubaColorMode.MONO,
-        "mi_double_precision": False,
-        "mi_polarized": False,
-    },
-    "ckd_double": {
-        "spectral_mode": SpectralMode.CKD,
-        "mi_backend": MitsubaBackend.SCALAR,
-        "mi_color_mode": MitsubaColorMode.MONO,
-        "mi_double_precision": True,
-        "mi_polarized": False,
-    },
-}
 
-# Aliases
-_mode_registry.update(
-    {
-        "mono": _mode_registry["mono_double"].copy(),
-        "ckd": _mode_registry["ckd_double"].copy(),
+# Map associating a mode ID string to the corresponding class
+# (aliased in public API section). This is implemented as a cached function to
+# make a delayed evaluation possible (otherwise, the Mode class is not defined).
+# See also the Mode.new() constructor.
+@functools.lru_cache(maxsize=1)
+def _mode_registry() -> dict[str, Mode]:
+    return {
+        k: Mode(id=k, **v)
+        for k, v in {
+            "mono_single": {
+                "spectral_mode": SpectralMode.MONO,
+                "mi_backend": MitsubaBackend.SCALAR,
+                "mi_color_mode": MitsubaColorMode.MONO,
+                "mi_double_precision": False,
+                "mi_polarized": False,
+            },
+            "mono_double": {
+                "spectral_mode": SpectralMode.MONO,
+                "mi_backend": MitsubaBackend.SCALAR,
+                "mi_color_mode": MitsubaColorMode.MONO,
+                "mi_double_precision": True,
+                "mi_polarized": False,
+            },
+            "ckd_single": {
+                "spectral_mode": SpectralMode.CKD,
+                "mi_backend": MitsubaBackend.SCALAR,
+                "mi_color_mode": MitsubaColorMode.MONO,
+                "mi_double_precision": False,
+                "mi_polarized": False,
+            },
+            "ckd_double": {
+                "spectral_mode": SpectralMode.CKD,
+                "mi_backend": MitsubaBackend.SCALAR,
+                "mi_color_mode": MitsubaColorMode.MONO,
+                "mi_double_precision": True,
+                "mi_polarized": False,
+            },
+        }.items()
     }
-)
 
 
 @parse_docs
@@ -269,15 +270,22 @@ class Mode:
 
         Returns
         -------
-        :class:`Mode`
-            Created :class:`Mode` instance.
+        .Mode
+            Created :class:`.Mode` instance.
         """
         try:
-            mode_kwargs = _mode_registry[mode_id]
+            return _mode_registry()[mode_id]
         except KeyError:
             raise ValueError(f"unknown mode '{mode_id}'")
-        return Mode(id=mode_id, **mode_kwargs)
 
+
+# Define mode aliases
+_mode_registry().update(
+    {
+        "mono": _mode_registry()["mono_double"],
+        "ckd": _mode_registry()["ckd_double"],
+    }
+)
 
 # Eradiate's operational mode configuration
 _active_mode: Mode | None = None
@@ -300,16 +308,35 @@ def mode() -> Mode | None:
     return _active_mode
 
 
-def modes() -> dict:
+def modes(filter: t.Callable[[Mode], bool] | None = None) -> dict[str, Mode]:
     """
     Get list of registered operational modes.
 
+    Parameters
+    ----------
+    filter : callable, optional
+        A callable used to filter the returned modes. Operates on a
+        :class:`.Mode` instance.
+
     Returns
     -------
-    dict
-        List of registered operational modes
+    modes: dict[str, .Mode]
+        List of registered operational modes.
+
+    Examples
+    --------
+    Return the full list of registered modes:
+
+    >>> eradiate.modes()
+
+    Return only CKD modes:
+
+    >>> eradiate.modes(lambda x: x.is_ckd)
     """
-    return _mode_registry
+    if filter is None:
+        filter = lambda x: True
+
+    return {k: v for k, v in _mode_registry().items() if filter(v)}
 
 
 def set_mode(mode_id: str):
@@ -341,7 +368,7 @@ def set_mode(mode_id: str):
     """
     global _active_mode
 
-    if mode_id in _mode_registry:
+    if mode_id in _mode_registry():
         mode = Mode.new(mode_id)
         mitsuba.set_variant(mode.mi_variant)
     elif mode_id.lower() == "none":
