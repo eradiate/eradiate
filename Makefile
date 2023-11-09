@@ -36,7 +36,7 @@ pip-update-txt-files:
 # No hashes: doesn't play nicely with RTD when running pip-compile on macOS
 pip-compile: pip-update-in-files
 
-	@for LAYER in dev dependencies main recommended tests docs optional; do \
+	@for LAYER in main tests recommended docs dev optional dependencies; do \
 		echo "Compiling requirements/pip/$${LAYER}.in to requirements/pip/$${LAYER}.lock.txt"; \
 		pip-compile --upgrade --resolver=backtracking --build-isolation --allow-unsafe \
 			--output-file requirements/pip/$${LAYER}.lock.txt \
