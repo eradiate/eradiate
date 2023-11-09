@@ -3,7 +3,7 @@ dependencies:
   includes:
     - main
   packages:
-    - "eradiate-mitsuba==0.0.2"
+    - "eradiate-mitsuba==0.1.1rc1"
 
 main:
   constraints:
