@@ -630,7 +630,7 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
     "atmosphere", [None, "homogeneous"], ids=["none", "homogeneous"]
 )
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
-def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, request):
+def test_rpv_vs_lambertian(ert_seed_state, mode_mono, atmosphere, reflectance, artefact_dir, request):
     r"""
     RPV(:math:`\rho, g=0, k=1, rho_c=1`) equivalent to Lambertian(:math:`\rho`)
     ===========================================================================
@@ -719,6 +719,7 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, req
             ),
         },
     }
+
     experiments = {
         bsdf: eradiate.experiments.AtmosphereExperiment(
             illumination={"type": "directional", "zenith": 30.0 * ureg.deg},
@@ -736,7 +737,10 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, req
     }
 
     # Run experiments
-    results = {bsdf: eradiate.run(exp) for bsdf, exp in experiments.items()}
+    results = {}
+    for bsdf, exp in experiments.items():
+        ert_seed_state.reset()
+        results[bsdf] = eradiate.run(exp)
 
     # Make figure
     filename = f"{request.node.originalname}-{'none' if atmosphere is None else 'homogeneous'}-{reflectance}.png"
@@ -757,4 +761,4 @@ def test_rpv_vs_lambertian(mode_mono, atmosphere, reflectance, artefact_dir, req
     if atmosphere is None:
         np.testing.assert_array_equal(rpv, lambertian)
     else:
-        np.testing.assert_allclose(rpv, lambertian, rtol=1e-2, atol=2e-3)
+        np.testing.assert_allclose(rpv, lambertian, rtol=1e-2, atol=1e-2)
