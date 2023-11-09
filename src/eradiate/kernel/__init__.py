@@ -2,7 +2,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 # Internal constants
 _EXPECTED_MITSUBA_VERSION = "3.2.1"
-_EXPECTED_MITSUBA_PATCH_VERSION = "0.0.2"
+_EXPECTED_MITSUBA_PATCH_VERSION = "0.1.1rc1"
 
 # Exported constants
 ERADIATE_MITSUBA_PACKAGE_VERSION = None
@@ -36,22 +36,9 @@ except PackageNotFoundError as pkg_error:
 
 # Retrieve the kernel and kernel patch versions
 ERADIATE_KERNEL_VERSION = _mi.scalar_mono.MI_VERSION
-ERADIATE_KERNEL_PATCH_VERSION = _mi.scalar_rgb.ERD_MI_VERSION
+if hasattr(_mi.scalar_rgb, "ERD_MI_VERSION"):
+    ERADIATE_KERNEL_PATCH_VERSION = _mi.scalar_rgb.ERD_MI_VERSION
 
-# Check if the kernel version is compatible
-if ERADIATE_KERNEL_VERSION != _EXPECTED_MITSUBA_VERSION:
-    raise ImportError(
-        "Using an incompatible version of Mitsuba. Eradiate requires Mitsuba "
-        f"{_EXPECTED_MITSUBA_VERSION}. Found Mitsuba {ERADIATE_KERNEL_VERSION}."
-    )
-if ERADIATE_KERNEL_PATCH_VERSION != _EXPECTED_MITSUBA_PATCH_VERSION:
-    raise ImportError(
-        "Using an incompatible patch version of Mitsuba. Eradiate requires a "
-        f"Mitsuba kernel version {_EXPECTED_MITSUBA_VERSION}, with the patch "
-        f"version {_EXPECTED_MITSUBA_PATCH_VERSION}. Found Mitsuba "
-        f"{ERADIATE_KERNEL_VERSION} with the patch version"
-        f" {ERADIATE_KERNEL_PATCH_VERSION}."
-    )
 
 import lazy_loader
 
