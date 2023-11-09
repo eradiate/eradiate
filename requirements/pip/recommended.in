@@ -1,3 +1,4 @@
+-c main.lock.txt
 aabbtree
 astropy
 ipython
