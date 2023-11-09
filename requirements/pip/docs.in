@@ -1,5 +1,4 @@
 -r main.in
--c dev.lock.txt
 autodocsumm
 myst-parser
 nbsphinx>=0.9.0
