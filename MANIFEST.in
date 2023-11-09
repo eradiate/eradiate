@@ -1,2 +1,2 @@
-include src/eradiate/data/downloads.yml
-include src/eradiate/data/downloads_development.yml
+include src/eradiate/data/downloads_all.yml
+include src/eradiate/data/downloads_minimal.yml

@@ -143,14 +143,14 @@ def fetch(
         if from_file is None:
             # TODO: fetch this list from online
             if eradiate.config.source_dir is None:
-                from_file = files("eradiate") / "data" / "downloads.yml"
+                from_file = files("eradiate") / "data" / "downloads_all.yml"
             else:
                 from_file = (
                     eradiate.config.source_dir
                     / "src"
                     / "eradiate"
                     / "data"
-                    / "downloads_development.yml"
+                    / "downloads_minimal.yml"
                 )
         console.print(f"Reading file list from '{from_file}'")
         yaml = YAML()
