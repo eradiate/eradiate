@@ -68,10 +68,12 @@ Emoji marks have the following meaning:
   updated in *User Guide / Data Guide / Absorption* ({ghpr}`344`).
 * Removed the obsolete pages *User Guide / Data Guide / ``us76_u86_4-spectra``*
   and *User Guide / Data Guide / Correlated-k distribution (CKD)* ({ghpr}`344`).
+* Minor changes to the maintainer guide, fixing a few minor mistakes
+  ({ghpr}`375`)
 
 ### Internal changes
 
-* Bumped `joseki` from `2.1.0` to `2.5.0` ({ghpr}`375`).
+* Bumped `joseki` from `2.1.0` to `2.5.1` ({ghpr}`375`).
 * Added `joseki>=2.1.0` as required dependency ({ghpr}`344`).
 * Removed `iapws` ({ghpr}`344`).
 * Added a `cfconventions.py` module to store variable attributes
@@ -99,6 +101,8 @@ Emoji marks have the following meaning:
 * Added wavenumber to the physical quantity definitions ({ghpr}`344`).
 * Defined two convenient pytest fixtures for molecular atmospheres:
   `us_standard_mono` and `us_standard_ckd_550nm` ({ghpr}`344`).
+* Bumped `eradiate-mitsuba` from `0.1.0` to `0.1.1`, correcting the RTLS plugin
+  ({ghpr}`375`)
 
 ---
 
