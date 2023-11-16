@@ -29,6 +29,6 @@ authors:
 repository-code: 'https://github.com/eradiate/eradiate'
 url: 'https://www.eradiate.eu'
 license: LGPL-3.0
-version: 0.23.2
-doi: 10.5281/zenodo.8125857
-date-released: 2023-07-08
+version: 0.24.4
+doi: 10.5281/zenodo.8432052
+date-released: 2023-10-11
