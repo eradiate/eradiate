@@ -29,26 +29,29 @@ def test_select_with_multi_delta():
         (
             InterpolatedSpectrum(
                 wavelengths=np.linspace(500.0, 600.0, 11) * ureg.nm,
-                values=np.array([0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0], dtype=float),
+                values=np.array([0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0], dtype=float)
+                * ureg.dimensionless,
             ),
-            np.arange(499.0, 582.0, 1.0) * ureg.nm,
+            np.arange(501.0, 580.0, 1.0) * ureg.nm,
         ),
         (
             InterpolatedSpectrum(
                 wavelengths=np.linspace(500.5, 600.5, 11) * ureg.nm,
-                values=np.array([0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0], dtype=float),
+                values=np.array([0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0], dtype=float)
+                * ureg.dimensionless,
             ),
-            np.arange(500.0, 582.0, 1.0) * ureg.nm,
+            np.arange(501.0, 581.0, 1.0) * ureg.nm,
         ),
         (
             InterpolatedSpectrum(
                 wavelengths=np.linspace(500.0, 600.0, 11) * ureg.nm,
-                values=np.array([0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0], dtype=float),
+                values=np.array([0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0], dtype=float)
+                * ureg.dimensionless,
             ),
             np.concatenate(
                 [
-                    np.arange(499.0, 532.0, 1.0),
-                    np.arange(539.0, 582.0, 1.0),
+                    np.arange(501.0, 530.0, 1.0),
+                    np.arange(541.0, 580.0, 1.0),
                 ]
             )
             * ureg.nm,

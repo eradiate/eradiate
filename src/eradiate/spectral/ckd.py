@@ -9,7 +9,6 @@ import attrs
 import numpy as np
 import pint
 import pinttr
-import portion as P
 import xarray as xr
 
 from .index import CKDSpectralIndex
@@ -88,12 +87,6 @@ class Bin:
     def wcenter(self) -> pint.Quantity:
         """quantity : Bin central wavelength."""
         return 0.5 * (self.wmin + self.wmax)
-
-    @property
-    def interval(self) -> P.Interval:
-        """portion.Interval : Closed-open interval corresponding to the bin
-        wavelength interval."""
-        return P.closedopen(self.wmin, self.wmax)
 
     @property
     def pretty_repr(self) -> str:

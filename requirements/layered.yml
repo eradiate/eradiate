@@ -22,7 +22,6 @@ main:
     - "numpy"
     - "pint"
     - "pinttrs>=23.2.0"
-    - "portion"
     - "pooch"
     - "rich"
     - "ruamel.yaml"

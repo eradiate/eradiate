@@ -8,7 +8,6 @@ import warnings
 
 import numpy as np
 import pint
-import portion as P
 import xarray as xr
 
 import eradiate
@@ -403,20 +402,14 @@ def interp_t(
 # ------------------------------------------------------------------------------
 
 
-def wrange_mono(ds: xr.Dataset) -> P.Interval[pint.Quantity]:
+def wrange_mono(ds: xr.Dataset) -> tuple[pint.Quantity]:
     wds = to_quantity(ds.w)
     wunits = ucc.get("wavelength")
 
     if wds.check("[length]^-1"):
-        return P.closed(
-            (1 / wds.max()).to(wunits),
-            (1 / wds.min()).to(wunits),
-        )
+        return ((1 / wds.max()).to(wunits), (1 / wds.min()).to(wunits))
     elif wds.check("[length]"):
-        return P.closed(
-            wds.min().to(wunits),
-            wds.max().to(wunits),
-        )
+        return (wds.min().to(wunits), wds.max().to(wunits))
     else:
         raise ValueError(
             f"Spectral coordinate of absorption dataset has unexpected units "
@@ -425,8 +418,7 @@ def wrange_mono(ds: xr.Dataset) -> P.Interval[pint.Quantity]:
 
 
 def check_w_range_mono(ds: xr.Dataset, w: pint.Quantity):
-    wrange = wrange_mono(ds=ds)
-    wmin, wmax = wrange.lower, wrange.upper
+    wmin, wmax = wrange_mono(ds=ds)
 
     if np.any((w < wmin) | (w > wmax)):
         msg = (
@@ -512,7 +504,7 @@ def eval_sigma_a_mono_impl_ds(
 
 
 def eval_sigma_a_mono_impl(
-    absorption_data: dict[P.Interval, xr.Dataset],
+    absorption_data: dict[tuple[pint.Quantity], xr.Dataset],
     thermoprops: xr.Dataset,
     w: pint.Quantity,
     error_handler_config: dict[str, dict[str, str]] | None = None,
@@ -536,20 +528,19 @@ def eval_sigma_a_mono_impl(
     # assume that w might be a large array
 
     das = []
-    upper_max = max([i.upper for i in absorption_data.keys()])
+    upper_max = max([i[1] for i in absorption_data.keys()])
     for interval, dataset in absorption_data.items():
         # we assume that this list is not too long (<10 elements) so the
         # performance cost of this loop is not too high.
 
         # find the wavelength that are contained in the current wavelength
         # interval:
-        if interval.upper != upper_max:
+        if interval[1] != upper_max:
             w_where = ws[
-                (ws >= interval.lower)
-                & (ws < interval.upper)  # mind the strict inequality
+                (ws >= interval[0]) & (ws < interval[1])  # mind the strict inequality
             ]
         else:
-            w_where = ws[(ws >= interval.lower) & (ws <= interval.upper)]
+            w_where = ws[(ws >= interval[0]) & (ws <= interval[1])]
 
         if w_where.size > 0:
             da = eval_sigma_a_mono_impl_ds(
@@ -569,13 +560,13 @@ def eval_sigma_a_mono_impl(
 # ------------------------------------------------------------------------------
 
 
-def wrange_ckd(ds: xr.Dataset) -> P.Interval[pint.Quantity]:
+def wrange_ckd(ds: xr.Dataset) -> tuple[pint.Quantity]:
     wbounds = to_quantity(ds.wbounds.squeeze())
     wunits = ucc.get("wavelength")
     if wbounds.check("[length]^-1"):
-        return P.closed(tuple(np.sort((1 / wbounds.to(wunits)))))
+        return tuple(np.sort((1 / wbounds.to(wunits))))
     elif wbounds.check("[length]"):
-        return P.closed(*tuple(np.sort(wbounds).to(wunits)))
+        return tuple(np.sort(wbounds).to(wunits))
     else:
         raise ValueError(
             f"Spectral coordinate of absorption dataset has unexpected units "

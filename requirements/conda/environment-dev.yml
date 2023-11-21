@@ -36,7 +36,6 @@ dependencies:
   - pint
   - pinttrs>=23.2.0
   - pooch
-  - portion
   - rich
   - ruamel.yaml
   - scipy
