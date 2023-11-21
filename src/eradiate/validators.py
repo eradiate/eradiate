@@ -5,7 +5,7 @@ from numbers import Number
 
 import attrs
 import numpy as np
-import portion as P
+import pint
 import xarray as xr
 
 from .attrs import AUTO
@@ -228,20 +228,28 @@ def auto_or(*wrapped_validators):
     return f
 
 
+def isinstance_of_2tuple_of_quantity(x):
+    if isinstance(x, tuple):
+        if len(x) == 2:
+            if isinstance(x[0], pint.Quantity) and isinstance(x[1], pint.Quantity):
+                return True
+    return False
+
+
 def validate_absorption_data(instance, attribute, value):
     """Validate absorption data.
 
     Raises
     ------
     TypeError
-        If the value is not a dict with keys of type :class:`portion.Interval`
+        If the value is not a dict with keys of type tuple and length 2,
         and values of type :class:`xarray.Dataset`.
     """
     if isinstance(value, dict):
         for k, v in value.items():
-            if not isinstance(k, P.Interval):
+            if not isinstance_of_2tuple_of_quantity(k):
                 raise TypeError(
-                    f"{attribute.name} keys must be portion.Interval, "
+                    f"{attribute.name} keys must be 2-tuple of pint.Quantity, "
                     f"(got {type(k)})"
                 )
             if not isinstance(v, xr.Dataset):

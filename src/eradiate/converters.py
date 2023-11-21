@@ -15,7 +15,6 @@ from pathlib import Path
 import mitsuba as mi
 import numpy as np
 import pint
-import portion as P
 import xarray as xr
 
 import eradiate
@@ -198,22 +197,30 @@ def convert_thermoprops(value) -> xr.Dataset:
         )
 
 
-def convert_absorption_data(value) -> dict[P.Interval, xr.Dataset]:
+def isinstance_of_2tuple_quantity(x):
+    if isinstance(x, tuple):
+        if len(x) == 2:
+            if isinstance(x[0], pint.Quantity) and isinstance(x[1], pint.Quantity):
+                return True
+    return False
+
+
+def convert_absorption_data(value) -> dict[tuple[pint.Quantity], xr.Dataset]:
     """Converter for atmosphere absorption coefficient data."""
 
     # Import must be local to avoid circular imports
     from .radprops.absorption import wrange
 
-    # dict: verify that keys are portion.Interval and values are xarray.Dataset
+    # dict: verify that keys are 2-tuple[pint.Quantity] and values are xarray.Dataset
     if isinstance(value, dict):
-        if all([isinstance(k, P.Interval) for k in value]) and all(
+        if all([isinstance_of_2tuple_quantity(k) for k in value]) and all(
             [isinstance(v, xr.Dataset) for v in value.values()]
         ):
             return value
         else:
             raise ValueError(
-                "All keys must be portion.Interval and all values must be "
-                "xarray.Dataset"
+                "All keys must be 2-tuple of pint.Quantity and all values must "
+                "be xarray.Dataset"
             )
 
     # tuple: specifications for absorption data on the online stable data store

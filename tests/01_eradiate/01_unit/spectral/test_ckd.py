@@ -46,7 +46,7 @@ def test_select_with_multi_delta_1():
 
 def test_select_with_multi_delta_2():
     """
-    Unit tests for :meth:`.BinSet.select_with`.
+    When wavelength fall between two bins, the left bin is selected by convention.
     """
     binset = BinSet.arange(
         start=280.0 * ureg.nm,
@@ -56,7 +56,7 @@ def test_select_with_multi_delta_2():
 
     srf = MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm)
     expected_selected_bins = [
-        Bin(wmin=550.0 * ureg.nm, wmax=560.0 * ureg.nm),
+        Bin(wmin=540.0 * ureg.nm, wmax=550.0 * ureg.nm),
     ]
     selected = srf.select_in(binset)
     for bin, expected_bin in zip(selected.bins, expected_selected_bins):
@@ -75,7 +75,14 @@ def test_select_from_connex_interpolated_spectrum_1():
 
     srf = InterpolatedSpectrum(
         wavelengths=np.linspace(500.0, 600.0, 11) * ureg.nm,
-        values=np.ones(11),
+        values=np.concatenate(
+            [
+                np.array([0.0]),
+                np.ones(9),
+                np.array([0.0]),
+            ]
+        )
+        * ureg.dimensionless,
     )
 
     selected = srf.select_in(binset)
@@ -96,20 +103,23 @@ def test_select_from_connex_interpolated_spectrum_2():
         step=10.0 * ureg.nm,
     )
 
+    epsilon = np.finfo(float).eps
+
     srf = InterpolatedSpectrum(
         wavelengths=np.linspace(500.0, 600.0, 11) * ureg.nm,
         values=np.concatenate(
             [
-                np.array([0.0]),
+                np.array([epsilon]),
                 np.ones(9),
-                np.array([0.0]),
+                np.array([epsilon]),
             ]
-        ),
+        )
+        * ureg.dimensionless,
     )
 
     selected = srf.select_in(binset)
-    wmin_expected = np.linspace(500.0, 600.0, 11) * ureg.nm
-    assert len(selected.bins) == 10
+    wmin_expected = np.linspace(490.0, 610.0, 13) * ureg.nm
+    assert len(selected.bins) == 11
     for bin, wmin in zip(selected.bins, wmin_expected):
         assert np.isclose(bin.wmin, wmin)
         assert np.isclose(bin.wmax, wmin + 10.0 * ureg.nm)
@@ -133,7 +143,8 @@ def test_select_from_connex_interpolated_spectrum_3():
                 np.ones(7),
                 np.array([0.0, 0.0]),
             ]
-        ),
+        )
+        * ureg.dimensionless,
     )
 
     selected = srf.select_in(binset)
@@ -156,7 +167,8 @@ def test_select_from_non_connex_interpolated_spectrum_1():
 
     srf = InterpolatedSpectrum(
         wavelengths=np.linspace(500.0, 600.0, 11) * ureg.nm,
-        values=np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0]),
+        values=np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0])
+        * ureg.dimensionless,
     )
 
     selected = srf.select_in(binset)
@@ -185,7 +197,8 @@ def test_select_from_non_connex_interpolated_spectrum_2():
     )
     srf = InterpolatedSpectrum(
         wavelengths=np.linspace(500.0, 600.0, 11) * ureg.nm,
-        values=np.array([0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0]),
+        values=np.array([0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0])
+        * ureg.dimensionless,
     )
 
     selected = srf.select_in(binset)
@@ -221,7 +234,8 @@ def test_select_from_connex_interpolated_spectrum_misaligned():
                 np.ones(7),
                 np.array([0.0, 0.0]),
             ]
-        ),
+        )
+        * ureg.dimensionless,
     )
 
     selected = srf.select_in(binset)

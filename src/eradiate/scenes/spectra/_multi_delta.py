@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from itertools import compress
 
 import attrs
@@ -81,16 +83,41 @@ class MultiDeltaSpectrum(Spectrum):
 
     def select_in_bin_set(self, binset: BinSet) -> BinSet:
         bins = binset.bins
+        wunits = "nm"
+        xmin = np.array([bin.wmin.m_as(wunits) for bin in bins])
+        xmax = np.array([bin.wmax.m_as(wunits) for bin in bins])
+        x = self.wavelengths.m_as(wunits)
+        selected = select_method_1(xmin, xmax, x)
+        return BinSet(bins=list(np.array(bins)[selected]))
 
-        # transform bins into closed-open intervals, so that a wavelength
-        # value is included in at most one bin, when bins are adjacent
-        bin_intervals = [b.interval for b in bins]
 
-        selected = [False] * len(bins)
-        for ib, b in enumerate(bin_intervals):
-            for w in self.wavelengths:
-                if w in b:
-                    selected[ib] = True
-                    break
+def chunk_bins(xmin, xmax) -> list[np.ndarray]:
+    """
+    Split the dual list-based bin definition into a sequence of single
+    list-based contiguous bin definitions.
+    """
+    assert np.shape(xmin) == np.shape(xmax)
+    chunks = np.concatenate(((False,), (xmin[1:] == xmax[:-1])))
+    assert np.shape(chunks) == np.shape(xmin)
 
-        return BinSet(bins=list(compress(bins, selected)))
+    chunk_start = np.where(chunks == False)[0]
+    chunk_end = np.concatenate((chunk_start[1:], (len(chunks),)))
+
+    return [
+        np.unique((xmin[start:end], xmax[start:end]))
+        for start, end in zip(chunk_start, chunk_end)
+    ]
+
+
+def select_method_1(xmin, xmax, x):
+    selmin = np.searchsorted(xmin, x)
+    selmax = np.searchsorted(xmax, x) + 1
+    hit = selmin == selmax  # Mask where x values which triggered a bin hit
+
+    # Map x values to selected bin (index -999 means not selected)
+    bin_index = np.where(hit, selmin - 1, np.full_like(x, -999)).astype("int")
+
+    # Get selected bins only
+    selected = np.unique(bin_index)[bin_index >= 0]  # mask removes -999 value
+
+    return selected

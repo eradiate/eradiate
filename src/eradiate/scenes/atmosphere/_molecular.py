@@ -10,7 +10,6 @@ import attrs
 import joseki
 import numpy as np
 import pint
-import portion as P
 import xarray as xr
 
 import eradiate
@@ -109,7 +108,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     function but can be set to other values.
     """
 
-    absorption_data: dict[P.Interval, xr.Dataset] = documented(
+    absorption_data: dict[tuple(pint.Quantity), xr.Dataset] = documented(
         attrs.field(
             kw_only=True,
             factory=default_absorption_data,
@@ -122,7 +121,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         "specified file (must be a NetCDF file)."
         "If a tuple, the first element is the dataset codename and the"
         "second is the desired working wavelength range.",
-        type="Dict of portion.Interval and xarray.Dataset",
+        type="Dict of tuple of pint.Quantity and xarray.Dataset",
         init_type=(
             "Dataset or list of Datasets or str or :class:`.PathLike` or "
             "tuple[str, pint.Quantity]"

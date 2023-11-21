@@ -7,7 +7,6 @@ import attrs
 import numpy as np
 import pint
 import pinttr
-import portion as P
 import xarray as xr
 
 from ._core import Spectrum
@@ -20,7 +19,6 @@ from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...util.misc import where_consecutive_zeros, where_non_significant_zeros
 
 
 @parse_docs
@@ -278,66 +276,6 @@ class InterpolatedSpectrum(Spectrum):
             )
         }
 
-    def where_non_zero(self) -> P.Interval:
-        """
-        Returns the wavelength interval where the spectrum evaluates to a
-        non-zero value.
-
-        Returns
-        -------
-        Interval
-            Wavelength interval.
-        """
-        wunits = self.wavelengths.units
-        wm = self.wavelengths.m
-        vm = self.values.m if isinstance(self.values, pint.Quantity) else self.values
-
-        # 1. strip non significant zeros
-        nsz = where_non_significant_zeros(vm)
-        values = vm[~nsz]
-        wavelengths = wm[~nsz]
-
-        # 2. split where consecutive zeros are located
-        ind, _ = where_consecutive_zeros(values)
-        split_ind = ind + 1
-        values_split = np.split(values, split_ind)
-        wavelengths_split = np.split(wavelengths, split_ind)
-
-        # 3. cleanup after split
-        values_cleaned = []
-        wavelengths_cleaned = []
-        for w, v in zip(wavelengths_split, values_split):
-            nsz = where_non_significant_zeros(v)
-            values_cleaned.append(v[~nsz])
-            wavelengths_cleaned.append(w[~nsz])
-
-        # 4. Determine interval
-        intervals = []
-        for w in wavelengths_cleaned:
-            # lower and upper bound of current sub-interval
-            wlower = w[0]
-            wupper = w[-1]
-
-            # corresponding indices
-            ilower = np.where(wm == wlower)
-            iupper = np.where(wm == wupper)
-
-            # create sub-interval
-            interval = P.open(wlower * wunits, wupper * wunits)
-
-            # update left and right boundaries if necessary
-            if vm[ilower] != 0:
-                interval = interval.replace(left=P.CLOSED)
-            if vm[iupper] != 0:
-                interval = interval.replace(right=P.CLOSED)
-
-            intervals.append(interval)
-
-        # union of all intervals
-        interval = reduce(lambda i1, i2: i1 | i2, intervals[0:], intervals[0])
-
-        return interval
-
     def select_in_wavelength_set(self, wset: WavelengthSet) -> WavelengthSet:
         """
         Selects the wavelengths that are included in the wavelength interval
@@ -353,51 +291,34 @@ class InterpolatedSpectrum(Spectrum):
         WavelengthSet
             Wavelength set.
         """
-
-        # interval where the response function is non-zero
-        i = self.where_non_zero()
-
-        # transform all atomic intervals to closed-closed intervals
-        # so that adjacent zeros, when present, are included
-        i = i.apply(lambda x: (P.CLOSED, x.lower, x.upper, P.CLOSED))
-
-        # select wavelengths that are included in the interval
-        w = wset.wavelengths
-        lwf = np.diff(w).max()  # largest wavelength difference
-
-        if i.atomic:  # fast (vectorized)
-            selected = w[(w - lwf <= i.upper) & (w + lwf >= i.lower)]
-        else:  # slow (for-loop)
-            selected = np.stack(
-                [
-                    w
-                    for w in wset.wavelengths
-                    if i.contains(w - lwf) or i.contains(w + lwf)
-                ]
-            )
-
-        return WavelengthSet(selected)
+        wunits = "nm"
+        w = wset.wavelengths.m_as(wunits)
+        rw = self.wavelengths.m_as(wunits)
+        r = self.values.m
+        rinterp = np.interp(w, rw, r, left=0.0, right=0.0)
+        selected = w[rinterp > 0]
+        return WavelengthSet(selected * ureg(wunits))
 
     def select_in_bin_set(self, binset: BinSet) -> BinSet:
         bins = binset.bins
+        wunits = "nm"
+        xmin = np.array([bin.wmin.m_as(wunits) for bin in bins])
+        xmax = np.array([bin.wmax.m_as(wunits) for bin in bins])
+        r = self.values.m
+        w = self.wavelengths.m_as(wunits)
+        selected = select_method_2(xmin, xmax, w, r)
+        return BinSet(bins=list(np.array(bins)[selected]))
 
-        # transform bins into closed-open intervals, so that a wavelength
-        # value is included in at most one bin, when bins are adjacent
-        bin_intervals = [b.interval for b in bins]
 
-        # interval where the response function is non-zero
-        i = self.where_non_zero()
+def nonzero_integral(x, y):
+    from scipy.integrate import cumulative_trapezoid
 
-        # transform all atomic intervals to open-open intervals
-        # so that adjacent zeros, when present, are not included
-        i = i.apply(lambda x: (P.OPEN, x.lower, x.upper, P.OPEN))
+    cumsum = np.concatenate(((0.0,), cumulative_trapezoid(y, x)))
+    return cumsum[:-1] != cumsum[1:]
 
-        # select bins that overlap with the non-zero interval
-        selected = [False] * len(bins)
-        for ib, b in enumerate(bin_intervals):
-            for j in i:
-                if b.overlaps(j):
-                    selected[ib] = True
-                    break
 
-        return BinSet(bins=list(compress(bins, selected)))
+def select_method_2(xmin, xmax, w, srf):
+    # Evaluate the SRF on the bin grid
+    bins = np.unique((xmin, xmax))
+    srf_bins = np.interp(bins, w, srf, left=0, right=0)
+    return np.where(nonzero_integral(bins, srf_bins))[0]
