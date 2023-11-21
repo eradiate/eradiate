@@ -51,7 +51,7 @@ Emoji marks have the following meaning:
 
 ### Improvements and fixes
 
-* Added support for quadrature specifications ({ghpr}`344`).
+* Added support for quadrature specifications ({ghpr}`344`, {ghpr}`375`).
 * Added support for custom absorption data (mono and ckd) ({ghpr}`344`).
 * Added support for custom atmospheric profiles ({ghpr}`344`).
 * Added module `radprops/absorption` to compute the air volume absorption
@@ -62,8 +62,8 @@ Emoji marks have the following meaning:
 ### Documentation
 
 * The new dataset schema for atmosphere's thermophysical profiles is documented
-  [here](https://nollety.github.io/joseki/2.2/explanation/#dataset-schema)
-  ({ghpr}`344`).
+  [here](https://rayference.github.io/joseki/2.5/explanation/#dataset-schema)
+  ({ghpr}`344`, {ghpr}`375`).
 * The new dataset schema for atmosphere's absorption coefficient data is
   updated in *User Guide / Data Guide / Absorption* ({ghpr}`344`).
 * Removed the obsolete pages *User Guide / Data Guide / ``us76_u86_4-spectra``*
@@ -73,7 +73,9 @@ Emoji marks have the following meaning:
 
 ### Internal changes
 
-* Bumped `joseki` from `2.1.0` to `2.5.1` ({ghpr}`375`).
+* Add `eval_transmittance_*` methods ({ghpr}`375`)
+* Add unit test for experiment with CAMS atmosphere ({ghpr}`375`)
+* Bumped `joseki` from `2.1.0` to `>=2.5.0` ({ghpr}`375`).
 * Added `joseki>=2.1.0` as required dependency ({ghpr}`344`).
 * Removed `iapws` ({ghpr}`344`).
 * Added a `cfconventions.py` module to store variable attributes
