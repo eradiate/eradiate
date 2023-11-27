@@ -228,14 +228,6 @@ def auto_or(*wrapped_validators):
     return f
 
 
-def isinstance_of_2tuple_of_quantity(x):
-    if isinstance(x, tuple):
-        if len(x) == 2:
-            if isinstance(x[0], pint.Quantity) and isinstance(x[1], pint.Quantity):
-                return True
-    return False
-
-
 def validate_absorption_data(instance, attribute, value):
     """Validate absorption data.
 
@@ -247,7 +239,10 @@ def validate_absorption_data(instance, attribute, value):
     """
     if isinstance(value, dict):
         for k, v in value.items():
-            if not isinstance_of_2tuple_of_quantity(k):
+            if not isinstance(k, tuple) and list(map(type, k)) == [
+                pint.Quantity,
+                pint.Quantity,
+            ]:
                 raise TypeError(
                     f"{attribute.name} keys must be 2-tuple of pint.Quantity, "
                     f"(got {type(k)})"

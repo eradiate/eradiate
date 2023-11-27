@@ -3,6 +3,8 @@ Atmosphere's radiative profile.
 """
 from __future__ import annotations
 
+from copy import deepcopy
+
 import attrs
 import joseki
 import numpy as np
@@ -25,9 +27,9 @@ from ..util.misc import cache_by_id, summary_repr
 from ..validators import validate_absorption_data
 
 
-def _absorption_data_repr(
-    value: dict[tuple(pint.Quantity), xr.Dataset]
-) -> dict(str, str):
+def _absorption_data_repr(value: dict[tuple(pint.Quantity), xr.Dataset]) -> dict(
+    str, str
+):
     def repr_k(value):
         "Representation for keys which are wavelength intervals."
 
@@ -79,10 +81,12 @@ class AtmosphereRadProfile(RadProfile):
         ),
         doc="Atmosphere's thermophysical properties.",
         type="Dataset",
-        default=":meth:`joseki.make() <joseki.make>` with "
-        "``identifier='afgl_1986-us_standard'`` and "
-        "``z=np.linspace(0, 120, 61) * ureg.km``"
-        "``additional_moleculs=False``.",
+        default=(
+            "`joseki.make <https://rayference.github.io/joseki/latest/reference/#src.joseki.core.make>`_"
+            ' with ``identifier`` set to "afgl_1986-us_standard" and '
+            '``z`` set to "np.linspace(0.0, 120.0, 121) * ureg.km" and '
+            '``additional_molecules`` set to "False".'
+        ),
     )
 
     @thermoprops.validator
@@ -122,7 +126,7 @@ class AtmosphereRadProfile(RadProfile):
 
     error_handler_config: dict[str, dict[str, str]] = documented(
         attrs.field(
-            factory=lambda: DEFAULT_HANDLER_CONFIG,
+            factory=lambda: deepcopy(DEFAULT_HANDLER_CONFIG),
             validator=attrs.validators.deep_mapping(
                 key_validator=attrs.validators.instance_of(str),
                 value_validator=attrs.validators.deep_mapping(
@@ -223,7 +227,6 @@ class AtmosphereRadProfile(RadProfile):
             return np.zeros((w.size, zgrid.n_layers)).squeeze() / ureg.km
 
     def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-
         if self.has_scattering:
             thermoprops = self._thermoprops_interp(zgrid)
             sigma_s = compute_sigma_s_air(

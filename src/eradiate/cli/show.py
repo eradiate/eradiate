@@ -5,8 +5,6 @@ from rich.console import Console
 app = typer.Typer()
 
 
-
-
 @app.command()
 def main():
     """
@@ -34,7 +32,7 @@ def main():
         ERADIATE_KERNEL_VERSION,
         _EXPECTED_MITSUBA_VERSION,
         ERADIATE_KERNEL_PATCH_VERSION,
-        _EXPECTED_MITSUBA_PATCH_VERSION
+        _EXPECTED_MITSUBA_PATCH_VERSION,
     )
 
     warnings = []

@@ -150,9 +150,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         if not self.components:
             raise ValueError("HeterogeneousAtmosphere must have at least one component")
 
-        # Force component IDs and geometry
+        # Force component IDs
         for i, component in enumerate(self.components):
-            component.update()  # TODO: check if this is necessary
+            component.update()
             component.id = f"{self.id}_component_{i}"
             logger.debug(
                 "Override the geometry of component '%s' to %s (was %s)",
@@ -183,8 +183,10 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     def spectral_set(
         self,
-        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+        quad_spec: QuadratureSpecifications | None = None,
     ) -> None | BinSet | WavelengthSet:
+        if quad_spec is None:
+            quad_spec = QuadratureSpecifications()
         components_with_spectral_set = [
             component
             for component in self.components

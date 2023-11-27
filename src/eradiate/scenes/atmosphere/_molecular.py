@@ -37,7 +37,8 @@ from ...validators import validate_absorption_data
 
 
 def default_absorption_data() -> tuple:
-    """Default absorption data based on active spectral mode.
+    """
+    Default absorption data based on active spectral mode.
 
     Returns
     -------
@@ -118,7 +119,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         ),
         doc="Absorption coefficient data. "
         "If a file path, the absorption coefficient is loaded from the "
-        "specified file (must be a NetCDF file)."
+        "specified file (must be a NetCDF file). "
         "If a tuple, the first element is the dataset codename and the"
         "second is the desired working wavelength range.",
         type="Dict of tuple of pint.Quantity and xarray.Dataset",
@@ -142,9 +143,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         ),
         doc="Thermophysical properties.",
         type="Dataset",
-        default=":meth:`joseki.make() <joseki.make>` with "
-        "``identifier'=afgl_1986-us_standard'`` and "
-        "``z=np.linspace(0.0, 120.0, 121) * ureg.km``",
+        default=(
+            "`joseki.make <https://rayference.github.io/joseki/latest/reference/#src.joseki.core.make>`_"
+            ' with ``identifier`` set to "afgl_1986-us_standard" and '
+            '``z`` set to "np.linspace(0.0, 120.0, 121) * ureg.km"'
+        ),
     )
 
     _phase: PhaseFunction = documented(
@@ -237,7 +240,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         )
 
     def spectral_set(
-        self, quad_spec: QuadratureSpecifications = QuadratureSpecifications()
+        self, quad_spec: QuadratureSpecifications | None = None
     ) -> None | BinSet | WavelengthSet:
         if self.has_absorption:
             absorption_data = list(self.absorption_data.values())
@@ -246,6 +249,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             if eradiate.mode().is_mono:
                 return WavelengthSet.from_absorption_dataset(absorption_data)
             elif eradiate.mode().is_ckd:
+                if quad_spec is None:
+                    quad_spec = QuadratureSpecifications()  # default
                 return BinSet.from_absorption_data(absorption_data, quad_spec)
             else:
                 raise NotImplementedError

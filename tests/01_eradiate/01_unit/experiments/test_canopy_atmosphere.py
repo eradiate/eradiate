@@ -40,10 +40,7 @@ def test_canopy_atmosphere_experiment_construct_measures(mode_mono):
 
 
 @pytest.mark.parametrize("padding", (0, 1))
-def test_canopy_atmosphere_experiment_construct_normalize_measures(
-    mode_mono,
-    padding,
-):
+def test_canopy_atmosphere_experiment_construct_normalize_measures(mode_mono, padding):
     # When canopy is not None, measure target matches canopy unit cell
     exp = CanopyAtmosphereExperiment(
         atmosphere=None,

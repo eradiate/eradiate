@@ -70,15 +70,16 @@ def ert_seed_state():
     return SeedState(0)
 
 
-TEST_ERROR_HANDLER_CONFIG = {
-    "x": {
-        "missing": "ignore",
-        "scalar": "ignore",
-        "bounds": "raise",
-    },
-    "p": {"bounds": "ignore"},
-    "t": {"bounds": "ignore"},
-}
+def _error_handler_config():
+    return {
+        "x": {
+            "missing": "ignore",
+            "scalar": "ignore",
+            "bounds": "raise",
+        },
+        "p": {"bounds": "ignore"},
+        "t": {"bounds": "ignore"},
+    }
 
 
 @pytest.fixture
@@ -97,7 +98,7 @@ def error_handler_config():
     The bounds error for the 'x' (mole fraction) coordinate is considered
     fatal.
     """
-    return TEST_ERROR_HANDLER_CONFIG
+    return _error_handler_config()
 
 
 @pytest.fixture
@@ -119,7 +120,7 @@ def us_standard_mono():
             "additional_molecules": False,
         },
         "absorption_data": ("komodo", [549.5, 550.5] * ureg.nm),
-        "error_handler_config": TEST_ERROR_HANDLER_CONFIG,
+        "error_handler_config": _error_handler_config(),
     }
 
 
@@ -144,7 +145,7 @@ def us_standard_ckd_550nm():
             "additional_molecules": False,
         },
         "absorption_data": ("monotropa", [549.5, 550.5] * ureg.nm),
-        "error_handler_config": TEST_ERROR_HANDLER_CONFIG,
+        "error_handler_config": _error_handler_config(),
     }
 
 
@@ -169,5 +170,5 @@ def cams_lybia4_ckd_550nm():
         "type": "molecular",
         "thermoprops": thermoprops,
         "absorption_data": ("monotropa", [549.5, 550.5] * ureg.nm),
-        "error_handler_config": TEST_ERROR_HANDLER_CONFIG,
+        "error_handler_config": _error_handler_config(),
     }

@@ -13,7 +13,8 @@ from ..exceptions import DataError
 def locate_absorption_data(
     codename: str, mode: str, wavelength_range: pint.Quantity
 ) -> list[Path]:
-    """Locate absorption data for a given wavelength range.
+    """
+    Locate absorption data for a given wavelength range.
 
     Returns
     -------
@@ -27,6 +28,9 @@ def locate_absorption_data(
 
     Notes
     -----
+    Determine from the spectral mode, dataset codename and wavelength range,
+    which absorption datasets are required to cover the requested wavelength
+    range. This is done by reading an index file from the remote data store.
     Datasets that have not already been downloaded will be downloaded from the
     remote data store.
     """

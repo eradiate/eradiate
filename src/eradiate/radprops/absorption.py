@@ -176,11 +176,7 @@ def check_x_ranges(k: xr.DataArray, thermoprops: xr.Dataset) -> None:
 def interp_x(
     k: xr.DataArray,
     thermoprops: xr.Dataset,
-    error_handler_config: dict[str, str] = {
-        "missing": "ignore",
-        "scalar": "ignore",
-        "bounds": "raise",
-    },
+    error_handler_config: dict[str, str] | None = None,
 ) -> xr.DataArray:
     """
     Interpolate absorption coefficient data along volume fraction dimensions.
@@ -203,7 +199,13 @@ def interp_x(
         Interpolated absorption coefficient data array.
     """
     # update missing keys in handle_config with DEFAULT_HANDLE_CONFIG
-    error_handler_config = {**DEFAULT_X_ERROR_HANDLER_CONFIG, **error_handler_config}
+    if error_handler_config is None:
+        error_handler_config = DEFAULT_X_ERROR_HANDLER_CONFIG
+    else:
+        error_handler_config = {
+            **DEFAULT_X_ERROR_HANDLER_CONFIG,
+            **error_handler_config,
+        }
 
     x_thermoprops = [f"x_{m}" for m in thermoprops.joseki.molecules]
     logger.debug("x_thermoprops: %s", x_thermoprops)
@@ -294,11 +296,7 @@ def check_p_range(k: xr.Dataset, thermoprops: xr.Dataset):
 def interp_p(
     k: xr.DataArray,
     thermoprops: xr.Dataset,
-    error_handler_config: dict[str, str] = {
-        "missing": "raise",
-        "scalar": "raise",
-        "bounds": "ignore",
-    },
+    error_handler_config: dict[str, str] | None = None,
 ) -> xr.Dataset:
     """
     Interpolate absorption dataset along pressure dimension.
@@ -324,6 +322,13 @@ def interp_p(
         check_p_range(k, thermoprops)
         bounds_error = True
     except OutOfBoundsCoordinateError as e:
+        if error_handler_config is None:
+            error_handler_config = DEFAULT_P_ERROR_HANDLER_CONFIG
+        else:
+            error_handler_config = {
+                **DEFAULT_P_ERROR_HANDLER_CONFIG,
+                **error_handler_config,
+            }
         handle_error(e, error_handler_config)
         bounds_error = False
 
@@ -354,11 +359,7 @@ def check_t_range(k: xr.DataArray, thermoprops: xr.Dataset):
 def interp_t(
     k: xr.DataArray,
     thermoprops: xr.Dataset,
-    error_handler_config: dict[str, str] = {
-        "missing": "raise",
-        "scalar": "raise",
-        "bounds": "ignore",
-    },
+    error_handler_config: dict[str, str] | None = None,
 ) -> xr.Dataset:
     """
     Interpolate absorption coefficient data set along temperature dimension.
@@ -384,6 +385,13 @@ def interp_t(
         check_t_range(k, thermoprops)
         bounds_error = True
     except OutOfBoundsCoordinateError as e:
+        if error_handler_config is None:
+            error_handler_config = DEFAULT_T_ERROR_HANDLER_CONFIG
+        else:
+            error_handler_config = {
+                **DEFAULT_T_ERROR_HANDLER_CONFIG,
+                **error_handler_config,
+            }
         handle_error(e, error_handler_config)
         bounds_error = False
 

@@ -158,7 +158,7 @@ class Experiment(ABC):
         return self._spectral_set
 
     quad_spec: QuadratureSpecifications = attrs.field(
-        default=QuadratureSpecifications(),
+        factory=lambda: QuadratureSpecifications(),
         converter=QuadratureSpecifications.convert,
         validator=attrs.validators.instance_of(QuadratureSpecifications),
     )

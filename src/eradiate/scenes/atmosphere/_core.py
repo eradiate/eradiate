@@ -94,7 +94,7 @@ class Atmosphere(CompositeSceneElement, ABC):
             converter=SceneGeometry.convert,
             validator=attrs.validators.instance_of(SceneGeometry),
         ),
-        doc="Parameters defining the basic geometry of the scene."
+        doc="Parameters defining the basic geometry of the scene. "
         "Note if the atmosphere is used in a simulation, the experiment has "
         "all control over the atmosphere's geometry and is going to set it. "
         "Therefore, in such a case it is best to define the geometry at the "
@@ -643,7 +643,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_transmittance_accross_spectral_set(
         self,
         interaction: str = "extinction",
-        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+        quad_spec: QuadratureSpecifications | None = None,
     ) -> xr.DataArray:
         """
         Evaluate the atmosphere's transmittance with respect to extinction
@@ -666,6 +666,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 quad_spec=quad_spec,
             )
         elif eradiate.mode().is_ckd:
+            if quad_spec is None:
+                quad_spec = QuadratureSpecifications()
             return self.eval_transmittance_accross_spectral_set_ckd(
                 interaction=interaction,
                 quad_spec=quad_spec,
@@ -676,8 +678,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_transmittance_accross_spectral_set_mono(
         self,
         interaction: str = "extinction",
-        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+        quad_spec: QuadratureSpecifications | None = None,
     ) -> xr.DataArray:
+        if quad_spec is None:
+            quad_spec = QuadratureSpecifications()
         w = self.spectral_set.wavelengths
         wunits = symbol(ucc.get("wavelength"))
         transmittance = np.full(w.size, np.nan)
@@ -704,10 +708,12 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_transmittance_accross_spectral_set_ckd(
         self,
         interaction: str = "extinction",
-        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+        quad_spec: QuadratureSpecifications | None = None,
     ) -> xr.DataArray:
         # compute transmittance at each spectral index
         transmittance = {}
+        if quad_spec is None:
+            quad_spec = QuadratureSpecifications()
         for si in self.spectral_set(quad_spec=quad_spec).spectral_indices():
             transmittance[si.as_hashable] = self.eval_transmittance(
                 si=si,

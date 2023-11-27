@@ -8,14 +8,12 @@ import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
-import xarray as xr
 
 from .shapes import CuboidShape, RectangleShape, Shape, SphereShape
 from ..attrs import documented, parse_docs
 from ..constants import EARTH_RADIUS
 from ..kernel import map_cube, map_unit_cube
 from ..radprops import ZGrid
-from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_context_kernel as uck
 from ..units import unit_registry as ureg

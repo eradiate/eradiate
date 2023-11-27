@@ -85,7 +85,7 @@ class RTLSBSDF(BSDF):
             default=2.0,
             units=ucc.deferred("dimensionless"),
         ),
-        doc="Height-to-center-of-crown. " "Must be dimensionless.",
+        doc="Height-to-center-of-crown. Must be dimensionless.",
         type="quantity",
         init_type="quantity or float",
         default="2.0",
