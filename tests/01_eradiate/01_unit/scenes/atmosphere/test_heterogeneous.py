@@ -89,11 +89,7 @@ def test_heterogeneous_single_ckd(
 
 @pytest.mark.slow
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
-def test_heterogeneous_multi_mono(
-    mode_mono,
-    geometry,
-    us_standard_mono,
-):
+def test_heterogeneous_multi_mono(mode_mono, geometry, us_standard_mono):
     """
     Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
     """

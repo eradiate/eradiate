@@ -1,7 +1,7 @@
 from .units import symbol
 from .units import unit_context_config as ucc
 
-# Variable attributes, see section 3 of the CD conventions document
+# Variable attributes, see section 3 of the CF conventions document
 # https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html#_description_of_the_data
 ATTRIBUTES = {
     "radiation_wavelength": {

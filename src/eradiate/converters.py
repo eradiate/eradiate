@@ -182,7 +182,7 @@ def convert_thermoprops(value) -> xr.Dataset:
             return joseki.load_dataset(path)
         else:
             raise ValueError(
-                f"invalid path for 'thermoprops': {path} " f"(expected a file)"
+                f"invalid path for 'thermoprops': {path} (expected a file)"
             )
 
     # Dictionary: forward to joseki.make()
@@ -197,15 +197,17 @@ def convert_thermoprops(value) -> xr.Dataset:
         )
 
 
-def isinstance_of_2tuple_quantity(x):
-    if isinstance(x, tuple):
-        if len(x) == 2:
-            if isinstance(x[0], pint.Quantity) and isinstance(x[1], pint.Quantity):
-                return True
-    return False
+def _is_quantity(x):
+    return isinstance(x, pint.Quantity)
 
 
-def convert_absorption_data(value) -> dict[tuple[pint.Quantity], xr.Dataset]:
+def _isinstance_of_2tuple_quantity(x):
+    return isinstance(x, tuple) and list(map(_is_quantity, x)) == [True, True]
+
+
+def convert_absorption_data(
+    value,
+) -> dict[tuple[pint.Quantity, pint.Quantity], xr.Dataset]:
     """Converter for atmosphere absorption coefficient data."""
 
     # Import must be local to avoid circular imports
@@ -213,8 +215,8 @@ def convert_absorption_data(value) -> dict[tuple[pint.Quantity], xr.Dataset]:
 
     # dict: verify that keys are 2-tuple[pint.Quantity] and values are xarray.Dataset
     if isinstance(value, dict):
-        if all([isinstance_of_2tuple_quantity(k) for k in value]) and all(
-            [isinstance(v, xr.Dataset) for v in value.values()]
+        if all(map(_isinstance_of_2tuple_quantity, value.keys())) and all(
+            map(lambda x: isinstance(x, xr.Dataset), value.values())
         ):
             return value
         else:
@@ -264,9 +266,15 @@ def convert_absorption_data(value) -> dict[tuple[pint.Quantity], xr.Dataset]:
 
         else:  # assume 'value' is a local directory
             path = Path(value)
-            files = list(path.glob("*.nc"))
-            datasets = [xr.open_dataset(file) for file in files]
-            return {wrange(ds): ds for ds in datasets}
+            if path.exists() and path.is_dir():
+                files = list(path.glob("*.nc"))
+                datasets = [xr.open_dataset(file) for file in files]
+                return {wrange(ds): ds for ds in datasets}
+            else:
+                raise ValueError(
+                    f"invalid path for 'absorption_data': {path} "
+                    f"(expected a netCDF file or a directory)"
+                )
 
     # Anything else: raise error
     else:

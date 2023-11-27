@@ -100,6 +100,7 @@ intersphinx_mapping = {
     "attrs": ("https://www.attrs.org/en/stable/", None),
     "dateutil": ("https://dateutil.readthedocs.io/en/stable/", None),
     "dessinemoi": ("https://dessinemoi.readthedocs.io/en/stable/", None),
+    "joseki": ("https://rayference.github.io/joseki/latest/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "mitsuba": ("https://mitsuba.readthedocs.io/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),

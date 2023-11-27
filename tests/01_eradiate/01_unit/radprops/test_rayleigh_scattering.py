@@ -64,8 +64,6 @@ def test_sigma_s_air_optical_thickness():
     )
     optical_thickness = sigma_s.integrate(coord="z")
 
-    # optical_thickness = np.sum(sigma_s.to("m^-1").magnitude * dz)
-
     assert np.isclose(optical_thickness, 0.0973, rtol=1e-2)
 
 

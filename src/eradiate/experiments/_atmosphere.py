@@ -125,7 +125,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
     def _check_geometry_comply_with_molecular_atmosphere(self, atmosphere):
         """
         Check that the experiment geometry is compatible with the molecular
-        atmosphere' vertical extent.
+        atmosphere vertical extent.
 
         Parameters
         ----------
@@ -139,25 +139,21 @@ class AtmosphereExperiment(EarthObservationExperiment):
             extent.
         """
         z = to_quantity(atmosphere.thermoprops.z)
-        thermoprops_lower = z[0]
-        thermoprops_upper = z[-1]
+        thermoprops_zbounds = z[[0, -1]]
+        geometry_zbounds = self.geometry.zgrid.levels[[0, -1]]
         suggested_solution = (
             "Try to set the experiment geometry so that it does not go beyond "
             "the vertical extent of the molecular atmosphere."
         )
-        if self.geometry.zgrid.levels[0] < thermoprops_lower:
+        if (
+            geometry_zbounds[0] < thermoprops_zbounds[0]
+            or geometry_zbounds[-1] > thermoprops_zbounds[-1]
+        ):
             raise ValueError(
                 "Attribtues 'geometry' and 'atmosphere' are incompatible: "
-                f"'geometry.zgrid' lower bound ({self.geometry.zgrid.levels[0]}) "
-                f"exceeds lower bound of 'atmosphere.thermoprops' "
-                f"({thermoprops_lower}). {suggested_solution}"
-            )
-        if self.geometry.zgrid.levels[-1] > thermoprops_upper:
-            raise ValueError(
-                "Attribtues 'geometry' and 'atmosphere' are incompatible: "
-                f"'geometry.zgrid' upper bound ({self.geometry.zgrid.levels[-1]}) "
-                f"exceeds upper bound of 'atmosphere.thermoprops' "
-                f"({thermoprops_upper}). {suggested_solution}"
+                f"'geometry.zgrid' bounds ({geometry_zbounds}) go beyond the "
+                f"bounds of 'atmosphere.thermoprops' ({thermoprops_zbounds}). "
+                f"{suggested_solution}"
             )
 
     def _normalize_atmosphere(self) -> None:

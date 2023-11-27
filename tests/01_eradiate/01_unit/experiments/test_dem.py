@@ -190,7 +190,7 @@ def test_dem_experiment_run_detailed(modes_all):
     # Post-processing creates expected variables ...
     expected = {"irradiance", "brf", "brdf", "radiance", "spp"}
     if eradiate.mode().is_ckd:
-        expected |= {"wbounds"}
+        expected.add("wbounds")
 
     assert set(results.data_vars) == expected
 

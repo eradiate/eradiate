@@ -220,10 +220,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                 "'has_absorption' and 'has_scattering' must be True"
             )
 
-    _phase: TabulatedPhaseFunction | None = attrs.field(
-        default=None,
-        init=False,
-    )
+    _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
 
     def spectral_set(
         self,
@@ -232,10 +229,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return None
 
     def update(self) -> None:
-        self._phase = TabulatedPhaseFunction(
-            id=self.phase_id,
-            data=self.dataset.phase,
-        )
+        self._phase = TabulatedPhaseFunction(id=self.phase_id, data=self.dataset.phase)
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties

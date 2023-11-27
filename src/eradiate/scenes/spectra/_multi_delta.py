@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from itertools import compress
-
 import attrs
 import numpy as np
 import pint
@@ -87,29 +85,11 @@ class MultiDeltaSpectrum(Spectrum):
         xmin = np.array([bin.wmin.m_as(wunits) for bin in bins])
         xmax = np.array([bin.wmax.m_as(wunits) for bin in bins])
         x = self.wavelengths.m_as(wunits)
-        selected = select_method_1(xmin, xmax, x)
+        selected = _select(xmin, xmax, x)
         return BinSet(bins=list(np.array(bins)[selected]))
 
 
-def chunk_bins(xmin, xmax) -> list[np.ndarray]:
-    """
-    Split the dual list-based bin definition into a sequence of single
-    list-based contiguous bin definitions.
-    """
-    assert np.shape(xmin) == np.shape(xmax)
-    chunks = np.concatenate(((False,), (xmin[1:] == xmax[:-1])))
-    assert np.shape(chunks) == np.shape(xmin)
-
-    chunk_start = np.where(chunks == False)[0]
-    chunk_end = np.concatenate((chunk_start[1:], (len(chunks),)))
-
-    return [
-        np.unique((xmin[start:end], xmax[start:end]))
-        for start, end in zip(chunk_start, chunk_end)
-    ]
-
-
-def select_method_1(xmin, xmax, x):
+def _select(xmin, xmax, x):
     selmin = np.searchsorted(xmin, x)
     selmax = np.searchsorted(xmax, x) + 1
     hit = selmin == selmax  # Mask where x values which triggered a bin hit

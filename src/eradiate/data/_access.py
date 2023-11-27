@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
+
 import lazy_loader
 
 from ..typing import PathLike
@@ -45,3 +47,13 @@ def load_dataset(*args, **kwargs) -> xarray.Dataset:
     """
     with open_dataset(*args, **kwargs) as ds:
         return ds.load()
+
+
+@contextmanager
+def open_datasets(paths):
+    try:
+        datasets = [open_dataset(path) for path in paths]
+        yield datasets
+    finally:
+        for ds in datasets:
+            ds.close()
