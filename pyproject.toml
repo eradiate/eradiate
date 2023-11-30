@@ -48,9 +48,8 @@ filterwarnings = [
 testpaths = "tests"
 
 [tool.ruff]
-select = [
-  "I"
-]
+ignore = ["E501", "F821"]
+select = ["I", "F", "E"]
 src = ["src", "tests"]
 
 [tool.ruff.isort]
