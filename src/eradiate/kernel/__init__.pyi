@@ -11,6 +11,7 @@ from ._render import MitsubaObjectWrapper as MitsubaObjectWrapper
 from ._render import TypeIdLookupStrategy as TypeIdLookupStrategy
 from ._render import mi_render as mi_render
 from ._render import mi_traverse as mi_traverse
+from ._versions import check_kernel as check_kernel
 from .gridvolume import read_binary_grid3d as read_binary_grid3d
 from .gridvolume import write_binary_grid3d as write_binary_grid3d
 from .logging import install_logging as install_logging

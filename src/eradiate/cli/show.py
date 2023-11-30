@@ -28,33 +28,7 @@ def main():
     def warning(text):
         error_console.print(text)
 
-    from eradiate.kernel import (
-        ERADIATE_KERNEL_VERSION,
-        _EXPECTED_MITSUBA_VERSION,
-        ERADIATE_KERNEL_PATCH_VERSION,
-        _EXPECTED_MITSUBA_PATCH_VERSION,
-    )
-
-    warnings = []
-    # Check if the kernel version is compatible
-    if ERADIATE_KERNEL_VERSION != _EXPECTED_MITSUBA_VERSION:
-        warnings.append(
-            "Using an incompatible version of Mitsuba. Eradiate requires Mitsuba "
-            f"{_EXPECTED_MITSUBA_VERSION}. Found Mitsuba {ERADIATE_KERNEL_VERSION}."
-        )
-    if ERADIATE_KERNEL_PATCH_VERSION is None:
-        warnings.append(
-            "Using a without explicit support for Eradiate. Make sure your kernel "
-            "is compiled with the appropriate variants and plugins to run Eradiate."
-        )
-    elif ERADIATE_KERNEL_PATCH_VERSION != _EXPECTED_MITSUBA_PATCH_VERSION:
-        warnings.append(
-            "Using an incompatible patch version of Mitsuba. Eradiate requires a "
-            f"Mitsuba kernel version {_EXPECTED_MITSUBA_VERSION}, with a specific patch "
-            f"version {_EXPECTED_MITSUBA_PATCH_VERSION}. Found Mitsuba "
-            f"{ERADIATE_KERNEL_VERSION} with the patch version"
-            f" {ERADIATE_KERNEL_PATCH_VERSION}."
-        )
+    warnings = eradiate.kernel.check_kernel()
 
     if warnings:
         section("Warnings", newline=False)
