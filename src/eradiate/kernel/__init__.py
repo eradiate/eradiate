@@ -1,8 +1,8 @@
 from importlib.metadata import PackageNotFoundError, version
 
 # Internal constants
-_EXPECTED_MITSUBA_VERSION = "3.2.1"
-_EXPECTED_MITSUBA_PATCH_VERSION = "0.1.1rc1"
+_EXPECTED_MITSUBA_VERSION = "3.4.0"
+_EXPECTED_MITSUBA_PATCH_VERSION = "0.1.1"
 
 # Exported constants
 ERADIATE_MITSUBA_PACKAGE_VERSION = None
