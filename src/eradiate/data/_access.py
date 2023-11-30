@@ -2,14 +2,12 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 
-import lazy_loader
+import xarray as xr
 
 from ..typing import PathLike
 
-xr = lazy_loader.load("xarray")
 
-
-def open_dataset(filename: PathLike, **kwargs) -> xarray.Dataset:
+def open_dataset(filename: PathLike, **kwargs) -> xr.Dataset:
     """
     Open a dataset from the online data store (requires Internet access).
 
@@ -36,7 +34,7 @@ def open_dataset(filename: PathLike, **kwargs) -> xarray.Dataset:
     return xr.open_dataset(filename, **kwargs)
 
 
-def load_dataset(*args, **kwargs) -> xarray.Dataset:
+def load_dataset(*args, **kwargs) -> xr.Dataset:
     """
     Open, load into memory, and close a dataset from the online data store
     (requires Internet access).
