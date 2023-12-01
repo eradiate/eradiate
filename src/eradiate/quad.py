@@ -111,17 +111,15 @@ class Quad:
         )
 
     @classmethod
-    def new(cls, type: str, n: int) -> Quad:
+    def new(cls, type: str | QuadType, n: int) -> Quad:
         """
         Initialize a :class:`.Quad` instance of the specified type.
 
         Parameters
         ----------
-        type : str
-            Quadrature rule type. Allowed values are:
-
-            * ``gauss_legendre``;
-            * ``gauss_lobatto``.
+        type : str or .QuadType
+            Quadrature rule type. If a string is passed, it is converted to
+            a :class:`.QuadType`.
 
         n : int
             Number of quadrature points.
@@ -131,10 +129,12 @@ class Quad:
         :class:`.Quad`
             Quadrature definition.
         """
-        if type == "gauss_legendre":
+        type = QuadType(type)
+
+        if type is QuadType.GAUSS_LEGENDRE:
             return cls.gauss_legendre(n)
 
-        elif type == "gauss_lobatto":
+        elif type is QuadType.GAUSS_LOBATTO:
             return cls.gauss_lobatto(n)
 
         else:
