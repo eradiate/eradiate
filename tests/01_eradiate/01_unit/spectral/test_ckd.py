@@ -2,10 +2,15 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.quad import Quad
+from eradiate.quad import Quad, QuadType
 from eradiate.scenes.spectra import InterpolatedSpectrum, MultiDeltaSpectrum
 from eradiate.spectral import Bin, BinSet
-from eradiate.spectral.ckd import QuadratureSpecifications
+from eradiate.spectral.ckd import (
+    QuadSpec,
+    QuadSpecErrorThreshold,
+    QuadSpecFixed,
+    QuadSpecMinError,
+)
 
 
 def test_ckd_bin():
@@ -246,48 +251,37 @@ def test_select_from_connex_interpolated_spectrum_misaligned():
         assert np.isclose(bin.wmax, wmin + 10.0 * ureg.nm)
 
 
-def test_quadrature_specifications():
-    """
-    Unit tests for :class:`.QuadratureSpecifications`.
-    """
-    quad_spec = QuadratureSpecifications(
-        type="fixed",
-        params={"n": 8, "type": "gauss_lobatto"},
-    )
-    assert quad_spec.type == "fixed"
-
-    with pytest.raises(ValueError):
-        quad_spec = QuadratureSpecifications(
-            type="invalid",
-        )
-
-
-def test_quadrature_specifications():
-    """Default constructor builds QuadratureSpecifications object."""
-    q = QuadratureSpecifications(type="fixed", params={"n": 8, "type": "gauss_lobatto"})
-    assert isinstance(q, QuadratureSpecifications)
+def test_quad_spec_default():
+    assert QuadSpec.default() == QuadSpecFixed(quad_type=QuadType.GAUSS_LEGENDRE, n=1)
 
 
 @pytest.mark.parametrize(
-    "d",
+    "value, expected",
     [
-        {"type": "fixed", "params": {"n": 8, "type": "gauss_lobatto"}},
-        {
-            "type": "minimize_error",
-            "params": {
-                "nmax": 16,
-            },
-        },
-        {
-            "type": "error_below_threshold",
-            "params": {
-                "threshold": 1e-2,
-                "nmax": 16,
-            },
-        },
+        (
+            {"type": "fixed", "n": 8, "quad_type": "gauss_lobatto"},
+            QuadSpecFixed(8, "gauss_lobatto"),
+        ),
+        (
+            {"type": "minimize", "nmax": 8},
+            QuadSpecMinError(8),
+        ),
+        (
+            {"type": "threshold", "nmax": 8, "threshold": 0.01},
+            QuadSpecErrorThreshold(0.01, 8),
+        ),
+        ({"type": "invalid"}, ValueError),
+        ({}, ValueError),
     ],
 )
-def test_quadrature_specifications_from_dict(d):
-    """Valid dictionaries are converted to QuadratureSpecifications objects."""
-    q = QuadratureSpecifications.from_dict(d)
-    assert isinstance(q, QuadratureSpecifications)
+def test_quad_spec_from_dict(value, expected):
+    """
+    Unit tests for :class:`.QuadSpec`.
+    """
+    if isinstance(expected, type) and issubclass(expected, Exception):
+        with pytest.raises(expected):
+            QuadSpec.from_dict(value)
+
+    else:
+        quad_spec = QuadSpec.from_dict(value)
+        assert quad_spec == expected

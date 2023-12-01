@@ -28,7 +28,7 @@ from ...radprops import (
 )
 from ...radprops._atmosphere import _absorption_data_repr
 from ...radprops.absorption import DEFAULT_HANDLER_CONFIG
-from ...spectral.ckd import BinSet, QuadratureSpecifications
+from ...spectral.ckd import BinSet, QuadSpec
 from ...spectral.index import SpectralIndex
 from ...spectral.mono import WavelengthSet
 from ...units import unit_registry as ureg
@@ -240,18 +240,21 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         )
 
     def spectral_set(
-        self, quad_spec: QuadratureSpecifications | None = None
+        self, quad_spec: QuadSpec | None = None
     ) -> None | BinSet | WavelengthSet:
         if self.has_absorption:
             absorption_data = list(self.absorption_data.values())
             if len(absorption_data) == 1:
                 absorption_data = absorption_data[0]
+
             if eradiate.mode().is_mono:
                 return WavelengthSet.from_absorption_dataset(absorption_data)
+
             elif eradiate.mode().is_ckd:
                 if quad_spec is None:
-                    quad_spec = QuadratureSpecifications()  # default
+                    quad_spec = QuadSpec.default()  # default
                 return BinSet.from_absorption_data(absorption_data, quad_spec)
+
             else:
                 raise NotImplementedError
         else:

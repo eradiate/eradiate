@@ -110,10 +110,8 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
         ],
         "quad_spec": {
             "type": "fixed",
-            "params": {
-                "type": "gauss_legendre",
-                "n": 16,
-            },
+            "quad_type": "gauss_legendre",
+            "n": 16,
         },
     }
 

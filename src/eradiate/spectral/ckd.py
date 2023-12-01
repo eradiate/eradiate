@@ -104,192 +104,193 @@ class Bin:
 
 
 # ------------------------------------------------------------------------------
-#                              Bin set data class
+#                          CKD quadrature setup classes
 # ------------------------------------------------------------------------------
 
 
 @parse_docs
 @attrs.define
-class QuadratureSpecifications:
-    r"""
-    Quadrature rule specifications.
+class QuadSpec:
+    """
+    Abstract base class for all quadrature specification patterns.
 
-    Notes
-    -----
-
-    .. list-table:: Quadrature specifications types
-       :widths: 30 30 30
-       :header-rows: 1
-
-       * - ``type``
-         - Description
-         - Parameters
-       * - ``"fixed"``
-         - Use a fixed number of quadrature points.
-         - ``n`` (``int``): number of quadrature points,
-           ``type`` (``str``): quadrature type (default: ``"gauss_legendre"``)
-       * - ``"minimize_error"``
-         - Find the number of quadrature points that minimizes the error on the
-           atmospheric transmittance.
-         - ``nmax`` (``int``): upper bound on the number of quadrature points
-       * - ``"error_below_threshold"``
-         - Find the number of quadrature points so that the error on the
-           atmospheric transmittance is below a specified threshold.
-         - ``threshold`` (``float``): error threshold value,
-           ``nmax`` (``int``): upper bound on the number of quadrature points.
+    Each subclass defines a strategy used to generate a spectral quadrature
+    corresponding to a CKD dataset and must implement the strategy in the
+    :meth:`make_quad`.
     """
 
-    type: str = documented(
-        attrs.field(
-            default="fixed",
-            converter=str,
-            validator=attrs.validators.in_(
-                {"fixed", "minimize_error", "error_below_threshold"}
-            ),
-        ),
-        doc="Algorithm to determine the number of quadrature points."
-        'Must be in {"fixed", "minimize_error", "error_below_threshold"}.'
-        "Each algorithm takes additional parameters (see ``params``).",
-        default="fixed",
-        type="str",
-        init_type="str",
-    )
+    @staticmethod
+    def default() -> QuadSpecFixed:
+        return QuadSpecFixed(n=1, quad_type="gauss_legendre")
 
-    params: dict = documented(
-        attrs.field(
-            default={"type": "gauss_legendre", "n": 1},
-            converter=dict,
-            validator=attrs.validators.instance_of(dict),
-        ),
-        doc="Parameters to the algorithm used to determine the number of "
-        "quadrature points."
-        "Refer to the notes section for the parameters corresponding to "
-        "each algorithm.",
-        default="{'type': 'gauss_legendre', 'n': 1}",
-        type="dict",
-        init_type="dict",
-    )
+    @staticmethod
+    def from_dict(
+        value: dict[str, t.Any]
+    ) -> QuadSpecFixed | QuadSpecMinError | QuadSpecErrorThreshold:
+        """
+        Create a quadrature specification subtype from a dictionary. The
+        dictionary must have a ``type`` entry, whose value maps to a give
+        quadrature specification subtype as follows:
 
-    @type.validator
-    @params.validator
-    def _params_validator(self, attribute, value):
-        # if type is "fixed", params must be a dict with keys "type" and "n"
-        # where 'type' is a str and 'n' an int
-        # elif type is "minimize_error", params must be a dict with key "nmax"
-        # where 'nmax' is an int
-        # elif type is "threshold", params must be a dict with keys 'threshold'
-        # and 'nmax' where 'threshold' is a float and 'nmax' is an int
+        * ``fixed``: :class:`.QuadSpecFixed`
+        * ``minimize_error``: :class:`.QuadSpecMinError`
+        * ``error_threshold``: :class:`.QuadSpecErrorThreshold`
 
-        if self.type == "fixed":
-            if self.params.keys() != {"type", "n"}:
-                raise ValueError(
-                    f"while validating {attribute.name}: "
-                    f"params must be a dict with keys 'type' and 'n'"
-                    f"(got {list(self.params.keys())})"
-                )
-            if not isinstance(self.params["type"], str):
-                raise ValueError(
-                    f"while validating {attribute.name}: "
-                    f"params['type'] must be a str"
-                    f"(got {type(self.params['type'])})"
-                )
-            if not self.params["type"] in [x.value for x in QuadType]:
-                raise ValueError(
-                    f"while validating {attribute.name}: "
-                    f"params['type'] must be in {[x.value for x in QuadType]} "
-                    f"(got {self.params['type']})"
-                )
-            if not isinstance(self.params["n"], int):
-                raise ValueError(
-                    f"while validating {attribute.name}: "
-                    f"params['n'] must be an int"
-                    f"(got {type(self.params['n'])})"
-                )
+        Parameters
+        ----------
+        value : dict
+            A dictionary mapping parameter names to their respective values.
 
-        elif self.type == "minimize_error":
-            if self.params.keys() != {"nmax"}:
-                raise ValueError(
-                    f"while validating {attribute.name}: "
-                    f"params must be a dict with key 'nmax' "
-                    f"(got {list(self.params.keys())})"
-                )
-            if not isinstance(self.params["nmax"], int):
-                raise ValueError(
-                    f"while validating {attribute.name}: "
-                    f"params['nmax'] must be an int"
-                    f"(got {type(self.params['nmax'])})"
-                )
+        Returns
+        -------
+        QuadSpec
+        """
+        try:
+            subtype: str = value.pop("type")
+        except KeyError:
+            raise ValueError("dictionary input must have a 'type' entry")
 
-        elif self.type == "error_below_threshold":
-            if self.params.keys() != {"threshold", "nmax"}:
-                raise ValueError(
-                    f"while validating {attribute.name}: "
-                    f"params must be a dict with keys 'threshold' and 'nmax'"
-                    f"(got {list(self.params.keys())})"
-                )
-            if not isinstance(self.params["threshold"], float):
-                raise ValueError(
-                    f"while validating {attribute.name}: "
-                    f"params['threshold'] must be a float"
-                    f"(got {type(self.params['threshold'])})"
-                )
-            if not isinstance(self.params["nmax"], int):
-                raise ValueError(
-                    f"while validating {attribute.name}: "
-                    "params['nmax'] must be an int"
-                    f"(got {type(self.params['nmax'])})"
-                )
+        if subtype == "fixed":
+            cls = QuadSpecFixed
+        elif subtype in {"minimize", "minimize_error"}:
+            cls = QuadSpecMinError
+        elif subtype in {"threshold", "error_threshold"}:
+            cls = QuadSpecErrorThreshold
+        else:
+            raise ValueError(f"Unknown quadrature specification '{subtype}'")
+
+        return cls.from_dict(value)
 
     @classmethod
-    def convert(
-        cls, value: QuadratureSpecifications | dict
-    ) -> QuadratureSpecifications:
+    def convert(cls, value: t.Any) -> QuadSpec:
+        """
+        Convert an object to a
+        """
         if isinstance(value, dict):
             return cls.from_dict(value)
-        elif isinstance(value, QuadratureSpecifications):
-            return value
         else:
-            raise TypeError(
-                f"Unsupported type {type(value)}; "
-                f"expected dict or QuadratureSpecifications"
-            )
-
-    @classmethod
-    def from_dict(cls, value: dict) -> QuadratureSpecifications:
-        return cls(**value)
+            return value
 
     def make_quad(self, dataset: xr.Dataset) -> Quad:
         """
-        Make a quadrature rule from the specifications and the dataset.
+        Apply the quadrature generation strategy and generate a quadrature rule
+        for a given dataset.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            An xarray dataset following the CKD absorption data format, for
+            which a quadrature rule is generated.
+
+        Returns
+        -------
+        .Quad
         """
-        if self.type == "fixed":
-            return Quad.new(**self.params)
+        raise NotImplementedError
 
-        elif self.type == "minimize_error":
-            n = ng_minimum(
-                error=dataset.error,
-                ng_max=self.params.get("nmax", None),
-            )
-            quad_type = dataset.ng.attrs.get(
-                "quadrature_type",
-                "gauss_legendre",
-            )
-            return Quad.new(type=quad_type, n=n)
 
-        elif self.type == "error_below_threshold":
-            n = ng_threshold(
-                error=dataset.error,
-                threshold=self.params["threshold"],
-                ng_max=self.params.get("nmax", None),
-            )
-            quad_type = dataset.ng.attrs.get(
-                "quadrature_type",
-                "gauss_legendre",
-            )
-            return Quad.new(type=quad_type, n=n)
+@parse_docs
+@attrs.define
+class QuadSpecFixed(QuadSpec):
+    """
+    Fixed number of quadrature points [``fixed``]
 
-        else:
-            raise NotImplementedError(f"Unsupported type {self.type}")
+    Use a fixed number of quadrature points for all bins. If the quadrature
+    is specified this way, the quadrature type has to be explicitly specified
+    using the ``type`` field.
+    """
+
+    n: int = documented(
+        attrs.field(),
+        doc="Number of quadrature points",
+        type="int",
+    )
+
+    quad_type: QuadType = documented(
+        attrs.field(default="gauss_legendre", converter=QuadType),
+        doc="Quadrature type",
+        type=".QuadType",
+        init_type=".QuadType or str",
+        default='"gauss_legendre"',
+    )
+
+    @classmethod
+    def from_dict(cls, value: dict[str, t.Any]) -> QuadSpecFixed:
+        return cls(**value)
+
+    def make_quad(self, dataset: xr.Dataset) -> Quad:
+        # Inherit docstring
+        return Quad.new(type=self.quad_type, n=self.n)
+
+
+@parse_docs
+@attrs.define
+class QuadSpecMinError(QuadSpec):
+    """
+    Error-minimizing number of quadrature points [``minimize_error``]
+
+    Find the number of quadrature points that minimizes the error on the
+    atmospheric transmittance. The quadrature type
+    """
+
+    nmax: int | None = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(int),
+        ),
+        doc="Maximum number of quadrature points",
+        type="int or None",
+        init_type="int, optional",
+    )
+
+    @classmethod
+    def from_dict(cls, value: dict[str, t.Any]) -> QuadSpecMinError:
+        return cls(**value)
+
+    def make_quad(self, dataset: xr.Dataset) -> Quad:
+        # Inherit docstring
+        n = ng_minimum(error=dataset.error, ng_max=self.nmax)
+        quad_type = dataset.ng.attrs.get("quadrature_type", "gauss_legendre")
+        return Quad.new(type=quad_type, n=n)
+
+
+@parse_docs
+@attrs.define
+class QuadSpecErrorThreshold(QuadSpec):
+    """
+    Error-threshold number of quadrature points [``error_threshold``]
+
+    Find the number of quadrature points so that the error on the atmospheric
+    transmittance is below a specified threshold.
+    """
+
+    threshold: float = documented(
+        attrs.field(),
+        doc="Error threshold value",
+        type="float",
+    )
+
+    nmax: int | None = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(int),
+        ),
+        doc="Maximum number of quadrature points",
+        type="int or None",
+        init_type="int, optional",
+    )
+
+    @classmethod
+    def from_dict(cls, value: dict[str, t.Any]) -> QuadSpecErrorThreshold:
+        return cls(**value)
+
+    def make_quad(self, dataset: xr.Dataset) -> Quad:
+        # Inherit docstring
+        quad_type = dataset.ng.attrs.get("quadrature_type", "gauss_legendre")
+        n = ng_threshold(
+            error=dataset.error, threshold=self.threshold, ng_max=self.nmax
+        )
+        return Quad.new(type=quad_type, n=n)
 
 
 def ng_minimum(error: xr.DataArray, ng_max: int | None = None):
@@ -357,6 +358,11 @@ def ng_threshold(
     else:
         ng = int(ng[0])
         return ng_max if ng > ng_max else ng
+
+
+# ------------------------------------------------------------------------------
+#                              Bin set data class
+# ------------------------------------------------------------------------------
 
 
 @parse_docs
@@ -498,7 +504,7 @@ class BinSet:
     def from_absorption_dataset(
         cls,
         dataset: xr.Dataset,
-        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+        quad_spec: QuadSpec | None = None,
     ) -> BinSet:
         """
         Generate a bin set from an absorption dataset.
@@ -508,7 +514,7 @@ class BinSet:
         dataset : Dataset
             Absorption dataset.
 
-        quad_spec : QuadratureSpecifications
+        quad_spec : .QuadSpec
             Quadrature rule specification. If provided, it will be used to
             generate the quadrature rule based on error data in the
             absorption dataset.
@@ -522,6 +528,8 @@ class BinSet:
         -----
         Assumes that the absorption dataset has a ``wbounds`` data variable.
         """
+        if quad_spec is None:
+            quad_spec = QuadSpec.default()
 
         # make quadrature rule
         quad = quad_spec.make_quad(dataset)
@@ -553,7 +561,7 @@ class BinSet:
     def from_absorption_datasets(
         cls,
         datasets: list[xr.Dataset],
-        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+        quad_spec: QuadSpec = None,
     ) -> BinSet:
         """
         Generate a bin set from a list of absorption datasets.
@@ -563,7 +571,7 @@ class BinSet:
         datasets : list of Dataset
             Absorption datasets.
 
-        quad_spec : QuadratureSpecifications
+        quad_spec : .QuadSpec
             Quadrature rule specification. If provided, it will be used to
             generate the quadrature rule based on error data in the
             absorption dataset.
@@ -577,6 +585,9 @@ class BinSet:
         -----
         Assumes that the absorption datasets have a ``wbounds`` data variable.
         """
+        if quad_spec is None:
+            quad_spec = QuadSpec.default()
+
         binsets = [
             cls.from_absorption_dataset(dataset, quad_spec=quad_spec)
             for dataset in datasets
@@ -607,13 +618,13 @@ class BinSet:
 @singledispatch
 def from_absorption_data_impl(
     absorption_data: xr.Dataset | list,
-    quad_spec: QuadratureSpecifications,
+    quad_spec: QuadSpec,
 ) -> BinSet:
     raise NotImplementedError(f"Unsupported type {type(absorption_data)}")
 
 
 @from_absorption_data_impl.register(xr.Dataset)
-def _(absorption_data, quad_spec: QuadratureSpecifications) -> BinSet:
+def _(absorption_data, quad_spec: QuadSpec) -> BinSet:
     return BinSet.from_absorption_dataset(
         dataset=absorption_data,
         quad_spec=quad_spec,
@@ -621,7 +632,7 @@ def _(absorption_data, quad_spec: QuadratureSpecifications) -> BinSet:
 
 
 @from_absorption_data_impl.register(list)
-def _(absorption_data, quad_spec: QuadratureSpecifications) -> BinSet:
+def _(absorption_data, quad_spec: QuadSpec) -> BinSet:
     return BinSet.from_absorption_datasets(
         datasets=absorption_data,
         quad_spec=quad_spec,

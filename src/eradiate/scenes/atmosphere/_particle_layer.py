@@ -21,7 +21,7 @@ from ...attrs import documented, parse_docs
 from ...contexts import KernelContext
 from ...kernel import UpdateParameter
 from ...radprops import ZGrid
-from ...spectral.ckd import BinSet, QuadratureSpecifications
+from ...spectral.ckd import BinSet, QuadSpec
 from ...spectral.index import (
     CKDSpectralIndex,
     MonoSpectralIndex,
@@ -223,8 +223,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
 
     def spectral_set(
-        self,
-        quad_spec: QuadratureSpecifications = QuadratureSpecifications(),
+        self, quad_spec: QuadSpec | None = None
     ) -> None | BinSet | WavelengthSet:
         return None
 

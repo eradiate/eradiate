@@ -35,7 +35,7 @@ from ..scenes.measure import (
     measure_factory,
 )
 from ..scenes.spectra import InterpolatedSpectrum
-from ..spectral.ckd import BinSet, QuadratureSpecifications
+from ..spectral.ckd import BinSet, QuadSpec
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..spectral.mono import WavelengthSet
 from ..util.misc import deduplicate_sorted, onedict_value
@@ -157,10 +157,10 @@ class Experiment(ABC):
     def spectral_set(self) -> WavelengthSet | BinSet:
         return self._spectral_set
 
-    quad_spec: QuadratureSpecifications = attrs.field(
-        factory=lambda: QuadratureSpecifications(),
-        converter=QuadratureSpecifications.convert,
-        validator=attrs.validators.instance_of(QuadratureSpecifications),
+    quad_spec: QuadSpec = attrs.field(
+        factory=QuadSpec.default,
+        converter=QuadSpec.convert,
+        validator=attrs.validators.instance_of(QuadSpec),
     )
 
     def __attrs_post_init__(self):

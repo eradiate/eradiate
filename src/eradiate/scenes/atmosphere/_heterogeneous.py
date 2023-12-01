@@ -20,7 +20,7 @@ from ...attrs import documented, parse_docs
 from ...contexts import KernelContext
 from ...kernel import TypeIdLookupStrategy
 from ...radprops import ZGrid
-from ...spectral.ckd import BinSet, QuadratureSpecifications
+from ...spectral.ckd import BinSet, QuadSpec
 from ...spectral.index import SpectralIndex
 from ...spectral.mono import WavelengthSet
 from ...units import to_quantity
@@ -183,10 +183,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     def spectral_set(
         self,
-        quad_spec: QuadratureSpecifications | None = None,
+        quad_spec: QuadSpec | None = None,
     ) -> None | BinSet | WavelengthSet:
         if quad_spec is None:
-            quad_spec = QuadratureSpecifications()
+            quad_spec = QuadSpec.default()
+
         components_with_spectral_set = [
             component
             for component in self.components
