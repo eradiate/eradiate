@@ -30,7 +30,7 @@ from ...kernel import (
 )
 from ...quad import Quad
 from ...radprops import ZGrid
-from ...spectral.ckd import BinSet, QuadratureSpecifications
+from ...spectral.ckd import BinSet, QuadSpec
 from ...spectral.index import SpectralIndex
 from ...spectral.mono import WavelengthSet
 from ...units import symbol
@@ -643,7 +643,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_transmittance_accross_spectral_set(
         self,
         interaction: str = "extinction",
-        quad_spec: QuadratureSpecifications | None = None,
+        quad_spec: QuadSpec | None = None,
     ) -> xr.DataArray:
         """
         Evaluate the atmosphere's transmittance with respect to extinction
@@ -651,7 +651,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         Parameters
         ----------
-        quad_spec : :class:`.QuadratureSpecifications`, optional
+        quad_spec : :class:`.QuadSpec`, optional
             Quadrature specifications.
 
         Returns
@@ -667,7 +667,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             )
         elif eradiate.mode().is_ckd:
             if quad_spec is None:
-                quad_spec = QuadratureSpecifications()
+                quad_spec = QuadSpec.default()
             return self.eval_transmittance_accross_spectral_set_ckd(
                 interaction=interaction,
                 quad_spec=quad_spec,
@@ -678,10 +678,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_transmittance_accross_spectral_set_mono(
         self,
         interaction: str = "extinction",
-        quad_spec: QuadratureSpecifications | None = None,
+        quad_spec: QuadSpec | None = None,
     ) -> xr.DataArray:
         if quad_spec is None:
-            quad_spec = QuadratureSpecifications()
+            quad_spec = QuadSpec.default()
+
         w = self.spectral_set.wavelengths
         wunits = symbol(ucc.get("wavelength"))
         transmittance = np.full(w.size, np.nan)
@@ -708,12 +709,13 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_transmittance_accross_spectral_set_ckd(
         self,
         interaction: str = "extinction",
-        quad_spec: QuadratureSpecifications | None = None,
+        quad_spec: QuadSpec | None = None,
     ) -> xr.DataArray:
         # compute transmittance at each spectral index
         transmittance = {}
         if quad_spec is None:
-            quad_spec = QuadratureSpecifications()
+            quad_spec = QuadSpec.default()
+
         for si in self.spectral_set(quad_spec=quad_spec).spectral_indices():
             transmittance[si.as_hashable] = self.eval_transmittance(
                 si=si,

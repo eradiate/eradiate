@@ -15,6 +15,17 @@ Spectral indexes
    MonoSpectralIndex
    CKDSpectralIndex
 
+CKD spectral quadrature specification strategies
+------------------------------------------------
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   QuadSpec
+   QuadSpecFixed
+   QuadSpecMinError
+   QuadSpecErrorThreshold
+
 Utility containers
 ------------------
 
@@ -24,4 +35,3 @@ Utility containers
    WavelengthSet
    Bin
    BinSet
-   QuadratureSpecifications
