@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as t
+from collections.abc import MutableMapping
 
 import attrs
 import dessinemoi
@@ -30,7 +31,7 @@ class Factory(dessinemoi.Factory):
         value,
         allowed_cls: type | tuple[type] | None = None,
     ) -> t.Any:
-        if isinstance(value, t.MutableMapping):
+        if isinstance(value, MutableMapping):
             # Interpret units and copy value to avoid unintended mutation
             value_copy = pinttr.interpret_units(value, ureg=ureg)
 

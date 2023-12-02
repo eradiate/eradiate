@@ -3,7 +3,6 @@ Particle layers.
 """
 from __future__ import annotations
 
-import typing as t
 from functools import singledispatchmethod
 
 import attrs
@@ -311,20 +310,20 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     @singledispatchmethod
     def eval_albedo(
-        self, si: SpectralIndex, zgrid: t.Optional[ZGrid] = None
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
 
     @eval_albedo.register(MonoSpectralIndex)
-    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_albedo_mono(
             w=si.w,
             zgrid=self.geometry.zgrid if zgrid is None else zgrid,
         )
 
     @eval_albedo.register(CKDSpectralIndex)
-    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_albedo_ckd(
             w=si.w,
             g=si.g,
@@ -356,20 +355,20 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def eval_sigma_t(
         self,
         si: SpectralIndex,
-        zgrid: t.Optional[ZGrid] = None,
+        zgrid: ZGrid | None = None,
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
 
     @eval_sigma_t.register(MonoSpectralIndex)
-    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_t_mono(
             w=si.w,
             zgrid=self.geometry.zgrid if zgrid is None else zgrid,
         )
 
     @eval_sigma_t.register(CKDSpectralIndex)
-    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_t_ckd(
             w=si.w,
             g=si.g,
@@ -402,20 +401,20 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     def eval_sigma_a(
         self,
         si: SpectralIndex,
-        zgrid: t.Optional[ZGrid] = None,
+        zgrid: ZGrid | None = None,
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
 
     @eval_sigma_a.register(MonoSpectralIndex)
-    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_a_mono(
             w=si.w,
             zgrid=self.geometry.zgrid if zgrid is None else zgrid,
         )
 
     @eval_sigma_a.register(CKDSpectralIndex)
-    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_a_ckd(
             w=si.w,
             g=si.g,
@@ -433,20 +432,20 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     @singledispatchmethod
     def eval_sigma_s(
-        self, si: SpectralIndex, zgrid: t.Optional[ZGrid] = None
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
 
     @eval_sigma_s.register(MonoSpectralIndex)
-    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_s_mono(
             w=si.w,
             zgrid=self.geometry.zgrid if zgrid is None else zgrid,
         )
 
     @eval_sigma_s.register(CKDSpectralIndex)
-    def _(self, si, zgrid: t.Optional[ZGrid] = None) -> pint.Quantity:
+    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_s_ckd(
             w=si.w,
             g=si.g,
