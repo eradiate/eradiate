@@ -8,9 +8,12 @@ Required dependencies
 
 * Python (3.8 or later)
 
-Radiometric engine
+Core libraries
 
-* `Mitsuba 3 <https://mitsuba.readthedocs.io/>`_
+* `Mitsuba 3 <https://mitsuba.readthedocs.io/>`_ (radiometric engine; custom build,
+  packaged as ``eradiate-mitsuba`` on PyPI)
+* `Joseki <https://github.com/rayference/joseki>`_ (atmospheric profile
+  management)
 
 Numerical computing infrastructure
 
