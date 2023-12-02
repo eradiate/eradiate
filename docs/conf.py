@@ -126,10 +126,6 @@ autodoc_typehints = "none"
 autodoc_member_order = "groupwise"
 autodoc_preserve_defaults = False
 
-# Mitsuba modules must be mocked in order to allow compiling docs even if they're not here;
-# this mocking is also done in the ertdocs extension
-autodoc_mock_imports = []
-
 # Autosummary tables in autodoc
 # https://autodocsumm.readthedocs.io/en/latest
 autodoc_default_options = {
