@@ -60,6 +60,7 @@ Python and C++17. It relies on a radiometric kernel based on the
    rst/reference_plugins/index
    src/reference_cli.md
    src/CHANGELOG.md
+   src/release_notes/index.md
    rst/bibliography
 
 .. toctree::
