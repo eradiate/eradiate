@@ -57,7 +57,7 @@ class DiscreteCanopy(Canopy):
                 _instanced_canopy_elements_converter(x)
                 for x in pinttr.util.always_iterable(value)
             ]
-            if not isinstance(value, t.MutableMapping)
+            if not isinstance(value, MutableMapping)
             else [_instanced_canopy_elements_converter(value)],
             validator=attrs.validators.deep_iterable(
                 member_validator=attrs.validators.instance_of(InstancedCanopyElement)
