@@ -27,9 +27,9 @@ from ..util.misc import cache_by_id, summary_repr
 from ..validators import validate_absorption_data
 
 
-def _absorption_data_repr(value: dict[tuple(pint.Quantity), xr.Dataset]) -> dict(
-    str, str
-):
+def _absorption_data_repr(
+    value: dict[tuple[pint.Quantity], xr.Dataset]
+) -> dict[str, str]:
     def repr_k(value):
         "Representation for keys which are wavelength intervals."
 
