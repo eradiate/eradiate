@@ -415,7 +415,7 @@ def wrange_mono(ds: xr.Dataset) -> tuple[pint.Quantity]:
     wunits = ucc.get("wavelength")
 
     if wds.check("[length]^-1"):
-        return ((1 / wds.max()).to(wunits), (1 / wds.min()).to(wunits))
+        return ((1.0 / wds.max()).to(wunits), (1.0 / wds.min()).to(wunits))
     elif wds.check("[length]"):
         return (wds.min().to(wunits), wds.max().to(wunits))
     else:
@@ -693,8 +693,9 @@ def eval_sigma_a_ckd_impl_ds(
 
 
 def _isclose(a, b, **kwargs):
-    """Return values in b that are close to one value in a (different
-    shapes supported)."""
+    """
+    Return values in b that are close to one value in a (different shapes supported).
+    """
     out = []
     for value in a:
         isclosed = b[np.isclose(b, value, **kwargs)]
@@ -712,7 +713,7 @@ def w_dataset(ds: xr.Dataset) -> pint.Quantity:
     if w.check("[length]"):
         return w.to(wunits)
     elif w.check("[length^-1]"):
-        return (1 / w).to(wunits)
+        return (1.0 / w).to(wunits)
     else:
         raise ValueError
 

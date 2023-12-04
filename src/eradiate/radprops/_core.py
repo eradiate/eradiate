@@ -307,7 +307,8 @@ class RadProfile(ABC):
         si: SpectralIndex,
         zgrid: ZGrid | None = None,
     ) -> pint.Quantity:
-        """Evaluate albedo at given spectral index.
+        """
+        Evaluate albedo at given spectral index.
 
         Parameters
         ----------
@@ -429,7 +430,9 @@ class RadProfile(ABC):
         w: pint.Quantity,
         zgrid: ZGrid,
     ) -> pint.Quantity:
-        """Evaluate absorption coefficient spectrum in monochromatic modes."""
+        """
+        Evaluate absorption coefficient spectrum in monochromatic mode.
+        """
         raise NotImplementedError
 
     def eval_sigma_a_ckd(
@@ -438,7 +441,9 @@ class RadProfile(ABC):
         g: float,
         zgrid: ZGrid,
     ) -> pint.Quantity:
-        """Evaluate absorption coefficient spectrum in CKD modes."""
+        """
+        Evaluate absorption coefficient spectrum in CKD modes.
+        """
         raise NotImplementedError
 
     @singledispatchmethod
@@ -504,7 +509,7 @@ class RadProfile(ABC):
         Returns
         -------
         Dataset
-            Radiative properties dataset.
+            Radiative property dataset.
         """
         raise NotImplementedError
 
