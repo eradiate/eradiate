@@ -10,6 +10,7 @@ __all__ = [
 ]
 
 import enum
+import importlib
 import logging
 import typing as t
 from functools import lru_cache
@@ -17,36 +18,63 @@ from functools import lru_cache
 import pint
 import pinttr
 import xarray
+from importlib_resources import files
 from pinttr.exceptions import UnitsError
 from pinttr.util import units_compatible
+
+from eradiate.typing import PathLike
 
 logger = logging.getLogger(__name__)
 
 
 # -- Global data members -------------------------------------------------------
 
+# Joseki being a dependency of Eradiate, and given that it uses the application
+# registry, we import its definitions early
+importlib.import_module("joseki.units")
+
 #: Unit registry common to all Eradiate components. All units used in Eradiate
 #: must be created using this registry. Aliased in :mod:`eradiate`.
 unit_registry = pint.get_application_registry()
 
-definitions = [
-    "dobson_unit = 2.687e20 * meter^-2 " "= du = dobson = dobson_units",
-    # IUPAC. Compendium of Chemical Terminology, 2nd ed. (the "Gold Book").
-    # Compiled by A. D. McNaught and A. Wilkinson. Blackwell Scientific
-    # Publications, Oxford (1997). Online version (2019-) created by S. J.
-    # Chalk. ISBN 0-9678550-9-8. https://doi.org/10.1351/goldbook.
-    "atmo_centimeter = 1000 * dobson_unit "
-    "= atm_cm = centimeter_atmosphere = centimeter_amagat",
-    # Chapter 1 Vertical Structure of an Atmosphere. In International
-    # Geophysics, 22:1–45. Elsevier, 1978.
-    # https://doi.org/10.1016/S0074-6142(09)60038-3.
-]
 
-for definition in definitions:
-    try:
-        unit_registry.define(definition)
-    except pint.RedefinitionError:
-        logger.warning("unit definition '%s' already exists", definition)
+def _parse_definitions(path):
+    # Parse a unit definition file (i.e. strip it from line comments and empty
+    # lines)
+    definitions = []
+    with open(path, "r") as f:
+        for line in f:
+            line = line.strip()
+
+            if line.startswith("#") or not line:  # Skip comments and empty lines
+                continue
+            else:
+                definitions.append(line)
+
+    return definitions
+
+
+def _load_definitions(ureg: pint.UnitRegistry, definitions: list[str]) -> None:
+    # Add extra definitions, possibly skipping those that already exist. This is
+    # a very simple wrapper around Pint's usual unit definition logic.
+
+    for definition in definitions:
+        _unit_name, _unit_definition = list(
+            map(lambda x: x.strip(), definition.split("="))
+        )[0:2]
+
+        if _unit_name in ureg:
+            if 1.0 * ureg(_unit_definition) == 1.0 * ureg(_unit_name):
+                # Definitions are identical: skip
+                # Note: we don't check symbols or aliases, might cause bugs in
+                # very rare cases
+                continue
+            else:
+                # Definitions are different: let the user-controlled policy apply
+                ureg.define(definition)
+
+
+_load_definitions(unit_registry, _parse_definitions(files("eradiate") / "units.txt"))
 
 
 class PhysicalQuantity(enum.Enum):
