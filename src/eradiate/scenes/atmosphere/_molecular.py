@@ -109,7 +109,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     function but can be set to other values.
     """
 
-    absorption_data: dict[tuple(pint.Quantity), xr.Dataset] = documented(
+    absorption_data: dict[tuple[pint.Quantity, pint.Quantity], xr.Dataset] = documented(
         attrs.field(
             kw_only=True,
             factory=default_absorption_data,
@@ -122,11 +122,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         "specified file (must be a NetCDF file). "
         "If a tuple, the first element is the dataset codename and the"
         "second is the desired working wavelength range.",
-        type="Dict of tuple of pint.Quantity and xarray.Dataset",
-        init_type=(
-            "Dataset or list of Datasets or str or :class:`.PathLike` or "
-            "tuple[str, pint.Quantity]"
-        ),
+        type="dict[tuple[quantity, quantity], Dataset]",
+        init_type="Dataset or list of Dataset or str or path-like or tuple[str, quantity]",
     )
 
     _thermoprops: xr.Dataset = documented(
@@ -141,13 +138,14 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             validator=attrs.validators.instance_of(xr.Dataset),
             repr=summary_repr,
         ),
-        doc="Thermophysical properties.",
+        doc="Thermophysical property dataset. If a path is passed, Eradiate will "
+        "look it up and load it. If a dictionary is passed, it will be passed "
+        "as keyword argument to ``joseki.make()``. The default is "
+        '``joseki.make(identifier="afgl_1986-us_standard",  z=np.linspace(0.0, 120.0, 121) * ureg.km)``. '
+        "See `the Joseki docs <https://rayference.github.io/joseki/latest/reference/#src.joseki.core.make>`_ "
+        "for details.",
         type="Dataset",
-        default=(
-            "`joseki.make <https://rayference.github.io/joseki/latest/reference/#src.joseki.core.make>`_"
-            ' with ``identifier`` set to "afgl_1986-us_standard" and '
-            '``z`` set to "np.linspace(0.0, 120.0, 121) * ureg.km"'
-        ),
+        init_type="Dataset or path-like or dict",
     )
 
     _phase: PhaseFunction = documented(
@@ -219,7 +217,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         ),
         doc="Error handler configuration for absorption data interpolation.",
         type="dict",
-        default=DEFAULT_HANDLER_CONFIG,
+        default=":data:`.DEFAULT_HANDLER_CONFIG`",
     )
 
     def update(self) -> None:

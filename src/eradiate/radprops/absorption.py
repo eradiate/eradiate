@@ -1,5 +1,5 @@
 """
-Functions to compute monochromatic absorption.
+Functions to compute atmospheric absorption properties.
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ DEFAULT_X_ERROR_HANDLER_CONFIG = {
 DEFAULT_P_ERROR_HANDLER_CONFIG = {
     "missing": "raise",
     "scalar": "raise",
-    "bounds": "ignore",  # atmospheric presure easily goes very low, but at
+    "bounds": "ignore",  # atmospheric pressure easily goes very low, but at
     # these altitude, the air is very thin and so is the
     # absorption coefficient
 }
@@ -51,6 +51,7 @@ DEFAULT_T_ERROR_HANDLER_CONFIG = {
     # the absorption coefficient
 }
 
+#: Default interpolation error handling configuration
 DEFAULT_HANDLER_CONFIG = {
     "x": DEFAULT_X_ERROR_HANDLER_CONFIG,
     "p": DEFAULT_P_ERROR_HANDLER_CONFIG,
