@@ -3,7 +3,7 @@ Eradiate Documentation
 
 **Date**: |today| |
 **Version**: |version| |
-:doc:`src/CHANGELOG`
+:doc:`src/release_notes/index`
 
 **Useful links**:
 `Home <https://www.eradiate.eu>`_ |
@@ -59,7 +59,6 @@ Python and C++17. It relies on a radiometric kernel based on the
    rst/reference_api/index
    rst/reference_plugins/index
    src/reference_cli.md
-   src/CHANGELOG.md
    src/release_notes/index.md
    rst/bibliography
 
