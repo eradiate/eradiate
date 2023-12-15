@@ -160,7 +160,8 @@ class Spectrum(NodeSceneElement, ABC):
         if value not in PhysicalQuantity.spectrum():
             raise ValueError(
                 f"while validating {attribute.name}: "
-                f"got value '{value}', expected one of {str(PhysicalQuantity.spectrum())}"
+                f"got value '{value}', expected one of "
+                f"{str(PhysicalQuantity.spectrum())}"
             )
 
     @singledispatchmethod

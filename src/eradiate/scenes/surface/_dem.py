@@ -111,7 +111,8 @@ def mesh_from_dem(
 
     else:
         raise ValueError(
-            f"Data array coordinates must be either `x/y` or `lat/lon`.\nGot: {da.coords}"
+            "Data array coordinates must be either `x/y` or "
+            f"`lat/lon`.\nGot: {da.coords}"
         )
 
     theta_lim, phi_lim = _minmax_coordinates(vertices)

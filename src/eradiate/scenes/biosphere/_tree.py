@@ -51,8 +51,9 @@ class AbstractTree(Tree):
     in the scene using :class:`.InstancedCanopyElement`.
 
     The trunk starts at [0, 0, -0.1] and extends
-    to [0, 0, trunk_height]. The trunk extends below ``z=0`` to avoid intersection
-    issues at the intersection of the trunk and the ground the tree is usually placed on.
+    to [0, 0, trunk_height]. The trunk extends below ``z=0`` to avoid
+    intersection issues at the intersection of the trunk and the ground the tree
+    is usually placed on.
 
     The leaf cloud will by default be offset such that its local coordinate
     origin coincides with the upper end of the trunk. If this is not desired,

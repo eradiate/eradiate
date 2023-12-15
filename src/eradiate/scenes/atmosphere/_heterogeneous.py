@@ -23,7 +23,6 @@ from ...radprops import ZGrid
 from ...spectral.ckd import BinSet, QuadSpec
 from ...spectral.index import SpectralIndex
 from ...spectral.mono import WavelengthSet
-from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id

@@ -37,7 +37,8 @@ def unstack_mdistant_grid(obj: XarrayObj) -> XarrayObj:
     # Reindex object
     result = (
         obj.drop_vars(
-            # First remove the target coords, as well as the indexing dim and associated coords
+            # First remove the target coords, as well as the indexing dim and
+            # associated coords
             # Also remove the x film coordinate (irrelevant after unstacking)
             ("vza", "vaa", "x_index", "x")
         )

@@ -175,7 +175,7 @@ def deduplicate(value: t.Sequence, preserve_order: bool = True) -> list:
 
 def deduplicate_sorted(value: t.Sequence, cmp: t.Callable | None = None) -> list:
     if cmp is None:
-        cmp = lambda x, y: x == y
+        cmp = lambda x, y: x == y  # noqa: E731
 
     result = [value[0]]
 
@@ -306,11 +306,15 @@ def natsort_alphanum_key(x):
     ----------
     .. [2] `Natural sorting on Stack Overflow <https://stackoverflow.com/a/11150413/3645374>`_.
     """
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    return tuple(convert(c) for c in re.split("([0-9]+)", x))
+    return tuple(
+        map(
+            lambda text: int(text) if text.isdigit() else text.lower(),
+            re.split("([0-9]+)", x),
+        )
+    )
 
 
-def natsorted(l):
+def natsorted(l):  # noqa
     """
     Sort a list of strings with natural ordering.
 

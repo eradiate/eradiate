@@ -283,7 +283,8 @@ def _remap_viewing_angles_plane(
     return theta, phi
 
 
-_is_sorted = lambda a: np.all(a[:-1] <= a[1:])
+def _is_sorted(x):
+    return np.all(x[:-1] <= x[1:])
 
 
 @parse_docs

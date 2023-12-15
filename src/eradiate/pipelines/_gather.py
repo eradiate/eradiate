@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 import logging
 
 import attrs
@@ -61,7 +60,6 @@ class GatherMono(PipelineStep):
     )
 
     def transform(self, x: dict) -> xr.Dataset:
-
         # Basic preparation
         spectral_dims = []
         spectral_dim_metadata = {}
@@ -150,7 +148,6 @@ class GatherCKD(PipelineStep):
     )
 
     def transform(self, x: dict) -> xr.Dataset:
-
         # transform 'x' into a list of 'xr.Dataset' where each dataset
         # corresponds to a spectral index
 

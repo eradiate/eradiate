@@ -144,7 +144,8 @@ class SceneGeometry(ABC):
     @abstractmethod
     def atmosphere_shape(self) -> Shape:
         """
-        :class:`.Shape`: Stencil of the participating medium representing the atmosphere.
+        :class:`.Shape`: Stencil of the participating medium representing the
+        atmosphere.
         """
         pass
 

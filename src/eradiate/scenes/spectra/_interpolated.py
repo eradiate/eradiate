@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from functools import reduce
-from itertools import compress
-
 import attrs
 import numpy as np
 import pint
@@ -108,7 +105,10 @@ class InterpolatedSpectrum(Spectrum):
 
         # Check size
         if value.ndim > 1:
-            f"while validating '{attribute.name}': '{attribute.name}' must be a 1D array"
+            raise ValueError(
+                f"while validating '{attribute.name}': '{attribute.name}' must "
+                "be a 1D array"
+            )
 
         if len(value) < 2:
             raise ValueError(

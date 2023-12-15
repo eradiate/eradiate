@@ -12,9 +12,8 @@ from ..core import traverse
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ...attrs import documented
 from ...contexts import KernelContext
-from ...kernel import InitParameter, UpdateParameter, map_unit_cube
+from ...kernel import InitParameter, UpdateParameter
 from ...spectral.index import SpectralIndex
-from ...units import unit_context_kernel as uck
 from ...util.misc import cache_by_id
 
 
@@ -177,7 +176,8 @@ class BlendPhaseFunction(PhaseFunction):
         elif isinstance(n_component, int):
             n_component = [n_component]
 
-        # Compute normalized component weights (cached until call with different context)
+        # Compute normalized component weights (cached until call with different
+        # context)
         weights = self._eval_conditional_weights_impl(si)
 
         # Return selected components

@@ -175,7 +175,8 @@ class AngleLayout(Layout):
         zeniths = value[:, 0].m_as(ureg.deg)
         if np.any((zeniths < 0) | (zeniths > 180)):
             raise ValueError(
-                f"while validating {attribute.name}: zenith values must be in [0°, 180°]"
+                f"while validating {attribute.name}: zenith values must be in "
+                "[0°, 180°]"
             )
 
     @property
@@ -358,7 +359,8 @@ class GridLayout(Layout):
         zeniths = value.m_as(ureg.deg)
         if np.any((zeniths < 0) | (zeniths > 180)):
             raise ValueError(
-                f"while validating {attribute.name}: zenith values must be in [0°, 180°]"
+                f"while validating {attribute.name}: zenith values must be in "
+                "[0°, 180°]"
             )
 
     azimuths: pint.Quantity = documented(

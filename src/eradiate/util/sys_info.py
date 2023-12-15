@@ -12,6 +12,7 @@ import platform
 import re
 import subprocess
 import sys
+from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 
 import drjit as dr
@@ -19,7 +20,7 @@ import mitsuba as mi
 
 
 def _run(command):
-    "Returns (return-code, stdout, stderr)"
+    """Returns (return-code, stdout, stderr)"""
     p = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
     )
@@ -35,7 +36,7 @@ def _run(command):
 
 
 def _run_and_match(command, regex):
-    "Runs command and returns the first regex match if it exists"
+    """Runs command and returns the first regex match if it exists"""
     rc, out, _ = _run(command)
     if rc != 0:
         return None
@@ -74,15 +75,15 @@ def show() -> dict:
 
     result["cpu_info"] = _get_cpu_info()
     result["python"] = sys.version.replace("\n", "")
-    # result["llvm_version"] = dr.llvm_version()  # Commented until we bump mitsuba and drjit
+    result["llvm_version"] = dr.llvm_version()
     result["drjit_version"] = dr.__version__ + (" (DEBUG)" if dr.DEBUG else "")
     result["mitsuba_version"] = mi.MI_VERSION + (" (DEBUG)" if mi.DEBUG else "")
     try:
         eradiate_mitsuba_version = version("eradiate-mitsuba")
     except PackageNotFoundError:
-        eradiate_mitsuba_version = "not installed (DEBUG)"
+        eradiate_mitsuba_version = "not installed [DEV|DEBUG]"
     result["eradiate_mitsuba_version"] = eradiate_mitsuba_version
-    # result["mitsuba_compiler"] = import_module("mitsuba.config").CXX_COMPILER  # Commented until we bump mitsuba and drjit
+    result["mitsuba_compiler"] = import_module("mitsuba.config").CXX_COMPILER
 
     # Python dependencies
     for package in ["numpy", "scipy", "xarray"]:
@@ -104,9 +105,11 @@ if __name__ == "__main__":
     print(f"  Python: {sys_info['python']}")
 
     print("\nVersions")
+    print(f"  llvm {sys_info['llvm_version']}")
     print(f"  drjit {sys_info['drjit_version']}")
     print(
-        f"  eradiate-mitsuba {sys_info['eradiate_mitsuba_version']} (based on mitsuba {sys_info['mitsuba_version']})"
+        f"  eradiate-mitsuba {sys_info['eradiate_mitsuba_version']} "
+        f"(based on mitsuba {sys_info['mitsuba_version']})"
     )
 
     print("\nMitsuba variants")
