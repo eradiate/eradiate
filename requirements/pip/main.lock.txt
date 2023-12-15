@@ -13,7 +13,7 @@ attrs==23.1.0
     #   environ-config
     #   joseki
     #   pinttrs
-certifi==2023.7.22
+certifi==2023.11.17
     # via
     #   netcdf4
     #   requests
@@ -35,16 +35,16 @@ dessinemoi==23.1.0
     # via -r requirements/pip/main.in
 environ-config==23.2.0
     # via -r requirements/pip/main.in
-fonttools==4.44.0
+fonttools==4.46.0
     # via matplotlib
-idna==3.4
+idna==3.6
     # via requests
 importlib-resources==6.1.1
     # via
     #   -r requirements/pip/main.in
     #   joseki
     #   matplotlib
-joseki==2.5.1
+joseki==2.6.0
     # via -r requirements/pip/main.in
 kiwisolver==1.4.5
     # via matplotlib
@@ -52,7 +52,7 @@ lazy-loader==0.3
     # via -r requirements/pip/main.in
 markdown-it-py==3.0.0
     # via rich
-matplotlib==3.7.3
+matplotlib==3.7.4
     # via -r requirements/pip/main.in
 mdurl==0.1.2
     # via markdown-it-py
@@ -91,13 +91,11 @@ pint==0.21.1
     #   pinttrs
 pinttrs==23.2.0
     # via -r requirements/pip/main.in
-platformdirs==3.11.0
+platformdirs==4.1.0
     # via pooch
 pooch==1.8.0
     # via -r requirements/pip/main.in
-portion==2.4.1
-    # via -r requirements/pip/main.in
-pygments==2.16.1
+pygments==2.17.2
     # via rich
 pyparsing==3.1.1
     # via matplotlib
@@ -109,7 +107,7 @@ pytz==2023.3.post1
     # via pandas
 requests==2.31.0
     # via pooch
-rich==13.6.0
+rich==13.7.0
     # via -r requirements/pip/main.in
 ruamel-yaml==0.18.5
     # via -r requirements/pip/main.in
@@ -124,19 +122,17 @@ shellingham==1.5.4
     # via -r requirements/pip/main.in
 six==1.16.0
     # via python-dateutil
-sortedcontainers==2.4.0
-    # via portion
 tqdm==4.66.1
     # via -r requirements/pip/main.in
 typer==0.9.0
     # via -r requirements/pip/main.in
-typing-extensions==4.8.0
+typing-extensions==4.9.0
     # via
     #   rich
     #   typer
 tzdata==2023.3
     # via pandas
-urllib3==2.0.7
+urllib3==2.1.0
     # via requests
 ussa1976==0.3.4
     # via joseki
