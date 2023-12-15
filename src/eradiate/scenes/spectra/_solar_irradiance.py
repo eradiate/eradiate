@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import importlib.util
 import typing as t
 import warnings
 
@@ -32,7 +33,7 @@ def _datetime_converter(x: t.Any):
             raise
 
         try:
-            import astropy
+            importlib.import_module("astropy")
         except ModuleNotFoundError:
             warnings.warn(
                 "To use the date-based Solar irradiance scaling feature, you "

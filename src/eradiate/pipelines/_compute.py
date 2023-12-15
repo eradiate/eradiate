@@ -12,9 +12,8 @@ import eradiate
 from ._core import PipelineStep
 from ..attrs import documented, parse_docs
 from ..scenes.measure import Measure
-from ..scenes.spectra import InterpolatedSpectrum, UniformSpectrum
+from ..scenes.spectra import InterpolatedSpectrum
 from ..units import symbol, to_quantity
-from ..units import unit_registry as ureg
 
 logger = logging.getLogger(__name__)
 
@@ -96,9 +95,9 @@ class ApplySpectralResponseFunction(PipelineStep):
     def _transform_ckd(self, x: t.Any):
         result = x.copy(deep=False)
 
-        if not "w" in result.coords:
+        if "w" not in result.coords:
             raise ValueError("input data is missing a 'w' coordinate")
-        if not "wbounds" in result.data_vars:
+        if "wbounds" not in result.data_vars:
             raise ValueError("input data is missing a 'wbounds' data variable")
 
         measure = self.measure

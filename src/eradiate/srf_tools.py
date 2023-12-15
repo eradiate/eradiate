@@ -64,8 +64,8 @@ def update_attrs(srf: xr.Dataset, filter_name: str, filter_attr: str) -> None:
     Notes
     -----
     * The update is done inplace.
-    * If the dataset has no ``filter`` attribute, it is created. Otherwise, a new line is
-      appended to it.
+    * If the dataset has no ``filter`` attribute, it is created. Otherwise, a
+      new line is appended to it.
     """
     # filter attribute
     _value = srf.attrs.get("filter")

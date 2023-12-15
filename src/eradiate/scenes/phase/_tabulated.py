@@ -15,7 +15,6 @@ from ...spectral.index import (
     MonoSpectralIndex,
     SpectralIndex,
 )
-from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
 
 

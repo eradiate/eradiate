@@ -188,7 +188,8 @@ def filter(
         typer.Option(
             "-p",
             "--percentage",
-            help="Data points that do not contribute to this percentage of the integrated spectral response are dropped",
+            help="Data points that do not contribute to this percentage of the "
+            "integrated spectral response are dropped",
         ),
     ] = None,
 ):

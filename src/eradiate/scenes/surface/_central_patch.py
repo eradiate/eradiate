@@ -47,18 +47,20 @@ class CentralPatchSurface(Surface):
 
     This class creates a square surface to which two BSDFs will be attached.
 
-    The two constituent surfaces ``central_patch`` and ``background_surface`` define the
-    properties of the two sections of this surface.
+    The two constituent surfaces ``central_patch`` and ``background_surface``
+    define the properties of the two sections of this surface.
 
-    The size of the central surface is controlled by setting the ``width`` parameter of the
-    ``central_patch`` surface, while the ``width`` of the ``background_surface`` must be set to
-    ``AUTO`` and the total width of the surface is set by the ``width`` of the main surface object.
-    Note that the ``width`` of a surface defaults to ``AUTO``, which means, omitting the parameter
-    in the ``background_surface`` will yield the correct behaviour.
+    The size of the central surface is controlled by setting the ``width``
+    parameter of the ``central_patch`` surface, while the ``width`` of the
+    ``background_surface`` must be set to ``AUTO`` and the total width of the
+    surface is set by the ``width`` of the main surface object.
+    Note that the ``width`` of a surface defaults to ``AUTO``, which means,
+    omitting the parameter in the ``background_surface`` will yield the correct
+    behaviour.
 
-    If the ``central_patch`` width is set to ``AUTO`` as well it defaults to one third of the
-    overall surface size, unless a contextual constraint (*e.g.* to match the size of an
-    atmosphere or canopy) is applied.
+    If the ``central_patch`` width is set to ``AUTO`` as well it defaults to one
+    third of the overall surface size, unless a contextual constraint (*e.g.* to
+    match the size of an atmosphere or canopy) is applied.
     """
 
     shape: RectangleShape | None = documented(
@@ -252,7 +254,8 @@ class CentralPatchSurface(Surface):
 
         if self.shape is None:
             raise TraversalError(
-                "A 'CentralPatchSurface' cannot be traversed if its 'shape' field is unset."
+                "A 'CentralPatchSurface' cannot be traversed if its 'shape' field "
+                "is unset."
             )
 
         super().traverse(callback)

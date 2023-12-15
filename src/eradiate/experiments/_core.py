@@ -385,12 +385,6 @@ class EarthObservationExperiment(Experiment, ABC):
             si=self._spectral_index_generator().__next__(), kwargs=self._context_kwargs
         )
 
-    def contexts(self):
-        return sorted(
-            KernelContext(si, self._context_kwargs)
-            for si in self._spectral_index_generator()
-        )
-
     @property
     @abstractmethod
     def _context_kwargs(self) -> dict[str, t.Any]:

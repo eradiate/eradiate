@@ -22,8 +22,6 @@ from importlib_resources import files
 from pinttr.exceptions import UnitsError
 from pinttr.util import units_compatible
 
-from eradiate.typing import PathLike
-
 logger = logging.getLogger(__name__)
 
 
@@ -124,7 +122,7 @@ def _make_unit_context():
     # fmt: off
     for key, value in {
         # We allow for dimensionless quantities
-        PhysicalQuantity.DIMENSIONLESS: pinttr.UnitGenerator(unit_registry.dimensionless),
+        PhysicalQuantity.DIMENSIONLESS: pinttr.UnitGenerator(unit_registry.dimensionless),  # noqa: E501
         # Basic quantities must be named after their SI name
         # https://en.wikipedia.org/wiki/International_System_of_Units
         PhysicalQuantity.LENGTH: pinttr.UnitGenerator(unit_registry.m),
@@ -134,7 +132,7 @@ def _make_unit_context():
         PhysicalQuantity.ALBEDO: pinttr.UnitGenerator(unit_registry.dimensionless),
         PhysicalQuantity.ANGLE: pinttr.UnitGenerator(unit_registry.deg),
         PhysicalQuantity.REFLECTANCE: pinttr.UnitGenerator(unit_registry.dimensionless),
-        PhysicalQuantity.TRANSMITTANCE: pinttr.UnitGenerator(unit_registry.dimensionless),
+        PhysicalQuantity.TRANSMITTANCE: pinttr.UnitGenerator(unit_registry.dimensionless),  # noqa: E501
         PhysicalQuantity.WAVELENGTH: pinttr.UnitGenerator(unit_registry.nm),
         PhysicalQuantity.WAVENUMBER: pinttr.UnitGenerator(unit_registry.cm ** -1),
     }.items():

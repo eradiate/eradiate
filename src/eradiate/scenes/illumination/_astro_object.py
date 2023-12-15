@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import attrs
-import drjit as dr
-import mitsuba as mi
 import numpy as np
 import pint
 import pinttr

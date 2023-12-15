@@ -762,8 +762,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     @property
     def _template_medium(self) -> dict:
         # Inherit docstring
-        length_units = uck.get("length")
-        top = self.geometry.toa_altitude.m_as(length_units)
 
         if isinstance(self.geometry, PlaneParallelGeometry):
             to_world = self.geometry.atmosphere_volume_to_world
@@ -798,7 +796,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             }
 
         elif isinstance(self.geometry, SphericalShellGeometry):
-            planet_radius = self.geometry.planet_radius.m_as(length_units)
             volume_rmin = self.geometry.atmosphere_volume_rmin
             to_world = self.geometry.atmosphere_volume_to_world
 

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing as t
-import warnings
 from pathlib import Path
 
 import attrs
@@ -28,9 +26,10 @@ class SpotIllumination(Illumination):
     """
     Spot illumination scene element [``spot``].
 
-    Eradiate ships a beam texture that implements a gaussian beam profile with three standard deviations
-    included in the total beam width. This texture is named `gaussian_3sigma.bmp` and can be used by
-    retrieving the path to the file using `eradiate.data.data_store.fetch()`.
+    Eradiate ships a beam texture that implements a gaussian beam profile with
+    three standard deviations included in the total beam width. This texture is
+    named ``gaussian_3sigma.bmp`` and can be used by retrieving the path to the
+    file using `eradiate.data.data_store.fetch()`.
     """
 
     origin: pint.Quantity = documented(
@@ -138,7 +137,8 @@ class SpotIllumination(Illumination):
         type="Path",
         init_type="path-like",
         default=None,
-        doc="Path to the file describing the beam profile. Must be a valid bitmap image file.",
+        doc="Path to the file describing the beam profile. Must be a valid bitmap "
+        "image file.",
     )
 
     @classmethod

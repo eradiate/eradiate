@@ -161,7 +161,7 @@ def fetch(
             console.print(f"[blue]Fetching '{filename}'[/]")
             path = eradiate.data.data_store.fetch(filename)
         except DataError:
-            console.print(f"[red]✗[/] not found")
+            console.print("[red]✗[/] not found")
         else:
             console.print(f"[green]✓[/] found \[{path}]")
 
@@ -181,7 +181,7 @@ def purge_cache(
         )
 
         if isinstance(data_store, eradiate.data.SafeDirectoryDataStore):
-            console.print(f"  Skipping")
+            console.print("  Skipping")
             continue
 
         if isinstance(data_store, eradiate.data.SafeOnlineDataStore):

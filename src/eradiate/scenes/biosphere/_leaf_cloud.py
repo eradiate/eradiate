@@ -263,7 +263,8 @@ class LeafCloudParams:
                 self.__getattribute__(field)
         except Exception as e:
             raise Exception(
-                f"cannot compute field '{field}', parameter set is likely under-constrained"
+                f"cannot compute field '{field}', parameter set is likely "
+                "under-constrained"
             ) from e
 
     def __attrs_post_init__(self):

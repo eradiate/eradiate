@@ -45,7 +45,8 @@ class Bin:
             units=ucc.deferred("wavelength"),
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),
-        doc='Bin lower spectral bound.\n\nUnit-enabled field (default: ucc["wavelength"]).',
+        doc="Bin lower spectral bound.\n\nUnit-enabled field "
+        '(default: ucc["wavelength"]).',
         type="quantity",
         init_type="quantity or float",
     )
@@ -55,7 +56,8 @@ class Bin:
             units=ucc.deferred("wavelength"),
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),
-        doc='Bin upper spectral bound.\n\nUnit-enabled field (default: ucc["wavelength"]).',
+        doc="Bin upper spectral bound.\n\nUnit-enabled field "
+        '(default: ucc["wavelength"]).',
         type="quantity",
         init_type="quantity or float",
     )
