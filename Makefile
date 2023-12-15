@@ -27,7 +27,7 @@ pip-update-in-files:
 	python3 requirements/make_pip_in_files.py --quiet
 
 
-# Update .in files
+# Update .txt files
 pip-update-txt-files:
 	python3 requirements/make_pip_txt_files.py --quiet
 
