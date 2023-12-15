@@ -31,12 +31,13 @@ def _absorption_data_repr(
     value: dict[tuple[pint.Quantity], xr.Dataset]
 ) -> dict[str, str]:
     def repr_k(value):
-        "Representation for keys which are wavelength intervals."
-
-        return f"{value.lower:~.3f} {value.upper:~.3f}"
+        """Representation for keys which are wavelength intervals."""
+        units = value[0].u
+        tmp = (value[0].m, value[1].m_as(units)) * units
+        return f"{tmp:.2f~}"
 
     def repr_v(value):
-        "Representation for values which are absorption dataset"
+        """Representation for values which are absorption dataset"""
         return summary_repr(value)
 
     return "\n".join([repr_k(k) + ": " + repr_v(v) for k, v in value.items()])
