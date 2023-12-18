@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from pathlib import Path
 
 from ._blind_directory import BlindDirectoryDataStore
 from ._blind_online import BlindOnlineDataStore
@@ -45,6 +46,13 @@ def init_data_store(
     if production is None:
         production = config.source_dir is None
 
+    download_dir = config.download_dir
+    if download_dir is None:
+        if production:
+            download_dir = Path("./eradiate_downloads")
+        else:
+            download_dir = config.source_dir
+
     if not production:
         small_files = SafeDirectoryDataStore(
             path=config.source_dir / "resources" / "data"
@@ -52,7 +60,7 @@ def init_data_store(
     else:
         if offline:
             small_files = BlindDirectoryDataStore(
-                path=config.download_dir / "resources" / "data"
+                path=download_dir / "resources" / "data"
             )
         else:
             small_files = SafeOnlineDataStore(
@@ -62,7 +70,7 @@ def init_data_store(
                         config.small_files_registry_revision,
                     ]
                 ),
-                path=config.download_dir / "resources" / "data",
+                path=download_dir / "resources" / "data",
             )
 
     if offline:
@@ -72,11 +80,11 @@ def init_data_store(
                     ("small_files", small_files),
                     (
                         "large_files_stable",
-                        BlindDirectoryDataStore(path=config.download_dir / "stable"),
+                        BlindDirectoryDataStore(path=download_dir / "stable"),
                     ),
                     (
                         "large_files_unstable",
-                        BlindDirectoryDataStore(path=config.download_dir / "unstable"),
+                        BlindDirectoryDataStore(path=download_dir / "unstable"),
                     ),
                 ]
             )
@@ -91,14 +99,14 @@ def init_data_store(
                         "large_files_stable",
                         SafeOnlineDataStore(
                             base_url="/".join([config.data_store_url, "stable"]),
-                            path=config.download_dir / "stable",
+                            path=download_dir / "stable",
                         ),
                     ),
                     (
                         "large_files_unstable",
                         BlindOnlineDataStore(
                             base_url="/".join([config.data_store_url, "unstable"]),
-                            path=config.download_dir / "unstable",
+                            path=download_dir / "unstable",
                         ),
                     ),
                 ]

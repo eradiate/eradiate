@@ -11,7 +11,7 @@ TEST_FILE_ONLINE_REGISTERED = "tests/data/online/registered_dataset.nc"
 TEST_FILE_ONLINE_UNREGISTERED = "tests/data/online/unregistered_dataset.nc"
 
 
-def test_multi_data_store(tmpdir):
+def test_multi_data_store(source_dir, tmpdir):
     # Initialise test data store
     data_store = MultiDataStore(
         [
