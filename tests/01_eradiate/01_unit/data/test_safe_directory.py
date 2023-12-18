@@ -10,10 +10,10 @@ TEST_FILE_REGISTERED = Path("tests/data/git/registered_dataset.nc")
 TEST_FILE_UNREGISTERED = Path("tests/data/git/unregistered_dataset.nc")
 
 
-def test_directory_data_store_fetch():
+def test_directory_data_store_fetch(source_dir):
     # The data submodule can be instantiated
     data_store = SafeDirectoryDataStore(
-        path=eradiate.config.source_dir / "resources/data"
+        path=source_dir / "resources/data"
     )
 
     # We can fetch the test file

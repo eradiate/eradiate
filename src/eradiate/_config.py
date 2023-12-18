@@ -189,11 +189,9 @@ class EradiateConfig:
 
     #: Path to the Eradiate download directory.
     download_dir = var(
-        default="$ERADIATE_SOURCE_DIR/resources/downloads",
-        converter=lambda x: pathlib.Path(
-            os.path.expanduser(os.path.expandvars(x))
-        ).absolute(),
+        converter=lambda x: x if x is None else pathlib.Path(x).absolute(),
         help="Path to the Eradiate download directory.",
+        default=None,
     )
 
     #: If ``True``, activate the offline mode. All online data stores
