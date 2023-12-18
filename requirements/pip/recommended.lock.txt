@@ -6,7 +6,7 @@
 #
 aabbtree==2.8.1
     # via -r requirements/pip/recommended.in
-anyio==4.1.0
+anyio==4.2.0
     # via jupyter-server
 argon2-cffi==23.1.0
     # via jupyter-server
@@ -235,7 +235,7 @@ prometheus-client==0.19.0
     # via jupyter-server
 prompt-toolkit==3.0.43
     # via ipython
-psutil==5.9.6
+psutil==5.9.7
     # via ipykernel
 ptyprocess==0.7.0
     # via
@@ -297,7 +297,7 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
-rpds-py==0.13.2
+rpds-py==0.15.2
     # via
     #   jsonschema
     #   referencing
@@ -353,6 +353,7 @@ types-python-dateutil==2.8.19.14
 typing-extensions==4.9.0
     # via
     #   -c requirements/pip/main.lock.txt
+    #   anyio
     #   async-lru
     #   ipython
 tzdata==2023.3

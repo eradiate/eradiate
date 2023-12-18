@@ -236,7 +236,7 @@ requests==2.31.0
     #   sphinx
 rich==13.7.0
     # via -r requirements/pip/main.in
-rpds-py==0.13.2
+rpds-py==0.15.2
     # via
     #   jsonschema
     #   referencing
