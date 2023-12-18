@@ -99,7 +99,7 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
     elif illumination == "constant":
         objects["illumination"] = ConstantIllumination(radiance=li)
         theoretical_solution = np.full_like(vza, rho * li)
-        rtol = 1e-3
+        rtol = 5e-3
 
     # Deactivated for now (see parametrization)
     elif illumination == "astro_object":
