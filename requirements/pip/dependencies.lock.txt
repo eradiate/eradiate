@@ -56,7 +56,7 @@ environ-config==23.2.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
-eradiate-mitsuba==0.1.1rc1
+eradiate-mitsuba==0.1.1rc2
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/dependencies.in

@@ -16,7 +16,7 @@ alabaster==0.7.13
     # via sphinx
 annotated-types==0.6.0
     # via pydantic
-anyio==4.1.0
+anyio==4.2.0
     # via jupyter-server
 appdirs==1.4.4
     # via ensureconda
@@ -147,7 +147,7 @@ environ-config==23.2.0
     # via
     #   -c requirements/pip/main.lock.txt
     #   -r requirements/pip/main.in
-eradiate-mitsuba==0.1.1rc1
+eradiate-mitsuba==0.1.1rc2
     # via -r requirements/pip/optional.in
 exceptiongroup==1.2.0
     # via
@@ -440,7 +440,7 @@ prometheus-client==0.19.0
     # via jupyter-server
 prompt-toolkit==3.0.43
     # via ipython
-psutil==5.9.6
+psutil==5.9.7
     # via ipykernel
 ptyprocess==0.7.0
     # via
@@ -543,7 +543,7 @@ rich==13.7.0
     # via
     #   -c requirements/pip/main.lock.txt
     #   -r requirements/pip/main.in
-rpds-py==0.13.2
+rpds-py==0.15.2
     # via
     #   jsonschema
     #   referencing
@@ -681,6 +681,7 @@ typing-extensions==4.9.0
     # via
     #   -c requirements/pip/main.lock.txt
     #   annotated-types
+    #   anyio
     #   async-lru
     #   conda-lock
     #   ipython
@@ -733,7 +734,7 @@ zipp==3.17.0
     #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==23.3.1
+pip==23.3.2
     # via
     #   -r requirements/pip/dev.in
     #   pip-tools

@@ -45,7 +45,7 @@ https://conda.anaconda.org/conda-forge/osx-64/openjpeg-2.5.0-ha4da562_3.conda#40
 https://conda.anaconda.org/conda-forge/osx-64/python-3.12.0-h30d4d87_0_cpython.conda#d11dc8f4551011fb6baa2865f1ead48f
 https://conda.anaconda.org/eradiate/noarch/aabbtree-2.8.0-py_0.tar.bz2#647bcce5f0af4974e507591d5420486b
 https://conda.anaconda.org/conda-forge/noarch/appnope-0.1.3-pyhd8ed1ab_0.tar.bz2#54ac328d703bff191256ffa1183126d1
-https://conda.anaconda.org/conda-forge/noarch/astropy-iers-data-0.2023.12.11.0.31.11-pyhd8ed1ab_0.conda#dc7b74ed44c2a261638cafa94ab51d58
+https://conda.anaconda.org/conda-forge/noarch/astropy-iers-data-0.2023.12.18.0.30.18-pyhd8ed1ab_0.conda#eb5c1c4aa99ec3280fa05d0cac4e96e5
 https://conda.anaconda.org/conda-forge/noarch/attrs-23.1.0-pyh71513ae_1.conda#3edfead7cedd1ab4400a6c588f3e75f8
 https://conda.anaconda.org/conda-forge/osx-64/brotli-python-1.1.0-py312heafc425_1.conda#a288b88f06b8bfe0dedaf5c4b6ac6b7a
 https://conda.anaconda.org/conda-forge/noarch/cached_property-1.5.2-pyha770c72_1.tar.bz2#576d629e47797577ab0f1b351297ef4a
@@ -76,7 +76,7 @@ https://conda.anaconda.org/conda-forge/osx-64/pillow-10.1.0-py312h0c70c2f_0.cond
 https://conda.anaconda.org/conda-forge/noarch/pkgutil-resolve-name-1.3.10-pyhd8ed1ab_1.conda#405678b942f2481cecdb3e010f4925d9
 https://conda.anaconda.org/conda-forge/noarch/platformdirs-4.1.0-pyhd8ed1ab_0.conda#45a5065664da0d1dfa8f8cd2eaf05ab9
 https://conda.anaconda.org/conda-forge/noarch/prometheus_client-0.19.0-pyhd8ed1ab_0.conda#7baa10fa8073c371155cf451b71b848d
-https://conda.anaconda.org/conda-forge/osx-64/psutil-5.9.5-py312h104f124_1.conda#3f9a16e777cc6efcf5ef6a04492f7db4
+https://conda.anaconda.org/conda-forge/osx-64/psutil-5.9.7-py312h41838bb_0.conda#7821d7d96725c47216be6f14a090553d
 https://conda.anaconda.org/conda-forge/noarch/ptyprocess-0.7.0-pyhd3deb0d_0.tar.bz2#359eeb6536da0e687af562ed265ec263
 https://conda.anaconda.org/conda-forge/noarch/pure_eval-0.2.2-pyhd8ed1ab_0.tar.bz2#6784285c7e55cb7212efabc79e4c2883
 https://conda.anaconda.org/conda-forge/noarch/pycparser-2.21-pyhd8ed1ab_0.tar.bz2#076becd9e05608f8dc72757d5f3a91ff
