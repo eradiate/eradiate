@@ -2,16 +2,12 @@ import mitsuba as mi
 import numpy as np
 
 import eradiate.data
-from eradiate import KernelContext
 from eradiate import unit_registry as ureg
 from eradiate.scenes.illumination import SpotIllumination
 from eradiate.test_tools.types import check_scene_element
 
 
 def test_construct_basic(mode_mono):
-    # We need a default spectral config
-    ctx = KernelContext()
-
     # Construct without parameters
     illumination = SpotIllumination()
     check_scene_element(illumination, mi_cls=mi.Emitter)
@@ -35,9 +31,6 @@ def test_construct_texture(mode_mono, tmp_path):
     array = np.ones((3, 3, 3))
     im = Image.fromarray(np.uint8(array * 255))
     im.save(filename)
-
-    # We need a default spectral config
-    ctx = KernelContext()
 
     # Construct with custom beam profile filename
     illumination = SpotIllumination(
@@ -63,9 +56,6 @@ def test_construct_texture(mode_mono, tmp_path):
 
 
 def test_construct_from_size(mode_mono):
-    # We need a default spectral config
-    ctx = KernelContext()
-
     spot_radius = 1 * ureg.m
     beam_angle = 3 * ureg.deg
 

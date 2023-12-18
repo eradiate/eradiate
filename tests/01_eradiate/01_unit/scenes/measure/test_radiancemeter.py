@@ -18,10 +18,8 @@ def test_radiancemeter_medium(mode_mono):
     ctx1 = KernelContext()
     ctx2 = KernelContext(kwargs={"measure.atmosphere_medium_id": "test_atmosphere"})
 
-    kdict = template.render(ctx=KernelContext())
+    kdict = template.render(ctx=ctx1)
     assert "medium" not in kdict
 
-    kdict = template.render(
-        ctx=KernelContext(kwargs={"measure.atmosphere_medium_id": "test_atmosphere"})
-    )
+    kdict = template.render(ctx=ctx2)
     assert kdict["medium"] == {"type": "ref", "id": "test_atmosphere"}

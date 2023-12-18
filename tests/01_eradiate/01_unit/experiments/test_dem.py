@@ -8,7 +8,6 @@ from eradiate import unit_registry as ureg
 from eradiate.constants import EARTH_RADIUS
 from eradiate.experiments import DEMExperiment
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
-from eradiate.scenes.bsdfs import LambertianBSDF
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.spectra import MultiDeltaSpectrum

@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.exceptions import ModeError
 from eradiate.spectral.index import (
     CKDSpectralIndex,
     MonoSpectralIndex,
