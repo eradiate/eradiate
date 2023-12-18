@@ -8,12 +8,12 @@ eradiate.kernel.install_logging()
 
 
 def test_run_function(modes_all_double):
-    mode = eradiate.mode()
-
-    measure = {"type": "mdistant"}
-    measure["srf"] = {
-        "type": "multi_delta",
-        "wavelengths": [540, 550] * ureg.nm,
+    measure = {
+        "type": "mdistant",
+        "srf": {
+            "type": "multi_delta",
+            "wavelengths": [540, 550] * ureg.nm,
+        },
     }
 
     exp = AtmosphereExperiment(atmosphere=None, measures=measure)

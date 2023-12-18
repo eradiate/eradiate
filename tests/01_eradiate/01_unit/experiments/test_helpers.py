@@ -1,11 +1,9 @@
-import numpy as np
 import pytest
 
 import eradiate
 from eradiate.experiments._helpers import measure_inside_atmosphere, surface_converter
 from eradiate.scenes.atmosphere import HeterogeneousAtmosphere
 from eradiate.scenes.surface import BasicSurface
-from eradiate.units import unit_registry as ureg
 
 
 def test_helpers_measure_inside_atmosphere(

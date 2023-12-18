@@ -4,15 +4,19 @@ from eradiate.pipelines import ApplyCallable, Pipeline
 
 
 def test_pipeline_step_apply_callable():
-    f = lambda x: sum(x)
+    def f(x):
+        return sum(x)
 
     step = ApplyCallable(f)
     assert step.transform([1, 1]) == 2
 
 
 def test_pipeline_basic():
-    f = lambda x: sum(x)
-    g = lambda x: x + 1
+    def f(x):
+        return sum(x)
+
+    def g(x):
+        return x + 1
 
     # Init from list of steps
     pipeline = Pipeline([ApplyCallable(f), ApplyCallable(g)])

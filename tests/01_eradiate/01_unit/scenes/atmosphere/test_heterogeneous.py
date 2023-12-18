@@ -3,14 +3,12 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate import KernelContext
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
 from eradiate.radprops import ZGrid
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
-    MolecularAtmosphere,
     ParticleLayer,
 )
 from eradiate.scenes.core import traverse

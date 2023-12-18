@@ -10,7 +10,6 @@ from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import CentralPatchSurface
 from eradiate.test_tools.types import check_scene_element
-from eradiate.test_tools.util import skipif_data_not_found
 
 
 def test_canopy_atmosphere_experiment_construct_default(mode_mono):
@@ -177,7 +176,6 @@ def test_canopy_atmosphere_experiment_real_life(
     mode_mono,
     us_standard_mono,
 ):
-
     # Construct with typical parameters
     exp = CanopyAtmosphereExperiment(
         surface={"type": "rpv"},

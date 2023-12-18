@@ -2,14 +2,12 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import pytest
-from environ.exceptions import ConfigError, MissingEnvValueError
+from environ.exceptions import ConfigError
 
 from eradiate._config import EradiateConfig, ProgressLevel
-from eradiate.exceptions import ConfigWarning
 
 
 def eradiate_mitsuba_status(expect_installed=False):
-
     """
     Check if eradiate-mitsuba is installed in order to skip tests depending
     on the setup type (production or development).

@@ -5,7 +5,6 @@ import numpy as np
 import numpy.testing as npt
 import pytest
 
-from eradiate import KernelContext
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
 from eradiate.data import open_datasets
@@ -17,14 +16,14 @@ def test_molecular_atmosphere_default_mono(mode_mono):
     atmosphere = MolecularAtmosphere()
     si = atmosphere.spectral_set().spectral_indices().__next__()
     template, _ = traverse(atmosphere)
-    kernel_dict = template.render(KernelContext(si=si))
+    assert template.render(KernelContext(si=si))
 
 
 def test_molecular_atmosphere_default_ckd(mode_ckd):
     atmosphere = MolecularAtmosphere()
     si = next(atmosphere.spectral_set().spectral_indices())
     template, _ = traverse(atmosphere)
-    kernel_dict = template.render(KernelContext(si=si))
+    assert template.render(KernelContext(si=si))
 
 
 def test_molecular_atmosphere_scale(mode_mono, error_handler_config):
@@ -53,7 +52,6 @@ def test_molecular_atmosphere_kernel_dict(mode_ckd, error_handler_config):
             "spectra/absorption/ckd/monotropa/monotropa-4700_4800.nc",
         ]
     ) as absorption_data:
-
         atmosphere = MolecularAtmosphere(
             thermoprops={
                 "identifier": "afgl_1986-us_standard",

@@ -70,6 +70,9 @@ def test_gauss_lobatto(n, exp_nodes, exp_weights, mode_mono):
 
 def test_quad_integrate(modes_all):
     quad = Quad.gauss_legendre(10)
-    f = lambda x: x**2
+
+    def f(x):
+        return x**2
+
     values = np.array([f(x) for x in quad.eval_nodes(interval=(0, 1))])
     assert np.allclose(quad.integrate(values, interval=(0, 1)), 1.0 / 3.0)
