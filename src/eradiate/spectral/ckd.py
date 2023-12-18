@@ -123,7 +123,10 @@ class QuadSpec:
 
     @staticmethod
     def default() -> QuadSpecFixed:
-        return QuadSpecFixed(n=1, quad_type="gauss_legendre")
+        """
+        Return the default spectral quadrature (Gauss-Legendre, 16 *g*-points).
+        """
+        return QuadSpecFixed(n=16, quad_type="gauss_legendre")
 
     @staticmethod
     def from_dict(
@@ -166,7 +169,9 @@ class QuadSpec:
     @classmethod
     def convert(cls, value: t.Any) -> QuadSpec:
         """
-        Convert an object to a
+        Attempt conversion to a :class:`.QuadSpec` instance. If `value` is a
+        dictionary, it is passed to :meth:`.from_dict`; otherwise, it is left
+        unchanged.
         """
         if isinstance(value, dict):
             return cls.from_dict(value)

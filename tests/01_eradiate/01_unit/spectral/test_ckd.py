@@ -252,7 +252,7 @@ def test_select_from_connex_interpolated_spectrum_misaligned():
 
 
 def test_quad_spec_default():
-    assert QuadSpec.default() == QuadSpecFixed(quad_type=QuadType.GAUSS_LEGENDRE, n=1)
+    assert QuadSpec.default() == QuadSpecFixed(quad_type=QuadType.GAUSS_LEGENDRE, n=16)
 
 
 @pytest.mark.parametrize(
