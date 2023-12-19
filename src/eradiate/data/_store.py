@@ -49,7 +49,7 @@ def init_data_store(
     download_dir = config.download_dir
     if download_dir is None:
         if production:
-            download_dir = Path("./eradiate_downloads")
+            download_dir = Path("./eradiate_downloads").absolute()
         else:
             download_dir = config.source_dir
 

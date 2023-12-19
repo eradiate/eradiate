@@ -4,7 +4,7 @@ import logging
 import os
 import shutil
 import typing as t
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import attrs
 import pooch
@@ -167,7 +167,7 @@ class SafeOnlineDataStore(DataStore):
         registry_fname = self.registry_fetch()
         self.manager.registry = registry_from_file(registry_fname)
 
-    def is_registered(self, filename: PathLike, allow_compressed: bool = True) -> Path:
+    def is_registered(self, filename: PathLike, allow_compressed: bool = True) -> PurePosixPath:
         """
         Check if a file is registered, with an option to look for compressed
         data.
@@ -199,10 +199,10 @@ class SafeOnlineDataStore(DataStore):
             fname_compressed = fname + ".gz"
 
             if fname_compressed in self.manager.registry:
-                return Path(fname_compressed)
+                return PurePosixPath(fname_compressed)
 
         if fname in self.manager.registry:
-            return Path(fname)
+            return PurePosixPath(fname)
 
         raise ValueError(f"File '{fname}' is not in the registry.")
 
