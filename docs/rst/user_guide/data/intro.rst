@@ -150,3 +150,37 @@ computer graphics technology and measure results are usually mapped against
 hemispherical quantities, a mapping transformation associate angles to film
 coordinates. For convenience, Eradiate ships helpers to convert data from film
 coordinates to angular coordinates.
+
+Configuring the data storage
+----------------------------
+
+By default, Eradiate will store the downloaded data files into a folder
+configured using the `eradiate.config` module or some preset environment
+variables. This section will describe the default values of the data paths and
+the behavior of the data store depending on the installation structure of
+Eradiate and its configuration.
+
+Working with the Eradiate package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Using the Eradiate package as provided through PyPI, Eradiate will attempt to
+write its data files to a subfolder in the current working directory called
+``eradiate_downloads``. It will attempt to create the folder if it does not
+exist.
+
+Users may overwrite this default location by either setting the
+``eradiate.config.download_dir`` field to a path to the preferred directory, or
+by presetting the ``ERADIATE_DOWNLOAD_DIR`` environment variable before
+importing Eradiate.
+
+Working with a development environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When using Eradiate directly from the source code, the default store will use
+the data folder contained in the ``eradiate.config.source_dir`` instead of
+trying to create a folder locally. In this configuration, the data will be
+stored in the ``resources/data`` subfolder of the code repository.
+
+Developers can always overwrite this default behavior using the
+``eradiate.config.download_dir`` field or the ``ERADIATE_DOWNLOAD_DIR``
+environment variable.
