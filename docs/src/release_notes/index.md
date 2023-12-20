@@ -13,10 +13,10 @@ when necessary—we also advise to not ignore `DeprecationWarning`s.
 
 Emoji marks have the following meaning:
 
-* ︎⚠ Requires particular attention during upgrade or usage
+* ⚠️ Requires particular attention during upgrade or usage
   (breaking change or experimental feature).
-* 🗎 Documentation-related change.
-* 🖳 This is a developer-facing change.
+* 📖 Documentation-related change.
+* 🖥️ This is a developer-facing change.
 ```
 
 ```{toctree}
@@ -26,6 +26,7 @@ v0.25.x.md
 v0.24.x.md
 v0.23.x_and_older.md
 ```
+
 This is the list of changes to Eradiate between each release.
 For the full change log, see the [commit logs](https://github.com/eradiate/eradiate/commits/).
 
