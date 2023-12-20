@@ -54,14 +54,10 @@ def init_data_store(
             download_dir = config.source_dir / "resources" / "data"
 
     if not production:
-        small_files = SafeDirectoryDataStore(
-            path=download_dir
-        )
+        small_files = SafeDirectoryDataStore(path=download_dir)
     else:
         if offline:
-            small_files = BlindDirectoryDataStore(
-                path=download_dir
-            )
+            small_files = BlindDirectoryDataStore(path=download_dir)
         else:
             small_files = SafeOnlineDataStore(
                 base_url="/".join(
@@ -70,7 +66,7 @@ def init_data_store(
                         config.small_files_registry_revision,
                     ]
                 ),
-                path=download_dir
+                path=download_dir,
             )
 
     if offline:
