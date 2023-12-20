@@ -67,7 +67,7 @@ executing==2.0.1
     # via stack-data
 fastjsonschema==2.19.0
     # via nbformat
-fonttools==4.46.0
+fonttools==4.47.0
     # via
     #   -c requirements/pip/main.lock.txt
     #   matplotlib
@@ -128,7 +128,7 @@ jupyter-client==8.6.0
     #   ipykernel
     #   jupyter-server
     #   nbclient
-jupyter-core==5.5.0
+jupyter-core==5.5.1
     # via
     #   ipykernel
     #   jupyter-client
@@ -177,7 +177,7 @@ mistune==3.0.2
     # via nbconvert
 nbclient==0.9.0
     # via nbconvert
-nbconvert==7.12.0
+nbconvert==7.13.0
     # via jupyter-server
 nbformat==5.9.2
     # via

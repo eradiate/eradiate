@@ -91,7 +91,7 @@ https://conda.anaconda.org/conda-forge/osx-64/unicodedata2-15.1.0-py38hcafd530_0
 https://conda.anaconda.org/conda-forge/noarch/zipp-3.17.0-pyhd8ed1ab_0.conda#2e4d6bc0b14e10f895fc6791a7d9b26a
 https://conda.anaconda.org/eradiate/noarch/dessinemoi-23.1.0-py_0.tar.bz2#490780e63e113a7dc444bd068e049bfe
 https://conda.anaconda.org/conda-forge/noarch/environ-config-22.1.0-pyhd8ed1ab_0.tar.bz2#a1103faffa0a877313c1fba776aa0fc0
-https://conda.anaconda.org/conda-forge/osx-64/fonttools-4.46.0-py38hae2e43d_0.conda#373649e333b1e968aa0e1fc635071671
+https://conda.anaconda.org/conda-forge/osx-64/fonttools-4.47.0-py38hae2e43d_0.conda#8b4947f4c0d48f627142dafd2ddc5f42
 https://conda.anaconda.org/conda-forge/osx-64/hdf5-1.14.3-nompi_h691f4bf_100.conda#8e2ac4ae815a8c9743fe37d70f48f075
 https://conda.anaconda.org/conda-forge/noarch/importlib_resources-6.1.1-pyhd8ed1ab_0.conda#3d5fa25cf42f3f32a12b2d874ace8574
 https://conda.anaconda.org/conda-forge/osx-64/libcblas-3.9.0-20_osx64_openblas.conda#b324ad206d39ce529fb9073f9d062062
@@ -111,14 +111,15 @@ https://conda.anaconda.org/conda-forge/noarch/pytest-metadata-3.0.0-pyhd8ed1ab_1
 https://conda.anaconda.org/conda-forge/noarch/requests-2.31.0-pyhd8ed1ab_0.conda#a30144e4156cdbb236f99ebb49828f8b
 https://conda.anaconda.org/conda-forge/noarch/rich-13.7.0-pyhd8ed1ab_0.conda#d7a11d4f3024b2f4a6e0ae7377dd61e9
 https://conda.anaconda.org/conda-forge/osx-64/cftime-1.6.3-py38h7092abf_0.conda#f57fc174e437cb07db08e3e18ece59f9
-https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.5.3-py38hae485fc_2.tar.bz2#718d7cbae46372fd7972841b82f53f0d
+https://conda.anaconda.org/conda-forge/osx-64/contourpy-1.1.1-py38h15a1a5b_1.conda#1c702bb95106dbed8ddb262ad4041432
 https://conda.anaconda.org/conda-forge/osx-64/pandas-1.5.3-py38hec72209_1.conda#a8f001ab0a7c6312cea020bd20689765
 https://conda.anaconda.org/conda-forge/noarch/pooch-1.8.0-pyhd8ed1ab_0.conda#134b2b57b7865d2316a7cce1915a51ed
 https://conda.anaconda.org/conda-forge/noarch/pytest-json-report-1.5.0-pyhd8ed1ab_0.tar.bz2#837e335fa428cf7c784ee2e80594506c
 https://conda.anaconda.org/conda-forge/noarch/typer-0.9.0-pyhd8ed1ab_0.conda#5030a13b2fe5e143d5956d4943d3018f
-https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.5.3-py38h50d1736_2.tar.bz2#23e4ffdb854ca152150d1c971a9d1e8d
+https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.7.3-py38hcd1b199_0.conda#7e17b15addb42d41728f580757e3f528
 https://conda.anaconda.org/conda-forge/osx-64/netcdf4-1.6.5-nompi_py38h52a4375_100.conda#8bac4ea57ae15e0e128c21e3f8f9d224
 https://conda.anaconda.org/conda-forge/osx-64/scipy-1.10.1-py38h9cf86d3_3.conda#5e20c77455e815704b008ab8f42f6169
 https://conda.anaconda.org/conda-forge/noarch/xarray-2023.1.0-pyhd8ed1ab_0.conda#c11eb03b6f77a0d22ae88c454c940f55
+https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.7.3-py38h50d1736_0.conda#24885db052b1f02675a2f45ed6be3396
 https://conda.anaconda.org/conda-forge/noarch/ussa1976-0.3.4-pyhd8ed1ab_0.conda#c29c9ce2a92397b9c579c29b01c25248
 https://conda.anaconda.org/conda-forge/noarch/joseki-2.6.0-pyhd8ed1ab_0.conda#218072440c672af703f5fb3781cfd71a

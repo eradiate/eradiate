@@ -67,7 +67,7 @@ environ-config==23.2.0
     # via -r requirements/pip/main.in
 fastjsonschema==2.19.0
     # via nbformat
-fonttools==4.46.0
+fonttools==4.47.0
     # via matplotlib
 idna==3.6
     # via requests
@@ -100,7 +100,7 @@ jsonschema-specifications==2023.11.2
     # via jsonschema
 jupyter-client==8.6.0
     # via nbclient
-jupyter-core==5.5.0
+jupyter-core==5.5.1
     # via
     #   jupyter-client
     #   nbclient
@@ -137,7 +137,7 @@ myst-parser==2.0.0
     # via -r requirements/pip/docs.in
 nbclient==0.9.0
     # via nbconvert
-nbconvert==7.12.0
+nbconvert==7.13.0
     # via nbsphinx
 nbformat==5.9.2
     # via

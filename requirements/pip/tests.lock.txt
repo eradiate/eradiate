@@ -37,7 +37,7 @@ environ-config==23.2.0
     # via -r requirements/pip/main.in
 exceptiongroup==1.2.0
     # via pytest
-fonttools==4.46.0
+fonttools==4.47.0
     # via matplotlib
 idna==3.6
     # via requests
