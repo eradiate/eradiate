@@ -51,16 +51,16 @@ def init_data_store(
         if production:
             download_dir = Path("./eradiate_downloads").absolute()
         else:
-            download_dir = config.source_dir
+            download_dir = config.source_dir / "resources" / "data"
 
     if not production:
         small_files = SafeDirectoryDataStore(
-            path=config.source_dir / "resources" / "data"
+            path=download_dir
         )
     else:
         if offline:
             small_files = BlindDirectoryDataStore(
-                path=download_dir / "resources" / "data"
+                path=download_dir
             )
         else:
             small_files = SafeOnlineDataStore(
@@ -70,7 +70,7 @@ def init_data_store(
                         config.small_files_registry_revision,
                     ]
                 ),
-                path=download_dir / "resources" / "data",
+                path=download_dir
             )
 
     if offline:
