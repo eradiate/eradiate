@@ -167,7 +167,9 @@ class SafeOnlineDataStore(DataStore):
         registry_fname = self.registry_fetch()
         self.manager.registry = registry_from_file(registry_fname)
 
-    def is_registered(self, filename: PathLike, allow_compressed: bool = True) -> PurePosixPath:
+    def is_registered(
+        self, filename: PathLike, allow_compressed: bool = True
+    ) -> PurePosixPath:
         """
         Check if a file is registered, with an option to look for compressed
         data.
