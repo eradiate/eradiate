@@ -333,7 +333,8 @@ Preparing a  release
 --------------------
 
 1. Update the change log.
-2. Tag the target commit for release.
+2. Update the version and release date fields in `CITATION.cff`.
+3. Tag the target commit for release.
 
 Tagging a commit for release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

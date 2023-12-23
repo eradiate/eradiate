@@ -1,4 +1,5 @@
-# Initially generated with cffinit [https://bit.ly/cffinit]
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
 
 cff-version: 1.2.0
 title: Eradiate radiative transfer model
@@ -26,9 +27,12 @@ authors:
     family-names: Govaerts
     affiliation: Rayference
     orcid: 'https://orcid.org/0000-0002-9476-9595'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.7224314
+    description: Latest version on Zenodo
 repository-code: 'https://github.com/eradiate/eradiate'
 url: 'https://www.eradiate.eu'
 license: LGPL-3.0
-version: 0.24.4
-doi: 10.5281/zenodo.8432052
-date-released: 2023-10-11
+version: 0.25.0
+date-released: '2023-12-20'
