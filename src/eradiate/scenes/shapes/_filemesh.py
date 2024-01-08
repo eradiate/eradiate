@@ -54,9 +54,12 @@ class FileMeshShape(ShapeNode):
             raise ValueError(
                 f"unsupported mesh file extension '{self.filename.suffix}'"
             )
-
-        return {
+        result = {
             "type": mi_plugin,
             "filename": str(self.filename),
             "face_normals": True,
         }
+        if self.to_world is not None:
+            result["to_world"] = self.to_world
+
+        return result

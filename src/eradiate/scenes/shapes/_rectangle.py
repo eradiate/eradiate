@@ -104,14 +104,18 @@ class RectangleShape(ShapeNode):
         # Inherit docstring
         length_units = uck.get("length")
         scale = self.edges.m_as(length_units) * 0.5
-        result = {
-            "type": "rectangle",
-            "to_world": mi.ScalarTransform4f.look_at(
+        if self.to_world is not None:
+            trafo = self.to_world
+        else:
+            trafo = mi.ScalarTransform4f.look_at(
                 origin=self.center.m_as(length_units),
                 target=self.center.m_as(length_units) + self.normal,
                 up=self.up,
-            )
-            @ mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0]),
+            ) @ mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0])
+
+        result = {
+            "type": "rectangle",
+            "to_world": trafo,
         }
 
         return result
