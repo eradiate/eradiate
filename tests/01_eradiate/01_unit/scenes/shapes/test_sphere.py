@@ -2,8 +2,10 @@ import mitsuba as mi
 import numpy as np
 import pytest
 
+from eradiate import KernelContext
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
+from eradiate.scenes.core import traverse
 from eradiate.scenes.shapes import SphereShape
 from eradiate.test_tools.types import check_scene_element
 
@@ -19,6 +21,33 @@ def test_sphere_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
 
     if expected_reflectance is not None:
         assert mi_wrapper.parameters["bsdf.reflectance.value"] == expected_reflectance
+
+
+def test_sphere_construct_trafo(modes_all):
+    assert SphereShape(to_world=mi.Transform4f.scale(2))
+
+
+def test_sphere_template(modes_all):
+    sphere = SphereShape(center=(1, 1, 1), radius=2)
+
+    template, _ = traverse(sphere)
+    kernel_dict = template.render(ctx=KernelContext())
+
+    assert kernel_dict["type"] == "sphere"
+    assert np.allclose(kernel_dict["center"], (1, 1, 1))
+    assert kernel_dict["radius"] == 2
+
+    assert "to_world" not in kernel_dict
+
+    sphere = SphereShape(
+        center=(1, 1, 1), radius=2, to_world=mi.ScalarTransform4f.translate((1, 0, 0))
+    )
+    template, _ = traverse(sphere)
+    kernel_dict = template.render(ctx=KernelContext())
+
+    assert np.allclose(kernel_dict["center"], (1, 1, 1))
+    assert kernel_dict["radius"] == 2
+    assert kernel_dict["to_world"] == mi.ScalarTransform4f.translate((1, 0, 0))
 
 
 def test_sphere_surface():
@@ -54,3 +83,8 @@ def test_sphere_bbox():
     bbox = sphere.bbox
     np.testing.assert_array_equal(bbox.min.m_as(ureg.m), [-1, -1, -1])
     np.testing.assert_array_equal(bbox.max.m_as(ureg.m), [3, 3, 3])
+
+    sphere = SphereShape(center=[1, 1, 1], radius=2.0, to_world=mi.Transform4f.scale(2))
+    bbox = sphere.bbox
+    np.testing.assert_array_equal(bbox.min.m_as(ureg.m), [-2, -2, -2])
+    np.testing.assert_array_equal(bbox.max.m_as(ureg.m), [6, 6, 6])
