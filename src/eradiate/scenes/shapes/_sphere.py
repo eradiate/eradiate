@@ -10,7 +10,6 @@ from pinttr.util import ensure_units
 from ._core import ShapeNode
 from ..bsdfs import BSDF
 from ..core import BoundingBox
-from ... import converters
 from ...attrs import documented, parse_docs
 from ...constants import EARTH_RADIUS
 from ...units import unit_context_config as ucc
@@ -29,6 +28,11 @@ class SphereShape(ShapeNode):
     Sphere shape [``sphere``].
 
     This shape represents a sphere parametrized by its centre and radius.
+
+    Notes
+    -----
+    * If the `to_world` parameter is set, it will be appended to the position
+      and scaling defined by the `center` and `radius` parameters.
     """
 
     center: pint.Quantity = documented(
@@ -50,37 +54,27 @@ class SphereShape(ShapeNode):
         default="1.0",
     )
 
-    to_world: "mitsuba.ScalarTransform4f" = documented(
-        attrs.field(
-            converter=converters.to_mi_scalar_transform,
-            default=None,
-        ),
-        doc="Transform to scale, shift and rotate the sphere. "
-        "This transform will be prepended to the transform derived "
-        "from the center position and radius of the sphere. If, for example, a "
-        "scaling is provided here, it will multiply the sphere's radius.",
-        type="mitsuba.ScalarTransform4f or None",
-        init_type="mitsuba.ScalarTransform4f or array-like, optional",
-        default=None,
-    )
-
-    @to_world.validator
-    def to_world_validator(self, attribute, value):
-        if value is not None:
-            if not isinstance(value, mi.ScalarTransform4f):
-                raise TypeError(
-                    f"while validating '{attribute.name}': "
-                    f"'{attribute.name}' must be a mitsuba.ScalarTransform4f; "
-                    f"found: {type(value)}",
-                )
-
     @property
     def bbox(self) -> BoundingBox:
         length_units = ucc.get("length")
-        offset = (
-            np.full_like(self.center, self.radius.m_as(length_units)) * length_units
-        )
-        return BoundingBox(self.center - offset, self.center + offset)
+        if self.to_world is not None:
+            trafo = (
+                self.to_world
+                @ mi.Transform4f.translate(self.center.m_as(length_units))
+                @ mi.Transform4f.scale(self.radius.m_as(length_units))
+            )
+        else:
+            trafo = mi.Transform4f.translate(
+                self.center.m_as(length_units)
+            ) @ mi.Transform4f.scale(self.radius.m_as(length_units))
+
+        c = trafo @ (0, 0, 0)
+        r = np.linalg.norm(trafo @ (1, 0, 0) - c)
+
+        p1 = pint.Quantity(np.array(c + np.array((-1, -1, -1)) * r), length_units)
+        p2 = pint.Quantity(np.array(c + np.array((1, 1, 1)) * r), length_units)
+
+        return BoundingBox(p1, p2)
 
     @property
     def template(self) -> dict:
@@ -113,10 +107,20 @@ class SphereShape(ShapeNode):
             ``True`` iff ``p`` in within the sphere.
         """
         length_units = ucc.get("length")
+        if self.to_world is not None:
+            trafo = (
+                self.to_world
+                @ mi.Transform4f.translate(self.center.m_as(length_units))
+                @ mi.Transform4f.scale(self.radius.m_as(length_units))
+            )
+        else:
+            trafo = mi.Transform4f.translate(
+                self.center.m_as(length_units)
+            ) @ mi.Transform4f.scale(self.radius.m_as(length_units))
         p = np.atleast_2d(ensure_units(p, ucc.get("length")).m_as(length_units))
-        c = self.center.m_as(length_units)
+        c = trafo @ (0, 0, 0)
         d = np.linalg.norm(p - c, axis=1)
-        r = self.radius.m_as(length_units)
+        r = np.linalg.norm(trafo @ (1, 0, 0) - c)
         return d < r if strict else d <= r
 
     @classmethod

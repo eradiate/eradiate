@@ -26,6 +26,12 @@ def test_cuboid_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
         assert mi_wrapper.parameters["bsdf.reflectance.value"] == expected_reflectance
 
 
+def test_cuboid_construct_trafo(mode_mono):
+    assert CuboidShape(
+        edges=[1, 1, 1], to_world=mi.Transform4f.rotate(axis=[1, 1, 1], angle=45)
+    )
+
+
 @pytest.mark.parametrize(
     "kwargs, expected_transform",
     [
@@ -37,12 +43,23 @@ def test_cuboid_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
             {"edges": [2, 2, 2], "center": [1, 1, 1]},
             [(0, 0, 0), (2, 2, 2)],
         ),
+        ({"to_world": True}, [(1, 1, 1), (3, 3, 3)]),
+        (
+            {"edges": [2, 2, 2], "center": [1, 1, 1], "to_world": True},
+            [(1, 1, 1), (3, 3, 3)],
+        ),
     ],
-    ids=["edges", "center"],
+    ids=["edges", "center", "to_world", "full"],
 )
 def test_cuboid_params(mode_mono_double, kwargs, expected_transform):
-    # Set edges
-    cuboid = CuboidShape(**kwargs)
+    if "to_world" in kwargs:
+        trafo = kwargs.pop("to_world")
+        if trafo:
+            to_world = mi.ScalarTransform4f.translate((2, 2, 2))
+            cuboid = CuboidShape(**kwargs, to_world=to_world)
+    else:
+        cuboid = CuboidShape(**kwargs)
+
     template, _ = traverse(cuboid)
     kernel_dict = template.render(ctx=KernelContext())
     to_world = kernel_dict["to_world"]
@@ -73,7 +90,7 @@ def test_cuboid_atmosphere(mode_mono_double):
         assert dr.allclose(bbox.max, [500, 500, 1000])
 
 
-def test_cuboid_contains():
+def test_cuboid_contains(mode_mono):
     cuboid = CuboidShape(center=[0.5, 0.5, 0.5], edges=[1, 1, 1])
 
     # Works with a single point
@@ -84,9 +101,29 @@ def test_cuboid_contains():
     # Works with multiple points
     assert np.all(cuboid.contains([[0.5, 0.5, 0.5], [0.5, -0.5, 0.5]]) == [True, False])
 
+    # to_world
+    import mitsuba as mi
 
-def test_cuboid_bbox():
+    cuboid = CuboidShape(to_world=mi.Transform4f.rotate(angle=45, axis=(0, 0, 1)))
+
+    # Works with a single point
+    assert cuboid.contains([0.5, 0.5, 0.5])
+    assert not cuboid.contains([1.0, 1.0, 1.0])
+    assert not cuboid.contains([0.5, 0.5, 0.5] * ureg.km)
+
+    # Works with multiple points
+    assert np.all(cuboid.contains([[0.5, 0.5, 0.5], [1.0, 1.0, 1.0]]) == [True, False])
+
+
+def test_cuboid_bbox(mode_mono):
     cuboid = CuboidShape(center=[0.5, 0.5, 0.5], edges=[1, 1, 1])
     bbox = cuboid.bbox
     np.testing.assert_array_equal(bbox.min.m_as(ureg.m), [0, 0, 0])
     np.testing.assert_array_equal(bbox.max.m_as(ureg.m), [1, 1, 1])
+
+    import mitsuba as mi
+
+    cuboid = CuboidShape(to_world=mi.ScalarTransform4f.translate((1, 2, 3)))
+    bbox = cuboid.bbox
+    np.testing.assert_array_equal(bbox.min.m_as(ureg.m), [0, 1, 2])
+    np.testing.assert_array_equal(bbox.max.m_as(ureg.m), [2, 3, 4])

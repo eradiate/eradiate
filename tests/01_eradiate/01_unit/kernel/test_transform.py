@@ -1,7 +1,9 @@
 import drjit as dr
 import mitsuba as mi
+import numpy as np
 
 from eradiate.kernel import map_cube, map_unit_cube
+from eradiate.kernel.transform import transform_affine
 
 
 def test_map_unit_cube(mode_mono):
@@ -73,3 +75,24 @@ def test_map_cube(mode_mono):
             trafo.transform_affine(mi.Point3f(vertex)),
             new_vertex,
         )
+
+
+def test_transform_affine(mode_mono):
+    trafo_scale = mi.Transform4f.scale((2, 3, 4))
+    trafo_translate = mi.Transform4f.translate((0.1, 0.2, 0.3))
+    trafo_rotate = mi.Transform4f.rotate((0, 0, 1), 90)
+
+    points = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+    assert np.allclose(
+        transform_affine(trafo_scale, points),
+        np.array([[2, 0, 0], [0, 3, 0], [0, 0, 4]]),
+    )
+    assert np.allclose(
+        transform_affine(trafo_translate, points),
+        np.array([[1.1, 0.2, 0.3], [0.1, 1.2, 0.3], [0.1, 0.2, 1.3]]),
+    )
+    assert np.allclose(
+        transform_affine(trafo_rotate, points),
+        np.array([[0, 1, 0], [-1, 0, 0], [0, 0, 1]]),
+    )
