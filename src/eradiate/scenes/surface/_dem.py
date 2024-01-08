@@ -8,7 +8,12 @@ import numpy as np
 import pint
 import xarray as xr
 
-from ._core import Surface
+from ...attrs import documented, get_doc, parse_docs
+from ...constants import EARTH_RADIUS
+from ...units import to_quantity
+from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 from ..bsdfs import BSDF, LambertianBSDF, OpacityMaskBSDF
 from ..core import SceneElement
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
@@ -20,12 +25,7 @@ from ..shapes import (
     SphereShape,
     shape_factory,
 )
-from ...attrs import documented, get_doc, parse_docs
-from ...constants import EARTH_RADIUS
-from ...units import to_quantity
-from ...units import unit_context_config as ucc
-from ...units import unit_context_kernel as uck
-from ...units import unit_registry as ureg
+from ._core import Surface
 
 
 def mesh_from_dem(
@@ -142,9 +142,10 @@ def mesh_from_dem(
             altitude=atmo_bottom.m_as(uck.get("length")),
         ) * uck.get("length")
         mesh = BufferMeshShape(vertices=vertices_new, faces=faces)
-
     else:
-        raise ValueError(f"Unsupported scene geometry: {geometry}")
+        raise ValueError(
+            f"geometry must be PlaneParallelGeometry or SphericalShellGeometry, got {type(geometry)}"
+        )
 
     return mesh, theta_lim * ureg.deg, phi_lim * ureg.deg
 
@@ -471,7 +472,11 @@ class DEMSurface(Surface):
         -------
         .DEMSurface
         """
-        geometry = PlaneParallelGeometry() if geometry is None else geometry
+        geometry = (
+            PlaneParallelGeometry()
+            if geometry is None
+            else SceneGeometry.convert(geometry)
+        )
         bsdf = LambertianBSDF() if bsdf is None else bsdf
         bsdf_id = f"{id}_bsdf"
         mesh = attrs.evolve(mesh, bsdf=bsdf)
@@ -542,5 +547,8 @@ class DEMSurface(Surface):
                 up=np.array([0, 1, 0]),
                 bsdf=opacity_bsdf,
             )
+
+        else:
+            raise TypeError(f"Scene geometry is not recognized. {geometry}")
 
         return cls(shape=mesh, shape_background=surface_background, id=id)

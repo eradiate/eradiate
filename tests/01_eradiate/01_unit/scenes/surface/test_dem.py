@@ -127,21 +127,39 @@ def make_dataarray(data: pint.Quantity, coords: dict):
             },
             [(-0.089832, 0.179664), (-0.269496, 0.359328)],
         ),
+        (
+            {
+                "da": make_dataarray(
+                    data=np.zeros((10, 10)) * ureg.m,
+                    coords={
+                        "x": np.linspace(-10, 20, 10) * ureg.km,
+                        "y": np.linspace(-30, 40, 10) * ureg.km,
+                    },
+                ),
+                "geometry": "invalidgeometry",
+                "planet_radius": EARTH_RADIUS,
+            },
+            [(-0.089832, 0.179664), (-0.269496, 0.359328)],
+        ),
     ],
 )
 def test_mesh_from_dem(modes_all_double, kwargs, expected_limits):
-    if (kwargs["geometry"] == "spherical_shell") and kwargs[
-        "planet_radius"
-    ] is not None:
-        with pytest.warns():
-            mesh, lat, lon = mesh_from_dem(**kwargs)
+    if kwargs["geometry"] not in ["spherical_shell", "plane_parallel"]:
+        with pytest.raises(ValueError):
+            mesh_from_dem(**kwargs)
     else:
-        mesh, lat, lon = mesh_from_dem(**kwargs)
+        if (kwargs["geometry"] == "spherical_shell") and kwargs[
+            "planet_radius"
+        ] is not None:
+            with pytest.warns():
+                mesh, lat, lon = mesh_from_dem(**kwargs)
+        else:
+            mesh, lat, lon = mesh_from_dem(**kwargs)
 
-    assert len(mesh.vertices) == 100
+        assert len(mesh.vertices) == 100
 
-    assert np.allclose(lat.m, expected_limits[0], atol=1e-4, rtol=1e-3)
-    assert np.allclose(lon.m, expected_limits[1], atol=1e-4, rtol=1e-3)
+        assert np.allclose(lat.m, expected_limits[0], atol=1e-4, rtol=1e-3)
+        assert np.allclose(lon.m, expected_limits[1], atol=1e-4, rtol=1e-3)
 
 
 @pytest.mark.parametrize(
