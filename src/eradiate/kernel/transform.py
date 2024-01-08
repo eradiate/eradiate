@@ -4,6 +4,7 @@ Geometric transforms.
 from __future__ import annotations
 
 import mitsuba as mi
+import numpy as np
 
 
 def map_unit_cube(
@@ -90,3 +91,29 @@ def map_cube(
     return mi.ScalarTransform4f.translate(
         [half_edge_x + xmin, half_edge_y + ymin, half_edge_z + zmin]
     ) @ mi.ScalarTransform4f.scale([half_edge_x, half_edge_y, half_edge_z])
+
+
+def transform_affine(t, x):
+    """
+    Apply a mitsuba transformation to a list of points.
+
+    Parameters
+    ----------
+    t : mi.ScalarTransform4f
+        A transformation, to be applied to the list of points.
+
+    x : array-like
+        A list of points in (n, 3)-shape, to be transformed.
+
+    Returns
+    -------
+    ndarray
+        List in (n, 3)-shape of transformed points.
+    """
+    t = np.array(t.matrix)
+
+    r = np.dot(t, (np.vstack((x.T, np.ones(x.shape[0])))))
+    r /= r[3, :]
+    r = r[:3, ...].T
+
+    return r

@@ -28,6 +28,15 @@ def test_buffer_mesh_construct(modes_all_double, kwargs, expected):
             BufferMeshShape(**kwargs)
 
 
+def test_buffermesh_construct_trafo_warning(mode_mono):
+    with pytest.raises(Warning):
+        BufferMeshShape(
+            vertices=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            faces=[[1, 2, 3]],
+            to_world=mi.Transform4f.scale(2),
+        )
+
+
 def test_buffer_mesh_instance(mode_mono):
     mesh = BufferMeshShape(
         vertices=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
