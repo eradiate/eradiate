@@ -14,6 +14,7 @@ from ..bsdfs import BSDF
 from ..core import BoundingBox
 from ...attrs import documented, parse_docs
 from ...contexts import KernelContext
+from ...kernel.transform import transform_affine
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -42,6 +43,12 @@ class CuboidShape(ShapeNode):
 
     This shape represents an axis-aligned cuboid parametrized by the length of
     its edges and the coordinates of its central point.
+
+    Notes
+    -----
+    * If the `to_world` parameter is set, the `center` and `edges` parameters will
+      be ignored. The transform will be applied to a cube reaching from
+      [-1, -1, -1] to [1, 1, 1].
     """
 
     center: pint.Quantity = documented(
@@ -70,9 +77,32 @@ class CuboidShape(ShapeNode):
     def bbox(self) -> BoundingBox:
         # Inherit docstring
 
-        return BoundingBox(
-            self.center - 0.5 * self.edges, self.center + 0.5 * self.edges
-        )
+        if self.to_world is None:
+            return BoundingBox(
+                self.center - 0.5 * self.edges, self.center + 0.5 * self.edges
+            )
+        else:
+
+            new_points = transform_affine(
+                self.to_world,
+                np.array(
+                    [
+                        (-1, -1, -1),
+                        (1, -1, -1),
+                        (-1, 1, -1),
+                        (-1, -1, 1),
+                        (-1, 1, 1),
+                        (1, -1, 1),
+                        (1, 1, -1),
+                        (1, 1, 1),
+                    ]
+                ),
+            )
+
+            max = new_points.max(axis=0)
+            min = new_points.min(axis=0)
+
+            return BoundingBox(min, max)
 
     def contains(
         self, p: np.typing.ArrayLike, strict: bool = False
@@ -96,16 +126,76 @@ class CuboidShape(ShapeNode):
             ``True`` iff ``p`` in within the cuboid.
         """
 
-        node_min = self.center - 0.5 * self.edges
-        node_max = self.center + 0.5 * self.edges
+        length_unit = ucc.get("length")
+        p = np.atleast_2d(ensure_units(p, length_unit))
 
-        p = np.atleast_2d(ensure_units(p, ucc.get("length")))
-        cmp = (
-            np.logical_and(p > node_min, p < node_max)
-            if strict
-            else np.logical_and(p >= node_min, p <= node_max)
-        )
-        return np.all(cmp, axis=1)
+        if self.to_world is None:
+            node_min = self.center - 0.5 * self.edges
+            node_max = self.center + 0.5 * self.edges
+
+            cmp = (
+                np.logical_and(p > node_min, p < node_max)
+                if strict
+                else np.logical_and(p >= node_min, p <= node_max)
+            )
+            return np.all(cmp, axis=1)
+        else:
+
+            new_points = transform_affine(
+                self.to_world,
+                np.array(
+                    [(0, 0, 0), (-1, -1, -1), (1, -1, -1), (-1, 1, -1), (-1, -1, 1)]
+                ),
+            )
+
+            p0 = new_points[0]
+            p1 = new_points[1]
+            p2 = new_points[2]
+            p3 = new_points[3]
+            p4 = new_points[4]
+
+            v1 = p2 - p1
+            l1 = np.linalg.norm(v1)
+            n1 = v1 / l1
+
+            v2 = p3 - p1
+            l2 = np.linalg.norm(v2)
+            n2 = v2 / l2
+
+            v3 = p4 - p1
+            l3 = np.linalg.norm(v3)
+            n3 = v3 / l3
+
+            p = np.atleast_2d(p.m_as(length_unit))
+            vp = p - p0
+
+            projected_1 = np.dot(vp, n1)
+            projected_2 = np.dot(vp, n2)
+            projected_3 = np.dot(vp, n3)
+
+            l1_half = l1 / 2.0
+            l2_half = l2 / 2.0
+            l3_half = l3 / 2.0
+
+            if strict:
+                result = np.prod(
+                    [
+                        projected_1 < l1_half,
+                        projected_2 < l2_half,
+                        projected_3 < l3_half,
+                    ],
+                    axis=0,
+                )
+            else:
+                result = np.prod(
+                    [
+                        projected_1 <= l1_half,
+                        projected_2 <= l2_half,
+                        projected_3 <= l3_half,
+                    ],
+                    axis=0,
+                )
+            return result
 
     def eval_to_world(self, ctx: KernelContext | None = None) -> mi.ScalarTransform4f:
         kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}
@@ -137,10 +227,16 @@ class CuboidShape(ShapeNode):
     def template(self) -> dict:
         length_units = uck.get("length")
 
+        if self.to_world is not None:
+            trafo = self.to_world
+        else:
+            trafo = mi.ScalarTransform4f.translate(
+                self.center.m_as(length_units)
+            ) @ mi.ScalarTransform4f.scale(0.5 * self.edges.m_as(length_units))
+
         return {
             "type": "cube",
-            "to_world": mi.ScalarTransform4f.translate(self.center.m_as(length_units))
-            @ mi.ScalarTransform4f.scale(0.5 * self.edges.m_as(length_units)),
+            "to_world": trafo,
         }
 
     @classmethod

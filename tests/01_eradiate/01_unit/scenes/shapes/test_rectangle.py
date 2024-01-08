@@ -24,6 +24,10 @@ def test_rectangle_construct_kernel_dict(modes_all, kwargs, expected_reflectance
         assert mi_wrapper.parameters["bsdf.reflectance.value"] == expected_reflectance
 
 
+def test_rectangle_construct_trafo(modes_all):
+    assert RectangleShape(to_world=mi.Transform4f.scale(2))
+
+
 @pytest.mark.parametrize(
     "kwargs, expected_transform",
     [
@@ -44,6 +48,10 @@ def test_rectangle_construct_kernel_dict(modes_all, kwargs, expected_reflectance
             [(1, 0, -1), (-1, 0, 1)],
         ),
         (
+            {"to_world": True},
+            [(0, 0, 1), (2, 2, 1)],
+        ),
+        (
             {
                 "edges": [2, 4],
                 "normal": [0, -1, 0],
@@ -52,12 +60,29 @@ def test_rectangle_construct_kernel_dict(modes_all, kwargs, expected_reflectance
             },
             [(2, 0, 0), (-2, 0, 2)],
         ),
+        (
+            {
+                "edges": [2, 4],
+                "normal": [0, -1, 0],
+                "up": [-1, 0, 0],
+                "center": [0, 0, 1],
+                "to_world": True,
+            },
+            [(0, 0, 1), (2, 2, 1)],
+        ),
     ],
-    ids=["edges", "center", "up", "normal_up", "full"],
+    ids=["edges", "center", "up", "normal_up", "to_world-only", "no-to_world", "full"],
 )
 def test_rectangle_params(mode_mono_double, kwargs, expected_transform):
+    if "to_world" in kwargs:
+        trafo = kwargs.pop("to_world")
+        if trafo:
+            to_world = mi.ScalarTransform4f.translate((1, 1, 1))
+            rectangle = RectangleShape(**kwargs, to_world=to_world)
+    else:
+        rectangle = RectangleShape(**kwargs)
+
     # Set edges
-    rectangle = RectangleShape(**kwargs)
     template, _ = traverse(rectangle)
     kernel_dict = template.render(ctx=KernelContext())
     to_world = kernel_dict["to_world"]
