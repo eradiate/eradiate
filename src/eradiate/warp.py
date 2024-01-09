@@ -174,3 +174,30 @@ def uniform_disk_to_square_concentric(p: ArrayLike) -> np.ndarray:
     b = np.where(quadrant_0_or_2, t, r)
 
     return np.vstack(((a + 1.0) * 0.5, (b + 1.0) * 0.5)).T
+
+
+def transform_affine(t, x):
+    """
+    Apply a mitsuba transform to a list of points. This function is intended as a helper for the buffermesh class, which
+    does not support a to_world transform.
+
+    Parameters
+    ----------
+    t : mi.Transform4f
+        A transform, to be applied to the list of points.
+
+    x : array-like
+        A list of points to be transformed.
+
+    Returns
+    -------
+    ndarray
+        List of transformed points.
+    """
+    t = np.array(t.matrix)
+
+    r = np.dot(t, (np.vstack((x.T, np.ones(x.shape[0])))))
+    r /= r[3, :]
+    r = r[:3, ...].T
+
+    return r

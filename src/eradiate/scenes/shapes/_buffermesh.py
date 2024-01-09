@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 import attrs
 import mitsuba as mi
 import numpy as np
@@ -58,6 +60,15 @@ class BufferMeshShape(ShapeInstance):
                 f"while validating {attribute.name}, must be an array of shape "
                 f"(n, 3), got {value.shape}"
             )
+
+    def __attrs_post_init__(self):
+        if self.to_world is not None:
+            warnings.warn(
+                "A to_world transform cannot be set for the buffermesh class."
+                "Please apply the transform to your vertices manually. Refer to the documentation for a how-to."
+            )
+
+        self.update()
 
     def bbox(self) -> BoundingBox:
         # Inherit docstring

@@ -26,6 +26,12 @@ def test_cuboid_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
         assert mi_wrapper.parameters["bsdf.reflectance.value"] == expected_reflectance
 
 
+def test_cuboid_construct_trafo(mode_mono):
+    assert CuboidShape(
+        edges=[1, 1, 1], to_world=mi.Transform4f.rotate(axis=[1, 1, 1], angle=45)
+    )
+
+
 @pytest.mark.parametrize(
     "kwargs, expected_transform",
     [
