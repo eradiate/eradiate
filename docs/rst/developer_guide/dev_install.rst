@@ -35,19 +35,19 @@ machine meets the requirements listed below.
       .. tab-item:: Linux
          :sync: linux
 
-         Operating system: Ubuntu Linux 20.04.1.
+         Operating system: Ubuntu Linux 22.04.1.
 
          .. csv-table::
             :header: Requirement, Tested version
             :widths: 10, 10
 
-            git,       2.25.1
-            cmake,     3.22.2
-            ninja,     1.10.0
-            clang,     11.0.0-2
+            git,       2.34.1
+            cmake,     3.28.0
+            ninja,     1.10.1
+            clang,     11.1.0-6
             libc++,    11
             libc++abi, 11
-            python,    3.8.12 (miniconda3)
+            python,    3.9.18 (miniconda3)
 
       .. tab-item:: macOS
          :sync: macos
@@ -63,7 +63,7 @@ machine meets the requirements listed below.
             cmake,  3.22.1
             ninja,  1.10.2
             clang,  Apple clang version 13.0.0 (clang-1300.0.29.30)
-            python, 3.8.12 (miniconda3)
+            python, 3.9.18 (miniconda3)
 
 .. tab-set::
 
@@ -115,7 +115,7 @@ machine meets the requirements listed below.
 
          xcode-select --install
 
-Finally, Eradiate requires a fairly recent version of Python (at least 3.8)
+Finally, Eradiate requires a fairly recent version of Python (at least 3.9)
 and **we highly recommend using the Conda environment and package  manager** to
 set up your Python environment. Conda can be installed notably as part of the
 Anaconda distribution, or using its lightweight counterpart Miniconda.
