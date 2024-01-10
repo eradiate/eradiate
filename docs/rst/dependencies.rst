@@ -6,7 +6,7 @@ Dependencies
 Required dependencies
 ---------------------
 
-* Python (3.8 or later)
+* Python (3.9 or later)
 
 Core libraries
 
@@ -97,5 +97,3 @@ Others
   `python-dateutil <https://dateutil.readthedocs.io/>`_:
   Used for Earth-Sun distance calculation and date parsing in the Solar
   irradiance spectrum init code.
-* `IAPWS <https://iapws.readthedocs.io/>`_: Used for thermophysical property
-  computations.
