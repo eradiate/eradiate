@@ -6,7 +6,7 @@
 #
 aenum==3.1.15
     # via -r requirements/pip/main.in
-attrs==23.1.0
+attrs==23.2.0
     # via
     #   -r requirements/pip/main.in
     #   dessinemoi
@@ -87,7 +87,7 @@ pandas==2.0.3
     # via
     #   joseki
     #   xarray
-pillow==10.1.0
+pillow==10.2.0
     # via matplotlib
 pint==0.21.1
     # via
@@ -106,7 +106,7 @@ pygments==2.17.2
     # via rich
 pyparsing==3.1.1
     # via matplotlib
-pytest==7.4.3
+pytest==7.4.4
     # via
     #   -r requirements/pip/tests.in
     #   pytest-json-report
@@ -148,7 +148,7 @@ typing-extensions==4.9.0
     # via
     #   rich
     #   typer
-tzdata==2023.3
+tzdata==2023.4
     # via pandas
 urllib3==2.1.0
     # via requests

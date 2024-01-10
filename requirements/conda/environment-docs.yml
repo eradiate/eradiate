@@ -4,7 +4,7 @@ channels:
   - defaults
 dependencies:
   # default
-  - python=3.8
+  - python=3.9
   # docs
   - autodocsumm
   - myst-parser

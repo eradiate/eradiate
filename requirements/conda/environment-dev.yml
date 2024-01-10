@@ -4,7 +4,7 @@ channels:
   - defaults
 dependencies:
   # default
-  - python=3.8
+  - python=3.9
   # dev
   - conda-lock>=1.4
   - networkx>=3.1
