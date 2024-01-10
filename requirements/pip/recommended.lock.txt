@@ -20,7 +20,7 @@ asttokens==2.4.1
     # via stack-data
 async-lru==2.0.4
     # via jupyterlab
-attrs==23.1.0
+attrs==23.2.0
     # via
     #   -c requirements/pip/main.lock.txt
     #   jsonschema
@@ -43,7 +43,7 @@ charset-normalizer==3.3.2
     # via
     #   -c requirements/pip/main.lock.txt
     #   requests
-comm==0.2.0
+comm==0.2.1
     # via
     #   ipykernel
     #   ipywidgets
@@ -65,7 +65,7 @@ exceptiongroup==1.2.0
     # via anyio
 executing==2.0.1
     # via stack-data
-fastjsonschema==2.19.0
+fastjsonschema==2.19.1
     # via nbformat
 fonttools==4.47.0
     # via
@@ -79,7 +79,7 @@ idna==3.6
     #   anyio
     #   jsonschema
     #   requests
-importlib-metadata==7.0.0
+importlib-metadata==7.0.1
     # via
     #   jupyter-client
     #   jupyter-lsp
@@ -93,7 +93,7 @@ importlib-resources==6.1.1
     #   jsonschema-specifications
     #   jupyterlab
     #   matplotlib
-ipykernel==6.27.1
+ipykernel==6.28.0
     # via jupyterlab
 ipython==8.12.3
     # via
@@ -121,14 +121,14 @@ jsonschema[format-nongpl]==4.20.0
     #   jupyter-events
     #   jupyterlab-server
     #   nbformat
-jsonschema-specifications==2023.11.2
+jsonschema-specifications==2023.12.1
     # via jsonschema
 jupyter-client==8.6.0
     # via
     #   ipykernel
     #   jupyter-server
     #   nbclient
-jupyter-core==5.5.1
+jupyter-core==5.7.1
     # via
     #   ipykernel
     #   jupyter-client
@@ -141,15 +141,15 @@ jupyter-events==0.9.0
     # via jupyter-server
 jupyter-lsp==2.2.1
     # via jupyterlab
-jupyter-server==2.12.1
+jupyter-server==2.12.3
     # via
     #   jupyter-lsp
     #   jupyterlab
     #   jupyterlab-server
     #   notebook-shim
-jupyter-server-terminals==0.5.0
+jupyter-server-terminals==0.5.1
     # via jupyter-server
-jupyterlab==4.0.9
+jupyterlab==4.0.10
     # via -r requirements/pip/recommended.in
 jupyterlab-pygments==0.3.0
     # via nbconvert
@@ -177,7 +177,7 @@ mistune==3.0.2
     # via nbconvert
 nbclient==0.9.0
     # via nbconvert
-nbconvert==7.13.0
+nbconvert==7.14.0
     # via jupyter-server
 nbformat==5.9.2
     # via
@@ -221,7 +221,7 @@ pexpect==4.9.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pillow==10.1.0
+pillow==10.2.0
     # via
     #   -c requirements/pip/main.lock.txt
     #   matplotlib
@@ -280,7 +280,7 @@ pyzmq==25.1.2
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
-referencing==0.32.0
+referencing==0.32.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -297,11 +297,11 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
-rpds-py==0.15.2
+rpds-py==0.16.2
     # via
     #   jsonschema
     #   referencing
-seaborn==0.13.0
+seaborn==0.13.1
     # via -r requirements/pip/recommended.in
 send2trash==1.8.2
     # via jupyter-server
@@ -333,7 +333,7 @@ tornado==6.4
     #   jupyter-server
     #   jupyterlab
     #   terminado
-traitlets==5.14.0
+traitlets==5.14.1
     # via
     #   comm
     #   ipykernel
@@ -348,7 +348,7 @@ traitlets==5.14.0
     #   nbclient
     #   nbconvert
     #   nbformat
-types-python-dateutil==2.8.19.14
+types-python-dateutil==2.8.19.20240106
     # via arrow
 typing-extensions==4.9.0
     # via
@@ -356,7 +356,7 @@ typing-extensions==4.9.0
     #   anyio
     #   async-lru
     #   ipython
-tzdata==2023.3
+tzdata==2023.4
     # via
     #   -c requirements/pip/main.lock.txt
     #   pandas
@@ -366,7 +366,7 @@ urllib3==2.1.0
     # via
     #   -c requirements/pip/main.lock.txt
     #   requests
-wcwidth==0.2.12
+wcwidth==0.2.13
     # via prompt-toolkit
 webcolors==1.13
     # via jsonschema
