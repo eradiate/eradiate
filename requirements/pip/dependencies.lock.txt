@@ -8,7 +8,7 @@ aenum==3.1.15
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
-attrs==23.1.0
+attrs==23.2.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
@@ -128,7 +128,7 @@ pandas==2.0.3
     #   -c requirements/pip/optional.lock.txt
     #   joseki
     #   xarray
-pillow==10.1.0
+pillow==10.2.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   matplotlib
@@ -210,7 +210,7 @@ typing-extensions==4.9.0
     #   -c requirements/pip/optional.lock.txt
     #   rich
     #   typer
-tzdata==2023.3
+tzdata==2023.4
     # via
     #   -c requirements/pip/optional.lock.txt
     #   pandas
