@@ -22,6 +22,7 @@ Emoji marks have the following meaning:
 ```{toctree}
 :maxdepth: 2
 
+v0.26.x.md
 v0.25.x.md
 v0.24.x.md
 v0.23.x_and_older.md
