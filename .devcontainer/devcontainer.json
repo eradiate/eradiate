@@ -1,0 +1,34 @@
+{
+    "name": "eradiate",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/conda:1": {
+            "addCondaForge": true
+        },
+        "ghcr.io/devcontainers/features/common-utils:latest": {},
+        "ghcr.io/devcontainers-contrib/features/apt-get-packages:latest": {
+            "packages": "cmake,ninja-build,clang-11,libc++-11-dev,libc++abi-11-dev,libpng-dev,zlib1g-dev,libjpeg-dev"
+        }
+    },
+    "customizations": {
+        "vscode": {
+			"settings": {
+				"python.defaultInterpreterPath": "/opt/conda/envs/eradiate/bin/python"
+			},
+            "extensions": [
+                "donjayamanne.python-environment-manager",
+                "ms-python.black-formatter",
+                "ms-python.isort",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-toolsai.jupyter-renderers",
+                "ms-toolsai.jupyter",
+                "ms-toolsai.vscode-jupyter-cell-tags",
+                "tamasfe.even-better-toml"
+            ]
+        }
+    },
+    "onCreateCommand": "chmod +x .devcontainer/create-command.sh && .devcontainer/create-command.sh"
+    
+}
