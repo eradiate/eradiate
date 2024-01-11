@@ -1,4 +1,4 @@
 import os
-import typing
+from typing import TypeVar
 
-PathLike = typing.TypeVar("PathLike", str, bytes, os.PathLike)
+PathLike = TypeVar("PathLike", str, bytes, os.PathLike)
