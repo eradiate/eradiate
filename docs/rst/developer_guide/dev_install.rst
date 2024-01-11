@@ -9,6 +9,9 @@ well as for developing on the kernel code. It requires to compile the C++ code
 of the Mitsuba renderer, using the Eradiate specific plugins and the appropriate
 variants.
 
+Additionally, an Ubuntu-based Dev Container is available for a quick setup of
+the development environment. See `Development Container`_.
+
 Prerequisites
 -------------
 
@@ -376,3 +379,34 @@ followed the installation instructions, here is a possible workflow:
 
       conda deactivate
       conda env remove --name eradiate
+
+.. _sec-developer_guide-dev_install-dev_container:
+
+Development Container
+---------------------
+
+A development container is available to quickly set up the development
+environment. To use it, you will need to first clone the repository
+as described in the section titled `Cloning the repository`_ above,
+and then follow the procedure required by your IDE.
+
+
+.. dropdown:: If you are using Visual Studio Code ...
+   :color: info
+   :icon: info
+
+
+   While not required, the development container is well-configured to work with
+   Visual Studio Code. To use it, you will need to install the
+   `Remote - Dev Containers <https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers>`_
+   extension.
+
+   Once the extension is installed, you can open the repository in a container
+   by clicking on the popup that appears in the bottom right corner of the
+   window. You can also open the command palette (``Ctrl+Shift+P``) and search
+   for the ``Remote-Containers: Reopen in Container`` command.
+
+   After a few minutes, where all the previous steps are executed automatically,
+   you should be presented with a fully configured development environment,
+   including an ``eradiate`` Conda environment with a compiled kernel and several
+   other Python-related Visual Studio Code extensions.
