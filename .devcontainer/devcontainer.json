@@ -30,5 +30,4 @@
         }
     },
     "onCreateCommand": "chmod +x .devcontainer/create-command.sh && .devcontainer/create-command.sh"
-    
 }
