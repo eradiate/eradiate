@@ -30,6 +30,15 @@ def test_ckd_bin():
         Bin(wmin=510.0, wmax=500.0, quad=quad)
 
 
+def test_bin_set_arange():
+    binset = BinSet.arange(
+        500 * ureg.nm, 600 * ureg.nm, 10 * ureg.nm, quad=Quad.gauss_legendre(2)
+    )
+    result = binset.wavelengths
+    expected = [505, 515, 525, 535, 545, 555, 565, 575, 585, 595] * ureg.nm
+    assert np.allclose(result, expected)
+
+
 def test_select_with_multi_delta_1():
     """
     Unit tests for :meth:`.BinSet.select_with`.

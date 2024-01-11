@@ -12,6 +12,7 @@ import pinttr
 import xarray as xr
 
 from .index import CKDSpectralIndex
+from .spectral_set import SpectralSet
 from ..attrs import documented, parse_docs
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
 from ..quad import Quad, QuadType
@@ -374,7 +375,7 @@ def ng_threshold(
 
 @parse_docs
 @attrs.define(eq=False, frozen=True, slots=True)
-class BinSet:
+class BinSet(SpectralSet):
     """
     A data class representing a bin set used in CKD mode.
 
@@ -398,6 +399,34 @@ class BinSet:
     def spectral_indices(self) -> t.Generator[CKDSpectralIndex]:
         for bin in self.bins:
             yield from bin.spectral_indices()
+
+    @property
+    def wavelengths(self) -> pint.Quantity:
+        return self.wcenters
+
+    @property
+    def wcenters(self) -> pint.Quantity:
+        """
+        Return the central wavelength of all bins.
+        """
+        units = ucc.get("wavelength")
+        return [bin.wcenter.m_as(units) for bin in self.bins] * units
+
+    @property
+    def wmins(self) -> pint.Quantity:
+        """
+        Return the lower bound of all bins.
+        """
+        units = ucc.get("wavelength")
+        return [bin.wmin.m_as(units) for bin in self.bins] * units
+
+    @property
+    def wmaxs(self) -> pint.Quantity:
+        """
+        Return the upper bound of all bins.
+        """
+        units = ucc.get("wavelength")
+        return [bin.wmax.m_as(units) for bin in self.bins] * units
 
     @classmethod
     def arange(

@@ -10,6 +10,7 @@ import pinttr
 import xarray as xr
 
 from .index import MonoSpectralIndex
+from .spectral_set import SpectralSet
 from ..attrs import documented, parse_docs
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
 from ..units import to_quantity
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @parse_docs
 @attrs.define(eq=False, frozen=True, slots=True)
-class WavelengthSet:
+class WavelengthSet(SpectralSet):
     """
     A data class representing a wavelength set used in monochromatic modes.
 
