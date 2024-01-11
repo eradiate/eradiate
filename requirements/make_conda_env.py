@@ -4,6 +4,7 @@ from copy import deepcopy
 
 import click
 import networkx as nx
+from _utils import resolve_package_manager
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedSeq as CS
 
@@ -55,7 +56,7 @@ def cli(sections, output_dir, layered_config, pip_deps, quiet, write_graphs):
     with open(os.path.join("requirements", "environment.in")) as f:
         env_yml = yaml.load(f.read())
     with open(layered_config) as f:
-        layered_yml = yaml.load(f.read())
+        layered_yml = resolve_package_manager(yaml.load(f.read()), "conda")
 
     sections = [
         (x.strip(), {"packages": set(layered_yml[x.strip()].get("packages", []))})
@@ -71,7 +72,7 @@ def cli(sections, output_dir, layered_config, pip_deps, quiet, write_graphs):
             G.add_edge(section, include)
 
     if write_graphs:
-        path = os.path.join(output_dir, f"layer_graph.dot")
+        path = os.path.join(output_dir, "layer_graph.dot")
         nx.drawing.nx_pydot.write_dot(G, path)
 
     G.add_node("default", packages=set(dep_list))
