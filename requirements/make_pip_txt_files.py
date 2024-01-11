@@ -1,6 +1,7 @@
 import os
 
 import click
+from _utils import resolve_package_manager
 from ruamel.yaml import YAML
 
 
@@ -34,7 +35,7 @@ def cli(sections, output_dir, layered_config, quiet):
     # Load layered dependency dependencies
     yaml = YAML(typ="safe")
     with open(layered_config) as f:
-        layered_yml = yaml.load(f.read())
+        layered_yml = resolve_package_manager(yaml.load(f.read()), "pip")
 
     for section in sections:
         if not quiet:
@@ -53,7 +54,6 @@ def cli(sections, output_dir, layered_config, quiet):
 
         # Create .txt file
         with open(os.path.join(output_dir, f"{section}.txt"), "w") as f:
-
             f.write("\n".join(packages))
             f.write("\n")
 
