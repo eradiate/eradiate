@@ -26,6 +26,7 @@ main:
     - "rich"
     - "ruamel.yaml"
     - "scipy"
+    - "sf-hamilton>=1.40"
     - "shellingham!=1.5.1"  # Typer dependency; exclude this version which raises while previous don't
     - "tqdm"
     - "typer>=0.9.0"
@@ -41,6 +42,8 @@ recommended:
     - "ipywidgets"
     - "jupyterlab"
     - "python-dateutil"  # Used by the Solar irradiance spectrum date-based scaling feature
+    - pip: "graphviz"  # Used to visualize post-processing pipeline DAGs
+      conda: "python-graphviz"
     - "seaborn"  # Used to define the Eradiate plotting style
 
 docs:
