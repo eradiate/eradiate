@@ -299,7 +299,7 @@ def direction_to_angles(
 
 
 @ureg.wraps(ret=None, args=(None, "rad", "rad", None), strict=False)
-def spherical_to_cartesian(r, theta, phi, origin=np.zeros((3,))):
+def spherical_to_cartesian(r, theta, phi, origin=(0, 0, 0)):
     r"""
     Convert spherical coordinates to cartesian coordinates
 
