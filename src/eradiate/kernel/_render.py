@@ -343,7 +343,7 @@ def mi_render(
             # Loop on sensors
             for i_sensor, mi_sensor in mi_sensors:
                 # Render sensor
-                seed = int(seed_state.next())
+                seed = int(seed_state.next().squeeze())
                 logger.debug(
                     'Running Mitsuba for sensor "%s" with seed value %s',
                     mi_sensor.id(),
