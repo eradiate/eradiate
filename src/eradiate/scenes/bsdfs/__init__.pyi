@@ -7,3 +7,4 @@ from ._mqdiffuse import MQDiffuseBSDF as MQDiffuseBSDF
 from ._opacity_mask import OpacityMaskBSDF as OpacityMaskBSDF
 from ._rpv import RPVBSDF as RPVBSDF
 from ._rtls import RTLSBSDF as RTLSBSDF
+from ._hapke import HapkeBSDF as HapkeBSDF

@@ -111,6 +111,7 @@ class PhysicalQuantity(enum.Enum):
             cls.RADIANCE,
             cls.REFLECTANCE,
             cls.TRANSMITTANCE,
+            cls.ANGLE,
         )
 
 
