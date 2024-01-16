@@ -19,7 +19,7 @@ from ...warp import square_to_uniform_hemisphere
 @attrs.define(eq=False, slots=False)
 class DistantFluxMeasure(DistantMeasure):
     """
-    Distant radiosity measure scene element [``distant_flux``].
+    Distant radiosity measure scene element [``distantflux``, ``distant_flux``].
 
     This measure records the [spectral] radiosity (in W/m²[/nm]) at an infinite
     distance in a hemisphere defined by its ``direction`` parameter.

@@ -31,7 +31,7 @@ measure_factory.register_lazy_batch(
         (
             "_distant_flux.DistantFluxMeasure",
             "distant_flux",
-            {},
+            {"aliases": ["distantflux"]},
         ),
         (
             "_hemispherical_distant.HemisphericalDistantMeasure",
