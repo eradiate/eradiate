@@ -143,8 +143,8 @@ docs-rst:
 	make -C docs rst-plugins
 	make -C docs md-cli
 
-docs-render-tutorials: conda-init
-	jupyter nbconvert tutorials/**/*.ipynb --execute --to notebook --inplace
+docs-render-tutorials:
+	python3 tutorials/run.py run
 
 docs-clean:
 	make -C docs clean
