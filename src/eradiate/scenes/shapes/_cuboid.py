@@ -42,12 +42,18 @@ class CuboidShape(ShapeNode):
 
     This shape represents an axis-aligned cuboid parametrized by the length of
     its edges and the coordinates of its central point.
+
+    Notes
+    -----
+    * If the `to_world` parameter is set, the `center` and `edges` parameters will
+      be ignored. The transform will be applied to a cube reaching from
+      [-1, -1, -1] to [1, 1, 1].
     """
 
     center: pint.Quantity = documented(
         pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Coordinates of the centre of the cube. "
-        "Unit-enabled field (default: ``ucc['length']``).",
+            "Unit-enabled field (default: ``ucc['length']``).",
         type="quantity",
         init_type="quantity or array-like, optional",
         default="[0, 0, 0]",
@@ -60,7 +66,7 @@ class CuboidShape(ShapeNode):
             units=ucc.deferred("length"),
         ),
         doc="Lengths of the edges of the cuboid. "
-        "Unit-enabled field (default: ``ucc['length]``).",
+            "Unit-enabled field (default: ``ucc['length]``).",
         type="quantity",
         init_type="quantity or array-like",
         default="[1, 1, 1]",
@@ -75,7 +81,7 @@ class CuboidShape(ShapeNode):
         )
 
     def contains(
-        self, p: np.typing.ArrayLike, strict: bool = False
+            self, p: np.typing.ArrayLike, strict: bool = False
     ) -> t.Sequence[bool]:
         """
         Test whether a point lies within the cuboid.
@@ -151,12 +157,12 @@ class CuboidShape(ShapeNode):
 
     @classmethod
     def atmosphere(
-        cls,
-        top: pint.Quantity = 100.0 * ureg.km,
-        bottom: pint.Quantity = 0.0 * ureg.km,
-        bottom_offset: pint.Quantity = None,
-        width: pint.Quantity = 100.0 * ureg.km,
-        bsdf: BSDF | None = None,
+            cls,
+            top: pint.Quantity = 100.0 * ureg.km,
+            bottom: pint.Quantity = 0.0 * ureg.km,
+            bottom_offset: pint.Quantity = None,
+            width: pint.Quantity = 100.0 * ureg.km,
+            bsdf: BSDF | None = None,
     ) -> CuboidShape:
         """
         This class method constructor provides a simplified parametrization of

@@ -27,6 +27,11 @@ class SphereShape(ShapeNode):
     Sphere shape [``sphere``].
 
     This shape represents a sphere parametrized by its centre and radius.
+
+    Notes
+    -----
+    * If the `to_world` parameter is set, it will be appended to the position
+      and scaling due to the `center` and `radius` parameters.
     """
 
     center: pint.Quantity = documented(

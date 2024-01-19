@@ -69,11 +69,7 @@ class Shape:
             converter=converters.to_mi_scalar_transform,
             default=None,
         ),
-        doc="Transform to scale, shift and rotate the shape. "
-        "In the `Rectangle` and `Cuboid` classes, this transform"
-        "will replace the parametrization through the other parameters. "
-        "In the `Sphere` class it will prepend the radius and therefore"
-        "multiply the radius.",
+        doc="Transform to scale, shift and rotate the shape. ",
         type="mitsuba.ScalarTransform4f or None",
         init_type="mitsuba.ScalarTransform4f or array-like, optional",
         default=None,

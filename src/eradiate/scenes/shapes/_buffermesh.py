@@ -25,6 +25,11 @@ class BufferMeshShape(ShapeInstance):
 
     This shape represents a triangulated mesh directly defined by lists of vertex
     positions and faces.
+
+    Notes
+    -----
+    * The `buffermesh` class does not support the `to_world` parameter. Mesh vertices
+      must be transformed manually. The Eradiate documentation contains a tutorial.
     """
 
     vertices: pint.Quantity = documented(
@@ -64,8 +69,8 @@ class BufferMeshShape(ShapeInstance):
     def __attrs_post_init__(self):
         if self.to_world is not None:
             warnings.warn(
-                "A to_world transform cannot be set for the buffermesh class."
-                "Please apply the transform to your vertices manually. Refer to the documentation for a how-to."
+                "A BufferMeshShape instance has its to_world field set: It will be ignored. "
+                "For information on how to transform mesh vertices, see the Eradiate documentation."
             )
 
         self.update()

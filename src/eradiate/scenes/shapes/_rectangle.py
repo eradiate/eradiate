@@ -45,6 +45,12 @@ class RectangleShape(ShapeNode):
     This shape represents a rectangle parametrized by the length of its edges,
     the coordinates of its central point, a normal vector and an orientation
     vector.
+
+    Notes
+    -----
+    * If the `to_world` parameter is set, it will override the other parameters.
+      In that case, the transformation will be applied to a rectangle that covers the
+      [-1, -1, 0] to [1, 1, 0] area, with a normal pointing towards [0, 0, 1].
     """
 
     edges: pint.Quantity = documented(
