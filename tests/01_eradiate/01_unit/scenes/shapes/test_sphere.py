@@ -21,6 +21,10 @@ def test_sphere_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
         assert mi_wrapper.parameters["bsdf.reflectance.value"] == expected_reflectance
 
 
+def test_sphere_construct_trafo(modes_all):
+    assert SphereShape(to_world=mi.Transform4f.scale(2))
+
+
 def test_sphere_surface():
     # Check that parameters are correctly specified
     with ucc.override(length="km"):

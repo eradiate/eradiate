@@ -1,3 +1,4 @@
+import mitsuba as mi
 import numpy as np
 
 from eradiate import warp
@@ -30,3 +31,24 @@ def test_square_to_uniform_hemisphere():
 
     check_inverse(warp.square_to_uniform_hemisphere, warp.uniform_hemisphere_to_square)
     # check_vectorization("square_to_uniform_hemisphere")
+
+
+def test_transform_affine(mode_mono):
+    trafo_scale = mi.Transform4f.scale((2, 3, 4))
+    trafo_translate = mi.Transform4f.translate((0.1, 0.2, 0.3))
+    trafo_rotate = mi.Transform4f.rotate((0, 0, 1), 90)
+
+    points = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+    assert np.allclose(
+        warp.transform_affine(trafo_scale, points),
+        np.array([[2, 0, 0], [0, 3, 0], [0, 0, 4]]),
+    )
+    assert np.allclose(
+        warp.transform_affine(trafo_translate, points),
+        np.array([[1.1, 0.2, 0.3], [0.1, 1.2, 0.3], [0.1, 0.2, 1.3]]),
+    )
+    assert np.allclose(
+        warp.transform_affine(trafo_rotate, points),
+        np.array([[0, 1, 0], [-1, 0, 0], [0, 0, 1]]),
+    )

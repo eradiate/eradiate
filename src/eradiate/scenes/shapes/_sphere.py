@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import attrs
-import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
@@ -10,7 +9,6 @@ from pinttr.util import ensure_units
 from ._core import ShapeNode
 from ..bsdfs import BSDF
 from ..core import BoundingBox
-from ... import converters
 from ...attrs import documented, parse_docs
 from ...constants import EARTH_RADIUS
 from ...units import unit_context_config as ucc
@@ -49,30 +47,6 @@ class SphereShape(ShapeNode):
         init_type="quantity or float, optional",
         default="1.0",
     )
-
-    to_world: "mitsuba.ScalarTransform4f" = documented(
-        attrs.field(
-            converter=converters.to_mi_scalar_transform,
-            default=None,
-        ),
-        doc="Transform to scale, shift and rotate the sphere. "
-        "This transform will be prepended to the transform derived "
-        "from the center position and radius of the sphere. If, for example, a "
-        "scaling is provided here, it will multiply the sphere's radius.",
-        type="mitsuba.ScalarTransform4f or None",
-        init_type="mitsuba.ScalarTransform4f or array-like, optional",
-        default=None,
-    )
-
-    @to_world.validator
-    def to_world_validator(self, attribute, value):
-        if value is not None:
-            if not isinstance(value, mi.ScalarTransform4f):
-                raise TypeError(
-                    f"while validating '{attribute.name}': "
-                    f"'{attribute.name}' must be a mitsuba.ScalarTransform4f; "
-                    f"found: {type(value)}",
-                )
 
     @property
     def bbox(self) -> BoundingBox:
