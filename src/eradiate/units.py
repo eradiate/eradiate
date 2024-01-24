@@ -68,8 +68,12 @@ def _load_definitions(ureg: pint.UnitRegistry, definitions: list[str]) -> None:
                 # very rare cases
                 continue
             else:
-                # Definitions are different: let the user-controlled policy apply
+                # Definitions are different: attempt a redefinition and let
+                # user-controlled conflict handling policy apply
                 ureg.define(definition)
+        else:
+            # Attempt definition
+            ureg.define(definition)
 
 
 _load_definitions(unit_registry, _parse_definitions(files("eradiate") / "units.txt"))
