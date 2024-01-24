@@ -1,4 +1,4 @@
-# Unit definitions. Comments
+# Unit definitions. Line comments start with a hash are supported.
 
 # IUPAC. Compendium of Chemical Terminology, 2nd ed. (the "Gold Book").
 # Compiled by A. D. McNaught and A. Wilkinson. Blackwell Scientific
