@@ -138,6 +138,7 @@ class Experiment(ABC):
                 attrs.validators.instance_of((BinSet, WavelengthSet))
             ),
             converter=_convert_spectral_set,
+            repr=False,
         ),
         doc="Default spectral set. This attribute is used to set the "
         "default value for :attr:`spectral_set`."
@@ -151,7 +152,7 @@ class Experiment(ABC):
 
     # Mapping of measure index and WavelengthSet or BinSet depending on active
     # mode. This attribute is set by the '_normalize_spectral()' method.
-    _spectral_set = attrs.field(init=False)
+    _spectral_set = attrs.field(init=False, repr=False)
 
     @property
     def spectral_set(self) -> WavelengthSet | BinSet:
