@@ -74,7 +74,7 @@ conda-lock-all: conda-env
 	@for LAYER in dev dependencies main recommended tests docs optional; do \
 		conda-lock --kind explicit --no-mamba --file requirements/conda/environment-$${LAYER}.yml \
 			--filename-template "requirements/conda/environment-$${LAYER}-{platform}.lock" \
-			-p osx-64 -p linux-64; \
+			-p osx-64 -p linux-64 -p win-64; \
 	done
 
 conda-prepare:
