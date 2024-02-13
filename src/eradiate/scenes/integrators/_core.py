@@ -47,7 +47,7 @@ class Integrator(NodeSceneElement, ABC):
             converter=attrs.converters.optional(float),
         ),
         doc="Maximum amount of time to spend during a kernel render pass in "
-        "millisecond (excluding scene parsing).",
+        "second (excluding scene parsing).",
         type="float or None",
         init_type="float, optional",
         default="None",
