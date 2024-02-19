@@ -49,7 +49,7 @@ def test_rectangle_construct_trafo(modes_all):
         ),
         (
             {"to_world": True},
-            [(0, 1, 3), (2, 3, 3)],
+            [(0, 0, 1), (2, 2, 1)],
         ),
         (
             {
@@ -68,7 +68,7 @@ def test_rectangle_construct_trafo(modes_all):
                 "center": [0, 0, 1],
                 "to_world": True,
             },
-            [(0, 1, 3), (2, 3, 3)],
+            [(0, 0, 1), (2, 2, 1)],
         ),
     ],
     ids=["edges", "center", "up", "normal_up", "to_world-only", "no-to_world", "full"],

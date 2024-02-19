@@ -53,7 +53,7 @@ class CuboidShape(ShapeNode):
     center: pint.Quantity = documented(
         pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Coordinates of the centre of the cube. "
-            "Unit-enabled field (default: ``ucc['length']``).",
+        "Unit-enabled field (default: ``ucc['length']``).",
         type="quantity",
         init_type="quantity or array-like, optional",
         default="[0, 0, 0]",
@@ -66,7 +66,7 @@ class CuboidShape(ShapeNode):
             units=ucc.deferred("length"),
         ),
         doc="Lengths of the edges of the cuboid. "
-            "Unit-enabled field (default: ``ucc['length]``).",
+        "Unit-enabled field (default: ``ucc['length]``).",
         type="quantity",
         init_type="quantity or array-like",
         default="[1, 1, 1]",
@@ -76,12 +76,33 @@ class CuboidShape(ShapeNode):
     def bbox(self) -> BoundingBox:
         # Inherit docstring
 
-        return BoundingBox(
-            self.center - 0.5 * self.edges, self.center + 0.5 * self.edges
-        )
+        if self.to_world is None:
+            return BoundingBox(
+                self.center - 0.5 * self.edges, self.center + 0.5 * self.edges
+            )
+        else:
+            p1 = np.array((-1, -1, -1))
+            p2 = np.array((1, -1, -1))
+            p3 = np.array((-1, 1, -1))
+            p4 = np.array((-1, -1, 1))
+            p5 = np.array((-1, 1, 1))
+            p6 = np.array((1, -1, 1))
+            p7 = np.array((1, 1, -1))
+            p8 = np.array((1, 1, 1))
+
+            max = np.array([-np.inf, -np.inf, -np.inf])
+            min = np.array([np.inf, np.inf, np.inf])
+
+            for p in [p1, p2, p3, p4, p5, p6, p7, p8]:
+                p_t = np.array(self.to_world @ p)
+
+                max = np.where(p_t > max, p_t, max)
+                min = np.where(p_t < min, p_t, min)
+
+            return BoundingBox(min, max)
 
     def contains(
-            self, p: np.typing.ArrayLike, strict: bool = False
+        self, p: np.typing.ArrayLike, strict: bool = False
     ) -> t.Sequence[bool]:
         """
         Test whether a point lies within the cuboid.
@@ -102,16 +123,74 @@ class CuboidShape(ShapeNode):
             ``True`` iff ``p`` in within the cuboid.
         """
 
-        node_min = self.center - 0.5 * self.edges
-        node_max = self.center + 0.5 * self.edges
+        if self.to_world is None:
+            node_min = self.center - 0.5 * self.edges
+            node_max = self.center + 0.5 * self.edges
 
-        p = np.atleast_2d(ensure_units(p, ucc.get("length")))
-        cmp = (
-            np.logical_and(p > node_min, p < node_max)
-            if strict
-            else np.logical_and(p >= node_min, p <= node_max)
-        )
-        return np.all(cmp, axis=1)
+            p = np.atleast_2d(ensure_units(p, ucc.get("length")))
+            cmp = (
+                np.logical_and(p > node_min, p < node_max)
+                if strict
+                else np.logical_and(p >= node_min, p <= node_max)
+            )
+            return np.all(cmp, axis=1)
+        else:
+            p0 = np.array(self.to_world @ np.array((0, 0, 0)))
+            p1 = np.array(self.to_world @ np.array((-1, -1, -1)))
+            p2 = np.array(self.to_world @ np.array((1, -1, -1)))
+            p3 = np.array(self.to_world @ np.array((-1, 1, -1)))
+            p4 = np.array(self.to_world @ np.array((-1, -1, 1)))
+
+            v1 = p2 - p1
+            l1 = np.linalg.norm(v1)
+            n1 = v1 / l1
+
+            v2 = p3 - p1
+            l2 = np.linalg.norm(v2)
+            n2 = v2 / l2
+
+            v3 = p4 - p1
+            l3 = np.linalg.norm(v3)
+            n3 = v3 / l3
+
+            p = np.atleast_2d(
+                ensure_units(p, ucc.get("length")).m_as(ucc.get("length"))
+            )
+            vp = p - p0
+
+            # This doesn't work! It has too few dimensions >:(
+            if strict:
+                cmp = np.logical_and(
+                    np.dot(vp, n1) < l1 / 2.0,
+                    np.dot(vp, n2) < l2 / 2.0,
+                    np.dot(vp, n3) < l3 / 2.0,
+                )
+            else:
+                cmp = np.logical_and(
+                    np.dot(vp, n1) <= l1 / 2.0,
+                    np.dot(vp, n2) <= l2 / 2.0,
+                    np.dot(vp, n3) <= l3 / 2.0,
+                )
+            return np.all(cmp)
+
+            # if strict:
+            #     return np.all(
+            #         [
+            #             np.dot(vp, n1) < l1 / 2.0,
+            #             np.dot(vp, n2) < l2 / 2.0,
+            #             np.dot(vp, n3) < l3 / 2.0,
+            #         ],
+            #         axis=2,
+            #     )
+            # else:
+            #     return np.all(
+            #         [
+            #             np.dot(vp, n1) <= l1 / 2.0,
+            #             np.dot(vp, n2) <= l2 / 2.0,
+            #             np.dot(vp, n3) <= l3 / 2.0,
+            #         ],
+            #         axis=2,
+            #     )
 
     def eval_to_world(self, ctx: KernelContext | None = None) -> mi.ScalarTransform4f:
         kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}
@@ -157,12 +236,12 @@ class CuboidShape(ShapeNode):
 
     @classmethod
     def atmosphere(
-            cls,
-            top: pint.Quantity = 100.0 * ureg.km,
-            bottom: pint.Quantity = 0.0 * ureg.km,
-            bottom_offset: pint.Quantity = None,
-            width: pint.Quantity = 100.0 * ureg.km,
-            bsdf: BSDF | None = None,
+        cls,
+        top: pint.Quantity = 100.0 * ureg.km,
+        bottom: pint.Quantity = 0.0 * ureg.km,
+        bottom_offset: pint.Quantity = None,
+        width: pint.Quantity = 100.0 * ureg.km,
+        bsdf: BSDF | None = None,
     ) -> CuboidShape:
         """
         This class method constructor provides a simplified parametrization of
