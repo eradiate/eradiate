@@ -195,7 +195,7 @@ class SafeOnlineDataStore(DataStore):
         ValueError
             If `filename` could not be matched with any entry in the registry.
         """
-        fname = str(filename)
+        fname = Path(filename).as_posix()
 
         if allow_compressed and not fname.endswith(".gz"):
             fname_compressed = fname + ".gz"
@@ -208,11 +208,7 @@ class SafeOnlineDataStore(DataStore):
 
         raise ValueError(f"File '{fname}' is not in the registry.")
 
-    def fetch(
-        self,
-        filename: PathLike,
-        downloader: t.Callable | None = None,
-    ) -> Path:
+    def fetch(self, filename: PathLike, downloader: t.Callable | None = None) -> Path:
         """
         Fetch a file from the data store. This method wraps
         :meth:`pooch.Pooch.fetch` and automatically selects compressed files
@@ -243,7 +239,7 @@ class SafeOnlineDataStore(DataStore):
         ``"foo.nc"``.
         """
         # By default, just forward arguments
-        fname: str = str(filename)
+        fname = Path(filename).as_posix()
         processor = None
 
         # Look up the file in the registry

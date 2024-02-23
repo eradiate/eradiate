@@ -117,17 +117,13 @@ class SafeDirectoryDataStore(DataStore):
         """
         self._registry = registry_from_file(self.registry_fetch())
 
-    def fetch(
-        self,
-        filename: PathLike,
-        **kwargs,
-    ) -> Path:
+    def fetch(self, filename: PathLike, **kwargs) -> Path:
         # No kwargs are actually accepted
         if kwargs:
             keyword = next(iter(kwargs.keys()))
             raise TypeError(f"fetch() got an unexpected keyword argument '{keyword}'")
 
-        fname = str(filename)
+        fname = Path(filename).as_posix()
         if fname in self.registry:
             return self.path / fname
         else:
