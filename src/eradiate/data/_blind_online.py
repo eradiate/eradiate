@@ -56,11 +56,7 @@ class BlindOnlineDataStore(DataStore):
         """
         return []
 
-    def fetch(
-        self,
-        filename: PathLike,
-        downloader: t.Callable | None = None,
-    ) -> Path:
+    def fetch(self, filename: PathLike, downloader: t.Callable | None = None) -> Path:
         """
         Fetch a file from the data store. This method wraps
         :func:`pooch.retrieve` and automatically selects compressed files
@@ -91,16 +87,17 @@ class BlindOnlineDataStore(DataStore):
         ``"foo.nc"``.
         """
 
-        fname = str(filename)
+        fname = Path(filename).as_posix()
 
         with LoggingContext(
             pooch.get_logger(), level="WARNING"
         ):  # Silence pooch messages temporarily
+            url = self.base_url + fname
             # Try first to get a compressed file
             try:
                 return Path(
                     pooch.retrieve(
-                        os.path.join(self.base_url, fname + ".gz"),
+                        url + ".gz",
                         known_hash=None,
                         fname=fname + ".gz",
                         path=self.path,
@@ -116,7 +113,7 @@ class BlindOnlineDataStore(DataStore):
                 try:
                     return Path(
                         pooch.retrieve(
-                            os.path.join(self.base_url, fname),
+                            url,
                             known_hash=None,
                             fname=fname,
                             path=self.path,

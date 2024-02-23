@@ -93,7 +93,6 @@ def test_uniform_kernel_dict(mode_mono):
             "value_units": "W/m^2/sr/nm",
         }
     )
-    print(traverse(spectrum))
 
     # Produced kernel dict is valid
     with uck.override({"radiance": "kW/m^2/sr/nm"}):

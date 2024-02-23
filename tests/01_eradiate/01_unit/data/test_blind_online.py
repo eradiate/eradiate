@@ -46,7 +46,6 @@ def test_blind_data_store_purge(tmpdir, keep):
     for file in files:
         store.fetch(file)
     assert len(list(os.scandir(tmpdir / "tests/data/online"))) == 2
-    print(list(os.scandir(tmpdir / "tests/data/online")))
 
     if not keep:
         store.purge(keep=None)

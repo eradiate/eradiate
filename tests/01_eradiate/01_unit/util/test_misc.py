@@ -64,7 +64,11 @@ def test_camel_to_snake():
 
 def test_fullname(mode_mono):
     # Functions
-    assert fullname(os.path.join) == "posixpath.join"
+    if os.name == "nt":
+        assert fullname(os.path.join) == "ntpath.join"
+    else:
+        assert fullname(os.path.join) == "posixpath.join"
+
     assert (
         fullname(eradiate.kernel.gridvolume.write_binary_grid3d)
         == "eradiate.kernel.gridvolume.write_binary_grid3d"
