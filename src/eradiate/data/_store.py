@@ -11,7 +11,7 @@ from ._safe_online import SafeOnlineDataStore
 from .._config import config
 
 #: Global data store.
-data_store: MultiDataStore = None
+data_store: MultiDataStore | None = None
 
 
 def init_data_store(

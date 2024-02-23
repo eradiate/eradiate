@@ -48,11 +48,7 @@ class BlindDirectoryDataStore(DataStore):
         """
         return []
 
-    def fetch(
-        self,
-        filename: PathLike,
-        **kwargs,
-    ) -> Path:
+    def fetch(self, filename: PathLike, **kwargs) -> Path:
         # No kwargs are actually accepted
         if kwargs:
             keyword = next(iter(kwargs.keys()))

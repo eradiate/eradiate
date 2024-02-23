@@ -211,8 +211,6 @@ def test_generate_dem_vertices(mode_mono):
 
 def test_generate_face_indices(mode_mono):
     face_indices = _generate_face_indices(len_x=2, len_y=2)
-    print(face_indices)
-
     expected_indices = [[3, 0, 1], [2, 0, 3]]
 
     for exp in expected_indices:

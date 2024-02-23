@@ -40,7 +40,7 @@ def test_oneline_data_store_is_registered(tmpdir):
 
     # Default behaviour allows matching compressed files
     filename = store.is_registered(TEST_FILE)
-    assert str(filename) == str(TEST_FILE) + ".gz"
+    assert str(filename) == TEST_FILE.as_posix() + ".gz"
 
     # The test file is actually gzip-compressed and will therefore not match a
     # registry entry if allow_compressed is set to False
