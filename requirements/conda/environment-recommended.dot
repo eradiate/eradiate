@@ -1,3 +1,0 @@
-strict digraph  {
-recommended [packages="{'astropy', 'seaborn', 'jupyterlab', 'iapws', 'python-dateutil', 'ipython', 'ipywidgets', 'aabbtree'}"];
-}
