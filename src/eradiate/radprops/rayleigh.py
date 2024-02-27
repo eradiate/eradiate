@@ -74,32 +74,40 @@ def compute_sigma_s_air(
     quantity
         Scattering coefficient.
     """
+    # We are going to elevate `wavelength` to the power 4: if it is stored as a
+    # 32-bit int, as can happen on Windows where the default integer type is
+    # int32, calculus will be wrong due to integer overflow. To mitigate that
+    # risk, we convert the wavelength to micron.
+    # In addition, the Bates (1984) dataset is indexed by wavelengths in microns
+    # as well, meaning that this conversion is anyway necessary.
+    w = wavelength.to("micron")
+
     BATES_1984_DATA = _BATES_1984_DATA().data
     f_left = BATES_1984_DATA.f.values[0]
     f_right = BATES_1984_DATA.f.values[-1]
     king_factor = BATES_1984_DATA.f.interp(
-        w=wavelength.m_as("micrometer"),
-        kwargs=dict(fill_value=(f_left, f_right)),
+        w=w.magnitude, kwargs={"fill_value": (f_left, f_right)}
     ).values
 
     refractive_index = air_refractive_index(
-        wavelength=wavelength, number_density=number_density
+        wavelength=w, number_density=number_density
     )
-    if isinstance(wavelength.magnitude, np.ndarray) and isinstance(
+    if isinstance(w.magnitude, np.ndarray) and isinstance(
         number_density.magnitude, np.ndarray
     ):
         king_factor = king_factor[:, np.newaxis]
-        wavelength = wavelength[:, np.newaxis]
+        w = w[:, np.newaxis]
         number_density = number_density[np.newaxis, :]
 
-    return (
+    result = (
         8.0
         * np.power(np.pi, 3)
-        / (3.0 * np.power(wavelength, 4))
+        / (3.0 * np.power(w, 4))
         / number_density
         * np.square(np.square(refractive_index) - 1.0)
         * king_factor
-    ).to("km^-1")
+    )
+    return result.to("km^-1")
 
 
 def air_refractive_index(
