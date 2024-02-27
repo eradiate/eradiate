@@ -12,6 +12,11 @@ variants.
 Additionally, an Ubuntu-based Dev Container is available for a quick setup of
 the development environment. See `Development Container`_.
 
+.. warning::
+
+   Windows support is currently experimental. Please report issues on our
+   `issue tracker <https://github.com/eradiate/eradiate/issues>`_.
+
 Prerequisites
 -------------
 
@@ -22,10 +27,11 @@ machine meets the requirements listed below.
    :header: Requirement, Tested version
    :widths: 10, 10
 
-   git,       2.18+
-   cmake,     3.22+
-   ninja,     1.10+
-   clang,     11+
+   git,                     2.18+
+   cmake,                   3.22+
+   ninja,                   1.10+
+   clang (macOS and Linux), 11+
+   MSVC (Windows),          2022
 
 .. dropdown:: Tested configuration
    :color: info
@@ -60,6 +66,22 @@ machine meets the requirements listed below.
             :stub-columns: 1
 
             git,    2.32.0 (Apple Git-132)
+            cmake,  3.22.1
+            ninja,  1.10.2
+            clang,  Apple clang version 13.0.0 (clang-1300.0.29.30)
+            python, 3.9.18 (miniconda3)
+
+      .. tab-item:: Windows
+         :sync: windows
+
+         Operating system: Windows 11.
+
+         .. csv-table::
+            :header: Requirement, Tested version
+            :widths: 10, 20
+            :stub-columns: 1
+
+            git,    2.43.0.windows.1
             cmake,  3.22.1
             ninja,  1.10.2
             clang,  Apple clang version 13.0.0 (clang-1300.0.29.30)
@@ -115,10 +137,19 @@ machine meets the requirements listed below.
 
          xcode-select --install
 
+   .. tab-item:: Windows
+      :sync: windows
+
+      On Windows, you will need to install the MSVC compiler, *e.g* through
+      `Visual Studio Community <https://visualstudio.microsoft.com/>`_. In
+      addition, you will need to install `GNU Make <https://gnuwin32.sourceforge.net/packages/make.htm>`_
+      and `CMake <https://cmake.org/>`_.
+
 Finally, Eradiate requires a fairly recent version of Python (at least 3.9)
 and **we highly recommend using the Conda environment and package  manager** to
 set up your Python environment. Conda can be installed notably as part of the
-Anaconda distribution, or using its lightweight counterpart Miniconda.
+Anaconda distribution, or using its lightweight counterparts Miniconda or
+Miniforge (we recommend using the latter for convenience).
 `See installation instructions here <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 .. _sec-developer_guide-dev_install-cloning:
@@ -184,8 +215,15 @@ can be changed to your liking. We will first create an empty environment:
    conda create --name eradiate
 
 .. warning::
-   If an environment with the same name exists, you will be prompted for
-   overwrite.
+   * If an environment with the same name exists, you will be prompted for
+     overwrite.
+   * On Windows, you might be missing a global Python installation. This will
+     prevent development environment bootstrapping. A workaround can be to
+     install Python as part of your Conda environment setup:
+
+     .. code:: bash
+
+        conda create --name eradiate python=3.9
 
 This produces an empty environment, which we then activate:
 
@@ -227,7 +265,7 @@ Once your Conda environment is configured, you should reactivate it:
 Compiling the radiometric kernel
 --------------------------------
 
-Using the Makefile rule to build the kernel is the recommended way to compile.
+We recommend using the using the Makefile rule to build the kernel:
 
 .. code:: bash
 
@@ -245,7 +283,7 @@ Using the Makefile rule to build the kernel is the recommended way to compile.
 
       conda install "cmake>=3.22"
 
-Inspect CMake's output to check if Clang is used as the C++ compiler. Search for
+**Linux and macOS**: Inspect CMake's output to check if Clang is used as the C++ compiler. Search for
 lines starting with
 
 .. code::
@@ -282,8 +320,7 @@ Clang.
             export CC=clang
             export CXX=clang++
 
-
-Inspect CMake's output to check if your Conda environment Python is used by
+**All platforms**: Inspect CMake's output to check if your Conda environment Python is used by
 CMake. Search for a line starting with:
 
 .. tab-set::
@@ -301,6 +338,14 @@ CMake. Search for a line starting with:
          .. code::
 
             -- Found Python: /Users/<username>/miniconda3/envs/eradiate/...
+
+      .. tab-item:: Windows
+         :sync: windows
+
+         .. code::
+
+            -- Found Python: C:/Users/<username>/miniconda3/envs/eradiate/...
+
 
 The content of this line may vary depending on how you installed Conda. If
 this path points to a Python binary not associated with a Conda virtual
