@@ -16,7 +16,7 @@ def make_figure(fname_plot, brf_1, brf_2):
     params = dict(x="vza", ls="dotted", marker=".")
     brf_1.plot(**params)
     brf_2.plot(**params)
-    plt.legend(["experiment 1", "experiment 2"])
+    plt.legend(["experiment 1 (rayleigh)", "experiment 2 (tabphase)"])
     plt.title(f"w = {to_quantity(brf_1.w).squeeze():~}")
     plt.tight_layout()
 
