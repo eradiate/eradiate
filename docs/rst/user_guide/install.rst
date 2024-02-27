@@ -3,13 +3,17 @@
 Installation
 ============
 
+.. warning::
+
+   Windows support is currently experimental. Please report issues on our
+   `issue tracker <https://github.com/eradiate/eradiate/issues>`_.
+
 Eradiate is delivered through PyPI and can be installed using the ``pip``. This
 is the recommended way to install Eradiate.
 
 .. code:: bash
 
    pip install eradiate
-
 
 This will install the latest stable version of Eradiate, along with all the
 dependencies necessary to run it. If you want to install the latest development
