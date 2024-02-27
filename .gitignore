@@ -7,6 +7,7 @@
 # Text editors and IDEs
 .idea/
 .vscode/
+.vs/
 
 # Python
 .pytest_cache/

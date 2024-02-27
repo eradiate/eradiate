@@ -24,12 +24,12 @@ pip-update-tools:
 
 # Update .in files
 pip-update-in-files:
-	python3 requirements/make_pip_in_files.py --quiet
+	python requirements/make_pip_in_files.py --quiet
 
 
 # Update .txt files
 pip-update-txt-files:
-	python3 requirements/make_pip_txt_files.py --quiet
+	python requirements/make_pip_txt_files.py --quiet
 
 # Lock pip dependencies
 # Dev must be compiled first because it constrains the others
@@ -60,7 +60,7 @@ pip-update: pip-lock pip-init
 
 # Generate environment files
 conda-env:
-	python3 requirements/make_conda_env.py --quiet;
+	python requirements/make_conda_env.py --quiet;
 
 # Lock conda dependencies
 conda-lock: conda-env
@@ -78,11 +78,11 @@ conda-lock-all: conda-env
 	done
 
 conda-prepare:
-	python3 requirements/check_conda_env.py
+	python requirements/check_conda_env.py
 	conda config --env --add channels conda-forge --add channels eradiate
 
 install-no-deps:
-	python3 requirements/copy_envvars.py
+	python requirements/copy_envvars.py
 	pip install --editable . --no-deps
 
 # Initialise development environment
@@ -111,15 +111,21 @@ conda-update: conda-lock-all conda-init
 
 # -- Build the Eradiate Mitsuba kernel -----------------------------------------
 
+ifeq ($(PLATFORM), win-64)
+kernel:
+	cmake -S ext/mitsuba -B ext/mitsuba/build -G "Visual Studio 17 2022" -A x64 --preset eradiate
+	cmake --build ext/mitsuba/build --config Release
+else
 kernel:
 	cmake -S ext/mitsuba -B ext/mitsuba/build -DCMAKE_BUILD_TYPE=Release -GNinja --preset eradiate
 	ninja -C ext/mitsuba/build
+endif
 
 
 # -- Build Wheel for Eradiate --------------------------------------------------
 
 wheel:
-	python3 -m build
+	python -m build
 
 # -- Documentation -------------------------------------------------------------
 
