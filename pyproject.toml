@@ -24,18 +24,6 @@ changelog = "https://github.com/eradiate/eradiate/CHANGELOG.md"
 documentation = "https://eradiate.readthedocs.io"
 repository = "https://github.com/eradiate/eradiate"
 
-[tool.coverage.run]
-omit = [
-  "*/tests/*"
-]
-source = [
-  "eradiate/"
-]
-
-[tool.isort]
-profile = "black"
-reverse_relative = true
-
 [tool.pytest.ini_options]
 filterwarnings = [
   "error",
@@ -70,7 +58,6 @@ recommended = {file = ['requirements/pip/recommended.txt']}
 eradiate = ["py.typed", "*.pyi"]
 
 [tool.setuptools.packages.find]
-exclude = ["plugins"]
 include = ["eradiate*"]
 namespaces = false
 where = ["src"]
