@@ -5,4 +5,5 @@ ipython
 ipywidgets
 jupyterlab
 python-dateutil
+graphviz
 seaborn

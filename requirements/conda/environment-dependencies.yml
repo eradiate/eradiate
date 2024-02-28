@@ -24,6 +24,7 @@ dependencies:
   - rich
   - ruamel.yaml
   - scipy
+  - sf-hamilton>=1.40
   - shellingham!=1.5.1
   - tqdm
   - typer>=0.9.0
