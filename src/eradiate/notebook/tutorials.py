@@ -1,9 +1,11 @@
 """
 Extensions and helpers for tutorials.
 """
+
 from __future__ import annotations
 
 import matplotlib.pyplot as plt
+import xarray as xr
 
 from ..scenes.atmosphere import AbstractHeterogeneousAtmosphere
 from ..spectral.index import SpectralIndex
@@ -122,6 +124,7 @@ def load_ipython_extension(ipython):
     from ..plot import set_style
 
     set_style()
+    xr.set_options(display_expand_data=False)
     display(
         Markdown(
             f"*Last updated: {datetime.datetime.now():%Y-%m-%d %H:%M} "
