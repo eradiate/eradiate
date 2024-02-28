@@ -158,39 +158,25 @@ class CuboidShape(ShapeNode):
             )
             vp = p - p0
 
-            # This doesn't work! It has too few dimensions >:(
             if strict:
-                cmp = np.logical_and(
-                    np.dot(vp, n1) < l1 / 2.0,
-                    np.dot(vp, n2) < l2 / 2.0,
-                    np.dot(vp, n3) < l3 / 2.0,
+                cmp = np.prod(
+                    [
+                        np.dot(vp, n1) < l1 / 2.0,
+                        np.dot(vp, n2) < l2 / 2.0,
+                        np.dot(vp, n3) < l3 / 2.0,
+                    ],
+                    axis=0,
                 )
             else:
-                cmp = np.logical_and(
-                    np.dot(vp, n1) <= l1 / 2.0,
-                    np.dot(vp, n2) <= l2 / 2.0,
-                    np.dot(vp, n3) <= l3 / 2.0,
+                cmp = np.prod(
+                    [
+                        np.dot(vp, n1) <= l1 / 2.0,
+                        np.dot(vp, n2) <= l2 / 2.0,
+                        np.dot(vp, n3) <= l3 / 2.0,
+                    ],
+                    axis=0,
                 )
-            return np.all(cmp)
-
-            # if strict:
-            #     return np.all(
-            #         [
-            #             np.dot(vp, n1) < l1 / 2.0,
-            #             np.dot(vp, n2) < l2 / 2.0,
-            #             np.dot(vp, n3) < l3 / 2.0,
-            #         ],
-            #         axis=2,
-            #     )
-            # else:
-            #     return np.all(
-            #         [
-            #             np.dot(vp, n1) <= l1 / 2.0,
-            #             np.dot(vp, n2) <= l2 / 2.0,
-            #             np.dot(vp, n3) <= l3 / 2.0,
-            #         ],
-            #         axis=2,
-            #     )
+            return cmp
 
     def eval_to_world(self, ctx: KernelContext | None = None) -> mi.ScalarTransform4f:
         kwargs = ctx.kwargs.get(self.id, {}) if ctx is not None else {}

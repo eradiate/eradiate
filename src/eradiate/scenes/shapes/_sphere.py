@@ -56,10 +56,17 @@ class SphereShape(ShapeNode):
     @property
     def bbox(self) -> BoundingBox:
         length_units = ucc.get("length")
-        offset = (
-            np.full_like(self.center, self.radius.m_as(length_units)) * length_units
-        )
-        return BoundingBox(self.center - offset, self.center + offset)
+        offset = np.full_like(self.center, self.radius.m_as(length_units))
+        p1 = self.center.m_as(length_units) - offset
+        p2 = self.center.m_as(length_units) + offset
+
+        if self.to_world is not None:
+            p1 = self.to_world @ p1
+            p1 = pint.Quantity(np.array(p1), length_units)
+            p2 = self.to_world @ p2
+            p2 = pint.Quantity(np.array(p2), length_units)
+
+        return BoundingBox(p1, p2)
 
     @property
     def template(self) -> dict:

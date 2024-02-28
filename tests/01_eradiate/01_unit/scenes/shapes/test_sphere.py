@@ -86,5 +86,5 @@ def test_sphere_bbox():
 
     sphere = SphereShape(center=[1, 1, 1], radius=2.0, to_world=mi.Transform4f.scale(2))
     bbox = sphere.bbox
-    np.testing.assert_array_equal(bbox.min.m_as(ureg.m), [-3, -3, -3])
-    np.testing.assert_array_equal(bbox.max.m_as(ureg.m), [5, 5, 5])
+    np.testing.assert_array_equal(bbox.min.m_as(ureg.m), [-2, -2, -2])
+    np.testing.assert_array_equal(bbox.max.m_as(ureg.m), [6, 6, 6])
