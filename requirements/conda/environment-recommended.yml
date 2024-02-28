@@ -10,4 +10,5 @@ dependencies:
   - ipywidgets
   - jupyterlab
   - python-dateutil
+  - python-graphviz
   - seaborn

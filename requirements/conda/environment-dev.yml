@@ -39,6 +39,7 @@ dependencies:
   - rich
   - ruamel.yaml
   - scipy
+  - sf-hamilton>=1.40
   - shellingham!=1.5.1
   - tqdm
   - typer>=0.9.0
@@ -50,6 +51,7 @@ dependencies:
   - ipywidgets
   - jupyterlab
   - python-dateutil
+  - python-graphviz
   - seaborn
   # tests
   - pytest
