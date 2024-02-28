@@ -43,6 +43,9 @@ src = ["src", "tests"]
 [tool.ruff.isort]
 relative-imports-order = "closest-to-furthest"
 
+[tool.ruff.lint.per-file-ignores]
+"*.ipynb" = ["E402"]
+
 [tool.setuptools]
 include-package-data = true  # Required because of package data
 
