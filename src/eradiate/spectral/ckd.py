@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import itertools
 import logging
 import typing as t
-from functools import singledispatch
 
 import attrs
 import numpy as np
@@ -392,7 +390,7 @@ class BinSet(SpectralSet):
             ),
         ),
         doc="Set of bins.",
-        type="set of :class:`.Bin`",
+        type="list of :class:`.Bin`",
         init_type="iterable of :class:`.Bin`",
     )
 
@@ -489,12 +487,12 @@ class BinSet(SpectralSet):
         quad: Quad | None = None,
     ) -> BinSet:
         """
-        Generate a bin set with linearly spaced bins, that covers the spectral
+        Generate a bin set with linearly spaced bins covering the spectral
         range of a spectral response function.
 
         Parameters
         ----------
-        srf: Dataset
+        srf : Dataset
             Spectral response function dataset.
 
         step : quantity
@@ -513,21 +511,14 @@ class BinSet(SpectralSet):
         wmin = wavelengths.min()
         wmax = wavelengths.max()
 
-        return cls.arange(
-            start=wmin - step,
-            stop=wmax + step,
-            step=step,
-            quad=quad,
-        )
+        return cls.arange(start=wmin - step, stop=wmax + step, step=step, quad=quad)
 
     @classmethod
     def from_wavelength_bounds(
-        cls,
-        wmin: pint.Quantity,
-        wmax: pint.Quantity,
-        quad: Quad | None = None,
+        cls, wmin: pint.Quantity, wmax: pint.Quantity, quad: Quad | None = None
     ) -> BinSet:
-        quad = Quad.gauss_legendre(1) if quad is None else quad
+        if quad is None:
+            quad = Quad.gauss_legendre(1)
 
         return cls(
             bins=[
@@ -537,75 +528,18 @@ class BinSet(SpectralSet):
         )
 
     @classmethod
-    def from_absorption_dataset(
+    def from_absorption_data(
         cls,
-        dataset: xr.Dataset,
+        datasets: xr.Dataset | t.Sequence[xr.Dataset],
         quad_spec: QuadSpec | None = None,
     ) -> BinSet:
         """
-        Generate a bin set from an absorption dataset.
+        Generate a bin set from one or several absorption datasets.
 
         Parameters
         ----------
-        dataset : Dataset
+        datasets : Dataset or sequence of Dataset
             Absorption dataset.
-
-        quad_spec : .QuadSpec
-            Quadrature rule specification. If provided, it will be used to
-            generate the quadrature rule based on error data in the
-            absorption dataset.
-
-        Returns
-        -------
-        :class:`.BinSet`
-            Generated bin set.
-
-        Notes
-        -----
-        Assumes that the absorption dataset has a ``wbounds`` data variable.
-        """
-        if quad_spec is None:
-            quad_spec = QuadSpec.default()
-
-        # make quadrature rule
-        quad = quad_spec.make_quad(dataset)
-
-        # determine wavelength bounds
-        wlower = to_quantity(dataset.wbounds.sel(wbv="lower"))
-        wupper = to_quantity(dataset.wbounds.sel(wbv="upper"))
-
-        if wlower.check("[length]"):
-            wmin = wlower
-            wmax = wupper
-        elif wlower.check("[length]^-1"):
-            wmin = (1.0 / wupper).to("nm")  # min wavelength is max wavenumber
-            wmax = (1.0 / wlower).to("nm")  # max wavelength is min wavenumber
-        else:
-            raise ValueError(
-                f"Invalid dimensionality for dataset spectral coordinate; "
-                f"expected [length] or [length]^-1 "
-                f"(got {wlower.dimensionality})"
-            )
-
-        return cls.from_wavelength_bounds(
-            wmin=wmin,
-            wmax=wmax,
-            quad=quad,
-        )
-
-    @classmethod
-    def from_absorption_datasets(
-        cls,
-        datasets: list[xr.Dataset],
-        quad_spec: QuadSpec = None,
-    ) -> BinSet:
-        """
-        Generate a bin set from a list of absorption datasets.
-
-        Parameters
-        ----------
-        datasets : list of Dataset
-            Absorption datasets.
 
         quad_spec : .QuadSpec
             Quadrature rule specification. If provided, it will be used to
@@ -621,18 +555,38 @@ class BinSet(SpectralSet):
         -----
         Assumes that the absorption datasets have a ``wbounds`` data variable.
         """
+        if isinstance(datasets, xr.Dataset):
+            datasets = [datasets]
+
         if quad_spec is None:
             quad_spec = QuadSpec.default()
 
-        binsets = [
-            cls.from_absorption_dataset(dataset, quad_spec=quad_spec)
-            for dataset in datasets
-        ]
-        return cls(bins=itertools.chain.from_iterable([b.bins for b in binsets]))
+        bins = []
 
-    @classmethod
-    def from_absorption_data(cls, absorption_data, quad_spec: dict) -> BinSet:
-        return from_absorption_data_impl(absorption_data, quad_spec=quad_spec)
+        for dataset in datasets:
+            # make quadrature rule
+            quad = quad_spec.make_quad(dataset)
+
+            # determine wavelength bounds
+            wlower = to_quantity(dataset.wbounds.sel(wbv="lower"))
+            wupper = to_quantity(dataset.wbounds.sel(wbv="upper"))
+
+            if wlower.check("[length]"):
+                wmin = wlower
+                wmax = wupper
+            elif wlower.check("[length]^-1"):
+                wmin = (1.0 / wupper).to("nm")  # min wavelength is max wavenumber
+                wmax = (1.0 / wlower).to("nm")  # max wavelength is min wavenumber
+            else:
+                raise ValueError(
+                    f"Invalid dimensionality for dataset spectral coordinate; "
+                    f"expected [length] or [length]^-1 "
+                    f"(got {wlower.dimensionality})"
+                )
+            binset = cls.from_wavelength_bounds(wmin=wmin, wmax=wmax, quad=quad)
+            bins.extend(binset.bins)
+
+        return cls(bins=bins)
 
     @classmethod
     def default(cls):
@@ -645,31 +599,5 @@ class BinSet(SpectralSet):
         dw = 10.0
 
         return BinSet.arange(
-            start=wmin * ureg.nm,
-            stop=wmax * ureg.nm,
-            step=dw * ureg.nm,
+            start=wmin * ureg.nm, stop=wmax * ureg.nm, step=dw * ureg.nm
         )
-
-
-@singledispatch
-def from_absorption_data_impl(
-    absorption_data: xr.Dataset | list,
-    quad_spec: QuadSpec,
-) -> BinSet:
-    raise NotImplementedError(f"Unsupported type {type(absorption_data)}")
-
-
-@from_absorption_data_impl.register(xr.Dataset)
-def _(absorption_data, quad_spec: QuadSpec) -> BinSet:
-    return BinSet.from_absorption_dataset(
-        dataset=absorption_data,
-        quad_spec=quad_spec,
-    )
-
-
-@from_absorption_data_impl.register(list)
-def _(absorption_data, quad_spec: QuadSpec) -> BinSet:
-    return BinSet.from_absorption_datasets(
-        datasets=absorption_data,
-        quad_spec=quad_spec,
-    )
