@@ -131,7 +131,7 @@ class QuadSpec:
 
     @staticmethod
     def from_dict(
-        value: dict[str, t.Any]
+        value: dict[str, t.Any],
     ) -> QuadSpecFixed | QuadSpecMinError | QuadSpecErrorThreshold:
         """
         Create a quadrature specification subtype from a dictionary. The
@@ -429,6 +429,7 @@ class BinSet(SpectralSet):
         return [bin.wmax.m_as(units) for bin in self.bins] * units
 
     @classmethod
+    @ureg.wraps(None, (None, "nm", "nm", "nm", None), strict=False)
     def arange(
         cls,
         start: pint.Quantity,
@@ -441,14 +442,17 @@ class BinSet(SpectralSet):
 
         Parameters
         ----------
-        start : quantity
-            Lower bound of first bin.
+        start : quantity or float
+            Lower bound of first bin. If a float is passed, it is interpreted as
+            being in units of nm.
 
         stop : quantity
-            Upper bound of last bin.
+            Upper bound of last bin. If a float is passed, it is interpreted as
+            being in units of nm.
 
-        step : quantity
-            Bin width.
+        step : quantity, default: 10 nm
+            Bin width. If a float is passed, it is interpreted as being in units
+            of nm.
 
         quad : .Quad, optional
             Quadrature rule (same for all bins in the set). Defaults to
@@ -462,22 +466,18 @@ class BinSet(SpectralSet):
         if quad is None:
             quad = Quad.gauss_legendre(1)
 
-        bins = []
+        wmins = np.arange(start, stop, step)
+        wmaxs = wmins + step
 
         wunits = ucc.get("wavelength")
-        _start = start.m_as(wunits)
-        _stop = stop.m_as(wunits)
-        _step = step.m_as(wunits)
-
-        for wmin in np.arange(_start, _stop, _step):
-            wmax = wmin + _step
-            bins.append(
-                Bin(
-                    wmin=wmin * wunits,
-                    wmax=wmax * wunits,
-                    quad=quad,
-                )
+        bins = [
+            Bin(
+                wmin=(wmin * ureg.nm).to(wunits),
+                wmax=(wmax * ureg.nm).to(wunits),
+                quad=quad,
             )
+            for wmin, wmax in zip(wmins, wmaxs)
+        ]
 
         return cls(bins)
 
