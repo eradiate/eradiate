@@ -84,6 +84,21 @@ def all_positive(_, attribute, value):
         raise ValueError(f"{attribute} must be all positive or zero, got {value}")
 
 
+def all_strictly_positive(_, attribute, value):
+    """
+    Validate iff value is a vector with all its values strictly positive.
+
+    Raises
+    ------
+    ValueError
+        If not all values are strictly positive.
+    """
+    if isinstance(value, ureg.Quantity):
+        value = value.magnitude
+    if np.any(np.array(value) <= 0):
+        raise ValueError(f"{attribute} must be all strictly positive, got {value}")
+
+
 def path_exists(_, attribute, value):
     """
     Validate iff initializer is called with a value defining a path to an
