@@ -6,15 +6,11 @@ import pint
 import pinttr
 
 from ._core import Spectrum
+from ... import validators
 from ...attrs import documented, parse_docs
 from ...spectral.ckd import BinSet
 from ...spectral.mono import WavelengthSet
 from ...units import unit_context_kernel as uck
-from ...units import unit_registry as ureg
-
-
-def wavelengths_converter(value):
-    return np.sort(np.atleast_1d(value))
 
 
 @parse_docs
@@ -25,35 +21,29 @@ class MultiDeltaSpectrum(Spectrum):
 
     Notes
     -----
-    This spectrum is for special use.
-    It does not have a kernel representation.
-    The spectrum cannot be evaluated.
-    As a result, neither can it be plotted.
+    This spectrum is intended to be used for spectral grid specification.
+    It has no kernel-level representation, and it cannot be evaluated.
     """
 
     wavelengths: pint.Quantity = documented(
         pinttr.field(
-            default=550.0 * ureg.nm,
+            kw_only=True,
             units=uck.deferred("wavelength"),
             converter=[
-                wavelengths_converter,
+                lambda x: np.sort(np.atleast_1d(x)),
                 pinttr.converters.to_units(uck.deferred("wavelength")),
+                lambda x: np.unique(x.m) * x.units,
             ],
+            validator=validators.all_strictly_positive,
         ),
         doc="An array of wavelengths specifying the translation wavelength of each "
-        "Dirac delta. Wavelength values are positive and unique."
-        "When a single value is provided, it is converted to a 1-element array."
-        "Wavelength values are sorted by increasing magnitude.",
+        "Dirac delta. Wavelength values are positive and unique. "
+        "When a single value is provided, it is converted to a 1-element array. "
+        "Wavelength are deduplicated and sorted by ascending values. "
+        'Unit-enabled field (default: ``ucc["wavelength"]``).',
         type="quantity",
         init_type="array-like or quantity",
     )
-
-    @wavelengths.validator
-    def _w_validator(self, attribute, value):
-        if not np.all(value > 0):
-            raise ValueError(f"w values must be all positive (got {value})")
-        if np.unique(value.m).size != value.m.size:
-            raise ValueError(f"w values must be unique (got {value})")
 
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         raise NotImplementedError
@@ -95,9 +85,10 @@ def _select(xmin, xmax, x):
     hit = selmin == selmax  # Mask where x values which triggered a bin hit
 
     # Map x values to selected bin (index -999 means not selected)
-    bin_index = np.where(hit, selmin - 1, np.full_like(x, -999)).astype("int")
+    bin_index = np.where(hit, selmin - 1, np.full_like(x, -999)).astype(np.int64)
 
     # Get selected bins only
-    selected = np.unique(bin_index)[bin_index >= 0]  # mask removes -999 value
+    selected = np.unique(bin_index)  # mask removes -999 value
+    selected = selected[selected >= 0]
 
     return selected
