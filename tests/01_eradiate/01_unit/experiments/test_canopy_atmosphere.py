@@ -233,13 +233,7 @@ def test_canopy_atmosphere_experiment_run_detailed(mode_mono):
     results = eradiate.run(exp)
 
     # Post-processing creates expected variables ...
-    assert set(results.data_vars) == {
-        "brdf",
-        "brf",
-        "irradiance",
-        "radiance",
-        "spp",
-    }
+    assert set(results.data_vars) == {"brdf", "brf", "irradiance", "radiance"}
 
     # ... dimensions
     assert set(results["radiance"].dims) == {"saa", "sza", "w", "x_index", "y_index"}
