@@ -38,7 +38,8 @@ pip-compile: pip-update-in-files
 
 	@for LAYER in main tests recommended docs dev optional dependencies; do \
 		echo "Compiling requirements/pip/$${LAYER}.in to requirements/pip/$${LAYER}.lock.txt"; \
-		pip-compile --upgrade --resolver=backtracking --build-isolation --allow-unsafe \
+		pip-compile --upgrade --resolver=backtracking --build-isolation \
+			--allow-unsafe --no-strip-extras \
 			--output-file requirements/pip/$${LAYER}.lock.txt \
 			requirements/pip/$${LAYER}.in; \
 	done
