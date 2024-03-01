@@ -215,7 +215,7 @@ def test_atmosphere_experiment_run_detailed(
 
     # Check result dataset structure
     # Post-processing creates expected variables ...
-    expected = {"brdf", "brf", "irradiance", "radiance", "spp"}
+    expected = {"brdf", "brf", "irradiance", "radiance"}
     assert set(results.data_vars) == expected
 
     # ... dimensions ...

@@ -114,13 +114,7 @@ def test_canopy_experiment_run_detailed(modes_all_double):
     """
     srf = MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm)
     if eradiate.mode().is_mono:
-        expected_vars = {
-            "brdf",
-            "brf",
-            "irradiance",
-            "radiance",
-            "spp",
-        }
+        expected_vars = {"brdf", "brf", "irradiance", "radiance"}
         expected_coords_radiance = {
             "saa",
             "sza",
@@ -135,14 +129,7 @@ def test_canopy_experiment_run_detailed(modes_all_double):
         expected_coords_irradiance = {"saa", "sza", "w"}
 
     elif eradiate.mode().is_ckd:
-        expected_vars = {
-            "brdf",
-            "brf",
-            "irradiance",
-            "radiance",
-            "radiance_raw",
-            "spp",
-        }
+        expected_vars = {"brdf", "brf", "irradiance", "radiance"}
         expected_coords_radiance = {
             "bin_wmin",
             "bin_wmax",
