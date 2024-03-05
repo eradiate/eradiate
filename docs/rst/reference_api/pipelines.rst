@@ -19,6 +19,10 @@ dictionary easily.
    * - Parameter
      - Type
      - Description
+   * - ``add_viewing_angles``
+     - :class:`bool`
+     - Whether the measure provides viewing angles that can be mapped to film
+       pixels.
    * - ``apply_spectral_response``
      - :class:`bool`
      - Whether we should apply SRF weighting (a.k.a convolution) to spectral

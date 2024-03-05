@@ -179,5 +179,6 @@ def spectral_response(srf: Spectrum) -> xr.DataArray:
 
 
 @tag(**{"final": "true", "kind": "coord"})
+@config.when(add_viewing_angles=True)
 def viewing_angles(angles: np.ndarray) -> xr.Dataset:
     return logic.viewing_angles(angles)
