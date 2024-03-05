@@ -74,11 +74,11 @@ class Experiment(ABC):
     measures: list[Measure] = documented(
         attrs.field(
             factory=lambda: [MultiDistantMeasure()],
-            converter=lambda value: [
-                measure_factory.convert(x) for x in pinttr.util.always_iterable(value)
-            ]
-            if not isinstance(value, dict)
-            else [measure_factory.convert(value)],
+            converter=lambda value: (
+                [measure_factory.convert(x) for x in pinttr.util.always_iterable(value)]
+                if not isinstance(value, dict)
+                else [measure_factory.convert(value)]
+            ),
             validator=attrs.validators.deep_iterable(
                 member_validator=attrs.validators.instance_of(Measure)
             ),
@@ -502,14 +502,20 @@ class EarthObservationExperiment(Experiment, ABC):
 
     def _pipeline_inputs(self, i_measure: int):
         # This convenience function collects pipeline inputs for a specific measure
+
         measure = self.measures[i_measure]
         result = {
-            "angles": measure.viewing_angles.m_as(ureg.deg),
             "bitmaps": measure.mi_results,
             "spectral_set": self.spectral_set[i_measure],
             "illumination": self.illumination,
             "srf": measure.srf,
         }
+
+        config = pl.config(measure)
+        if config.get("add_viewing_angles", False):
+            result["angles"] = measure.viewing_angles.m_as(ureg.deg)
+        else:
+            result["viewing_angles"] = None
 
         return result
 

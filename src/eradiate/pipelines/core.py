@@ -39,7 +39,7 @@ def config(measure: Measure, mode: Mode | str | None = None) -> dict:
 
     See Also
     --------
-    For the list of configuration parameters, see :mod:`eradiate.pipelines`.
+    :mod:`eradiate.pipelines`
     """
     result = {}
 
@@ -52,6 +52,9 @@ def config(measure: Measure, mode: Mode | str | None = None) -> dict:
 
     # Is the measure distant?
     result["measure_distant"] = measure.is_distant()
+
+    # Does the measure provide viewing angle values?
+    result["add_viewing_angles"] = hasattr(measure, "viewing_angles")
 
     # Which physical variable are we processing?
     result["var_name"], result["var_metadata"] = measure.var
@@ -72,7 +75,7 @@ def driver(config: dict):
     ----------
     config : dict
         A configuration dictionary specifying various parameters
-        (see :mod:`~eradiate.pipelines.steps` for details).
+        (see :mod:`~eradiate.pipelines` for details).
 
     Returns
     -------

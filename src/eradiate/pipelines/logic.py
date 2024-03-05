@@ -7,10 +7,6 @@ import numpy as np
 import pint
 import pinttrs
 import xarray as xr
-from hamilton.function_modifiers import (
-    config,
-    tag,
-)
 from pinttr.util import always_iterable
 
 from .._mode import Mode
@@ -21,11 +17,7 @@ from ..scenes.illumination import (
     DirectionalIllumination,
     Illumination,
 )
-from ..scenes.spectra import (
-    InterpolatedSpectrum,
-    Spectrum,
-    UniformSpectrum,
-)
+from ..scenes.spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum
 from ..spectral.spectral_set import SpectralSet
 from ..units import symbol, to_quantity
 from ..units import unit_context_config as ucc
@@ -576,11 +568,11 @@ def gather_bitmaps(
                ...
            }
 
-    viewing_angles : Dataset
+    viewing_angles : Dataset, optional
         A dataset holding the viewing angles associated with each pixel in the
         processed bitmaps.
 
-    solar_angles : Dataset
+    solar_angles : Dataset, optional
         A dataset holding the solar angles associated with the processed
         observation data.
 
@@ -674,8 +666,6 @@ def gather_bitmaps(
     return result
 
 
-@tag(**{"final": "true", "kind": "data"})
-@config.when(measure_distant=True, var_name="sector_radiosity")
 def radiosity(sector_radiosity: xr.DataArray) -> xr.DataArray:
     """
     Aggregate sector radiosity into a full-hemisphere radiosity dataset.
@@ -704,7 +694,6 @@ def radiosity(sector_radiosity: xr.DataArray) -> xr.DataArray:
     return result
 
 
-@config.when(apply_spectral_response=True)
 def spectral_response(srf: Spectrum) -> xr.DataArray:
     """
     Evaluate a spectral response function as a data array.
@@ -755,7 +744,6 @@ def spectral_response(srf: Spectrum) -> xr.DataArray:
     return result
 
 
-@tag(**{"final": "true", "kind": "coord"})
 def viewing_angles(angles: np.ndarray) -> xr.Dataset:
     """
     Collect viewing angles associated with each film pixel from the measure, if
