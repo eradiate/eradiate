@@ -6,7 +6,7 @@ import zipfile
 from enum import Enum
 from pathlib import Path
 
-from ..biosphere import load_scenario
+from ._canopy_loader import load_scenario
 
 DEFAULT_SCENARIO_FOLDER_NAME = ".scenarios"
 
@@ -153,7 +153,7 @@ def load_rami_scenario(
     ----------
     scenario_name : str or RAMIActualCanopies or RAMIHeterogeneousAbstractCanopies or RAMIHomogeneousAbstractCanopies
         The name of the RAMI-V scenario. If a string is provided, it will automatically be converted to the appropriate enum.
-    version : ScenarioVersion
+    version : RAMIScenarioVersion
         The version of the scenario.
     padding : int, optional
         The padding to apply to the scenario, defaults to 0.

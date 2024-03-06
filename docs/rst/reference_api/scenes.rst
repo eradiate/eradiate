@@ -149,6 +149,19 @@
       _leaf_cloud.EllipsoidLeafCloudParams
       _leaf_cloud.SphereLeafCloudParams
 
+**Canopy loader**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   load_scenario
+   load_rami_scenario
+   RAMIActualCanopies
+   RAMIHeterogeneousAbstractCanopies
+   RAMIHomogeneousAbstractCanopies
+   RAMIScenarioVersion
+
+
 **Full canopies**
 
 .. autosummary::

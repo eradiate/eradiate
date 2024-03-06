@@ -158,39 +158,40 @@ def load_scenario(
     spectral_data: dict[str, t.Any | dict[str, t.Any]] | None = None,
 ) -> dict:
     """
-    Parse JSON file of scenario from a given path. Apply transformation to the data by converting units of wavelengths and
-    compute instance positions.
+    Parse JSON file of scenario from a given path. Apply transformation to the
+    data by converting units of wavelengths and compute instance positions.
 
     Parameters
     ----------
-    scenario_folder : Path
+    scenario_folder : path-like
         Path of the folder containing scenario JSON file.
     padding : int
         Padding to apply to the scenario.
-    spectral_data : dict[str, t.Any | dict[str, t.Any]] | None
+    spectral_data : dict[str, t.Any or dict[str, t.Any]] or None
         Spectral data to apply to the scenario, defaults to None (keep original).
+        Example:
 
-        An example of the spectral data is given below:
+        .. code:: python
 
-        spectral_data = {
-            "ground": {
-                "reflectance": ground_reflectance,
-            },
-            "object_name": {
-                "subobject_name": {
-                    # Spectral data for the subobject, such as
-                    "reflectance": reflectance,
-                    "transmittance": transmittance,
+            spectral_data = {
+                "ground": {
+                    "reflectance": ground_reflectance,
                 },
+                "object_name": {
+                    "subobject_name": {
+                        # Spectral data for the subobject, such as
+                        "reflectance": reflectance,
+                        "transmittance": transmittance,
+                    },
+                }
             }
-        }
 
-        Each spectral data specified replaces the original data completely, so it is necessary to specify all the data
-        for the object.
+        Each spectral data specified replaces the original data completely, so
+        it is necessary to specify all the data for the object.
 
     Returns
     -------
-    t.Dict
+    dict
         Returns a dictionary parsed from JSON with transformations applied.
     """
 
