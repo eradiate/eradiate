@@ -1,7 +1,7 @@
 .. _sec-howto-scene_loader:
 
-Scene Description
-=================
+Scene Loader
+============
 
 A scene is composed by a ``scenario.json`` file and a set of mesh files. The ``scenario.json`` file contains the description of the scene, including the properties of the surface and canopies within the scene. The mesh files contain the geometry of the canopy elements.
 
