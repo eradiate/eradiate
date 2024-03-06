@@ -28,3 +28,4 @@ htmlcov/
 
 # Default data storage
 resources/downloads/
+.scenarios/*

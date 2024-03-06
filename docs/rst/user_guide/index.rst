@@ -13,6 +13,7 @@ User guides
    onedim_experiment
    spectral_discretization
    unit_guide_user
+   scene_loader
    data/index
 
 What is Eradiate?
