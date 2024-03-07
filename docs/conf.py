@@ -235,6 +235,7 @@ html_theme_options = {
     "repository_branch": "main",
     "use_repository_button": True,
     "use_issues_button": True,
+    "use_sidenotes": True,
     "logo": {
         "image_light": "_static/eradiate-logo-typo-black.svg",
         "image_dark": "_static/eradiate-logo-typo-white.svg",

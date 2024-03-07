@@ -228,6 +228,7 @@
 
    BlackBSDF
    CheckerboardBSDF
+   HapkeBSDF
    LambertianBSDF
    MQDiffuseBSDF
    OpacityMaskBSDF
