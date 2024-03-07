@@ -48,7 +48,7 @@ ISO 80000-2:2019 convention :cite:`ISO201980000QuantitiesUnits` (commonly used
 in physics) where:
 
 * :math:`r`, denotes the radial distance whose magnitude is a positive number;
-* `\theta \in [0, \pi]` rad, *i.e.* :math:`[0, 180]°`, denotes the
+* :math:`\theta \in [0, \pi]` rad, *i.e.* :math:`[0, 180]°`, denotes the
   *zenith angle*, a.k.a. the colatitude, polar angle, normal angle or
   inclination angle, which measures the angular distance to the local zenith;
 * :math:`\varphi \in [0, 2\pi[` rad, *i.e.* :math:`[0, 360[°`, denotes the

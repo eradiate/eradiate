@@ -1,13 +1,21 @@
-.. _sec-howto-scene_loader:
+.. _sec-user_guide-scene_loader:
 
-Scene Loader
+Scene loader
 ============
 
-A scene is composed by a ``scenario.json`` file and a set of mesh files. The ``scenario.json`` file contains the description of the scene, including the properties of the surface and canopies within the scene. The mesh files contain the geometry of the canopy elements.
+This page presents the canopy scene loader. A scene is composed by a
+``scenario.json`` file and a set of mesh files. The ``scenario.json`` file
+contains the description of the scene, including the properties of the surface
+and canopies within the scene. The mesh files contain the geometry of the canopy
+elements.
 
-The ``scenario.json`` file is structured to define specific properties of the surface and canopies within a scene. It closely aligns with the expected scene description format for the ``eradiate.experiments.CanopyExperiment`` within its "surface" and "canopy" fields.
+The ``scenario.json`` file is structured to define specific properties of the
+surface and canopies within a scene. It closely aligns with the expected scene
+description format for the :class:`~eradiate.experiments.CanopyExperiment`
+within its ``surface`` and ``canopy`` fields.
 
-Below is an example `scenario.json` containing a Lambertian surface and a discrete canopy composed of mesh tree elements:
+Below is an example ``scenario.json`` containing a Lambertian surface and a
+discrete canopy composed of mesh tree elements:
 
 .. code-block:: json-object
 
@@ -152,74 +160,94 @@ The folder structure for the above example would be:
                 └── Pinus_mugo_PIMO1_-_Original
                     └── Wood.ply
 
-Differences from `CanopyExperiment`
------------------------------------
+Differences from ``CanopyExperiment``
+-------------------------------------
 
-**Mesh Filename**
+Mesh filename
+    The ``mesh_filename`` field within the canopy element specifies the relative
+    path to the mesh file. This path is relative to the ``scenario.json`` file
+    itself. Upon loading the scene, this relative path will be expanded to the
+    absolute path where the mesh file is located.
 
-The ``mesh_filename`` field within the canopy element specifies the relative path to the mesh file. This path is relative to the ``scenario.json`` file itself. Upon loading the scene, this relative path will be expanded to the absolute path where the mesh file is located.
+Instance positions
+    Instance positions within the canopy configuration are described using a
+    4x4 affine transformation matrix. This matrix details the transformations
+    applied to position the original mesh within the scene.\ [#sn1]_
 
-**Instance Positions**
+    .. [#sn1] The current implementation supports translations only. Support for rotations
+       is foreseen in a future update.
 
-Instance positions within the canopy configuration are described using a 4x4 affine transformation matrix. This matrix details the transformations applied to position the original mesh within the scene.
-
-The structure currently focuses on providing precise control over the placement of canopy elements, with the potential for more complex transformations to be supported in future updates.
-
-Custom Spectral Properties
+Custom spectral properties
 --------------------------
 
-The ``reflectance`` field within the surface and canopy elements can be customized using custom spectral properties. To do so, a dictionary describing the spectral to be used is provided with matching ``canopy_element`` and ``mesh_tree_elements`` ids. An example of a custom spectral property is shown below:
+The ``reflectance`` field within the surface and canopy elements can be
+customized using custom spectral properties. To do so, a dictionary describing
+the spectral to be used is provided with matching ``canopy_element`` and
+``mesh_tree_elements`` ids. An example of a custom spectral property is shown
+below:
 
 .. code-block:: python
 
-    spectral_data = {
-              "PIMO1": {
-                  "Wood": {
-                      "reflectance": (
-                          {
-                              "quantity": "reflectance",
-                              "wavelengths": [
-                                  442.948,
-                                  490.448,
-                                  560.43045,
-                                  665.2445,
-                                  681.556,
-                                  709.1095,
-                                  754.184,
-                                  833.5,
-                                  865.587,
-                                  1242.5,
-                                  1610.5,
-                                  2120.0,
-                                  2199.0,
-                              ],
-                              "wavelengths_units": "nanometer",
-                              "values": [
-                                  0.053892,
-                                  0.057882,
-                                  0.136485,
-                                  0.055265,
-                                  0.052734,
-                                  0.214271,
-                                  0.4771,
-                                  0.494542,
-                                  0.496112,
-                                  0.461875,
-                                  0.332809,
-                                  0.158912,
-                                  0.181612,
-                              ],
-                              "type": "interpolated",
-                          }
-                      ),
-                  },
-              },
-          }
+   spectral_data = {
+       "PIMO1": {
+           "Wood": {
+               "reflectance": (
+                   {
+                       "quantity": "reflectance",
+                       "wavelengths": [
+                           442.948,
+                           490.448,
+                           560.43045,
+                           665.2445,
+                           681.556,
+                           709.1095,
+                           754.184,
+                           833.5,
+                           865.587,
+                           1242.5,
+                           1610.5,
+                           2120.0,
+                           2199.0,
+                       ],
+                       "wavelengths_units": "nanometer",
+                       "values": [
+                           0.053892,
+                           0.057882,
+                           0.136485,
+                           0.055265,
+                           0.052734,
+                           0.214271,
+                           0.4771,
+                           0.494542,
+                           0.496112,
+                           0.461875,
+                           0.332809,
+                           0.158912,
+                           0.181612,
+                       ],
+                       "type": "interpolated",
+                   }
+               ),
+           },
+       },
+   }
 
 
-Default Scenarios
------------------
-Preconfigured RAMI-5 scenarios from the `DART Team <https://dart.omp.eu/>`_, are available for use and downloaded upon request via the datastore. These are downloaded when a specific scenario is requested via the datastore. Due to their size and the number of files they contain, the scenarios are downloaded in a compressed format and, by default, extracted to the current working directory. The extracted files are then used to load the scenario. To change the default location for the extracted files, set the appropriate parameter in the ``load_rami_scenario`` function.
+RAMI benchmark scenarios
+------------------------
+
+We provide a specific loader for scenes derived from the
+`RAMI-V scene list <https://rami-benchmark.jrc.ec.europa.eu/_www/phase_descr.php?strPhase=RAMI5>`_.
+These pre-configured are available for use and downloaded upon request via the
+datastore.\ [#sn2]_ These are downloaded when a specific scenario is requested via the
+datastore. Due to their size and the number of files they contain, the scenarios
+are downloaded in a compressed format and, by default, extracted to the current
+working directory. The extracted files are then used to load the scenario. To
+change the default location for the extracted files, set the appropriate
+parameter in the :func:`.load_rami_scenario` function.
+
+.. [#sn2] We thank the `DART <https://dart.omp.eu/>`_ team for allowing us to
+   use their 3D model files to derive our scene models.
 
 .. code-block:: python
 
@@ -227,18 +255,12 @@ Preconfigured RAMI-5 scenarios from the `DART Team <https://dart.omp.eu/>`_, are
 
     import eradiate
     from eradiate.experiments import CanopyExperiment
-    from eradiate.scenes.biosphere import (
-        RAMIActualCanopies,
-        RAMIHomogeneousAbstractCanopies,
-        load_rami_scenario,
-    )
+    from eradiate.scenes.biosphere import load_rami_scenario
     from eradiate.units import unit_registry as ureg
 
     eradiate.set_mode("mono")
 
-    scenario_data = load_rami_scenario(
-        RAMIHomogeneousAbstractCanopies.ADJACENT_CANOPIES_MEDIUM_ERECTOPHILE_SPARSE_PLANOPHILE
-    )
+    scenario_data = load_rami_scenario("HOM30_DIS_ED0")
 
     scenario = CanopyExperiment(
         **scenario_data,
@@ -253,7 +275,7 @@ Preconfigured RAMI-5 scenarios from the `DART Team <https://dart.omp.eu/>`_, are
             "spp": 4**2,
             "srf": {
                 "type": "multi_delta",
-                "wavelengths": np.array([660, 550, 440]) * ureg.nm,
+                "wavelengths": np.array([660.0, 550.0, 440.0]) * ureg.nm,
             },
         },
         illumination={"type": "directional", "zenith": 45.0, "azimuth": 350.0},
