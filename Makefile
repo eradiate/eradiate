@@ -1,12 +1,15 @@
 # Detect platform
 ifeq ($(OS), Windows_NT)
 	PLATFORM := win-64
+	PYTHON := python
 else
 	uname := $(shell sh -c 'uname 2>/dev/null || echo unknown')
 	ifeq ($(uname), Darwin)
 		PLATFORM := osx-64
+		PYTHON := python3
 	else ifeq ($(uname), Linux)
 		PLATFORM := linux-64
+		PYTHON := python3
 	else
 		@echo "Unsupported platform"
 		exit 1
@@ -15,6 +18,9 @@ endif
 
 all:
 	@echo "Detected platform: $(PLATFORM)"
+	@echo "Python:"
+	@echo "  "`which $(PYTHON)`
+	@echo "  "`$(PYTHON) --version`
 
 # -- Dependency management with Pip --------------------------------------------
 
@@ -24,12 +30,12 @@ pip-update-tools:
 
 # Update .in files
 pip-update-in-files:
-	python requirements/make_pip_in_files.py --quiet
+	$(PYTHON) requirements/make_pip_in_files.py --quiet
 
 
 # Update .txt files
 pip-update-txt-files:
-	python requirements/make_pip_txt_files.py --quiet
+	$(PYTHON) requirements/make_pip_txt_files.py --quiet
 
 # Lock pip dependencies
 # Dev must be compiled first because it constrains the others
@@ -60,7 +66,7 @@ pip-update: pip-lock pip-init
 
 # Generate environment files
 conda-env:
-	python requirements/make_conda_env.py --quiet;
+	$(PYTHON) requirements/make_conda_env.py --quiet;
 
 # Lock conda dependencies
 conda-lock: conda-env
@@ -78,11 +84,11 @@ conda-lock-all: conda-env
 	done
 
 conda-prepare:
-	python requirements/check_conda_env.py
+	$(PYTHON) requirements/check_conda_env.py
 	conda config --env --add channels conda-forge --add channels eradiate
 
 install-no-deps:
-	python requirements/copy_envvars.py
+	$(PYTHON) requirements/copy_envvars.py
 	pip install --editable . --no-deps
 
 # Initialise development environment
@@ -125,7 +131,7 @@ endif
 # -- Build Wheel for Eradiate --------------------------------------------------
 
 wheel:
-	python -m build
+	$(PYTHON) -m build
 
 # -- Documentation -------------------------------------------------------------
 
@@ -151,7 +157,7 @@ docs-rst:
 	make -C docs md-cli
 
 docs-render-tutorials:
-	python3 tutorials/run.py run
+	$(PYTHON) tutorials/run.py run
 
 docs-clean:
 	make -C docs clean
