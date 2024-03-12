@@ -40,7 +40,25 @@ def _absorption_data_repr(
         """Representation for values which are absorption dataset"""
         return summary_repr(value)
 
-    return "\n".join([repr_k(k) + ": " + repr_v(v) for k, v in value.items()])
+    if len(value) < 10:
+        lines = [f"{repr_k(k)}: {repr_v(v)}" for k, v in value.items()]
+
+    else:
+        lines = []
+
+        for i, (k, v) in enumerate(value.items()):
+            if i > 4:
+                break
+            lines.append(f"{repr_k(k)}: {repr_v(v)}")
+
+        lines.append("...")
+
+        for i, (k, v) in enumerate(reversed(value.items())):
+            if i > 4:
+                break
+            lines.append(f"{repr_k(k)}: {repr_v(v)}")
+
+    return "\n".join(lines)
 
 
 @parse_docs
