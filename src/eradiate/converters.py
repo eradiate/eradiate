@@ -247,7 +247,12 @@ def convert_absorption_data(
             wavelength_range=wavelength_range,
         )
         datasets = [xr.load_dataset(path) for path in paths]
-        return {wrange(ds): ds for ds in datasets}
+
+        # Sort entries by ascending lower bound
+        entries = [(wrange(ds), ds) for ds in datasets]
+        entries.sort(key=lambda x: x[0][0])
+
+        return dict(entries)
 
     # Dataset: compute wavelength range
     elif isinstance(value, xr.Dataset):
