@@ -168,7 +168,7 @@ def gather_bitmaps(
 
 
 @tag(**{"final": "true", "kind": "data"})
-@config.when(measure_distant=True, var_name="sector_radiosity")
+@config.when(var_name="sector_radiosity")
 def radiosity(sector_radiosity: xr.DataArray) -> xr.DataArray:
     return logic.radiosity(sector_radiosity)
 
