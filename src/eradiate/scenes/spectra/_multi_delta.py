@@ -11,6 +11,7 @@ from ...attrs import documented, parse_docs
 from ...spectral.ckd import BinSet
 from ...spectral.mono import WavelengthSet
 from ...units import unit_context_kernel as uck
+from ...util.misc import summary_repr_vector
 
 
 @parse_docs
@@ -35,6 +36,7 @@ class MultiDeltaSpectrum(Spectrum):
                 lambda x: np.unique(x.m) * x.units,
             ],
             validator=validators.all_strictly_positive,
+            repr=lambda x: f"{summary_repr_vector(x.m)} {x.u:~}",
         ),
         doc="An array of wavelengths specifying the translation wavelength of each "
         "Dirac delta. Wavelength values are positive and unique. "

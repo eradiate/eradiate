@@ -1,6 +1,7 @@
 """
 A collection of tools which don't really fit anywhere else.
 """
+
 from __future__ import annotations
 
 import functools
@@ -508,6 +509,21 @@ def _(da: xr.DataArray):
         desc = " | " + desc
 
     return f"<xarray.DataArray{desc}>"
+
+
+def summary_repr_vector(a: np.ndarray, edgeitems: int = 4):
+    """
+    Return a brief summary representation of a Numpy vector.
+    """
+    size = len(a)
+    if size > edgeitems * 2 + 1:
+        return (
+            f"[{np.array2string(a[:edgeitems]).strip('[]')}"
+            " ... "
+            f"{np.array2string(a[size-edgeitems:]).strip('[]')}]"
+        )
+    else:
+        return np.array2string(a)
 
 
 def find_runs(
