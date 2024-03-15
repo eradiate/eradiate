@@ -266,7 +266,10 @@ class Experiment(ABC):
         pass
 
 
-def _extra_objects_converter(value):
+def _extra_objects_converter(value: dict | None) -> dict:
+    if not value:
+        return {}
+
     result = {}
 
     for key, element_spec in value.items():
@@ -292,7 +295,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
     extra_objects: dict[str, SceneElement] = documented(
         attrs.field(
-            factory=dict,
+            default=None,
             converter=_extra_objects_converter,
             validator=attrs.validators.deep_mapping(
                 key_validator=attrs.validators.instance_of(str),
@@ -303,7 +306,8 @@ class EarthObservationExperiment(Experiment, ABC):
         "The keys of this dictionary are used to identify the objects "
         "in the kernel dictionary.",
         type="dict",
-        default="{}",
+        init_type="dict or None",
+        default="None",
     )
 
     illumination: DirectionalIllumination | ConstantIllumination = documented(
