@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import typing as t
+import warnings
 
 import attrs
 import numpy as np
@@ -14,6 +15,7 @@ from .spectral_set import SpectralSet
 from ..attrs import documented, parse_docs
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
 from ..quad import Quad, QuadType
+from ..radprops import CKDAbsorptionDatabase
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -528,18 +530,18 @@ class BinSet(SpectralSet):
         )
 
     @classmethod
-    def from_absorption_data(
+    def from_absorption_database(
         cls,
-        datasets: xr.Dataset | t.Sequence[xr.Dataset],
+        abs_db: CKDAbsorptionDatabase,
         quad_spec: QuadSpec | None = None,
     ) -> BinSet:
         """
-        Generate a bin set from one or several absorption datasets.
+        Generate a bin set from a molecular absorption database.
 
         Parameters
         ----------
-        datasets : Dataset or sequence of Dataset
-            Absorption dataset.
+        abs_db : .CKDAbsorptionDatabase
+            Molecular absorption database.
 
         quad_spec : .QuadSpec
             Quadrature rule specification. If provided, it will be used to
@@ -548,45 +550,40 @@ class BinSet(SpectralSet):
 
         Returns
         -------
-        :class:`.BinSet`
+        .BinSet
             Generated bin set.
-
-        Notes
-        -----
-        Assumes that the absorption datasets have a ``wbounds`` data variable.
         """
-        if isinstance(datasets, xr.Dataset):
-            datasets = [datasets]
-
         if quad_spec is None:
             quad_spec = QuadSpec.default()
 
-        bins = []
+        # Note: We had to disable the advanced quadrature rule specification
+        # because it requires to open all files in the absorption database, which
+        # results  in an impracticable performance penalty with very large CKD
+        # databases.
+        # This feature will be enabled again in the future, when the spectral
+        # loop handling will be rewritten.
+        if isinstance(quad_spec, QuadSpecMinError):
+            n_g = quad_spec.nmax
+            warnings.warn(
+                "The advanced quadrature specification is temporarily disabled, "
+                "switching to a fixed quadrature rule specification with %s g-points."
+                % n_g
+            )
+            quad_spec = QuadSpecFixed(n_g=n_g)
 
-        for dataset in datasets:
-            # make quadrature rule
-            quad = quad_spec.make_quad(dataset)
+        if isinstance(quad_spec, QuadSpecErrorThreshold):
+            n_g = quad_spec.nmax
+            warnings.warn(
+                "The advanced quadrature specification is temporarily disabled, "
+                "switching to a fixed quadrature rule specification with %s g-points."
+                % n_g
+            )
+            quad_spec = QuadSpecFixed(n_g=n_g)
 
-            # determine wavelength bounds
-            wlower = to_quantity(dataset.wbounds.sel(wbv="lower"))
-            wupper = to_quantity(dataset.wbounds.sel(wbv="upper"))
-
-            if wlower.check("[length]"):
-                wmin = wlower
-                wmax = wupper
-            elif wlower.check("[length]^-1"):
-                wmin = (1.0 / wupper).to("nm")  # min wavelength is max wavenumber
-                wmax = (1.0 / wlower).to("nm")  # max wavelength is min wavenumber
-            else:
-                raise ValueError(
-                    f"Invalid dimensionality for dataset spectral coordinate; "
-                    f"expected [length] or [length]^-1 "
-                    f"(got {wlower.dimensionality})"
-                )
-            binset = cls.from_wavelength_bounds(wmin=wmin, wmax=wmax, quad=quad)
-            bins.extend(binset.bins)
-
-        return cls(bins=bins)
+        quad = quad_spec.make_quad(None)  # TODO: Refactor this, it's an ugly hack
+        wmin = abs_db.spectral_coverage["wbound_lower [nm]"].values * ureg.nm
+        wmax = abs_db.spectral_coverage["wbound_upper [nm]"].values * ureg.nm
+        return cls.from_wavelength_bounds(wmin=wmin, wmax=wmax, quad=quad)
 
     @classmethod
     def default(cls):
