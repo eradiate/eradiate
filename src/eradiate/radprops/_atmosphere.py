@@ -1,9 +1,8 @@
 """
 Atmosphere's radiative profile.
 """
-from __future__ import annotations
 
-from copy import deepcopy
+from __future__ import annotations
 
 import attrs
 import joseki
@@ -12,53 +11,14 @@ import pint
 import xarray as xr
 from joseki.profiles.core import interp
 
+from ._absorption import AbsorptionDatabase
 from ._core import RadProfile, ZGrid, make_dataset
-from .absorption import (
-    DEFAULT_HANDLER_CONFIG,
-    eval_sigma_a_ckd_impl,
-    eval_sigma_a_mono_impl,
-)
 from .rayleigh import compute_sigma_s_air
 from ..attrs import documented, parse_docs
-from ..converters import convert_absorption_data, convert_thermoprops
+from ..converters import convert_thermoprops
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 from ..util.misc import cache_by_id, summary_repr
-from ..validators import validate_absorption_data
-
-
-def _absorption_data_repr(
-    value: dict[tuple[pint.Quantity], xr.Dataset]
-) -> dict[str, str]:
-    def repr_k(value):
-        """Representation for keys which are wavelength intervals."""
-        units = value[0].u
-        tmp = (value[0].m, value[1].m_as(units)) * units
-        return f"{tmp:.2f~}"
-
-    def repr_v(value):
-        """Representation for values which are absorption dataset"""
-        return summary_repr(value)
-
-    if len(value) < 10:
-        lines = [f"{repr_k(k)}: {repr_v(v)}" for k, v in value.items()]
-
-    else:
-        lines = []
-
-        for i, (k, v) in enumerate(value.items()):
-            if i > 4:
-                break
-            lines.append(f"{repr_k(k)}: {repr_v(v)}")
-
-        lines.append("...")
-
-        for i, (k, v) in enumerate(reversed(value.items())):
-            if i > 4:
-                break
-            lines.append(f"{repr_k(k)}: {repr_v(v)}")
-
-    return "\n".join(lines)
 
 
 @parse_docs
@@ -67,25 +27,25 @@ class AtmosphereRadProfile(RadProfile):
     """
     Atmospheric radiative profile.
 
-    Notes
-    -----
-    The radiative profile is defined by atmospheric thermophysical and
-    absorption coefficient data.
+    This class provides an interface to generate vertical profiles of
+    atmospheric volume radiative properties (also sometimes referred to as
+    collision coefficients).
+
+    The atmospheric radiative profile is built from a thermophysical profile,
+    which provides the temperature, pressure and species concentrations as a
+    function of altitude, and an absorption coefficient database indexed by
+    those thermophysical variables.
     """
 
-    absorption_data: xr.Dataset | list[xr.Dataset] = documented(
+    absorption_data: AbsorptionDatabase = documented(
         attrs.field(
-            converter=convert_absorption_data,
-            validator=validate_absorption_data,
-            repr=_absorption_data_repr,
+            factory=AbsorptionDatabase.default,
+            converter=AbsorptionDatabase.convert,
+            validator=attrs.validators.instance_of(AbsorptionDatabase),
         ),
-        doc="Absorption coefficient data. "
-        "If a file path, the absorption coefficient is loaded from the "
-        "specified file (must be a NetCDF file)."
-        "If a tuple, the first element is the dataset codename and the"
-        "second is the desired working wavelength range.",
-        type="Dataset or list of Dataset",
-        init_type="Dataset or list of Dataset or :class:`.PathLike`",
+        doc="Absorption coefficient data.",
+        type=".CKDAbsorptionDatabase",
+        init_type='.CKDAbsorptionDatabase or str, default: ``"monotropa"``',
     )
 
     thermoprops: xr.Dataset = documented(
@@ -143,22 +103,6 @@ class AtmosphereRadProfile(RadProfile):
 
     _zgrid: ZGrid | None = attrs.field(default=None, init=False)
 
-    error_handler_config: dict[str, dict[str, str]] = documented(
-        attrs.field(
-            factory=lambda: deepcopy(DEFAULT_HANDLER_CONFIG),
-            validator=attrs.validators.deep_mapping(
-                key_validator=attrs.validators.instance_of(str),
-                value_validator=attrs.validators.deep_mapping(
-                    key_validator=attrs.validators.instance_of(str),
-                    value_validator=attrs.validators.instance_of(str),
-                ),
-            ),
-        ),
-        doc="Error handler configuration for absorption data interpolation.",
-        type="dict",
-        default=DEFAULT_HANDLER_CONFIG,
-    )
-
     def __attrs_post_init__(self):
         self.update()
 
@@ -194,10 +138,7 @@ class AtmosphereRadProfile(RadProfile):
         ).to("dimensionless")
 
     def eval_albedo_ckd(
-        self,
-        w: pint.Quantity,
-        g: float,
-        zgrid: ZGrid,
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
     ) -> pint.Quantity:
         sigma_s = self.eval_sigma_s_ckd(w=w, g=g, zgrid=zgrid)
         sigma_t = self.eval_sigma_t_ckd(w=w, g=g, zgrid=zgrid)
@@ -211,36 +152,28 @@ class AtmosphereRadProfile(RadProfile):
         # wavelengths span multiple datasets we for-loop over them.
         w = np.atleast_1d(w)
         if self.has_absorption:
-            values = eval_sigma_a_mono_impl(  # values at altitude levels
-                self.absorption_data,
-                thermoprops=self._thermoprops_interp(zgrid),
-                w=w,
-                error_handler_config=self.error_handler_config,
-            )  # axis order = (w, z)
+            thermoprops = self._thermoprops_interp(zgrid)
+            values = self.absorption_data.eval_sigma_a_mono(w, thermoprops).transpose(
+                "w", "z"
+            )
+            values = to_quantity(values)
+            # We evaluated the
             # project on altitude layers
             return 0.5 * (values[:, 1:] + values[:, :-1]).squeeze()
         else:
             return np.zeros((w.size, zgrid.n_layers)).squeeze() / ureg.km
 
     def eval_sigma_a_ckd(
-        self,
-        w: pint.Quantity,
-        g: float,
-        zgrid: ZGrid,
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
     ) -> pint.Quantity:
-        # NOTE: this method accepts 'w'-arrays and is vectorized as far as
-        # each individual absorption dataset is concerned, namely when the
-        # wavelengths span multiple datasets we for-loop over them.
         w = np.atleast_1d(w)
         if self.has_absorption:
-            values = eval_sigma_a_ckd_impl(  # values at altitude levels
-                self.absorption_data,
-                thermoprops=self._thermoprops_interp(zgrid),
-                w=w,
-                g=g,
-                error_handler_config=self.error_handler_config,
+            values = self.absorption_data.eval_sigma_a_ckd(
+                w, g, self._thermoprops_interp(zgrid)
             )  # axis order = (w, z)
-            # project on altitude layers
+            values = to_quantity(values)
+
+            # Interpolate on altitude layers
             return 0.5 * (values[:, 1:] + values[:, :-1]).squeeze()
         else:
             return np.zeros((w.size, zgrid.n_layers)).squeeze() / ureg.km
@@ -258,10 +191,7 @@ class AtmosphereRadProfile(RadProfile):
             return np.zeros((1, zgrid.n_layers)) / ureg.km
 
     def eval_sigma_s_ckd(
-        self,
-        w: pint.Quantity,
-        g: float,
-        zgrid: ZGrid,
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
     ) -> pint.Quantity:
         return self.eval_sigma_s_mono(w=w, zgrid=zgrid)
 

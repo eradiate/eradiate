@@ -10,8 +10,8 @@ import pinttr
 
 from ._distant import DistantMeasure
 from ... import converters, frame
-from ..._config import config
 from ...attrs import documented, parse_docs
+from ...config import settings
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -33,9 +33,11 @@ class Layout(ABC):
     azimuth_convention: frame.AzimuthConvention = documented(
         attrs.field(
             default=None,
-            converter=lambda x: config.azimuth_convention
-            if x is None
-            else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x),
+            converter=lambda x: (
+                settings.azimuth_convention
+                if x is None
+                else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x)
+            ),
             validator=attrs.validators.instance_of(frame.AzimuthConvention),
             kw_only=True,
         ),
@@ -268,9 +270,7 @@ class DirectionLayout(Layout):
             self.directions,
             azimuth_convention=self.azimuth_convention,
             normalize=True,
-        ).to(
-            ucc.get("angle")
-        )  # Convert to default angle units
+        ).to(ucc.get("angle"))  # Convert to default angle units
 
     @property
     def n_directions(self) -> int:

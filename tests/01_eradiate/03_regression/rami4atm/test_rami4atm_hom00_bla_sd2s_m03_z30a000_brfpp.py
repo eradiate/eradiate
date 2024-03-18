@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate import data
 from eradiate import unit_registry as ureg
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.test_tools.regression import Chi2Test
@@ -59,22 +58,7 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
                     "identifier": "afgl_1986-us_standard",
                     "z": np.arange(0, 120.05, 0.05) * ureg.km,
                 },
-                "absorption_data": [
-                    data.open_dataset(
-                        f"spectra/absorption/ckd/monotropa/monotropa-"
-                        f"{int(w)}_{int(w+100)}.nc"
-                    )
-                    for w in np.arange(17100, 18700, 100)
-                ],
-                "error_handler_config": {
-                    "x": {
-                        "missing": "ignore",
-                        "scalar": "ignore",
-                        "bounds": "raise",
-                    },
-                    "p": {"bounds": "ignore"},
-                    "t": {"bounds": "ignore"},
-                },
+                "absorption_data": "monotropa",
             },
             "particle_layers": [
                 {
