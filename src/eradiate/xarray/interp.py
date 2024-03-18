@@ -8,7 +8,7 @@ import numpy as np
 import xarray as xr
 
 from .. import frame
-from .._config import config
+from ..config import settings
 from ..warp import uniform_hemisphere_to_square
 
 
@@ -62,7 +62,7 @@ def film_to_angular(
 
     # Define azimuth convention
     if azimuth_convention is None:
-        azimuth_convention = config.azimuth_convention
+        azimuth_convention = settings.azimuth_convention
     elif isinstance(azimuth_convention, str):
         azimuth_convention = frame.AzimuthConvention[azimuth_convention.upper()]
     else:

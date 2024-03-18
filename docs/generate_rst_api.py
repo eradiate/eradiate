@@ -2,9 +2,6 @@ from importlib import import_module
 from pathlib import Path
 from textwrap import dedent, indent
 
-import eradiate
-from eradiate._config import EradiateConfig, format_help_dicts_rst
-
 # Auto-generation disclaimer text
 HEADER = dedent(
     """
@@ -36,30 +33,30 @@ def write_if_modified(filename, content):
             f.write(content)
 
 
-def generate_env_vars_docs():
-    outdir = Path(__file__).parent.absolute() / "rst/reference_api/generated/env_vars"
-    print(f"Generating environment variable docs in '{outdir}'")
-
-    content = "\n".join(
-        [
-            HEADER,
-            "",
-            dedent(
-                """
-                .. _sec-config-env_vars:
-
-                Environment variables
-                ---------------------
-                """
-            ),
-            EradiateConfig.generate_help(
-                formatter=format_help_dicts_rst, display_defaults=True
-            ),
-            "",
-        ]
-    )
-
-    write_if_modified(outdir / "env_vars.rst", content)
+# def generate_env_vars_docs():
+#     outdir = Path(__file__).parent.absolute() / "rst/reference_api/generated/env_vars"
+#     print(f"Generating environment variable docs in '{outdir}'")
+#
+#     content = "\n".join(
+#         [
+#             HEADER,
+#             "",
+#             dedent(
+#                 """
+#                 .. _sec-config-env_vars:
+#
+#                 Environment variables
+#                 ---------------------
+#                 """
+#             ),
+#             EradiateConfig.generate_help(
+#                 formatter=format_help_dicts_rst, display_defaults=True
+#             ),
+#             "",
+#         ]
+#     )
+#
+#     write_if_modified(outdir / "env_vars.rst", content)
 
 
 # List of (module, variable) pairs
@@ -126,4 +123,4 @@ def generate_factory_docs():
 
 if __name__ == "__main__":
     generate_factory_docs()
-    generate_env_vars_docs()
+    # generate_env_vars_docs()

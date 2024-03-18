@@ -8,7 +8,7 @@ import re
 import mitsuba.scalar_rgb as mi
 from tqdm.auto import tqdm
 
-from .._config import ProgressLevel, config
+from .. import config
 
 
 def _add_logging_level(level_name, level_num, method_name=None):
@@ -139,7 +139,7 @@ def install_logging(force: bool = False) -> None:
                     unit_scale=1.0,
                     leave=True,
                     bar_format="{l_bar}{bar}| {elapsed}, ETA={remaining}",
-                    disable=config.progress < ProgressLevel.KERNEL,
+                    disable=config.settings.progress < config.ProgressLevel.KERNEL,
                 )
                 self.progress = 0.0
 
