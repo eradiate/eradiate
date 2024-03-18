@@ -6,7 +6,7 @@ x = {missing = "ignore", scalar = "ignore", bounds = "raise"}
 # absorption coefficient ⇒ ignore ouf-of-bounds errors
 p = {missing = "raise", scalar = "raise", bounds = "ignore"}
 
-# atmospheric temperature climbs fast above 80-100 km,
+# Atmospheric temperature climbs fast above 80-100 km,
 # but at these altitude, the air is very thin and so is
 # the absorption coefficient
 t = {missing = "raise", scalar = "raise", bounds = "ignore"}
