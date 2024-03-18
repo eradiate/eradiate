@@ -4,8 +4,6 @@ Molecular atmospheres.
 
 from __future__ import annotations
 
-from copy import deepcopy
-
 import attrs
 import joseki
 import numpy as np
@@ -19,56 +17,30 @@ from ..core import traverse
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ...attrs import documented, parse_docs
 from ...contexts import KernelContext
-from ...converters import convert_absorption_data, convert_thermoprops
+from ...converters import convert_thermoprops
 from ...exceptions import UnsupportedModeError
 from ...radprops import (
+    AbsorptionDatabase,
     AtmosphereRadProfile,
+    ErrorHandlingConfiguration,
     RadProfile,
     ZGrid,
 )
-from ...radprops._atmosphere import _absorption_data_repr
-from ...radprops.absorption import DEFAULT_HANDLER_CONFIG
 from ...spectral.ckd import BinSet, QuadSpec
 from ...spectral.index import SpectralIndex
 from ...spectral.mono import WavelengthSet
+from ...spectral.spectral_set import SpectralSet
 from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
-from ...validators import validate_absorption_data
 
 
-def default_absorption_data() -> tuple:
-    """
-    Default absorption data based on active spectral mode.
-
-    Returns
-    -------
-    tuple
-        Absorption data specifications.
-
-    Raises
-    ------
-    UnsupportedModeError:
-        When the spectral mode is neither 'mono' or 'ckd'.
-
-    Notes
-    -----
-    The correct Eradiate mode must be set before this function is called.
-    In monochromatic mode, the returned absorption data specifications are
-    suitable for working in the 250 nm to 3125 nm wavelength range.
-    In CKD mode, the returned absorption data specifications are suitable for
-    working with the wavenumber band [18100, 18200] cm^-1 (equivalent to the
-    wavelength range [549.45, 552.48] nm).
-    The corresponding absorption datasets will be downloaded from the Eradiate
-    online data store, if they have not already been downloaded.
-    """
-    wavelength_range = [549.5, 550.5] * ureg.nm
+def _default_absorption_data():
     if eradiate.mode().is_mono:
-        dataset_codename = "komodo"
+        return "komodo"
     elif eradiate.mode().is_ckd:
-        dataset_codename = "monotropa"
+        return "monotropa"
     else:
-        raise UnsupportedModeError(supported=["mono", "ckd"])
-    return (dataset_codename, wavelength_range)
+        raise UnsupportedModeError(unsupported=["mono", "ckd"])
 
 
 @parse_docs
@@ -109,13 +81,12 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     function but can be set to other values.
     """
 
-    absorption_data: dict[tuple[pint.Quantity, pint.Quantity], xr.Dataset] = documented(
+    absorption_data: AbsorptionDatabase = documented(
         attrs.field(
             kw_only=True,
-            factory=default_absorption_data,
-            converter=convert_absorption_data,
-            validator=validate_absorption_data,
-            repr=_absorption_data_repr,
+            factory=AbsorptionDatabase.default,
+            converter=AbsorptionDatabase.convert,
+            validator=attrs.validators.instance_of(AbsorptionDatabase),
         ),
         doc="Absorption coefficient data. "
         "If a file path, the absorption coefficient is loaded from the "
@@ -162,11 +133,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     has_absorption: bool = documented(
-        attrs.field(
-            kw_only=True,
-            default=True,
-            converter=bool,
-        ),
+        attrs.field(kw_only=True, default=True, converter=bool),
         doc="Absorption switch. If ``True``, the absorption coefficient is "
         "computed. Else, the absorption coefficient is set to zero.",
         type="bool",
@@ -174,11 +141,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     has_scattering: bool = documented(
-        attrs.field(
-            kw_only=True,
-            default=True,
-            converter=bool,
-        ),
+        attrs.field(kw_only=True, default=True, converter=bool),
         doc="Scattering switch. If ``True``, the scattering coefficient is "
         "computed. Else, the scattering coefficient is set to zero.",
         type="bool",
@@ -203,55 +166,43 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         repr=False,
     )
 
-    error_handler_config: dict[str, dict[str, str]] = documented(
+    error_handler_config: ErrorHandlingConfiguration | None = documented(
         attrs.field(
             kw_only=True,
-            factory=lambda: deepcopy(DEFAULT_HANDLER_CONFIG),
-            validator=attrs.validators.deep_mapping(
-                key_validator=attrs.validators.instance_of(str),
-                value_validator=attrs.validators.deep_mapping(
-                    key_validator=attrs.validators.instance_of(str),
-                    value_validator=attrs.validators.instance_of(str),
-                ),
+            default=None,
+            converter=ErrorHandlingConfiguration.convert,
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(ErrorHandlingConfiguration)
             ),
         ),
-        doc="Error handler configuration for absorption data interpolation.",
-        type="dict",
-        default=":data:`.DEFAULT_HANDLER_CONFIG`",
+        doc="Error handler configuration for absorption data interpolation. If "
+        "unset, the global configuration specified in the ``absorption_database_error_handling`` "
+        "section is used. ",
+        type="ErrorHandlingConfiguration or None",
+        init_type="ErrorHandlingConfiguration or dict, optional",
+        default="None",
     )
 
     def update(self) -> None:
         # Inherit docstring
         self.phase.id = self.phase_id
 
-        self.error_handler_config = {
-            **DEFAULT_HANDLER_CONFIG,
-            **self.error_handler_config,
-        }
-
         self._radprops_profile = AtmosphereRadProfile(
             thermoprops=self.thermoprops,
             has_scattering=self.has_scattering,
             has_absorption=self.has_absorption,
             absorption_data=self.absorption_data,
-            error_handler_config=self.error_handler_config,
         )
 
-    def spectral_set(
-        self, quad_spec: QuadSpec | None = None
-    ) -> None | BinSet | WavelengthSet:
+    def spectral_set(self, quad_spec: QuadSpec | None = None) -> None | SpectralSet:
         if self.has_absorption:
-            absorption_data = list(self.absorption_data.values())
-            if len(absorption_data) == 1:
-                absorption_data = absorption_data[0]
-
             if eradiate.mode().is_mono:
-                return WavelengthSet.from_absorption_dataset(absorption_data)
+                return WavelengthSet.from_absorption_database(self.absorption_data)
 
             elif eradiate.mode().is_ckd:
                 if quad_spec is None:
                     quad_spec = QuadSpec.default()  # default
-                return BinSet.from_absorption_data(absorption_data, quad_spec)
+                return BinSet.from_absorption_database(self.absorption_data, quad_spec)
 
             else:
                 raise NotImplementedError

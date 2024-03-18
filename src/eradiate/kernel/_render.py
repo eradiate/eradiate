@@ -9,7 +9,7 @@ import mitsuba as mi
 from tqdm.auto import tqdm
 
 from ._kernel_dict import UpdateMapTemplate
-from .._config import ProgressLevel, config
+from .. import config
 from ..attrs import documented, parse_docs
 from ..contexts import KernelContext
 from ..rng import SeedState, root_seed_state
@@ -87,9 +87,11 @@ class MitsubaObjectWrapper:
     parameters: mi.SceneParameters | None = documented(
         attrs.field(
             default=None,
-            repr=lambda x: "SceneParameters[...]"
-            if x.__class__.__name__ == "SceneParameters"
-            else str(None),
+            repr=lambda x: (
+                "SceneParameters[...]"
+                if x.__class__.__name__ == "SceneParameters"
+                else str(None)
+            ),
         ),
         doc="Mitsuba scene parameter map.",
         type="mitsuba.SceneParameters",
@@ -100,9 +102,9 @@ class MitsubaObjectWrapper:
     umap_template: UpdateMapTemplate | None = documented(
         attrs.field(
             default=None,
-            repr=lambda x: "UpdateMapTemplate[...]"
-            if isinstance(x, UpdateMapTemplate)
-            else str(x),
+            repr=lambda x: (
+                "UpdateMapTemplate[...]" if isinstance(x, UpdateMapTemplate) else str(x)
+            ),
         ),
         doc="An update map template, which can be rendered and used to update "
         "Mitsuba scene parameters depending on context information.",
@@ -319,7 +321,8 @@ def mi_render(
         unit_scale=1.0,
         leave=True,
         bar_format="{desc}{n:g}/{total:g}|{bar}| {elapsed}, ETA={remaining}",
-        disable=(config.progress < ProgressLevel.SPECTRAL_LOOP) or len(ctxs) <= 1,
+        disable=(config.settings.progress < config.ProgressLevel.SPECTRAL_LOOP)
+        or len(ctxs) <= 1,
     ) as pbar:
         for ctx in ctxs:
             pbar.set_description(

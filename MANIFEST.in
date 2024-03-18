@@ -1,3 +1,4 @@
+include src/eradiate/config/*.toml
 include src/eradiate/data/downloads_all.yml
 include src/eradiate/data/downloads_minimal.yml
 include src/eradiate/units.txt
