@@ -13,7 +13,7 @@ TEST_FILE_DOES_NOT_EXIST = Path("tests/data/git/does_not_exist.nc")
 def test_directory_data_store_fetch():
     # The data submodule can be instantiated
     data_store = BlindDirectoryDataStore(
-        path=eradiate.config.source_dir / "resources/data"
+        path=eradiate.config.SOURCE_DIR / "resources/data"
     )
 
     # We can fetch the test file

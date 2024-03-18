@@ -142,11 +142,11 @@ def fetch(
     if not file_list:
         if from_file is None:
             # TODO: fetch this list from online
-            if eradiate.config.source_dir is None:
+            if eradiate.config.SOURCE_DIR is None:
                 from_file = files("eradiate") / "data" / "downloads_all.yml"
             else:
                 from_file = (
-                    eradiate.config.source_dir
+                    eradiate.config.SOURCE_DIR
                     / "src"
                     / "eradiate"
                     / "data"

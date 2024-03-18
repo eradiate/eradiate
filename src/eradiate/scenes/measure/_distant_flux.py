@@ -7,8 +7,8 @@ import pint
 
 from ._distant import DistantMeasure
 from ... import frame, validators
-from ..._config import config
 from ...attrs import documented, parse_docs
+from ...config import settings
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -46,9 +46,11 @@ class DistantFluxMeasure(DistantMeasure):
     azimuth_convention: frame.AzimuthConvention = documented(
         attrs.field(
             default=None,
-            converter=lambda x: config.azimuth_convention
-            if x is None
-            else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x),
+            converter=lambda x: (
+                settings.azimuth_convention
+                if x is None
+                else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x)
+            ),
             validator=attrs.validators.instance_of(frame.AzimuthConvention),
         ),
         doc="Azimuth convention. If ``None``, the global default configuration "

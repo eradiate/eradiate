@@ -89,9 +89,7 @@ def compute_sigma_s_air(
         w=w.magnitude, kwargs={"fill_value": (f_left, f_right)}
     ).values
 
-    refractive_index = air_refractive_index(
-        wavelength=w, number_density=number_density
-    )
+    refractive_index = air_refractive_index(wavelength=w, number_density=number_density)
     if isinstance(w.magnitude, np.ndarray) and isinstance(
         number_density.magnitude, np.ndarray
     ):

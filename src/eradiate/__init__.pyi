@@ -1,3 +1,4 @@
+from . import config as config
 from . import constants as constants
 from . import contexts as contexts
 from . import converters as converters
@@ -15,7 +16,6 @@ from . import spectral as spectral
 from . import units as units
 from . import validators as validators
 from . import xarray as xarray
-from ._config import config as config
 from ._mode import MitsubaBackend as MitsubaBackend
 from ._mode import MitsubaColorMode as MitsubaColorMode
 from ._mode import Mode as Mode
