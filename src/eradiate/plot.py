@@ -5,9 +5,14 @@ import warnings
 
 import matplotlib.pyplot as _plt
 import numpy as np
+import seaborn as sns
+import xarray as xr
 import xarray.plot
+from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
+from matplotlib.gridspec import SubplotSpec
 from xarray.plot import FacetGrid
 
 
@@ -177,3 +182,97 @@ def make_ticks(num_ticks: int, limits: t.Sequence[float]):
     marks = [f"{i / np.pi * 180}°" for i in steps]
 
     return steps, marks
+
+
+# -- Data dashboard definitions ------------------------------------------------
+
+
+class PiecewiseNorm(Normalize):
+    def __init__(self, levels, clip=False):
+        # input levels
+        self._levels = np.sort(levels)
+        # corresponding normalized values between 0 and 1
+        self._normed = np.linspace(0, 1, len(levels))
+        Normalize.__init__(self, None, None, clip)
+
+    def __call__(self, value, clip=None):
+        # linearly interpolate to get the normalized value
+        return np.ma.masked_array(np.interp(value, self._levels, self._normed))
+
+    def inverse(self, value):
+        return 1.0 - self.__call__(value)
+
+
+def _chunk_array(array, len_chunk):
+    n_chunks = max(1, round(len(array) / len_chunk))
+    return np.array_split(array, n_chunks)
+
+
+def dashboard_particle_dataset(
+    ds: xr.Dataset, title=None, phase_wavelength_chunk_size=5
+):
+    df = ds.phase.isel(i=0, j=0, drop=True).to_dataframe()[["phase"]]
+    df = df.sort_values(["w", "mu"]).reset_index()
+    df["theta"] = np.arccos(df["mu"])
+    phase_min = ds.phase.min()
+    phase_max = ds.phase.max()
+
+    w_chunks = [
+        (chunk.min(), chunk.max())
+        for chunk in _chunk_array(np.unique(df["w"]), phase_wavelength_chunk_size)
+    ]
+    naxs_phase = len(w_chunks)
+    ncols = 2
+    nrows_phase = naxs_phase // ncols + (1 if naxs_phase % ncols else 0)
+    height_ratios = [0.5, 0.5] + [1 for _ in range(nrows_phase)]
+
+    fig, axs = plt.subplot_mosaic(
+        [
+            ["sigma_t", "sigma_t"],
+            ["albedo", "albedo"],
+        ]
+        + [[f"phase_{i *2}", f"phase_{i*2+1}"] for i in range(nrows_phase)],
+        height_ratios=height_ratios,
+        figsize=(4 * ncols, 4 * sum(height_ratios)),
+        subplot_kw={"projection": "polar"},
+        layout="constrained",
+    )
+
+    for i_var, var in enumerate(["sigma_t", "albedo"]):
+        gs = axs[var].get_gridspec()
+        start = i_var * ncols
+        stop = start + 1
+        axs[var].remove()
+        axs[var] = plt.subplot(SubplotSpec(gs, start, stop), projection=None)
+        ds[var].plot(ax=axs[var], ls=":", marker=".")
+
+    for i_phase, (wmin, wmax) in enumerate(w_chunks):
+        _df = df.where((df["w"] >= wmin) & (df["w"] <= wmax)).dropna()
+        ax = axs[f"phase_{i_phase}"]
+        sns.lineplot(
+            ax=ax,
+            data=_df,
+            x="theta",
+            y="phase",
+            hue="w",
+            hue_norm=PiecewiseNorm(levels=_df["w"].values),
+            legend="full",
+            palette="Spectral",
+        )
+        ax.set_rlim([phase_min * 0.5, phase_max * 5.0])
+        ax.set_rscale("log")
+        ax.set_thetagrids(np.arange(0, 181, 45))
+        ax.set_thetamax(180)
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+        ax.legend(
+            loc="upper center",
+            ncol=3,
+            bbox_to_anchor=(0.5, 0.1),
+            title=f"{ds.w.long_name} [{ds.w.units}]",
+        )
+
+    if title:
+        fig.suptitle(title)
+
+    return fig, axs
