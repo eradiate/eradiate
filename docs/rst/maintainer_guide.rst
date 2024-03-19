@@ -332,12 +332,18 @@ branch of the PR.
 Preparing a  release
 --------------------
 
-1. Update the change log.
-2. Update the version and release date fields in `CITATION.cff`.
-3. Tag the target commit for release.
+1. Make sure all tests pass.
+2. Update the change log.
+3. Update the version and release date fields in `CITATION.cff`.
+4. Create a draft release on GitHub and update it.
+5. Using release candidates, make sure that built Pyhon wheels will work as
+   expected.
+6. Finalize release notes and create the release tag. **Make sure that the \
+   release commit is referenced only by one tag.**
+7. Build and upload Python wheels.
 
-Tagging a commit for release
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Tagging a commit for release manually
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Eradiate picks up its version number using the `setuptools-scm <https://github.com/pypa/setuptools_scm>`_
 package. Under the hood, it uses Git tags and the ``git describe`` command,
