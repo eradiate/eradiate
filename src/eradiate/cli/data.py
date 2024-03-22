@@ -154,7 +154,7 @@ def fetch(
                 )
         console.print(f"Reading file list from '{from_file}'")
         yaml = YAML()
-        file_list = yaml.load(from_file)
+        file_list = yaml.load(Path(from_file))
 
     for filename in file_list:
         try:
@@ -170,7 +170,7 @@ def fetch(
 def purge_cache(
     keep: Annotated[
         bool, typer.Option("--keep", "-k", help="Keep registered files.")
-    ] = False
+    ] = False,
 ):
     """
     Purge the cache of online data stores.
