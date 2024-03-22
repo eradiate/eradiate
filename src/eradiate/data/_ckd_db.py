@@ -101,7 +101,7 @@ class CKDAbsorptionDataBase:
                 magnitude, units
             )
 
-        # Populate bin bounds
+        # Populate spectral mesh (nodes) for both wavelength and wavenumber lookup mode
         self._chunks["wl"] = np.concatenate(
             (quantities["wl_min"], [quantities["wl_max"][-1]])
         )
@@ -136,6 +136,11 @@ class CKDAbsorptionDataBase:
 
         return cls(dirpath, index, metadata)
 
+    @classmethod
+    def from_codename(cls, name) -> CKDAbsorptionDataBase:
+        # Fetch all files using the datastore and build the database
+        raise NotImplementedError
+
     @lru_cache
     def load_dataset(self, path) -> xr.Dataset:
         print(f"Loading {path}")
@@ -144,15 +149,15 @@ class CKDAbsorptionDataBase:
     def lookup_filenames(self, /, **kwargs) -> list[str]:
         if len(kwargs) != 1:
             raise ValueError
-        mode, values = next(iter(kwargs.items()))
+        lookup_mode, values = next(iter(kwargs.items()))
         values = np.atleast_1d(values)
-        bins = self._chunks[mode]
-        out_bound = (values < bins.min()) | (values > bins.max())
+        chunks = self._chunks[lookup_mode]
+        out_bound = (values < chunks.min()) | (values > chunks.max())
         if np.any(out_bound):
-            # TODO: handle this error
-            raise RuntimeError
+            # TODO: handle this error better?
+            raise ValueError("out-of-bound spectral coordinate value")
 
-        indexes = np.digitize(values.m_as(bins.u), bins=bins.m) - 1
+        indexes = np.digitize(values.m_as(chunks.u), bins=chunks.m) - 1
         return list(self._index["filename"].iloc[indexes])
 
     def lookup_datasets(self, /, **kwargs) -> list[xr.Dataset]:

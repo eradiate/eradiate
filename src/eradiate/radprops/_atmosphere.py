@@ -1,6 +1,7 @@
 """
 Atmosphere's radiative profile.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -28,7 +29,7 @@ from ..validators import validate_absorption_data
 
 
 def _absorption_data_repr(
-    value: dict[tuple[pint.Quantity], xr.Dataset]
+    value: dict[tuple[pint.Quantity], xr.Dataset],
 ) -> dict[str, str]:
     def repr_k(value):
         """Representation for keys which are wavelength intervals."""
@@ -194,10 +195,7 @@ class AtmosphereRadProfile(RadProfile):
         ).to("dimensionless")
 
     def eval_albedo_ckd(
-        self,
-        w: pint.Quantity,
-        g: float,
-        zgrid: ZGrid,
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
     ) -> pint.Quantity:
         sigma_s = self.eval_sigma_s_ckd(w=w, g=g, zgrid=zgrid)
         sigma_t = self.eval_sigma_t_ckd(w=w, g=g, zgrid=zgrid)
@@ -223,10 +221,7 @@ class AtmosphereRadProfile(RadProfile):
             return np.zeros((w.size, zgrid.n_layers)).squeeze() / ureg.km
 
     def eval_sigma_a_ckd(
-        self,
-        w: pint.Quantity,
-        g: float,
-        zgrid: ZGrid,
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
     ) -> pint.Quantity:
         # NOTE: this method accepts 'w'-arrays and is vectorized as far as
         # each individual absorption dataset is concerned, namely when the
@@ -258,10 +253,7 @@ class AtmosphereRadProfile(RadProfile):
             return np.zeros((1, zgrid.n_layers)) / ureg.km
 
     def eval_sigma_s_ckd(
-        self,
-        w: pint.Quantity,
-        g: float,
-        zgrid: ZGrid,
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
     ) -> pint.Quantity:
         return self.eval_sigma_s_mono(w=w, zgrid=zgrid)
 
