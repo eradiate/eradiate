@@ -5,5 +5,5 @@
 # ***************************************************************
 
 $env:ERADIATE_SOURCE_DIR = Get-Location
-$env:PATH = $env:ERADIATE_SOURCE_DIR + "\ext\mitsuba\Release\build" + ";" + $env:PATH
+$env:PATH = $env:ERADIATE_SOURCE_DIR + "\ext\mitsuba\build\Release" + ";" + $env:PATH
 $env:PYTHONPATH = $env:ERADIATE_SOURCE_DIR + "\ext\mitsuba\build\Release\python" + ";" + $env:PYTHONPATH
