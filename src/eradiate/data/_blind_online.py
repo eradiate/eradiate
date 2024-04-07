@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import logging
 import os
 import shutil
+import time
 import typing as t
 from pathlib import Path
 
@@ -14,6 +16,8 @@ from ..attrs import documented, parse_docs
 from ..exceptions import DataError
 from ..typing import PathLike
 from ..util.misc import LoggingContext
+
+logger = logging.getLogger(__name__)
 
 
 @parse_docs
@@ -34,6 +38,13 @@ class BlindOnlineDataStore(DataStore):
         type="Path",
         init_type="path-like",
         doc="Path to the local cache location.",
+    )
+
+    attempts: int = documented(
+        attrs.field(default=3, converter=int),
+        type="int",
+        doc="Number of download attempts to make before giving up because of "
+        "connection errors.",
     )
 
     @property
@@ -88,30 +99,34 @@ class BlindOnlineDataStore(DataStore):
         """
 
         fname = Path(filename).as_posix()
+        url = self.base_url + fname
+        max_wait = 10
+        result = None
 
         with LoggingContext(
             pooch.get_logger(), level="WARNING"
         ):  # Silence pooch messages temporarily
-            url = self.base_url + fname
-            # Try first to get a compressed file
-            try:
-                return Path(
-                    pooch.retrieve(
-                        url + ".gz",
-                        known_hash=None,
-                        fname=fname + ".gz",
-                        path=self.path,
-                        processor=pooch.processors.Decompress(
-                            name=os.path.basename(fname)
-                        ),
+            for i in range(self.attempts):
+                # Try first to get a compressed file
+                try:
+                    result = Path(
+                        pooch.retrieve(
+                            url + ".gz",
+                            known_hash=None,
+                            fname=fname + ".gz",
+                            path=self.path,
+                            processor=pooch.processors.Decompress(
+                                name=os.path.basename(fname)
+                            ),
+                        )
                     )
-                )
-            except RequestException:
-                pass
+                    break
+                except RequestException:
+                    pass
 
                 # If no gzip-compressed file is available, try the actual file
                 try:
-                    return Path(
+                    result = Path(
                         pooch.retrieve(
                             url,
                             known_hash=None,
@@ -119,10 +134,27 @@ class BlindOnlineDataStore(DataStore):
                             path=self.path,
                         ),
                     )
-                except RequestException as e:
-                    raise DataError(
-                        f"file '{fname}' could not be retrieved from {self.base_url}"
-                    ) from e
+                    break
+                except RequestException:
+                    pass
+
+                # If we get here, it means download failed
+                retries_left = self.attempts - (i + 1)
+                logger.info(
+                    "Failed to download '%s'. "
+                    "Will attempt the download again %d more time%s.",
+                    fname,
+                    retries_left,
+                    "s" if retries_left > 1 else "",
+                )
+                time.sleep(min(i + 1, max_wait))
+
+        if result is None:
+            raise DataError(
+                f"file '{fname}' could not be retrieved from {self.base_url}"
+            )
+        else:
+            return result
 
     def purge(self, keep: None | str | list[str] = None) -> None:
         """
