@@ -33,6 +33,10 @@ class SafeOnlineDataStore(DataStore):
     registry_fname : path-like, optional
         Path to the registry file, relative to `path`.
 
+    attempts : int, default: 3
+        Number of download attempts to make before giving up because of
+        connection errors or a hash mismatch.
+
     Fields
     ------
     manager : pooch.Pooch
@@ -50,7 +54,11 @@ class SafeOnlineDataStore(DataStore):
     registry_fname: Path = attrs.field(converter=Path)
 
     def __init__(
-        self, base_url: str, path: PathLike, registry_fname: PathLike = "registry.txt"
+        self,
+        base_url: str,
+        path: PathLike,
+        registry_fname: PathLike = "registry.txt",
+        attempts: int = 3,
     ):
         # Initialize attributes
         if not base_url.endswith("/"):
@@ -61,6 +69,7 @@ class SafeOnlineDataStore(DataStore):
             base_url=base_url,
             path=path,
             registry=None,  # We'll load it later
+            retry_if_failed=attempts - 1,
         )
         self.__attrs_init__(manager=manager, registry_fname=registry_fname)
 
@@ -95,6 +104,10 @@ class SafeOnlineDataStore(DataStore):
     def registry(self) -> dict[str, str]:
         # Inherit docstring
         return self.manager.registry
+
+    @property
+    def retry_if_failed(self):
+        return self.manager.retry_if_failed
 
     def registry_files(
         self, filter: t.Callable[[t.Any], bool] | None = None
