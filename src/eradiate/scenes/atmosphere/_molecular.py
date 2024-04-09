@@ -176,8 +176,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             ),
         ),
         doc="Error handler configuration for absorption data interpolation. If "
-        "unset, the global configuration specified in the ``absorption_database_error_handling`` "
-        "section is used. ",
+        "unset, the global configuration specified in the "
+        "``absorption_database.error_handling`` section is used. ",
         type="ErrorHandlingConfiguration or None",
         init_type="ErrorHandlingConfiguration or dict, optional",
         default="None",
