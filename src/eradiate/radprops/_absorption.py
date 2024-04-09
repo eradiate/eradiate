@@ -87,7 +87,7 @@ def handle_error(error: InterpolationError, action: ErrorHandlingAction):
 
 
 ERROR_HANDLING_CONFIG_DEFAULT = ErrorHandlingConfiguration.convert(
-    config.settings.ABSORPTION_DATABASE_ERROR_HANDLING
+    config.settings.ABSORPTION_DATABASE.ERROR_HANDLING
 )
 
 # ------------------------------------------------------------------------------
@@ -318,7 +318,7 @@ class AbsorptionDatabase:
         return cls(dir_path, index, spectral_coverage, metadata=metadata, lazy=lazy)
 
     @staticmethod
-    def from_name(name: str, lazy=False) -> AbsorptionDatabase:
+    def from_name(name: str, **kwargs) -> AbsorptionDatabase:
         """
         Initialize a database from a name.
 
@@ -336,6 +336,7 @@ class AbsorptionDatabase:
         # Not great, but a.t.m it's the nicest we can do
         path = data_store.fetch(f"{db['path']}/metadata.json").parent
         cls = db["cls"]
+        kwargs = {**db.get("kwargs", {}), **kwargs}
 
         # If an operational mode is selected, we check if the user is instantiating
         # a DB type that is relevant to that mode
@@ -349,7 +350,18 @@ class AbsorptionDatabase:
                     "to consider loading a different database."
                 )
 
-        return cls.from_directory(path, lazy)
+        return cls.from_directory(path, **kwargs)
+
+    @classmethod
+    def from_dict(cls, value: dict):
+        """
+        Construct from a dictionary. The dictionary has a required entry ``"construct"``
+        that specifies the constructor that will be used to instantiate the
+        database. Additional entries are keyword arguments passed to the selected
+        constructor.
+        """
+
+        raise NotImplementedError
 
     @staticmethod
     def default() -> AbsorptionDatabase:
@@ -391,7 +403,7 @@ class AbsorptionDatabase:
             except ValueError:
                 pass
 
-        if isinstance(value, (str, Path)):
+        if isinstance(value, (str, Path, dict)):
             if eradiate.mode().is_mono:
                 cls = MonoAbsorptionDatabase
             elif eradiate.mode().is_ckd:
@@ -399,7 +411,11 @@ class AbsorptionDatabase:
             else:
                 raise UnsupportedModeError(supported=["mono", "ckd"])
 
-            return cls.from_directory(value)
+            if isinstance(value, (str, Path)):
+                return cls.from_directory(value)
+
+            if isinstance(value, dict):
+                return cls.from_dict(value)
 
         # Legacy behaviour
         if isinstance(value, (tuple, list)) and isinstance(value[0], str):
@@ -573,6 +589,13 @@ class AbsorptionDatabase:
 
 @attrs.define(repr=False, eq=False)
 class MonoAbsorptionDatabase(AbsorptionDatabase):
+    @classmethod
+    def from_dict(cls, value: dict) -> MonoAbsorptionDatabase:
+        # Inherit docstring
+        value = value.copy()
+        constructor = getattr(cls, value.pop("construct"))
+        return constructor(**value)
+
     def eval_sigma_a_mono(
         self,
         w: pint.Quantity,
@@ -607,6 +630,13 @@ class MonoAbsorptionDatabase(AbsorptionDatabase):
 
 @attrs.define(repr=False, eq=False)
 class CKDAbsorptionDatabase(AbsorptionDatabase):
+    @classmethod
+    def from_dict(cls, value: dict) -> CKDAbsorptionDatabase:
+        # Inherit docstring
+        value = value.copy()
+        constructor = getattr(cls, value.pop("construct"))
+        return constructor(**value)
+
     def eval_sigma_a_ckd(
         self,
         w: pint.Quantity,
@@ -662,10 +692,12 @@ KNOWN_DATABASES = {
     "gecko": {
         "cls": MonoAbsorptionDatabase,
         "path": "spectra/absorption/mono/gecko",
+        "kwargs": {"lazy": True},
     },
     "komodo": {
         "cls": MonoAbsorptionDatabase,
         "path": "spectra/absorption/mono/komodo",
+        "kwargs": {"lazy": True},
     },
     "monotropa": {
         "cls": CKDAbsorptionDatabase,
