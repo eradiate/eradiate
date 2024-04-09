@@ -293,7 +293,6 @@ def custom_step(app):
 
     generate_md_cli.generate()  # CLI reference
     generate_rst_plugins.generate()  # Plugins
-    generate_rst_api.generate_env_vars_docs()  # Environment variables
     generate_rst_api.generate_factory_docs()  # Factories
 
 
