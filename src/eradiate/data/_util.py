@@ -2,96 +2,34 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pandas as pd
-import pint
-
-import eradiate
-
-from ..exceptions import DataError
+from importlib_resources import files
+from ruamel.yaml import YAML
 
 
-def locate_absorption_data(
-    codename: str, mode: str, wavelength_range: pint.Quantity
-) -> list[Path]:
-    """
-    Locate absorption data for a given wavelength range.
+def get_file_list(spec: str):
+    yaml = YAML()
 
-    Returns
-    -------
-    list of pathlib.Path
-        List of paths to absorption datasets.
+    def load_file_list(path):
+        return yaml.load(path)
 
-    Raises
-    ------
-    ValueError
-        If no data is available for the requested wavelength range.
+    FILTER_RULES = {
+        "komodo": lambda x: x.startswith("spectra/absorption/mono/komodo"),
+        "gecko": lambda x: x.startswith("spectra/absorption/mono/gecko"),
+        "monotropa": lambda x: x.startswith("spectra/absorption/ckd/monotropa"),
+        "mycena": lambda x: x.startswith("spectra/absorption/ckd/mycena"),
+        "panellus": lambda x: x.startswith("spectra/absorption/ckd/panellus"),
+    }
 
-    Notes
-    -----
-    Determine from the spectral mode, dataset codename and wavelength range,
-    which absorption datasets are required to cover the requested wavelength
-    range. This is done by reading an index file from the remote data store.
-    Datasets that have not already been downloaded will be downloaded from the
-    remote data store.
-    """
-    base_path = f"spectra/absorption/{mode}/{codename}"
-    try:
-        index_path = eradiate.data.data_store.fetch(f"{base_path}/index.csv")
-        df = pd.read_csv(index_path)
+    if spec == "minimal":
+        return load_file_list(Path(files("eradiate") / "data/downloads_minimal.yml"))
 
-        # select all files whose associated wavelength range overlaps with the
-        # requested wavelength range
-        wl_min_units, wl_max_units = None, None
-        wl_min_column = None
-        wl_max_column = None
-        for c in df.columns:
-            if c.startswith("wl_min"):
-                wl_min_column = c
-                # units are enclosed in []
-                wl_min_units = c.split("[")[1].split("]")[0]
+    file_list_all = load_file_list(Path(files("eradiate") / "data/downloads_all.yml"))
 
-            if c.startswith("wl_max"):
-                wl_max_column = c
-                # units are enclosed in []
-                wl_max_units = c.split("[")[1].split("]")[0]
+    if spec == "all":
+        return file_list_all
 
-        if wl_min_units is None or wl_max_units is None:
-            raise DataError(
-                "index file must contain at least one column whose name starts "
-                "with 'wl_min' and one column whose name starts with 'wl_max'"
-            )
+    if spec in FILTER_RULES:
+        rule = FILTER_RULES[spec]
+        return [path for path in file_list_all if rule(path)]
 
-        requested_min = wavelength_range.min().m_as(wl_min_units)
-        requested_max = wavelength_range.max().m_as(wl_max_units)
-
-        data_wl_min = df[wl_min_column].min()
-        data_wl_max = df[wl_max_column].max()
-
-        if requested_min < data_wl_min or requested_max > data_wl_max:
-            raise ValueError(
-                f"requested wavelength range {wavelength_range} is outside "
-                f"the range of the available data ({data_wl_min} {wl_min_units}"
-                f" - {data_wl_max} {wl_max_units})"
-            )
-
-        filenames = (
-            df["filename"]
-            .where(
-                (df[wl_max_column] >= requested_min)
-                & (df[wl_min_column] <= requested_max)
-            )
-            .dropna()
-            .values.tolist()
-        )
-
-        if len(filenames) == 0:
-            raise ValueError(f"no files found for wavelength range {wavelength_range}")
-
-        return [
-            eradiate.data.data_store.fetch(f"{base_path}/{filename}")
-            for filename in filenames
-        ]
-
-    except DataError:
-        # assume no index file is required because there is only one file
-        return [eradiate.data.data_store.fetch(f"{base_path}/{codename}.nc")]
+    raise ValueError(f"unknown file list specification '{spec}'")
