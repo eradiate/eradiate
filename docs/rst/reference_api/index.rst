@@ -28,6 +28,7 @@ Alphabetical list of modules
 
    eradiate_core
    attrs
+   config
    constants
    contexts
    converters
@@ -58,6 +59,5 @@ Private modules
 .. toctree::
    :maxdepth: 1
 
-   config
    factory
    mode

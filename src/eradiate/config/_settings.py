@@ -14,7 +14,8 @@ class ProgressLevel(enum.IntEnum):
     """
     An enumeration defining valid progress levels.
 
-    This is an integer enumeration, meaning that levels can be compared.
+    This is an integer enumeration, meaning that levels can be compared to
+    numerics.
     """
 
     NONE = 0  #: No progress
@@ -32,6 +33,8 @@ def _default_download_dir():
 
 DEFAULTS = importlib_resources.files("eradiate.config").joinpath(f"{ENV}.toml")
 
+#: Main settings data structure. See the `Dynaconf documentation <https://www.dynaconf.com/>`_
+#: for details.
 settings = Dynaconf(
     settings_files=[DEFAULTS, "eradiate.toml"],
     env_prefix="ERADIATE",
