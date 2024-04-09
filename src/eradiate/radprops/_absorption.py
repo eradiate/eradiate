@@ -24,6 +24,7 @@ import eradiate
 
 from .. import config
 from .._mode import SpectralMode
+from ..attrs import documented, parse_docs
 from ..data import data_store
 from ..exceptions import InterpolationError, UnsupportedModeError
 from ..typing import PathLike
@@ -95,14 +96,19 @@ ERROR_HANDLING_CONFIG_DEFAULT = ErrorHandlingConfiguration.convert(
 # ------------------------------------------------------------------------------
 
 
+@parse_docs
 @attrs.define(repr=False, eq=False)
 class AbsorptionDatabase:
     """
     Common parent type for absorption coefficient databases.
     """
 
-    #: Path to database root directory.
-    _dir_path: Path = attrs.field(converter=lambda x: Path(x).absolute().resolve())
+    _dir_path: Path = documented(
+        attrs.field(converter=lambda x: Path(x).absolute().resolve()),
+        doc="Path to database root directory.",
+        type="pathlib.Path",
+        init_type="path-like",
+    )
 
     @_dir_path.validator
     def _dir_path_validator(self, attribute, value):
@@ -112,8 +118,11 @@ class AbsorptionDatabase:
                 "directory"
             )
 
-    #: File index, assumed sorted by ascending wavelengths.
-    _index: pd.DataFrame = attrs.field(repr=False)
+    _index: pd.DataFrame = documented(
+        attrs.field(repr=False),
+        doc="File index, assumed sorted by ascending wavelengths.",
+        type="Datadrame",
+    )
 
     @_index.validator
     def _index_validator(self, attribute, value):
@@ -127,23 +136,38 @@ class AbsorptionDatabase:
                 "ascending wavelength values"
             )
 
-    #: Dataframe containing that unrolls the spectral information contained in
-    #  all data files in the database.
-    _spectral_coverage: pd.DataFrame = attrs.field(repr=False)
+    _spectral_coverage: pd.DataFrame = documented(
+        attrs.field(repr=False),
+        doc="Dataframe containing that unrolls the spectral information contained in "
+        "all data files in the database.",
+        type="Dataframe",
+    )
 
-    #: Dictionary that contains the database metadata.
-    _metadata: dict = attrs.field(factory=dict, repr=False)
+    _metadata: dict = documented(
+        attrs.field(factory=dict, repr=False),
+        doc="Dictionary that contains the database metadata.",
+        type="dict",
+    )
 
-    #: Dictionary mapping spectral lookup mode keys ('wl' or 'wn') to arrays
-    #  containing the nodes of the spectral chunk mesh, which is used to perform
-    #  spectral coordinate-based file lookup.
-    _chunks: dict[str, np.ndarray] = attrs.field(factory=dict, repr=False, init=False)
+    _chunks: dict[str, np.ndarray] = documented(
+        attrs.field(factory=dict, repr=False, init=False),
+        doc="Dictionary mapping spectral lookup mode keys ('wl' or 'wn') to arrays "
+        "containing the nodes of the spectral chunk mesh, which is used to perform "
+        "spectral coordinate-based file lookup.",
+        type="dict[str, ndarray]",
+    )
 
-    #: Access mode switch: if True, load data lazily; else, load data eagerly.
-    lazy: bool = attrs.field(default=False, repr=False)
+    lazy: bool = documented(
+        attrs.field(default=False, repr=False),
+        doc="Access mode switch: if True, load data lazily; else, load data eagerly.",
+        type="bool",
+    )
 
-    #: Cache
-    _cache: LRUCache = attrs.field(factory=lambda: LRUCache(8), repr=False)
+    _cache: LRUCache = documented(
+        attrs.field(factory=lambda: LRUCache(8), repr=False),
+        doc="A mapping that implements an LRU caching policy.",
+        type="cachetools.LRUCache",
+    )
 
     def __attrs_post_init__(self):
         # Parse field names and units
@@ -353,12 +377,21 @@ class AbsorptionDatabase:
         return cls.from_directory(path, **kwargs)
 
     @classmethod
-    def from_dict(cls, value: dict):
+    def from_dict(cls, value: dict) -> AbsorptionDatabase:
         """
         Construct from a dictionary. The dictionary has a required entry ``"construct"``
         that specifies the constructor that will be used to instantiate the
         database. Additional entries are keyword arguments passed to the selected
         constructor.
+
+        Parameters
+        ----------
+        value : dict
+            Converted value.
+
+        Returns
+        -------
+        AbsorptionDatabase
         """
 
         raise NotImplementedError
@@ -385,16 +418,18 @@ class AbsorptionDatabase:
         Returns
         -------
         MonoAbsorptionDatabase or CKDAbsorptionDatabase
-            The returned type is consistent with active mode.
 
         Notes
         -----
         Conversion rules are as follows:
 
-        * If ``value`̀` is a string, try converting using the :meth:`.from_name`
+        * If ``value`` is a string, try converting using the :meth:`.from_name`
           constructor. Do not raise if this fails.
         * If ``value`` is a string or a path, try converting using the
-          :meth:`.from_directory` constructor.
+          :meth:`.from_directory` constructor. The returned type is consistent
+          with the active mode.
+        * If ``value`` is a dict, try converting using the :meth:`.from_dict`
+          constructor. The returned type is consistent with the active mode.
         * Otherwise, do not convert.
         """
         if isinstance(value, str):
@@ -433,12 +468,15 @@ class AbsorptionDatabase:
     @property
     def spectral_coverage(self) -> pd.DataFrame:
         """
-        Return spectral coverage table.
+        Returns
+        -------
+        DataFrame
+            Spectral coverage table.
         """
         return self._spectral_coverage
 
     @cachedmethod(lambda self: self._cache)
-    def load_dataset(self, fname: PathLike) -> xr.Dataset:
+    def load_dataset(self, fname: str) -> xr.Dataset:
         """
         Convenience method to load a dataset. This method is decorated with
         :func:`functools.lru_cache` with ``maxsize=1``, which limits the number
@@ -447,7 +485,16 @@ class AbsorptionDatabase:
         The behaviour of this method is also affected by the ``lazy`` parameter:
         if ``lazy`` is ``False``, files are loaded eagerly with
         :func:`xarray.load_dataset`; if ``lazy`` is ``True``, files are loaded
-        lazily with :func:`xarray.open_dataset`
+        lazily with :func:`xarray.open_dataset`.
+
+        Parameters
+        ----------
+        fname : str
+            Name of the file that is to be loaded.
+
+        Returns
+        -------
+        Dataset
         """
         path = self._dir_path / fname
 
@@ -458,14 +505,23 @@ class AbsorptionDatabase:
             logger.debug("Loading '%s'" % path)
             return xr.load_dataset(path)
 
-    def cache_clear(self):
+    def cache_clear(self) -> None:
+        """
+        Clear the cache.
+        """
         self._cache.clear()
 
-    def cache_close(self):
+    def cache_close(self) -> None:
+        """
+        Close all cached datasets.
+        """
         for value in self._cache.values():
             value.close()
 
-    def cache_reset(self, maxsize):
+    def cache_reset(self, maxsize: int) -> None:
+        """
+        Reset the cache with the specified maximum size.
+        """
         self._cache.clear()
         self._cache = LRUCache(maxsize=maxsize)
 
@@ -523,6 +579,10 @@ class AbsorptionDatabase:
         return list(self._index["filename"].iloc[indexes])
 
     def lookup_datasets(self, /, **kwargs) -> list[xr.Dataset]:
+        """
+        Perform a dataset lookup based on the requested spectral coordinate.
+        See :meth:`lookup_filenames` for the accepted arguments.
+        """
         filenames = self.lookup_filenames(**kwargs)
         return [self.load_dataset(filename) for filename in filenames]
 
@@ -532,6 +592,35 @@ class AbsorptionDatabase:
         thermoprops: xr.Dataset,
         error_handling_config: ErrorHandlingConfiguration | None = None,
     ) -> xr.DataArray:
+        """
+        Compute the absorption coefficient given spectral coordinates and a
+        thermophysical profile (mono variant).
+
+        Parameters
+        ----------
+        w : quantity
+            The wavelength for which the absorption coefficient is evaluated.
+
+        thermoprops : Dataset
+            The thermophysical profile for which the absorption coefficient is
+            evaluated.
+
+        error_handling_config : .ErrorHandlingConfiguration, optional
+            The error handling policy applied if corrdinates are missing, do not
+            have the appropriate dimension or are out of the dataset's bounds.
+            If unset, the default policy specified by the
+            ``absorption_dataset.error_handling`` setting is applied.
+
+        Returns
+        -------
+        DataArray
+            A data array containing the evaluated absorption coefficient as a
+            function of the spectral coordinate and altitude.
+
+        See Also
+        --------
+        :mod:`eradiate.config`
+        """
         raise NotImplementedError
 
     def eval_sigma_a_ckd(
@@ -541,6 +630,38 @@ class AbsorptionDatabase:
         thermoprops: xr.Dataset,
         error_handling_config: ErrorHandlingConfiguration | None = None,
     ) -> xr.DataArray:
+        """
+        Compute the absorption coefficient given spectral coordinates and a
+        thermophysical profile (CKD variant).
+
+        Parameters
+        ----------
+        w : quantity
+            The wavelength for which the absorption coefficient is evaluated.
+
+        g : float
+            The g-point for which the absorption coefficient is evaluated.
+
+        thermoprops : Dataset
+            The thermophysical profile for which the absorption coefficient is
+            evaluated.
+
+        error_handling_config : .ErrorHandlingConfiguration, optional
+            The error handling policy applied if corrdinates are missing, do not
+            have the appropriate dimension or are out of the dataset's bounds.
+            If unset, the default policy specified by the
+            ``absorption_dataset.error_handling`` setting is applied.
+
+        Returns
+        -------
+        DataArray
+            A data array containing the evaluated absorption coefficient as a
+            function of the spectral coordinate and altitude.
+
+        See Also
+        --------
+        :mod:`eradiate.config`
+        """
         raise NotImplementedError
 
     @staticmethod
@@ -602,6 +723,8 @@ class MonoAbsorptionDatabase(AbsorptionDatabase):
         thermoprops: xr.Dataset,
         error_handling_config: ErrorHandlingConfiguration | None = None,
     ) -> xr.DataArray:
+        # Inherit docstring
+
         if error_handling_config is None:
             error_handling_config = ERROR_HANDLING_CONFIG_DEFAULT
 
@@ -644,6 +767,8 @@ class CKDAbsorptionDatabase(AbsorptionDatabase):
         thermoprops: xr.Dataset,
         error_handling_config: ErrorHandlingConfiguration | None = None,
     ) -> xr.DataArray:
+        # Inherit docstring
+
         # TODO: Implement new bounds error handling policy. This policy is as
         #  follows:
         #  * Interpolation is done for an altitude range such that the pressure
