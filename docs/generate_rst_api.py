@@ -33,32 +33,6 @@ def write_if_modified(filename, content):
             f.write(content)
 
 
-# def generate_env_vars_docs():
-#     outdir = Path(__file__).parent.absolute() / "rst/reference_api/generated/env_vars"
-#     print(f"Generating environment variable docs in '{outdir}'")
-#
-#     content = "\n".join(
-#         [
-#             HEADER,
-#             "",
-#             dedent(
-#                 """
-#                 .. _sec-config-env_vars:
-#
-#                 Environment variables
-#                 ---------------------
-#                 """
-#             ),
-#             EradiateConfig.generate_help(
-#                 formatter=format_help_dicts_rst, display_defaults=True
-#             ),
-#             "",
-#         ]
-#     )
-#
-#     write_if_modified(outdir / "env_vars.rst", content)
-
-
 # List of (module, variable) pairs
 FACTORIES = [
     ("eradiate.radprops", "rad_profile_factory"),
