@@ -9,7 +9,10 @@ from eradiate.units import unit_registry as ureg
 
 @pytest.mark.regression
 def test_rpv_afgl1986_continental_brfpp(
-    mode_ckd_double, artefact_dir, session_timestamp, error_handler_config
+    mode_ckd_double,
+    artefact_dir,
+    session_timestamp,
+    absorption_database_error_handler_config,
 ):
     r"""
     RPV AFGL1986 Aerosol regression test
@@ -69,7 +72,7 @@ def test_rpv_afgl1986_continental_brfpp(
                     "additional_molecules": False,
                 },
                 "absorption_data": "monotropa",
-                "error_handler_config": error_handler_config,
+                "error_handler_config": absorption_database_error_handler_config,
             },
             "particle_layers": {
                 "type": "particle_layer",

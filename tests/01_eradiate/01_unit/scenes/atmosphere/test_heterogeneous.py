@@ -25,7 +25,9 @@ def test_heterogeneous_empty(modes_all_double):
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
 @pytest.mark.parametrize("component", ["molecular", "particle"])
-def test_heterogeneous_single_mono(mode_mono, geometry, component, us_standard_mono):
+def test_heterogeneous_single_mono(
+    mode_mono, geometry, component, atmosphere_us_standard_mono
+):
     """
     Unit tests for a HeterogeneousAtmosphere with a single component.
     """
@@ -33,7 +35,7 @@ def test_heterogeneous_single_mono(mode_mono, geometry, component, us_standard_m
     if component == "molecular":
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry,
-            molecular_atmosphere=us_standard_mono,
+            molecular_atmosphere=atmosphere_us_standard_mono,
         )
         si = atmosphere.spectral_set().spectral_indices().__next__()
         kernel_context = KernelContext(si=si)
@@ -52,14 +54,16 @@ def test_heterogeneous_single_mono(mode_mono, geometry, component, us_standard_m
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
 @pytest.mark.parametrize("component", ["molecular", "particle"])
-def test_heterogeneous_single_ckd(mode_ckd, geometry, component, us_standard_ckd):
+def test_heterogeneous_single_ckd(
+    mode_ckd, geometry, component, atmosphere_us_standard_ckd
+):
     """
     Unit tests for a HeterogeneousAtmosphere with a single component.
     """
     # Construct succeeds
     if component == "molecular":
         atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, molecular_atmosphere=us_standard_ckd
+            geometry=geometry, molecular_atmosphere=atmosphere_us_standard_ckd
         )
 
     else:
@@ -80,14 +84,14 @@ def test_heterogeneous_single_ckd(mode_ckd, geometry, component, us_standard_ckd
 
 @pytest.mark.slow
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
-def test_heterogeneous_multi_mono(mode_mono, geometry, us_standard_mono):
+def test_heterogeneous_multi_mono(mode_mono, geometry, atmosphere_us_standard_mono):
     """
     Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
     """
     # Construct succeeds
     atmosphere = HeterogeneousAtmosphere(
         geometry=geometry,
-        molecular_atmosphere=us_standard_mono,
+        molecular_atmosphere=atmosphere_us_standard_mono,
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
 
@@ -102,14 +106,14 @@ def test_heterogeneous_multi_mono(mode_mono, geometry, us_standard_mono):
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
-def test_heterogeneous_multi_ckd(mode_ckd, geometry, us_standard_ckd):
+def test_heterogeneous_multi_ckd(mode_ckd, geometry, atmosphere_us_standard_ckd):
     """
     Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
     """
     # Construct succeeds
     atmosphere = HeterogeneousAtmosphere(
         geometry={"type": geometry, "zgrid": np.linspace(0, 120, 121) * ureg.km},
-        molecular_atmosphere=us_standard_ckd,
+        molecular_atmosphere=atmosphere_us_standard_ckd,
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
 
@@ -187,7 +191,9 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
         )
 
 
-def test_heterogeneous_mix_weights(modes_all_double, us_standard_mono, us_standard_ckd):
+def test_heterogeneous_mix_weights(
+    modes_all_double, atmosphere_us_standard_mono, atmosphere_us_standard_ckd
+):
     """
     Check that component weights are correctly computed.
     """
@@ -205,7 +211,9 @@ def test_heterogeneous_mix_weights(modes_all_double, us_standard_mono, us_standa
     mixed = HeterogeneousAtmosphere(
         geometry=geometry,
         molecular_atmosphere=(
-            us_standard_ckd if eradiate.mode().is_ckd else us_standard_mono
+            atmosphere_us_standard_ckd
+            if eradiate.mode().is_ckd
+            else atmosphere_us_standard_mono
         ),
         particle_layers=ParticleLayer(
             bottom=0.0 * ureg.km,
@@ -289,10 +297,10 @@ def test_heterogeneous_mix_weights(modes_all_double, us_standard_mono, us_standa
 
 
 @pytest.mark.slow
-def test_heterogeneous_scale(mode_mono, us_standard_mono):
+def test_heterogeneous_scale(mode_mono, atmosphere_us_standard_mono):
     atmosphere = HeterogeneousAtmosphere(
         geometry="plane_parallel",
-        molecular_atmosphere=us_standard_mono,
+        molecular_atmosphere=atmosphere_us_standard_mono,
         particle_layers=[ParticleLayer() for _ in range(2)],
         scale=2.0,
     )
@@ -312,11 +320,11 @@ def test_heterogeneous_scale(mode_mono, us_standard_mono):
 
 def test_heterogeneous_blend_switches(
     mode_mono,
-    us_standard_mono,
+    atmosphere_us_standard_mono,
 ):
     # Rayleigh-only atmosphere + particle layer combination works
     assert HeterogeneousAtmosphere(
-        molecular_atmosphere=us_standard_mono,
+        molecular_atmosphere=atmosphere_us_standard_mono,
         particle_layers=[ParticleLayer()],
     )
 
@@ -326,7 +334,7 @@ def test_heterogeneous_blend_switches(
     ["absorbing_only", "scattering_only"],
 )
 def test_heterogeneous_absorbing_mol_atm(
-    mode_ckd, particle_radprops, request, us_standard_ckd
+    mode_ckd, particle_radprops, request, atmosphere_us_standard_ckd
 ):
     """
     Phase function weights are correct when the molecular atmosphere is
@@ -342,7 +350,7 @@ def test_heterogeneous_absorbing_mol_atm(
         dataset=request.getfixturevalue(particle_radprops),
     )
     atmosphere = HeterogeneousAtmosphere(
-        molecular_atmosphere=us_standard_ckd,
+        molecular_atmosphere=atmosphere_us_standard_ckd,
         particle_layers=particle_layer,
         geometry={
             "type": "spherical_shell",  # arbitrary
