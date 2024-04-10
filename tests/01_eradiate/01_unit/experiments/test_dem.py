@@ -50,12 +50,12 @@ def test_dem_experiment_construct_normalize_measures(mode_mono):
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
 
-def test_dem_experiment_ckd(mode_ckd, us_standard_ckd):
+def test_dem_experiment_ckd(mode_ckd, atmosphere_us_standard_ckd):
     """
     DEMExperiment with heterogeneous atmosphere in CKD mode can be created.
     """
     exp = DEMExperiment(
-        atmosphere=us_standard_ckd,
+        atmosphere=atmosphere_us_standard_ckd,
         surface={"type": "lambertian"},
         measures={"type": "distant", "id": "distant_measure"},
     )
@@ -92,13 +92,13 @@ def test_dem_experiment_kernel_dict(modes_all_double):
 
 
 @pytest.mark.slow
-def test_dem_experiment_real_life(mode_mono, us_standard_mono):
+def test_dem_experiment_real_life(mode_mono, atmosphere_us_standard_mono):
     # Construct with typical parameters
     exp = DEMExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": us_standard_mono,
+            "molecular_atmosphere": atmosphere_us_standard_mono,
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
@@ -118,7 +118,7 @@ def test_dem_experiment_real_life(mode_mono, us_standard_mono):
 
 def test_dem_experiment_inconsistent_multiradiancemeter(
     mode_mono,
-    us_standard_mono,
+    atmosphere_us_standard_mono,
 ):
     # A MultiRadiancemeter measure must have all origins inside the atmosphere or none.
     # A mix of both will raise an error.
@@ -128,7 +128,7 @@ def test_dem_experiment_inconsistent_multiradiancemeter(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": us_standard_mono,
+            "molecular_atmosphere": atmosphere_us_standard_mono,
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
