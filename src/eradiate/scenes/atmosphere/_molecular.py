@@ -88,13 +88,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             converter=AbsorptionDatabase.convert,
             validator=attrs.validators.instance_of(AbsorptionDatabase),
         ),
-        doc="Absorption coefficient data. "
-        "If a file path, the absorption coefficient is loaded from the "
-        "specified file (must be a NetCDF file). "
-        "If a tuple, the first element is the dataset codename and the"
-        "second is the desired working wavelength range.",
-        type="dict[tuple[quantity, quantity], Dataset]",
-        init_type="Dataset or list of Dataset or str or path-like or tuple[str, quantity]",
+        doc="Absorption coefficient data. The passed value is pre-processed by "
+        ":meth:`.AbsorptionDatabase.convert`.",
+        type="AbsorptionDatabase",
+        init_type="str or path-like or dict or .AbsorptionDatabase",
+        default=":meth:`AbsorptionDatabase.default() <.AbsorptionDatabase.default>`",
     )
 
     _thermoprops: xr.Dataset = documented(
@@ -178,9 +176,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         doc="Error handler configuration for absorption data interpolation. If "
         "unset, the global configuration specified in the "
         "``absorption_database.error_handling`` section is used. ",
-        type="ErrorHandlingConfiguration or None",
-        init_type="ErrorHandlingConfiguration or dict, optional",
-        default="None",
+        type=".ErrorHandlingConfiguration or None",
+        init_type="dict or .ErrorHandlingConfiguration, optional",
     )
 
     def update(self) -> None:

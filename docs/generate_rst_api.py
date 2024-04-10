@@ -97,4 +97,3 @@ def generate_factory_docs():
 
 if __name__ == "__main__":
     generate_factory_docs()
-    # generate_env_vars_docs()
