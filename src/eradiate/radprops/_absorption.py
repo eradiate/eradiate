@@ -101,6 +101,54 @@ ERROR_HANDLING_CONFIG_DEFAULT = ErrorHandlingConfiguration.convert(
 class AbsorptionDatabase:
     """
     Common parent type for absorption coefficient databases.
+
+    This class implements most of the data indexing logic common to all
+    absorption coefficient databases.
+    A database is composed of a set of NetCDF files compliant with the
+    absorption coefficient database format specification and placed in the
+    same directory. A database instance is initialized by specifying the path
+    to the directory where the files are stored.
+
+    If it exists, a ``metadata.json`` file is loaded into the :attr:`metadata`
+    attribute.
+
+    Databases are usually not initialized using the constructor, but rather
+    using the class method constructors :meth:`from_directory`,
+    :meth:`from_name` and :meth:`from_dict`.
+
+    Notes
+    -----
+    A file index, stored as the :attr:`_index` private attribute, associates
+    to each file the spectral region it covers. The index is preferably loaded
+    from a CSV file that contains all this information; if it is not found, the
+    table is built upon database initialization and saved to the database
+    directory. The indexing step requires to access all files and may take a
+    while. The file index table is used during queries to select efficiently the
+    file where data will be read. For convenience, information about bounds
+    contained in the index is assembled into a spectral mesh suitable for
+    query using :func:`numpy.digitize` and stored in the :attr:`_chunks`
+    dictionary.
+
+    A spectral coverage table, stored as the :attr:`_spectral_coverage` private
+    attribute, merges the spectral coordinates of all files into a consistent
+    index. This table is used to provide spectral coverage information to
+    higher-level components that drive the simulation. Table contents are
+    preferably loaded from a CSV file; if it is not found, the table is build
+    upon database initialization and saved to the database directory. This
+    indexing step also requires to access all files and may take a while.
+
+    Database access and memory usage can be controlled through two parameters:
+
+    * File queries are stored in an LRU cache. The initial size is set to a low
+      value (8) and should be appropriate for most situations. If more cache
+      control is needed, the :meth:`cache_clear`,  :meth:`cache_close` and
+      :meth:`cache_reset` methods can be used.
+    * Datasets can be open with an eager or lazy approach. This behaviour is
+      controlled using the ``lazy`` constructor parameter. In eager mode, the
+      entire file used for a query is loaded into memory. This can bring
+      significant access overhead when using large files. If desired, datasets
+      can instead be open lazily, triggering disk access only for the specific
+      data that are used.
     """
 
     _dir_path: Path = documented(
@@ -121,7 +169,7 @@ class AbsorptionDatabase:
     _index: pd.DataFrame = documented(
         attrs.field(repr=False),
         doc="File index, assumed sorted by ascending wavelengths.",
-        type="Datadrame",
+        type="DataFrame",
     )
 
     @_index.validator
@@ -140,7 +188,7 @@ class AbsorptionDatabase:
         attrs.field(repr=False),
         doc="Dataframe containing that unrolls the spectral information contained in "
         "all data files in the database.",
-        type="Dataframe",
+        type="DataFrame",
     )
 
     _metadata: dict = documented(
@@ -312,6 +360,10 @@ class AbsorptionDatabase:
         ----------
         dir_path : path-like
             Path where the CKD database is located.
+
+        Returns
+        -------
+        AbsorptionDatabase
         """
         dir_path = Path(dir_path).resolve()
 
@@ -350,6 +402,10 @@ class AbsorptionDatabase:
         ----------
         name : path-like
             Name of the requested CKD database.
+
+        Returns
+        -------
+        AbsorptionDatabase
         """
 
         try:
@@ -398,6 +454,18 @@ class AbsorptionDatabase:
 
     @staticmethod
     def default() -> AbsorptionDatabase:
+        """
+        Return a default database, depending on the active mode.
+
+        Defaults are as follows:
+
+        * Monochromatic: ``"komodo"``
+        * CKD: ``"monotropa"``
+
+        Returns
+        -------
+        AbsorptionDatabase
+        """
         if eradiate.mode().is_mono:
             return AbsorptionDatabase.from_name("komodo")
         elif eradiate.mode().is_ckd:
@@ -464,6 +532,26 @@ class AbsorptionDatabase:
             return AbsorptionDatabase.from_name(value[0])
 
         return value
+
+    @property
+    def dir_path(self) -> Path:
+        """
+        Returns
+        -------
+        Path
+            Database root path.
+        """
+        return self._dir_path
+
+    @property
+    def metadata(self) -> dict:
+        """
+        Returns
+        -------
+        dict
+            Database metadata.
+        """
+        return self._metadata
 
     @property
     def spectral_coverage(self) -> pd.DataFrame:
@@ -710,6 +798,14 @@ class AbsorptionDatabase:
 
 @attrs.define(repr=False, eq=False)
 class MonoAbsorptionDatabase(AbsorptionDatabase):
+    """
+    Absorption coefficient database (monochromatic variant).
+
+    See Also
+    --------
+    AbsorptionDatabase
+    """
+
     @classmethod
     def from_dict(cls, value: dict) -> MonoAbsorptionDatabase:
         # Inherit docstring
@@ -753,6 +849,14 @@ class MonoAbsorptionDatabase(AbsorptionDatabase):
 
 @attrs.define(repr=False, eq=False)
 class CKDAbsorptionDatabase(AbsorptionDatabase):
+    """
+    Absorption coefficient database (CKD variant).
+
+    See Also
+    --------
+    AbsorptionDatabase
+    """
+
     @classmethod
     def from_dict(cls, value: dict) -> CKDAbsorptionDatabase:
         # Inherit docstring
