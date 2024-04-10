@@ -53,13 +53,14 @@ def main():
     message("\n".join([f"• {variant}" for variant in mi.variants()]))
 
     section("Configuration")
-    for var in sorted(x.name for x in eradiate.config.__attrs_attrs__):
+    for var in ["SOURCE_DIR", "ENV"]:
         value = getattr(eradiate.config, var)
-        if var == "progress":
-            var_repr = f"{str(value)} ({value.value})"
-        else:
-            var_repr = str(value)
+        var_repr = str(value)
         message(f"• ERADIATE_{var.upper()}: {var_repr}")
+
+    message("• Loaded setting files:")
+    for fname in eradiate.config.settings._loaded_files:
+        message(f"  • {fname}")
 
 
 __doc__ = main.__doc__
