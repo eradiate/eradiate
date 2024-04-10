@@ -5,12 +5,6 @@
 
 .. py:currentmodule:: eradiate
 
-Configuration
--------------
-
-.. autodata:: config
-   :annotation:
-
 Mode management
 ---------------
 

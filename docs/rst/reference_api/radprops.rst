@@ -27,3 +27,4 @@
    AbsorptionDatabase
    MonoAbsorptionDatabase
    CKDAbsorptionDatabase
+   ErrorHandlingConfiguration
