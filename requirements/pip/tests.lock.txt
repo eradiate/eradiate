@@ -10,9 +10,10 @@ attrs==23.2.0
     # via
     #   -r requirements/pip/main.in
     #   dessinemoi
-    #   environ-config
     #   joseki
     #   pinttrs
+cachetools==5.3.3
+    # via -r requirements/pip/main.in
 certifi==2024.2.2
     # via
     #   netcdf4
@@ -27,21 +28,21 @@ click==8.1.7
     #   joseki
     #   typer
     #   ussa1976
-contourpy==1.2.0
+contourpy==1.2.1
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
 dessinemoi==24.1.0
     # via -r requirements/pip/main.in
-environ-config==23.2.0
+dynaconf==3.2.5
     # via -r requirements/pip/main.in
 exceptiongroup==1.2.0
     # via pytest
-fonttools==4.49.0
+fonttools==4.51.0
     # via matplotlib
 idna==3.6
     # via requests
-importlib-resources==6.1.3
+importlib-resources==6.4.0
     # via
     #   -r requirements/pip/main.in
     #   joseki
@@ -52,11 +53,11 @@ joseki==2.6.1
     # via -r requirements/pip/main.in
 kiwisolver==1.4.5
     # via matplotlib
-lazy-loader==0.3
+lazy-loader==0.4
     # via -r requirements/pip/main.in
 markdown-it-py==3.0.0
     # via rich
-matplotlib==3.8.3
+matplotlib==3.8.4
     # via -r requirements/pip/main.in
 mdurl==0.1.2
     # via markdown-it-py
@@ -80,8 +81,9 @@ numpy==1.26.4
     #   sf-hamilton
     #   ussa1976
     #   xarray
-packaging==23.2
+packaging==24.0
     # via
+    #   lazy-loader
     #   matplotlib
     #   pooch
     #   pytest
@@ -91,7 +93,7 @@ pandas==2.2.1
     #   joseki
     #   sf-hamilton
     #   xarray
-pillow==10.2.0
+pillow==10.3.0
     # via matplotlib
 pint==0.23
     # via
@@ -110,7 +112,7 @@ pygments==2.17.2
     # via rich
 pyparsing==3.1.2
     # via matplotlib
-pytest==8.0.2
+pytest==8.1.1
     # via
     #   -r requirements/pip/tests.in
     #   pytest-json-report
@@ -128,29 +130,33 @@ pytz==2024.1
 requests==2.31.0
     # via pooch
 rich==13.7.1
-    # via -r requirements/pip/main.in
+    # via
+    #   -r requirements/pip/main.in
+    #   typer
 ruamel-yaml==0.18.6
     # via -r requirements/pip/main.in
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.12.0
+scipy==1.13.0
     # via
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-sf-hamilton==1.52.0
+sf-hamilton==1.57.0
     # via -r requirements/pip/main.in
 shellingham==1.5.4
-    # via -r requirements/pip/main.in
+    # via
+    #   -r requirements/pip/main.in
+    #   typer
 six==1.16.0
     # via python-dateutil
 tomli==2.0.1
     # via pytest
 tqdm==4.66.2
     # via -r requirements/pip/main.in
-typer==0.9.0
+typer==0.12.3
     # via -r requirements/pip/main.in
-typing-extensions==4.10.0
+typing-extensions==4.11.0
     # via
     #   pint
     #   sf-hamilton
@@ -164,10 +170,10 @@ urllib3==2.2.1
     # via requests
 ussa1976==0.3.4
     # via joseki
-xarray==2024.2.0
+xarray==2024.3.0
     # via
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-zipp==3.17.0
+zipp==3.18.1
     # via importlib-resources
