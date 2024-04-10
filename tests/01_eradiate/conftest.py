@@ -72,7 +72,7 @@ def ert_seed_state():
 
 
 @pytest.fixture
-def error_handler_config():
+def absorption_database_error_handler_config():
     """Error handler configuration for absorption coefficient interpolation.
 
     Notes
@@ -104,7 +104,9 @@ def thermoprops_us_standard():
 
 
 @pytest.fixture
-def us_standard_mono(thermoprops_us_standard, error_handler_config):
+def atmosphere_us_standard_mono(
+    thermoprops_us_standard, absorption_database_error_handler_config
+):
     """
     AFGL (1986) U.S. Standard atmosphere with monochromatic absorption data.
 
@@ -118,22 +120,24 @@ def us_standard_mono(thermoprops_us_standard, error_handler_config):
         "type": "molecular",
         "thermoprops": thermoprops_us_standard,
         "absorption_data": "komodo",
-        "error_handler_config": error_handler_config,
+        "error_handler_config": absorption_database_error_handler_config,
     }
 
 
 @pytest.fixture
-def us_standard_ckd(thermoprops_us_standard, error_handler_config):
+def atmosphere_us_standard_ckd(
+    thermoprops_us_standard, absorption_database_error_handler_config
+):
     return {
         "type": "molecular",
         "thermoprops": thermoprops_us_standard,
         "absorption_data": "monotropa",
-        "error_handler_config": error_handler_config,
+        "error_handler_config": absorption_database_error_handler_config,
     }
 
 
 @pytest.fixture
-def cams_lybia4_ckd_550nm(error_handler_config):
+def atmosphere_cams_lybia4_ckd(absorption_database_error_handler_config):
     """
     CAMS Lybia4 atmosphere with CKD absorption data.
 
@@ -153,5 +157,5 @@ def cams_lybia4_ckd_550nm(error_handler_config):
         "type": "molecular",
         "thermoprops": thermoprops,
         "absorption_data": "monotropa",
-        "error_handler_config": error_handler_config,
+        "error_handler_config": absorption_database_error_handler_config,
     }
