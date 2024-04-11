@@ -5,7 +5,7 @@ dependencies:
   constraints:
     - optional
   packages:
-    - "eradiate-mitsuba==0.2.0"
+    - "eradiate-mitsuba==0.2.1"
 
 main:
   packages:
@@ -83,4 +83,4 @@ optional:
   includes:
     - dev
   packages:
-    - "eradiate-mitsuba==0.2.0"
+    - "eradiate-mitsuba==0.2.1"
