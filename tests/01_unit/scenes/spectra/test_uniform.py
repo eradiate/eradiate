@@ -6,7 +6,6 @@ from pinttr.exceptions import UnitsError
 
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
-from eradiate.scenes.core import traverse
 from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory
 from eradiate.test_tools.types import check_scene_element
 from eradiate.units import PhysicalQuantity
