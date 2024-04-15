@@ -6,7 +6,6 @@ import eradiate.test_tools.regression as tt
 
 
 def test_instantiate():
-
     # instantiate the test with reasonable defaults
     assert tt.RMSETest(
         name="rmse",

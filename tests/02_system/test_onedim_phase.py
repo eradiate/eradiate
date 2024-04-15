@@ -1,4 +1,5 @@
 """Test cases targeting the phase function component of a 1D experiment."""
+
 import os
 
 import matplotlib.pyplot as plt

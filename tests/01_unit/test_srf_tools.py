@@ -1,4 +1,5 @@
 """Test cases for the srf_filter module."""
+
 import datetime
 
 import numpy as np

@@ -331,7 +331,7 @@ def test_heterogeneous_blend_switches(
 
 @pytest.mark.parametrize(
     "particle_radprops",
-    ["absorbing_only", "scattering_only"],
+    ["particle_dataset_absorbing_only", "particle_dataset_scattering_only"],
 )
 def test_heterogeneous_absorbing_mol_atm(
     mode_ckd, particle_radprops, request, atmosphere_us_standard_ckd
@@ -341,13 +341,13 @@ def test_heterogeneous_absorbing_mol_atm(
     absorbing-only and the particle layer is either absorbing-only or
     scattering-only.
     """
+    # Expand fixture
+    _particle_radprops = request.getfixturevalue(particle_radprops)
     # Create the heterogeneous atmosphere
     pl_bottom = 1.0 * ureg.km  # arbitrary
     pl_top = 4.0 * ureg.km  # arbitrary
     particle_layer = ParticleLayer(
-        bottom=pl_bottom,
-        top=pl_top,
-        dataset=request.getfixturevalue(particle_radprops),
+        bottom=pl_bottom, top=pl_top, dataset=_particle_radprops
     )
     atmosphere = HeterogeneousAtmosphere(
         molecular_atmosphere=atmosphere_us_standard_ckd,
@@ -373,9 +373,9 @@ def test_heterogeneous_absorbing_mol_atm(
     # Within the particle layer, the phase function weight should be:
     #   - zero, if the particle layer is not scattering (i.e., absorbing-only)
     #   - larger than zero, if the particle layer is scattering
-    if particle_radprops == "absorbing_only":
+    if particle_radprops == "particle_dataset_absorbing_only":
         assert np.all(weights[inside_particle_layer] == 0.0)
-    elif particle_radprops == "scattering_only":
+    elif particle_radprops == "particle_dataset_scattering_only":
         assert np.all(weights[inside_particle_layer] > 0.0)
     else:
         raise ValueError(
