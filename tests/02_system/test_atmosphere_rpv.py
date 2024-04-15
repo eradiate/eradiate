@@ -630,7 +630,9 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
     "atmosphere", [None, "homogeneous"], ids=["none", "homogeneous"]
 )
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
-def test_rpv_vs_lambertian(ert_seed_state, mode_mono, atmosphere, reflectance, artefact_dir, request):
+def test_rpv_vs_lambertian(
+    ert_seed_state, mode_mono, atmosphere, reflectance, artefact_dir, request
+):
     r"""
     RPV(:math:`\rho, g=0, k=1, rho_c=1`) equivalent to Lambertian(:math:`\rho`)
     ===========================================================================

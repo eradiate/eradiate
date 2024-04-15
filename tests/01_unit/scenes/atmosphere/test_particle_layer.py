@@ -37,7 +37,9 @@ def test_particle_layer_kernel_dict(mode_mono, geometry):
 
 
 @pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
-def test_particle_layer_eval_mono_absorbing_only(mode_mono, absorbing_only, w):
+def test_particle_layer_eval_mono_absorbing_only(
+    mode_mono, particle_dataset_absorbing_only, w
+):
     """eval methods return expected values for an absorbing-only layer."""
     bottom = 0.0 * ureg.km
     top = 1.0 * ureg.km
@@ -47,7 +49,7 @@ def test_particle_layer_eval_mono_absorbing_only(mode_mono, absorbing_only, w):
             "ground_altitude": bottom,
             "toa_altitude": top,
         },
-        dataset=absorbing_only,
+        dataset=particle_dataset_absorbing_only,
         bottom=bottom,
         top=top,
     )
@@ -61,7 +63,9 @@ def test_particle_layer_eval_mono_absorbing_only(mode_mono, absorbing_only, w):
 
 
 @pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
-def test_particle_layer_eval_mono_scattering_only(mode_mono, scattering_only, w):
+def test_particle_layer_eval_mono_scattering_only(
+    mode_mono, particle_dataset_scattering_only, w
+):
     """eval methods return expected values for a scattering-only layer."""
     bottom = 0.0 * ureg.km
     top = 1.0 * ureg.km
@@ -71,7 +75,7 @@ def test_particle_layer_eval_mono_scattering_only(mode_mono, scattering_only, w)
             "ground_altitude": bottom,
             "toa_altitude": top,
         },
-        dataset=scattering_only,
+        dataset=particle_dataset_scattering_only,
         bottom=bottom,
         top=top,
     )
@@ -85,7 +89,7 @@ def test_particle_layer_eval_mono_scattering_only(mode_mono, scattering_only, w)
 
 
 @pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
-def test_particle_layer_eval_mono(mode_mono, test_particles_dataset, w):
+def test_particle_layer_eval_mono(mode_mono, particle_dataset_test, w):
     """
     eval_* methods return expected values for a scattering and absorbing layer.
     """
@@ -97,7 +101,7 @@ def test_particle_layer_eval_mono(mode_mono, test_particles_dataset, w):
             "ground_altitude": bottom,
             "toa_altitude": top,
         },
-        dataset=test_particles_dataset,
+        dataset=particle_dataset_test,
         tau_ref=1.0,
         bottom=bottom,
         top=top,
@@ -113,7 +117,9 @@ def test_particle_layer_eval_mono(mode_mono, test_particles_dataset, w):
 
 
 @pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
-def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, absorbing_only, w):
+def test_particle_layer_eval_ckd_absorbing_only(
+    mode_ckd, particle_dataset_absorbing_only, w
+):
     """eval methods return expected values for an absorbing-only layer."""
     bottom = 0.0 * ureg.km
     top = 1.0 * ureg.km
@@ -123,7 +129,7 @@ def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, absorbing_only, w):
             "ground_altitude": bottom,
             "toa_altitude": top,
         },
-        dataset=absorbing_only,
+        dataset=particle_dataset_absorbing_only,
         bottom=bottom,
         top=top,
     )
@@ -137,7 +143,9 @@ def test_particle_layer_eval_ckd_absorbing_only(mode_ckd, absorbing_only, w):
 
 
 @pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
-def test_particle_layer_eval_ckd_scattering_only(mode_ckd, scattering_only, w):
+def test_particle_layer_eval_ckd_scattering_only(
+    mode_ckd, particle_dataset_scattering_only, w
+):
     """eval methods return expected values for a scattering-only layer."""
     bottom = 0.0 * ureg.km
     top = 1.0 * ureg.km
@@ -147,7 +155,7 @@ def test_particle_layer_eval_ckd_scattering_only(mode_ckd, scattering_only, w):
             "ground_altitude": bottom,
             "toa_altitude": top,
         },
-        dataset=scattering_only,
+        dataset=particle_dataset_scattering_only,
         bottom=bottom,
         top=top,
     )
@@ -161,7 +169,7 @@ def test_particle_layer_eval_ckd_scattering_only(mode_ckd, scattering_only, w):
 
 
 @pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
-def test_particle_layer_eval_ckd(mode_ckd, test_particles_dataset, w):
+def test_particle_layer_eval_ckd(mode_ckd, particle_dataset_test, w):
     """eval methods return expected values for a scattering-only layer."""
     bottom = 0.0 * ureg.km
     top = 1.0 * ureg.km
@@ -171,7 +179,7 @@ def test_particle_layer_eval_ckd(mode_ckd, test_particles_dataset, w):
             "ground_altitude": bottom,
             "toa_altitude": top,
         },
-        dataset=test_particles_dataset,
+        dataset=particle_dataset_test,
         tau_ref=1.0,
         bottom=bottom,
         top=top,
