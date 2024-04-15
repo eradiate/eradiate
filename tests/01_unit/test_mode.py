@@ -1,4 +1,5 @@
 """Root module testing."""
+
 import pytest
 
 import eradiate

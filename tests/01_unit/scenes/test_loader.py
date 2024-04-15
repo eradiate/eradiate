@@ -7,8 +7,6 @@ import eradiate
 from eradiate.experiments import CanopyExperiment
 from eradiate.scenes.biosphere import load_scenario
 from eradiate.scenes.biosphere._canopy_loader import apply_transformation
-from eradiate.units import unit_registry as ureg
-
 from eradiate.scenes.biosphere._rami_scenarios import (
     RAMIActualCanopies,
     RAMIHeterogeneousAbstractCanopies,
@@ -16,6 +14,7 @@ from eradiate.scenes.biosphere._rami_scenarios import (
     RAMIScenarioVersion,
     generate_name,
 )
+from eradiate.units import unit_registry as ureg
 
 eradiate.set_mode("mono")
 

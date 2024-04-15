@@ -39,7 +39,7 @@ def test_rtls(modes_all_double):
         },
         h=0.2,
         r=0.1,
-        b=0.97
+        b=0.97,
     )
 
     check_scene_element(bsdf, mi.BSDF)
