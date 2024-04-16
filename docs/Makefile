@@ -12,7 +12,7 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help serve html-plot rst-api rst-plugins clean clean_generated Makefile
+.PHONY: help serve html-plot rst-api rst-data rst-plugins clean clean_generated Makefile
 
 serve:
 	sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
@@ -25,6 +25,9 @@ html-plot:
 rst-api:
 	python generate_rst_api.py
 
+rst-data:
+	python generate_rst_data.py
+
 rst-plugins:
 	python generate_rst_plugins.py
 
@@ -35,6 +38,7 @@ clean: clean_generated
 	rm -rf _build/*
 
 clean_generated:
+	rm -rf rst/data/generated/*
 	rm -rf rst/reference_api/generated/*
 	rm -rf rst/reference_plugins/generated/*
 	rm -rf examples/generated/*
