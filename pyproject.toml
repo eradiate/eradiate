@@ -36,15 +36,13 @@ filterwarnings = [
 testpaths = "tests"
 
 [tool.ruff]
-ignore = ["E501", "F821"]
-select = ["I", "F", "E"]
 src = ["src", "tests"]
 
-[tool.ruff.isort]
-relative-imports-order = "closest-to-furthest"
-
-[tool.ruff.lint.per-file-ignores]
-"*.ipynb" = ["E402"]
+[tool.ruff.lint]
+ignore = ["E501", "F821"]
+isort = {relative-imports-order = "closest-to-furthest"}
+per-file-ignores = {"*.ipynb" = ["E402"]}
+select = ["I", "F", "E"]
 
 [tool.setuptools]
 include-package-data = true  # Required because of package data
