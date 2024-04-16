@@ -153,6 +153,7 @@ docs-linkcheck:
 
 docs-rst:
 	make -C docs rst-api
+	make -C docs rst-data
 	make -C docs rst-plugins
 	make -C docs md-cli
 
