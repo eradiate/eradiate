@@ -291,11 +291,13 @@ def custom_step(app):
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     import generate_md_cli
     import generate_rst_api
+    import generate_rst_data
     import generate_rst_plugins
 
     generate_md_cli.generate()  # CLI reference
     generate_rst_plugins.generate()  # Plugins
     generate_rst_api.generate_factory_docs()  # Factories
+    generate_rst_data.generate_particle_radprops_summary()  # Summary
 
 
 def setup(app):

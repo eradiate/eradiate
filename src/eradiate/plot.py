@@ -231,7 +231,7 @@ def dashboard_particle_dataset(
             ["sigma_t", "sigma_t"],
             ["albedo", "albedo"],
         ]
-        + [[f"phase_{i *2}", f"phase_{i*2+1}"] for i in range(nrows_phase)],
+        + [[f"phase_{i * 2}", f"phase_{i * 2 + 1}"] for i in range(nrows_phase)],
         height_ratios=height_ratios,
         figsize=(4 * ncols, 4 * sum(height_ratios)),
         subplot_kw={"projection": "polar"},
@@ -265,12 +265,22 @@ def dashboard_particle_dataset(
         ax.set_thetamax(180)
         ax.set_xlabel("")
         ax.set_ylabel("")
-        ax.legend(
+
+        # Deal with legend entries
+        lgd = ax.legend(
             loc="upper center",
             ncol=3,
             bbox_to_anchor=(0.5, 0.1),
             title=f"{ds.w.long_name} [{ds.w.units}]",
         )
+        new_labels = [f"{w:.3g}" for w in np.unique(_df["w"].values)]
+        for i, _ in enumerate(lgd.get_texts()):
+            lgd.get_texts()[i].set_text(new_labels[i])
+
+    # Clear empty axes
+    for i in range(i_phase + 1, nrows_phase * 2):
+        ax = axs[f"phase_{i}"]
+        ax.remove()
 
     if title:
         fig.suptitle(title)
