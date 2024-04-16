@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = [
     "symbol",
     "to_quantity",
+    "units_compatible",
     "unit_context_config",
     "unit_context_kernel",
     "unit_registry",
