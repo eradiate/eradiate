@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import warnings
-
 import attrs
 import mitsuba as mi
 import numpy as np
@@ -25,11 +23,6 @@ class BufferMeshShape(ShapeInstance):
 
     This shape represents a triangulated mesh directly defined by lists of vertex
     positions and faces.
-
-    Notes
-    -----
-    * The `buffermesh` class does not support the `to_world` parameter. Mesh vertices
-      must be transformed manually. The Eradiate documentation contains a tutorial.
     """
 
     vertices: pint.Quantity = documented(
@@ -65,15 +58,6 @@ class BufferMeshShape(ShapeInstance):
                 f"while validating {attribute.name}, must be an array of shape "
                 f"(n, 3), got {value.shape}"
             )
-
-    def __attrs_post_init__(self):
-        if self.to_world is not None:
-            warnings.warn(
-                "A BufferMeshShape instance has its to_world field set: It will be ignored. "
-                "For information on how to transform mesh vertices, see the Eradiate documentation."
-            )
-
-        self.update()
 
     def bbox(self) -> BoundingBox:
         # Inherit docstring

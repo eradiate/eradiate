@@ -3,11 +3,9 @@ from __future__ import annotations
 from abc import ABC
 
 import attrs
-import mitsuba as mi
 
 from ..bsdfs import BSDF, bsdf_factory
 from ..core import BoundingBox, InstanceSceneElement, NodeSceneElement, Ref
-from ... import converters
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 
@@ -63,27 +61,6 @@ class Shape:
         type="BSDF or Ref or None",
         init_type="BSDF or Ref or dict, optional",
     )
-
-    to_world: "mitsuba.ScalarTransform4f" = documented(
-        attrs.field(
-            converter=converters.to_mi_scalar_transform,
-            default=None,
-        ),
-        doc="Transform to scale, shift and rotate the shape. ",
-        type="mitsuba.ScalarTransform4f or None",
-        init_type="mitsuba.ScalarTransform4f or array-like, optional",
-        default=None,
-    )
-
-    @to_world.validator
-    def to_world_validator(self, attribute, value):
-        if value is not None:
-            if not isinstance(value, mi.ScalarTransform4f):
-                raise TypeError(
-                    f"while validating '{attribute.name}': "
-                    f"'{attribute.name}' must be a mitsuba.ScalarTransform4f; "
-                    f"found: {type(value)}",
-                )
 
     def __attrs_post_init__(self):
         self.update()

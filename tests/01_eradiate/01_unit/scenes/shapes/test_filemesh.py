@@ -57,17 +57,3 @@ def test_filemesh_kernel_dict(modes_all_double, file_type, tempfile, request):
 def test_construct_file_illegal(modes_all_double):
     with pytest.raises(ValueError, match="mesh files only in PLY or OBJ format"):
         FileMeshShape(filename="path/to/file.wrong")
-
-
-@pytest.mark.parametrize(
-    "file_type, tempfile",
-    [
-        ("ply", "tempfile_ply"),
-        ("obj", "tempfile_obj"),
-    ],
-    ids=["ply", "obj"],
-)
-def test_construct_filemesh_trafo(mode_mono, file_type, tempfile, request):
-    assert FileMeshShape(
-        filename=request.getfixturevalue(tempfile), to_world=mi.Transform4f.scale(3)
-    )

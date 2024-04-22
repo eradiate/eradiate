@@ -45,12 +45,6 @@ class RectangleShape(ShapeNode):
     This shape represents a rectangle parametrized by the length of its edges,
     the coordinates of its central point, a normal vector and an orientation
     vector.
-
-    Notes
-    -----
-    * If the `to_world` parameter is set, it will override the other parameters.
-      In that case, the transformation will be applied to a rectangle that covers the
-      [-1, -1, 0] to [1, 1, 0] area, with a normal pointing towards [0, 0, 1].
     """
 
     edges: pint.Quantity = documented(
@@ -110,18 +104,14 @@ class RectangleShape(ShapeNode):
         # Inherit docstring
         length_units = uck.get("length")
         scale = self.edges.m_as(length_units) * 0.5
-        if self.to_world is not None:
-            trafo = self.to_world
-        else:
-            trafo = mi.ScalarTransform4f.look_at(
+        result = {
+            "type": "rectangle",
+            "to_world": mi.ScalarTransform4f.look_at(
                 origin=self.center.m_as(length_units),
                 target=self.center.m_as(length_units) + self.normal,
                 up=self.up,
-            ) @ mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0])
-
-        result = {
-            "type": "rectangle",
-            "to_world": trafo,
+            )
+            @ mi.ScalarTransform4f.scale([scale[0], scale[1], 1.0]),
         }
 
         return result
