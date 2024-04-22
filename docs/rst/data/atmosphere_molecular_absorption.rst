@@ -1,30 +1,13 @@
-.. _sec-user_guide-data-absorption:
+.. _sec-data-molecular_absorption:
 
-Absorption data
-===============
+Atmosphere: Molecular absorption
+================================
 
-Absorption datasets tabulate the volume absorption coefficient of a gas mixture
-against spectral index, mixture's components' volume fraction, air pressure
-and air temperature.
-
-For monochromatic absorption datasets, the spectral index consists
-of a radiation wavelength or radiation wavenumber coordinate.
-
-For CKD absorption datasets, the spectral index consists of two coordinates:
-
-* the center of the spectral band (in wavelength or wavenumber space)
-* the absorption coefficient cumulative probability, or :math:`g`-point.
-
-Data access
------------
-
-Distributed absorption datasets are available from the
-`Eradiate store <http://eradiate.eu/data/store/>`_.
-
-.. note::
-
-   You can also plug in your own datasets, provided they comply with the
-   below specifications.
+Molecular absorption datasets tabulate the volume absorption coefficient of a
+gas mixture against the spectral coordinates, the volume fraction of the mixture
+components, air pressure and air temperature.
+Eradiate's built-in molecular absorption datasets are managed by the data store
+(see :ref:`sec-data-intro` for details).
 
 Specifications
 --------------
@@ -58,9 +41,9 @@ one optional data variable:
 
 at least five :term:`dimension coordinates <dimension coordinate>`:
 
-* ``w`` : radiation wavelength or radiation wavenumber of the band center,
-* ``wbv`` : band wavelength bounds,
-* ``g`` : quadrature :math:`g`-point,
+* ``w`` : radiation wavelength or radiation wavenumber of the band center
+* ``wbv`` : band wavelength bounds
+* ``g`` : quadrature :math:`g`-point / absorption coefficient cumulative probability
 * ``x_M`` (where ``M`` is the molecule formula, e.g. ``x_H2O``, ``x_CO2``): gas
   mixture mole fractions (1 to :math:`N_M` coordinates where :math:`N_M` is the
   number of molecules in the mixture),

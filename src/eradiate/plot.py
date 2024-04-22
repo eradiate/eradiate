@@ -214,8 +214,9 @@ def dashboard_particle_dataset(
     df = ds.phase.isel(i=0, j=0, drop=True).to_dataframe()[["phase"]]
     df = df.sort_values(["w", "mu"]).reset_index()
     df["theta"] = np.arccos(df["mu"])
-    phase_min = ds.phase.min()
-    phase_max = ds.phase.max()
+    phase_min = df["phase"].min()
+    phase_max = df["phase"].max()
+    print(f"{phase_min = }, {phase_max = }")
 
     w_chunks = [
         (chunk.min(), chunk.max())
@@ -267,11 +268,20 @@ def dashboard_particle_dataset(
         ax.set_ylabel("")
 
         # Deal with legend entries
+        lgd_title = "wavelength"  # default value, overridden by metadata if any
+        for field in ["long_name", "standard_name"]:
+            if field in ds.w.attrs:
+                lgd_title = field
+                break
+
+        if "units" in ds.w.attrs:
+            lgd_title += f" [{ds.w.units}]"
+
         lgd = ax.legend(
             loc="upper center",
             ncol=3,
             bbox_to_anchor=(0.5, 0.1),
-            title=f"{ds.w.long_name} [{ds.w.units}]",
+            title=lgd_title,
         )
         new_labels = [f"{w:.3g}" for w in np.unique(_df["w"].values)]
         for i, _ in enumerate(lgd.get_texts()):

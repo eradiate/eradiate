@@ -35,6 +35,12 @@ Python and C++17. It relies on a radiometric kernel based on the
 
       A practical introduction to Eradiate.
 
+   .. grid-item-card:: :fas:`database` Data guide
+      :link: sec-data-intro
+      :link-type: ref
+
+      Information about data formats and shipped datasets.
+
    .. grid-item-card:: :fas:`file-code` Reference
       :link: sec-reference_api
       :link-type: ref
@@ -68,7 +74,12 @@ Python and C++17. It relies on a radiometric kernel based on the
    :titlesonly:
    :caption: Data
 
+   rst/data/intro
    Aerosols / particles <rst/data/generated/aerosols_particles.rst>
+   rst/data/atmosphere_thermoprops
+   rst/data/atmosphere_molecular_absorption
+   Solar irradiance <rst/data/solar_irradiance.rst>
+   rst/data/srf
 
 .. toctree::
    :maxdepth: 3
