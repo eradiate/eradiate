@@ -8,9 +8,7 @@ from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.regression
-def test_rpv_afgl1986_brfpp(
-    mode_ckd_double, artefact_dir, session_timestamp, error_handler_config
-):
+def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp):
     r"""
     RPV AFGL1986 regression test
     ====================================
@@ -66,8 +64,18 @@ def test_rpv_afgl1986_brfpp(
                     "z": np.linspace(0, 120, 61) * ureg.km,
                     "additional_molecules": False,
                 },
-                "absorption_data": "monotropa",
-                "error_handler_config": error_handler_config,
+                "absorption_data": (
+                    "spectra/absorption/ckd/monotropa/monotropa-18100_18200.nc"
+                ),
+                "error_handler_config": {
+                    "x": {
+                        "missing": "ignore",
+                        "scalar": "ignore",
+                        "bounds": "raise",
+                    },
+                    "p": {"bounds": "ignore"},
+                    "t": {"bounds": "ignore"},
+                },
             },
         },
     )

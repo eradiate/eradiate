@@ -6,7 +6,10 @@ from eradiate import unit_registry as ureg
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
 def test_heterogeneous_parameter_lookup(
-    modes_all_double, geometry, us_standard_mono, us_standard_ckd
+    modes_all_double,
+    geometry,
+    us_standard_mono,
+    us_standard_ckd_550nm,
 ):
     """
     Kernel parameter lookup
@@ -42,7 +45,7 @@ def test_heterogeneous_parameter_lookup(
     atmosphere_mono = us_standard_mono
     atmosphere_mono.update({"has_scattering": False})
 
-    atmosphere_ckd = us_standard_ckd
+    atmosphere_ckd = us_standard_ckd_550nm
     atmosphere_ckd.update({"has_scattering": False})
 
     exp = eradiate.experiments.AtmosphereExperiment(

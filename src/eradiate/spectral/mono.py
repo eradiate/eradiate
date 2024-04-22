@@ -13,7 +13,6 @@ from .index import MonoSpectralIndex
 from .spectral_set import SpectralSet
 from ..attrs import documented, parse_docs
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
-from ..radprops import MonoAbsorptionDatabase
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -26,6 +25,16 @@ logger = logging.getLogger(__name__)
 class WavelengthSet(SpectralSet):
     """
     A data class representing a wavelength set used in monochromatic modes.
+
+    See Also
+    --------
+    :class:`~.BinSet`
+
+    Notes
+    -----
+    This is class is a simple container for an array of wavelengths at which
+    a monochromatic experiment is to be performed.
+    Its design is inspired by :class:`~.BinSet`.
     """
 
     wavelengths: pint.Quantity = documented(
@@ -44,22 +53,30 @@ class WavelengthSet(SpectralSet):
             yield MonoSpectralIndex(w=w)
 
     @classmethod
-    def from_absorption_database(cls, abs_db: MonoAbsorptionDatabase) -> WavelengthSet:
+    def from_absorption_dataset(cls, dataset: xr.Dataset) -> WavelengthSet:
         """
         Create a wavelength set from an absorption dataset.
 
         Parameters
         ----------
-        abs_db : .MonoAbsorptionDatabase
+        dataset : Dataset
             Absorption dataset.
 
         Returns
         -------
-        .WavelengthSet
+        :class:`.WavelengthSet`
+            Generated wavelength set.
         """
-        wavelengths = (
-            np.sort(abs_db.spectral_coverage.index.get_level_values(1).values) * ureg.nm
-        )
+        # we dont know if the absorption dataset 'w' variable holds
+        # wavelengths or wavenumbers, so we check the units
+        w = to_quantity(dataset.w)
+        if w.check("[length]^-1"):
+            wavelengths = np.sort(1 / w).to(
+                "nm"
+            )  # ordered wavenumbers are reversed in wavelength-space
+        elif w.check("[length]"):
+            wavelengths = w
+
         return cls(wavelengths=wavelengths)
 
     @classmethod

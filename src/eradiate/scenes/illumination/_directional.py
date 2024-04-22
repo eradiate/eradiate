@@ -10,8 +10,8 @@ import pinttr
 from ._core import Illumination
 from ..core import NodeSceneElement
 from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
+from ..._config import config
 from ...attrs import documented, parse_docs
-from ...config import settings
 from ...frame import AzimuthConvention, angles_to_direction
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -57,11 +57,9 @@ class DirectionalIllumination(Illumination):
     azimuth_convention: AzimuthConvention = documented(
         attrs.field(
             default=None,
-            converter=lambda x: (
-                settings.azimuth_convention
-                if x is None
-                else (AzimuthConvention[x.upper()] if isinstance(x, str) else x)
-            ),
+            converter=lambda x: config.azimuth_convention
+            if x is None
+            else (AzimuthConvention[x.upper()] if isinstance(x, str) else x),
             validator=attrs.validators.instance_of(AzimuthConvention),
         ),
         doc="Azimuth convention. If ``None``, the global default configuration "

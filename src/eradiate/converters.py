@@ -2,6 +2,7 @@ from __future__ import annotations
 
 __all__ = [
     "auto_or",
+    "convert_absorption_data",
     "convert_thermoprops",
     "on_quantity",
     "to_dataset",
@@ -9,20 +10,26 @@ __all__ = [
 
 import os
 import typing as t
+from pathlib import Path
 
 import mitsuba as mi
 import numpy as np
 import pint
 import xarray as xr
 
+import eradiate
+
 from . import data
 from .attrs import AUTO
 from .data import data_store
+from .data._util import locate_absorption_data
+from .exceptions import UnsupportedModeError
 from .typing import PathLike
+from .units import to_quantity
 
 
 def on_quantity(
-    wrapped_converter: t.Callable[[t.Any], t.Any],
+    wrapped_converter: t.Callable[[t.Any], t.Any]
 ) -> t.Callable[[t.Any], t.Any]:
     """
     Apply a converter to the magnitude of a :class:`pint.Quantity`.
@@ -48,7 +55,7 @@ def on_quantity(
 
 
 def auto_or(
-    wrapped_converter: t.Callable[[t.Any], t.Any],
+    wrapped_converter: t.Callable[[t.Any], t.Any]
 ) -> t.Callable[[t.Any], t.Any]:
     """
     A converter that allows an attribute to be set to :data:`.AUTO`.
@@ -196,3 +203,87 @@ def _is_quantity(x):
 
 def _isinstance_of_2tuple_quantity(x):
     return isinstance(x, tuple) and list(map(_is_quantity, x)) == [True, True]
+
+
+def convert_absorption_data(
+    value,
+) -> dict[tuple[pint.Quantity, pint.Quantity], xr.Dataset]:
+    """Converter for atmosphere absorption coefficient data."""
+
+    # Import must be local to avoid circular imports
+    from .radprops.absorption import wrange
+
+    # dict: verify that keys are 2-tuple[pint.Quantity] and values are xarray.Dataset
+    if isinstance(value, dict):
+        if all(map(_isinstance_of_2tuple_quantity, value.keys())) and all(
+            map(lambda x: isinstance(x, xr.Dataset), value.values())
+        ):
+            return value
+        else:
+            raise ValueError(
+                "All keys must be 2-tuple of pint.Quantity and all values must "
+                "be xarray.Dataset"
+            )
+
+    # tuple: specifications for absorption data on the online stable data store
+    elif isinstance(value, tuple):
+        codename = value[0]
+        wavelength_range = value[1]
+
+        if isinstance(wavelength_range, xr.Dataset):
+            srf = wavelength_range
+            w = to_quantity(srf.w)
+            wavelength_range = w[:: w.size - 1]
+
+        if eradiate.mode().is_mono:
+            mode = "mono"
+        elif eradiate.mode().is_ckd:
+            mode = "ckd"
+        else:
+            raise UnsupportedModeError
+        paths = locate_absorption_data(
+            codename=codename,
+            mode=mode,
+            wavelength_range=wavelength_range,
+        )
+        datasets = [xr.load_dataset(path) for path in paths]
+
+        # Sort entries by ascending lower bound
+        entries = [(wrange(ds), ds) for ds in datasets]
+        entries.sort(key=lambda x: x[0][0])
+
+        return dict(entries)
+
+    # Dataset: compute wavelength range
+    elif isinstance(value, xr.Dataset):
+        return {wrange(value): value}
+
+    # List[Dataset]: compute wavelength ranges
+    elif isinstance(value, list) and all(isinstance(v, xr.Dataset) for v in value):
+        return {wrange(ds): ds for ds in value}
+
+    # Pathlike: try and load the file(s)
+    elif isinstance(value, (os.PathLike, str)):
+        if str(value).endswith(".nc"):  # single file
+            path = data_store.fetch(value)
+            ds = xr.open_dataset(path)
+            return {wrange(ds): ds}
+
+        else:  # assume 'value' is a local directory
+            path = Path(value)
+            if path.exists() and path.is_dir():
+                files = list(path.glob("*.nc"))
+                datasets = [xr.open_dataset(file) for file in files]
+                return {wrange(ds): ds for ds in datasets}
+            else:
+                raise ValueError(
+                    f"invalid path for 'absorption_data': {path} "
+                    f"(expected a netCDF file or a directory)"
+                )
+
+    # Anything else: raise error
+    else:
+        raise TypeError(
+            f"invalid type for 'absorption_data': {type(value)} "
+            f"(expected dict or Dataset or list of Dataset or str or PathLike)"
+        )

@@ -50,12 +50,12 @@ def test_dem_experiment_construct_normalize_measures(mode_mono):
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
 
-def test_dem_experiment_ckd(mode_ckd, us_standard_ckd):
+def test_dem_experiment_ckd(mode_ckd, us_standard_ckd_550nm):
     """
     DEMExperiment with heterogeneous atmosphere in CKD mode can be created.
     """
     exp = DEMExperiment(
-        atmosphere=us_standard_ckd,
+        atmosphere=us_standard_ckd_550nm,
         surface={"type": "lambertian"},
         measures={"type": "distant", "id": "distant_measure"},
     )

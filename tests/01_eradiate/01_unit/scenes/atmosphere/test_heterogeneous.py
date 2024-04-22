@@ -13,7 +13,7 @@ from eradiate.scenes.atmosphere import (
 )
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import SceneGeometry
-from eradiate.spectral.index import CKDSpectralIndex, SpectralIndex
+from eradiate.spectral.index import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
 
 
@@ -52,20 +52,27 @@ def test_heterogeneous_single_mono(mode_mono, geometry, component, us_standard_m
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
 @pytest.mark.parametrize("component", ["molecular", "particle"])
-def test_heterogeneous_single_ckd(mode_ckd, geometry, component, us_standard_ckd):
+def test_heterogeneous_single_ckd(
+    mode_ckd,
+    geometry,
+    component,
+    us_standard_ckd_550nm,
+):
     """
     Unit tests for a HeterogeneousAtmosphere with a single component.
     """
     # Construct succeeds
     if component == "molecular":
         atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, molecular_atmosphere=us_standard_ckd
+            geometry=geometry,
+            molecular_atmosphere=us_standard_ckd_550nm,
         )
 
     else:
         component = ParticleLayer()
         atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, particle_layers=[component]
+            geometry=geometry,
+            particle_layers=[component],
         )
 
     # The scene element produces valid kernel dictionary specifications
@@ -102,18 +109,22 @@ def test_heterogeneous_multi_mono(mode_mono, geometry, us_standard_mono):
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
-def test_heterogeneous_multi_ckd(mode_ckd, geometry, us_standard_ckd):
+def test_heterogeneous_multi_ckd(
+    mode_ckd,
+    geometry,
+    us_standard_ckd_550nm,
+):
     """
     Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
     """
     # Construct succeeds
     atmosphere = HeterogeneousAtmosphere(
         geometry={"type": geometry, "zgrid": np.linspace(0, 120, 121) * ureg.km},
-        molecular_atmosphere=us_standard_ckd,
+        molecular_atmosphere=us_standard_ckd_550nm,
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
 
-    si = CKDSpectralIndex(w=550.0 * ureg.nm, g=0.5)
+    si = list(atmosphere.spectral_set().spectral_indices())[0]
     kernel_context = KernelContext(si=si)
 
     # The scene element produces valid kernel dictionary specifications
@@ -187,7 +198,11 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
         )
 
 
-def test_heterogeneous_mix_weights(modes_all_double, us_standard_mono, us_standard_ckd):
+def test_heterogeneous_mix_weights(
+    modes_all_double,
+    us_standard_ckd_550nm,
+    us_standard_mono,
+):
     """
     Check that component weights are correctly computed.
     """
@@ -205,7 +220,7 @@ def test_heterogeneous_mix_weights(modes_all_double, us_standard_mono, us_standa
     mixed = HeterogeneousAtmosphere(
         geometry=geometry,
         molecular_atmosphere=(
-            us_standard_ckd if eradiate.mode().is_ckd else us_standard_mono
+            us_standard_ckd_550nm if eradiate.mode().is_ckd else us_standard_mono
         ),
         particle_layers=ParticleLayer(
             bottom=0.0 * ureg.km,
@@ -326,7 +341,10 @@ def test_heterogeneous_blend_switches(
     ["absorbing_only", "scattering_only"],
 )
 def test_heterogeneous_absorbing_mol_atm(
-    mode_ckd, particle_radprops, request, us_standard_ckd
+    mode_ckd,
+    particle_radprops,
+    request,
+    us_standard_ckd_550nm,
 ):
     """
     Phase function weights are correct when the molecular atmosphere is
@@ -342,7 +360,7 @@ def test_heterogeneous_absorbing_mol_atm(
         dataset=request.getfixturevalue(particle_radprops),
     )
     atmosphere = HeterogeneousAtmosphere(
-        molecular_atmosphere=us_standard_ckd,
+        molecular_atmosphere=us_standard_ckd_550nm,
         particle_layers=particle_layer,
         geometry={
             "type": "spherical_shell",  # arbitrary

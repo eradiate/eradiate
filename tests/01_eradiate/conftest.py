@@ -1,4 +1,3 @@
-import joseki
 import numpy as np
 import pytest
 
@@ -71,6 +70,18 @@ def ert_seed_state():
     return SeedState(0)
 
 
+def _error_handler_config():
+    return {
+        "x": {
+            "missing": "ignore",
+            "scalar": "ignore",
+            "bounds": "raise",
+        },
+        "p": {"bounds": "ignore"},
+        "t": {"bounds": "ignore"},
+    }
+
+
 @pytest.fixture
 def error_handler_config():
     """Error handler configuration for absorption coefficient interpolation.
@@ -87,24 +98,11 @@ def error_handler_config():
     The bounds error for the 'x' (mole fraction) coordinate is considered
     fatal.
     """
-    return {
-        "p": {"missing": "raise", "scalar": "raise", "bounds": "ignore"},
-        "t": {"missing": "raise", "scalar": "raise", "bounds": "ignore"},
-        "x": {"missing": "ignore", "scalar": "ignore", "bounds": "raise"},
-    }
-
-
-@pytest.fixture(scope="session")
-def thermoprops_us_standard():
-    yield joseki.make(
-        identifier="afgl_1986-us_standard",
-        z=np.linspace(0.0, 120.0, 121) * ureg.km,
-        additional_molecules=False,
-    )
+    return _error_handler_config()
 
 
 @pytest.fixture
-def us_standard_mono(thermoprops_us_standard, error_handler_config):
+def us_standard_mono():
     """
     AFGL (1986) U.S. Standard atmosphere with monochromatic absorption data.
 
@@ -116,24 +114,43 @@ def us_standard_mono(thermoprops_us_standard, error_handler_config):
     """
     return {
         "type": "molecular",
-        "thermoprops": thermoprops_us_standard,
-        "absorption_data": "komodo",
-        "error_handler_config": error_handler_config,
+        "thermoprops": {
+            "identifier": "afgl_1986-us_standard",
+            "z": np.linspace(0.0, 120.0, 121) * ureg.km,
+            "additional_molecules": False,
+        },
+        "absorption_data": ("komodo", [549.5, 550.5] * ureg.nm),
+        "error_handler_config": _error_handler_config(),
     }
 
 
 @pytest.fixture
-def us_standard_ckd(thermoprops_us_standard, error_handler_config):
+def us_standard_ckd_550nm():
+    """
+    AFGL (1986) U.S. Standard atmosphere with CKD absorption data.
+
+    Notes
+    -----
+    Molecules included are H2O, CO2, O3, N2O, CO, CH4, O2.
+    Specified absorption data covers the CKD band associated with wavenumber
+    interval [18100, 18200] cm^-1, i.e. the wavelenght range
+    [549.45, 552.48] nm.
+    Altitude grid is regular with a 1 km step, from 0 to 120 km.
+    """
     return {
         "type": "molecular",
-        "thermoprops": thermoprops_us_standard,
-        "absorption_data": "monotropa",
-        "error_handler_config": error_handler_config,
+        "thermoprops": {
+            "identifier": "afgl_1986-us_standard",
+            "z": np.linspace(0.0, 120.0, 121) * ureg.km,
+            "additional_molecules": False,
+        },
+        "absorption_data": ("monotropa", [549.5, 550.5] * ureg.nm),
+        "error_handler_config": _error_handler_config(),
     }
 
 
 @pytest.fixture
-def cams_lybia4_ckd_550nm(error_handler_config):
+def cams_lybia4_ckd_550nm():
     """
     CAMS Lybia4 atmosphere with CKD absorption data.
 
@@ -152,6 +169,6 @@ def cams_lybia4_ckd_550nm(error_handler_config):
     return {
         "type": "molecular",
         "thermoprops": thermoprops,
-        "absorption_data": "monotropa",
-        "error_handler_config": error_handler_config,
+        "absorption_data": ("monotropa", [549.5, 550.5] * ureg.nm),
+        "error_handler_config": _error_handler_config(),
     }

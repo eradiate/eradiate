@@ -85,7 +85,9 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
 
 
 def test_heterogeneous_atmosphere_expansion_molecular_atmosphere(
-    mode_ckd_double, ert_seed_state, us_standard_ckd
+    mode_ckd_double,
+    ert_seed_state,
+    us_standard_ckd_550nm,
 ):
     """
     Perfect single-component HeterogeneousAtmosphere expansion (molecular atmosphere)
@@ -125,7 +127,7 @@ def test_heterogeneous_atmosphere_expansion_molecular_atmosphere(
     }
 
     # Non-absorbing molecular atmosphere
-    molecular_atmosphere = us_standard_ckd
+    molecular_atmosphere = us_standard_ckd_550nm
     molecular_atmosphere.update({"has_absorption": False})
     exp1 = eradiate.experiments.AtmosphereExperiment(
         atmosphere=molecular_atmosphere,
