@@ -13,17 +13,16 @@ Core members
 .. data:: ENV
    :annotation: = str
 
-   Path to the Eradiate source code directory, if relevant. Takes the value of
-   the ``ERADIATE_SOURCE_DIR`` environment variable if it is set; otherwise
-   defaults to ``None``.
-
-.. data:: SOURCE_DIR
-   :annotation: = pathlib.Path or None
-
    Identifier of the environment in which Eradiate is used. Takes the value of
    the ``ERADIATE_ENV`` environment variable if it is set; otherwise defaults to
    ``"default"``.
 
+.. data:: SOURCE_DIR
+   :annotation: = pathlib.Path or None
+
+   Path to the Eradiate source code directory, if relevant. Takes the value of
+   the ``ERADIATE_SOURCE_DIR`` environment variable if it is set; otherwise
+   defaults to ``None``.
 
 .. py:currentmodule:: eradiate.config
 
@@ -41,8 +40,7 @@ Core members
       settings.SOME.KEY
 
    All settings have a default value specified by the
-   `default configuration file\
-   <https://github.com/eradiate/eradiate/blob/abs_db/src/eradiate/config/default.toml>`_
+   :ref:`default configuration file <sec-user_guide-config-default>`
    and can be overridden by the user from an ``eradiate.toml`` file, placed in
    the current working directory or higher. Each setting can also be overridden
    using `environment variables <https://www.dynaconf.com/envvars/>`_ with the
