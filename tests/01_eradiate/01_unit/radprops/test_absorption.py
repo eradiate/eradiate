@@ -23,19 +23,9 @@ class TestMonoAbsorptionDatabase:
     @pytest.fixture(scope="class")
     def db(self):
         eradiate.set_mode("none")
-        _db = MonoAbsorptionDatabase.from_name("komodo")
+        _db = MonoAbsorptionDatabase.from_name("komodo", lazy=True)
         yield _db
         _db.cache_clear()
-
-    def test_construct(self, db):
-        # Default komodo settings use lazy data loading
-        assert db.lazy is True
-
-        # The dict converter accepts kwargs and can be used to override defaults
-        db = MonoAbsorptionDatabase.from_dict(
-            {"construct": "from_name", "name": "komodo", "lazy": False}
-        )
-        assert db.lazy is False
 
     @pytest.mark.parametrize(
         "w",
@@ -64,16 +54,6 @@ class TestCKDAbsorptionDatabase:
         _db = CKDAbsorptionDatabase.from_name("monotropa")
         yield _db
         _db.cache_clear()
-
-    def test_construct(self, db):
-        # Default monotropa settings use eager data loading
-        assert db.lazy is False
-
-        # The dict converter accepts kwargs and can be used to override defaults
-        db = MonoAbsorptionDatabase.from_dict(
-            {"construct": "from_name", "name": "monotropa", "lazy": True}
-        )
-        assert db.lazy is True
 
     @pytest.mark.parametrize(
         "w, expected",

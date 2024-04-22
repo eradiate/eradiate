@@ -8,7 +8,7 @@ progress = "spectral_loop"
 small_files_registry_revision = "master"
 small_files_registry_url = "https://raw.githubusercontent.com/eradiate/eradiate-data"
 
-[absorption_database.error_handling]
+[absorption_database_error_handling]
 # Atmospheric pressure easily goes very low, but at these altitude, the air is
 # very thin and so is the absorption coefficient ⇒ ignore ouf-of-bounds errors
 p = {missing = "raise", scalar = "raise", bounds = "ignore"}
