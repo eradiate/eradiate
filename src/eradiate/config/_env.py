@@ -41,15 +41,11 @@ def _validate_source_dir(value: Path | None):
             ) from FileNotFoundError(eradiate_init)
 
 
-#: Path to the Eradiate source code directory, if relevant. Takes the value of
-#: the ``ERADIATE_SOURCE_DIR`` environment variable if it is set; otherwise
-#: defaults to ``None``.
+#: Path to the Eradiate source code directory, if relevant.
 SOURCE_DIR: Path | None = os.environ.get("ERADIATE_SOURCE_DIR", default=None)
 if SOURCE_DIR is not None:
     SOURCE_DIR = Path(SOURCE_DIR).resolve()
 _validate_source_dir(SOURCE_DIR)
 
-#: Identifier of the environment in which Eradiate is used. Takes the value of
-#: the ``ERADIATE_ENV`` environment variable if it is set; otherwise defaults to
-#: ``"default"``.
+#: Identifier of the environment in which Eradiate is used.
 ENV: str = os.environ.get("ERADIATE_ENV", "default")

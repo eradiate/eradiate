@@ -1,21 +1,20 @@
 # This is the default configuration file for Eradiate.
 # See the documentation for a description of all entries.
 
-# Default azimuth convention (see https://eradiate.readthedocs.io/en/stable/rst/user_guide/conventions.html#azimuth-definition-conventions)
 azimuth_convention = "east_right"
-# Data sotre configuration
 data_store_url = "https://eradiate.eu/data/store/"
-# Offline mode switch: if true, data download attempts will be suppressed
 offline = false
-# Progress information display (from least to most verbose: none, spectral_loop or kernel)
 progress = "spectral_loop"
 small_files_registry_revision = "master"
 small_files_registry_url = "https://raw.githubusercontent.com/eradiate/eradiate-data"
 
 [absorption_database.error_handling]
-# This default configuration ignores bound errors on pressure and temperature
-# variables because this usually occurs at high altitude, where the absorption.
+# Atmospheric pressure easily goes very low, but at these altitude, the air is
+# very thin and so is the absorption coefficient ⇒ ignore ouf-of-bounds errors
 p = {missing = "raise", scalar = "raise", bounds = "ignore"}
+# Atmospheric temperature climbs fast above 80-100 km, but at these altitude,
+# the air is very thin and so is the absorption coefficient
 t = {missing = "raise", scalar = "raise", bounds = "ignore"}
-# Ignore missing molecule coordinates, raise on bound error.
+# Ignore missing molecule coordinates, and raise when going out of the
+# covered range
 x = {missing = "ignore", scalar = "ignore", bounds = "raise"}
