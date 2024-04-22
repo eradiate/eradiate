@@ -1,6 +1,5 @@
 import os.path
 import textwrap
-from importlib.resources import files
 from pathlib import Path
 from typing import List, Optional
 
@@ -11,7 +10,7 @@ from typing_extensions import Annotated
 
 import eradiate
 
-from ..data._util import get_file_list
+from ..data._util import get_file_list, known_file_lists
 from ..exceptions import DataError
 
 app = typer.Typer()
@@ -118,13 +117,11 @@ def fetch(
         Optional[List[str]],
         typer.Argument(
             help="An arbitrary number of relative paths to files to be "
-            "retrieved from the data store or file group specifications. "
+            "retrieved from the data store or file list specifications. "
             "If unset, the list of files is read from a YAML file which can be "
-            "specified by using the ``--from-file`` option and defaults to "
-            "``$ERADIATE_SOURCE_DIR/data/downloads_all.yml`` a production "
-            "environment and "
-            "``$ERADIATE_SOURCE_DIR/data/downloads_minimal.yml`` in a "
-            "development environment."
+            "specified by using the ``--from-file`` option, if it is specified. "
+            "Otherwise, it defaults to ``all`` in a production environment and "
+            "``minimal`` in a development environment."
         ),
     ] = None,
     from_file: Annotated[
@@ -136,10 +133,35 @@ def fetch(
             "is set, the FILES argument(s) will be ignored.",
         ),
     ] = None,
+    list: Annotated[
+        bool,
+        typer.Option(
+            "--list",
+            "-l",
+            help="List built-in file lists and exit.",
+        ),
+    ] = False,
 ):
     """
     Fetch files from the Eradiate data store.
     """
+    if list:
+        print("Known file lists:")
+        for file_list in known_file_lists():
+            print(f"  {file_list}")
+        exit(0)
+
+    if not file_list:
+        if from_file is None:
+            if eradiate.config.SOURCE_DIR is None:
+                file_list = ["all"]
+            else:
+                file_list = ["minimal"]
+        else:
+            console.print(f"Reading file list from '{from_file}'")
+            yaml = YAML()
+            file_list = yaml.load(Path(from_file))
+
     converted = []
     for spec in file_list:
         try:
@@ -148,19 +170,6 @@ def fetch(
             converted.append(spec)
 
     file_list = converted
-
-    if not file_list:
-        if from_file is None:
-            if eradiate.config.SOURCE_DIR is None:
-                from_file = files("eradiate") / "data/downloads_all.yml"
-            else:
-                from_file = (
-                    eradiate.config.SOURCE_DIR
-                    / "src/eradiate/data/downloads_minimal.yml"
-                )
-        console.print(f"Reading file list from '{from_file}'")
-        yaml = YAML()
-        file_list = yaml.load(Path(from_file))
 
     for filename in file_list:
         try:
