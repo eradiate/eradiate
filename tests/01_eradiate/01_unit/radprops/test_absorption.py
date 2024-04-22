@@ -44,15 +44,11 @@ class TestMonoAbsorptionDatabase:
             np.linspace(540.0, 560.0) * ureg.nm,
         ],
     )
-    def test_eval(
-        self, db, thermoprops_us_standard, absorption_database_error_handler_config, w
-    ):
+    def test_eval(self, db, thermoprops_us_standard, error_handler_config, w):
         sigma_a = db.eval_sigma_a_mono(
             w,
             thermoprops_us_standard,
-            ErrorHandlingConfiguration.convert(
-                absorption_database_error_handler_config
-            ),
+            ErrorHandlingConfiguration.convert(error_handler_config),
         )
 
         # sigma_a should have a shape of (w, z)
@@ -101,15 +97,11 @@ class TestCKDAbsorptionDatabase:
         "wg",
         [([550.0] * ureg.nm, 0.5)],
     )
-    def test_eval(
-        self, db, thermoprops_us_standard, absorption_database_error_handler_config, wg
-    ):
+    def test_eval(self, db, thermoprops_us_standard, error_handler_config, wg):
         sigma_a = db.eval_sigma_a_ckd(
             *wg,
             thermoprops_us_standard,
-            ErrorHandlingConfiguration.convert(
-                absorption_database_error_handler_config
-            ),
+            ErrorHandlingConfiguration.convert(error_handler_config),
         )
 
         # sigma_a should have a shape of (w, z)

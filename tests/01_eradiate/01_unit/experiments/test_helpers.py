@@ -8,11 +8,11 @@ from eradiate.scenes.surface import BasicSurface
 
 def test_helpers_measure_inside_atmosphere(
     mode_mono,
-    atmosphere_us_standard_mono,
+    us_standard_mono,
 ):
     atm = HeterogeneousAtmosphere(
         geometry="plane_parallel",
-        molecular_atmosphere=atmosphere_us_standard_mono,
+        molecular_atmosphere=us_standard_mono,
     )
 
     s1 = eradiate.scenes.measure.MultiDistantMeasure()

@@ -174,14 +174,14 @@ def test_canopy_atmosphere_experiment_surface_adjustment(mode_mono):
 @pytest.mark.slow
 def test_canopy_atmosphere_experiment_real_life(
     mode_mono,
-    atmosphere_us_standard_mono,
+    us_standard_mono,
 ):
     # Construct with typical parameters
     exp = CanopyAtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "molecular_atmosphere": us_standard_mono,
         },
         canopy={
             "type": "discrete_canopy",
@@ -250,7 +250,7 @@ def test_canopy_atmosphere_experiment_run_detailed(mode_mono):
 
 def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(
     mode_mono,
-    atmosphere_us_standard_mono,
+    us_standard_mono,
 ):
     # A MultiRadiancemeter measure must have all origins inside the atmosphere
     # or none. A mix of both will raise an error.
@@ -260,7 +260,7 @@ def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "molecular_atmosphere": us_standard_mono,
         },
         canopy={
             "type": "discrete_canopy",

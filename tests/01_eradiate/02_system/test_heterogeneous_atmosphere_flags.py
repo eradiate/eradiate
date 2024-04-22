@@ -15,7 +15,7 @@ from eradiate import unit_registry as ureg
     ids=["default", "mol_nosc", "mol_noab"],
 )
 def test_heterogeneous_atm_flags(
-    modes_all_double, atm_flags, atmosphere_us_standard_mono, atmosphere_us_standard_ckd
+    modes_all_double, atm_flags, us_standard_mono, us_standard_ckd
 ):
     """
     Heterogeneous atmosphere component flags
@@ -26,9 +26,9 @@ def test_heterogeneous_atm_flags(
     """
     # TODO: Recycle this test
     if eradiate.mode().is_mono:
-        molecular = atmosphere_us_standard_mono
+        molecular = us_standard_mono
     elif eradiate.mode().is_ckd:
-        molecular = atmosphere_us_standard_ckd
+        molecular = us_standard_ckd
     else:
         raise NotImplementedError
 

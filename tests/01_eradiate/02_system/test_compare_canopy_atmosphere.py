@@ -15,12 +15,7 @@ from eradiate.units import unit_registry as ureg
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
 @pytest.mark.parametrize("sza", [0.0, 30.0, 60.0])
 def test_compare_canopy_atmosphere_vs_atmosphere(
-    mode_ckd_double,
-    reflectance,
-    sza,
-    artefact_dir,
-    ert_seed_state,
-    atmosphere_us_standard_ckd,
+    mode_ckd_double, reflectance, sza, artefact_dir, ert_seed_state, us_standard_ckd
 ):
     r"""
     Compare CanopyAtmosphereExperiment with AtmosphereExperiment
@@ -78,7 +73,7 @@ def test_compare_canopy_atmosphere_vs_atmosphere(
 
     surface = {"type": "lambertian", "reflectance": reflectance}
     illumination = {"type": "directional", "zenith": sza, "azimuth": 0.0}
-    molecular_atmosphere = atmosphere_us_standard_ckd
+    molecular_atmosphere = us_standard_ckd
     molecular_atmosphere.update({"has_absorption": False})
     atmosphere = {
         "type": "heterogeneous",
