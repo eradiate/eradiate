@@ -1,19 +1,14 @@
-.. _sec-user_guide-data-solar_irradiance:
+.. _sec-data-solar_irradiance:
 
 Solar irradiance spectra
 ========================
 
-A solar irradiance spectrum dataset provides the Sun's irradiance
-spectrum at a Sun-Earth distance of 1 astronomical unit.
-Solar spectral irradiance data may come from observations—*e.g.* using a
-spectrometer onboard a satellite—or theoretical models such as the blackbody
-model, or from a combination of observation data and theoretical models.
-
-Data access
------------
-
-All solar irradiance spectrum datasets required by Eradiate are
-managed the data store (see :ref:`sec-user_guide-data-intro` for details).
+Solar irradiance spectrum datasets provides the solar irradiance spectrum at a
+Sun-Earth distance of 1 astronomical unit. Solar spectral irradiance data may
+come from observations—*e.g.* using a spectrometer onboard a satellite—or
+theoretical models such as the blackbody model, or from a combination of
+observation data and theoretical models. Solar irradiance data is managed by the
+data store (see :ref:`sec-data-intro` for details).
 
 Identifier format
 ^^^^^^^^^^^^^^^^^
@@ -311,11 +306,11 @@ highlights the extrapolation region.
 
 .. only:: latex
 
-   .. image:: ../../../fig/data/data/srf/thuillier_2003_extrapolated.png
+   .. image:: /fig/data/data/srf/thuillier_2003_extrapolated.png
 
 .. only:: not latex
 
-   .. image:: ../../../fig/data/data/srf/thuillier_2003_extrapolated.svg
+   .. image:: /fig/data/data/srf/thuillier_2003_extrapolated.svg
 
 .. note::
 
