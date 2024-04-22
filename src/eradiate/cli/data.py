@@ -11,7 +11,6 @@ from typing_extensions import Annotated
 
 import eradiate
 
-from ..data._util import get_file_list
 from ..exceptions import DataError
 
 app = typer.Typer()
@@ -118,9 +117,9 @@ def fetch(
         Optional[List[str]],
         typer.Argument(
             help="An arbitrary number of relative paths to files to be "
-            "retrieved from the data store or file group specifications. "
-            "If unset, the list of files is read from a YAML file which can be "
-            "specified by using the ``--from-file`` option and defaults to "
+            "retrieved from the data store. If unset, the list of "
+            "files is read from a YAML file which can be specified by "
+            "using the ``--from-file`` option and defaults to "
             "``$ERADIATE_SOURCE_DIR/data/downloads_all.yml`` a production "
             "environment and "
             "``$ERADIATE_SOURCE_DIR/data/downloads_minimal.yml`` in a "
@@ -140,23 +139,18 @@ def fetch(
     """
     Fetch files from the Eradiate data store.
     """
-    converted = []
-    for spec in file_list:
-        try:
-            converted.extend(get_file_list(spec))
-        except ValueError:
-            converted.append(spec)
-
-    file_list = converted
-
     if not file_list:
         if from_file is None:
+            # TODO: fetch this list from online
             if eradiate.config.SOURCE_DIR is None:
-                from_file = files("eradiate") / "data/downloads_all.yml"
+                from_file = files("eradiate") / "data" / "downloads_all.yml"
             else:
                 from_file = (
                     eradiate.config.SOURCE_DIR
-                    / "src/eradiate/data/downloads_minimal.yml"
+                    / "src"
+                    / "eradiate"
+                    / "data"
+                    / "downloads_minimal.yml"
                 )
         console.print(f"Reading file list from '{from_file}'")
         yaml = YAML()
