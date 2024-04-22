@@ -43,11 +43,9 @@ class AtmosphereRadProfile(RadProfile):
             converter=AbsorptionDatabase.convert,
             validator=attrs.validators.instance_of(AbsorptionDatabase),
         ),
-        doc="Absorption coefficient data. The passed value is pre-processed by "
-        ":meth:`.AbsorptionDatabase.convert`.",
-        type="AbsorptionDatabase",
-        init_type="str or path-like or dict or .AbsorptionDatabase",
-        default=":meth:`AbsorptionDatabase.default() <.AbsorptionDatabase.default>`",
+        doc="Absorption coefficient data.",
+        type=".CKDAbsorptionDatabase",
+        init_type='.CKDAbsorptionDatabase or str, default: ``"monotropa"``',
     )
 
     thermoprops: xr.Dataset = documented(

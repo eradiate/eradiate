@@ -98,7 +98,6 @@ intersphinx_mapping = {
     "astropy": ("https://docs.astropy.org/en/stable/", None),
     "attr": ("https://www.attrs.org/en/stable/", None),
     "attrs": ("https://www.attrs.org/en/stable/", None),
-    "cachetools": ("https://cachetools.readthedocs.io/en/stable/", None),
     "dateutil": ("https://dateutil.readthedocs.io/en/stable/", None),
     "dessinemoi": ("https://dessinemoi.readthedocs.io/en/stable/", None),
     "hamilton": ("https://hamilton.dagworks.io/en/latest/", None),
@@ -184,7 +183,6 @@ napoleon_type_aliases = {
     # pint terms and aliases
     "quantity": ":class:`quantity <pint.Quantity>`",
     # pandas terms and aliases
-    "DataFrame": "~pandas.DataFrame",
     "pd.Index": "~pandas.Index",
     "pd.NaT": "~pandas.NaT",
     # local aliases
