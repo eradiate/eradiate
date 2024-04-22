@@ -9,6 +9,7 @@ User guides
    install
    basic_concepts
    conventions
+   config
    package_structure
    onedim_experiment
    spectral_discretization
