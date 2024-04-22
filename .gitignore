@@ -27,5 +27,5 @@ docs/rst/reference_plugins/generated/
 htmlcov/
 
 # Default data storage
-resources/downloads/
+.eradiate_downloads/
 .scenarios/*
