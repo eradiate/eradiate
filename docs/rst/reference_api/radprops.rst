@@ -11,6 +11,7 @@
    :recursive:
    :toctree: generated/autosummary/
 
+   absorption
    rayleigh
 
 .. rubric:: Classes
@@ -24,6 +25,3 @@
    ZGrid
    RadProfile
    AtmosphereRadProfile
-   AbsorptionDatabase
-   MonoAbsorptionDatabase
-   CKDAbsorptionDatabase
