@@ -1,73 +1,5 @@
-.. _sec-user_guide-data-intro:
-
-Introduction
-============
-
-Eradiate ships, processes and produces data. This guide presents:
-
-* the rationale underlying data models used in Eradiate;
-* the components used to manipulate data shipped with Eradiate.
-
-Formats
--------
-
-Most data sets used and produced by Eradiate are stored in the
-`NetCDF format <https://www.unidata.ucar.edu/software/netcdf/>`_. Eradiate
-interacts with these data using the `xarray <https://xarray.pydata.org/>`_
-library, whose data model is based on NetCDF. Xarray provides a comprehensive,
-robust and convenient interface to read, write, manipulate and visualise NetCDF
-data.
-
-Accessing shipped data
-----------------------
-
-Eradiate ships with a series of data sets managed its global data store.
-
-.. code-block:: python
-
-   from eradiate.data import data_store
-
-This global data store aggregates multiple subordinated data stores based on
-the size and maturity level of data files they manage.
-List a data store' registered data sets by reading its ``registry`` property,
-*i.e.*:
-
-.. code-block:: python
-
-   list(data_store.stores["small_files"].registry)
-
-for small data files and:
-
-.. code-block:: python
-
-   list(data_store.stores["large_files_stable"].registry)
-
-for large data files.
-
-To open a specific data set, use :func:`eradiate.data.open_dataset`:
-
-.. code-block:: python
-
-   import eradiate
-   ds = eradiate.data.open_dataset("spectra/solar_irradiance/thuillier_2003.nc")
-
-To load a data set into memory, use :func:`eradiate.data.load_dataset`:
-
-.. code-block:: python
-
-   ds = eradiate.data.load_dataset("spectra/solar_irradiance/thuillier_2003.nc")
-
-.. warning::
-
-   The data module does not support concurrent download requests from multiple
-   processes running Eradiate. This means that in such cases, two processes
-   requesting the same resource using *e.g.* :func:`eradiate.data.load_dataset`
-   may both trigger two downloads overwriting each other, resulting in
-   unpredictable (but surely incorrect) behaviour.
-
-   If your use case requires running Eradiate from multiple processes, we
-   strongly advise that you **download all data in advance** using the
-   ``eradiate data fetch`` command (see :ref:`sec-reference_cli`).
+Data format details
+===================
 
 .. _sec-user_guide-data_guide-working_angular_data:
 
@@ -150,20 +82,3 @@ computer graphics technology and measure results are usually mapped against
 hemispherical quantities, a mapping transformation associate angles to film
 coordinates. For convenience, Eradiate ships helpers to convert data from film
 coordinates to angular coordinates.
-
-Configuring data storage
-------------------------
-
-Eradiate stores downloaded data in a configurable directory. We distinguish two
-cases:
-
-* **You are working with a packaged version of Eradiate**, *i.e.* you installed
-  it to your Python environment from PyPI. In that case, the default download
-  location is set to ``./eradiate_downloads``, which is a subdirectory relative
-  to the current working directory.
-* **You are working with a development setup**, *i.e.* you checked out the
-  sources. In that case, the default download location is set to
-  ``$ERADIATE_SOURCE_DIR/resources/data/downloads``.
-
-In both cases, the download location can be controlled by setting the
-:envvar:`ERADIATE_DOWNLOAD_DIR` environment variable.
