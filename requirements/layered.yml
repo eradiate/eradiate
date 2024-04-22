@@ -11,10 +11,9 @@ main:
   packages:
     - "aenum"
     - "attrs>=22.2"
-    - "cachetools>=5.3"
     - "click"
     - "dessinemoi>=23.1.0"
-    - "dynaconf>=3.2"
+    - "environ-config"
     - "importlib_resources"
     - "joseki>=2.6.0"
     - "lazy_loader>=0.1"

@@ -14,6 +14,7 @@ attrs==23.2.0
     # via
     #   -r requirements/pip/main.in
     #   dessinemoi
+    #   environ-config
     #   joseki
     #   jsonschema
     #   pinttrs
@@ -30,8 +31,6 @@ beautifulsoup4==4.12.3
     #   pydata-sphinx-theme
 bleach==6.1.0
     # via nbconvert
-cachetools==5.3.3
-    # via -r requirements/pip/main.in
 certifi==2024.2.2
     # via
     #   netcdf4
@@ -48,7 +47,7 @@ click==8.1.7
     #   ussa1976
 colorama==0.4.6
     # via sphinx-autobuild
-contourpy==1.2.1
+contourpy==1.2.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
@@ -64,23 +63,23 @@ docutils==0.20.1
     #   pydata-sphinx-theme
     #   sphinx
     #   sphinxcontrib-bibtex
-dynaconf==3.2.5
+environ-config==23.2.0
     # via -r requirements/pip/main.in
 fastjsonschema==2.19.1
     # via nbformat
-fonttools==4.51.0
+fonttools==4.49.0
     # via matplotlib
 idna==3.6
     # via requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==7.1.0
+importlib-metadata==7.0.2
     # via
     #   jupyter-client
     #   nbconvert
     #   sphinx
     #   sphinxcontrib-bibtex
-importlib-resources==6.4.0
+importlib-resources==6.1.3
     # via
     #   -r requirements/pip/main.in
     #   joseki
@@ -97,9 +96,9 @@ jsonschema==4.21.1
     # via nbformat
 jsonschema-specifications==2023.12.1
     # via jsonschema
-jupyter-client==8.6.1
+jupyter-client==8.6.0
     # via nbclient
-jupyter-core==5.7.2
+jupyter-core==5.7.1
     # via
     #   jupyter-client
     #   nbclient
@@ -111,7 +110,7 @@ kiwisolver==1.4.5
     # via matplotlib
 latexcodec==3.0.0
     # via pybtex
-lazy-loader==0.4
+lazy-loader==0.3
     # via -r requirements/pip/main.in
 livereload==2.6.3
     # via sphinx-autobuild
@@ -124,7 +123,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   nbconvert
-matplotlib==3.8.4
+matplotlib==3.8.3
     # via -r requirements/pip/main.in
 mdit-py-plugins==0.4.0
     # via myst-parser
@@ -136,11 +135,11 @@ mypy-extensions==1.0.0
     # via typing-inspect
 myst-parser==2.0.0
     # via -r requirements/pip/docs.in
-nbclient==0.10.0
+nbclient==0.9.0
     # via nbconvert
-nbconvert==7.16.3
+nbconvert==7.16.2
     # via nbsphinx
-nbformat==5.10.4
+nbformat==5.9.2
     # via
     #   nbclient
     #   nbconvert
@@ -165,9 +164,8 @@ numpy==1.26.4
     #   sf-hamilton
     #   ussa1976
     #   xarray
-packaging==24.0
+packaging==23.2
     # via
-    #   lazy-loader
     #   matplotlib
     #   nbconvert
     #   pooch
@@ -181,7 +179,7 @@ pandas==2.2.1
     #   xarray
 pandocfilters==1.5.1
     # via nbconvert
-pillow==10.3.0
+pillow==10.2.0
     # via matplotlib
 pint==0.23
     # via
@@ -226,7 +224,7 @@ pyyaml==6.0.1
     #   pybtex
 pyzmq==25.1.2
     # via jupyter-client
-referencing==0.34.0
+referencing==0.33.0
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -235,9 +233,7 @@ requests==2.31.0
     #   pooch
     #   sphinx
 rich==13.7.1
-    # via
-    #   -r requirements/pip/main.in
-    #   typer
+    # via -r requirements/pip/main.in
 rpds-py==0.18.0
     # via
     #   jsonschema
@@ -246,17 +242,15 @@ ruamel-yaml==0.18.6
     # via -r requirements/pip/main.in
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.13.0
+scipy==1.12.0
     # via
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-sf-hamilton==1.57.0
+sf-hamilton==1.52.0
     # via -r requirements/pip/main.in
 shellingham==1.5.4
-    # via
-    #   -r requirements/pip/main.in
-    #   typer
+    # via -r requirements/pip/main.in
 six==1.16.0
     # via
     #   bleach
@@ -309,7 +303,7 @@ tornado==6.4
     #   livereload
 tqdm==4.66.2
     # via -r requirements/pip/main.in
-traitlets==5.14.2
+traitlets==5.14.1
     # via
     #   jupyter-client
     #   jupyter-core
@@ -317,9 +311,9 @@ traitlets==5.14.2
     #   nbconvert
     #   nbformat
     #   nbsphinx
-typer==0.12.3
+typer==0.9.0
     # via -r requirements/pip/main.in
-typing-extensions==4.11.0
+typing-extensions==4.10.0
     # via
     #   pint
     #   pydata-sphinx-theme
@@ -338,12 +332,12 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-xarray==2024.3.0
+xarray==2024.2.0
     # via
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-zipp==3.18.1
+zipp==3.17.0
     # via
     #   importlib-metadata
     #   importlib-resources

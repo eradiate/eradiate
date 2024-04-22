@@ -13,12 +13,9 @@ attrs==23.2.0
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
     #   dessinemoi
+    #   environ-config
     #   joseki
     #   pinttrs
-cachetools==5.3.3
-    # via
-    #   -c requirements/pip/optional.lock.txt
-    #   -r requirements/pip/main.in
 certifi==2024.2.2
     # via
     #   -c requirements/pip/optional.lock.txt
@@ -39,7 +36,7 @@ click==8.1.7
     #   joseki
     #   typer
     #   ussa1976
-contourpy==1.2.1
+contourpy==1.2.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   matplotlib
@@ -55,7 +52,7 @@ drjit==0.4.4
     # via
     #   -c requirements/pip/optional.lock.txt
     #   eradiate-mitsuba
-dynaconf==3.2.5
+environ-config==23.2.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
@@ -63,7 +60,7 @@ eradiate-mitsuba==0.2.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/dependencies.in
-fonttools==4.51.0
+fonttools==4.49.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   matplotlib
@@ -71,7 +68,7 @@ idna==3.6
     # via
     #   -c requirements/pip/optional.lock.txt
     #   requests
-importlib-resources==6.4.0
+importlib-resources==6.1.3
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
@@ -85,7 +82,7 @@ kiwisolver==1.4.5
     # via
     #   -c requirements/pip/optional.lock.txt
     #   matplotlib
-lazy-loader==0.4
+lazy-loader==0.3
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
@@ -93,7 +90,7 @@ markdown-it-py==3.0.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   rich
-matplotlib==3.8.4
+matplotlib==3.8.3
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
@@ -125,10 +122,9 @@ numpy==1.26.4
     #   sf-hamilton
     #   ussa1976
     #   xarray
-packaging==24.0
+packaging==23.2
     # via
     #   -c requirements/pip/optional.lock.txt
-    #   lazy-loader
     #   matplotlib
     #   pooch
     #   xarray
@@ -138,7 +134,7 @@ pandas==2.2.1
     #   joseki
     #   sf-hamilton
     #   xarray
-pillow==10.3.0
+pillow==10.2.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   matplotlib
@@ -185,7 +181,6 @@ rich==13.7.1
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
-    #   typer
 ruamel-yaml==0.18.6
     # via
     #   -c requirements/pip/optional.lock.txt
@@ -194,13 +189,13 @@ ruamel-yaml-clib==0.2.8
     # via
     #   -c requirements/pip/optional.lock.txt
     #   ruamel-yaml
-scipy==1.13.0
+scipy==1.12.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-sf-hamilton==1.57.0
+sf-hamilton==1.52.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
@@ -208,7 +203,6 @@ shellingham==1.5.4
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
-    #   typer
 six==1.16.0
     # via
     #   -c requirements/pip/optional.lock.txt
@@ -217,11 +211,11 @@ tqdm==4.66.2
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
-typer==0.12.3
+typer==0.9.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
-typing-extensions==4.11.0
+typing-extensions==4.10.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   pint
@@ -244,13 +238,13 @@ ussa1976==0.3.4
     # via
     #   -c requirements/pip/optional.lock.txt
     #   joseki
-xarray==2024.3.0
+xarray==2024.2.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-zipp==3.18.1
+zipp==3.17.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   importlib-resources
