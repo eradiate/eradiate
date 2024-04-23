@@ -6,6 +6,7 @@
 [![docs][rtd-badge]][rtd-url]
 [![black][black-badge]][black-url]
 [![ruff][ruff-badge]][ruff-url]
+[![zenodo][zenodo-badge]][zenodo-url]
 
 [pypi-badge]: https://img.shields.io/pypi/v/eradiate?style=flat-square
 [pypi-url]: https://pypi.org/project/eradiate/
@@ -15,6 +16,8 @@
 [black-url]: https://github.com/psf/black/
 [ruff-badge]: https://img.shields.io/badge/%E2%9A%A1%EF%B8%8F-ruff-red?style=flat-square
 [ruff-url]: https://ruff.rs
+[zenodo-badge]: https://img.shields.io/badge/doi-10.5281/zenodo.7224314-blue.svg?style=flat-square
+[zenodo-url]: https://zenodo.org/records/7224314
 
 Eradiate is a modern radiative transfer simulation software package for Earth
 observation applications. Its main focus is accuracy, and for that purpose, it
