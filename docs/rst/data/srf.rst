@@ -10,7 +10,7 @@ Data access
 -----------
 
 All spectral response function data sets required by Eradiate are
-managed the data store (see :ref:`sec-user_guide-data-intro` for details).
+managed the data store (see :ref:`sec-data-intro` for details).
 
 .. _sec-user_guide-data-srf-naming_convention:
 

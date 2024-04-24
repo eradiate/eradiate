@@ -298,6 +298,7 @@ def custom_step(app):
     generate_rst_plugins.generate()  # Plugins
     generate_rst_api.generate_factory_docs()  # Factories
     generate_rst_data.generate_particle_radprops_summary()  # Summary
+    generate_rst_data.generate_rami_scene_summary()  # Summary
 
 
 def setup(app):
