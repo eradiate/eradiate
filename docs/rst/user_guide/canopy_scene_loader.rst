@@ -1,7 +1,7 @@
-.. _sec-user_guide-scene_loader:
+.. _sec-user_guide-canopy_scene_loader:
 
-Scene loader
-============
+Canopy scene loader
+===================
 
 This page presents the canopy scene loader. A scene is composed by a
 ``scenario.json`` file and a set of mesh files. The ``scenario.json`` file
@@ -232,7 +232,7 @@ below:
        },
    }
 
-.. _sec-user_guide-scene_loader-rami_scenes:
+.. _sec-user_guide-canopy_scene_loader-rami_scenes:
 
 RAMI benchmark scenarios
 ------------------------

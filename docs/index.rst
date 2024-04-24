@@ -88,7 +88,6 @@ Python and C++17. It relies on a radiometric kernel based on the
    :titlesonly:
    :caption: Developers/contributors
 
-
    rst/dependencies
    rst/contributing
    rst/maintainer_guide
