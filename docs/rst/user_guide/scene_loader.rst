@@ -232,22 +232,21 @@ below:
        },
    }
 
+.. _sec-user_guide-scene_loader-rami_scenes:
 
 RAMI benchmark scenarios
 ------------------------
 
 We provide a specific loader for scenes derived from the
 `RAMI-V scene list <https://rami-benchmark.jrc.ec.europa.eu/_www/phase_descr.php?strPhase=RAMI5>`_.
-These pre-configured are available for use and downloaded upon request via the
-datastore.\ [#sn2]_ These are downloaded when a specific scenario is requested via the
-datastore. Due to their size and the number of files they contain, the scenarios
-are downloaded in a compressed format and, by default, extracted to the current
-working directory. The extracted files are then used to load the scenario. To
-change the default location for the extracted files, set the appropriate
-parameter in the :func:`.load_rami_scenario` function.
-
-.. [#sn2] We thank the `DART <https://dart.omp.eu/>`_ team for allowing us to
-   use their 3D model files to derive our scene models.
+The list of pre-configured scenes is available in the
+:doc:`data guide </rst/data/generated/rami_scenes>`. Shipped data are downloaded
+automatically when a specific scenario is requested via the datastore. Due to
+their size and the number of files they contain, the scenarios are downloaded in
+a compressed format and, by default, extracted to the current working directory.
+The extracted files are then used to load the scenario. To change the default
+location for the extracted files, set the appropriate parameter in the
+:func:`.load_rami_scenario` function.
 
 .. code-block:: python
 
@@ -260,6 +259,7 @@ parameter in the :func:`.load_rami_scenario` function.
 
     eradiate.set_mode("mono")
 
+    # Use the RAMI ID to reference the scenario
     scenario_data = load_rami_scenario("HOM30_DIS_ED0")
 
     scenario = CanopyExperiment(

@@ -58,7 +58,7 @@ class SolarIrradianceSpectrum(Spectrum):
     See Also
     --------
 
-    :ref:`Solar irradiance spectrum data guide <sec-user_guide-data-solar_irradiance>`
+    :ref:`Solar irradiance spectrum data guide <sec-data-solar_irradiance>`
 
     Notes
     ------
@@ -118,7 +118,7 @@ class SolarIrradianceSpectrum(Spectrum):
         "store with that path."
         "If a string is passed, it is interpreted as a Solar irradiance "
         "spectrum identifier "
-        "(see :ref:`sec-user_guide-data-solar_irradiance` for the list); ",
+        "(see :ref:`sec-data-solar_irradiance` for the list); ",
         type="Dataset",
         init_type="Dataset or str or path-like, optional",
         default='"coddington_2021-1_nm"',

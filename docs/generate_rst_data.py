@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from pathlib import Path
 from textwrap import dedent
 
@@ -7,6 +8,10 @@ import attrs
 
 import eradiate
 from eradiate.plot import dashboard_particle_dataset
+from eradiate.scenes.biosphere import (
+    RAMIActualCanopies,
+    RAMIHeterogeneousAbstractCanopies,
+)
 
 eradiate.plot.set_style()
 
@@ -41,6 +46,13 @@ PARTICLE_RADPROPS = [
         "spectra/particles/govaerts_2021-desert-extrapolated.nc",
     ),
 ]
+
+RAMI_SCENE_COMMENTS = {
+    "HET51_WWO_TLS": (
+        "This version of the Wytham Wood scene uses data from the updated v2 "
+        "dataset."
+    )
+}
 
 
 def write_if_modified(filename, content):
@@ -161,5 +173,75 @@ Format
     write_if_modified(outfile_rst, result)
 
 
+def generate_rami_scene_summary():
+    outfile_rst = (
+        Path(__file__).parent.absolute() / "rst/data/generated/rami_scenes.rst"
+    )
+    print(f"Generating RAMI scene index in '{outfile_rst}'")
+
+    from eradiate.scenes.biosphere import (
+        RAMIHomogeneousAbstractCanopies,
+    )
+
+    sections = [
+        """
+RAMI benchmark scenes
+=====================
+
+Eradiate ships a collection of canopy scenes built from the 
+`RAMI-V scene list <https://rami-benchmark.jrc.ec.europa.eu/_www/phase_descr.php?strPhase=RAMI5>`_
+These pre-configured scenes are available for download request via the 
+datastore.\ [#sn2]_ 
+Usage is documented in the 
+:ref:`scene loader guide <sec-user_guide-scene_loader-rami_scenes>`.
+
+.. [#sn2] We thank the `DART <https://dart.omp.eu/>`_ team for letting us use 
+   their 3D model files to derive our scene models.
+   
+.. note::
+
+   The renders in the index table below use material spectra interpolated from 
+   the monochromatic optical properties provided in the RAMI scene 
+   specifications. Colours are therefore not realistic.
+
+""".strip()
+    ]
+
+    table = [
+        """
+.. list-table:: RAMI benchmark scene index
+   :widths: 1 1 1 2
+   :header-rows: 1
+   
+   * - RAMI ID
+     - Description
+     - Comments      
+     - Render
+""".strip()
+    ]
+
+    for x in itertools.chain(
+        RAMIHomogeneousAbstractCanopies,
+        RAMIHeterogeneousAbstractCanopies,
+        RAMIActualCanopies,
+    ):
+        rami_id = x.value
+        description = x.name.replace("_", " ").lower()
+        comments = RAMI_SCENE_COMMENTS.get(rami_id, "")
+        row = f"""
+   * - {rami_id}
+     - {description}
+     - {comments}
+     - .. image:: /fig/rami_scenes/{x.name}_30_90.png
+"""
+        table.append(row.strip("\n"))
+
+    sections.append("\n".join(table))
+
+    result = "\n\n".join([HEADER] + sections) + "\n"
+    write_if_modified(outfile_rst, result)
+
+
 if __name__ == "__main__":
     generate_particle_radprops_summary()
+    generate_rami_scene_summary()
