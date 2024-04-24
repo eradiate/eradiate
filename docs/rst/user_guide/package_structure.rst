@@ -31,6 +31,10 @@ Experiments [:mod:`eradiate.experiments`]
     In this package, you will find interfaces to trigger simulation runs,
     including pre- and post-processing operations.
 
+Command-line interface [:mod:`eradiate.cli`]
+    This package contains the implementation of the Eradiate command-line
+    interface.
+
 Radiometric kernel
 ------------------
 
@@ -38,7 +42,7 @@ Kernel [:mod:`eradiate.kernel`]
     This module provides functionality related with Eradiate's radiometric
     kernel Mitsuba.
 
-Data handling and visualisation
+Data handling and visualization
 -------------------------------
 
 Data handling [:mod:`eradiate.data`]
@@ -49,9 +53,6 @@ Post-processing pipeline definitions [:mod:`eradiate.pipelines`]
     raw sensor results yielded by kernel sensors to quantities of interest for
     Earth observation applications (*e.g.* reflectance). The data is stored as
     xarray labelled arrays (:term:`Dataset`).
-
-xarray utility functions [:mod:`eradiate.xarray`]
-    Various support components taking advantage of the xarray library.
 
 Plotting [:mod:`eradiate.plot`]
     This module defines optional utility functions to create
@@ -65,20 +66,19 @@ Radiative properties [:mod:`eradiate.radprops`]
     This package provides abstractions used to define radiative properties used
     to create scenes.
 
-Thermosphysical properties [:mod:`eradiate.thermoprops`]
-    This package provides abstractions used to define thermophysical properties
-    of scene objects. The output of its components are generally used as input
-    of components responsible for radiative property computation.
+Other support components
+------------------------
 
 Numerical constants [:mod:`eradiate.constants`]
     Various numerical constants used throughout the code base.
 
-Other support components
-------------------------
+Class writing facilities [``eradiate.{`` :mod:`~eradiate.attrs`, :mod:`~eradiate.converters`, :mod:`~eradiate.validators`, :mod:`~eradiate._factory` ``}``]
+    These components are part of Eradiate's core class writing system. It relies
+    on the `attrs <https://www.attrs.org>`_ library, extended for `Pint <https://pint.readthedocs.io>`_
+    compatibility by the `Pinttrs <https://pinttrs.readthedocs.io>`_ library.
 
-Unit support [:mod:`eradiate.units`]
-    Various utility functions and data variables used to safely handle unit
-    conversions in Eradiate.
+Exceptions [:mod:`eradiate.exceptions`]
+    Exception and warning definitions.
 
 Math support [``eradiate.{`` :mod:`~eradiate.frame`, :mod:`~eradiate.quad`, :mod:`~eradiate.warp` ``}``]
     For the cases where Eradiate's math dependencies and kernel are not
@@ -87,13 +87,12 @@ Math support [``eradiate.{`` :mod:`~eradiate.frame`, :mod:`~eradiate.quad`, :mod
 Random number generation [:mod:`eradiate.rng`]
     Support components for fine control of random number generation.
 
-Exceptions [:mod:`eradiate.exceptions`]
-    Exception and warning definitions.
+Unit support [:mod:`eradiate.units`]
+    Various utility functions and data variables used to safely handle unit
+    conversions in Eradiate.
 
-Class writing facilities [``eradiate.{`` :mod:`~eradiate.attrs`, :mod:`~eradiate.converters`, :mod:`~eradiate.validators`, :mod:`~eradiate._factory` ``}``]
-    These components are part of Eradiate's core class writing system. It relies
-    on the `attrs <https://www.attrs.org>`_ library, extended for `Pint <https://pint.readthedocs.io>`_
-    compatibility by the `Pinttrs <https://pinttrs.readthedocs.io>`_ library.
+xarray utility functions [:mod:`eradiate.xarray`]
+    Various support components taking advantage of the xarray library.
 
 Miscellaneous [:mod:`eradiate.util`]
     Other support components which don't fit in any of the aforementioned
