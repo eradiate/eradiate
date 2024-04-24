@@ -108,6 +108,7 @@ def bidirectional_reflectance(radiance: xr.DataArray, irradiance: xr.DataArray) 
         "brf_srf": {"final": "true", "kind": "data"},
     }
 )
+@config.when_in(mode_id=_MODE_IDS_CKD)
 @config.when(var_name="radiance", measure_distant=True, apply_spectral_response=True)
 @extract_fields({"brdf_srf": xr.DataArray, "brf_srf": xr.DataArray})
 def bidirectional_reflectance_srf(
