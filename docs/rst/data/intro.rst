@@ -3,11 +3,6 @@
 Introduction
 ============
 
-.. toctree::
-   :hidden:
-
-   data_format_details
-
 Input data plays a role equally important to the radiative transfer equation
 integration algorithm when it comes to simulating radiative transfer. Data
 handling and procurement in Eradiate follows the following principles:
@@ -42,7 +37,7 @@ checks). The following configuration items drive the behaviour of Eradiate's
 data store:
 
 Development mode
-    This bevĥaviour is controlled by the
+    This behaviour is controlled by the
     :data:`ERADIATE_SOURCE_DIR <eradiate.config.SOURCE_DIR>` environment
     variable.
     In development mode, parts of the data is shipped in a Git submodule.
@@ -125,3 +120,8 @@ will, if necessary, trigger data download and caching.
 .. seealso::
 
    :mod:`eradiate.data`: complete data module reference.
+
+.. toctree::
+   :hidden:
+
+   data_format_details
