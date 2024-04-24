@@ -80,6 +80,7 @@ Python and C++17. It relies on a radiometric kernel based on the
    rst/data/atmosphere_molecular_absorption
    Solar irradiance <rst/data/solar_irradiance.rst>
    rst/data/srf
+   rst/data/generated/rami_scenes
 
 .. toctree::
    :maxdepth: 3
