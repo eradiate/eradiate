@@ -319,6 +319,11 @@ def nonzero_integral(x, y):
 
 def select_method_2(xmin, xmax, w, srf):
     # Evaluate the SRF on the bin grid
+    resolution = (max(xmax) - min(xmax)) / (len(xmax) - 1)
+    epsilon = resolution * 1e-3
     bins = np.unique((xmin, xmax))
+    precision_mask = np.ones((len(bins)), dtype=bool)
+    precision_mask[1:] = np.abs(np.diff(bins)) > epsilon
+    bins = bins[precision_mask]
     srf_bins = np.interp(bins, w, srf, left=0, right=0)
     return np.where(nonzero_integral(bins, srf_bins))[0]
