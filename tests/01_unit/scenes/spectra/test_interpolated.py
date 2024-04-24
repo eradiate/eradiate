@@ -342,4 +342,4 @@ def test_interpolated_select_ckd_inaccurate_bin_bounds():
         values=([0, 0] + [1] * 7 + [0, 0]) * ureg.dimensionless,
     )
     selected = srf.select_in(binset).wcenters
-    assert np.allclose(selected.wcenters, [525.0, 575.0] * ureg.nm)
+    assert np.allclose(selected, [525.0, 575.0] * ureg.nm)
