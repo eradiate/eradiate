@@ -372,7 +372,7 @@ class DEMSurface(Surface):
         ),
         doc="Shape describing the surface.",
         type=".BufferMeshShape or .FileMeshShape or None",
-        init_type=".BufferMeshShape or .OBJMeshShape or .PLYMeshShape or dict",
+        init_type=".BufferMeshShape or .FileMeshShape or dict",
         default="None",
     )
 

@@ -52,25 +52,26 @@ Plane parallel [:class:`.PlaneParallelGeometry`, ``plane_parallel``]
 
 Spherical shell [:class:`.SphericalShellGeometry`, ``spherical_shell``]
     When this geometry configuration is used, the scene is built with a
-    rotationally invariant symmetry. This configuration accounts for the
-    roundedness of the planet. **This feature is experimental and is being
-    validated.**
+    rotationally invariant symmetry. This configuration accounts for planetary
+    curvature.
 
 Illumination [``illumination``]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The one-dimensional experiment currently supports only one illumination type.
-
 Directional illumination [:class:`.DirectionalIllumination`, ``directional``]
     An infinitely distant emitter which emits light in a single direction
     (angular Dirac delta distribution of incoming radiance). This type of
-    illumination is used to simulate incoming Solar radiation. By default, a
-    Solar spectrum is automatically selected.
+    illumination is used to simulate incoming solar radiation.
+
+Astronomical object [:class:`.AstroObjectIllumination`, ``astro_object``]
+    An infinitely distant emitter that emits light in a conical section of the
+    angular space. It aims at providing a more realistic representation of
+    natural illuminants than the directional emitter.
 
 In addition, this angular distribution can be associated a spectrum.
 A variety of pre-defined Solar irradiance spectra are defined (see
-:ref:`sec-user_guide-data-solar_irradiance` for a complete list of shipped
-irradiance spectrum datasets).
+:ref:`sec-data-solar_irradiance` for a complete list of shipped irradiance
+spectra).
 
 Measures [``measures``]
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -106,7 +107,7 @@ Distant radiancemeter [:class:`.MultiDistantMeasure`, ``distant``]
 Distant fluxmeter [:class:`.DistantFluxMeasure`, ``distant_flux``]
     This measure records the flux leaving the scene (in W/m²/nm) over the entire
     hemisphere. It is mostly used to compute the scene albedo. The following
-    quantities are available from the results dataset:
+    quantities are available from the result dataset:
 
     Radiosity [``radiosity``]
         The flux leaving the scene in W/m²/nm.
@@ -150,50 +151,23 @@ Rahman-Pinty-Verstraete (RPV) surface [:class:`.RPVBSDF`, ``rpv``]
     used for land surface reflection modelling. Eradiate implements several
     variants of it with 3 or 4 parameters.
 
+Ross thick-Li sparse (RTLS) surface [:class:`.RTLSBSDF`, ``rtls``]
+    This reflection model is commonly used in remote sensing applications.
+
+Hapke surface [:class:`.HapkeBSDF`]
+    A reflection model specialized for bare soil.
+
 Black surface [:class:`.BlackBSDF`, ``black``]
     The black surface absorbs all incoming radiation, irrespective of
     incident angle or wavelength.
 
-Digital elevation model [``dem``]
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Eradiate extends the standard functionalities of one-dimensional simulations with
-digital elevation models (DEM). A three-dimensional surface can be defined with the ``dem``
-parameter. The DEM can be defined in several ways and it can be used with any BSDF type
-mentioned in the surface section above. Since a DEM surface model always has a finite
-horizontal extent, Eradiate adds horizontal elements to the edge of the DEM surface
-to prevent rays from escaping under it. The remaining surface area outside of the DEM is
-covered with the surface specified in the ``surface`` section.
-
-Note that Eradiate does not adjust the horizontal level of the flat surface automatically.
-If the DEM contains elevation values below the flat surface level (0m per default), the 3D
-surface will intersect the flat surface and the areas below the flat surface's level will
-be obscured by it.
-
-There are three ways to define a DEM geometry:
-
-An xarray DataArray [:meth:`.DEMSurface.from_dataarray`]
-    A DataArray defining a digital elevation model needs to have two coordinates named
-    `lat` for the latitude and `lon` for the longitude, specified in degrees and the
-    elevation data specified in kernel units of length.
-
-Triangulated meshes [:class:`.FileMesh`, ``file_mesh``]
-    To define the DEM using a triangulated mesh users can supply either a .obj file
-    or a .ply file. The mesh file will be interpreted as kernel units of length.
-    In this case no constructor method is used. Instead the `shape` member of the
-    `dem` class is directly defined with this mesh shape.
-
-Analytical functions [:meth:`.DEMSurface.from_analytical`]
-    Digital elevation models can be defined using functions, which take an x and
-    y position and return the corresponding elevation value.
-
 Result output
 -------------
 
-The :meth:`.AtmosphereExperiment.run` method stores the computed results in the
-``results`` attribute as a dictionary mapping measure identifiers to a
-:class:`~xarray.Dataset` object. Each data set has one variable for each
-computed physical quantity (*e.g.* spectral irradiance, leaving radiance, BRDF
-and BRF for the ``distant`` measure). Results can then be easily exported to
-files (*e.g.* NetCDF) and visualised using xarray's integrated plotting
-features or external plotting components.
+When running an experiment with the :func:`eradiate.run` function, the computed
+results are stored in the ``results`` attribute as a dictionary mapping measure
+identifiers to a :class:`~xarray.Dataset` object. Each data set has one variable
+for each computed physical quantity (*e.g.* spectral irradiance, leaving
+radiance, BRDF and BRF for the ``distant`` measure). Results can then be easily
+exported to files (*e.g.* NetCDF) and visualised using xarray's integrated
+plotting features or external plotting components.

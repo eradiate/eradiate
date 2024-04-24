@@ -193,7 +193,7 @@ Eradiate ships a collection of canopy scenes built from the
 These pre-configured scenes are available for download request via the 
 datastore.\ [#sn2]_ 
 Usage is documented in the 
-:ref:`scene loader guide <sec-user_guide-scene_loader-rami_scenes>`.
+:ref:`scene loader guide <sec-user_guide-canopy_scene_loader-rami_scenes>`.
 
 .. [#sn2] We thank the `DART <https://dart.omp.eu/>`_ team for letting us use 
    their 3D model files to derive our scene models.
