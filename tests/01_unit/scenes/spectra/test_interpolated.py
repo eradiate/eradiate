@@ -9,7 +9,7 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.scenes.spectra import InterpolatedSpectrum, spectrum_factory
-from eradiate.spectral import BinSet
+from eradiate.spectral import Bin, BinSet
 from eradiate.spectral.index import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
 from eradiate.units import PhysicalQuantity
@@ -324,3 +324,22 @@ def test_interpolated_select_ckd(interpolated_kwargs, expected_selected_wcenters
     srf = InterpolatedSpectrum(**interpolated_kwargs)
     selected = srf.select_in(binset)
     assert np.allclose(selected.wcenters, expected_selected_wcenters)
+
+
+def test_interpolated_select_ckd_inaccurate_bin_bounds():
+    # Inaccurate bin bounds (due to numerical precision issues) are corrected by
+    # the bin selection method implementation
+    binset = BinSet(
+        bins=[
+            Bin(wmin=500.0, wmax=550.0),
+            Bin(wmin=550.0 + np.finfo("float16").eps, wmax=600.0),
+            # we use float16 so that even on Windows (where the default float
+            # type is float32), this test still works as expected
+        ]
+    )
+    srf = InterpolatedSpectrum(
+        wavelengths=np.linspace(500.0, 600.0, 11),
+        values=([0, 0] + [1] * 7 + [0, 0]) * ureg.dimensionless,
+    )
+    selected = srf.select_in(binset).wcenters
+    assert np.allclose(selected.wcenters, [525.0, 575.0] * ureg.nm)
