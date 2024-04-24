@@ -22,7 +22,7 @@ version, please refer to the :ref:`sec-developer_guide-dev_install`.
 .. warning::
 
    Eradiate uses a modified version of the Mitsuba 3 renderer, distributed on
-   PyPI as the ``eradiate-mitsuba``. That package conflicts with the ``mitsuba``
+   PyPI as ``eradiate-mitsuba``. That package conflicts with the ``mitsuba``
    package distributed by the Mitsuba team and both cannot be installed
    together.
 
