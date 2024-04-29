@@ -14,11 +14,11 @@ import importlib
 import logging
 import typing as t
 from functools import lru_cache
+from importlib.resources import files
 
 import pint
 import pinttr
 import xarray
-from importlib_resources import files
 from pinttr.exceptions import UnitsError
 from pinttr.util import units_compatible
 
