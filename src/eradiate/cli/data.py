@@ -1,10 +1,10 @@
 import os.path
 import textwrap
+from importlib.resources import files
 from pathlib import Path
 from typing import List, Optional
 
 import typer
-from importlib_resources import files
 from rich.console import Console
 from ruamel.yaml import YAML
 from typing_extensions import Annotated

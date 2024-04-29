@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import enum
+import importlib.resources
 from pathlib import Path
 
-import importlib_resources
 from dynaconf import Dynaconf, Validator
 
 from ._env import ENV, SOURCE_DIR
@@ -31,7 +31,7 @@ def _default_download_dir():
     )
 
 
-DEFAULTS = importlib_resources.files("eradiate.config").joinpath(f"{ENV}.toml")
+DEFAULTS = importlib.resources.files("eradiate.config").joinpath(f"{ENV}.toml")
 
 #: Main settings data structure. See the `Dynaconf documentation <https://www.dynaconf.com/>`_
 #: for details.
