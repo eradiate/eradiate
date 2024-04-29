@@ -53,6 +53,7 @@ docs:
     - "autodocsumm"
     - "myst-parser"
     - "nbsphinx>=0.9.0"
+    - "seaborn"
     - "sphinx-book-theme>=1.0"
     - "sphinx"
     - "sphinxcontrib-bibtex>=2.0"

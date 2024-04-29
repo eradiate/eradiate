@@ -59,7 +59,7 @@ dynaconf==3.2.5
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
-eradiate-mitsuba==0.2.0
+eradiate-mitsuba==0.2.1
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/dependencies.in
@@ -67,14 +67,13 @@ fonttools==4.51.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   matplotlib
-idna==3.6
+idna==3.7
     # via
     #   -c requirements/pip/optional.lock.txt
     #   requests
 importlib-resources==6.4.0
     # via
     #   -c requirements/pip/optional.lock.txt
-    #   -r requirements/pip/main.in
     #   joseki
     #   matplotlib
 joseki==2.6.1
@@ -132,7 +131,7 @@ packaging==24.0
     #   matplotlib
     #   pooch
     #   xarray
-pandas==2.2.1
+pandas==2.2.2
     # via
     #   -c requirements/pip/optional.lock.txt
     #   joseki
@@ -152,7 +151,7 @@ pinttrs==24.1.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
-platformdirs==4.2.0
+platformdirs==4.2.1
     # via
     #   -c requirements/pip/optional.lock.txt
     #   pooch
@@ -200,7 +199,7 @@ scipy==1.13.0
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-sf-hamilton==1.57.0
+sf-hamilton==1.59.1
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
