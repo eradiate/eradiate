@@ -37,7 +37,7 @@ DEFAULTS = importlib.resources.files("eradiate.config").joinpath(f"{ENV}.toml")
 #: for details.
 settings = Dynaconf(
     settings_files=[DEFAULTS, "eradiate.toml"],
-    env_prefix="ERADIATE",
+    envvar_prefix="ERADIATE",
     merge_enabled=True,
     validate_on_update=True,
     validators=[
