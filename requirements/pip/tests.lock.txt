@@ -36,15 +36,14 @@ dessinemoi==24.1.0
     # via -r requirements/pip/main.in
 dynaconf==3.2.5
     # via -r requirements/pip/main.in
-exceptiongroup==1.2.0
+exceptiongroup==1.2.1
     # via pytest
 fonttools==4.51.0
     # via matplotlib
-idna==3.6
+idna==3.7
     # via requests
 importlib-resources==6.4.0
     # via
-    #   -r requirements/pip/main.in
     #   joseki
     #   matplotlib
 iniconfig==2.0.0
@@ -88,7 +87,7 @@ packaging==24.0
     #   pooch
     #   pytest
     #   xarray
-pandas==2.2.1
+pandas==2.2.2
     # via
     #   joseki
     #   sf-hamilton
@@ -102,9 +101,9 @@ pint==0.23
     #   pinttrs
 pinttrs==24.1.0
     # via -r requirements/pip/main.in
-platformdirs==4.2.0
+platformdirs==4.2.1
     # via pooch
-pluggy==1.4.0
+pluggy==1.5.0
     # via pytest
 pooch==1.8.1
     # via -r requirements/pip/main.in
@@ -112,7 +111,7 @@ pygments==2.17.2
     # via rich
 pyparsing==3.1.2
     # via matplotlib
-pytest==8.1.1
+pytest==8.2.0
     # via
     #   -r requirements/pip/tests.in
     #   pytest-json-report
@@ -142,7 +141,7 @@ scipy==1.13.0
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-sf-hamilton==1.57.0
+sf-hamilton==1.59.1
     # via -r requirements/pip/main.in
 shellingham==1.5.4
     # via

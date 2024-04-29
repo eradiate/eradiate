@@ -20,6 +20,8 @@ anyio==4.3.0
     # via
     #   httpx
     #   jupyter-server
+    #   starlette
+    #   watchfiles
 appdirs==1.4.4
     # via ensureconda
 argon2-cffi==23.1.0
@@ -30,7 +32,7 @@ arrow==1.3.0
     # via isoduration
 astropy==6.0.1
     # via -r requirements/pip/recommended.in
-astropy-iers-data==0.2024.4.8.0.32.4
+astropy-iers-data==0.2024.4.29.0.28.48
     # via astropy
 asttokens==2.4.1
     # via stack-data
@@ -52,7 +54,7 @@ babel==2.14.0
     #   jupyterlab-server
     #   pydata-sphinx-theme
     #   sphinx
-backports-tarfile==1.0.0
+backports-tarfile==1.1.1
     # via jaraco-context
 beautifulsoup4==4.12.3
     # via
@@ -100,6 +102,7 @@ click==8.1.7
     #   pip-tools
     #   typer
     #   ussa1976
+    #   uvicorn
 click-default-group==1.2.4
     # via conda-lock
 clikit==0.6.2
@@ -138,7 +141,7 @@ dessinemoi==24.1.0
     #   -r requirements/pip/main.in
 distlib==0.3.8
     # via virtualenv
-docutils==0.20.1
+docutils==0.21.2
     # via
     #   myst-parser
     #   nbsphinx
@@ -154,9 +157,9 @@ dynaconf==3.2.5
     #   -r requirements/pip/main.in
 ensureconda==1.4.4
     # via conda-lock
-eradiate-mitsuba==0.2.0
+eradiate-mitsuba==0.2.1
     # via -r requirements/pip/optional.in
-exceptiongroup==1.2.0
+exceptiongroup==1.2.1
     # via
     #   anyio
     #   ipython
@@ -180,14 +183,16 @@ fqdn==1.5.1
 graphviz==0.20.3
     # via -r requirements/pip/recommended.in
 h11==0.14.0
-    # via httpcore
+    # via
+    #   httpcore
+    #   uvicorn
 html5lib==1.1
     # via conda-lock
 httpcore==1.0.5
     # via httpx
 httpx==0.27.0
     # via jupyterlab
-idna==3.6
+idna==3.7
     # via
     #   -c requirements/pip/main.lock.txt
     #   anyio
@@ -210,7 +215,6 @@ importlib-metadata==7.1.0
 importlib-resources==6.4.0
     # via
     #   -c requirements/pip/main.lock.txt
-    #   -r requirements/pip/main.in
     #   joseki
     #   matplotlib
 iniconfig==2.0.0
@@ -230,7 +234,7 @@ jaraco-classes==3.4.0
     # via keyring
 jaraco-context==5.3.0
     # via keyring
-jaraco-functools==4.0.0
+jaraco-functools==4.0.1
     # via keyring
 jedi==0.19.1
     # via ipython
@@ -252,7 +256,7 @@ joseki==2.6.1
     # via
     #   -c requirements/pip/main.lock.txt
     #   -r requirements/pip/main.in
-json5==0.9.24
+json5==0.9.25
     # via jupyterlab-server
 jsonpointer==2.4
     # via jsonschema
@@ -281,7 +285,7 @@ jupyter-events==0.10.0
     # via jupyter-server
 jupyter-lsp==2.2.5
     # via jupyterlab
-jupyter-server==2.13.0
+jupyter-server==2.14.0
     # via
     #   jupyter-lsp
     #   jupyterlab
@@ -289,15 +293,15 @@ jupyter-server==2.13.0
     #   notebook-shim
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.1.6
+jupyterlab==4.1.8
     # via -r requirements/pip/recommended.in
 jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.26.0
+jupyterlab-server==2.27.1
     # via jupyterlab
 jupyterlab-widgets==3.0.10
     # via ipywidgets
-keyring==25.1.0
+keyring==25.2.0
     # via conda-lock
 kiwisolver==1.4.5
     # via
@@ -309,8 +313,6 @@ lazy-loader==0.4
     # via
     #   -c requirements/pip/main.lock.txt
     #   -r requirements/pip/main.in
-livereload==2.6.3
-    # via sphinx-autobuild
 markdown-it-py==3.0.0
     # via
     #   -c requirements/pip/main.lock.txt
@@ -326,7 +328,7 @@ matplotlib==3.8.4
     #   -c requirements/pip/main.lock.txt
     #   -r requirements/pip/main.in
     #   seaborn
-matplotlib-inline==0.1.6
+matplotlib-inline==0.1.7
     # via
     #   ipykernel
     #   ipython
@@ -348,7 +350,7 @@ mypy-extensions==1.0.0
     # via
     #   -c requirements/pip/main.lock.txt
     #   typing-inspect
-myst-parser==2.0.0
+myst-parser==3.0.1
     # via -r requirements/pip/docs.in
 nbclient==0.10.0
     # via nbconvert
@@ -414,7 +416,7 @@ packaging==24.0
     #   pytest
     #   sphinx
     #   xarray
-pandas==2.2.1
+pandas==2.2.2
     # via
     #   -c requirements/pip/main.lock.txt
     #   joseki
@@ -447,13 +449,13 @@ pip-tools==7.4.1
     # via -r requirements/pip/dev.in
 pkginfo==1.10.0
     # via conda-lock
-platformdirs==4.2.0
+platformdirs==4.2.1
     # via
     #   -c requirements/pip/main.lock.txt
     #   jupyter-core
     #   pooch
     #   virtualenv
-pluggy==1.4.0
+pluggy==1.5.0
     # via pytest
 pooch==1.8.1
     # via
@@ -479,13 +481,13 @@ pybtex-docutils==1.0.3
     # via sphinxcontrib-bibtex
 pycparser==2.22
     # via cffi
-pydantic==2.6.4
+pydantic==2.7.1
     # via conda-lock
-pydantic-core==2.16.3
+pydantic-core==2.18.2
     # via pydantic
 pydata-sphinx-theme==0.15.2
     # via sphinx-book-theme
-pyerfa==2.0.1.3
+pyerfa==2.0.1.4
     # via astropy
 pygments==2.17.2
     # via
@@ -502,11 +504,11 @@ pyparsing==3.1.2
     # via
     #   -c requirements/pip/main.lock.txt
     #   matplotlib
-pyproject-hooks==1.0.0
+pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
-pytest==8.1.1
+pytest==8.2.0
     # via
     #   -r requirements/pip/tests.in
     #   pytest-json-report
@@ -536,12 +538,12 @@ pyyaml==6.0.1
     #   jupyter-events
     #   myst-parser
     #   pybtex
-pyzmq==25.1.2
+pyzmq==26.0.2
     # via
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
-referencing==0.34.0
+referencing==0.35.0
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -588,12 +590,14 @@ scipy==1.13.0
     #   joseki
     #   ussa1976
 seaborn==0.13.2
-    # via -r requirements/pip/recommended.in
+    # via
+    #   -r requirements/pip/docs.in
+    #   -r requirements/pip/recommended.in
 secretstorage==3.3.3
     # via keyring
 send2trash==1.8.3
     # via jupyter-server
-sf-hamilton==1.57.0
+sf-hamilton==1.59.1
     # via
     #   -c requirements/pip/main.lock.txt
     #   -r requirements/pip/main.in
@@ -608,7 +612,6 @@ six==1.16.0
     #   asttokens
     #   bleach
     #   html5lib
-    #   livereload
     #   pybtex
     #   python-dateutil
     #   rfc3339-validator
@@ -620,7 +623,7 @@ snowballstemmer==2.2.0
     # via sphinx
 soupsieve==2.5
     # via beautifulsoup4
-sphinx==7.2.6
+sphinx==7.3.7
     # via
     #   -r requirements/pip/docs.in
     #   autodocsumm
@@ -632,7 +635,7 @@ sphinx==7.2.6
     #   sphinx-copybutton
     #   sphinx-design
     #   sphinxcontrib-bibtex
-sphinx-autobuild==2024.2.4
+sphinx-autobuild==2024.4.16
     # via -r requirements/pip/docs.in
 sphinx-book-theme==1.1.2
     # via -r requirements/pip/docs.in
@@ -656,11 +659,13 @@ sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
 stack-data==0.6.3
     # via ipython
+starlette==0.37.2
+    # via sphinx-autobuild
 terminado==0.18.1
     # via
     #   jupyter-server
     #   jupyter-server-terminals
-tinycss2==1.2.1
+tinycss2==1.3.0
     # via nbconvert
 tomli==2.0.1
     # via
@@ -668,8 +673,8 @@ tomli==2.0.1
     #   conda-lock
     #   jupyterlab
     #   pip-tools
-    #   pyproject-hooks
     #   pytest
+    #   sphinx
 tomlkit==0.12.4
     # via conda-lock
 toolz==0.12.1
@@ -680,13 +685,12 @@ tornado==6.4
     #   jupyter-client
     #   jupyter-server
     #   jupyterlab
-    #   livereload
     #   terminado
 tqdm==4.66.2
     # via
     #   -c requirements/pip/main.lock.txt
     #   -r requirements/pip/main.in
-traitlets==5.14.2
+traitlets==5.14.3
     # via
     #   comm
     #   ipykernel
@@ -720,8 +724,10 @@ typing-extensions==4.11.0
     #   pydantic-core
     #   pydata-sphinx-theme
     #   sf-hamilton
+    #   starlette
     #   typer
     #   typing-inspect
+    #   uvicorn
 typing-inspect==0.9.0
     # via
     #   -c requirements/pip/main.lock.txt
@@ -740,8 +746,12 @@ ussa1976==0.3.4
     # via
     #   -c requirements/pip/main.lock.txt
     #   joseki
-virtualenv==20.25.1
+uvicorn==0.29.0
+    # via sphinx-autobuild
+virtualenv==20.26.0
     # via conda-lock
+watchfiles==0.21.0
+    # via sphinx-autobuild
 wcwidth==0.2.13
     # via prompt-toolkit
 webcolors==1.13
@@ -751,8 +761,10 @@ webencodings==0.5.1
     #   bleach
     #   html5lib
     #   tinycss2
-websocket-client==1.7.0
+websocket-client==1.8.0
     # via jupyter-server
+websockets==12.0
+    # via sphinx-autobuild
 wheel==0.43.0
     # via pip-tools
 widgetsnbextension==4.0.10
@@ -774,7 +786,7 @@ pip==24.0
     # via
     #   -r requirements/pip/dev.in
     #   pip-tools
-setuptools==69.2.0
+setuptools==69.5.1
     # via
     #   -r requirements/pip/dev.in
     #   pip-tools
