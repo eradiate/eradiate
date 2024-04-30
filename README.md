@@ -244,7 +244,7 @@ Got a question? Please visit our
 
 ## Authors and acknowledgements
 
-Eradiate is developed by a core team consisting of Vincent Leroy, Yvan Nollet,
+Eradiate is developed by a core team consisting of Vincent Leroy,
 Sebastian Schunke, Nicolas Misk and Yves Govaerts.
 
 Eradiate uses the
@@ -261,6 +261,38 @@ the [European Space Agency](http://www.esa.int/) (contract no
 40000127201/19/I‑BG).
 The design phase was funded by the [MetEOC-3 project](http://www.meteoc.org/)
 (EMPIR grant 16ENV03).
+
+## Citing Eradiate
+
+The most general citation is as follows:
+
+```bibtex
+@software{Eradiate,
+    author = {Leroy, Vincent and Nollet, Yvan and Schunke, Sebastian and Misk, Nicolas and Govaerts, Yves},
+    license = {LGPL-3.0},
+    title = {Eradiate radiative transfer model},
+    url = {https://github.com/eradiate/eradiate},
+    doi = {10.5281/zenodo.7224314},
+    year = {2024}
+}
+```
+
+If you want to reference a specific version, you can update the previous citation
+with `doi`, `year` and `version` fields populated with metadata retrieved from our
+[Zenodo records](https://zenodo.org/search?q=parent.id%3A7224314&f=allversions%3Atrue&l=list&p=1&s=10&sort=version).
+Example:
+
+```bibtex
+@software{Eradiate,
+    author = {Leroy, Vincent and Nollet, Yvan and Schunke, Sebastian and Misk, Nicolas and Govaerts, Yves},
+    license = {LGPL-3.0},
+    title = {Eradiate radiative transfer model},
+    url = {https://github.com/eradiate/eradiate},
+    doi = {10.5281/zenodo.10411036},
+    year = {2023},
+    version = {0.25.0},
+}
+```
 
 ## License
 
