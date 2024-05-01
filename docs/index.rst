@@ -74,7 +74,7 @@ Python and C++17. It relies on a radiometric kernel based on the
    :titlesonly:
    :caption: Data
 
-   rst/data/intro
+   Introduction <rst/data/intro.rst>
    Aerosols / particles <rst/data/generated/aerosols_particles.rst>
    rst/data/atmosphere_thermoprops
    rst/data/atmosphere_molecular_absorption
