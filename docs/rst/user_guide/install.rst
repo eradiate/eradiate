@@ -31,3 +31,17 @@ version, please refer to the :ref:`sec-developer_guide-dev_install`.
    installed automatically. However, if you are installing Eradiate to an
    environment already containing a Mitsuba installation, be sure to remove it
    before installing Eradiate.
+
+After installing Eradiate, it is recommended to download some support data to
+start simulations:
+
+.. code:: bash
+
+   eradiate data fetch minimal
+
+.. warning::
+
+   Since v0.27.0, molecular absorption databases are no longer downloaded lazily
+   when used for the first time. Instead, they must be downloaded prior to
+   running Eradiate. See the :doc:`data guide </rst/data/intro>` for more
+   information.

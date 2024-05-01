@@ -1,7 +1,7 @@
 .. _sec-data-intro:
 
-Introduction
-============
+Data guide introduction
+=======================
 
 Input data plays a role equally important to the radiative transfer equation
 integration algorithm when it comes to simulating radiative transfer. Data
