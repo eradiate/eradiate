@@ -5,6 +5,11 @@
 
 .. py:currentmodule:: eradiate.srf_tools
 
+Generators
+----------
+
+.. autofunction:: make_gaussian
+
 Trimming algorithms
 -------------------
 
