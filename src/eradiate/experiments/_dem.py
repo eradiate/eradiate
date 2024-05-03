@@ -6,7 +6,11 @@ import warnings
 import attrs
 
 from ._core import EarthObservationExperiment
-from ._helpers import measure_inside_atmosphere, surface_converter
+from ._helpers import (
+    check_geometry_atmosphere,
+    measure_inside_atmosphere,
+    surface_converter,
+)
 from ..attrs import documented, parse_docs
 from ..scenes.atmosphere import (
     Atmosphere,
@@ -25,7 +29,6 @@ from ..scenes.geometry import (
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
 from ..scenes.measure import DistantMeasure, Measure, TargetPoint
 from ..scenes.surface import BasicSurface, DEMSurface
-from ..units import to_quantity
 
 
 @parse_docs
@@ -126,44 +129,6 @@ class DEMExperiment(EarthObservationExperiment):
         self._normalize_atmosphere()
         self._normalize_measures()
 
-    def _check_geometry_comply_with_molecular_atmosphere(self, atmosphere):
-        """
-        Check that the experiment geometry is compatible with the molecular
-        atmosphere' vertical extent.
-
-        Parameters
-        ----------
-        atmosphere : MolecularAtmosphere
-            The molecular atmosphere to check.
-
-        Raises
-        ------
-        ValueError
-            If the geometry vertical extent exceeds the atmosphere vertical
-            extent.
-        """
-        z = to_quantity(atmosphere.thermoprops.z)
-        thermoprops_lower = z[0]
-        thermoprops_upper = z[-1]
-        suggested_solution = (
-            "Try to set the experiment geometry so that it does not go beyond "
-            "the vertical extent of the molecular atmosphere."
-        )
-        if self.geometry.zgrid.levels[0] < thermoprops_lower:
-            raise ValueError(
-                "Attribtues 'geometry' and 'atmosphere' are incompatible: "
-                f"'geometry.zgrid' lower bound ({self.geometry.zgrid.levels[0]}) "
-                f"exceeds lower bound of 'atmosphere.thermoprops' "
-                f"({thermoprops_lower}). {suggested_solution}"
-            )
-        if self.geometry.zgrid.levels[-1] > thermoprops_upper:
-            raise ValueError(
-                "Attribtues 'geometry' and 'atmosphere' are incompatible: "
-                f"'geometry.zgrid' upper bound ({self.geometry.zgrid.levels[-1]}) "
-                f"exceeds upper bound of 'atmosphere.thermoprops' "
-                f"({thermoprops_upper}). {suggested_solution}"
-            )
-
     def _normalize_atmosphere(self) -> None:
         """
         Enforce the experiment geometry on the atmosphere component(s).
@@ -173,11 +138,11 @@ class DEMExperiment(EarthObservationExperiment):
             # vertical extent, we verify here that the experiment's geometry
             # comply with the atmosphere's vertical extent.
             if isinstance(self.atmosphere, MolecularAtmosphere):
-                self._check_geometry_comply_with_molecular_atmosphere(self.atmosphere)
+                check_geometry_atmosphere(self.geometry, self.atmosphere)
             if isinstance(self.atmosphere, HeterogeneousAtmosphere):
                 if self.atmosphere.molecular_atmosphere is not None:
-                    self._check_geometry_comply_with_molecular_atmosphere(
-                        self.atmosphere.molecular_atmosphere
+                    check_geometry_atmosphere(
+                        self.geometry, self.atmosphere.molecular_atmosphere
                     )
 
             # Override atmosphere geometry with experiment geometry
@@ -235,9 +200,9 @@ class DEMExperiment(EarthObservationExperiment):
 
         for measure in self.measures:
             if measure_inside_atmosphere(self.atmosphere, measure):
-                kwargs[
-                    f"{measure.sensor_id}.atmosphere_medium_id"
-                ] = self.atmosphere.medium_id
+                kwargs[f"{measure.sensor_id}.atmosphere_medium_id"] = (
+                    self.atmosphere.medium_id
+                )
 
         return kwargs
 
