@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from ..scenes.atmosphere import Atmosphere
+from ..scenes.atmosphere import Atmosphere, MolecularAtmosphere
 from ..scenes.bsdfs import BSDF, bsdf_factory
+from ..scenes.geometry import SceneGeometry
 from ..scenes.measure import (
     DistantMeasure,
     Measure,
@@ -10,6 +11,7 @@ from ..scenes.measure import (
 )
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, Surface, surface_factory
+from ..units import to_quantity
 
 
 def measure_inside_atmosphere(atmosphere: Atmosphere, measure: Measure) -> bool:
@@ -78,3 +80,42 @@ def surface_converter(value: dict | Surface | BSDF) -> Surface:
         )
 
     return value
+
+
+def check_geometry_atmosphere(
+    geometry: SceneGeometry, atmosphere: MolecularAtmosphere
+) -> None:
+    """
+    Check that the experiment geometry is compatible with the vertical extent of
+    the molecular atmosphere.
+
+    Parameters
+    ----------
+    geometry : SceneGeometry
+        An experiment geometry.
+
+    atmosphere : MolecularAtmosphere
+        A molecular atmosphere.
+
+    Raises
+    ------
+    ValueError
+        If the geometry vertical extent exceeds the atmosphere vertical
+        extent.
+    """
+    z = to_quantity(atmosphere.thermoprops.z)
+    thermoprops_zbounds = z[[0, -1]]
+    geometry_zbounds = geometry.zgrid.levels[[0, -1]]
+    suggested_solution = (
+        "Try to set the experiment geometry so that it does not go beyond "
+        "the vertical extent of the molecular atmosphere."
+    )
+    if (geometry_zbounds[0] < thermoprops_zbounds[0]) or (
+        geometry_zbounds[1] > thermoprops_zbounds[1]
+    ):
+        raise ValueError(
+            "Attribtues 'geometry' and 'atmosphere' are incompatible: "
+            f"'geometry.zgrid' bounds ({geometry_zbounds}) go beyond the "
+            f"bounds of 'atmosphere.thermoprops' ({thermoprops_zbounds}). "
+            f"{suggested_solution}"
+        )
