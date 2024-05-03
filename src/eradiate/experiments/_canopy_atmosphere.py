@@ -7,6 +7,7 @@ import attrs
 
 from ._core import EarthObservationExperiment
 from ._helpers import (
+    check_geometry_atmosphere,
     measure_inside_atmosphere,
     surface_converter,
 )
@@ -35,7 +36,6 @@ from ..scenes.integrators import (
 from ..scenes.measure import DistantMeasure, Measure
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface
-from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
@@ -190,40 +190,6 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         self._normalize_atmosphere()
         self._normalize_measures()
 
-    def _check_geometry_comply_with_molecular_atmosphere(self, atmosphere):
-        """
-        Check that the experiment geometry is compatible with the molecular
-        atmosphere' vertical extent.
-
-        Parameters
-        ----------
-        atmosphere : MolecularAtmosphere
-            The molecular atmosphere to check.
-
-        Raises
-        ------
-        ValueError
-            If the geometry vertical extent exceeds the atmosphere vertical
-            extent.
-        """
-        z = to_quantity(atmosphere.thermoprops.z)
-        thermoprops_zbounds = z[[0, 1]]
-        geometry_zbounds = self.geometry.zgrid.levels[[0, 1]]
-        suggested_solution = (
-            "Try to set the experiment geometry so that it does not go beyond "
-            "the vertical extent of the molecular atmosphere."
-        )
-        if (
-            geometry_zbounds[0] < thermoprops_zbounds[0]
-            or geometry_zbounds[-1] > thermoprops_zbounds[-1]
-        ):
-            raise ValueError(
-                "Attribtues 'geometry' and 'atmosphere' are incompatible: "
-                f"'geometry.zgrid' bounds ({geometry_zbounds}) go beyond the "
-                f"bounds of 'atmosphere.thermoprops' ({thermoprops_zbounds}). "
-                f"{suggested_solution}"
-            )
-
     def _normalize_atmosphere(self) -> None:
         """
         Enforce the experiment geometry on the atmosphere component(s).
@@ -233,11 +199,11 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
             # vertical extent, we verify here that the experiment's geometry
             # comply with the atmosphere's vertical extent.
             if isinstance(self.atmosphere, MolecularAtmosphere):
-                self._check_geometry_comply_with_molecular_atmosphere(self.atmosphere)
+                check_geometry_atmosphere(self.geometry, self.atmosphere)
             if isinstance(self.atmosphere, HeterogeneousAtmosphere):
                 if self.atmosphere.molecular_atmosphere is not None:
-                    self._check_geometry_comply_with_molecular_atmosphere(
-                        self.atmosphere.molecular_atmosphere
+                    check_geometry_atmosphere(
+                        self.geometry, self.atmosphere.molecular_atmosphere
                     )
 
             # Override atmosphere geometry with experiment geometry
@@ -285,9 +251,9 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
 
         for measure in self.measures:
             if measure_inside_atmosphere(self.atmosphere, measure):
-                kwargs[
-                    f"{measure.sensor_id}.atmosphere_medium_id"
-                ] = self.atmosphere.medium_id
+                kwargs[f"{measure.sensor_id}.atmosphere_medium_id"] = (
+                    self.atmosphere.medium_id
+                )
 
         return kwargs
 
