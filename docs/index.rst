@@ -74,13 +74,13 @@ Python and C++17. It relies on a radiometric kernel based on the
    :titlesonly:
    :caption: Data
 
-   Introduction <rst/data/intro.rst>
-   Aerosols / particles <rst/data/generated/aerosols_particles.rst>
-   rst/data/atmosphere_thermoprops
-   rst/data/atmosphere_molecular_absorption
-   Solar irradiance <rst/data/solar_irradiance.rst>
-   rst/data/srf
-   rst/data/generated/rami_scenes
+   Introduction <rst/data/intro>
+   Atmosphere: Aerosols / particles <rst/data/generated/aerosols_particles>
+   Atmosphere: Molecular absorption <rst/data/atmosphere_thermoprops>
+   Atmosphere: Thermophysical properties <rst/data/atmosphere_molecular_absorption>
+   Solar irradiance <rst/data/solar_irradiance>
+   Spectral response functions <rst/data/srf>
+   RAMI benchmark scenes <rst/data/generated/rami_scenes>
 
 .. toctree::
    :maxdepth: 3
