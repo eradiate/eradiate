@@ -1,6 +1,7 @@
 """
 Particle layers.
 """
+
 from __future__ import annotations
 
 from functools import singledispatchmethod
@@ -285,9 +286,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         # Scatter this total OT to all layers
         # TODO: Make sure that axis order is consistent with other vectorized
         #  routines
+        fractions = self.eval_fractions(zgrid)
         tau_layers = np.broadcast_to(
             np.reshape(tau, (-1, 1)), (len(wavelengths), zgrid.n_layers)
-        ) * np.reshape(self.eval_fractions(zgrid), (1, -1))
+        ) * np.reshape(fractions, (1, -1))
 
         # Compute corresponding average coefficient
         sigma_t = tau_layers / zgrid.layer_height
