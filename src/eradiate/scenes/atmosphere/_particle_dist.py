@@ -126,6 +126,7 @@ class ExponentialParticleDistribution(ParticleDistribution):
     rate : float
         Decay rate :math:`\lambda`.
     """
+
     rate: float = attrs.field(default=5.0, converter=float)
 
     @rate.validator
@@ -149,7 +150,11 @@ class ExponentialParticleDistribution(ParticleDistribution):
             )
 
     def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
-        return np.exp(-x * self.rate) * self.rate / (1.0 - np.exp(-self.rate))
+        return np.where(
+            np.logical_or(x < 0.0, x > 1.0),
+            np.zeros_like(x),
+            np.exp(-x * self.rate) * self.rate / (1.0 - np.exp(-self.rate)),
+        )
 
 
 @parse_docs
@@ -189,8 +194,11 @@ class GaussianParticleDistribution(ParticleDistribution):
     )
 
     def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
-        return np.exp(-0.5 * np.square((x - self.mean) / self.std)) / (
-            self.std * np.sqrt(2.0 * np.pi)
+        return np.where(
+            np.logical_or(x < 0.0, x > 1.0),
+            np.zeros_like(x),
+            np.exp(-0.5 * np.square((x - self.mean) / self.std))
+            / (self.std * np.sqrt(2.0 * np.pi)),
         )
 
 
@@ -312,6 +320,7 @@ class ArrayParticleDistribution(ParticleDistribution):
         else:
             fill_value = np.nan
 
+        # TODO: This is unsafe, values of x outside of [0, 1] should return 0
         f = scipy.interpolate.interp1d(
             self.coords,
             self.values,
@@ -339,4 +348,5 @@ class InterpolatorParticleDistribution(ParticleDistribution):
     )
 
     def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
+        # TODO: This is unsafe, values of x outside of [0, 1] should return 0
         return self.interpolator(x)
