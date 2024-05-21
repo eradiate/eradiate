@@ -52,7 +52,7 @@ lazy-loader==0.4
     # via -r requirements/pip/main.in
 markdown-it-py==3.0.0
     # via rich
-matplotlib==3.8.4
+matplotlib==3.9.0
     # via -r requirements/pip/main.in
 mdurl==0.1.2
     # via markdown-it-py
@@ -96,11 +96,11 @@ pint==0.23
     #   pinttrs
 pinttrs==24.1.0
     # via -r requirements/pip/main.in
-platformdirs==4.2.1
+platformdirs==4.2.2
     # via pooch
 pooch==1.8.1
     # via -r requirements/pip/main.in
-pygments==2.17.2
+pygments==2.18.0
     # via rich
 pyparsing==3.1.2
     # via matplotlib
@@ -110,7 +110,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 pytz==2024.1
     # via pandas
-requests==2.31.0
+requests==2.32.1
     # via pooch
 rich==13.7.1
     # via
@@ -125,7 +125,7 @@ scipy==1.13.0
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-sf-hamilton==1.59.1
+sf-hamilton==1.62.0
     # via -r requirements/pip/main.in
 shellingham==1.5.4
     # via
@@ -133,7 +133,7 @@ shellingham==1.5.4
     #   typer
 six==1.16.0
     # via python-dateutil
-tqdm==4.66.2
+tqdm==4.66.4
     # via -r requirements/pip/main.in
 typer==0.12.3
     # via -r requirements/pip/main.in
@@ -151,10 +151,10 @@ urllib3==2.2.1
     # via requests
 ussa1976==0.3.4
     # via joseki
-xarray==2024.3.0
+xarray==2024.5.0
     # via
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-zipp==3.18.1
+zipp==3.18.2
     # via importlib-resources
