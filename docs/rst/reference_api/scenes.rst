@@ -279,6 +279,7 @@
    :toctree: generated/autosummary/
 
    Illumination
+   AbstractDirectionalIllumination
 
 **Factories**
 
