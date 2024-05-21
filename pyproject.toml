@@ -36,6 +36,7 @@ filterwarnings = [
 testpaths = "tests"
 
 [tool.ruff]
+exclude = ["docs/_ext/autodocsumm.py"]
 src = ["src", "tests"]
 
 [tool.ruff.lint]

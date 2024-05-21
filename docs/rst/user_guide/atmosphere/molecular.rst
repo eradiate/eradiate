@@ -35,7 +35,7 @@ The following atmospheric thermophysical properties models are pre-defined:
   * U.S. Standard
 
 .. warning::
-  
+
    `U.S. Standard Atmosphere, 1976` and `U.S. Standard` are not the same.
 
 Although they are pre-defined, these thermophysical properties can be customised
