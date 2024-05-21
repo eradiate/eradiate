@@ -80,6 +80,16 @@ COS_PI_4 = 0.5 * np.sqrt(2)
         ("south_right", [COS_PI_4, 0, COS_PI_4]),
         ("south_left", [-COS_PI_4, 0, COS_PI_4]),
     ],
+    ids=[
+        "east_right",
+        "east_left",
+        "north_right",
+        "north_left",
+        "west_right",
+        "west_left",
+        "south_right",
+        "south_left",
+    ],
 )
 def test_astro_object_azimuth_convention(mode_mono, azimuth_convention, expected):
     illumination = AstroObjectIllumination(
@@ -88,3 +98,14 @@ def test_astro_object_azimuth_convention(mode_mono, azimuth_convention, expected
         azimuth_convention=azimuth_convention,
     )
     assert np.allclose(illumination.direction, expected), illumination.direction
+
+
+@pytest.mark.parametrize(
+    "azimuth", [-90.0 * ureg.deg, -np.pi / 2 * ureg.rad], ids=["-90 deg", "-pi/2 rad"]
+)
+def test_astro_object_azimuth_negative_values(mode_mono, azimuth):
+    with pytest.warns(UserWarning):
+        illumination = AstroObjectIllumination(
+            azimuth=ureg.Quantity(azimuth), zenith=0.0 * ureg.deg
+        )
+        np.testing.assert_allclose(illumination.azimuth.m_as("deg"), 270.0)

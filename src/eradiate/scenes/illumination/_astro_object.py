@@ -5,7 +5,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._directional import DirectionalIllumination
+from ._core import AbstractDirectionalIllumination
 from ...attrs import documented, parse_docs
 from ...frame import angles_to_direction
 from ...units import unit_context_config as ucc
@@ -15,7 +15,7 @@ from ...validators import is_positive
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class AstroObjectIllumination(DirectionalIllumination):
+class AstroObjectIllumination(AbstractDirectionalIllumination):
     """
     Astronomical Object Illumination scene element [``astro_object``].
 
