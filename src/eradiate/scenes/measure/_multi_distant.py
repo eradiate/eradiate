@@ -42,7 +42,7 @@ class Layout(ABC):
             kw_only=True,
         ),
         doc="Azimuth convention used by this layout. If ``None``, the global "
-        "default configuration is used (see :class:`.EradiateConfig`).",
+        "default configuration is used (see :ref:`sec-user_guide-config`).",
         type=".AzimuthConvention",
         init_type=".AzimuthConvention or str, optional",
         default="None",
