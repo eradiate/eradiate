@@ -54,7 +54,7 @@ class DistantFluxMeasure(DistantMeasure):
             validator=attrs.validators.instance_of(frame.AzimuthConvention),
         ),
         doc="Azimuth convention. If ``None``, the global default configuration "
-        "is used (see :class:`.EradiateConfig`).",
+        "is used (see :ref:`sec-user_guide-config`).",
         type=".AzimuthConvention",
         init_type=".AzimuthConvention or str, optional",
         default="None",
