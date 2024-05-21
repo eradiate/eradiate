@@ -92,7 +92,7 @@ markdown-it-py==3.0.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   rich
-matplotlib==3.8.4
+matplotlib==3.9.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
@@ -151,7 +151,7 @@ pinttrs==24.1.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
-platformdirs==4.2.1
+platformdirs==4.2.2
     # via
     #   -c requirements/pip/optional.lock.txt
     #   pooch
@@ -159,7 +159,7 @@ pooch==1.8.1
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
-pygments==2.17.2
+pygments==2.18.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   rich
@@ -176,7 +176,7 @@ pytz==2024.1
     # via
     #   -c requirements/pip/optional.lock.txt
     #   pandas
-requests==2.31.0
+requests==2.32.1
     # via
     #   -c requirements/pip/optional.lock.txt
     #   pooch
@@ -199,7 +199,7 @@ scipy==1.13.0
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-sf-hamilton==1.59.1
+sf-hamilton==1.62.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
@@ -212,7 +212,7 @@ six==1.16.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   python-dateutil
-tqdm==4.66.2
+tqdm==4.66.4
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
@@ -243,13 +243,13 @@ ussa1976==0.3.4
     # via
     #   -c requirements/pip/optional.lock.txt
     #   joseki
-xarray==2024.3.0
+xarray==2024.5.0
     # via
     #   -c requirements/pip/optional.lock.txt
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-zipp==3.18.1
+zipp==3.18.2
     # via
     #   -c requirements/pip/optional.lock.txt
     #   importlib-resources

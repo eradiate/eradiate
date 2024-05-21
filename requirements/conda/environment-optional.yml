@@ -12,12 +12,11 @@ dependencies:
   - pip>=22
   - setuptools>=61
   # docs
-  - autodocsumm
   - myst-parser
   - nbsphinx>=0.9.0
   - seaborn
   - sphinx
-  - sphinx-autobuild
+  - sphinx-autobuild<=2021
   - sphinx-book-theme>=1.0
   - sphinx-copybutton
   - sphinx-design
