@@ -79,7 +79,7 @@ Documentation
 ^^^^^^^^^^^^^
 
 * `Sphinx <https://www.sphinx-doc.org/>`_
-* `autodocsumm <https://autodocsumm.readthedocs.io/>`_
+* `autodocsumm <https://autodocsumm.readthedocs.io/>`_ (vendored, see :ghpr:`410` for details)
 * `myst-parser <https://myst-parser.readthedocs.io/>`_
 * `nbsphinx <https://nbsphinx.readthedocs.io/>`_
 * `sphinx-book-theme <https://sphinx-book-theme.readthedocs.io/>`_
