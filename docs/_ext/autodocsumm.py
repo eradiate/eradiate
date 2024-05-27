@@ -86,9 +86,7 @@ except ImportError:
         return string
 
 
-from . import _version
-
-__version__ = _version.get_versions()["version"]
+__version__ = "0.2.12"  # Modified from original to avoid including the _version module
 
 
 logger = logging.getLogger(__name__)
