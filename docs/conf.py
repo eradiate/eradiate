@@ -47,7 +47,6 @@ extensions = [
     "sphinx.ext.napoleon",  # Better docstrings
     "sphinx.ext.viewcode",  # Add links to highlighted source code
     # Third-party
-    "autodocsumm",  # Possibly add autosummary table to autodoc
     "myst_parser",  # Markdown support
     "nbsphinx",  # Display notebooks
     "sphinx_copybutton",
@@ -55,6 +54,7 @@ extensions = [
     "sphinxcontrib.bibtex",  # BibTeX bibliography
     # Custom extensions
     "pluginparameters",  # Directives and roles to document Mitsuba plugins
+    "autodocsumm",  # Possibly add autosummary table to autodoc (external, vendored)
 ]
 
 # -- GitHub quicklinks with 'extlinks' -----------------------------------------
