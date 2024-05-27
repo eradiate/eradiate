@@ -10,6 +10,8 @@ aenum==3.1.15
     # via -r requirements/pip/main.in
 alabaster==0.7.16
     # via sphinx
+asttokens==2.4.1
+    # via stack-data
 attrs==23.2.0
     # via
     #   -r requirements/pip/main.in
@@ -30,6 +32,8 @@ bleach==6.1.0
     # via nbconvert
 cachetools==5.3.3
     # via -r requirements/pip/main.in
+cerberus==1.3.5
+    # via -r requirements/pip/main.in
 certifi==2024.2.2
     # via
     #   netcdf4
@@ -48,6 +52,8 @@ contourpy==1.2.1
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
+decorator==5.1.1
+    # via ipython
 defusedxml==0.7.1
     # via nbconvert
 dessinemoi==24.1.0
@@ -62,9 +68,13 @@ docutils==0.21.2
     #   sphinxcontrib-bibtex
 dynaconf==3.2.5
     # via -r requirements/pip/main.in
+exceptiongroup==1.2.1
+    # via ipython
+executing==2.0.1
+    # via stack-data
 fastjsonschema==2.19.1
     # via nbformat
-fonttools==4.51.0
+fonttools==4.52.3
     # via matplotlib
 idna==3.7
     # via requests
@@ -80,6 +90,10 @@ importlib-resources==6.4.0
     # via
     #   joseki
     #   matplotlib
+ipython==8.18.1
+    # via -r requirements/pip/docs.in
+jedi==0.19.1
+    # via ipython
 jinja2==3.1.4
     # via
     #   myst-parser
@@ -92,7 +106,7 @@ jsonschema==4.22.0
     # via nbformat
 jsonschema-specifications==2023.12.1
     # via jsonschema
-jupyter-client==8.6.1
+jupyter-client==8.6.2
     # via nbclient
 jupyter-core==5.7.2
     # via
@@ -123,6 +137,8 @@ matplotlib==3.9.0
     # via
     #   -r requirements/pip/main.in
     #   seaborn
+matplotlib-inline==0.1.7
+    # via ipython
 mdit-py-plugins==0.4.1
     # via myst-parser
 mdurl==0.1.2
@@ -180,6 +196,10 @@ pandas==2.2.2
     #   xarray
 pandocfilters==1.5.1
     # via nbconvert
+parso==0.8.4
+    # via jedi
+pexpect==4.9.0
+    # via ipython
 pillow==10.3.0
     # via matplotlib
 pint==0.23
@@ -195,6 +215,12 @@ platformdirs==4.2.2
     #   pooch
 pooch==1.8.1
     # via -r requirements/pip/main.in
+prompt-toolkit==3.0.44
+    # via ipython
+ptyprocess==0.7.0
+    # via pexpect
+pure-eval==0.2.2
+    # via stack-data
 pybtex==0.24.0
     # via
     #   pybtex-docutils
@@ -206,6 +232,7 @@ pydata-sphinx-theme==0.15.2
 pygments==2.18.0
     # via
     #   accessible-pygments
+    #   ipython
     #   nbconvert
     #   pydata-sphinx-theme
     #   rich
@@ -229,7 +256,7 @@ referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.1
+requests==2.32.2
     # via
     #   pooch
     #   sphinx
@@ -245,14 +272,14 @@ ruamel-yaml==0.18.6
     # via -r requirements/pip/main.in
 ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
-scipy==1.13.0
+scipy==1.13.1
     # via
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
 seaborn==0.13.2
     # via -r requirements/pip/docs.in
-sf-hamilton==1.62.0
+sf-hamilton==1.63.0
     # via -r requirements/pip/main.in
 shellingham==1.5.4
     # via
@@ -260,6 +287,7 @@ shellingham==1.5.4
     #   typer
 six==1.16.0
     # via
+    #   asttokens
     #   bleach
     #   livereload
     #   pybtex
@@ -285,7 +313,7 @@ sphinx-book-theme==1.1.2
     # via -r requirements/pip/docs.in
 sphinx-copybutton==0.5.2
     # via -r requirements/pip/docs.in
-sphinx-design==0.5.0
+sphinx-design==0.6.0
     # via -r requirements/pip/docs.in
 sphinxcontrib-applehelp==1.0.8
     # via sphinx
@@ -301,6 +329,8 @@ sphinxcontrib-qthelp==1.0.7
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
+stack-data==0.6.3
+    # via ipython
 tinycss2==1.3.0
     # via nbconvert
 tomli==2.0.1
@@ -313,16 +343,19 @@ tqdm==4.66.4
     # via -r requirements/pip/main.in
 traitlets==5.14.3
     # via
+    #   ipython
     #   jupyter-client
     #   jupyter-core
+    #   matplotlib-inline
     #   nbclient
     #   nbconvert
     #   nbformat
     #   nbsphinx
 typer==0.12.3
     # via -r requirements/pip/main.in
-typing-extensions==4.11.0
+typing-extensions==4.12.0
     # via
+    #   ipython
     #   pint
     #   pydata-sphinx-theme
     #   sf-hamilton
@@ -336,6 +369,8 @@ urllib3==2.2.1
     # via requests
 ussa1976==0.3.4
     # via joseki
+wcwidth==0.2.13
+    # via prompt-toolkit
 webencodings==0.5.1
     # via
     #   bleach
@@ -345,7 +380,7 @@ xarray==2024.5.0
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-zipp==3.18.2
+zipp==3.19.0
     # via
     #   importlib-metadata
     #   importlib-resources
