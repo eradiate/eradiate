@@ -1,3 +1,4 @@
+import logging
 import os.path
 import textwrap
 from pathlib import Path
@@ -5,6 +6,7 @@ from typing import List, Optional
 
 import typer
 from rich.console import Console
+from rich.logging import RichHandler
 from ruamel.yaml import YAML
 from typing_extensions import Annotated
 
@@ -12,9 +14,19 @@ import eradiate
 
 from ..data._util import get_file_list, known_file_lists
 from ..exceptions import DataError
+from ..radprops._absorption import (
+    KNOWN_DATABASES as KNOWN_MOLECULAR_ABSORPTION_DATABASES,
+)
+from ..radprops._absorption import AbsorptionDatabase
 
 app = typer.Typer()
 console = Console(color_system=None)
+
+FORMAT = "%(message)s"
+logging.basicConfig(
+    level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
+)
+logger = logging.getLogger(__file__)
 
 
 @app.callback()
@@ -118,10 +130,13 @@ def fetch(
         typer.Argument(
             help="An arbitrary number of relative paths to files to be "
             "retrieved from the data store or file list specifications. "
+            "A file list keyword can also be specified to download a "
+            "pre-defined list of files (use the `--list` option to display) "
+            "available keywords. "
             "If unset, the list of files is read from a YAML file which can be "
-            "specified by using the ``--from-file`` option, if it is specified. "
-            "Otherwise, it defaults to ``all`` in a production environment and "
-            "``minimal`` in a development environment."
+            "specified by using the `--from-file` option, if it is used. "
+            "Otherwise, it defaults to `all` in a production environment and "
+            "`minimal` in a development environment."
         ),
     ] = None,
     from_file: Annotated[
@@ -284,3 +299,47 @@ def info(
             if the_repr is not None:
                 console.print(f"  {section_title}")
                 console.print(textwrap.indent(reprs[repr_key], " " * 4))
+
+
+@app.command()
+def check(
+    keywords: Annotated[
+        Optional[List[str]],
+        typer.Argument(
+            help="A keyword defining the datasets that are to be checked. "
+            "See the `--list` option for available keywords,"
+        ),
+    ] = None,
+    list: Annotated[
+        bool,
+        typer.Option(
+            "--list",
+            "-l",
+            help="List known keywords and exit.",
+        ),
+    ] = False,
+    fix: Annotated[
+        bool,
+        typer.Option(
+            "--fix",
+            "-f",
+            help="Fix issues that can be.",
+        ),
+    ] = False,
+):
+    """
+    Check data for availability and integrity, optionally fix them.
+    """
+    if list:
+        print("Known keywords:")
+        for key in KNOWN_MOLECULAR_ABSORPTION_DATABASES.keys():
+            print(f"  {key}")
+        exit(0)
+
+    for key in keywords:
+        logger.info(f"Opening '{key}'")
+        try:
+            AbsorptionDatabase.from_name(key, fix=fix)
+            logger.info("Success!")
+        except FileNotFoundError:
+            pass

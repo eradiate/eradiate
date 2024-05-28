@@ -62,7 +62,7 @@ Downloading data
 Data download is done using the ``eradiate data fetch`` command
 (see :ref:`sec-reference_cli`). The most common way to download data is to
 reference a file list when calling ``eradiate data fetch``. Known file lists
-are displayed using the ``--list`` option:
+are displayed using the ``--list`` option, *e.g.*:
 
 .. code-block:: console
 
@@ -89,6 +89,24 @@ A specific file list can then be downloaded by simply requesting it, *e.g.*:
    ✓ found
    [/home/username/src/eradiate/.eradiate_downloads/stable/spectra/absorpti
    on/mono/komodo/metadata.json]
+
+.. note::
+
+   Some data might require ancillary files that are not part of the download
+   lists. For example, the current format of molecular absorption databases uses
+   index and spectral coverage tables, which can be missing from the download
+   list, but can be built by Eradiate automatically. While this is done
+   automatically when creating an :class:`.AbsorptionDatabase`, it can also be
+   done manually prior to running computations with Eradiate, using the
+   ``eradiate data check`` command with the ``--fix`` option, *e.g.*:
+
+   .. code-block:: console
+
+      $ eradiate data check monotropa --fix
+      [10:44:35] INFO     Opening 'monotropa'
+                 WARNING  Could not find spectral coverage table, building it
+      [10:44:37] INFO     Success!
+
 
 Accessing data (advanced users and developers)
 ----------------------------------------------
