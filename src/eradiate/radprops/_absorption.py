@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import errno
 import glob
 import json
 import logging
@@ -351,7 +352,9 @@ class AbsorptionDatabase:
         return result
 
     @classmethod
-    def from_directory(cls, dir_path: PathLike, lazy=False) -> AbsorptionDatabase:
+    def from_directory(
+        cls, dir_path: PathLike, lazy: bool = False, fix: bool = True
+    ) -> AbsorptionDatabase:
         """
         Initialize a CKD database from a directory that contains one or several
         datasets.
@@ -361,9 +364,22 @@ class AbsorptionDatabase:
         dir_path : path-like
             Path where the CKD database is located.
 
+        lazy : bool
+            Access mode switch: if True, load data lazily; else, load data
+            eagerly.
+
+        fix : bool
+            If ``True``, attempt generating missing index files upon
+            initialization. Otherwise, raise if they are missing.
+
         Returns
         -------
         AbsorptionDatabase
+
+        Raises
+        ------
+        FileNotFoundError
+            If an index file is missing and ``fix`` is ``False``.
         """
         dir_path = Path(dir_path).resolve()
 
@@ -374,22 +390,35 @@ class AbsorptionDatabase:
             metadata = {}
 
         filenames = glob.glob(os.path.join(dir_path, "*.nc"))
-        try:
-            logger.debug("Loading index file")
-            index = pd.read_csv(dir_path / "index.csv")
-        except FileNotFoundError:
-            logger.debug("Could not find index file, building it")
+
+        logger.debug("Loading index file")
+        index_path = dir_path / "index.csv"
+        if index_path.is_file():
+            index = pd.read_csv(index_path)
+        elif fix:
+            logger.warning("Could not find index file, building it")
             index = cls._make_index(filenames)
-            index.to_csv(dir_path / "index.csv", index=False)
+            index.to_csv(index_path, index=False)
+        else:
+            logger.critical(f"Could not find index file '{index_path}'")
+            raise FileNotFoundError(errno.ENOENT, "Missing index file", index_path)
         index = index.sort_values(by="wl_min [nm]").reset_index(drop=True)
 
-        try:
-            logger.debug("Loading spectral coverage table file")
-            spectral_coverage = pd.read_csv(dir_path / "spectral.csv", index_col=(0, 1))
-        except FileNotFoundError:
-            logger.debug("Could not find spectral coverage table, building it")
+        logger.debug("Loading spectral coverage table file")
+        spectral_coverage_path = dir_path / "spectral.csv"
+        if spectral_coverage_path.is_file():
+            spectral_coverage = pd.read_csv(spectral_coverage_path, index_col=(0, 1))
+        elif fix:
+            logger.warning("Could not find spectral coverage table, building it")
             spectral_coverage = cls._make_spectral_coverage(filenames)
             spectral_coverage.to_csv(dir_path / "spectral.csv")
+        else:
+            logger.critical(
+                f"Could not find spectral coverage table '{spectral_coverage_path}'"
+            )
+            raise FileNotFoundError(
+                errno.ENOENT, "Missing spectral coverage table", spectral_coverage_path
+            )
 
         return cls(dir_path, index, spectral_coverage, metadata=metadata, lazy=lazy)
 
@@ -402,6 +431,10 @@ class AbsorptionDatabase:
         ----------
         name : path-like
             Name of the requested CKD database.
+
+        kwargs
+            Additional keyword arguments are forwarded to the :meth:`.from_directory`
+            constructor.
 
         Returns
         -------

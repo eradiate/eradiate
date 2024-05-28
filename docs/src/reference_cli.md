@@ -42,11 +42,32 @@ $ eradiate data [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `check`: Check data for availability and integrity,...
 * `fetch`: Fetch files from the Eradiate data store.
 * `info`: Display information about data store...
 * `make-registry`: Recursively construct a file registry from...
 * `purge-cache`: Purge the cache of online data stores.
 * `update-registries`: Update local registries for online sources.
+
+#### `eradiate data check`
+
+Check data for availability and integrity, optionally fix them.
+
+**Usage**:
+
+```console
+$ eradiate data check [OPTIONS] [KEYWORDS]...
+```
+
+**Arguments**:
+
+* `[KEYWORDS]...`: A keyword defining the datasets that are to be checked. See the `--list` option for available keywords,
+
+**Options**:
+
+* `-l, --list`: List known keywords and exit.
+* `-f, --fix`: Fix issues that can be.
+* `--help`: Show this message and exit.
 
 #### `eradiate data fetch`
 
@@ -60,7 +81,7 @@ $ eradiate data fetch [OPTIONS] [FILE_LIST]...
 
 **Arguments**:
 
-* `[FILE_LIST]...`: An arbitrary number of relative paths to files to be retrieved from the data store or file list specifications. If unset, the list of files is read from a YAML file which can be specified by using the ``--from-file`` option, if it is specified. Otherwise, it defaults to ``all`` in a production environment and ``minimal`` in a development environment.
+* `[FILE_LIST]...`: An arbitrary number of relative paths to files to be retrieved from the data store or file list specifications. A file list keyword can also be specified to download a pre-defined list of files (use the `--list` option to display) available keywords. If unset, the list of files is read from a YAML file which can be specified by using the `--from-file` option, if it is used. Otherwise, it defaults to `all` in a production environment and `minimal` in a development environment.
 
 **Options**:
 
