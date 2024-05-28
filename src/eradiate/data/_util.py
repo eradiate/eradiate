@@ -50,6 +50,9 @@ def known_file_lists() -> list[str]:
 
 
 def get_file_list(spec: str):
+    """
+    Get a list of files corresponding to a specifier (i.e. an identifier).
+    """
     try:
         return FILE_LIST_LOADERS[spec].get_file_list()
     except KeyError as e:
