@@ -54,6 +54,12 @@ and, if the data variable ``error`` is present:
 
 * ``ng`` : number of quadrature :math:`g`-point.
 
+.. warning::
+   Although we try to handle out-of range interpolation errors as gracefully as
+   possible, it is strongly recommend to ensure that thermophysical parameter
+   values can be used as arguments to interpolate in the molecular absorption
+   database when assembling molecular absorption data and / or thermophysical
+   parameters.
 
 Available datasets
 ------------------

@@ -49,14 +49,10 @@ def plot_sigma_t(
 
     from eradiate.units import to_quantity
 
-    for (
-        atmosphere
-    ) in atmospheres:  # Try to get a default spectral set from the atmosphere object
-        spectral_set = atmosphere.spectral_set()
-        if spectral_set is not None:
-            si = next(atmospheres[0].spectral_set().spectral_indices())
     if si is None:  # If none is found, fall back to the default (550 nm)
         si = SpectralIndex.new()
+    else:  # Otherwise, apply conversion protocol
+        si = SpectralIndex.convert(si)
 
     if labels is None:
         label_iter = iter([None for _ in atmospheres])
