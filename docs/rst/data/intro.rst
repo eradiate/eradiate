@@ -56,6 +56,8 @@ Download directory
     location, if this setting is not overridden by the user, depends on whether
     Eradiate is operating in development mode or not.
 
+.. _sec-data-intro-download:
+
 Downloading data
 ----------------
 
