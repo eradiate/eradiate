@@ -20,6 +20,43 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
    become part of the API, they need to be either transferred to a public module
    or exposed in a public module.
 
+Quick access
+------------
+
+.. grid:: 2
+
+    .. grid-item::
+
+        .. card:: :fas:`circle-play` Core
+            :link: eradiate_core
+            :link-type: doc
+
+            ``eradiate``
+
+    .. grid-item::
+
+        .. card:: :fas:`globe` Scenes
+            :link: scenes
+            :link-type: doc
+
+            ``eradiate.scenes``
+
+    .. grid-item::
+
+        .. card:: :fas:`vials` Experiments
+            :link: experiments
+            :link-type: doc
+
+            ``eradiate.experiments``
+
+    .. grid-item::
+
+        .. card:: :fas:`gears` Configuration
+            :link: config
+            :link-type: doc
+
+            ``eradiate.config``
+
 Alphabetical list of modules
 ----------------------------
 
