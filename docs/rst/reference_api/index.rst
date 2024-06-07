@@ -23,39 +23,32 @@ Eradiate's API reference documentation is generated automatically using Sphinx's
 Quick access
 ------------
 
-.. grid:: 2
+.. grid:: 1 2 auto auto
+    :gutter: 3
 
-    .. grid-item::
+    .. grid-item-card:: :fas:`circle-play` Core
+        :link: eradiate_core
+        :link-type: doc
 
-        .. card:: :fas:`circle-play` Core
-            :link: eradiate_core
-            :link-type: doc
+        ``eradiate``
 
-            ``eradiate``
+    .. grid-item-card:: :fas:`globe` Scenes
+        :link: scenes
+        :link-type: doc
 
-    .. grid-item::
+        ``eradiate.scenes``
 
-        .. card:: :fas:`globe` Scenes
-            :link: scenes
-            :link-type: doc
+    .. grid-item-card:: :fas:`vials` Experiments
+        :link: experiments
+        :link-type: doc
 
-            ``eradiate.scenes``
+        ``eradiate.experiments``
 
-    .. grid-item::
+    .. grid-item-card:: :fas:`gears` Configuration
+        :link: config
+        :link-type: doc
 
-        .. card:: :fas:`vials` Experiments
-            :link: experiments
-            :link-type: doc
-
-            ``eradiate.experiments``
-
-    .. grid-item::
-
-        .. card:: :fas:`gears` Configuration
-            :link: config
-            :link-type: doc
-
-            ``eradiate.config``
+        ``eradiate.config``
 
 Alphabetical list of modules
 ----------------------------
