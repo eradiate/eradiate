@@ -7,7 +7,10 @@ from textwrap import dedent
 import attrs
 
 import eradiate
-from eradiate.plot import dashboard_particle_dataset
+from eradiate.plot import (
+    absorption_database_spectral_coverage,
+    dashboard_particle_dataset,
+)
 from eradiate.scenes.biosphere import (
     RAMIActualCanopies,
     RAMIHeterogeneousAbstractCanopies,
@@ -26,36 +29,6 @@ HEADER = dedent(
       target automates this process.
     """
 ).strip()
-
-
-@attrs.define
-class ParticleRadpropsInfo:
-    keyword: str
-    fname: str
-    description: str | None = attrs.field(default=None)
-    aliases: list[str] = attrs.field(factory=list)
-
-
-PARTICLE_RADPROPS = [
-    ParticleRadpropsInfo(id, f"spectra/particles/{id}.nc")
-    for id in [
-        "govaerts_2021-continental-extrapolated",
-        "govaerts_2021-desert-extrapolated",
-        "sixsv-biomass_burning",
-        "sixsv-continental",
-        "sixsv-desert",
-        "sixsv-maritime",
-        "sixsv-stratospheric",
-        "sixsv-urban",
-    ]
-]
-
-RAMI_SCENE_COMMENTS = {
-    "HET51_WWO_TLS": (
-        "This version of the Wytham Wood scene uses data from the updated v2 "
-        "dataset."
-    )
-}
 
 
 def write_if_modified(filename, content):
@@ -81,6 +54,150 @@ def savefig(fig, filename: Path, **kwargs):
     fig.savefig(filename, **kwargs)
 
 
+@attrs.define
+class AbsorptionDatabaseInfo:
+    keyword: str
+    path: str
+    spectral_sampling: str
+
+
+ABSORPTION_DATABASES = {"mono": [], "ckd": []}
+ABSORPTION_DATABASES["ckd"].extend(
+    [
+        AbsorptionDatabaseInfo(
+            keyword="monotropa",
+            path="spectra/absorption/ckd/monotropa",
+            spectral_sampling="100 cm⁻¹",
+        ),
+        AbsorptionDatabaseInfo(
+            keyword="mycena",
+            path="spectra/absorption/ckd/mycena",
+            spectral_sampling="10 nm",
+        ),
+        AbsorptionDatabaseInfo(
+            keyword="panellus",
+            path="spectra/absorption/ckd/panellus",
+            spectral_sampling="1 nm",
+        ),
+    ]
+)
+
+
+def generate_absorption_database_visual(
+    info: AbsorptionDatabaseInfo, outfile: Path, force=False
+):
+    # Create summary plot for an absorption database
+    if outfile.is_file() and not force:  # Skip if file exists
+        return
+
+    print(f"Generating molecular absorption database visual in '{outfile}'")
+    db = eradiate.radprops.AbsorptionDatabase.from_name(info.keyword)
+    fig, _ = absorption_database_spectral_coverage(db)
+    savefig(fig, outfile, dpi=150, bbox_inches="tight")
+
+
+def generate_absorption_database_summary():
+    # Write a table with the list of particle radiative property datasets
+    outdir_visuals = Path(__file__).parent.absolute() / "fig/absorption_databases"
+    outfile_rst = (
+        Path(__file__).parent.absolute() / "rst/data/generated/absorption_databases.rst"
+    )
+    print(f"Generating molecular absorption database index in '{outfile_rst}'")
+
+    sections = [
+        dedent(
+            """
+.. _sec-data-molecular_absorption:
+
+Atmosphere: Molecular absorption
+================================
+
+Molecular absorption databases tabulate the volume absorption coefficient of a
+gas mixture against the spectral coordinates, the volume fraction of the mixture
+components, air pressure and air temperature.
+Eradiate's built-in molecular absorption datasets are managed by the data store
+(see :ref:`sec-data-intro` for details).
+
+Format (CKD)
+------------
+
+* **Format** ``xarray.Dataset`` (in-memory), NetCDF (storage)
+* **Dimensions**
+
+  * ``w``: radiation wavelength
+  * ``g``: cumulative probability of the absorption coefficient distribution
+  * ``p``: air pressure
+  * ``t``: air temperature
+  * ``x_M``, where ``M`` is the molecule formula, *e.g.* ``x_H2O``: gas mixture mole fractions
+
+* **Coordinates** (all dimension coordinates; when relevant, ``units`` are
+  required and specified in the units metadata field)
+
+  * ``w`` float [length]
+  * ``p`` float [pressure]
+  * ``t`` float [temperature]
+  * ``x_M`` float [dimensionless]
+
+* **Data variables** (when relevant, units are required and  specified in the
+  units metadata field)
+
+  * ``sigma_a`` (``w``, ``p``, ``t``, ``x_M``): volume absorption coefficient [length^-1]
+
+.. dropdown:: Full validation schema
+
+   .. literalinclude:: /resources/data_schemas/absorption_database_ckd_v1.yml
+"""
+        ).strip()
+    ]
+    lst = ["\n".join(["Database index", "--------------"])]
+
+    for info in ABSORPTION_DATABASES["ckd"]:
+        outfile_visual = outdir_visuals / f"{info.keyword}.png"
+
+        generate_absorption_database_visual(info, outfile_visual)
+        title = f"``{info.keyword}``"
+        item = "\n".join(
+            [
+                title,
+                "^" * len(title),
+                "",
+                f"Datastore path: ``{info.path}``",
+                "",
+                f"Spectral sampling: {info.spectral_sampling}",
+                "",
+                f".. image:: /fig/absorption_databases/{info.keyword}.png",
+            ]
+        )
+        lst.append(item)
+
+    sections.append("\n\n".join(lst))
+    result = "\n\n".join([HEADER] + sections) + "\n"
+    write_if_modified(outfile_rst, result)
+
+
+@attrs.define
+class ParticleRadpropsInfo:
+    keyword: str
+    fname: str
+    description: str | None = attrs.field(default=None)
+    aliases: list[str] = attrs.field(factory=list)
+
+
+PARTICLE_RADPROPS = [
+    ParticleRadpropsInfo(id, f"spectra/particles/{id}.nc")
+    for id in [
+        "govaerts_2021-continental-extrapolated",
+        "govaerts_2021-desert-extrapolated",
+        "sixsv-biomass_burning",
+        "sixsv-continental",
+        "sixsv-desert",
+        "sixsv-maritime",
+        "sixsv-stratospheric",
+        "sixsv-urban",
+    ]
+]
+
+
 def generate_particle_radprops_visual(
     info: ParticleRadpropsInfo, outfile: Path, force=False
 ):
@@ -91,12 +208,13 @@ def generate_particle_radprops_visual(
     with eradiate.data.open_dataset(info.fname) as ds:
         print(f"Generating particle radiative property visual in '{outfile}'")
         fig, _ = dashboard_particle_dataset(ds)
-        savefig(fig, outfile, dpi=150)
+        savefig(fig, outfile, dpi=150, bbox_inches="tight")
 
 
 def generate_particle_radprops_summary():
     # Write a table with the list of particle radiative property datasets
-    outdir_visuals = Path(__file__).parent.absolute() / "rst/data/fig"
+    outdir_visuals_relative = "fig/particle_radprops"
+    outdir_visuals_absolute = Path(__file__).parent.absolute() / outdir_visuals_relative
     outfile_rst = (
         Path(__file__).parent.absolute() / "rst/data/generated/aerosols_particles.rst"
     )
@@ -153,7 +271,7 @@ Format
     lst = ["\n".join(["Dataset index", "-------------"])]
 
     for info in PARTICLE_RADPROPS:
-        outfile_visual = outdir_visuals / f"{info.keyword}.png"
+        outfile_visual = outdir_visuals_absolute / f"{info.keyword}.png"
 
         generate_particle_radprops_visual(info, outfile_visual)
         title = f"``{info.keyword}``"
@@ -166,7 +284,7 @@ Format
                 "",
                 f"{info.description if info.description else '*No description available.*'}",
                 "",
-                f".. image:: ../fig/{info.keyword}.png",
+                f".. image:: /{outdir_visuals_relative}/{info.keyword}.png",
             ]
         )
         lst.append(item)
@@ -174,6 +292,14 @@ Format
     sections.append("\n\n".join(lst))
     result = "\n\n".join([HEADER] + sections) + "\n"
     write_if_modified(outfile_rst, result)
+
+
+RAMI_SCENE_COMMENTS = {
+    "HET51_WWO_TLS": (
+        "This version of the Wytham Wood scene uses data from the updated v2 "
+        "dataset."
+    )
+}
 
 
 def generate_rami_scene_summary():

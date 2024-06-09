@@ -187,7 +187,7 @@ class AbsorptionDatabase:
 
     _spectral_coverage: pd.DataFrame = documented(
         attrs.field(repr=False),
-        doc="Dataframe containing that unrolls the spectral information contained in "
+        doc="Dataframe that unrolls the spectral information contained in "
         "all data files in the database.",
         type="DataFrame",
     )
