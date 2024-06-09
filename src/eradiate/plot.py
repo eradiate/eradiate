@@ -8,6 +8,7 @@ import numpy as np
 import seaborn as sns
 import xarray as xr
 import xarray.plot
+from cycler import cycler
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
@@ -296,3 +297,61 @@ def dashboard_particle_dataset(
         fig.suptitle(title)
 
     return fig, axs
+
+
+def absorption_database_spectral_coverage(db, wrange=None, title=None):
+    df_index = db._index
+    wmins = df_index["wl_min [nm]"]
+    wmaxs = df_index["wl_max [nm]"]
+
+    if wrange is not None:
+        select = (wmins >= wrange[0]) & (wmaxs <= wrange[1])
+        df_index = df_index.loc[select]
+
+    wmins = df_index["wl_min [nm]"]
+    wmaxs = df_index["wl_max [nm]"]
+
+    fig, ax = plt.subplots(1, 1, figsize=(6, 1))
+
+    color_cycle = cycler(color=sns.color_palette())
+
+    for i, (filename, color) in enumerate(zip(df_index["filename"], color_cycle())):
+        color = color["color"]
+        spectral_coverage = db.spectral_coverage.loc[filename]
+
+        for _, (wmin, wmax) in spectral_coverage.iterrows():
+            ax.fill_between([wmin, wmax], 0, 1, color=color, alpha=0.5)
+
+        if i == 0:
+            w = wmins.min()
+            ax.scatter(w, 0.5, color=color, marker=8)
+            ax.annotate(
+                f"{w:4.2f}",
+                (w, 0.5),
+                color=color,
+                textcoords="offset points",
+                xytext=(-6, 0),
+                ha="right",
+                va="center",
+            )
+
+    else:
+        w = wmaxs.max()
+        ax.scatter(w, 0.5, color=color, marker=9)
+        ax.annotate(
+            f"{w:4.2f}",
+            (w, 0.5),
+            color=color,
+            textcoords="offset points",
+            xytext=(6, 0),
+            ha="left",
+            va="center",
+        )
+
+    ax.set_xlabel("Wavelength [nm]")
+    ax.set_yticks([])
+    if title:
+        ax.set_title(title)
+    sns.despine(ax=ax, top=True, left=True, right=True, bottom=False)
+
+    return fig, ax

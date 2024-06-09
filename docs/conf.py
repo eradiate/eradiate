@@ -297,8 +297,9 @@ def custom_step(app):
     generate_md_cli.generate()  # CLI reference
     generate_rst_plugins.generate()  # Plugins
     generate_rst_api.generate_factory_docs()  # Factories
-    generate_rst_data.generate_particle_radprops_summary()  # Summary
-    generate_rst_data.generate_rami_scene_summary()  # Summary
+    generate_rst_data.generate_absorption_database_summary()  # Data summary
+    generate_rst_data.generate_particle_radprops_summary()  # Data summary
+    generate_rst_data.generate_rami_scene_summary()  # Data summary
 
 
 def setup(app):

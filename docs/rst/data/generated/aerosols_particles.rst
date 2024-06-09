@@ -57,7 +57,7 @@ Filename: ``spectra/particles/govaerts_2021-continental-extrapolated.nc``
 
 *No description available.*
 
-.. image:: ../fig/govaerts_2021-continental-extrapolated.png
+.. image:: /fig/particle_radprops/govaerts_2021-continental-extrapolated.png
 
 ``govaerts_2021-desert-extrapolated``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -66,7 +66,7 @@ Filename: ``spectra/particles/govaerts_2021-desert-extrapolated.nc``
 
 *No description available.*
 
-.. image:: ../fig/govaerts_2021-desert-extrapolated.png
+.. image:: /fig/particle_radprops/govaerts_2021-desert-extrapolated.png
 
 ``sixsv-biomass_burning``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,7 +75,7 @@ Filename: ``spectra/particles/sixsv-biomass_burning.nc``
 
 *No description available.*
 
-.. image:: ../fig/sixsv-biomass_burning.png
+.. image:: /fig/particle_radprops/sixsv-biomass_burning.png
 
 ``sixsv-continental``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -84,7 +84,7 @@ Filename: ``spectra/particles/sixsv-continental.nc``
 
 *No description available.*
 
-.. image:: ../fig/sixsv-continental.png
+.. image:: /fig/particle_radprops/sixsv-continental.png
 
 ``sixsv-desert``
 ^^^^^^^^^^^^^^^^
@@ -93,7 +93,7 @@ Filename: ``spectra/particles/sixsv-desert.nc``
 
 *No description available.*
 
-.. image:: ../fig/sixsv-desert.png
+.. image:: /fig/particle_radprops/sixsv-desert.png
 
 ``sixsv-maritime``
 ^^^^^^^^^^^^^^^^^^
@@ -102,7 +102,7 @@ Filename: ``spectra/particles/sixsv-maritime.nc``
 
 *No description available.*
 
-.. image:: ../fig/sixsv-maritime.png
+.. image:: /fig/particle_radprops/sixsv-maritime.png
 
 ``sixsv-stratospheric``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -111,7 +111,7 @@ Filename: ``spectra/particles/sixsv-stratospheric.nc``
 
 *No description available.*
 
-.. image:: ../fig/sixsv-stratospheric.png
+.. image:: /fig/particle_radprops/sixsv-stratospheric.png
 
 ``sixsv-urban``
 ^^^^^^^^^^^^^^^
@@ -120,4 +120,4 @@ Filename: ``spectra/particles/sixsv-urban.nc``
 
 *No description available.*
 
-.. image:: ../fig/sixsv-urban.png
+.. image:: /fig/particle_radprops/sixsv-urban.png
