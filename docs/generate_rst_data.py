@@ -37,14 +37,17 @@ class ParticleRadpropsInfo:
 
 
 PARTICLE_RADPROPS = [
-    ParticleRadpropsInfo(
+    ParticleRadpropsInfo(id, f"spectra/particles/{id}.nc")
+    for id in [
         "govaerts_2021-continental-extrapolated",
-        "spectra/particles/govaerts_2021-continental-extrapolated.nc",
-    ),
-    ParticleRadpropsInfo(
         "govaerts_2021-desert-extrapolated",
-        "spectra/particles/govaerts_2021-desert-extrapolated.nc",
-    ),
+        "sixsv-biomass_burning",
+        "sixsv-continental",
+        "sixsv-desert",
+        "sixsv-maritime",
+        "sixsv-stratospheric",
+        "sixsv-urban",
+    ]
 ]
 
 RAMI_SCENE_COMMENTS = {
@@ -105,9 +108,9 @@ def generate_particle_radprops_summary():
 Aerosol / particle single-scattering radiative properties
 =========================================================
 
-A particle radiative single-scattering property dataset provides collision 
-coefficients and scattering phase matrix data for a given particle type. 
-Eradiate's built-in particle radiative property datasets are managed by the 
+A particle radiative single-scattering property dataset provides collision
+coefficients and scattering phase matrix data for a given particle type.
+Eradiate's built-in particle radiative property datasets are managed by the
 data store (see :ref:`sec-data-intro` for details).
 
 Format
@@ -121,19 +124,19 @@ Format
   * ``i``: scattering phase matrix row index
   * ``j``: scattering phase matrix column index
 
-* **Coordinates** (all dimension coordinates; when relevant, ``units`` are 
+* **Coordinates** (all dimension coordinates; when relevant, ``units`` are
   required and specified in the units metadata field)
 
   * ``w`` float [length]
   * ``mu`` float [dimensionless]
   * ``i``,  ``j`` int
 
-* **Data variables** (when relevant, units are required and  specified in the 
+* **Data variables** (when relevant, units are required and  specified in the
   units metadata field)
 
   * ``sigma_t`` (``w``): volume extinction coefficient [length^-1]
   * ``albedo`` (``w``): single-scattering albedo [dimensionless]
-  * ``phase`` (``w``, ``mu``, ``i``, ``j``): scattering phase matrix 
+  * ``phase`` (``w``, ``mu``, ``i``, ``j``): scattering phase matrix
     [steradian^-1]
 
 * **Conventions**
@@ -188,20 +191,20 @@ def generate_rami_scene_summary():
 RAMI benchmark scenes
 =====================
 
-Eradiate ships a collection of canopy scenes built from the 
+Eradiate ships a collection of canopy scenes built from the
 `RAMI-V scene list <https://rami-benchmark.jrc.ec.europa.eu/_www/phase_descr.php?strPhase=RAMI5>`_
-These pre-configured scenes are available for download request via the 
-datastore.\ [#sn2]_ 
-Usage is documented in the 
+These pre-configured scenes are available for download request via the
+datastore.\ [#sn2]_
+Usage is documented in the
 :ref:`scene loader guide <sec-user_guide-canopy_scene_loader-rami_scenes>`.
 
-.. [#sn2] We thank the `DART <https://dart.omp.eu/>`_ team for letting us use 
+.. [#sn2] We thank the `DART <https://dart.omp.eu/>`_ team for letting us use
    their 3D model files to derive our scene models.
-   
+
 .. note::
 
-   The renders in the index table below use material spectra interpolated from 
-   the monochromatic optical properties provided in the RAMI scene 
+   The renders in the index table below use material spectra interpolated from
+   the monochromatic optical properties provided in the RAMI scene
    specifications. Colours are therefore not realistic.
 
 """.strip()
@@ -212,10 +215,10 @@ Usage is documented in the
 .. list-table:: RAMI benchmark scene index
    :widths: 1 1 1 2
    :header-rows: 1
-   
+
    * - RAMI ID
      - Description
-     - Comments      
+     - Comments
      - Render
 """.strip()
     ]
