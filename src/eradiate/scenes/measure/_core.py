@@ -34,6 +34,11 @@ measure_factory.register_lazy_batch(
             {},
         ),
         (
+            "_distant.MultiPixelDistantMeasure",
+            "mpdistant",
+            {},
+        ),
+        (
             "_distant_flux.DistantFluxMeasure",
             "distant_flux",
             {"aliases": ["distantflux"]},
