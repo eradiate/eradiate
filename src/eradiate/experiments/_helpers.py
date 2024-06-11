@@ -4,7 +4,7 @@ from ..scenes.atmosphere import Atmosphere, MolecularAtmosphere
 from ..scenes.bsdfs import BSDF, bsdf_factory
 from ..scenes.geometry import SceneGeometry
 from ..scenes.measure import (
-    DistantMeasure,
+    AbstractDistantMeasure,
     Measure,
     MultiRadiancemeterMeasure,
     RadiancemeterMeasure,
@@ -42,7 +42,7 @@ def measure_inside_atmosphere(atmosphere: Atmosphere, measure: Measure) -> bool:
                 "atmosphere."
             )
 
-    elif isinstance(measure, DistantMeasure):
+    elif isinstance(measure, AbstractDistantMeasure):
         # Note: This will break if the user makes something weird such as using
         # a large offset value which would put some origins outside and others
         # inside the atmosphere shape

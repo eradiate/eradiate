@@ -27,7 +27,7 @@ from ..scenes.geometry import (
     SphericalShellGeometry,
 )
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
-from ..scenes.measure import DistantMeasure, Measure, TargetPoint
+from ..scenes.measure import AbstractDistantMeasure, Measure, TargetPoint
 from ..scenes.surface import BasicSurface, DEMSurface
 
 
@@ -161,7 +161,7 @@ class DEMExperiment(EarthObservationExperiment):
         """
         for measure in self.measures:
             # Override ray target location if relevant
-            if isinstance(measure, DistantMeasure):
+            if isinstance(measure, AbstractDistantMeasure):
                 if isinstance(self.surface, DEMSurface):
                     if measure.target is None:
                         msg = (
