@@ -33,7 +33,7 @@ from ..scenes.integrators import (
     VolPathIntegrator,
     integrator_factory,
 )
-from ..scenes.measure import DistantMeasure, Measure
+from ..scenes.measure import AbstractDistantMeasure, Measure
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface
 from ..units import unit_context_config as ucc
@@ -222,7 +222,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         """
         for measure in self.measures:
             # Override ray target location if relevant
-            if isinstance(measure, DistantMeasure):
+            if isinstance(measure, AbstractDistantMeasure):
                 if measure.target is None:
                     if self.canopy is None:  # No canopy: target origin point
                         measure.target = {"type": "point", "xyz": [0, 0, 0]}

@@ -29,6 +29,11 @@ measure_factory = Factory()
 measure_factory.register_lazy_batch(
     [
         (
+            "_distant.DistantMeasure",
+            "distant",
+            {},
+        ),
+        (
             "_distant_flux.DistantFluxMeasure",
             "distant_flux",
             {"aliases": ["distantflux"]},
@@ -41,7 +46,7 @@ measure_factory.register_lazy_batch(
         (
             "_multi_distant.MultiDistantMeasure",
             "multi_distant",
-            {"aliases": ["mdistant", "distant"]},
+            {"aliases": ["mdistant"]},
         ),
         (
             "_multi_radiancemeter.MultiRadiancemeterMeasure",
@@ -279,14 +284,18 @@ class Measure(NodeSceneElement, ABC):
             "sampler.type": self.sampler,
             "sampler.sample_count": self.spp,
             "medium.type": InitParameter(
-                lambda ctx: "ref"
-                if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
-                else InitParameter.UNUSED,
+                lambda ctx: (
+                    "ref"
+                    if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
+                    else InitParameter.UNUSED
+                ),
             ),
             "medium.id": InitParameter(
-                lambda ctx: ctx.kwargs[f"{self.sensor_id}.atmosphere_medium_id"]
-                if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
-                else InitParameter.UNUSED,
+                lambda ctx: (
+                    ctx.kwargs[f"{self.sensor_id}.atmosphere_medium_id"]
+                    if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
+                    else InitParameter.UNUSED
+                ),
             ),
         }
 

@@ -5,7 +5,7 @@ import mitsuba as mi
 import numpy as np
 import pint
 
-from ._distant import DistantMeasure
+from ._distant import AbstractDistantMeasure
 from ... import frame, validators
 from ...attrs import documented, parse_docs
 from ...config import settings
@@ -17,7 +17,7 @@ from ...warp import square_to_uniform_hemisphere
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class DistantFluxMeasure(DistantMeasure):
+class DistantFluxMeasure(AbstractDistantMeasure):
     """
     Distant radiosity measure scene element [``distantflux``, ``distant_flux``].
 

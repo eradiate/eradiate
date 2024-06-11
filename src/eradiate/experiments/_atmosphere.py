@@ -27,7 +27,7 @@ from ..scenes.geometry import (
     SphericalShellGeometry,
 )
 from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
-from ..scenes.measure import DistantMeasure, Measure, TargetPoint
+from ..scenes.measure import AbstractDistantMeasure, Measure, TargetPoint
 from ..scenes.surface import BasicSurface
 from ..units import unit_context_config as ucc
 
@@ -153,7 +153,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
         overridden if relevant.
         """
         for measure in self.measures:
-            if isinstance(measure, DistantMeasure) and measure.target is None:
+            if isinstance(measure, AbstractDistantMeasure) and measure.target is None:
                 if isinstance(self.geometry, PlaneParallelGeometry):
                     # Plane parallel geometry: target ground level
                     target_point = [0.0, 0.0, 0.0] * ucc.get("length")

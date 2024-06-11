@@ -8,7 +8,7 @@ import numpy as np
 import pint
 import pinttr
 
-from ._distant import DistantMeasure
+from ._distant import AbstractDistantMeasure
 from ... import converters, frame
 from ...attrs import documented, parse_docs
 from ...config import settings
@@ -406,7 +406,7 @@ def _extract_kwargs(kwargs: dict, keys: list[str]) -> dict:
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
-class MultiDistantMeasure(DistantMeasure):
+class MultiDistantMeasure(AbstractDistantMeasure):
     """
     Multi-distant radiance measure scene element [``distant``, ``mdistant``, \
     ``multi_distant``].
