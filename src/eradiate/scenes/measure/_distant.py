@@ -444,3 +444,151 @@ class DistantMeasure(AbstractDistantMeasure):
             "long_name": "radiance",
             "units": symbol(uck.get("radiance")),
         }
+
+
+@parse_docs
+@attrs.define(eq=False, slots=False)
+class MultiPixelDistantMeasure(AbstractDistantMeasure):
+    """
+    Multi-pixel distant measure scene element [``mpdistant``, ``multipixel_distant``]
+
+    This scene element records radiance leaving the scene in a single direction
+    defined by its ``direction`` parameter. Most users will however find the
+    :class:`.MultiDistantMeasure` class more flexible.
+    """
+
+    # --------------------------------------------------------------------------
+    #                           Fields and properties
+    # --------------------------------------------------------------------------
+
+    azimuth_convention: frame.AzimuthConvention = documented(
+        attrs.field(
+            default=None,
+            converter=lambda x: (
+                settings.azimuth_convention
+                if x is None
+                else frame.AzimuthConvention.convert(x)
+            ),
+            validator=attrs.validators.instance_of(frame.AzimuthConvention),
+        ),
+        doc="Azimuth convention. If ``None``, the global default configuration "
+        "is used (see :ref:`sec-user_guide-config`).",
+        type=".AzimuthConvention",
+        init_type=".AzimuthConvention or str, optional",
+        default="None",
+    )
+
+    direction: np.ndarray = documented(
+        attrs.field(
+            default=[0, 0, 1],
+            converter=np.array,
+            validator=validators.is_vector3,
+        ),
+        doc="A 3-vector defining the direction observed by the sensor, pointing "
+        "outwards the target.",
+        type="ndarray",
+        init_type="array-like",
+        default="[0, 0, 1]",
+    )
+
+    _film_resolution: tuple[int, int] = documented(
+        attrs.field(
+            default=(32, 32),
+            validator=attrs.validators.deep_iterable(
+                member_validator=attrs.validators.instance_of(int),
+                iterable_validator=validators.has_len(2),
+            ),
+        ),
+        doc="Film resolution as a (width, height) 2-tuple.",
+        type="array-like",
+        default="(32, 32)",
+    )
+
+    @property
+    def film_resolution(self) -> tuple[int, int]:
+        return self._film_resolution
+
+    @property
+    def viewing_angles(self) -> pint.Quantity:
+        """
+        quantity: Viewing angles computed from stored film coordinates as a
+            (width, height, 2) array. The last dimension is ordered as
+            (zenith, azimuth).
+        """
+        angles: pint.Quantity = frame.direction_to_angles(
+            self.direction, azimuth_convention=self.azimuth_convention
+        ).squeeze()
+        shape = (*self.film_resolution, 2)
+        return np.broadcast_to(angles.m, shape) * angles.u
+
+    # --------------------------------------------------------------------------
+    #                         Additional constructors
+    # --------------------------------------------------------------------------
+
+    @classmethod
+    def from_angles(cls, angles: pint.Quantity, **kwargs) -> MultiPixelDistantMeasure:
+        """
+        Construct using a direction layout defined by explicit (zenith, azimuth)
+        pairs.
+
+        Parameters
+        ----------
+        angles : array-like
+            A (zenith, azimuth) pair, either as a quantity or a unitless
+            array-like. In the latter case, the default angle units are applied.
+
+        azimuth_convention : .AzimuthConvention or str, optional
+            The azimuth convention applying to the viewing direction layout.
+            If unset, the global default convention is used.
+
+        **kwargs
+            Remaining keyword arguments are forwarded to the
+            :class:`.DistantMeasure` constructor.
+
+        Returns
+        -------
+        DistantMeasure
+        """
+        azimuth_convention = kwargs.pop("azimuth_convention", None)
+        if azimuth_convention is None:
+            azimuth_convention = settings.azimuth_convention
+
+        angles = ensure_units(angles, default_units=ucc.get("angle")).m_as(ureg.rad)
+        direction = np.squeeze(
+            frame.angles_to_direction(
+                angles=angles, azimuth_convention=azimuth_convention
+            )
+        )
+        return cls(direction=direction, **kwargs)
+
+    # --------------------------------------------------------------------------
+    #                       Kernel dictionary generation
+    # --------------------------------------------------------------------------
+
+    @property
+    def kernel_type(self) -> str:
+        # Inherit docstring
+        return "mpdistant"
+
+    @property
+    def template(self) -> dict:
+        # Inherit docstring
+        result = super().template
+        result["direction"] = mi.ScalarVector3f(-self.direction)
+
+        if self.target is not None:
+            result["target"] = self.target.kernel_item()
+
+        if self.ray_offset is not None:
+            result["ray_offset"] = self.ray_offset.m_as(uck.get("length"))
+
+        return result
+
+    @property
+    def var(self) -> tuple[str, dict]:
+        # Inherit docstring
+        return "radiance", {
+            "standard_name": "radiance",
+            "long_name": "radiance",
+            "units": symbol(uck.get("radiance")),
+        }
