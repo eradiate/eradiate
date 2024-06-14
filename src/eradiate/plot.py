@@ -16,6 +16,8 @@ from matplotlib.figure import Figure
 from matplotlib.gridspec import SubplotSpec
 from xarray.plot import FacetGrid
 
+from eradiate.radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
+
 
 def set_style(rc=None):
     """
@@ -299,7 +301,32 @@ def dashboard_particle_dataset(
     return fig, axs
 
 
-def absorption_database_spectral_coverage(db, wrange=None, title=None):
+def absorption_database_spectral_coverage_mono(
+    db: MonoAbsorptionDatabase, wrange=None, title=None
+):
+    df_index = db._index
+
+    fig, ax = plt.subplots(1, 1, figsize=(6, 1.5))
+
+    color_cycle = cycler(color=sns.color_palette())
+
+    for i, (filename, color) in enumerate(zip(df_index["filename"], color_cycle())):
+        color = color["color"]
+        spectral_coverage = db.spectral_coverage.loc[filename]
+        w = spectral_coverage.index.values
+        sns.histplot(x=w, color=color, ax=ax)
+
+    ax.set_xlabel("Wavelength [nm]")
+    if title:
+        ax.set_title(title)
+    sns.despine(offset=10)
+
+    return fig, ax
+
+
+def absorption_database_spectral_coverage_ckd(
+    db: CKDAbsorptionDatabase, wrange=None, title=None
+):
     df_index = db._index
     wmins = df_index["wl_min [nm]"]
     wmaxs = df_index["wl_max [nm]"]

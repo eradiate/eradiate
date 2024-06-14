@@ -1,6 +1,6 @@
 :orphan:
 
-Eradiate documentation
+Eradiate Documentation
 ======================
 
 .. toctree::
@@ -10,12 +10,12 @@ Eradiate documentation
    tutorials/index_latex
 
    rst/data/intro
-   rst/data/generated/aerosols_particles
+   rst/data/aerosols_particles
    rst/data/atmosphere_thermoprops
    rst/data/atmosphere_molecular_absorption
    rst/data/solar_irradiance
    rst/data/srf
-   rst/data/generated/rami_scenes
+   rst/data/rami_scenes
 
    rst/contributing
    rst/dependencies
