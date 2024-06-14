@@ -8,6 +8,8 @@ from click import Command, Group
 
 import eradiate.cli
 
+from .util import write_if_modified
+
 
 def get_docs_for_click_markdown(
     *,
@@ -44,7 +46,7 @@ def get_docs_for_click_markdown(
             elif param.param_type_name == "option":
                 opts.append(rv)
     if args:
-        docs += f"**Arguments**:\n\n"
+        docs += "**Arguments**:\n\n"
         for arg_name, arg_help in args:
             docs += f"* `{arg_name}`"
             if arg_help:
@@ -52,7 +54,7 @@ def get_docs_for_click_markdown(
             docs += "\n"
         docs += "\n"
     if opts:
-        docs += f"**Options**:\n\n"
+        docs += "**Options**:\n\n"
         for opt_name, opt_help in opts:
             docs += f"* `{opt_name}`"
             if opt_help:
@@ -65,7 +67,7 @@ def get_docs_for_click_markdown(
         group: Group = cast(Group, obj)
         commands = group.list_commands(ctx)
         if commands:
-            docs += f"**Commands**:\n\n"
+            docs += "**Commands**:\n\n"
             for command in commands:
                 command_obj = group.get_command(ctx, command)
                 assert command_obj
@@ -99,27 +101,9 @@ def docs(typer_obj: typer.Typer, name: str = "", indent: int = 0) -> str:
     return clean_docs
 
 
-def write_if_modified(filename, content):
-    filename.parent.mkdir(parents=True, exist_ok=True)
-
-    try:
-        with open(filename, "r") as f:
-            existing = f.read()
-    except OSError:
-        existing = None
-
-    if existing == content:
-        print(f"Skipping unchanged '{filename.name}'")
-
-    else:
-        print(f"Generating '{filename.name}'")
-        with open(filename, "w") as f:
-            f.write(content)
-
-
 def generate():
     root_dir = Path(__file__).absolute().parent.parent
-    out_dir = root_dir / "docs/src"
+    out_dir = root_dir / "src"
     print(f"Generating CLI docs in '{out_dir}'")
 
     docs_markdown = (

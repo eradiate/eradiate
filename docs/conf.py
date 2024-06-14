@@ -33,7 +33,7 @@ html_title = ""
 html_logo = "_static/eradiate-logo-typo-darkgrey.svg"
 
 templates_path = ["_templates"]  # Path to templates, relative to this directory.
-exclude_patterns = ["_build", "tutorials/README.md"]
+exclude_patterns = ["_build", "tutorials/README.md", "generate"]
 html_static_path = ["_static"]
 
 extensions = [
@@ -289,17 +289,14 @@ latex_documents = [
 
 def custom_step(app):
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    import generate_md_cli
-    import generate_rst_api
-    import generate_rst_data
-    import generate_rst_plugins
+    from generate import data, factories, md_cli, rst_plugins
 
-    generate_md_cli.generate()  # CLI reference
-    generate_rst_plugins.generate()  # Plugins
-    generate_rst_api.generate_factory_docs()  # Factories
-    generate_rst_data.generate_absorption_database_summary()  # Data summary
-    generate_rst_data.generate_particle_radprops_summary()  # Data summary
-    generate_rst_data.generate_rami_scene_summary()  # Data summary
+    md_cli.generate()  # CLI reference
+    rst_plugins.generate()  # Plugins
+    factories.generate()  # Factories
+    data.absorption_databases.generate_summary()
+    data.aerosols_particles.generate_summary()
+    data.rami_scenes.generate_summary()
 
 
 def setup(app):
