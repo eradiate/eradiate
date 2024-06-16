@@ -1,4 +1,0 @@
--r main.in
-pytest
-pytest-json-report
-asv==0.6.*
