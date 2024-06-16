@@ -21,6 +21,8 @@ class ParticleRadpropsInfo:
 def generate_particle_radprops_visual(
     info: ParticleRadpropsInfo, outfile: Path, force=False
 ):
+    eradiate.plot.set_style()
+
     # Create dashboards for a dataset
     if outfile.is_file() and not force:  # Skip if file exists
         return

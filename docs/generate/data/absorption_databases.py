@@ -24,12 +24,15 @@ class AbsorptionDatabaseInfo:
 def generate_absorption_database_visual(
     info: AbsorptionDatabaseInfo, outfile: Path, force=False
 ):
+    eradiate.plot.set_style()
+
     # Create summary plot for an absorption database
     if outfile.is_file() and not force:  # Skip if file exists
         return
 
     print(f"Generating molecular absorption database visual in '{outfile}'")
     db = eradiate.radprops.AbsorptionDatabase.from_name(info.keyword)
+
     if isinstance(db, MonoAbsorptionDatabase):
         fig, _ = absorption_database_spectral_coverage_mono(db)
     elif isinstance(db, CKDAbsorptionDatabase):
@@ -46,6 +49,20 @@ def generate_summary():
     template = jinja_environment.get_template("absorption_databases.rst")
 
     absorption_databases = {"mono": [], "ckd": []}
+    absorption_databases["mono"].extend(
+        [
+            AbsorptionDatabaseInfo(
+                keyword="gecko",
+                path="spectra/absorption/mono/gecko",
+                spectral_sampling="0.01 cm⁻¹ in [250, 300] + [600, 3125] nm, 0.1 cm⁻¹ in [300, 600] nm",
+            ),
+            AbsorptionDatabaseInfo(
+                keyword="komodo",
+                path="spectra/absorption/mono/komodo",
+                spectral_sampling="1 cm⁻¹",
+            ),
+        ]
+    )
     absorption_databases["ckd"].extend(
         [
             AbsorptionDatabaseInfo(
@@ -66,11 +83,11 @@ def generate_summary():
         ]
     )
 
-    for info in absorption_databases["ckd"]:
+    for info in absorption_databases["mono"] + absorption_databases["ckd"]:
         outfile_visual = outdir_visuals / f"{info.keyword}.png"
         generate_absorption_database_visual(info, outfile_visual)
 
-    result = template.render(absorption_databases=absorption_databases["ckd"])
+    result = template.render(absorption_databases=absorption_databases)
     write_if_modified(outfile_rst, result)
 
 

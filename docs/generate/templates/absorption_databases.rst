@@ -68,13 +68,24 @@ Format (CKD)
 Database index
 --------------
 
-{% for entry in absorption_databases %}
-``{{entry.keyword}}``
-{{'^' * ((entry.keyword|length) + 4)}}
+{% for entry in absorption_databases.mono %}
+``{{entry.keyword}}`` (mono)
+{{'^' * ((entry.keyword|length) + 11)}}
 
 Datastore path: ``{{entry.path}}``
 
 Spectral sampling: {{entry.spectral_sampling}}
+
+.. image:: /fig/absorption_databases/{{entry.keyword}}.png
+{% endfor %}
+
+{% for entry in absorption_databases.ckd %}
+``{{entry.keyword}}`` (CKD)
+{{'^' * ((entry.keyword|length) + 10)}}
+
+Datastore path: ``{{entry.path}}``
+
+Spectral bin size: {{entry.spectral_sampling}}
 
 .. image:: /fig/absorption_databases/{{entry.keyword}}.png
 {% endfor %}
