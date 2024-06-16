@@ -1,8 +1,0 @@
--r recommended.in
--r docs.in
--r tests.in
-conda-lock>=1.4
-pip>=22
-uv==0.2.*
-setuptools>=61
-networkx>=3.1

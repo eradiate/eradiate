@@ -9,6 +9,9 @@
 .vscode/
 .vs/
 
+# pixi environments
+.pixi
+
 # Python
 .pytest_cache/
 *.egg-info
