@@ -56,7 +56,7 @@ After updating, it's always better to rebuild the kernel:
 .. code:: bash
 
    cd $ERADIATE_SOURCE_DIR
-   cmake --build build
+   make kernel
 
 Updating your Conda environment
 -------------------------------
