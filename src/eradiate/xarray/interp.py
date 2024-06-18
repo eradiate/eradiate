@@ -63,10 +63,8 @@ def film_to_angular(
     # Define azimuth convention
     if azimuth_convention is None:
         azimuth_convention = settings.azimuth_convention
-    elif isinstance(azimuth_convention, str):
-        azimuth_convention = frame.AzimuthConvention[azimuth_convention.upper()]
     else:
-        pass
+        azimuth_convention = frame.AzimuthConvention.convert(azimuth_convention)
 
     # Interpolate values on angular grid
     data = np.empty((len(phi), len(theta)))

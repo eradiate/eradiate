@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import enum
+import typing as t
 
 import aenum
 import numpy as np
@@ -27,6 +28,41 @@ class AzimuthConvention(enum.Enum):
     WEST_LEFT = (np.pi, -1)  #: West left
     SOUTH_RIGHT = (1.5 * np.pi, 1)  #: South right
     SOUTH_LEFT = (1.5 * np.pi, -1)  #: South left
+
+    @staticmethod
+    def convert(value: t.Any) -> AzimuthConvention:
+        """
+        Attempt conversion of a value to an :class:`.AzimuthConvention`
+        instance. The conversion protocol is as follows:
+
+        * If ``value`` is a string, it is converted to upper case and passed to
+          the indexing operator of :class:`.AzimuthConvention`.
+        * If ``value`` is an :class:`.AzimuthConvention` instance, it is returned
+          without change.
+        * Otherwise, the method raises an exception.
+
+        Parameters
+        ----------
+        value
+            Value to attempt conversion of.
+
+        Returns
+        -------
+        Converted value
+
+        Raises
+        ------
+        TypeError
+            If no conversion protocol exists for ``value``.
+        """
+        if isinstance(value, str):
+            return AzimuthConvention[value.upper()]
+        elif isinstance(value, AzimuthConvention):
+            return value
+        else:
+            raise TypeError(
+                f"Cannot convert a {type(value)} instance to AzimuthConvention"
+            )
 
     @classmethod
     def register(cls, name: str, value: tuple[float, float]) -> None:
@@ -132,11 +168,8 @@ def transform_azimuth(
     """
     result = angles if inplace else np.copy(angles)
 
-    if isinstance(from_convention, str):
-        from_convention = AzimuthConvention[from_convention.upper()]
-
-    if isinstance(to_convention, str):
-        to_convention = AzimuthConvention[to_convention.upper()]
+    from_convention = AzimuthConvention.convert(from_convention)
+    to_convention = AzimuthConvention.convert(to_convention)
 
     if from_convention is not to_convention:
         from_offset, from_orientation = from_convention.value
