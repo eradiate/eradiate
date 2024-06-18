@@ -36,7 +36,7 @@ class Layout(ABC):
             converter=lambda x: (
                 settings.azimuth_convention
                 if x is None
-                else (frame.AzimuthConvention[x.upper()] if isinstance(x, str) else x)
+                else frame.AzimuthConvention.convert(x)
             ),
             validator=attrs.validators.instance_of(frame.AzimuthConvention),
             kw_only=True,

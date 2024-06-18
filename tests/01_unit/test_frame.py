@@ -3,6 +3,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.frame import (
+    AzimuthConvention,
     angles_in_hplane,
     angles_to_direction,
     cos_angle_to_direction,
@@ -10,6 +11,23 @@ from eradiate.frame import (
     spherical_to_cartesian,
     transform_azimuth,
 )
+
+
+def test_azimuth_convention_conversion():
+    # Conversion from string is supported
+    assert AzimuthConvention.convert("north_left") is AzimuthConvention.NORTH_LEFT
+    with pytest.raises(KeyError):
+        AzimuthConvention.convert("south_foo")
+
+    # AzimuthConvention instances pass through
+    assert (
+        AzimuthConvention.convert(AzimuthConvention.NORTH_LEFT)
+        is AzimuthConvention.NORTH_LEFT
+    )
+
+    # Other types raise
+    with pytest.raises(TypeError):
+        AzimuthConvention.convert(1.0)
 
 
 def test_cos_angle_to_direction():
@@ -21,7 +39,7 @@ def test_cos_angle_to_direction():
         cos_angle_to_direction(-1.0, ureg.Quantity(135.0, "deg")), [0, 0, -1]
     )
 
-    # Vectorised call
+    # Vectorized call
     expected = np.array([[0, 0, 1], [1, 0, 0], [np.sqrt(3) / 2, 0, 0.5], [0, 0, -1]])
     assert np.allclose(
         cos_angle_to_direction([1.0, 0.0, 0.5, -1.0], [0, 0, 0.0, 0.75 * np.pi]),
@@ -154,7 +172,7 @@ def test_direction_to_angles():
         [np.arccos(1 / np.sqrt(3)), 0.25 * np.pi],
     )
 
-    # Vectorised call
+    # Vectorized call
     assert np.allclose(
         direction_to_angles(
             [
