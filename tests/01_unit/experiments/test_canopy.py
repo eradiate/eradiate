@@ -29,9 +29,9 @@ def test_canopy_experiment_construct_measures(mode_mono_double):
 
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
-    assert CanopyExperiment(measures=[{"type": "distant"}])
+    assert CanopyExperiment(measures=[{"type": "mdistant"}])
     # -- Not wrapped in a sequence
-    assert CanopyExperiment(measures={"type": "distant"})
+    assert CanopyExperiment(measures={"type": "mdistant"})
 
 
 @pytest.mark.parametrize("padding", (0, 1))
@@ -96,7 +96,7 @@ def test_canopy_experiment_real_life(modes_all_double):
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures={
-            "type": "distant",
+            "type": "mdistant",
             "construct": "hplane",
             "zeniths": np.arange(-60, 61, 5),
             "azimuth": 0.0,

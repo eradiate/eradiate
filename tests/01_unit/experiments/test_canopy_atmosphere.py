@@ -32,10 +32,10 @@ def test_canopy_atmosphere_experiment_construct_measures(mode_mono):
 
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
-    assert CanopyAtmosphereExperiment(measures=[{"type": "distant"}])
+    assert CanopyAtmosphereExperiment(measures=[{"type": "mdistant"}])
 
     # -- Not wrapped in a sequence
-    assert CanopyAtmosphereExperiment(measures={"type": "distant"})
+    assert CanopyAtmosphereExperiment(measures={"type": "mdistant"})
 
 
 @pytest.mark.parametrize("padding", (0, 1))
@@ -96,7 +96,7 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
             padding=padding,
         ),
         measures=[
-            {"type": "distant", "id": "distant_measure"},
+            {"type": "mdistant", "id": "mdistant_measure"},
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
@@ -194,7 +194,7 @@ def test_canopy_atmosphere_experiment_real_life(
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
             {
-                "type": "distant",
+                "type": "mdistant",
                 "construct": "hplane",
                 "zeniths": np.arange(-60, 61, 5),
                 "azimuth": 0.0,
@@ -223,7 +223,7 @@ def test_canopy_atmosphere_experiment_run_detailed(mode_mono):
         measures=[
             {
                 "id": "toa_brf",
-                "type": "distant",
+                "type": "mdistant",
                 "construct": "hplane",
                 "zeniths": np.arange(-60, 61, 5),
                 "azimuth": 0.0,

@@ -77,7 +77,7 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
         geometry={"type": "plane_parallel", "toa_altitude": 1.0e2 * ureg.km},
         illumination={"type": "directional", "zenith": 0.0, "azimuth": 0.0},
         measures={
-            "type": "distant",
+            "type": "mdistant",
             "id": "toa_pplane",
             "construct": "hplane",
             "zeniths": np.linspace(-89, 89, n_vza),

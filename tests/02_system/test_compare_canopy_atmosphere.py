@@ -85,7 +85,7 @@ def test_compare_canopy_atmosphere_vs_atmosphere(
         "molecular_atmosphere": molecular_atmosphere,
     }
     measure = {
-        "type": "distant",
+        "type": "mdistant",
         "id": "measure",
         "construct": "hplane",
         "zeniths": np.arange(-90, 91, 15),
@@ -219,7 +219,7 @@ def test_compare_canopy_atmosphere_vs_canopy(
         padding=5,
     )
     measure = {
-        "type": "distant",
+        "type": "mdistant",
         "id": "measure",
         "construct": "hplane",
         "zeniths": np.arange(-90, 91, 15),

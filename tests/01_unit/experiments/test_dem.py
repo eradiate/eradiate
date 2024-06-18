@@ -34,10 +34,10 @@ def test_dem_experiment_construct_measures(modes_all):
 
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
-    assert DEMExperiment(measures=[{"type": "distant"}])
+    assert DEMExperiment(measures=[{"type": "mdistant"}])
 
     # -- Not wrapped in a sequence
-    assert DEMExperiment(measures={"type": "distant"})
+    assert DEMExperiment(measures={"type": "mdistant"})
 
 
 def test_dem_experiment_construct_normalize_measures(mode_mono):
@@ -57,7 +57,7 @@ def test_dem_experiment_ckd(mode_ckd, atmosphere_us_standard_ckd):
     exp = DEMExperiment(
         atmosphere=atmosphere_us_standard_ckd,
         surface={"type": "lambertian"},
-        measures={"type": "distant", "id": "distant_measure"},
+        measures={"type": "mdistant", "id": "mdistant_measure"},
     )
     check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
@@ -72,7 +72,7 @@ def test_dem_experiment_kernel_dict(modes_all_double):
         atmosphere=None,
         surface={"type": "lambertian"},
         measures=[
-            {"type": "distant", "id": "distant_measure"},
+            {"type": "mdistant", "id": "mdistant_measure"},
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
@@ -102,7 +102,7 @@ def test_dem_experiment_real_life(mode_mono, atmosphere_us_standard_mono):
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
-            {"type": "distant", "id": "distant_measure"},
+            {"type": "mdistant", "id": "mdistant_measure"},
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
@@ -234,8 +234,8 @@ def test_dem_experiment_warn_targeting_dem(modes_all_double, tmpdir):
             ),
             measures=[
                 {
-                    "type": "distant",
-                    "id": "distant_measure",
+                    "type": "mdistant",
+                    "id": "mdistant_measure",
                     "target": {"type": "point", "xyz": [1, 1, 0]},
                 },
             ],

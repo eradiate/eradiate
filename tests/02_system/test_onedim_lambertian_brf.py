@@ -63,7 +63,7 @@ def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
                     "azimuth": 0.0,
                 },
                 measures={
-                    "type": "distant",
+                    "type": "mdistant",
                     "id": "toa_pplane",
                     "construct": "hplane",
                     "zeniths": np.linspace(-90, 90, n_vza),
