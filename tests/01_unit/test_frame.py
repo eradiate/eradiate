@@ -150,31 +150,20 @@ def test_angles_to_direction():
     )
 
 
-def test_direction_to_angles():
-    # Scalar call
-    assert np.allclose(direction_to_angles([0, 0, 1]), (0, 0))
-    assert np.allclose(
-        direction_to_angles([np.sqrt(2) / 2, np.sqrt(2) / 2, 0]).m_as(ureg.deg),
-        [90.0, 45.0],
-    )
-    assert np.allclose(
-        direction_to_angles([1, 1, 0]).m_as(ureg.deg),
-        [90.0, 45.0],
-    )
-    assert np.allclose(
-        direction_to_angles(
+@pytest.mark.parametrize(
+    "directions, expected",
+    [
+        # Scalar call
+        ([0, 0, 1], [[0, 0]] * ureg.deg),
+        ([np.sqrt(2) / 2, np.sqrt(2) / 2, 0], [[90.0, 45.0]] * ureg.deg),
+        ([1, 1, 0], [[90.0, 45.0]] * ureg.deg),
+        (
             [1 / np.sqrt(3), 1 / np.sqrt(3), 1 / np.sqrt(3)],
-        ).m_as(ureg.rad),
-        [np.arccos(1 / np.sqrt(3)), 0.25 * np.pi],
-    )
-    assert np.allclose(
-        direction_to_angles([1, 1, 1]).m_as(ureg.rad),
-        [np.arccos(1 / np.sqrt(3)), 0.25 * np.pi],
-    )
-
-    # Vectorized call
-    assert np.allclose(
-        direction_to_angles(
+            [[np.arccos(1 / np.sqrt(3)), 0.25 * np.pi]] * ureg.rad,
+        ),
+        ([1, 1, 1], [[np.arccos(1 / np.sqrt(3)), 0.25 * np.pi]] * ureg.rad),
+        # Vectorized call
+        (
             [
                 [0, 0, 1],
                 [1, 0, 1],
@@ -183,18 +172,32 @@ def test_direction_to_angles():
                 [0, 1, 0],
                 [1, 1, 1],
                 [0, 0, -1],
+            ],
+            [
+                [0, 0],
+                [0.25 * np.pi, 0],
+                [0.25 * np.pi, 0.5 * np.pi],
+                [0.5 * np.pi, 0],
+                [0.5 * np.pi, 0.5 * np.pi],
+                [np.arccos(1 / np.sqrt(3)), 0.25 * np.pi],
+                [np.pi, 0.0],
             ]
+            * ureg.rad,
         ),
-        [
-            [0, 0],
-            [0.25 * np.pi, 0],
-            [0.25 * np.pi, 0.5 * np.pi],
-            [0.5 * np.pi, 0],
-            [0.5 * np.pi, 0.5 * np.pi],
-            [np.arccos(1 / np.sqrt(3)), 0.25 * np.pi],
-            [np.pi, 0.0],
-        ],
-    )
+    ],
+    ids=[
+        "scalar-0",
+        "scalar-1",
+        "scalar-2",
+        "scalar-3",
+        "scalar-4",
+        "vectorized-0",
+    ],
+)
+def test_direction_to_angles(directions, expected):
+    value = direction_to_angles(directions).m_as("deg")
+    expected = expected.m_as("deg")
+    np.testing.assert_allclose(value, expected)
 
 
 def test_spherical_to_cartesian():
@@ -202,13 +205,13 @@ def test_spherical_to_cartesian():
     theta = np.deg2rad(30)
     phi = np.deg2rad(0)
     d = spherical_to_cartesian(r, theta, phi)
-    assert np.allclose(d, [1, 0, np.sqrt(3)])
+    np.testing.assert_allclose(d, [1, 0, np.sqrt(3)])
 
     r = ureg.Quantity(2.0, "km")
     theta = np.deg2rad(60)
     phi = np.deg2rad(30)
-    d = spherical_to_cartesian(r, theta, phi)
-    assert np.allclose(d, ureg.Quantity([3.0 / 2.0, np.sqrt(3) / 2.0, 1.0], "km"))
+    d = spherical_to_cartesian(r, theta, phi).m_as("km")
+    np.testing.assert_allclose(d, [3.0 / 2.0, np.sqrt(3) / 2.0, 1.0])
 
 
 @pytest.mark.parametrize(
