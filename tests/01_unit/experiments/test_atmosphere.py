@@ -56,9 +56,9 @@ def test_atmosphere_experiment_construct_measures(modes_all_double):
 
     # Init from a dict-based measure spec
     # -- Correctly wrapped in a sequence
-    assert AtmosphereExperiment(measures=[{"type": "distant"}])
+    assert AtmosphereExperiment(measures=[{"type": "mdistant"}])
     # -- Not wrapped in a sequence
-    assert AtmosphereExperiment(measures={"type": "distant"})
+    assert AtmosphereExperiment(measures={"type": "mdistant"})
 
 
 @pytest.mark.parametrize(
@@ -91,7 +91,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
     exp = AtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0, "width_units": "km"},
         atmosphere=HomogeneousAtmosphere(),
-        measures={"type": "distant"},
+        measures={"type": "mdistant"},
     )
     mi_wrapper = check_scene_element(
         exp.scene, mi.Scene, drop_parameters=False
@@ -112,7 +112,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
         atmosphere=None,
         surface={"type": "lambertian"},
         measures=[
-            {"type": "distant", "id": "distant_measure"},
+            {"type": "mdistant", "id": "mdistant_measure"},
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
@@ -143,7 +143,7 @@ def test_atmosphere_experiment_real_life(
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
-            {"type": "distant", "id": "distant_measure"},
+            {"type": "mdistant", "id": "mdistant_measure"},
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
@@ -173,7 +173,7 @@ def test_atmosphere_experiment_run_basic(
         },
         surface={"type": "lambertian"},
         measures={
-            "type": "distant",
+            "type": "mdistant",
             "id": "distant_measure",
             "srf": MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
         },

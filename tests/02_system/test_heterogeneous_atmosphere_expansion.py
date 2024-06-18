@@ -37,7 +37,7 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
 
     # Measure
     measure = {
-        "type": "distant",
+        "type": "mdistant",
         "id": "measure",
         "construct": "hplane",
         "zeniths": np.arange(-90, 91, 15),
@@ -113,7 +113,7 @@ def test_heterogeneous_atmosphere_expansion_molecular_atmosphere(
 
     # measure
     measure = {
-        "type": "distant",
+        "type": "mdistant",
         "id": "measure",
         "construct": "hplane",
         "zeniths": np.arange(-90, 90, 15),
