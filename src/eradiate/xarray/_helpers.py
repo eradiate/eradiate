@@ -1,6 +1,5 @@
 import typing as t
 
-import pandas as pd
 import xarray as xr
 
 XarrayObj = t.Union[xr.DataArray, xr.Dataset]
@@ -30,21 +29,14 @@ def unstack_mdistant_grid(obj: XarrayObj) -> XarrayObj:
     vaa_attrs = obj["vaa"].attrs
 
     # Build new index
-    idx = pd.MultiIndex.from_arrays(
-        (obj.vza.values.flatten(), obj.vaa.values.flatten()), names=("vza", "vaa")
-    )
-
-    # Reindex object
-    result = (
-        obj.drop_vars(
-            # First remove the target coords, as well as the indexing dim and
-            # associated coords
-            # Also remove the x film coordinate (irrelevant after unstacking)
-            ("vza", "vaa", "x_index", "x")
-        )
-        .reindex(x_index=idx)
-        .unstack()
-    )  # Apply the new index and unstack
+    midx_values = (obj.vza.values.flatten(), obj.vaa.values.flatten())
+    result = obj.drop_vars(
+        ["x_index", "x"]
+    )  # Remove the x film coordinate (irrelevant after unstacking)
+    result = result.set_xindex(
+        ["vza", "vaa"], tuples=midx_values
+    )  # Reindex the x_index dimension with a multi-index using the vza and vaa variables
+    result = result.unstack()  # Unstack the multi-level index
 
     # Reapply metadata
     result["vza"].attrs = vza_attrs
