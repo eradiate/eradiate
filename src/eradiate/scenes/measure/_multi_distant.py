@@ -408,8 +408,7 @@ def _extract_kwargs(kwargs: dict, keys: list[str]) -> dict:
 @attrs.define(eq=False, slots=False)
 class MultiDistantMeasure(AbstractDistantMeasure):
     """
-    Multi-distant radiance measure scene element [``distant``, ``mdistant``, \
-    ``multi_distant``].
+    Multi-distant radiance measure scene element [``mdistant``, ``multi_distant``].
 
     This scene element creates a measure consisting of an array of
     radiancemeters positioned at an infinite distance from the scene. In
