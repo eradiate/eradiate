@@ -3,6 +3,87 @@
 
 .. automodule:: eradiate.scenes
 
+Quick access
+------------
+
+.. grid:: 1 2 auto auto
+    :gutter: 3
+
+    .. grid-item-card:: :fas:`gear` Core
+        :link: module-eradiate.scenes.core
+        :link-type: ref
+
+        ``eradiate.scenes.core``
+
+    .. grid-item-card:: :fas:`globe` Geometry
+        :link: module-eradiate.scenes.geometry
+        :link-type: ref
+
+        ``eradiate.scenes.geometry``
+
+    .. grid-item-card:: :fas:`cloud` Atmosphere
+        :link: module-eradiate.scenes.atmosphere
+        :link-type: ref
+
+        ``eradiate.scenes.atmosphere``
+
+    .. grid-item-card:: :fas:`tree` Biosphere
+        :link: module-eradiate.scenes.biosphere
+        :link-type: ref
+
+        ``eradiate.scenes.biosphere``
+
+    .. grid-item-card:: :fas:`mountain` Surface
+        :link: module-eradiate.scenes.surface
+        :link-type: ref
+
+        ``eradiate.scenes.surface``
+
+    .. grid-item-card:: :fas:`arrow-trend-up` BSDFs
+        :link: module-eradiate.scenes.bsdfs
+        :link-type: ref
+
+        ``eradiate.scenes.bsdfs``
+
+
+    .. grid-item-card:: :fas:`cubes` Shapes
+        :link: module-eradiate.scenes.shapes
+        :link-type: ref
+
+        ``eradiate.scenes.shapes``
+
+    .. grid-item-card:: :fas:`sun` Illumination
+        :link: module-eradiate.scenes.illumination
+        :link-type: ref
+
+        ``eradiate.scenes.illumination``
+
+    .. grid-item-card:: :fas:`video` Measure
+        :link: module-eradiate.scenes.measure
+        :link-type: ref
+
+        ``eradiate.scenes.measure``
+
+    .. grid-item-card:: :fas:`arrow-trend-down` Phase functions
+        :link: module-eradiate.scenes.phase
+        :link-type: ref
+
+        ``eradiate.scenes.phase``
+
+    .. grid-item-card:: :fas:`server` Integrators
+        :link: module-eradiate.scenes.integrators
+        :link-type: ref
+
+        ``eradiate.scenes.integrators``
+
+    .. grid-item-card:: :fas:`rainbow` Spectra
+        :link: module-eradiate.scenes.spectra
+        :link-type: ref
+
+        ``eradiate.scenes.spectra``
+
+.. _module-eradiate.scenes.core:
+
 ``eradiate.scenes.core``
 ------------------------
 
@@ -43,6 +124,8 @@
 
    BoundingBox
 
+.. _module-eradiate.scenes.geometry:
+
 ``eradiate.scenes.geometry``
 ----------------------------
 
@@ -56,6 +139,8 @@
    SceneGeometry
    PlaneParallelGeometry
    SphericalShellGeometry
+
+.. _module-eradiate.scenes.atmosphere:
 
 ``eradiate.scenes.atmosphere``
 ------------------------------
@@ -98,6 +183,8 @@
    InterpolatorParticleDistribution
    GaussianParticleDistribution
    UniformParticleDistribution
+
+.. _module-eradiate.scenes.biosphere:
 
 ``eradiate.scenes.biosphere``
 -----------------------------
@@ -169,6 +256,8 @@
 
    wellington_citrus_orchard
 
+.. _module-eradiate.scenes.surface:
+
 ``eradiate.scenes.surface``
 ---------------------------
 
@@ -203,6 +292,8 @@
 
    mesh_from_dem
 
+.. _module-eradiate.scenes.bsdfs:
+
 ``eradiate.scenes.bsdfs``
 -------------------------
 
@@ -235,6 +326,8 @@
    RPVBSDF
    RTLSBSDF
 
+.. _module-eradiate.scenes.shapes:
+
 ``eradiate.scenes.shapes``
 --------------------------
 
@@ -266,6 +359,8 @@
    RectangleShape
    SphereShape
 
+.. _module-eradiate.scenes.illumination:
+
 ``eradiate.scenes.illumination``
 --------------------------------
 
@@ -295,6 +390,8 @@
    ConstantIllumination
    SpotIllumination
 
+.. _module-eradiate.scenes.measure:
+
 ``eradiate.scenes.measure``
 ---------------------------
 
@@ -319,7 +416,9 @@
 .. autosummary::
    :toctree: generated/autosummary/
 
+   DistantMeasure
    MultiDistantMeasure
+   MultiPixelDistantMeasure
    DistantFluxMeasure
    HemisphericalDistantMeasure
    RadiancemeterMeasure
@@ -347,6 +446,8 @@
    DirectionLayout
    GridLayout
    HemispherePlaneLayout
+
+.. _module-eradiate.scenes.phase:
 
 ``eradiate.scenes.phase``
 -------------------------
@@ -377,6 +478,8 @@
    BlendPhaseFunction
    TabulatedPhaseFunction
 
+.. _module-eradiate.scenes.integrators:
+
 ``eradiate.scenes.integrators``
 -------------------------------
 
@@ -403,6 +506,8 @@
    PathIntegrator
    VolPathIntegrator
    VolPathMISIntegrator
+
+.. _module-eradiate.scenes.spectra:
 
 ``eradiate.scenes.spectra``
 ---------------------------
