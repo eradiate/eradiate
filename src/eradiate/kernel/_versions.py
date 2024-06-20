@@ -6,7 +6,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 # Internal constants
 REQUIRED_MITSUBA_VERSION = "3.4.1"
-REQUIRED_MITSUBA_PATCH_VERSION = "0.2.1"
+REQUIRED_MITSUBA_PATCH_VERSION = "0.2.3"
 
 
 def find_drjit():
