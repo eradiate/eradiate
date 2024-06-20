@@ -120,7 +120,7 @@ def test_mi_render(mode_mono):
                 "bsdf": {"type": "diffuse", "id": "my_bsdf"},
             },
             "sensor": {
-                "type": "mdistant",
+                "type": "distant",
                 "film": {"type": "hdrfilm", "width": 1, "height": 1},
                 "direction": [0, 0, -1],
                 "target": [0, 0, 0],
@@ -183,13 +183,13 @@ def test_mi_render_multisensor(mode_mono):
                 "bsdf": {"type": "diffuse", "id": "my_bsdf"},
             },
             "sensor1": {
-                "type": "mdistant",
+                "type": "distant",
                 "film": {"type": "hdrfilm", "width": 1, "height": 1},
                 "direction": [0, 0, -1],
                 "target": [0, 0, 0],
             },
             "sensor2": {
-                "type": "mdistant",
+                "type": "distant",
                 "film": {"type": "hdrfilm", "width": 1, "height": 1},
                 "direction": [0, 0, -1],
                 "target": [0, 0, 0],

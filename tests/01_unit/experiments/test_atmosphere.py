@@ -151,7 +151,7 @@ def test_atmosphere_experiment_real_life(
 
     # -- Distant measures get no external medium
     mi_sensors = {sensor.id(): sensor for sensor in mi_wrapper.obj.sensors()}
-    assert mi_sensors["distant_measure"].medium() is None
+    assert mi_sensors["mdistant_measure"].medium() is None
 
     # -- Radiancemeter inside the atmosphere must have a medium assigned
     assert mi_sensors["radiancemeter"].medium().id() == "medium_atmosphere"
@@ -174,7 +174,7 @@ def test_atmosphere_experiment_run_basic(
         surface={"type": "lambertian"},
         measures={
             "type": "mdistant",
-            "id": "distant_measure",
+            "id": "mdistant_measure",
             "srf": MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
         },
     )
