@@ -12,12 +12,12 @@ import pinttrs
 
 from ..core import NodeSceneElement
 from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
-from ... import unit_context_config as ucc
-from ... import unit_registry as ureg
 from ..._factory import Factory
 from ...attrs import documented, get_doc, parse_docs
 from ...config import settings
 from ...frame import AzimuthConvention, angles_to_direction
+from ...units import unit_context_config as ucc
+from ...units import unit_registry as ureg
 from ...validators import has_quantity, is_positive
 
 illumination_factory = Factory()
