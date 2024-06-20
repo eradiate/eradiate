@@ -333,14 +333,15 @@ Preparing a  release
 --------------------
 
 1. Make sure all tests pass.
-2. Update the change log.
-3. Update the version and release date fields in `CITATION.cff`.
-4. Create a draft release on GitHub and update it.
-5. Using release candidates, make sure that built Pyhon wheels will work as
+2. Make sure that dependencies are correct (check in particular the kernel version).
+3. Update the change log.
+4. Update the version and release date fields in `CITATION.cff`.
+5. Create a draft release on GitHub and update it.
+6. Using release candidates, make sure that built Pyhon wheels will work as
    expected.
-6. Finalize release notes and create the release tag. **Make sure that the \
+7. Finalize release notes and create the release tag. **Make sure that the \
    release commit is referenced only by one tag.**
-7. Build and upload Python wheels.
+8. Build and upload Python wheels.
 
 Tagging a commit for release manually
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
