@@ -116,11 +116,9 @@ def test_spectral_filter(wrange) -> None:
         assert srf_values.size == filtered.srf.size
 
 
-@pytest.mark.parametrize(
-    "percentage",
-    [50.0, 90.0, 95.0, 99.0],
-)
-def test_integral_filter(percentage) -> None:
+@pytest.mark.parametrize("percentage", [50.0, 90.0, 95.0, 99.0])
+@pytest.mark.parametrize("method, ", ["walk", "symmetry"])
+def test_integral_filter(percentage, method) -> None:
     """
     Keep only data that contribute to the integrated spectral response value
     to the amount of the specified percentage.
@@ -135,6 +133,6 @@ def test_integral_filter(percentage) -> None:
         coords={"w": ("w", w_values, {"units": "nm"})},
         attrs={"history": f"{utcnow} - data set creation"},
     )
-    filtered = integral_filter(srf=srf, percentage=percentage)
+    filtered = integral_filter(srf=srf, percentage=percentage, method=method)
 
     assert int(100 * filtered.srf.size / srf_values.size) == percentage
