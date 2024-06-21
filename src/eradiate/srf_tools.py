@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import datetime
-import typing as t
 import warnings
 from pathlib import Path
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 import pint
 import rich
+import scipy.integrate as spint
 import xarray as xr
 from rich.prompt import Confirm
 from rich.table import Table
@@ -52,13 +54,13 @@ def update_attrs(srf: xr.Dataset, filter_name: str, filter_attr: str) -> None:
 
     Parameters
     ----------
-    srf: Dataset
+    srf : Dataset
         Data set whose attributes to update.
 
-    filter_name: str
+    filter_name : str
         Filter name.
 
-    filter_attr: str
+    filter_attr : str
         Content of the 'filter' attribute.
 
     Notes
@@ -92,7 +94,7 @@ def wavelength_range_width(srf: PathLike | xr.Dataset) -> pint.Quantity:
 
     Parameters
     ----------
-    srf: path-like, Dataset
+    srf : path-like, Dataset
         Spectral response function data set.
 
     Notes
@@ -110,7 +112,7 @@ def wavelength_bandwidth(srf: PathLike | xr.Dataset) -> pint.Quantity:
 
     Parameters
     ----------
-    srf: path-like, Dataset
+    srf : path-like, Dataset
         Spectral response function data set.
 
     Notes
@@ -139,7 +141,7 @@ def mean_wavelength(srf: PathLike | xr.Dataset) -> pint.Quantity:
 
     Parameters
     ----------
-    srf: path-like, Dataset
+    srf : path-like, Dataset
         Spectral response function data set.
 
     Notes
@@ -170,7 +172,7 @@ def mean_wavelength(srf: PathLike | xr.Dataset) -> pint.Quantity:
 
 def filtering_summary(
     srf: PathLike | xr.Dataset, filtered: xr.Dataset
-) -> t.Mapping[str, t.Mapping[str, int | pint.Quantity]]:
+) -> dict[str, dict[str, int | pint.Quantity]]:
     srf = convert_no_id(srf)
     ni = srf.w.size
     nf = filtered.w.size
@@ -228,10 +230,10 @@ def summarize(
 
     Parameters
     ----------
-    srf: Dataset
+    srf : Dataset
         Initial spectral response function data set.
 
-    filtered: Dataset
+    filtered : Dataset
         Filtered spectral response function data set.
 
     Returns
@@ -276,7 +278,7 @@ def trim(srf: PathLike | xr.Dataset) -> xr.Dataset:
 
     Parameters
     ----------
-    srf: path-like, Dataset
+    srf:  path-like, Dataset
         Data set to trim.
 
     Returns
@@ -305,25 +307,23 @@ def trim(srf: PathLike | xr.Dataset) -> xr.Dataset:
 
 
 def save(
-    ds: xr.Dataset,
-    path: PathLike,
-    verbose: bool = False,
-    dry_run: bool = False,
+    ds: xr.Dataset, path: PathLike, verbose: bool = False, dry_run: bool = False
 ) -> None:
-    """Save dataset to disk.
+    """
+    Save dataset to disk.
 
     Parameters
     ----------
-    ds: Dataset
+    ds : Dataset
         Dataset to save.
 
-    path: path-like
+    path : path-like
         Path to which to save the dataset.
 
-    verbose: bool
+    verbose : bool
         If ``True``, display where the dataset is saved.
 
-    dry_run: bool
+    dry_run : bool
         If ``True``, display where the dataset would be saved but does not save
         it.
     """
@@ -422,7 +422,7 @@ def spectral_filter(
 
     Parameters
     ----------
-    srf: path-like or Dataset
+    srf : path-like or Dataset
         Spectral response function data set to filter.
 
     wmin: quantity
@@ -476,19 +476,16 @@ def spectral_filter(
     return filtered
 
 
-def threshold_filter(
-    srf: PathLike | xr.Dataset,
-    value: float = 1e-3,
-) -> xr.Dataset:
+def threshold_filter(srf: PathLike | xr.Dataset, value: float = 1e-3) -> xr.Dataset:
     """
     Drop data points where response is smaller or equal than a threshold value.
 
     Parameters
     ----------
-    srf: path-like or Dataset
+    srf : path-like or Dataset
         Spectral response function data set to filter.
 
-    value: float
+    value : float
         Spectral response threshold value.
 
     Raises
@@ -539,119 +536,113 @@ def threshold_filter(
     return filtered
 
 
-def integral_filter_w_bounds(
-    ds: PathLike | xr.Dataset, percentage: float = 99.0
-) -> tuple[float, float]:
-    """
-    Compute the wavelength bounds for the integral filter.
+def _integral_filter_bounds_walk(
+    x: npt.ArrayLike, y: npt.ArrayLike, fraction: float
+) -> tuple[tuple[int, int], float]:
+    # Compute CDF
+    cdf = np.concatenate(([0], spint.cumulative_trapezoid(y, x)))
+    cdf /= cdf.max()
 
-    The integrated spectral reponse is computed from the cumulative sum of the
-    spectral response function interpolated on a regular grid with the
-    smallest wavelength step of the initial data set.
+    # Compute indexes that realize the target fraction
+    i_left = np.argwhere(cdf < 0.5 * fraction).max()
+    i_right = np.argwhere(cdf > 1.0 - (0.5 * fraction)).min()
+    cs = cdf[i_right] - cdf[i_left]
 
-    Parameters
-    ----------
-    ds: path-like or Dataset
-        Dataset to filter.
+    return (i_left, i_right), cs
 
-    percentage: float
-        Keep data that contribute to this percentage of the integrated spectral
-        response.
 
-    Returns
-    -------
-    tuple
-        Wavelength bounds.
-    """
-    # convert input
-    ds = convert_no_id(ds)
+def _integral_filter_bounds_symmetry(
+    x: npt.ArrayLike, y: npt.ArrayLike, fraction: float
+) -> tuple[tuple[int, int], float]:
+    # Insert mean in x array
+    xmean = np.trapz(y * x, x) / np.trapz(y, x)
+    i_xmean = np.argwhere(x < xmean).max() + 1
+    xext = np.insert(x, i_xmean, xmean)
+    yext = np.insert(y, i_xmean, np.interp(xmean, x, y))
 
-    # interpolate the spectral reponse on a regular wavelength mesh
-    dwmin = ds.w.diff(dim="w").values.min()
-    wmin = ds.w.values.min()
-    wmax = ds.w.values.max()
-    wnum = int((wmax - wmin) / dwmin) + 1
-    wreg = np.linspace(wmin, wmax, wnum)
-    srfreg = ds.srf.interp(w=wreg)
+    # Compute CDF
+    cdf = np.concatenate(([0], spint.cumulative_trapezoid(yext, xext)))
+    cdf /= cdf.max()
 
-    # compute the cumulative sums of the interpolated spectral response
-    cumsum = np.cumsum(srfreg)
-    cumsum_max = cumsum.values.max()  # this is the integrated spectral response
+    # Compute symmetric indexes for which the enclosed CDF reaches the target fraction
+    i_max = (len(xext) - 1) // 2
+    for i in range(i_max):
+        i_left = i_xmean - i
+        i_right = i_xmean + i
+        cs = cdf[i_right] - cdf[i_left]
+        if cs >= 1.0 - fraction:
+            break
 
-    # this is half the fraction of data points to discard:
-    halffraction = (1 - (percentage / 100)) / 2
-
-    # wavelength points that contribute to less than half the percentage of the
-    # integrated response function, starting from the smallest wavelength values
-    w_left = cumsum.where(cumsum < halffraction * cumsum_max, drop=True).w.values
-
-    # wavelength points that contribute to less than half the percentage of the
-    # integrated response function, starting from the smallest wavelength values
-    w_right = cumsum.where(cumsum > (1 - halffraction) * cumsum_max, drop=True).w.values
-
-    # determine the wavelength bounds to discard these wavelength points that
-    # contribute to less than the specified percentage of the integrated
-    # spectral response:
-    w0 = w_left[-1] if w_left.size > 0 else wmin
-    w1 = w_right[0] if w_right.size > 0 else wmax
-
-    return w0, w1
+    return (i_left, i_right - 1), cs
 
 
 def integral_filter(
     srf: PathLike | xr.Dataset,
     percentage: float = 99.0,
+    method: Literal["symmetry", "walk"] = "symmetry",
 ) -> xr.Dataset:
     """
     Keep only data that contribute to the integrated spectral response value
     to the amount of the specified percentage.
 
-    The integrated spectral reponse is computed from the cumulative sum of the
-    spectral response function interpolated on a regular grid with the
-    smallest wavelength step of the initial data set.
-
     Parameters
     ----------
-    ds: path-like or Dataset
-        Dataset to filter.
+    srf : path-like or Dataset
+        Spectral response function data set to filter.
 
-    percentage: float
+    percentage : float
         Keep data that contribute to this percentage of the integrated spectral
         response.
 
+    method : "symmetry" or "walk"
+        Trimming bound definition method.
+        The ``"symmetry"`` method ensures that the bounds are positioned
+        symmetrically with respect to the mean wavelength of the SRF.
+        The ``"walk"`` method uses the cumulative integral of the SRF to
+        position bounds eagerly while walking the spectral dimension.
+
     Raises
     ------
-    ValueError: if the percentage value is not in [0, 100].
+    ValueError: if the percentage value is not in ]0, 100].
 
     Returns
     -------
     Dataset
         Filtered data set.
     """
-    # convert input
-    srf = convert_no_id(srf)
+    # Convert input
+    ds = convert_no_id(srf)
 
-    # validate_percentage
-    if percentage < 0.0 or percentage > 100.0:
-        raise ValueError(f"value must be within [0, 100.0] (got {percentage})")
+    # Validate percentage
+    if not 0.0 < percentage <= 100.0:
+        raise ValueError(f"value must be within ]0, 100.0] (got {percentage})")
+    fraction = 1.0 - percentage / 100.0
 
-    # compute wavelength bounds and filter
-    w_bounds = integral_filter_w_bounds(ds=srf, percentage=percentage)
-    filtered = srf.where(srf.w >= w_bounds[0], drop=True).where(
-        srf.w <= w_bounds[1], drop=True
-    )
+    # Compute bounds and apply filtering method
+    w = ds.w.values
+    values = ds.srf.values
 
-    # update filtered data set attributes
+    if method == "symmetry":
+        (i_left, i_right), cs = _integral_filter_bounds_symmetry(w, values, fraction)
+    elif method == "walk":
+        (i_left, i_right), cs = _integral_filter_bounds_walk(w, values, fraction)
+    else:
+        raise ValueError(f"Unknown method '{method}'")
+
+    wmin, wmax = w[[i_left, i_right]]
+    filtered = srf.where((srf.w >= wmin) & (srf.w <= wmax), drop=True)
+
+    # Update filtered data set attributes
     update_attrs(
         srf=filtered,
         filter_name="integral filter",
         filter_attr=(
             f"Data points that did not contribute to {percentage} % of the "
-            f"integrated spectral reponse were dropped."
+            f"integrated spectral response were dropped."
         ),
     )
 
-    # sanity check
+    # Sanity check
     if filtered.w.size == 0:
         raise ValueError(
             f"Filtering this data set with {percentage=} "
@@ -675,26 +666,26 @@ def show(
 
     Parameters
     ----------
-    ds: path-like, Dataset
+    ds : path-like, Dataset
         Spectral response function to be filtered.
 
-    trim_prior: bool
+    trim_prior : bool
         If ``True``, trim spectral response function prior to filter.
 
-    title: str, optional
+    title : str, optional
         Figure title.
 
-    threshold: float, optional
+    threshold : float, optional
         Threshold value for the threshold filter.
 
-    wmin: quantity, optional
+    wmin : quantity, optional
         Lower wavelength value for the spectral filter.
 
-    wmax: quantity, optional
+    wmax : quantity, optional
         Upper wavelength value for the spectral filter.
 
-    percentage: float, optional
-        Percentage value for the integral filter.
+    percentage : float, optional
+        Percentage value for the integral filter (will use the 'symmetry' method).
 
     Raises
     ------
@@ -708,12 +699,7 @@ def show(
     plt.figure(dpi=100)
     ax = plt.gca()
 
-    plt_params = {
-        "lw": 0.6,
-        "marker": ".",
-        "markersize": 2,
-        "yscale": "log",
-    }
+    plt_params = {"lw": 0.6, "marker": ".", "markersize": 2, "yscale": "log"}
 
     # optionally trim
     if trim_prior:
@@ -794,7 +780,10 @@ def show(
         )
 
     if percentage is not None:
-        wmin, wmax = integral_filter_w_bounds(ds=ds, percentage=percentage)
+        x = ureg.convert(ds.w.values, ds.w.units, "nm")
+        y = ds.srf.values
+        fraction = 1.0 - percentage / 100.0
+        wmin, wmax = x[list(_integral_filter_bounds_symmetry(x, y, fraction)[0])]
         # drop regions
         plt.axvline(x=wmin, color="red", lw=0.5)
         ax.fill_between(
@@ -850,47 +839,47 @@ def filter_srf(
 
     Parameters
     ----------
-    srf: path-like, Dataset
+    srf : path-like, Dataset
         Spectral response function data set to filter.
 
-    path: path-like
+    path : path-like
         Path to which to save the filtered data set.
 
-    verbose: bool
+    verbose : bool
         If ``True``, display a filtering summary table and the path to which
         filtered data set is saved.
 
-    show_plot: bool
+    show_plot : bool
         If ``True``, display a figure emphasizing the filtered region.
 
-    dry_run: bool
+    dry_run : bool
         If ``True``, display the path to which the filtered data set would be
         saved, but does not write the data set to the disk.
 
-    interactive: bool
+    interactive : bool
         If ``True``, prompt the user to proceed to saving the filtered dataset.
         This is useful in combination with ``verbose=True`` and
         ``show_plot=True``.
 
-    trim_prior: bool
+    trim_prior : bool
         Trim the data set prior to filtering.
 
-    threshold: float, optional
+    threshold : float, optional
         Threshold value for the threshold filter.
         See :meth:`threshold_filter`.
         If ``None``, disable the threshold filter.
 
-    wmin: quantity, optional
+    wmin : quantity, optional
         Lower wavelength bound for the spectral filter.
         See :meth:`spectral_filter`.
         If both ``wmin`` and ``wmax`` are ``None``, disable the spectral filter.
 
-    wmax: quantity, optional
+    wmax : quantity, optional
         Upper wavelength bound for the spectral filter.
         See :meth:`spectral_filter`.
         If both ``wmin`` and ``wmax`` are ``None``, disable the spectral filter.
 
-    percentage: float, optional
+    percentage : float, optional
         Percentage value for the integral filter.
         See :meth:`integral_filter`.
         If ``None``, disable the integral filter.
@@ -954,12 +943,7 @@ def filter_srf(
         if not Confirm.ask("Save filtered dataset?"):
             return
 
-    save(
-        ds=filtered,
-        path=output_path,
-        verbose=verbose,
-        dry_run=dry_run,
-    )
+    save(ds=filtered, path=output_path, verbose=verbose, dry_run=dry_run)
 
 
 @ureg.wraps(ret=None, args=("nm", "nm", None, "nm", "nm"), strict=False)
