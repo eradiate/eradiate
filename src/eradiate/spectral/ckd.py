@@ -110,6 +110,9 @@ class Bin:
 #                          CKD quadrature setup classes
 # ------------------------------------------------------------------------------
 
+# Number of g-points of the default quadrature
+_DEFAULT_NG: int = 16
+
 
 @parse_docs
 @attrs.define
@@ -127,7 +130,7 @@ class QuadSpec:
         """
         Return the default spectral quadrature (Gauss-Legendre, 16 *g*-points).
         """
-        return QuadSpecFixed(n=16, quad_type="gauss_legendre")
+        return QuadSpecFixed(n=_DEFAULT_NG, quad_type="gauss_legendre")
 
     @staticmethod
     def from_dict(
@@ -222,9 +225,10 @@ class QuadSpecFixed(QuadSpec):
         default='"gauss_legendre"',
     )
 
-    @classmethod
-    def from_dict(cls, value: dict[str, t.Any]) -> QuadSpecFixed:
-        return cls(**value)
+    @staticmethod
+    def from_dict(value: dict[str, t.Any]) -> QuadSpecFixed:
+        # Inherit docstring
+        return QuadSpecFixed(**value)
 
     def make_quad(self, dataset: xr.Dataset) -> Quad:
         # Inherit docstring
@@ -238,7 +242,7 @@ class QuadSpecMinError(QuadSpec):
     Error-minimizing number of quadrature points [``minimize_error``]
 
     Find the number of quadrature points that minimizes the error on the
-    atmospheric transmittance. The quadrature type
+    atmospheric transmittance.
     """
 
     nmax: int | None = documented(
@@ -251,9 +255,9 @@ class QuadSpecMinError(QuadSpec):
         init_type="int, optional",
     )
 
-    @classmethod
-    def from_dict(cls, value: dict[str, t.Any]) -> QuadSpecMinError:
-        return cls(**value)
+    @staticmethod
+    def from_dict(value: dict[str, t.Any]) -> QuadSpecMinError:
+        return QuadSpecMinError(**value)
 
     def make_quad(self, dataset: xr.Dataset) -> Quad:
         # Inherit docstring
@@ -288,9 +292,10 @@ class QuadSpecErrorThreshold(QuadSpec):
         init_type="int, optional",
     )
 
-    @classmethod
-    def from_dict(cls, value: dict[str, t.Any]) -> QuadSpecErrorThreshold:
-        return cls(**value)
+    @staticmethod
+    def from_dict(value: dict[str, t.Any]) -> QuadSpecErrorThreshold:
+        # Inherit docstring
+        return QuadSpecErrorThreshold(**value)
 
     def make_quad(self, dataset: xr.Dataset) -> Quad:
         # Inherit docstring
@@ -562,23 +567,14 @@ class BinSet(SpectralSet):
         # databases.
         # This feature will be enabled again in the future, when the spectral
         # loop handling will be rewritten.
-        if isinstance(quad_spec, QuadSpecMinError):
-            n_g = quad_spec.nmax
+        if isinstance(quad_spec, (QuadSpecMinError, QuadSpecErrorThreshold)):
+            n_g = quad_spec.nmax if quad_spec.nmax is not None else _DEFAULT_NG
             warnings.warn(
-                "The advanced quadrature specification is temporarily disabled, "
+                "Advanced quadrature specification is temporarily disabled, "
                 "switching to a fixed quadrature rule specification with %s g-points."
                 % n_g
             )
-            quad_spec = QuadSpecFixed(n_g=n_g)
-
-        if isinstance(quad_spec, QuadSpecErrorThreshold):
-            n_g = quad_spec.nmax
-            warnings.warn(
-                "The advanced quadrature specification is temporarily disabled, "
-                "switching to a fixed quadrature rule specification with %s g-points."
-                % n_g
-            )
-            quad_spec = QuadSpecFixed(n_g=n_g)
+            quad_spec = QuadSpecFixed(n=n_g)
 
         quad = quad_spec.make_quad(None)  # TODO: Refactor this, it's an ugly hack
         wmin = abs_db.spectral_coverage["wbound_lower [nm]"].values * ureg.nm
