@@ -166,11 +166,12 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         ),
         doc="Monte Carlo integration algorithm specification. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by "
-        ":meth:`IntegratorFactory.convert() <.IntegratorFactory.convert>`."
-        "If set to AUTO, the integrator will be set depending on the presence of an atmosphere."
-        "If an atmosphere is defined the integrator defaults to :class:`.VolPathIntegrator`"
-        "otherwise a :class:`.PathIntegrator` will be used.",
+        "interpreted by :data:`.integrator_factory`. "
+        "If set to :data:`.AUTO`, the integrator is set depending on the "
+        "presence of an atmosphere. "
+        "If an atmosphere is defined the integrator defaults to "
+        ":class:`.VolPathIntegrator`; otherwise a :class:`.PathIntegrator` is "
+        "used.",
         type=":class:`.Integrator` or AUTO",
         init_type=":class:`.Integrator` or dict or AUTO",
         default="AUTO",

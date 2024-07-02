@@ -117,8 +117,8 @@ class DEMExperiment(EarthObservationExperiment):
         ),
         doc="Monte Carlo integration algorithm specification. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.integrator_factory`. The DEMExperiment requires"
-        "the use of a .VolPathIntegrator.",
+        "interpreted by :data:`.integrator_factory`. This experiment requires "
+        "the use of a :class:`.VolPathIntegrator`.",
         type=".VolPathIntegrator",
         init_type=".VolPathIntegrator or dict",
         default=":class:`VolPathIntegrator() <.VolPathIntegrator>`",
