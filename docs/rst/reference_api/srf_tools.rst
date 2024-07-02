@@ -1,5 +1,5 @@
 ``eradiate.srf_tools``
-=======================
+======================
 
 .. automodule:: eradiate.srf_tools
 
@@ -27,6 +27,8 @@ Filtering algorithms
 .. autofunction:: threshold_filter
 
 .. autofunction:: filter_srf
+
+.. autofunction:: pad_zeros
 
 Plotting
 --------
