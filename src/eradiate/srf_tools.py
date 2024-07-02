@@ -652,6 +652,52 @@ def integral_filter(
     return filtered
 
 
+def pad_zeros(ds: xr.Dataset) -> xr.Dataset:
+    """
+    Pad an SRF dataset with zero values to the left and right.
+
+    Parameters
+    ----------
+    ds : Dataset
+        SRF dataset
+
+
+    Returns
+    -------
+    Dataset
+    """
+
+    # Extend spectral dimension
+    w = ds.w.values
+    dw = np.diff(ds.w)
+    w = np.concatenate(([w[0] - dw[0]], w, [w[-1] + dw[-1]]))
+
+    # Pad data variables
+    data = {
+        "srf": np.concatenate(([0.0], ds["srf"].values, [0.0])),
+        "srf_u": np.concatenate(([np.nan], ds["srf_u"].values, [np.nan])),
+    }
+
+    # Create result variable
+    result = xr.Dataset(
+        {
+            "srf": ("w", data["srf"], ds["srf"].attrs),
+            "srf_u": ("w", data["srf_u"], ds["srf_u"].attrs),
+        },
+        coords={"w": ("w", w, ds["w"].attrs)},
+        attrs=ds.attrs,
+    )
+
+    # Update dataset attributes
+    update_attrs(
+        srf=result,
+        filter_name="pad_zeros",
+        filter_attr="Added leading and trailing zeros.",
+    )
+
+    return result
+
+
 def show(
     ds: PathLike | xr.Dataset,
     trim_prior: bool = True,
@@ -696,8 +742,7 @@ def show(
     ds = convert_no_id(ds)
 
     # setup figure
-    plt.figure(dpi=100)
-    ax = plt.gca()
+    fig, ax = plt.subplots(1, 1, figsize=(6, 4))
 
     plt_params = {"lw": 0.6, "marker": ".", "markersize": 2, "yscale": "log"}
 
@@ -833,6 +878,7 @@ def filter_srf(
     wmin: pint.Quantity | None = None,
     wmax: pint.Quantity | None = None,
     percentage: float | None = None,
+    pad: bool = False,
 ) -> None:
     """
     Filter a spectral response function data set.
@@ -884,6 +930,9 @@ def filter_srf(
         See :meth:`integral_filter`.
         If ``None``, disable the integral filter.
 
+    pad : bool, default: False
+        If True, pad SRF data with leading and trailing zeros.
+
     Notes
     -----
     Select the filtering algorithms corresponding to the specified parameters.
@@ -920,6 +969,10 @@ def filter_srf(
     if threshold is not None:
         filtered = threshold_filter(srf=filtered, value=threshold)
 
+    # pad with zeros
+    if pad:
+        filtered = pad_zeros(filtered)
+
     # print filtering summary table
     if verbose:
         table = summarize(srf=srf, filtered=filtered)
@@ -946,13 +999,14 @@ def filter_srf(
     save(ds=filtered, path=output_path, verbose=verbose, dry_run=dry_run)
 
 
-@ureg.wraps(ret=None, args=("nm", "nm", None, "nm", "nm"), strict=False)
+@ureg.wraps(ret=None, args=("nm", "nm", None, "nm", "nm", None), strict=False)
 def make_gaussian(
     wl_center: pint.Quantity,
     fwhm: pint.Quantity,
     cutoff: float = 3.0,
     wl: pint.Quantity | None = None,
     wl_res: pint.Quantity | float = 1.0,
+    pad: bool = False,
 ) -> xr.Dataset:
     """
     Generate a Gaussian spectral response function dataset from central
@@ -979,6 +1033,9 @@ def make_gaussian(
     wl_res : quantity or float, optional
         Resolution of the automatic spectral mesh if relevant.
         If passed as an array, the value is interpreted as being given in nm.
+
+    pad : bool, default: False
+        If True, pad SRF data with leading and trailing zeros.
 
     Returns
     -------
@@ -1032,4 +1089,9 @@ def make_gaussian(
         "long_name": "spectral response function uncertainty",
         "units": "dimensionless",
     }
+
+    # Pad if requested
+    if pad:
+        result = pad_zeros(result)
+
     return result
