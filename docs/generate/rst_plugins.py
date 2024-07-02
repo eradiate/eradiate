@@ -107,8 +107,9 @@ def make_toc(section, title) -> str:
 
 
 def generate():
-    root_dir = Path(__file__).absolute().parent.parent
+    root_dir = (Path(__file__) / "../../..").resolve()
     plugin_dir = root_dir / "ext/mitsuba/src/eradiate_plugins"
+    print(f"Looking for plugins in {plugin_dir}")
     out_dir = root_dir / "docs/rst/reference_plugins/generated"
     print(f"Generating plugin docs in '{out_dir}'")
 
