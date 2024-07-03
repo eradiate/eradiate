@@ -53,3 +53,15 @@ class Integrator(NodeSceneElement, ABC):
         init_type="float, optional",
         default="None",
     )
+
+    moment: bool = documented(
+        attrs.field(
+            default=False,
+            converter=attrs.converters.optional(bool),
+        ),
+        doc="If true, calculates the variance of the output film",
+        type="bool",
+        init_type="bool, optional",
+        default="False",
+    )
+    

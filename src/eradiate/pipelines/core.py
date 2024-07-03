@@ -14,6 +14,7 @@ from rich.table import Table
 import eradiate
 
 from .._mode import Mode
+from ..scenes.integrators import Integrator
 from ..scenes.measure import Measure
 from ..scenes.spectra import InterpolatedSpectrum
 
@@ -21,7 +22,11 @@ from ..scenes.spectra import InterpolatedSpectrum
 telemetry.disable_telemetry()
 
 
-def config(measure: Measure, mode: Mode | str | None = None) -> dict:
+def config(
+    measure: Measure,
+    mode: Mode | str | None = None,
+    integrator: Integrator | None = None,
+) -> dict:
     """
     Generate a pipeline configuration for a specific scene setup.
 
@@ -32,6 +37,10 @@ def config(measure: Measure, mode: Mode | str | None = None) -> dict:
     mode : .Mode or str, optional
         Mode or mode ID for which the pipeline is configured. By default, the
         current active mode is used.
+
+    integrator : .Integrator or None, optional
+        Integrator used for the experiment; indicates whether the moment was
+        calculated during the integration.
 
     Returns
     -------
@@ -61,6 +70,9 @@ def config(measure: Measure, mode: Mode | str | None = None) -> dict:
 
     # Shall we apply spectral response function weighting (a.k.a convolution)?
     result["apply_spectral_response"] = isinstance(measure.srf, InterpolatedSpectrum)
+
+    # Should we calculate the variance in the result?
+    result["calculate_variance"] = integrator.moment if integrator is not None else False
 
     return result
 

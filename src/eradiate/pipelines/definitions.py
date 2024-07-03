@@ -15,6 +15,7 @@ from hamilton.function_modifiers import (
     source,
     tag,
     tag_outputs,
+    value,
 )
 
 from . import logic
@@ -32,7 +33,9 @@ _MODE_IDS_CKD = set(modes(lambda x: x.is_ckd).keys())
 
 def _parameterize_aggregate_ckd_quad(var_name):
     # Tailored decorator for the aggregate_ckd_quad() task
-    cfg = {var_name: {"raw_data": source(f"{var_name}_raw")}}
+    cfg = {
+        var_name: {"raw_data": source(f"{var_name}_raw")}
+    }
     return parameterize(**cfg)
 
 
@@ -44,7 +47,50 @@ def _parameterize_aggregate_ckd_quad(var_name):
 def aggregate_ckd_quad(
     mode_id: str, raw_data: xr.DataArray, spectral_set: SpectralSet
 ) -> xr.DataArray:
-    return logic.aggregate_ckd_quad(mode_id, raw_data, spectral_set)
+    return logic.aggregate_ckd_quad(mode_id, raw_data, spectral_set, False)
+
+
+def _parameterize_aggregate_ckd_quad_var(var_name):
+    # Tailored decorator for the aggregate_ckd_quad_var() task
+    cfg = {
+        f"{var_name}_var": {"raw_data": source(f"{var_name}_var_raw")},
+    }
+    return parameterize(**cfg)
+
+
+@tag(**{"final": "true", "kind": "data"})
+@config.when(calculate_variance=True)
+@resolve(
+    when=ResolveAt.CONFIG_AVAILABLE,
+    decorate_with=_parameterize_aggregate_ckd_quad_var,
+)
+def aggregate_ckd_quad_var(
+    mode_id: str, raw_data: xr.DataArray, spectral_set: SpectralSet
+) -> xr.DataArray:
+    return logic.aggregate_ckd_quad(mode_id, raw_data, spectral_set, True)
+
+
+def _parameterize_variance(var_name):
+    # Tailored decorator for the moment2_to_variance() task
+    cfg = {
+        f"{var_name}_var_raw": {
+            "raw_data": source(f"{var_name}_raw"),
+            "raw_m2_data": source(f"{var_name}_m2_raw"),
+        }
+    }
+    return parameterize(**cfg)
+
+
+@tag(**{"kind": "data"})
+@config.when(calculate_variance=True)
+@resolve(
+    when=ResolveAt.CONFIG_AVAILABLE,
+    decorate_with=_parameterize_variance,
+)
+def moment2_to_variance(
+    raw_data: xr.DataArray, raw_m2_data: xr.DataArray, spp: xr.DataArray
+) -> xr.DataArray:
+    return logic.moment2_to_variance(raw_data, raw_m2_data, spp)
 
 
 def _parameterize_apply_spectral_response(var_name, measure_distant):
@@ -137,6 +183,7 @@ def extract_irradiance(
         **{
             "spp": {"kind": "data"},
             f"{var_name}_raw": {"kind": "data"},
+            f"{var_name}_m2_raw": {"kind": "data"},
         }
     ),
 )
@@ -152,6 +199,8 @@ def extract_irradiance(
             f"{var_name}_raw": xr.DataArray,
             # Wavelength list, source from bitmap data
             # "wavelengths": xr.DataArray,
+            # 2nd moment of the main film
+            f"{var_name}_m2_raw": xr.DataArray,
         }
     ),
 )
@@ -159,12 +208,19 @@ def gather_bitmaps(
     mode_id: str,
     var_name: str,
     var_metadata: dict,
+    calculate_variance: bool,
     bitmaps: dict,
     viewing_angles: xr.Dataset,
     solar_angles: xr.Dataset,
 ) -> dict:
     return logic.gather_bitmaps(
-        mode_id, var_name, var_metadata, bitmaps, viewing_angles, solar_angles
+        mode_id,
+        var_name,
+        var_metadata,
+        calculate_variance,
+        bitmaps,
+        viewing_angles,
+        solar_angles,
     )
 
 
