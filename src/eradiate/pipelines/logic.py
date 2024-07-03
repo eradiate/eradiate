@@ -56,7 +56,7 @@ def _spectral_dims(mode: Mode | str) -> tuple[tuple[str, dict], ...]:
 
 
 def aggregate_ckd_quad(
-    mode_id: str, raw_data: xr.DataArray, spectral_set: SpectralSet
+    mode_id: str, raw_data: xr.DataArray, spectral_set: SpectralSet, is_variance: bool
 ) -> xr.DataArray:
     """
     Compute CKD quadrature.
@@ -82,6 +82,9 @@ def aggregate_ckd_quad(
 
     spectral_set : .WavelengthSet or .BinSet
         Spectral set for which the CKD quadrature is computed.
+
+    is_variance : bool
+        Flag that specifies whether the raw_data is a variance value.
 
     Returns
     -------
@@ -135,10 +138,21 @@ def aggregate_ckd_quad(
         # performance reasons (wrong data indexing method will result in
         # 10x+ speed reduction)
         for indexes in itertools.product(*[list(range(n)) for n in sizes.values()]):
-            result.values[(i_bin, *indexes)] = bin.quad.integrate(
-                values_at_nodes[(slice(None), *indexes)],
-                interval=(0.0, 1.0),
-            )
+            interval = (0.0, 1.0)
+
+            if is_variance:
+                weights = bin.quad.weights.copy()
+                if interval is not None:
+                    weights *= 0.5 * (interval[1] - interval[0])
+
+                variance = values_at_nodes[(slice(None), *indexes)]
+                weighted_sum = float(np.dot(weights**2, variance))
+                result.values[(i_bin, *indexes)] = weighted_sum
+            else:
+                result.values[(i_bin, *indexes)] = bin.quad.integrate(
+                    values_at_nodes[(slice(None), *indexes)],
+                    interval=interval,
+                )
 
     result.attrs = raw_data.attrs
     result.name = result_name
@@ -531,6 +545,7 @@ def gather_bitmaps(
     mode_id: str,
     var_name: str,
     var_metadata: dict,
+    gather_variance: bool,
     bitmaps: dict,
     viewing_angles: xr.Dataset,
     solar_angles: xr.Dataset,
@@ -549,6 +564,9 @@ def gather_bitmaps(
     var_metadata : dict
         A metadata dictionary to be attached to the data array holding the
         processed physical variable.
+
+    gather_variance : bool
+        Flag that specifies whether the variance bitmaps should be gathered.
 
     bitmaps : dict
         A dictionary mapping spectral loop indexes to the corresponding bitmap.
@@ -602,6 +620,7 @@ def gather_bitmaps(
         "spp": [],
         "weights_raw": [],
         f"{var_name}_raw": [],
+        f"{var_name}_m2_raw": [],
     }
 
     for spectral_index_hashable, result_dict in bitmaps.items():
@@ -628,20 +647,27 @@ def gather_bitmaps(
             xr.DataArray(np.reshape(spp, spp_shape), coords=all_coords)
         )
 
+        if gather_variance:
+            da_var = bitmap_to_dataarray(result_dict["m2"])
+            sensor_data[f"{var_name}_m2_raw"].append(da_var.expand_dims(dim=all_coords))
+
     # Combine all the data
     result = {k: xr.combine_by_coords(v) if v else None for k, v in sensor_data.items()}
 
-    # Add viewing angle coordinates to main data array
-    if viewing_angles is not None:
-        result[f"{var_name}_raw"] = result[f"{var_name}_raw"].assign_coords(
-            viewing_angles
-        )
+    keys = [f"{var_name}_raw"]
+    if gather_variance:
+        keys.append(f"{var_name}_m2_raw")
 
-    # Add solar angle coordinate to main data array
-    if solar_angles is not None:
-        result[f"{var_name}_raw"] = result[f"{var_name}_raw"].expand_dims(
-            {k: solar_angles[k].values for k in ["sza", "saa"]}, axis=(-1, -2)
-        )
+    for key in keys:
+        # Add viewing angle coordinates to main data array
+        if viewing_angles is not None:
+            result[key] = result[key].assign_coords(viewing_angles)
+
+        # Add solar angle coordinate to main data array
+        if solar_angles is not None:
+            result[key] = result[key].expand_dims(
+                {k: solar_angles[k].values for k in ["sza", "saa"]}, axis=(-1, -2)
+            )
 
     # Drop "channel" dimension when using a monochromatic Mitsuba variant
     if mode.check(mi_color_mode="mono"):
@@ -795,3 +821,37 @@ def viewing_angles(angles: np.ndarray) -> xr.Dataset:
             ),
         }
     )
+
+
+def moment2_to_variance(
+    expectation: xr.DataArray, m2: xr.DataArray, spp: xr.DataArray
+) -> xr.DataArray:
+    """
+    Calculate the variance (central 2nd moment) from the raw 2nd moment and expected value.
+
+    Parameters
+    ----------
+    expectation : DataArray
+        The data expected value. For Monte Carlo integration, this is the output of
+        the estimator.
+
+    m2 : DataArray
+        The data's raw 2nd moment.
+
+    spp : DataArray
+        The number of samples per pixels used during the Monte Carlo integration.
+
+    Returns
+    -------
+    DataArray
+        The variance (central 2nd moment) of the data. The DataArray has the same shape
+        as the expectation or m2.
+
+    Notes
+    -----
+    This function calculates the Monte-Carlo variance, which aggregates the variance
+    of each sample. It thus needs to be divided by the spp.
+    """
+    variance = (m2 - expectation * expectation) / spp
+    variance.name = m2.name.replace("m2", "var")
+    return variance

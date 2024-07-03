@@ -7,6 +7,7 @@ from datetime import datetime
 
 import attrs
 import mitsuba as mi
+import numpy as np
 import pinttr
 import xarray as xr
 from hamilton.driver import Driver
@@ -478,11 +479,25 @@ class EarthObservationExperiment(Experiment, ABC):
 
         for ctx_index, spectral_group_dict in mi_results.items():
             for sensor_id, mi_bitmap in spectral_group_dict.items():
-                measure = sensor_to_measure[sensor_id]
-                measure.mi_results[ctx_index] = {
-                    "bitmap": mi_bitmap,
-                    "spp": spp if spp > 0 else measure.spp,
-                }
+                if self.integrator.moment:
+                    split = mi_bitmap.split()
+                    m2 = split[1][1]
+                    m2_np = np.array(m2, copy=False)[:, :, [0]]
+                    m2 = mi.Bitmap(m2_np, mi.Bitmap.PixelFormat.Y)
+
+                    measure = sensor_to_measure[sensor_id]
+                    measure.mi_results[ctx_index] = {
+                        "bitmap": split[0][1],
+                        "m2": m2,
+                        "spp": spp if spp > 0 else measure.spp,
+                    }
+
+                else:
+                    measure = sensor_to_measure[sensor_id]
+                    measure.mi_results[ctx_index] = {
+                        "bitmap": mi_bitmap,
+                        "spp": spp if spp > 0 else measure.spp,
+                    }
 
     def postprocess(self) -> None:
         # Inherit docstring
@@ -501,7 +516,7 @@ class EarthObservationExperiment(Experiment, ABC):
         # Inherit docstring
         if isinstance(measure, int):
             measure = self.measures[measure]
-        config = pl.config(measure)
+        config = pl.config(measure, integrator=self.integrator)
         return eradiate.pipelines.driver(config)
 
     def _pipeline_inputs(self, i_measure: int):

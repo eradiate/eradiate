@@ -61,6 +61,9 @@ class MonteCarloIntegrator(Integrator):
         if self.hide_emitters is not None:
             result["hide_emitters"] = self.hide_emitters
 
+        if self.moment:
+            result = { "type":"moment", "nested":result }
+        
         return result
 
 
