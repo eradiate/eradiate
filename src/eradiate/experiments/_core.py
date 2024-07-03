@@ -22,6 +22,7 @@ from ..rng import SeedState
 from ..scenes.atmosphere import AbstractHeterogeneousAtmosphere
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
 from ..scenes.illumination import (
+    AbstractDirectionalIllumination,
     ConstantIllumination,
     DirectionalIllumination,
     illumination_factory,
@@ -310,19 +311,21 @@ class EarthObservationExperiment(Experiment, ABC):
         default="None",
     )
 
-    illumination: DirectionalIllumination | ConstantIllumination = documented(
+    illumination: AbstractDirectionalIllumination | ConstantIllumination = documented(
         attrs.field(
             factory=DirectionalIllumination,
             converter=illumination_factory.convert,
             validator=attrs.validators.instance_of(
-                (DirectionalIllumination, ConstantIllumination)
+                (AbstractDirectionalIllumination, ConstantIllumination)
             ),
         ),
         doc="Illumination specification. "
         "This parameter can be specified as a dictionary which will be "
         "interpreted by :data:`.illumination_factory`.",
-        type=":class:`.DirectionalIllumination`",
-        init_type=":class:`.DirectionalIllumination` or dict",
+        type=":class:`.AbstractDirectionalIllumination` or "
+        ":class:`.ConstantIllumination`",
+        init_type=":class:`.DirectionalIllumination` or "
+        ":class:`.ConstantIllumination` or dict",
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )
 
