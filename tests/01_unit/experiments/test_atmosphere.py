@@ -27,6 +27,15 @@ def test_atmosphere_experiment_construct_default(modes_all_double):
     assert exp.atmosphere.geometry is exp.geometry
 
 
+@pytest.mark.parametrize("illumination", ["directional", "astro_object"])
+def test_atmosphere_experiment_construct_illuminations(modes_all_double, illumination):
+    """
+    AtmosphereExperiment initializes successfully with different illumination
+    types.
+    """
+    assert AtmosphereExperiment(illumination={"type": illumination})
+
+
 def test_atmosphere_experiment_extra_objects(mode_mono):
     """
     Extra objects can be added to the scene.
