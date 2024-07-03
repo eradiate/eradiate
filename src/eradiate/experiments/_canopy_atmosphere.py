@@ -8,10 +8,12 @@ import attrs
 from ._core import EarthObservationExperiment
 from ._helpers import (
     check_geometry_atmosphere,
+    check_piecewise_compatible,
+    check_volpath_compatible,
     measure_inside_atmosphere,
     surface_converter,
 )
-from .. import converters, validators
+from .. import validators
 from ..attrs import AUTO, documented, parse_docs
 from ..scenes.atmosphere import (
     Atmosphere,
@@ -28,10 +30,9 @@ from ..scenes.geometry import (
     SceneGeometry,
 )
 from ..scenes.integrators import (
-    Integrator,
     PathIntegrator,
+    PiecewiseVolPathIntegrator,
     VolPathIntegrator,
-    integrator_factory,
 )
 from ..scenes.measure import AbstractDistantMeasure, Measure
 from ..scenes.shapes import RectangleShape
@@ -156,40 +157,11 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
 
-    _integrator: Integrator = documented(
-        attrs.field(
-            default=AUTO,
-            converter=converters.auto_or(integrator_factory.convert),
-            validator=validators.auto_or(
-                attrs.validators.instance_of(Integrator),
-            ),
-        ),
-        doc="Monte Carlo integration algorithm specification. "
-        "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.integrator_factory`. "
-        "If set to :data:`.AUTO`, the integrator is set depending on the "
-        "presence of an atmosphere. "
-        "If an atmosphere is defined the integrator defaults to "
-        ":class:`.VolPathIntegrator`; otherwise a :class:`.PathIntegrator` is "
-        "used.",
-        type=":class:`.Integrator` or AUTO",
-        init_type=":class:`.Integrator` or dict or AUTO",
-        default="AUTO",
-    )
-
-    @property
-    def integrator(self) -> Integrator:
-        if self._integrator is AUTO:
-            if self.atmosphere is not None:
-                return VolPathIntegrator()
-            else:
-                return PathIntegrator()
-        return self._integrator
-
     def __attrs_post_init__(self):
         self._normalize_spectral()
         self._normalize_atmosphere()
         self._normalize_measures()
+        self._normalize_integrator()
 
     def _normalize_atmosphere(self) -> None:
         """
@@ -237,6 +209,31 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
                             "ymax": 0.5 * self.canopy.size[1],
                             "z": self.canopy.size[2],
                         }
+
+    def _normalize_integrator(self) -> None:
+        """
+        Ensures that the integrator is compatible with the atmosphere and geometry.
+        """
+        piecewise_compatible, pw_msg = check_piecewise_compatible( self.geometry, self.atmosphere)
+        volpath_compatible, vol_msg = check_volpath_compatible( self.atmosphere)
+
+        if self.integrator is AUTO:
+            if piecewise_compatible:
+                self.integrator = PiecewiseVolPathIntegrator()
+            elif volpath_compatible:
+                self.integrator = VolPathIntegrator()
+            else:
+                self.integrator = PathIntegrator()
+        else :
+            msg = ""
+            if isinstance(self.integrator, PiecewiseVolPathIntegrator) and not piecewise_compatible:
+                msg = pw_msg
+
+            if isinstance(self.integrator, VolPathIntegrator) and not volpath_compatible:
+                msg = vol_msg
+
+            if msg:
+                raise ValueError(msg)
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         result = super()._dataset_metadata(measure)

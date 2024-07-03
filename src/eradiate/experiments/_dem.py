@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import typing as t
 import warnings
 
@@ -8,10 +9,11 @@ import attrs
 from ._core import EarthObservationExperiment
 from ._helpers import (
     check_geometry_atmosphere,
+    check_piecewise_compatible,
     measure_inside_atmosphere,
     surface_converter,
 )
-from ..attrs import documented, parse_docs
+from ..attrs import AUTO, documented, parse_docs
 from ..scenes.atmosphere import (
     Atmosphere,
     HeterogeneousAtmosphere,
@@ -26,10 +28,11 @@ from ..scenes.geometry import (
     SceneGeometry,
     SphericalShellGeometry,
 )
-from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
+from ..scenes.integrators import PiecewiseVolPathIntegrator, VolPathIntegrator
 from ..scenes.measure import AbstractDistantMeasure, Measure, TargetPoint
 from ..scenes.surface import BasicSurface, DEMSurface
 
+logger = logging.getLogger(__name__)
 
 @parse_docs
 @attrs.define
@@ -109,25 +112,11 @@ class DEMExperiment(EarthObservationExperiment):
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
 
-    _integrator: Integrator = documented(
-        attrs.field(
-            factory=VolPathIntegrator,
-            converter=integrator_factory.convert,
-            validator=attrs.validators.instance_of(VolPathIntegrator),
-        ),
-        doc="Monte Carlo integration algorithm specification. "
-        "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.integrator_factory`. This experiment requires "
-        "the use of a :class:`.VolPathIntegrator`.",
-        type=".VolPathIntegrator",
-        init_type=".VolPathIntegrator or dict",
-        default=":class:`VolPathIntegrator() <.VolPathIntegrator>`",
-    )
-
     def __attrs_post_init__(self):
         self._normalize_spectral()
         self._normalize_atmosphere()
         self._normalize_measures()
+        self._normalize_integrator()
 
     def _normalize_atmosphere(self) -> None:
         """
@@ -185,6 +174,21 @@ class DEMExperiment(EarthObservationExperiment):
 
                 if msg is not None:
                     warnings.warn(UserWarning(msg))
+
+    def _normalize_integrator(self) -> None:
+        """
+        Ensures that the integrator is compatible with the atmosphere and geometry.
+        """
+        piecewise_compatible, msg = check_piecewise_compatible( self.geometry, self.atmosphere)
+
+        if self.integrator is AUTO:
+            if piecewise_compatible:
+                self.integrator = PiecewiseVolPathIntegrator()
+            else:
+                self.integrator = VolPathIntegrator()
+        else :
+            if isinstance(self.integrator, PiecewiseVolPathIntegrator) and not piecewise_compatible:
+                raise ValueError(msg)
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         result = super()._dataset_metadata(measure)
