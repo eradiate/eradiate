@@ -119,3 +119,17 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
             result["use_spectral_mis"] = self.use_spectral_mis
 
         return result
+
+@parse_docs
+@attrs.define(eq=False, slots=False)
+class PiecewiseVolPathIntegrator(MonteCarloIntegrator):
+    """
+    A thin interface to the piecewise volumetric path tracer kernel plugin.
+
+    This integrator samples paths using random walks starting from the sensor.
+    It supports multiple scattering and accounts for 1D volume interactions.
+    """
+
+    @property
+    def kernel_type(self) -> str:
+        return "piecewise_volpath"

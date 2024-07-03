@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-from ..scenes.atmosphere import Atmosphere, MolecularAtmosphere
+from ..scenes.atmosphere import (
+    AbstractHeterogeneousAtmosphere,
+    Atmosphere,
+    MolecularAtmosphere,
+)
 from ..scenes.bsdfs import BSDF, bsdf_factory
-from ..scenes.geometry import SceneGeometry
+from ..scenes.geometry import SceneGeometry, SphericalShellGeometry
 from ..scenes.measure import (
     AbstractDistantMeasure,
     Measure,
@@ -119,3 +123,68 @@ def check_geometry_atmosphere(
             f"bounds of 'atmosphere.thermoprops' ({thermoprops_zbounds}). "
             f"{suggested_solution}"
         )
+
+
+def check_piecewise_compatible(
+    geometry: SceneGeometry, atmosphere: Atmosphere
+) -> tuple[bool, str]:
+    """
+    Check that the piecewise integrator is compatible with the experiment's
+    atmosphere and geometry.
+
+    Parameters
+    ----------
+    geometry : SceneGeometry
+        An experiment geometry.
+
+    atmosphere : MolecularAtmosphere
+        A molecular atmosphere.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Piecewise compatible flag and an exception message if the flag is not raised.
+        The message is empty if the flag is raised.
+    """
+
+    if isinstance(geometry, SphericalShellGeometry):
+        debug_message = (
+            "Piecewise integrator not compatible with spherical shell geometry."
+        )
+        return False, debug_message
+
+    if atmosphere is None or not isinstance(
+        atmosphere, AbstractHeterogeneousAtmosphere
+    ):
+        debug_message = f"Piecewise integrator not compatible with medium type : {type(atmosphere)}."
+        return False, debug_message
+
+    if atmosphere.force_majorant:
+        debug_message = "Piecewise integrator not compatible with a medium that has force_majorant = True."
+        return False, debug_message
+
+    return True, None
+
+
+def check_volpath_compatible(atmosphere: Atmosphere) -> tuple[bool, str]:
+    """
+    Check that the volpath integrator is compatible with the experiment's
+    atmosphere.
+
+    Parameters
+    ----------
+    atmosphere : MolecularAtmosphere
+        A molecular atmosphere.
+
+    Returns
+    -------
+    tuple[bool, str]
+        Volpath compatible flag and an exception message if the flag is not raised.
+        The message is empty if the flag is raised.
+    """
+
+    if atmosphere is None:
+        debug_message = "No atmosphere, prefer using the Path Integrator."
+        return False, debug_message
+
+    return True, ""

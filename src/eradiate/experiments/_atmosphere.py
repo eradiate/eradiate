@@ -5,13 +5,14 @@ import typing as t
 
 import attrs
 
-from ._core import EarthObservationExperiment, Experiment
+from ._core import EarthObservationExperiment
 from ._helpers import (
     check_geometry_atmosphere,
+    check_piecewise_compatible,
     measure_inside_atmosphere,
     surface_converter,
 )
-from ..attrs import documented, get_doc, parse_docs
+from ..attrs import AUTO, documented, parse_docs
 from ..scenes.atmosphere import (
     Atmosphere,
     HeterogeneousAtmosphere,
@@ -26,7 +27,10 @@ from ..scenes.geometry import (
     SceneGeometry,
     SphericalShellGeometry,
 )
-from ..scenes.integrators import Integrator, VolPathIntegrator, integrator_factory
+from ..scenes.integrators import (
+    PiecewiseVolPathIntegrator,
+    VolPathIntegrator,
+)
 from ..scenes.measure import AbstractDistantMeasure, Measure, TargetPoint
 from ..scenes.surface import BasicSurface
 from ..units import unit_context_config as ucc
@@ -104,23 +108,12 @@ class AtmosphereExperiment(EarthObservationExperiment):
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
 
-    # Override parent
-    _integrator: Integrator = documented(
-        attrs.field(
-            factory=VolPathIntegrator,
-            converter=integrator_factory.convert,
-            validator=attrs.validators.instance_of(Integrator),
-        ),
-        doc=get_doc(Experiment, attrib="_integrator", field="doc"),
-        type=get_doc(Experiment, attrib="_integrator", field="type"),
-        init_type=get_doc(Experiment, attrib="_integrator", field="init_type"),
-        default=":class:`VolPathIntegrator() <.VolPathIntegrator>`",
-    )
 
     def __attrs_post_init__(self):
         self._normalize_spectral()
         self._normalize_atmosphere()
         self._normalize_measures()
+        self._normalize_integrator()
 
     def _normalize_atmosphere(self) -> None:
         """
@@ -170,6 +163,22 @@ class AtmosphereExperiment(EarthObservationExperiment):
                     raise RuntimeError
 
                 measure.target = TargetPoint(target_point)
+
+
+    def _normalize_integrator(self) -> None:
+        """
+        Ensures that the integrator is compatible with the atmosphere and geometry.
+        """
+        piecewise_compatible, msg = check_piecewise_compatible( self.geometry, self.atmosphere)
+
+        if self.integrator is AUTO:
+            if piecewise_compatible:
+                self.integrator = PiecewiseVolPathIntegrator()
+            else:
+                self.integrator = VolPathIntegrator()
+        else :
+            if isinstance(self.integrator, PiecewiseVolPathIntegrator) and not piecewise_compatible:
+                raise ValueError(msg)
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         result = super()._dataset_metadata(measure)

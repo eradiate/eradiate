@@ -13,8 +13,8 @@ from hamilton.driver import Driver
 
 import eradiate
 
+from .. import converters, validators
 from .. import pipelines as pl
-from .. import validators
 from ..attrs import AUTO, documented, parse_docs
 from ..contexts import KernelContext, MultiGenerator
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
@@ -27,7 +27,7 @@ from ..scenes.illumination import (
     DirectionalIllumination,
     illumination_factory,
 )
-from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
+from ..scenes.integrators import Integrator, integrator_factory
 from ..scenes.measure import (
     Measure,
     MultiDistantMeasure,
@@ -95,26 +95,23 @@ class Experiment(ABC):
         default=":class:`MultiDistantMeasure() <.MultiDistantMeasure>`",
     )
 
-    _integrator: Integrator = documented(
+    integrator: Integrator = documented(
         attrs.field(
-            factory=PathIntegrator,
-            converter=integrator_factory.convert,
-            validator=attrs.validators.instance_of(Integrator),
+            default=AUTO,
+            converter=converters.auto_or(integrator_factory.convert),
+            validator=validators.auto_or(
+                attrs.validators.instance_of(Integrator),
+            ),
         ),
         doc="Monte Carlo integration algorithm specification. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.integrator_factory`.",
-        type=":class:`.Integrator`",
-        init_type=":class:`.Integrator` or dict",
-        default=":class:`PathIntegrator() <.PathIntegrator>`",
+        "interpreted by :data:`.integrator_factory`."
+        "The integrator defaults to :data:`AUTO`, which will choose the appropriate "
+        "integrator depending on the experiment's configuration. ",
+        type=":class:`.Integrator` or AUTO",
+        init_type=":class:`.Integrator` or dict or AUTO",
+        default="AUTO",
     )
-
-    @property
-    def integrator(self) -> Integrator:
-        """
-        :class:`.Integrator`: Integrator used to solve the radiative transfer equation.
-        """
-        return self._integrator
 
     _results: dict[str, xr.Dataset] = attrs.field(factory=dict, repr=False)
 

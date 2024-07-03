@@ -4,14 +4,14 @@ import typing as t
 
 import attrs
 
-from ._core import EarthObservationExperiment, Experiment
+from ._core import EarthObservationExperiment
 from ._helpers import surface_converter
 from .. import validators
-from ..attrs import documented, get_doc, parse_docs
+from ..attrs import AUTO, documented, parse_docs
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import SceneElement
-from ..scenes.integrators import Integrator, PathIntegrator, integrator_factory
+from ..scenes.integrators import VolPathIntegrator
 from ..scenes.measure import Measure
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface
@@ -80,22 +80,10 @@ class CanopyExperiment(EarthObservationExperiment):
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
 
-    # Override parent
-    _integrator: Integrator = documented(
-        attrs.field(
-            factory=PathIntegrator,
-            converter=integrator_factory.convert,
-            validator=attrs.validators.instance_of(Integrator),
-        ),
-        doc=get_doc(Experiment, attrib="_integrator", field="doc"),
-        type=get_doc(Experiment, attrib="_integrator", field="type"),
-        init_type=get_doc(Experiment, attrib="_integrator", field="init_type"),
-        default=":class:`PathIntegrator() <.PathIntegrator>`",
-    )
-
     def __attrs_post_init__(self):
         self._normalize_spectral()
         self._normalize_measures()
+        self._normalize_integrator()
 
     def _normalize_measures(self) -> None:
         """
@@ -120,6 +108,14 @@ class CanopyExperiment(EarthObservationExperiment):
                         "ymax": 0.5 * self.canopy.size[1],
                         "z": self.canopy.size[2],
                     }
+
+    def _normalize_integrator(self) -> None:
+        """
+        Ensures that the integrator is compatible with the atmosphere and geometry.
+        """
+
+        if self.integrator is AUTO:
+            self.integrator = VolPathIntegrator()
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         result = super()._dataset_metadata(measure)

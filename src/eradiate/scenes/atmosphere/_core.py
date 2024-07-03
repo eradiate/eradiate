@@ -372,6 +372,21 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         init_type="float, optional",
     )
 
+    force_majorant: bool = documented(
+        attrs.field(
+            default=False,
+            kw_only=True,
+            converter=attrs.converters.optional(bool),
+            validator=attrs.validators.optional(attrs.validators.instance_of(bool)),
+        ),
+        doc="If set to true, uses heterogeneous medium, which is compatible with all "
+        "integrators except PiecewiseVolpathIntegrator. Otherwise, uses a piecewise medium which "
+        "is compatible with PiecewiseVolPathIntegrator and other integrators. This setting "
+        "only affects PlaneParallelGeometry, other geometries use heterogeneous mediums.",
+        type="bool",
+        init_type="bool, optional",
+    )
+
     def update(self) -> None:
         """
         Update internal state.
@@ -765,7 +780,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         if isinstance(self.geometry, PlaneParallelGeometry):
             to_world = self.geometry.atmosphere_volume_to_world
-
+            
+            medium = "heterogeneous" if self.force_majorant else "piecewise"
             volumes = {
                 "albedo": {
                     "type": "gridvolume",
@@ -799,6 +815,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             volume_rmin = self.geometry.atmosphere_volume_rmin
             to_world = self.geometry.atmosphere_volume_to_world
 
+            medium = "heterogeneous"
             volumes = {
                 "albedo": {
                     "type": "sphericalcoordsvolume",
@@ -843,7 +860,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         # Create medium dictionary
         result = {
-            "type": "heterogeneous",
+            "type": medium,
             **volumes
             # Note: "phase" is deliberately unset, this is left to the
             # Atmosphere.template property
