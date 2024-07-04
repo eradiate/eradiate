@@ -14,7 +14,7 @@ from ..exceptions import UnsupportedModeError
 from ..kernel import bitmap_to_dataarray
 from ..scenes.illumination import (
     ConstantIllumination,
-    DirectionalIllumination,
+    AbstractDirectionalIllumination,
     Illumination,
 )
 from ..scenes.spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum
@@ -453,7 +453,7 @@ def extract_irradiance(
             }
         )
 
-    if isinstance(illumination, DirectionalIllumination):
+    if isinstance(illumination, AbstractDirectionalIllumination):
         # Collect illumination angular data
         saa = illumination.azimuth.m_as(ureg.deg)
         sza = illumination.zenith.m_as(ureg.deg)
