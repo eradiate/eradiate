@@ -1,0 +1,49 @@
+## This is the default configuration file for Eradiate.
+## All settings below can be set using environment variables with the
+## `ERADIATE_` prefix (e.g. the `download_dir` can be set with the
+## `ERADIATE_DOWNLOAD_DIR` variable).
+##
+## The configuration module will look for a file named `eradiate.toml`
+## in the current working directory, then walk up the file system until it finds
+## one.
+
+## -----------------------------------------------------------------------------
+##                           CONFIGURATION STARTS HERE
+## -----------------------------------------------------------------------------
+
+## Default azimuth convention
+## (see https://eradiate.readthedocs.io/en/stable/rst/user_guide/conventions.html#azimuth-definition-conventions)
+azimuth_convention = "east_right"
+
+## Progress information display
+## (from least to most verbose: none, spectral_loop or kernel)
+progress = "spectral_loop"
+
+## -----------------------------------------------------------------------------
+##                           Data store configuration
+## -----------------------------------------------------------------------------
+
+## Path where data files are downloaded, unset by default. Default behaviour is
+## as follows:
+## * If ERADIATE_SOURCE_DIR is defined, the default is $ERADIATE_SOURCE_DIR/.eradiate_downloads/
+## * If ERADIATE_SOURCE_DIR is not defined, the default is $PWD/.eradiate_downloads/
+download_dir = "../.eradiate_downloads"
+
+## Path to the large file repository
+data_store_url = "https://eradiate.eu/data/store/"
+
+## Path to the small file repository registry
+small_files_registry_url = "https://raw.githubusercontent.com/eradiate/eradiate-data"
+small_files_registry_revision = "master"
+
+## Offline mode switch: if true, data download attempts will be suppressed
+offline = false
+
+[absorption_database.error_handling]
+# This default configuration ignores bound errors on pressure and temperature
+# variables because this usually occurs at high altitude, where the absorption
+# coefficient is very low and can be safely forced to 0.
+p = {missing = "raise", scalar = "raise", bounds = "ignore"}
+t = {missing = "raise", scalar = "raise", bounds = "ignore"}
+# Ignore missing molecule coordinates, raise on bound error.
+x = {missing = "ignore", scalar = "ignore", bounds = "raise"}

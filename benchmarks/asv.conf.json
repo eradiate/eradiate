@@ -1,0 +1,40 @@
+{
+    // see https://github.com/airspeed-velocity/asv/blob/main/asv/template/asv.conf.json
+    // for comments on various configs.
+
+    "version": 1,
+
+    "project": "eradiate",
+
+    "project_url": "https://www.eradiate.eu/site/",
+
+    "repo": "https://github.com/eradiate/eradiate.git",
+
+    "build_command": [
+        "pip install --editable . --no-deps",
+        "cmake -S ext/mitsuba -B ext/mitsuba/build -DCMAKE_BUILD_TYPE=Release -GNinja -DMI_ENABLE_EMBREE=OFF -DMI_DEFAULT_VARIANTS='scalar_rgb;scalar_mono_double' -DPYTHONPATH=./ext/mitsuba/build/python:$ASV_PYTHONPATH",
+	    "ninja -C ext/mitsuba/build"
+    ],
+
+    // skip install step with a padding command (cannot be empty)
+    "install_command": ["python --version"],
+
+    "branches": ["main", "next"], 
+    "dvcs": "git",
+    "environment_type": "conda",
+
+    "show_commit_url": "http://github.com/eradiate/eradiate/commits/",
+    "conda_environment_file": "../requirements/conda/environment-tests.yml",
+    "matrix": {
+        "req":{
+            "make":[],
+            "cmake":[],
+            "ninja":[]
+        }
+    },
+
+    "benchmark_dir": "benchmarks",
+    "env_dir": "env",
+    "results_dir": "results",
+    "html_dir": "html"
+}

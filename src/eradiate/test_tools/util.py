@@ -14,6 +14,9 @@ from ..data import data_store
 from ..exceptions import DataError
 from ..typing import PathLike
 
+from typing import Callable, TypeVar, Any
+from typing_extensions import ParamSpec, TypeAlias
+
 
 def skipif_data_not_found(path: PathLike, action: t.Callable | None = None) -> None:
     """
@@ -70,3 +73,55 @@ def missing_artefact(filename: PathLike) -> None:
 
     else:
         raise ValueError(f"unsupported file extension {filename.suffix}")
+
+T = TypeVar('T')
+P = ParamSpec('P')
+WrappedFuncDeco: TypeAlias = Callable[[Callable[P, T]], Callable[P, T]]
+
+def copy_doc(copy_func: Callable[..., Any]) -> WrappedFuncDeco[P, T]:
+    """Copies the doc string of the given function to another. 
+    This function is intended to be used as a decorator.
+
+    .. code-block:: python3
+
+        def foo():
+            '''This is a foo doc string'''
+            ...
+
+        @copy_doc(foo)
+        def bar():
+            ...
+    """
+
+    def wrapped(func: Callable[P, T]) -> Callable[P, T]:
+        func.__doc__ = copy_func.__doc__
+        return func
+
+    return wrapped
+
+def append_doc(copy_func: Callable[..., Any], prepend=False) -> WrappedFuncDeco[P, T]:
+    """Append the doc string of the given function to another. 
+    If prepend is true, will place the copied doc string in front
+    of the decorated function's doc string.
+    This function is intended to be used as a decorator.
+
+    .. code-block:: python3
+
+        def foo():
+            '''This is a foo doc string'''
+            ...
+
+        @append_doc(foo)
+        def bar():
+            '''This is a bar doc string'''
+            ...
+    """
+
+    def wrapped(func: Callable[P, T]) -> Callable[P, T]:
+        if prepend:
+            func.__doc__ = copy_func.__doc__ + "\n" + func.__doc__
+        else:
+            func.__doc__ = func.__doc__ + "\n" + copy_func.__doc__ 
+        return func
+
+    return wrapped

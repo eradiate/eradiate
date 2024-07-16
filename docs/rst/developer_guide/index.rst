@@ -15,3 +15,4 @@ Hereafter is a collection of detailed guides for developers.
    lazy_loading
    radiometric_kernel_interface
    design_atmosphere
+   benchmark
