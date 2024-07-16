@@ -29,3 +29,9 @@ htmlcov/
 # Default data storage
 .eradiate_downloads/
 .scenarios/*
+
+# Airspeed Velocity (benchmarking infrastructure)
+benchmarks/env/
+benchmarks/eradiate/
+benchmarks/html/
+benchmarks/results/

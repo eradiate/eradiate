@@ -1,13 +1,12 @@
-import numpy as np
 import pytest
 
 import eradiate
-from eradiate.data import data_store
-from eradiate.experiments import CanopyExperiment
 from eradiate.test_tools.regression import Chi2Test
-from eradiate.units import unit_registry as ureg
+from eradiate.test_tools.test_cases.romc import create_het04a1_brfpp
+from eradiate.test_tools.util import append_doc
 
 
+@append_doc(create_het04a1_brfpp)
 @pytest.mark.regression
 def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
     r"""
@@ -50,78 +49,7 @@ def test_het04a1_brfpp(mode_mono_double, artefact_dir, session_timestamp):
 
     """
 
-    leaf_spec_path_sph = data_store.fetch(
-        "tests/regression_test_specifications/het04/het04_sph.def"
-    )
-    leaf_pos_path_sph = data_store.fetch(
-        "tests/regression_test_specifications/het04/het04_sph_positions.def"
-    )
-    leaf_spec_path_cyl = data_store.fetch(
-        "tests/regression_test_specifications/het04/het04_cyl.def"
-    )
-    leaf_pos_path_cyl = data_store.fetch(
-        "tests/regression_test_specifications/het04/het04_cyl_positions.def"
-    )
-
-    exp = CanopyExperiment(
-        canopy={
-            "type": "discrete_canopy",
-            "instanced_canopy_elements": [
-                {
-                    "construct": "from_file",
-                    "filename": leaf_pos_path_sph,
-                    "canopy_element": {
-                        "type": "leaf_cloud",
-                        "construct": "from_file",
-                        "filename": leaf_spec_path_sph,
-                        "leaf_reflectance": 0.49,
-                        "leaf_transmittance": 0.41,
-                        "id": "spherical_leaf_cloud",
-                    },
-                },
-                {
-                    "construct": "from_file",
-                    "filename": leaf_pos_path_cyl,
-                    "canopy_element": {
-                        "type": "leaf_cloud",
-                        "construct": "from_file",
-                        "filename": leaf_spec_path_cyl,
-                        "leaf_reflectance": 0.45,
-                        "leaf_transmittance": 0.3,
-                        "id": "cylindrical_leaf_cloud",
-                    },
-                },
-            ],
-            "size": [270, 270, 15] * ureg.m,
-        },
-        surface={"type": "lambertian", "reflectance": 0.15},
-        padding=5,
-        measures=[
-            {
-                "type": "mdistant",
-                "construct": "hplane",
-                "spp": 20000,
-                "azimuth": 180 * ureg.deg,
-                "zeniths": np.arange(-75, 75.01, 2) * ureg.deg,
-                "target": {
-                    "type": "rectangle",
-                    "xmin": -135 * ureg.m,
-                    "xmax": 135 * ureg.m,
-                    "ymin": -135 * ureg.m,
-                    "ymax": 135 * ureg.m,
-                    "z": 15 * ureg.m,
-                },
-            }
-        ],
-        illumination={
-            "type": "directional",
-            "zenith": 20 * ureg.deg,
-            "azimuth": 0.0 * ureg.deg,
-            "irradiance": 20.0,
-        },
-        integrator={"type": "path", "max_depth": -1},
-    )
-
+    exp = create_het04a1_brfpp()
     result = eradiate.run(exp)
 
     test = Chi2Test(
