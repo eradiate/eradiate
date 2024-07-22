@@ -148,6 +148,46 @@ def is_dir(_, attribute, value):
         )
 
 
+def is_sorted(
+    order: t.Literal["ascending", "descending"] = "ascending", strict: bool = False
+):
+    """
+    Validate iff a 1D array is sorted.
+
+    Parameters
+    ----------
+    order : {"ascending", "descending"}, default: "ascending"
+        Order expected for the array.
+
+    strict : bool, default: False
+        If ``True``, check for strict inequality.
+    """
+    if order == "ascending":
+        if strict:
+
+            def cmp(a):
+                return np.all(a[:-1] < a[1:])
+        else:
+
+            def cmp(a):
+                return np.all(a[:-1] <= a[1:])
+    else:
+        if strict:
+
+            def cmp(a):
+                return np.all(a[:-1] > a[1:])
+        else:
+
+            def cmp(a):
+                return np.all(a[:-1] >= a[1:])
+
+    def f(_, attribute, value):
+        if not cmp(value):
+            raise ValueError(f"while validating {attribute}: array must be sorted")
+
+    return f
+
+
 def has_len(size: int):
     """
     Validate iff value is a vector with specified length.
