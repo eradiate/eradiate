@@ -11,13 +11,12 @@ from pathlib import Path
 import attrs
 
 from ._core import DataStore, load_rules, make_registry, registry_from_file
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented
 from ..exceptions import DataError
 from ..typing import PathLike
 
 
-@parse_docs
-@attrs.define
+@define
 class SafeDirectoryDataStore(DataStore):
     """
     Serve files stored in a directory. This data store will only serve files

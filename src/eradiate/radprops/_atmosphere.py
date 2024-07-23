@@ -14,15 +14,14 @@ from joseki.profiles.core import interp
 from ._absorption import AbsorptionDatabase
 from ._core import RadProfile, ZGrid, make_dataset
 from .rayleigh import compute_sigma_s_air
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented
 from ..converters import convert_thermoprops
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 from ..util.misc import cache_by_id, summary_repr
 
 
-@parse_docs
-@attrs.define(eq=False)
+@define(eq=False)
 class AtmosphereRadProfile(RadProfile):
     """
     Atmospheric radiative profile.

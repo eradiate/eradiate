@@ -25,7 +25,7 @@ import eradiate
 
 from .. import config
 from .._mode import SpectralMode
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented
 from ..data import data_store
 from ..exceptions import DataError, InterpolationError, UnsupportedModeError
 from ..typing import PathLike
@@ -99,8 +99,7 @@ ERROR_HANDLING_CONFIG_DEFAULT = ErrorHandlingConfiguration.convert(
 # ------------------------------------------------------------------------------
 
 
-@parse_docs
-@attrs.define(repr=False, eq=False)
+@define(repr=False, eq=False)
 class AbsorptionDatabase:
     """
     Common parent type for absorption coefficient databases.

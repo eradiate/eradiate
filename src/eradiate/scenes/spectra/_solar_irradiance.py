@@ -12,7 +12,7 @@ import xarray as xr
 
 from ._core import Spectrum
 from ... import converters, data, validators
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...kernel import InitParameter, UpdateParameter
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_kernel as uck
@@ -45,8 +45,7 @@ def _datetime_converter(x: t.Any):
         return dateutil.parser.parse(x)
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class SolarIrradianceSpectrum(Spectrum):
     """
     Solar irradiance spectrum [``solar_irradiance``].

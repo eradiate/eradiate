@@ -249,6 +249,7 @@ def parse_docs(cls: type) -> type:
 
     docs = {}
     for field in cls.__attrs_attrs__:
+        # Collect documentation entries
         if MetadataKey.DOC in field.metadata:
             # Collect field docstring
             docs[field.name] = _FieldDoc(doc=field.metadata[MetadataKey.DOC])
@@ -377,3 +378,29 @@ def get_doc(cls: type, attrib: str, field: str) -> str:
         )
 
     raise ValueError(f"unsupported attribute doc field {field}")
+
+
+def define(maybe_cls=None, **kwargs):
+    """
+    A wrapper around :func:`attrs.define` that automatically applies docstring
+    processing with :func:`.parse_docs`. All arguments are forwarded to
+    :func:`attrs.define`.
+    """
+
+    def wrap(cls):
+        return parse_docs(attrs.define(maybe_cls=cls, **kwargs))
+
+    return wrap if maybe_cls is None else wrap(maybe_cls)
+
+
+def frozen(maybe_cls=None, **kwargs):
+    """
+    A wrapper around :func:`attrs.frozen` that automatically applies docstring
+    processing with :func:`.parse_docs`. All arguments are forwarded to
+    :func:`attrs.frozen`.
+    """
+
+    def wrap(cls):
+        return parse_docs(attrs.frozen(maybe_cls=cls, **kwargs))
+
+    return wrap if maybe_cls is None else wrap(maybe_cls)

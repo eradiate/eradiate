@@ -9,13 +9,12 @@ from ._core import Surface
 from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
 from ..core import Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, SphereShape, shape_factory
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...exceptions import OverriddenValueWarning, TraversalError
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class BasicSurface(Surface):
     """
     Basic surface [``basic``].

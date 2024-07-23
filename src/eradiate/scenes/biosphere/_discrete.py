@@ -12,7 +12,7 @@ import pinttr
 
 from ._core import Canopy, InstancedCanopyElement, biosphere_factory
 from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...units import unit_context_config as ucc
 
 
@@ -25,8 +25,7 @@ def _instanced_canopy_elements_converter(value):
     return biosphere_factory.convert(value)
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class DiscreteCanopy(Canopy):
     """
     Discrete canopy scene element [``discrete_canopy``].

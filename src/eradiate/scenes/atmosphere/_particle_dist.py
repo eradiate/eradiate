@@ -19,7 +19,7 @@ import numpy as np
 import scipy.interpolate
 
 from ..._factory import Factory
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 
 particle_distribution_factory = Factory()
 particle_distribution_factory.register_lazy_batch(
@@ -34,8 +34,7 @@ particle_distribution_factory.register_lazy_batch(
 )
 
 
-@parse_docs
-@attrs.define
+@define
 class ParticleDistribution(ABC):
     """
     Abstract base class for particle distributions used to define particle
@@ -51,8 +50,7 @@ class ParticleDistribution(ABC):
         pass
 
 
-@parse_docs
-@attrs.define
+@define
 class UniformParticleDistribution(ParticleDistribution):
     r"""
     Uniform particle distribution. Returns values given by the uniform PDF
@@ -100,8 +98,7 @@ class UniformParticleDistribution(ParticleDistribution):
         )
 
 
-@parse_docs
-@attrs.define(init=False)
+@define(init=False)
 class ExponentialParticleDistribution(ParticleDistribution):
     r"""
     Exponential particle distribution. Returns values given by the normalized
@@ -157,8 +154,7 @@ class ExponentialParticleDistribution(ParticleDistribution):
         )
 
 
-@parse_docs
-@attrs.define
+@define
 class GaussianParticleDistribution(ParticleDistribution):
     r"""
     Gaussian particle distribution. Returns values given by the Gaussian
@@ -202,8 +198,7 @@ class GaussianParticleDistribution(ParticleDistribution):
         )
 
 
-@parse_docs
-@attrs.define
+@define
 class ArrayParticleDistribution(ParticleDistribution):
     """
     Particle distribution specified by an array of values.
@@ -331,8 +326,7 @@ class ArrayParticleDistribution(ParticleDistribution):
         return f(x)
 
 
-@parse_docs
-@attrs.define
+@define
 class InterpolatorParticleDistribution(ParticleDistribution):
     """
     A flexible particle distribution which redirects its calls to an

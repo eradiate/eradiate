@@ -14,7 +14,7 @@ from ._core import Surface
 from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
 from ..core import Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, shape_factory
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...exceptions import OverriddenValueWarning, TraversalError
 from ...units import unit_context_config as ucc
 
@@ -34,8 +34,7 @@ def _edges_converter(value):
     return value * length_units
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class CentralPatchSurface(Surface):
     """
     Central patch surface [``central_patch``].

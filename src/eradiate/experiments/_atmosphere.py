@@ -12,7 +12,7 @@ from ._helpers import (
     measure_inside_atmosphere,
     surface_converter,
 )
-from ..attrs import AUTO, documented, parse_docs
+from ..attrs import AUTO, define, documented
 from ..scenes.atmosphere import (
     Atmosphere,
     HeterogeneousAtmosphere,
@@ -38,8 +38,7 @@ from ..units import unit_context_config as ucc
 logger = logging.getLogger(__name__)
 
 
-@parse_docs
-@attrs.define
+@define
 class AtmosphereExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a one-dimensional scene. This experiment approximates

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import typing as t
 
-import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -12,7 +11,7 @@ from pinttr.util import ensure_units
 from ._core import ShapeNode
 from ..bsdfs import BSDF
 from ..core import BoundingBox
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel.transform import transform_affine
 from ...units import unit_context_config as ucc
@@ -35,8 +34,7 @@ def _edges_converter(x):
     return x * length_units
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class CuboidShape(ShapeNode):
     """
     Cuboid shape [``cuboid``].

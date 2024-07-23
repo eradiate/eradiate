@@ -1,20 +1,18 @@
 from __future__ import annotations
 
-import attrs
 import numpy as np
 import pint
 import pinttr
 
 from ._core import AbstractDirectionalIllumination
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...frame import angles_to_direction
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...validators import is_positive
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class AstroObjectIllumination(AbstractDirectionalIllumination):
     """
     Astronomical Object Illumination scene element [``astro_object``].

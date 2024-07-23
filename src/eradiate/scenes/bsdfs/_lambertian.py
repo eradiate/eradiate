@@ -7,12 +7,11 @@ from ._core import BSDF
 from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class LambertianBSDF(BSDF):
     """
     Lambertian BSDF [``lambertian``].

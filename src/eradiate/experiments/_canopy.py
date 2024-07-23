@@ -7,7 +7,7 @@ import attrs
 from ._core import EarthObservationExperiment
 from ._helpers import surface_converter
 from .. import validators
-from ..attrs import AUTO, documented, parse_docs
+from ..attrs import AUTO, define, documented
 from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import SceneElement
@@ -17,8 +17,7 @@ from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface
 
 
-@parse_docs
-@attrs.define
+@define
 class CanopyExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a scene with an explicit canopy and no atmosphere.

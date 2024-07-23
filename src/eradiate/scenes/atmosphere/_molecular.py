@@ -15,7 +15,7 @@ import eradiate
 from ._core import AbstractHeterogeneousAtmosphere
 from ..core import traverse
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...converters import convert_thermoprops
 from ...exceptions import UnsupportedModeError
@@ -43,8 +43,7 @@ def _default_absorption_data():
         raise UnsupportedModeError(unsupported=["mono", "ckd"])
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     """
     Molecular atmosphere scene element [``molecular``].

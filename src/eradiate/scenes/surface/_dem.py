@@ -22,7 +22,7 @@ from ..shapes import (
     SphereShape,
     shape_factory,
 )
-from ...attrs import documented, get_doc, parse_docs
+from ...attrs import define, documented, get_doc
 from ...constants import EARTH_RADIUS
 from ...units import symbol, to_quantity
 from ...units import unit_context_config as ucc
@@ -469,8 +469,7 @@ def mesh_from_dem(
     return mesh, xlon_lim, ylat_lim
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class DEMSurface(Surface):
     """
     DEM Surface [``dem``]

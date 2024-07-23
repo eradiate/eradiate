@@ -13,7 +13,7 @@ from pinttr.util import ensure_units
 
 from ._core import Measure
 from ... import converters, frame, validators
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...config import settings
 from ...units import symbol
 from ...units import unit_context_config as ucc
@@ -99,8 +99,7 @@ def _target_point_rectangle_xyz_converter(x):
     )
 
 
-@parse_docs
-@attrs.define
+@define
 class TargetPoint(Target):
     """
     Point target or origin specification.
@@ -127,8 +126,7 @@ class TargetPoint(Target):
         return self.xyz.m_as(uck.get("length"))
 
 
-@parse_docs
-@attrs.define
+@define
 class TargetRectangle(Target):
     """
     Rectangle target origin specification.
@@ -250,8 +248,7 @@ class TargetRectangle(Target):
 # ------------------------------------------------------------------------------
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class AbstractDistantMeasure(Measure, ABC):
     """
     Abstract interface of all distant measure classes.
@@ -311,8 +308,7 @@ class AbstractDistantMeasure(Measure, ABC):
         return self.ray_offset is None
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class DistantMeasure(AbstractDistantMeasure):
     """
     Single-pixel distant measure scene element [``distant``]
@@ -446,8 +442,7 @@ class DistantMeasure(AbstractDistantMeasure):
         }
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class MultiPixelDistantMeasure(AbstractDistantMeasure):
     """
     Multi-pixel distant measure scene element [``mpdistant``, ``multipixel_distant``]

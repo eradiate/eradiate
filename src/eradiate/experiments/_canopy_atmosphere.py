@@ -14,7 +14,7 @@ from ._helpers import (
     surface_converter,
 )
 from .. import validators
-from ..attrs import AUTO, documented, parse_docs
+from ..attrs import AUTO, define, documented
 from ..scenes.atmosphere import (
     Atmosphere,
     HeterogeneousAtmosphere,
@@ -43,8 +43,7 @@ from ..units import unit_registry as ureg
 logger = logging.getLogger(__name__)
 
 
-@parse_docs
-@attrs.define
+@define
 class CanopyAtmosphereExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a scene with an explicit canopy and atmosphere.

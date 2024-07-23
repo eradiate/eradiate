@@ -5,12 +5,11 @@ import attrs
 from ._core import PhaseFunction
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...kernel import InitParameter, UpdateParameter
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class HenyeyGreensteinPhaseFunction(PhaseFunction):
     """
     Henyey-Greenstein phase function [``hg``].

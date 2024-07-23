@@ -2,11 +2,9 @@ from __future__ import annotations
 
 from abc import ABC
 
-import attrs
-
 from ..core import NodeSceneElement
 from ..._factory import Factory
-from ...attrs import parse_docs
+from ...attrs import define
 
 bsdf_factory = Factory()
 bsdf_factory.register_lazy_batch(
@@ -23,8 +21,7 @@ bsdf_factory.register_lazy_batch(
 )
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class BSDF(NodeSceneElement, ABC):
     """
     Abstract base class  for all BSDF scene elements.

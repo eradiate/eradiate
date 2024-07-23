@@ -19,7 +19,7 @@ from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeome
 from ..phase import PhaseFunction
 from ..shapes import Shape
 from ..._factory import Factory
-from ...attrs import documented, get_doc, parse_docs
+from ...attrs import define, documented, get_doc
 from ...cfconventions import ATTRIBUTES
 from ...contexts import KernelContext
 from ...exceptions import UnsupportedModeError
@@ -67,8 +67,7 @@ atmosphere_factory.register_lazy_batch(
 )
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class Atmosphere(CompositeSceneElement, ABC):
     """
     Abstract base class defining common facilities for all atmospheres.
@@ -352,8 +351,7 @@ class Atmosphere(CompositeSceneElement, ABC):
         )
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     """
     Abstract base class for heterogeneous atmospheres.

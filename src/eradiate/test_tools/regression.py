@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 
 from .. import data
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented
 from ..exceptions import DataError
 from ..typing import PathLike
 from ..util.misc import summary_repr
@@ -127,8 +127,7 @@ def reference_converter(
         return None
 
 
-@parse_docs
-@attrs.define
+@define
 class RegressionTest(ABC):
     """
     Common interface for tests based on the comparison of a result array against
@@ -309,8 +308,7 @@ class RegressionTest(ABC):
             )
 
 
-@parse_docs
-@attrs.define
+@define
 class RMSETest(RegressionTest):
     """
     This class implements a simple test based on the root mean squared
@@ -338,8 +336,7 @@ class RMSETest(RegressionTest):
         return rmse <= self.threshold, rmse
 
 
-@parse_docs
-@attrs.define
+@define
 class Chi2Test(RegressionTest):
     """
     This class implements a statistical test for the regression testing
