@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
 
 import numpy as np
 import numpy.typing as npt
 import pint
 import pinttrs
+import scipy.integrate as spi
 import xarray as xr
+from pinttrs.util import ensure_units
 
 from .. import converters, data, validators
 from ..attrs import define, documented
@@ -183,6 +186,15 @@ class BandSRF(SpectralResponseFunction):
                 f"{self.values.shape}"
             )
 
+    @values.validator
+    def _values_validator(self, attribute, value):
+        # Check for leading and trailing zeros
+        if not np.all(value.m[[0, -1]] == np.array([0.0, 0.0])):
+            warnings.warn(
+                "Initializing a BandSRF instance without a leading and trailing "
+                "zero is not recommended."
+            )
+
     @classmethod
     def from_dataarray(cls, da: xr.DataArray):
         return cls(wavelengths=to_quantity(da.w), values=da.values)
@@ -214,3 +226,31 @@ class BandSRF(SpectralResponseFunction):
             np.interp(w_m, self.wavelengths.m, self.values.m, left=0.0, right=0.0)
             * self.values.u
         )
+
+    def integrate(self, wmin, wmax):
+        """
+        Return the integral of the SRF on the specified interval, using the
+        trapezoid rule.
+        """
+        wmin = ensure_units(wmin, ucc.get("wavelength"))
+        wmax = ensure_units(wmax, ucc.get("wavelength"))
+
+        # Assemble spectral integration mesh
+        w_u = self.wavelengths.u
+        w_m = np.unique(
+            np.concatenate(
+                (
+                    np.atleast_1d(wmin.m_as(w_u)),
+                    self.wavelengths.m[
+                        (self.wavelengths >= wmin) & (self.wavelengths <= wmax)
+                    ],
+                    np.atleast_1d(wmax.m_as(w_u)),
+                )
+            )
+        )
+
+        # Evaluate SRF at mesh nodes
+        values_m = self.eval(w_m * w_u).m
+
+        # Compute integral
+        return spi.trapezoid(values_m, w_m) * w_u
