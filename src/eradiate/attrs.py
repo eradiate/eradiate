@@ -1,9 +1,10 @@
-"""``attrs``-based utility classes and functions."""
+"""*attrs*-based utility classes and functions."""
 
 from __future__ import annotations
 
 import enum
 import re
+import typing as t
 from textwrap import dedent, indent
 
 import attrs
@@ -53,10 +54,10 @@ class MetadataKey(enum.Enum):
     These Enum values should be used as metadata attribute keys.
     """
 
-    DOC = enum.auto()  #: Documentation for this field (str)
-    TYPE = enum.auto()  #: Documented type for this field (str)
-    INIT_TYPE = enum.auto()  #: Documented constructor parameter for this field (str)
-    DEFAULT = enum.auto()  #: Documented default value for this field (str)
+    DOC = "doc"  #: Documentation for this field (str)
+    TYPE = "type"  #: Documented type for this field (str)
+    INIT_TYPE = "init_type"  #: Documented constructor parameter for this field (str)
+    DEFAULT = "default"  #: Documented default value for this field (str)
 
 
 class DocFlags(enum.Flag):
@@ -220,7 +221,7 @@ def parse_docs(cls: type) -> type:
     """
     Extract attribute documentation and update class docstring with it.
 
-    This decorator will examine each ``attrs`` attribute and check its metadata
+    This decorator will examine each *attrs* attribute and check its metadata
     for documentation content. It will then update the class's docstring
     based on this content.
 
@@ -291,7 +292,7 @@ def documented(
     Parameters
     ----------
     attrib : attrs.Attribute
-        ``attrs`` attribute definition to which documentation is to be attached.
+        *attrs* attribute definition to which documentation is to be attached.
 
     doc : str, optional
         Docstring for the considered field. If set to ``None``, this function
@@ -330,7 +331,9 @@ def documented(
     return attrib
 
 
-def get_doc(cls: type, attrib: str, field: str) -> str:
+def get_doc(
+    cls: type, attrib: str, field: t.Literal["doc", "type", "init_type", "default"]
+) -> str:
     """
     Fetch attribute documentation field. Requires field metadata to be processed
     with :func:`documented`.
@@ -361,23 +364,19 @@ def get_doc(cls: type, attrib: str, field: str) -> str:
         If the requested ``field`` is unsupported.
     """
     try:
-        if field == "doc":
-            return attrs.fields_dict(cls)[attrib].metadata[MetadataKey.DOC]
+        key = MetadataKey[field.upper()]
+    except ValueError:
+        raise ValueError(f"unsupported attribute doc field {field}")
 
-        if field == "type":
-            return attrs.fields_dict(cls)[attrib].metadata[MetadataKey.TYPE]
-
-        if field == "init_type":
-            return attrs.fields_dict(cls)[attrib].metadata[MetadataKey.INIT_TYPE]
-
-        if field == "default":
-            return attrs.fields_dict(cls)[attrib].metadata[MetadataKey.DEFAULT]
+    try:
+        return attrs.fields_dict(cls)[attrib].metadata[key]
     except KeyError:
         raise ValueError(
             f"{cls.__name__}.{attrib} has no documented field " f"'{field}'"
         )
 
-    raise ValueError(f"unsupported attribute doc field {field}")
+    # This is very unlikely to happen, but just in case, we raise
+    raise RuntimeError
 
 
 def define(maybe_cls=None, **kwargs):
