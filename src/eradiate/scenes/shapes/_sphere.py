@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import attrs
 import mitsuba as mi
 import numpy as np
 import pint
@@ -10,7 +9,7 @@ from pinttr.util import ensure_units
 from ._core import ShapeNode
 from ..bsdfs import BSDF
 from ..core import BoundingBox
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...constants import EARTH_RADIUS
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -21,8 +20,7 @@ def _normalize(v: np.typing.ArrayLike) -> np.ndarray:
     return np.array(v) / np.linalg.norm(v)
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class SphereShape(ShapeNode):
     """
     Sphere shape [``sphere``].

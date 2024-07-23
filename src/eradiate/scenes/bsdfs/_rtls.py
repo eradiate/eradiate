@@ -9,13 +9,12 @@ from ._core import BSDF
 from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
 from ...units import unit_context_config as ucc
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class RTLSBSDF(BSDF):
     """
     RTLS BSDF [``rtls``].

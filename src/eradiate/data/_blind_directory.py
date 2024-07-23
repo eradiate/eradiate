@@ -6,13 +6,12 @@ from pathlib import Path
 import attrs
 
 from ._core import DataStore
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented
 from ..exceptions import DataError
 from ..typing import PathLike
 
 
-@parse_docs
-@attrs.define
+@define
 class BlindDirectoryDataStore(DataStore):
     """
     Serve files stored in a directory.

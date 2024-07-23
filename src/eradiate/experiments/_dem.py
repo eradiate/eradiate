@@ -13,7 +13,7 @@ from ._helpers import (
     measure_inside_atmosphere,
     surface_converter,
 )
-from ..attrs import AUTO, documented, parse_docs
+from ..attrs import AUTO, define, documented
 from ..scenes.atmosphere import (
     Atmosphere,
     HeterogeneousAtmosphere,
@@ -35,8 +35,7 @@ from ..scenes.surface import BasicSurface, DEMSurface
 logger = logging.getLogger(__name__)
 
 
-@parse_docs
-@attrs.define
+@define
 class DEMExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a scene with a digital elevation model (DEM) under a

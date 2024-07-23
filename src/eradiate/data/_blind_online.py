@@ -12,7 +12,7 @@ import pooch
 from requests import RequestException
 
 from ._core import DataStore, expand_rules
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented
 from ..exceptions import DataError
 from ..typing import PathLike
 from ..util.misc import LoggingContext
@@ -20,8 +20,7 @@ from ..util.misc import LoggingContext
 logger = logging.getLogger(__name__)
 
 
-@parse_docs
-@attrs.define
+@define
 class BlindOnlineDataStore(DataStore):
     """
     Serve data downloaded from a remote source without integrity check.

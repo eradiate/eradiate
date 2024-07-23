@@ -10,7 +10,7 @@ import pint
 import pinttr
 
 from .shapes import CuboidShape, RectangleShape, Shape, SphereShape
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented
 from ..constants import EARTH_RADIUS
 from ..kernel import map_cube, map_unit_cube
 from ..radprops import ZGrid
@@ -19,8 +19,7 @@ from ..units import unit_context_kernel as uck
 from ..units import unit_registry as ureg
 
 
-@parse_docs
-@attrs.define
+@define
 class SceneGeometry(ABC):
     """
     Abstract base class defining a scene geometry.
@@ -168,8 +167,7 @@ class SceneGeometry(ABC):
         pass
 
 
-@parse_docs
-@attrs.define
+@define
 class PlaneParallelGeometry(SceneGeometry):
     """
     Plane parallel geometry.
@@ -215,8 +213,7 @@ class PlaneParallelGeometry(SceneGeometry):
         return RectangleShape.surface(altitude=self.ground_altitude, width=self.width)
 
 
-@parse_docs
-@attrs.define
+@define
 class SphericalShellGeometry(SceneGeometry):
     """
     Spherical shell geometry.

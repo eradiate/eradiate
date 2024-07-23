@@ -16,7 +16,7 @@ import eradiate
 
 from .. import converters, validators
 from .. import pipelines as pl
-from ..attrs import AUTO, documented, parse_docs
+from ..attrs import AUTO, define, documented
 from ..contexts import KernelContext, MultiGenerator
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
 from ..rng import SeedState
@@ -55,8 +55,7 @@ def _convert_spectral_set(value):
         return value
 
 
-@parse_docs
-@attrs.define
+@define
 class Experiment(ABC):
     """
     Abstract base class for all Eradiate experiments. An experiment consists of
@@ -284,8 +283,7 @@ def _extra_objects_converter(value: dict | None) -> dict:
     return result
 
 
-@parse_docs
-@attrs.define
+@define
 class EarthObservationExperiment(Experiment, ABC):
     """
     Abstract based class for experiments illuminated by a distant directional

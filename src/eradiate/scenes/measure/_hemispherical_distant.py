@@ -9,7 +9,7 @@ import pinttr
 
 from ._distant import AbstractDistantMeasure
 from ... import frame, validators
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...config import settings
 from ...units import symbol
 from ...units import unit_context_config as ucc
@@ -18,8 +18,7 @@ from ...units import unit_registry as ureg
 from ...warp import square_to_uniform_hemisphere
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class HemisphericalDistantMeasure(AbstractDistantMeasure):
     """
     Hemispherical distant radiance measure scene element

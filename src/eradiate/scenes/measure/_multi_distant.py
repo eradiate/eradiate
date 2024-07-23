@@ -10,7 +10,7 @@ import pinttr
 
 from ._distant import AbstractDistantMeasure
 from ... import converters, frame
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...config import settings
 from ...units import symbol
 from ...units import unit_context_config as ucc
@@ -23,8 +23,7 @@ from ...util.misc import flatten
 # ------------------------------------------------------------------------------
 
 
-@parse_docs
-@attrs.define
+@define
 class Layout(ABC):
     """
     Abstract base class for all viewing direction layouts.
@@ -149,8 +148,7 @@ def _angles_converter(value):
     return (np.stack((zeniths, azimuths % 360), axis=1) * ureg.deg).to(angle_units)
 
 
-@parse_docs
-@attrs.define
+@define
 class AngleLayout(Layout):
     """
     A viewing direction layout directly defined by explicit (zenith, azimuth)
@@ -187,8 +185,7 @@ class AngleLayout(Layout):
         return self._angles
 
 
-@parse_docs
-@attrs.define
+@define
 class AzimuthRingLayout(Layout):
     """
     A viewing direction layout defined by a single zenith and a vector of
@@ -246,8 +243,7 @@ class AzimuthRingLayout(Layout):
         return np.hstack((zeniths, azimuths)) * angle_units
 
 
-@parse_docs
-@attrs.define
+@define
 class DirectionLayout(Layout):
     """
     A viewing direction layout directly defined by explicit (zenith, azimuth)
@@ -283,8 +279,7 @@ class DirectionLayout(Layout):
         return self._directions
 
 
-@parse_docs
-@attrs.define
+@define
 class HemispherePlaneLayout(Layout):
     """
     A viewing direction layout defined by a single azimuth and a vector of
@@ -331,8 +326,7 @@ class HemispherePlaneLayout(Layout):
         return np.hstack((zeniths, azimuths)) * angle_units
 
 
-@parse_docs
-@attrs.define
+@define
 class GridLayout(Layout):
     """
     A viewing direction layout defined as the Cartesian product of an azimuth
@@ -404,8 +398,7 @@ def _extract_kwargs(kwargs: dict, keys: list[str]) -> dict:
     return {key: kwargs.pop(key) for key in keys if key in kwargs}
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class MultiDistantMeasure(AbstractDistantMeasure):
     """
     Multi-distant radiance measure scene element [``mdistant``, ``multi_distant``].

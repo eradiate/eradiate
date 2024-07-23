@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import attrs
-
 from ._core import AbstractDirectionalIllumination
 from ..core import NodeSceneElement
-from ...attrs import parse_docs
+from ...attrs import define
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class DirectionalIllumination(AbstractDirectionalIllumination):
     """
     Directional illumination scene element [``directional``].

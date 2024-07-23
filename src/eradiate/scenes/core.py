@@ -13,7 +13,7 @@ import pinttr
 from pinttr.util import ensure_units
 
 from .._factory import Factory
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented, frozen
 from ..exceptions import TraversalError
 from ..kernel import KernelDictTemplate, UpdateMapTemplate, UpdateParameter
 from ..units import unit_context_config as ucc
@@ -24,8 +24,7 @@ from ..units import unit_registry as ureg
 # ------------------------------------------------------------------------------
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class SceneElement(ABC):
     """
     Abstract base class for all scene elements.
@@ -93,8 +92,7 @@ class SceneElement(ABC):
         pass
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class NodeSceneElement(SceneElement, ABC):
     """
     Abstract base class for scene elements which expand as a single Mitsuba
@@ -147,8 +145,7 @@ class NodeSceneElement(SceneElement, ABC):
                 callback.put_object(name, obj)
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class InstanceSceneElement(SceneElement, ABC):
     """
     Abstract base class for scene elements which represent a node in the Mitsuba
@@ -176,8 +173,7 @@ class InstanceSceneElement(SceneElement, ABC):
             callback.put_params(self.params)
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class CompositeSceneElement(SceneElement, ABC):
     """
     Abstract based class for scene elements which expand to multiple Mitsuba
@@ -237,8 +233,7 @@ class CompositeSceneElement(SceneElement, ABC):
                     callback.put_params({f"{name}.{k}": v for k, v in params.items()})
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class Ref(NodeSceneElement):
     """
     A scene element which represents a reference to a Mitsuba scene tree node.
@@ -259,8 +254,7 @@ class Ref(NodeSceneElement):
         return {"type": "ref", "id": self.id}
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class Scene(NodeSceneElement):
     """
     A generic scene element container which expands as a :class:`mitsuba.Scene`
@@ -291,8 +285,7 @@ class Scene(NodeSceneElement):
 # ------------------------------------------------------------------------------
 
 
-@parse_docs
-@attrs.define
+@define
 class SceneTraversal:
     """
     Data structure used to collect kernel dictionary data during scene element
@@ -407,8 +400,7 @@ def traverse(node: NodeSceneElement) -> tuple[KernelDictTemplate, UpdateMapTempl
 # -- Misc (to be moved elsewhere) ----------------------------------------------
 
 
-@parse_docs
-@attrs.frozen
+@frozen
 class BoundingBox:
     """
     A basic data class representing an axis-aligned bounding box with

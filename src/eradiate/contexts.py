@@ -4,7 +4,7 @@ import typing as t
 
 import attrs
 
-from .attrs import documented, parse_docs
+from .attrs import define, documented
 from .spectral import SpectralIndex
 
 # ------------------------------------------------------------------------------
@@ -38,8 +38,7 @@ class Context:
 # ------------------------------------------------------------------------------
 
 
-@parse_docs
-@attrs.define
+@define
 class KernelContext(Context):
     """
     Kernel evaluation context data structure. This class is used *e.g.* to store

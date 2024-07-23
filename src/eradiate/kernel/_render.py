@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 
 from ._kernel_dict import UpdateMapTemplate
 from .. import config
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented, frozen
 from ..contexts import KernelContext
 from ..rng import SeedState, root_seed_state
 
@@ -22,8 +22,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 
 
-@parse_docs
-@attrs.frozen
+@frozen
 class TypeIdLookupStrategy:
     """
     This parameter ID lookup strategy searches for a Mitsuba type and object ID
@@ -66,8 +65,7 @@ class TypeIdLookupStrategy:
 # ------------------------------------------------------------------------------
 
 
-@parse_docs
-@attrs.define
+@define
 class MitsubaObjectWrapper:
     """
     This container aggregates a Mitsuba object, its associated parameters and a

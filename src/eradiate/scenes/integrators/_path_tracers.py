@@ -5,11 +5,10 @@ import attrs
 import eradiate
 
 from ._core import Integrator
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class MonteCarloIntegrator(Integrator):
     """
     Base class for integrator elements wrapping kernel classes
@@ -79,8 +78,7 @@ class MonteCarloIntegrator(Integrator):
         return result
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class PathIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the path tracer kernel plugin.
@@ -95,8 +93,7 @@ class PathIntegrator(MonteCarloIntegrator):
         return "path"
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class VolPathIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the volumetric path tracer kernel plugin.
@@ -110,8 +107,7 @@ class VolPathIntegrator(MonteCarloIntegrator):
         return "volpath"
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class VolPathMISIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the volumetric path tracer (with spectral multiple
@@ -136,8 +132,7 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
         return result
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class PiecewiseVolPathIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the piecewise volumetric path tracer kernel plugin.

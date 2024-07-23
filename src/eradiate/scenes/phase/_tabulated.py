@@ -10,7 +10,7 @@ import xarray as xr
 import eradiate
 
 from ._core import PhaseFunction
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...kernel import InitParameter, UpdateParameter
 from ...spectral.index import (
     CKDSpectralIndex,
@@ -47,8 +47,7 @@ def _validate_data(instance, attribute, value):
         )
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class TabulatedPhaseFunction(PhaseFunction):
     r"""
     Tabulated phase function [``tab_phase``].

@@ -7,7 +7,7 @@ from enum import Enum
 import attrs
 import numpy as np
 
-from .attrs import documented, parse_docs
+from .attrs import define, documented
 from .util.misc import str_summary_numpy
 
 
@@ -18,8 +18,7 @@ class QuadType(Enum):
     GAUSS_LOBATTO = "gauss_lobatto"
 
 
-@parse_docs
-@attrs.define(eq=False, frozen=True)
+@define(eq=False, frozen=True)
 class Quad:
     """
     A data class storing information about a quadrature rule. Nodes and weights

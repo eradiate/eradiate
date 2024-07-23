@@ -17,6 +17,10 @@ Attributes
 Attribute docs extension
 ------------------------
 
+.. autofunction:: define
+
+.. autofunction:: frozen
+
 .. autofunction:: parse_docs
 
 .. autofunction:: documented

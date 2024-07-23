@@ -5,11 +5,10 @@ import attrs
 import eradiate
 
 from ._core import PhaseFunction
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class RayleighPhaseFunction(PhaseFunction):
     """
     Rayleigh phase function [``rayleigh``].

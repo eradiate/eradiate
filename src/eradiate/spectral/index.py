@@ -38,7 +38,7 @@ import eradiate
 
 from .. import validators
 from .._mode import SpectralMode
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented
 from ..exceptions import ModeError
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -129,8 +129,7 @@ class SpectralIndex(ABC):
             raise ValueError(f"Cannot convert {value} to a spectral index.")
 
 
-@parse_docs
-@attrs.define(eq=False, frozen=True, slots=True)
+@define(eq=False, frozen=True, slots=True)
 class MonoSpectralIndex(SpectralIndex):
     """
     Monochromatic spectral index.
@@ -169,8 +168,7 @@ class MonoSpectralIndex(SpectralIndex):
         return float(self.w.m_as(ureg.nm))
 
 
-@parse_docs
-@attrs.define(eq=False, frozen=True, slots=True)
+@define(eq=False, frozen=True, slots=True)
 class CKDSpectralIndex(SpectralIndex):
     """
     CKD spectral index.

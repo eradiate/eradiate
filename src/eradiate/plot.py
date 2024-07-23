@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 from matplotlib.gridspec import SubplotSpec
 from xarray.plot import FacetGrid
 
-from eradiate.radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
+from .radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
 
 
 def set_style(rc=None):

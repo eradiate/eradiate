@@ -12,13 +12,12 @@ from collections import UserDict
 import attrs
 import mitsuba as mi
 
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented
 from ..contexts import KernelContext
 from ..util.misc import nest
 
 
-@parse_docs
-@attrs.define
+@define
 class InitParameter:
     """
     This class declares an Eradiate parameter in a Mitsuba scene dictionary. It
@@ -40,8 +39,7 @@ class InitParameter:
         return self.evaluator(ctx)
 
 
-@parse_docs
-@attrs.define
+@define
 class UpdateParameter:
     """
     This class declares an Eradiate parameter in a Mitsuba scene parameter
