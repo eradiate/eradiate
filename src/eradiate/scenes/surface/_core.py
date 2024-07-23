@@ -6,7 +6,7 @@ import attrs
 
 from ..core import CompositeSceneElement, NodeSceneElement
 from ..._factory import Factory
-from ...attrs import documented, get_doc, parse_docs
+from ...attrs import define, documented, get_doc
 
 surface_factory = Factory()
 surface_factory.register_lazy_batch(
@@ -19,8 +19,7 @@ surface_factory.register_lazy_batch(
 )
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class Surface(CompositeSceneElement, ABC):
     """
     An abstract base class defining common facilities for all surfaces.

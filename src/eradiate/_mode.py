@@ -7,7 +7,7 @@ import typing as t
 import attrs
 import mitsuba
 
-from .attrs import documented, parse_docs
+from .attrs import documented, frozen
 from .exceptions import UnsupportedModeError
 
 # ------------------------------------------------------------------------------
@@ -150,8 +150,7 @@ def _mode_registry() -> dict[str, Mode]:
     }
 
 
-@parse_docs
-@attrs.frozen
+@frozen
 class Mode:
     """
     Data structure describing Eradiate's operational mode and associated

@@ -7,15 +7,14 @@ import xarray as xr
 
 from ._core import BSDF
 from ... import converters
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...kernel import InitParameter, UpdateParameter
 from ...units import to_quantity
 from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class MQDiffuseBSDF(BSDF):
     """
     Measured quasi-diffuse BSDF [``mqdiffuse``].

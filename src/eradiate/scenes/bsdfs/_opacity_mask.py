@@ -8,7 +8,7 @@ from ._core import BSDF, bsdf_factory
 from ._lambertian import LambertianBSDF
 from ..core import traverse
 from ... import converters
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
 
 
@@ -26,8 +26,7 @@ def _to_bitmap(value):
         return value
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class OpacityMaskBSDF(BSDF):
     """
     Opacity Mask BSDF [``opacity_mask``]

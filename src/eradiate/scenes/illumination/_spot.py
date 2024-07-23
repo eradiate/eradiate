@@ -13,15 +13,14 @@ from ._core import Illumination
 from ..core import NodeSceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 from ...validators import has_quantity
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class SpotIllumination(Illumination):
     """
     Spot illumination scene element [``spot``].

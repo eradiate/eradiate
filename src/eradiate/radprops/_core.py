@@ -14,7 +14,7 @@ from pinttr.util import ensure_units
 import eradiate
 
 from .._factory import Factory
-from ..attrs import documented, parse_docs
+from ..attrs import documented, frozen
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -171,8 +171,7 @@ def make_dataset(
     )
 
 
-@parse_docs
-@attrs.frozen(eq=False, init=False)
+@frozen(eq=False, init=False)
 class ZGrid:
     """
     A container for a regular altitude grid.

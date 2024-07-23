@@ -9,7 +9,7 @@ from ..bsdfs import BSDF, bsdf_factory
 from ..core import BoundingBox, InstanceSceneElement, NodeSceneElement, Ref
 from ... import converters
 from ..._factory import Factory
-from ...attrs import documented, get_doc, parse_docs
+from ...attrs import define, documented, get_doc
 
 shape_factory = Factory()
 shape_factory.register_lazy_batch(
@@ -24,8 +24,7 @@ shape_factory.register_lazy_batch(
 )
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class Shape:
     """
     Abstract interface for all shape scene elements.

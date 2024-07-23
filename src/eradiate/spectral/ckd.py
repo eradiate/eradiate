@@ -12,7 +12,7 @@ import xarray as xr
 
 from .index import CKDSpectralIndex
 from .spectral_set import SpectralSet
-from ..attrs import documented, parse_docs
+from ..attrs import define, documented
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
 from ..quad import Quad, QuadType
 from ..radprops import CKDAbsorptionDatabase
@@ -29,8 +29,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 
 
-@parse_docs
-@attrs.define(eq=False, frozen=True, slots=True)
+@define(eq=False, frozen=True, slots=True)
 class Bin:
     """
     A data class representing a spectral bin in CKD modes.
@@ -114,8 +113,7 @@ class Bin:
 _DEFAULT_NG: int = 16
 
 
-@parse_docs
-@attrs.define
+@define
 class QuadSpec:
     """
     Abstract base class for all quadrature specification patterns.
@@ -200,8 +198,7 @@ class QuadSpec:
         raise NotImplementedError
 
 
-@parse_docs
-@attrs.define
+@define
 class QuadSpecFixed(QuadSpec):
     """
     Fixed number of quadrature points [``fixed``]
@@ -235,8 +232,7 @@ class QuadSpecFixed(QuadSpec):
         return Quad.new(type=self.quad_type, n=self.n)
 
 
-@parse_docs
-@attrs.define
+@define
 class QuadSpecMinError(QuadSpec):
     """
     Error-minimizing number of quadrature points [``minimize_error``]
@@ -266,8 +262,7 @@ class QuadSpecMinError(QuadSpec):
         return Quad.new(type=quad_type, n=n)
 
 
-@parse_docs
-@attrs.define
+@define
 class QuadSpecErrorThreshold(QuadSpec):
     """
     Error-threshold number of quadrature points [``error_threshold``]
@@ -378,8 +373,7 @@ def ng_threshold(
 # ------------------------------------------------------------------------------
 
 
-@parse_docs
-@attrs.define(eq=False, frozen=True, slots=True)
+@define(eq=False, frozen=True, slots=True)
 class BinSet(SpectralSet):
     """
     A data class representing a bin set used in CKD mode.

@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-import attrs
 import numpy as np
 import pint
 import pinttr
 
 from ._core import Spectrum
 from ... import validators
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...spectral.ckd import BinSet
 from ...spectral.mono import WavelengthSet
 from ...units import unit_context_kernel as uck
 from ...util.misc import summary_repr_vector
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class MultiDeltaSpectrum(Spectrum):
     """
     A spectrum made of multiple translated Dirac delta [``multi_delta``].

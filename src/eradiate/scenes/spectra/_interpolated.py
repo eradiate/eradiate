@@ -8,7 +8,7 @@ import xarray as xr
 
 from ._core import Spectrum
 from ... import converters, validators
-from ...attrs import documented, parse_docs
+from ...attrs import define, documented
 from ...kernel import InitParameter, UpdateParameter
 from ...spectral.ckd import BinSet
 from ...spectral.mono import WavelengthSet
@@ -18,8 +18,7 @@ from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False, init=False)
+@define(eq=False, slots=False, init=False)
 class InterpolatedSpectrum(Spectrum):
     """
     Linearly interpolated spectrum [``interpolated``].

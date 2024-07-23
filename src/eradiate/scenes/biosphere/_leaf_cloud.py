@@ -15,7 +15,7 @@ from ._core import CanopyElement
 from ..core import SceneElement, traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
-from ...attrs import documented, get_doc, parse_docs
+from ...attrs import define, documented, get_doc
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -208,8 +208,7 @@ def _leaf_cloud_radii(n_leaves, leaf_radius):
     return np.full((n_leaves,), leaf_radius)
 
 
-@parse_docs
-@attrs.define
+@define
 class LeafCloudParams:
     """
     Base class to implement advanced parameter checking for :class:`.LeafCloud`
@@ -299,8 +298,7 @@ class LeafCloudParams:
         return self._leaf_radius
 
 
-@parse_docs
-@attrs.define
+@define
 class CuboidLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the cuboid :class:`.LeafCloud`
@@ -441,8 +439,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
         return f"CuboidLeafCloudParams({', '.join(result)})"
 
 
-@parse_docs
-@attrs.define
+@define
 class SphereLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the sphere :class:`.LeafCloud`
@@ -465,8 +462,7 @@ class SphereLeafCloudParams(LeafCloudParams):
         return self._radius
 
 
-@parse_docs
-@attrs.define
+@define
 class EllipsoidLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the ellipsoid :class:`.LeafCloud`
@@ -530,8 +526,7 @@ class EllipsoidLeafCloudParams(LeafCloudParams):
         return self._c
 
 
-@parse_docs
-@attrs.define
+@define
 class CylinderLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the cylinder :class:`.LeafCloud`
@@ -565,8 +560,7 @@ class CylinderLeafCloudParams(LeafCloudParams):
         return self._l_vertical
 
 
-@parse_docs
-@attrs.define
+@define
 class ConeLeafCloudParams(LeafCloudParams):
     """
     Advanced parameter checking class for the cone :class:`.LeafCloud`
@@ -600,8 +594,7 @@ class ConeLeafCloudParams(LeafCloudParams):
         return self._l_vertical
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class LeafCloud(CanopyElement):
     """
     A container class for leaf clouds in abstract discrete canopies.

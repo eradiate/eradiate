@@ -13,7 +13,7 @@ import pinttrs
 from ..core import NodeSceneElement
 from ..spectra import SolarIrradianceSpectrum, Spectrum, spectrum_factory
 from ..._factory import Factory
-from ...attrs import documented, get_doc, parse_docs
+from ...attrs import define, documented, get_doc
 from ...config import settings
 from ...frame import AzimuthConvention, angles_to_direction
 from ...units import unit_context_config as ucc
@@ -32,8 +32,7 @@ illumination_factory.register_lazy_batch(
 )
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
+@define(eq=False, slots=False)
 class Illumination(NodeSceneElement, ABC):
     """
     Abstract base class for all illumination scene elements.
@@ -66,9 +65,8 @@ def _azimuth_converter(value):
         return value
 
 
-@parse_docs
-@attrs.define(eq=False, slots=False)
-class AbstractDirectionalIllumination(Illumination):
+@define(eq=False, slots=False)
+class AbstractDirectionalIllumination(Illumination, ABC):
     """
     Abstract interface to directional-like illuminants.
     """
