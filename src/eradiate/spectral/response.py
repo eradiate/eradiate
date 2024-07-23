@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -14,9 +16,9 @@ from ..units import unit_registry as ureg
 from ..util.misc import summary_repr_vector
 
 # TODO:
-#  * Add plots
+#  * Propagate to measure and other intermediate components
+#  * Add plotting facilities
 #  * Documentation
-#  * Propagate in code
 
 # ------------------------------------------------------------------------------
 #                               Utility functions
@@ -30,6 +32,8 @@ def _quantity_repr(x):
 # ------------------------------------------------------------------------------
 #                             Class implementations
 # ------------------------------------------------------------------------------
+
+
 @define
 class SpectralResponseFunction(ABC):
     """
