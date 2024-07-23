@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.spectral.response import BandSRF, DeltaSRF, UniformSRF
@@ -57,6 +58,10 @@ def test_band_srf():
     # Construct
     srf = BandSRF(wavelengths=[500, 550, 600], values=[0, 1, 0])
 
+    # Construct without leading and trailing zeros
+    with pytest.warns(UserWarning):
+        BandSRF(wavelengths=[500, 550, 600], values=[1, 1, 1])
+
     # Evaluate with single value
     np.testing.assert_array_equal(
         srf.eval(550.0).m_as("dimensionless"), 1.0, strict=True
@@ -70,3 +75,23 @@ def test_band_srf():
     # Construct from ID
     srf = BandSRF.from_id("sentinel_2a-msi-3")
     np.testing.assert_array_equal(srf.support().m_as("nm"), [537, 584])
+
+    # Integrate
+    np.testing.assert_equal(
+        BandSRF(wavelengths=[500, 550, 600], values=[0, 1, 0])
+        .integrate(500, 600)
+        .m_as("nm"),
+        50.0,
+    )
+    np.testing.assert_equal(
+        BandSRF(wavelengths=[500, 550, 600], values=[0, 1, 0])
+        .integrate(500, 550)
+        .m_as("nm"),
+        25.0,
+    )
+    np.testing.assert_equal(
+        BandSRF(wavelengths=[500, 550, 600], values=[0, 1, 0])
+        .integrate(500, 550)
+        .m_as("nm"),
+        25.0,
+    )
