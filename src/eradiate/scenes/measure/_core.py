@@ -11,18 +11,12 @@ import xarray as xr
 import eradiate
 
 from ..core import NodeSceneElement
-from ..spectra import (
-    InterpolatedSpectrum,
-    MultiDeltaSpectrum,
-    Spectrum,
-    spectrum_factory,
-)
 from ... import validators
 from ..._factory import Factory
 from ...attrs import define, documented, get_doc
+from ...exceptions import DataError
 from ...kernel import InitParameter
-from ...srf_tools import convert as convert_srf
-from ...units import PhysicalQuantity
+from ...spectral.response import BandSRF, DeltaSRF, SpectralResponseFunction, UniformSRF
 from ...units import unit_registry as ureg
 
 measure_factory = Factory()
@@ -73,48 +67,67 @@ measure_factory.register_lazy_batch(
 )
 
 
-def _srf_converter(value: t.Any) -> Spectrum:
+def _srf_converter(value: t.Any) -> t.Any:
     """
-    Converter for :class:`.Measure` ``srf`` attribute.
-
-    Parameters
-    ----------
-    value : Any
-        Value to convert.
-
-    Returns
-    -------
-    Spectrum
-        Converted value.
+    Converter for the ``Measure.srf`` field.
 
     Notes
     -----
-    The behaviour of this converter depends on the value type:
-    * If ``value`` is not a string or path, it is passed to the
-      :class:`.spectrum_factory`'s converter.
-    * If ``value`` is a path, the converter tries to open the corresponding
-        file on the hard drive; should that fail, it queries the Eradiate data
-        store with that path.
-    * If ``value`` is a string, it is interpreted as an SRF identifier:
-      * If the identifier does not end with `-raw`, the converter looks for a
-        prepared version of the SRF and loads it if it exists, else it loads the
-        raw SRF.
-      * If the identifier ends with `-raw`, the converter loads the raw SRF.
+    Supported conversion protocols:
+
+    * :class:`dict`: Dispatch to subclass based on 'type' entry, then pass
+      dictionary to constructor as keyword arguments.
+    * Dataset, DataArray: Call :meth:`.BandSRF.from_dataarray`.
+    * Path-like: Attempt loading a dataset from the hard drive, then call
+      :meth:`.BandSRF.from_dataarray`.
+    * :class:`str`: Perform a NetCDF file lookup in the SRF database and load
+      it.
+
+    Anything else will pass through this converter without modification.
     """
-    if isinstance(value, (str, os.PathLike, xr.Dataset)):
-        ds = convert_srf(value)
-        w = ureg.Quantity(ds.w.values, ds.w.attrs["units"])
-        srf = ds.data_vars["srf"].values
-        return InterpolatedSpectrum(quantity="dimensionless", wavelengths=w, values=srf)
-    else:
-        converter = spectrum_factory.converter(quantity="dimensionless")
-        converted = converter(value)
-        if not isinstance(converted, (InterpolatedSpectrum, MultiDeltaSpectrum)):
+    if isinstance(value, dict):
+        d = value.copy()
+        try:
+            type_id = d.pop("type")
+        except KeyError as e:
             raise ValueError(
-                f"SRF must be an InterpolatedSpectrum or MultiDeltaSpectrum, "
-                f"got {converted}"
-            )
-        return converted
+                "missing 'type' key in SRF specification dictionary"
+            ) from e
+
+        dispatch_table = {
+            "uniform": UniformSRF,
+            "delta": DeltaSRF,
+            "multi_delta": DeltaSRF,
+            "band": BandSRF,
+        }
+
+        try:
+            cls = dispatch_table[type_id]
+        except KeyError as e:
+            raise ValueError(f"unknown SRF type '{type_id}'") from e
+
+        return cls(**d)
+
+    if isinstance(value, xr.Dataset):
+        return BandSRF.from_dataarray(value.srf)
+
+    if isinstance(value, xr.DataArray):
+        return BandSRF.from_dataarray(value)
+
+    if isinstance(value, (str, os.PathLike)):
+        try:
+            ds = xr.load_dataset(value)
+            return BandSRF.from_dataarray(ds.srf)
+        except FileNotFoundError:
+            pass
+
+    if isinstance(value, str):
+        try:
+            return BandSRF.from_id(value)
+        except DataError:
+            pass
+
+    return value
 
 
 def _str_summary_raw(x):
@@ -178,26 +191,19 @@ class Measure(NodeSceneElement, ABC):
         default="{}",
     )
 
-    srf: Spectrum = documented(
+    srf: SpectralResponseFunction = documented(
         attrs.field(
-            factory=lambda: MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
+            factory=lambda: DeltaSRF(wavelengths=550.0 * ureg.nm),
             converter=_srf_converter,
-            validator=validators.has_quantity(PhysicalQuantity.DIMENSIONLESS),
+            validator=attrs.validators.instance_of(SpectralResponseFunction),
         ),
         doc="Spectral response function (SRF). If a path is passed, it attempts "
         "to load a dataset from that location. If a keyword is passed, e.g., "
         "``'sentinel_2a-msi-4'`` it tries to serve the corresponding dataset "
-        "from the Eradiate data store. By default, the *prepared* version of "
-        "the SRF is served unless it does not exist in which case the *raw* "
-        "version is served. To request that the raw version is served, append "
-        "``'-raw'`` to the keyword, e.g., ``'sentinel_2a-msi-4-raw'``. "
-        "Note that the prepared SRF provide a better speed versus accuracy "
-        "trade-off, but for the best accuracy, the raw SRF should be used. "
-        "Other types will be converted by :data:`.spectrum_factory`.",
-        type=".Spectrum",
-        init_type="Path or str or .Spectrum or dict",
-        default=":class:`MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm) "
-        "<.MultiDeltaSpectrum>`",
+        "from the Eradiate data store.",
+        type=".SpectralResponseFunction",
+        init_type="Path-like or str or .SpectralResponseFunction or dict",
+        default=":class:`DeltaSRF(wavelengths=550.0 * ureg.nm) <.DeltaSRF>`",
     )
 
     sampler: str = documented(
