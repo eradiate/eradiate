@@ -95,3 +95,19 @@ def test_band_srf():
         .m_as("nm"),
         25.0,
     )
+
+    # Integrate (cumulative)
+    integral = BandSRF(
+        wavelengths=[500, 550, 600], values=[0, 1, 0]
+    ).integrate_cumulative([500, 550, 600])
+    np.testing.assert_equal(integral.m_as("nm"), [25, 50])
+
+    integral = BandSRF(
+        wavelengths=[500, 550, 600], values=[0, 1, 0]
+    ).integrate_cumulative([525, 550, 575])
+    np.testing.assert_equal(integral.m_as("nm"), [18.75, 37.5])
+
+    integral = BandSRF(
+        wavelengths=[500, 550, 600], values=[0, 1, 0]
+    ).integrate_cumulative([400, 500, 550, 600, 700])
+    np.testing.assert_equal(integral.m_as("nm"), [0, 25, 50, 50])

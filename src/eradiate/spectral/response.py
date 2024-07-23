@@ -54,14 +54,6 @@ class UniformSRF(SpectralResponseFunction):
     A spectral response function uniform on a preset spectral interval.
     """
 
-    value = documented(
-        pinttrs.field(
-            units=ucc.deferred("dimensionless"),
-            factory=lambda: 1.0,
-            validator=validators.is_positive,
-        )
-    )
-
     wmin = documented(
         pinttrs.field(
             units=ucc.deferred("wavelength"),
@@ -74,6 +66,14 @@ class UniformSRF(SpectralResponseFunction):
         pinttrs.field(
             units=ucc.deferred("wavelength"),
             factory=lambda: 2500.0 * ureg.nm,
+            validator=validators.is_positive,
+        )
+    )
+
+    value = documented(
+        pinttrs.field(
+            units=ucc.deferred("dimensionless"),
+            factory=lambda: 1.0,
             validator=validators.is_positive,
         )
     )
@@ -227,10 +227,23 @@ class BandSRF(SpectralResponseFunction):
             * self.values.u
         )
 
-    def integrate(self, wmin, wmax):
+    def integrate(
+        self, wmin: float | pint.Quantity, wmax: float | pint.Quantity
+    ) -> pint.Quantity:
         """
         Return the integral of the SRF on the specified interval, using the
         trapezoid rule.
+
+        Parameters
+        ----------
+        wmin, wmax : float or quantity
+            Lower and upper bounds of the integration domain. Floats are
+            interpreted as being specified in default configuration units.
+
+        Returns
+        -------
+        integral : quantity
+            Integral as a scalar quantity.
         """
         wmin = ensure_units(wmin, ucc.get("wavelength"))
         wmax = ensure_units(wmax, ucc.get("wavelength"))
@@ -254,3 +267,30 @@ class BandSRF(SpectralResponseFunction):
 
         # Compute integral
         return spi.trapezoid(values_m, w_m) * w_u
+
+    def integrate_cumulative(self, w: npt.ArrayLike) -> pint.Quantity:
+        """
+        Return the cumulative integral of the SRF on the specified mesh, using
+        the trapezoid rule.
+
+        Parameters
+        ----------
+        w : array-like
+            Nodes of the spectral integration mesh. If a dimensionless array is
+            passed, it is interpreted as being specified in default
+            configuration units.
+
+        Returns
+        -------
+        integral : quantity
+            Cumulative integral as an array of shape (N-1,), where
+            ``wavelength`` has shape (N,).
+        """
+        w_u = ucc.get("wavelength")
+        w_m = ensure_units(w, w_u).m_as(w_u)
+
+        # Evaluate SRF at mesh nodes
+        values_m = self.eval(w).m
+
+        # Compute integral
+        return spi.cumulative_trapezoid(values_m, w_m) * w_u
