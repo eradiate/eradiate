@@ -16,20 +16,12 @@ from ..attrs import define, documented
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
-from ..util.misc import summary_repr_vector
+from ..util.misc import summary_repr_quantity
 
 # TODO:
 #  * Propagate to measure and other intermediate components
 #  * Add plotting facilities
 #  * Documentation
-
-# ------------------------------------------------------------------------------
-#                               Utility functions
-# ------------------------------------------------------------------------------
-
-
-def _quantity_repr(x):
-    return f"{summary_repr_vector(x.m)} {x.u:~}"
 
 
 # ------------------------------------------------------------------------------
@@ -109,7 +101,7 @@ class DeltaSRF(SpectralResponseFunction):
                 pinttrs.converters.to_units(ucc.deferred("wavelength")),
             ],
             validator=validators.all_strictly_positive,
-            repr=_quantity_repr,
+            repr=summary_repr_quantity,
         ),
         doc="An array of wavelengths specifying the translation wavelength of each "
         "Dirac delta. Wavelength values are positive and unique. "
@@ -140,7 +132,7 @@ class BandSRF(SpectralResponseFunction):
                 pinttrs.converters.to_units(ucc.deferred("wavelength")),
             ],
             validator=validators.is_sorted(strict=True),
-            repr=_quantity_repr,
+            repr=summary_repr_quantity,
         ),
         doc="Wavelengths defining the interpolation grid. Values must be "
         "monotonically increasing.",
