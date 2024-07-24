@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import typing as t
 from abc import ABC, abstractmethod
 from functools import singledispatchmethod
 
+import attrs
 import numpy as np
 import numpy.typing as npt
 import pint
@@ -10,6 +12,7 @@ import pinttrs
 from pinttrs.util import ensure_units
 
 from .response import BandSRF, DeltaSRF, SpectralResponseFunction, UniformSRF
+from .. import converters
 from ..attrs import define, documented
 from ..radprops import CKDAbsorptionDatabase
 from ..units import unit_context_config as ucc
@@ -53,8 +56,13 @@ class MonoSpectralGrid(SpectralGrid):
     _wavelengths: pint.Quantity = documented(
         pinttrs.field(
             units=ucc.deferred("wavelength"),
-            on_setattr=None,
-            converter=np.atleast_1d,
+            converter=[
+                pinttrs.converters.to_units(ucc.deferred("wavelength")),
+                converters.on_quantity(np.atleast_1d),
+                converters.on_quantity(lambda x: x.astype(np.float64)),
+                converters.on_quantity(np.unique),
+                converters.on_quantity(np.sort),
+            ],
         ),
         doc="Wavelengths.",
         type="quantity",
@@ -71,6 +79,11 @@ class MonoSpectralGrid(SpectralGrid):
         raise NotImplementedError(f"unsupported data type '{type(srf)}'")
 
     @select.register
+    def _(self, srf: DeltaSRF):
+        # Pass SRF wavelengths through
+        return MonoSpectralGrid(wavelengths=srf.wavelengths)
+
+    @select.register
     def _(self, srf: UniformSRF):
         w_m = self.wavelengths.m
         w_u = self.wavelengths.u
@@ -81,47 +94,74 @@ class MonoSpectralGrid(SpectralGrid):
 
     @select.register
     def _(self, srf: BandSRF):
-        w_m = self.wavelengths.m
-        w_u = self.wavelengths.u
-        wmin_m, wmax_m = srf.support().m_as(w_u)
-
-        w_selected_m = w_m[(w_m >= wmin_m) & (w_m <= wmax_m)]
-        return MonoSpectralGrid(wavelengths=w_selected_m * w_u)
+        # Select all wavelengths for which the SRF evaluates to a nonzero value
+        values = srf.eval(self.wavelengths)
+        w_selected = self.wavelengths[values.m > 0.0]
+        return MonoSpectralGrid(wavelengths=w_selected)
 
 
 @define(init=False)
 class CKDSpectralGrid(SpectralGrid):
-    wcenters: pint.Quantity = documented(
-        pinttrs.field(units=ucc.deferred("wavelength")),
-        doc="Central wavelength of all bins.",
-        type="quantity",
-        init_type="quantity or array-like or float",
-    )
-
     wmins: pint.Quantity = documented(
         pinttrs.field(units=ucc.deferred("wavelength")),
-        doc="Lower bound of all bins.",
+        doc="Lower bound of all bins. Unitless values are interpreted as default "
+        "wavelength config units.",
         type="quantity",
-        init_type="quantity or array-like or float",
+        init_type="quantity or array-like",
     )
 
     wmaxs: pint.Quantity = documented(
         pinttrs.field(units=ucc.deferred("wavelength")),
-        doc="Upper bound of all bins.",
+        doc="Upper bound of all bins. Unitless values are interpreted as default "
+        "wavelength config units.",
         type="quantity",
-        init_type="quantity or array-like or float",
+        init_type="quantity or array-like",
     )
 
-    def __init__(self, wmins: npt.ArrayLike, wmaxs: npt.ArrayLike):
+    _wcenters: pint.Quantity = documented(attrs.field(init=False))
+
+    def __init__(
+        self,
+        wmins: npt.ArrayLike,
+        wmaxs: npt.ArrayLike,
+        fix_bounds: bool | t.Literal["keep_min", "keep_max"] = "keep_min",
+        epsilon: float = 1e-6,
+    ):
+        # Ensure consistent units and appropriate dtype
         w_u = ucc.get("wavelength")
-        wmins_m = ensure_units(wmins, w_u).m_as(w_u)
-        wmaxs_m = ensure_units(wmaxs, w_u).m_as(w_u)
-        wcenters_m = 0.5 * (wmins_m + wmaxs_m)
-        self.__attrs_init__(wcenters_m * w_u, wmins_m * w_u, wmaxs_m * w_u)
+        wmins_m = ensure_units(wmins, w_u).m_as(w_u).astype(np.float64)
+        wmaxs_m = ensure_units(wmaxs, w_u).m_as(w_u).astype(np.float64)
+
+        # Detect bound mismatch
+        diff_bounds = wmaxs_m[:-1] - wmins_m[1:]
+        fix_locations = (diff_bounds > 0.0) & (diff_bounds <= epsilon)
+        if np.any(fix_locations):
+            if fix_bounds == "keep_max":
+                wmins_m[1:] = np.where(fix_locations, wmaxs_m[:-1], wmins_m[1:])
+            elif fix_bounds == "keep_min":
+                wmaxs_m[:-1] = np.where(fix_locations, wmins_m[1:], wmaxs_m[:-1])
+            else:
+                raise ValueError(
+                    "while constructing CKDSpectralGrid: bin bound mismatch "
+                    f"(min: {wmins_m[1:][fix_locations]}; max: {wmaxs_m[:-1][fix_locations]}"
+                )
+
+        # Finally initialize the object
+        self.__attrs_init__(wmins_m * w_u, wmaxs_m * w_u)
+
+    def __attrs_post_init__(self):
+        self._wcenters = 0.5 * (self.wmins + self.wmaxs)
+
+    @property
+    def wcenters(self):
+        """
+        Central wavelength of all bins.
+        """
+        return self._wcenters
 
     def wavelengths(self):
         # Inherit docstring
-        return self.wcenters
+        return self._wcenters
 
     @classmethod
     def arange(
@@ -162,7 +202,7 @@ class CKDSpectralGrid(SpectralGrid):
 
         selmin = np.searchsorted(wmins_m, w_m)
         selmax = np.searchsorted(wmaxs_m, w_m) + 1
-        hit = selmin == selmax  # Mask where x values which triggered a bin hit
+        hit = selmin == selmax  # Mask where w_m values which triggered a bin hit
 
         # Map w values to selected bin (index -999 means not selected)
         bin_index = np.where(hit, selmin - 1, np.full_like(w_m, -999)).astype(np.int64)
@@ -184,9 +224,13 @@ class CKDSpectralGrid(SpectralGrid):
         wmins_m = self.wmins.m_as(w_u)
         wmaxs_m = self.wmaxs.m_as(w_u)
 
-        # Detect spectral bins on which the SRF takes nonzero values
-        # Selected bins are identified by their central wavelength
+        # Build spectral mesh used to interpolate
         w_m = np.unique(np.concatenate((wmins_m, wmaxs_m)))
+        # Note the handling of numeric precision-induced min and max bin bound
+        # mismatch was removed from the previous implementation because
+        # consistency is enforced upon initialization
+
+        # Detect spectral bins on which the SRF takes nonzero values
         cumsum = np.concatenate(([0], srf.integrate_cumulative(w_m * w_u).m_as(w_u)))
         selected = cumsum[:-1] != cumsum[1:]
 
