@@ -105,6 +105,7 @@ class DeltaSRF(SpectralResponseFunction):
             units=ucc.deferred("wavelength"),
             converter=[
                 converters.on_quantity(np.atleast_1d),
+                converters.on_quantity(lambda x: x.astype(np.float64)),
                 pinttrs.converters.to_units(ucc.deferred("wavelength")),
             ],
             validator=validators.all_strictly_positive,
