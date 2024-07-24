@@ -16,6 +16,12 @@ from .. import converters
 from ..attrs import define, documented
 from ..radprops import CKDAbsorptionDatabase
 from ..units import unit_context_config as ucc
+from ..units import unit_registry as ureg
+from ..util.misc import summary_repr_quantity
+
+# ------------------------------------------------------------------------------
+#                             Class implementations
+# ------------------------------------------------------------------------------
 
 
 @define
@@ -63,6 +69,7 @@ class MonoSpectralGrid(SpectralGrid):
                 converters.on_quantity(np.unique),
                 converters.on_quantity(np.sort),
             ],
+            repr=summary_repr_quantity,
         ),
         doc="Wavelengths.",
         type="quantity",
@@ -103,7 +110,7 @@ class MonoSpectralGrid(SpectralGrid):
 @define(init=False)
 class CKDSpectralGrid(SpectralGrid):
     wmins: pint.Quantity = documented(
-        pinttrs.field(units=ucc.deferred("wavelength")),
+        pinttrs.field(units=ucc.deferred("wavelength"), repr=summary_repr_quantity),
         doc="Lower bound of all bins. Unitless values are interpreted as default "
         "wavelength config units.",
         type="quantity",
@@ -111,14 +118,16 @@ class CKDSpectralGrid(SpectralGrid):
     )
 
     wmaxs: pint.Quantity = documented(
-        pinttrs.field(units=ucc.deferred("wavelength")),
+        pinttrs.field(units=ucc.deferred("wavelength"), repr=summary_repr_quantity),
         doc="Upper bound of all bins. Unitless values are interpreted as default "
         "wavelength config units.",
         type="quantity",
         init_type="quantity or array-like",
     )
 
-    _wcenters: pint.Quantity = documented(attrs.field(init=False))
+    _wcenters: pint.Quantity = documented(
+        attrs.field(init=False, repr=summary_repr_quantity)
+    )
 
     def __init__(
         self,
@@ -186,7 +195,12 @@ class CKDSpectralGrid(SpectralGrid):
 
     @classmethod
     def from_absorption_database(cls, abs_db: CKDAbsorptionDatabase):
-        raise NotImplementedError
+        """
+        Retrieve the spectral grid from a CKD absorption database.
+        """
+        wmins = abs_db.spectral_coverage["wbound_lower [nm]"].values * ureg.nm
+        wmaxs = abs_db.spectral_coverage["wbound_upper [nm]"].values * ureg.nm
+        return cls(wmins, wmaxs)
 
     @singledispatchmethod
     def select(self, srf: SpectralResponseFunction) -> CKDSpectralGrid:

@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from eradiate.radprops import CKDAbsorptionDatabase
 from eradiate.spectral.grid import CKDSpectralGrid, MonoSpectralGrid
 from eradiate.spectral.response import BandSRF, DeltaSRF, UniformSRF
 from eradiate.units import unit_registry as ureg
@@ -132,6 +133,14 @@ def test_ckd_spectral_grid_construct_fix_mismatch(policy, expected):
         )
         np.testing.assert_array_equal(grid.wmins.m_as("nm"), expected["min"])
         np.testing.assert_array_equal(grid.wmaxs.m_as("nm"), expected["max"])
+
+
+def test_ckd_spectral_grid_from_absorption_database():
+    abs_db = CKDAbsorptionDatabase.from_name("mycena")
+    grid = CKDSpectralGrid.from_absorption_database(abs_db)
+    np.testing.assert_allclose(
+        grid.wcenters.m, abs_db.spectral_coverage.index.get_level_values(1).values
+    )
 
 
 @pytest.mark.parametrize(
