@@ -520,10 +520,17 @@ def summary_repr_vector(a: np.ndarray, edgeitems: int = 4):
         return (
             f"[{np.array2string(a[:edgeitems]).strip('[]')}"
             " ... "
-            f"{np.array2string(a[size-edgeitems:]).strip('[]')}]"
+            f"{np.array2string(a[size - edgeitems:]).strip('[]')}]"
         )
     else:
         return np.array2string(a)
+
+
+def summary_repr_quantity(x: pint.Quantity):
+    """
+    Return a brief summary representation of a Pint quantity.
+    """
+    return f"{summary_repr_vector(x.m)} {x.u:~}"
 
 
 def find_runs(
