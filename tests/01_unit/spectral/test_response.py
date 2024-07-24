@@ -10,7 +10,7 @@ def test_uniform_srf():
     assert UniformSRF() is not None
 
     # Evaluation works as expected
-    srf = UniformSRF(1.0, 400.0, 500.0)
+    srf = UniformSRF(400.0, 500.0, 1.0)
     value = srf.eval([300, 400, 450, 500, 600]).m
     expected = np.array([0.0, 1.0, 1.0, 1.0, 0.0])
     np.testing.assert_array_equal(value, expected)
