@@ -14,7 +14,7 @@ from pinttrs.util import ensure_units
 from .response import BandSRF, DeltaSRF, SpectralResponseFunction, UniformSRF
 from .. import converters
 from ..attrs import define, documented
-from ..radprops import CKDAbsorptionDatabase
+from ..radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.misc import summary_repr_quantity
@@ -79,6 +79,17 @@ class MonoSpectralGrid(SpectralGrid):
     @property
     def wavelengths(self):
         return self._wavelengths
+
+    @classmethod
+    def from_absorption_database(cls, abs_db: MonoAbsorptionDatabase):
+        """
+        Retrieve the spectral grid from a monochromatic absorption database.
+        """
+        if not isinstance(abs_db, MonoAbsorptionDatabase):
+            raise TypeError
+
+        w = abs_db.spectral_coverage.index.get_level_values(level=1).values * ureg.nm
+        return cls(wavelengths=w)
 
     @singledispatchmethod
     def select(self, srf: SpectralResponseFunction) -> MonoSpectralGrid:
@@ -198,6 +209,9 @@ class CKDSpectralGrid(SpectralGrid):
         """
         Retrieve the spectral grid from a CKD absorption database.
         """
+        if not isinstance(abs_db, CKDAbsorptionDatabase):
+            raise TypeError
+
         wmins = abs_db.spectral_coverage["wbound_lower [nm]"].values * ureg.nm
         wmaxs = abs_db.spectral_coverage["wbound_upper [nm]"].values * ureg.nm
         return cls(wmins, wmaxs)
