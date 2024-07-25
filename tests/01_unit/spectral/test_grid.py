@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from eradiate.radprops import CKDAbsorptionDatabase
+from eradiate.radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
 from eradiate.spectral.grid import CKDSpectralGrid, MonoSpectralGrid
 from eradiate.spectral.response import BandSRF, DeltaSRF, UniformSRF
 from eradiate.units import unit_registry as ureg
@@ -26,6 +26,14 @@ def test_mono_spectral_grid_construct(wavelengths, expected):
     grid = MonoSpectralGrid(wavelengths=wavelengths)
     assert grid.wavelengths.m.dtype == np.dtype("float64")
     np.testing.assert_allclose(grid.wavelengths.m_as("nm"), expected)
+
+
+def test_mono_spectral_grid_from_absorption_database():
+    abs_db = MonoAbsorptionDatabase.from_name("gecko")
+    grid = MonoSpectralGrid.from_absorption_database(abs_db)
+    np.testing.assert_allclose(
+        grid.wavelengths.m, abs_db.spectral_coverage.index.get_level_values(1).values
+    )
 
 
 def test_mono_spectral_grid_select_delta_srf():
@@ -136,7 +144,7 @@ def test_ckd_spectral_grid_construct_fix_mismatch(policy, expected):
 
 
 def test_ckd_spectral_grid_from_absorption_database():
-    abs_db = CKDAbsorptionDatabase.from_name("mycena")
+    abs_db = CKDAbsorptionDatabase.from_name("monotropa")
     grid = CKDSpectralGrid.from_absorption_database(abs_db)
     np.testing.assert_allclose(
         grid.wcenters.m, abs_db.spectral_coverage.index.get_level_values(1).values
