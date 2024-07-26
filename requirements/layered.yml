@@ -38,7 +38,7 @@ recommended:
     - main
   packages:
     - "aabbtree"  # Used by the leaf collision detection feature
-    - "astropy"  # Used by the solar irradiance spectrum date-based scaling feature
+    - "astropy>=6.0.0"  # Used by the solar irradiance spectrum date-based scaling feature
     - "ipython"
     - "ipywidgets"
     - "jupyterlab"

@@ -1,6 +1,6 @@
 -c main.lock.txt
 aabbtree
-astropy
+astropy>=6.0.0
 ipython
 ipywidgets
 jupyterlab

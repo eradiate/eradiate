@@ -5,7 +5,7 @@ channels:
 dependencies:
   # recommended
   - aabbtree
-  - astropy
+  - astropy>=6.0.0
   - ipython
   - ipywidgets
   - jupyterlab
