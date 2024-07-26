@@ -3,25 +3,26 @@ Benchmarking
 
 Run Benchmarks
 --------------
-Eradiate's benchmarking suite is based on the ASV package which enables
-tracking a project's performance over time.
-To run the benchmark suite:
+
+Eradiate's benchmarking suite is based on the
+`Airspeed Velocity (ASV) <https://github.com/airspeed-velocity/asv>`_
+package which enables tracking a project's performance over time. To run the benchmark suite:
 
 .. code:: bash
 
     conda activate <env name>
     cd benchmarks
-    python -m eradiate.test_tools.benchmark.benchmark
+    python -m eradiate.test_tools.benchmark.cli
 
 By default, it will run the benchmark using the currently active environment.
 For dev environments, this means that you need an operational version
-of eradiate. Note that environments that use production versions prior
-to v0.28.xx cannot be benchmarked as they do no include changes required
+of Eradiate. Note that environments that use production versions prior
+to v0.28.0 cannot be benchmarked as they do no include changes required
 for the benchmark.
 
 If you want to archive results to a separate **asv database**, add the
 ``--archive-dir=<dir>`` argument. The path should point to the root
-of the database, where the asv.conf.json exists.
+of the database, where the ``asv.conf.json`` file exists.
 
 ASV also offers the possibility to run benchmarks on previous commits
 and branches. It will clone and build the project in a new environment
@@ -30,7 +31,7 @@ as a range, e.g. ``main^!`` for the last commit of the ``main`` branch:
 
 .. code:: bash
 
-    pyhton -m eradiate.test_tools.benchmark --git-ref=main^!
+    python -m eradiate.test_tools.benchmark.cli --git-ref=main^!
 
 The benchmark results are stored in the ``results`` folder. Those can be
 publish to an html page and viewed by running:

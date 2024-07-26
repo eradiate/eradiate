@@ -60,13 +60,12 @@ def benchmark(
     set_commit_hash, archive_dir, git_ref, verbose, show_stderr, quick, machine
 ):
     """
-    Benchmark test suite based on ASV. By default, runs the test suite on the current
-    environment. Specify a git-ref range to run the benchmark on cloned projects (ASV's default).
+    Benchmark test suite based on ASV. By default, runs the test suite on the
+    current environment. Specify a git-ref range to run the benchmark on
+    cloned projects (ASV's default).
 
-    Warning!
-    --------
-    Prod environment cannot be tested yet because no packaged versions contain
-    those changes yet.
+    Warning! Production environment cannot be tested yet because no
+    packaged versions contain those changes yet.
     """
 
     # get current benchmark directory
