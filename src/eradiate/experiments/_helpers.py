@@ -126,7 +126,7 @@ def check_geometry_atmosphere(
 
 
 def check_piecewise_compatible(
-    geometry: SceneGeometry, atmosphere: Atmosphere
+    geometry: SceneGeometry, atmosphere: Atmosphere | None
 ) -> tuple[bool, str]:
     """
     Check that the piecewise integrator is compatible with the experiment's
@@ -137,8 +137,8 @@ def check_piecewise_compatible(
     geometry : SceneGeometry
         An experiment geometry.
 
-    atmosphere : MolecularAtmosphere
-        A molecular atmosphere.
+    atmosphere : Atmosphere
+        The scene's atmosphere configuration.
 
     Returns
     -------
@@ -163,28 +163,29 @@ def check_piecewise_compatible(
         debug_message = "Piecewise integrator not compatible with a medium that has force_majorant = True."
         return False, debug_message
 
-    return True, None
+    return True, ""
 
 
-def check_volpath_compatible(atmosphere: Atmosphere) -> tuple[bool, str]:
+def check_path_compatible(atmosphere: Atmosphere | None) -> tuple[bool, str]:
     """
-    Check that the volpath integrator is compatible with the experiment's
-    atmosphere.
+    Check if the scene is compatible with the ``path`` integrator.
 
     Parameters
     ----------
-    atmosphere : MolecularAtmosphere
-        A molecular atmosphere.
+    atmosphere : Atmosphere
+        The scene's atmosphere configuration.
 
     Returns
     -------
     tuple[bool, str]
-        Volpath compatible flag and an exception message if the flag is not raised.
+        Path compatible flag and an exception message if the flag is not raised.
         The message is empty if the flag is raised.
     """
 
-    if atmosphere is None:
-        debug_message = "No atmosphere, prefer using the Path Integrator."
+    if atmosphere is not None:
+        debug_message = (
+            "You have an atmosphere in your scene, prefer using the Path Integrator."
+        )
         return False, debug_message
 
     return True, ""

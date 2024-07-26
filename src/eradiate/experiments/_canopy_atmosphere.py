@@ -8,8 +8,8 @@ import attrs
 from ._core import EarthObservationExperiment
 from ._helpers import (
     check_geometry_atmosphere,
+    check_path_compatible,
     check_piecewise_compatible,
-    check_volpath_compatible,
     measure_inside_atmosphere,
     surface_converter,
 )
@@ -214,23 +214,26 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         """
         Ensures that the integrator is compatible with the atmosphere and geometry.
         """
-        piecewise_compatible, pw_msg = check_piecewise_compatible( self.geometry, self.atmosphere)
-        volpath_compatible, vol_msg = check_volpath_compatible( self.atmosphere)
+        piecewise_compatible, pw_msg = check_piecewise_compatible(
+            self.geometry, self.atmosphere
+        )
+        path_compatible, path_msg = check_path_compatible(self.atmosphere)
 
         if self.integrator is AUTO:
             if piecewise_compatible:
                 self.integrator = PiecewiseVolPathIntegrator()
-            elif volpath_compatible:
-                self.integrator = VolPathIntegrator()
             else:
-                self.integrator = PathIntegrator()
-        else :
+                self.integrator = VolPathIntegrator()
+        else:
             msg = ""
-            if isinstance(self.integrator, PiecewiseVolPathIntegrator) and not piecewise_compatible:
+            if (
+                isinstance(self.integrator, PiecewiseVolPathIntegrator)
+                and not piecewise_compatible
+            ):
                 msg = pw_msg
 
-            if isinstance(self.integrator, VolPathIntegrator) and not volpath_compatible:
-                msg = vol_msg
+            if isinstance(self.integrator, PathIntegrator) and not path_compatible:
+                msg = path_msg
 
             if msg:
                 raise ValueError(msg)
