@@ -78,7 +78,7 @@ dev:
   packages:
     - "conda-lock>=1.4"  # Required by dependency management scripts
     - "pip>=22"  # Required by dependency management scripts
-    - "pip-tools>=6.5"  # Required by dependency management scripts
+    - "uv==0.2.*"  # Required by dependency management scripts
     - "setuptools>=61"  # Required by dependency management scripts
     - "networkx>=3.1"  # Required by dependency management scripts
 
