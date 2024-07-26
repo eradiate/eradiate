@@ -13,7 +13,7 @@ Thermophysical properties
 -------------------------
 
 Molecular atmosphere objects are created from a
-:ref:`thermophysical properties data set <sec-user_guide-data-thermoprops>`.
+:ref:`thermophysical properties data set <sec-data-thermoprops>`.
 
 .. _sec-molecular-atmosphere-thermophysical-properties-pre-defined:
 
