@@ -108,7 +108,6 @@ class AtmosphereExperiment(EarthObservationExperiment):
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
 
-
     def __attrs_post_init__(self):
         self._normalize_spectral()
         self._normalize_atmosphere()
@@ -164,20 +163,24 @@ class AtmosphereExperiment(EarthObservationExperiment):
 
                 measure.target = TargetPoint(target_point)
 
-
     def _normalize_integrator(self) -> None:
         """
         Ensures that the integrator is compatible with the atmosphere and geometry.
         """
-        piecewise_compatible, msg = check_piecewise_compatible( self.geometry, self.atmosphere)
+        piecewise_compatible, msg = check_piecewise_compatible(
+            self.geometry, self.atmosphere
+        )
 
         if self.integrator is AUTO:
             if piecewise_compatible:
                 self.integrator = PiecewiseVolPathIntegrator()
             else:
                 self.integrator = VolPathIntegrator()
-        else :
-            if isinstance(self.integrator, PiecewiseVolPathIntegrator) and not piecewise_compatible:
+        else:
+            if (
+                isinstance(self.integrator, PiecewiseVolPathIntegrator)
+                and not piecewise_compatible
+            ):
                 raise ValueError(msg)
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
