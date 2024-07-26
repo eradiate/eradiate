@@ -44,7 +44,7 @@ pip-compile: pip-update-in-files
 
 	@for LAYER in main tests recommended docs dev optional dependencies; do \
 		echo "Compiling requirements/pip/$${LAYER}.in to requirements/pip/$${LAYER}.lock.txt"; \
-		pip-compile --upgrade --resolver=backtracking --build-isolation \
+		uv pip compile --upgrade --resolver=backtracking --build-isolation \
 			--allow-unsafe --no-strip-extras \
 			--output-file requirements/pip/$${LAYER}.lock.txt \
 			requirements/pip/$${LAYER}.in; \
@@ -71,14 +71,14 @@ conda-env:
 # Lock conda dependencies
 conda-lock: conda-env
 	@for LAYER in dev dependencies main recommended tests docs optional; do \
-		conda-lock --kind explicit --no-mamba --file requirements/conda/environment-$${LAYER}.yml \
+		conda-lock --kind explicit --mamba --file requirements/conda/environment-$${LAYER}.yml \
 			--filename-template "requirements/conda/environment-$${LAYER}-{platform}.lock" \
 			-p $(PLATFORM); \
 	done
 
 conda-lock-all: conda-env
 	@for LAYER in dev dependencies main recommended tests docs optional; do \
-		conda-lock --kind explicit --no-mamba --file requirements/conda/environment-$${LAYER}.yml \
+		conda-lock --kind explicit --mamba --file requirements/conda/environment-$${LAYER}.yml \
 			--filename-template "requirements/conda/environment-$${LAYER}-{platform}.lock" \
 			-p osx-64 -p linux-64 -p win-64; \
 	done
