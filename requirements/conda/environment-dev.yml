@@ -8,9 +8,9 @@ dependencies:
   # dev
   - conda-lock>=1.4
   - networkx>=3.1
-  - pip-tools>=6.5
   - pip>=22
   - setuptools>=61
+  - uv==0.2.*
   # docs
   - ipython
   - myst-parser
@@ -54,5 +54,6 @@ dependencies:
   - python-dateutil
   - python-graphviz
   # tests
+  - asv==0.6.*
   - pytest
   - pytest-json-report
