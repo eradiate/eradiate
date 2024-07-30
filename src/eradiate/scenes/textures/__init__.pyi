@@ -1,0 +1,1 @@
+from .interpolated import InterpolatedTexture as InterpolatedTexture

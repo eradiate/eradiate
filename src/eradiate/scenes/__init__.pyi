@@ -10,3 +10,4 @@ from . import phase as phase
 from . import shapes as shapes
 from . import spectra as spectra
 from . import surface as surface
+from . import textures as textures
