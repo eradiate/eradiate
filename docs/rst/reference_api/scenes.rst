@@ -291,6 +291,7 @@ Quick access
    :toctree: generated/autosummary/
 
    mesh_from_dem
+   triangulate_grid
 
 .. _module-eradiate.scenes.bsdfs:
 
