@@ -5,7 +5,6 @@ import xarray as xr
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.constants import EARTH_RADIUS
 from eradiate.experiments import DEMExperiment
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.geometry import PlaneParallelGeometry
@@ -219,17 +218,15 @@ def test_dem_experiment_warn_targeting_dem(modes_all_double, tmpdir):
         attrs={"units": "meter"},
     )
 
-    mesh, lat, lon = mesh_from_dem(
-        da, geometry="plane_parallel", planet_radius=EARTH_RADIUS
-    )
+    mesh, xlim, ylim = mesh_from_dem(da, geometry="plane_parallel")
 
     with pytest.warns(UserWarning, match="uses a point target"):
         DEMExperiment(
             surface=DEMSurface.from_mesh(
                 id="terrain",
                 mesh=mesh,
-                lat=lat,
-                lon=lon,
+                xlon_lim=xlim,
+                ylat_lim=ylim,
                 geometry=PlaneParallelGeometry(),
             ),
             measures=[
