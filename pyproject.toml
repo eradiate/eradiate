@@ -1,13 +1,13 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=61", "setuptools_scm>=6.2"]
+requires = ["setuptools>=61"]
 
 [project]
 authors = [
   {name = "The Eradiate Team"}
 ]
 description = "A radiative transfer model for the Earth observation community"
-dynamic = ["version", "dependencies", "optional-dependencies"]
+dynamic = ["dependencies", "optional-dependencies"]
 license = {text = "LGPLv3"}
 maintainers = [
   {name = "The Eradiate Team"}
@@ -15,6 +15,7 @@ maintainers = [
 name = "eradiate"
 readme = "README.md"
 requires-python = ">=3.9"
+version = "0.27.2"
 
 [project.scripts]
 eradiate = "eradiate.cli:main"
@@ -63,14 +64,3 @@ eradiate = ["py.typed", "*.pyi"]
 include = ["eradiate*"]
 namespaces = false
 where = ["src"]
-
-[tool.setuptools_scm]
-git_describe_command = [
-  "git",
-  "describe",
-  "--dirty",
-  "--tags",
-  "--long",
-  "--match",
-  "v[0-9]*"
-]  # Redefined to avoid crashing with special build tags
