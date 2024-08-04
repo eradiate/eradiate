@@ -334,27 +334,17 @@ Preparing a  release
 
 1. Make sure all tests pass.
 2. Make sure that dependencies are correct (check in particular the kernel version).
+   Use the release checker utility for this:
+
+   .. code:: shell
+      python requirements/release.py
+
 3. Update the change log.
-4. Update the version and release date fields in `CITATION.cff`.
-5. Create a draft release on GitHub and update it.
-6. Using release candidates, make sure that built Pyhon wheels will work as
+4. Bump the version number using `Bump My Version <https://github.com/callowayproject/bump-my-version>`_.
+5. Update the version and release date fields in `CITATION.cff`.
+6. Create a draft release on GitHub and update it.
+7. Using release candidates, make sure that built Pyhon wheels will work as
    expected.
-7. Finalize release notes and create the release tag. **Make sure that the \
+8. Finalize release notes and create the release tag. **Make sure that the \
    release commit is referenced only by one tag.**
-8. Build and upload Python wheels.
-
-Tagging a commit for release manually
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Eradiate picks up its version number using the `setuptools-scm <https://github.com/pypa/setuptools_scm>`_
-package. Under the hood, it uses Git tags and the ``git describe`` command,
-which only picks up annotated tags. To make sure that the tags will be
-correctly picked up,
-`make sure that they are annotated <https://stackoverflow.com/questions/4154485/git-describe-ignores-a-tag>`_
-using
-
-.. code:: bash
-
-   git tag -a <your_tag_name> -m "<your_message>"
-
-Note that the message may be an empty string.
+9. Build and upload Python wheels.

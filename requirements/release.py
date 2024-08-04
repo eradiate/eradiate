@@ -1,9 +1,10 @@
 """
-Release support utility.
+Release utility.
 """
 
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import click
@@ -116,7 +117,9 @@ def get_git_submodule_status():
     return result
 
 
-def check_mitsuba_requirements(eradiate_root_dir):
+def check_mitsuba_requirements(
+    eradiate_root_dir: Path, ignore_submodule_not_on_tag: bool = False
+) -> int:
     """
     Check if Mitsuba requirements are consistent with checked out version.
     """
@@ -180,7 +183,7 @@ def check_mitsuba_requirements(eradiate_root_dir):
             f"* mitsuba patch requirement [{info['eradiate_kernel_mitsuba_patch_version']}]\n"
             "  retrieved from 'eradiate.kernel._versions'\n"
             f"* latest mitsuba submodule tag [{info['submodule_latest_tag_version']}]\n"
-            "  retrieved with the 'git describe' command\n"
+            "  retrieved with the 'git describe' command"
         )
 
     mitsuba_upstream_versions = {
@@ -193,27 +196,27 @@ def check_mitsuba_requirements(eradiate_root_dir):
             f"* mitsuba upstream version [{info['mi_header_mitsuba_version']}]\n"
             "  retrieved from 'mitsuba.h'\n"
             f"* mitsuba upstream requirement [{info['eradiate_kernel_mitsuba_version']}]\n"
-            "  retrieved from 'eradiate.kernel._versions'\n"
+            "  retrieved from 'eradiate.kernel._versions'"
         )
 
     if info["submodule_hash_mismatch"] is True:
         diagnostics["git_submodule_hash_mismatch"] = (
             "Checked out mitsuba submodule commit does not match the SHA-1 "
             "found in the index of the eradiate repository.\n"
-            "Update the submodule before releasing.\n"
+            "Update the submodule before releasing."
         )
 
-    if info["submodule_commits_since_tag"] > 0:
+    if info["submodule_commits_since_tag"] > 0 and not ignore_submodule_not_on_tag:
         diagnostics["submodule_not_on_tag"] = (
             "Checked out mitsuba submodule commit does not match the latest tag.\n"
             "This likely means that you are trying to release an Eradiate "
-            "version tested with an unreleased version of the kernel.\n"
+            "version tested with an unreleased version of the kernel."
         )
 
     print()
     if diagnostics:
-        for diag in diagnostics.values():
-            print(diag)
+        messages = [diag for diag in diagnostics.values()]
+        print("\n".join(messages))
         return 1
     else:
         print("No issues detected")
@@ -227,9 +230,22 @@ def check_mitsuba_requirements(eradiate_root_dir):
     default=".",
     help="Path to the root of the Eradiate codebase. Default: '.'",
 )
-def cli(eradiate_root_dir):
-    return check_mitsuba_requirements(Path(eradiate_root_dir))
+@click.option(
+    "--ignore-submodule-not-on-tag",
+    is_flag=True,
+)
+def cli(eradiate_root_dir, ignore_submodule_not_on_tag):
+    """
+    Eradiate release utility.
+
+    This tool performs release operations for the Eradiate software package.
+    It checks if the required Mitsuba
+    """
+    code = check_mitsuba_requirements(
+        Path(eradiate_root_dir), ignore_submodule_not_on_tag
+    )
+    sys.exit(code)
 
 
 if __name__ == "__main__":
-    exit(cli())
+    cli()
