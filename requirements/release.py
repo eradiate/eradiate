@@ -2,6 +2,8 @@
 Release utility.
 """
 
+import datetime
+import os
 import re
 import subprocess
 import sys
@@ -117,7 +119,7 @@ def get_git_submodule_status():
     return result
 
 
-def check_mitsuba_requirements(
+def _check_mitsuba_requirements(
     eradiate_root_dir: Path, ignore_submodule_not_on_tag: bool = False
 ) -> int:
     """
@@ -223,7 +225,17 @@ def check_mitsuba_requirements(
         return 0
 
 
-@click.command()
+@click.group()
+def cli():
+    """
+    Eradiate release utility.
+
+    This tool performs release operations for the Eradiate software package.
+    """
+    pass
+
+
+@cli.command()
 @click.option(
     "-l",
     "--eradiate-root-dir",
@@ -234,17 +246,55 @@ def check_mitsuba_requirements(
     "--ignore-submodule-not-on-tag",
     is_flag=True,
 )
-def cli(eradiate_root_dir, ignore_submodule_not_on_tag):
+def check_mitsuba(eradiate_root_dir, ignore_submodule_not_on_tag):
     """
-    Eradiate release utility.
+    Check if Mitsuba requirements are consistent.
+    """
 
-    This tool performs release operations for the Eradiate software package.
-    It checks if the required Mitsuba
-    """
-    code = check_mitsuba_requirements(
+    code = _check_mitsuba_requirements(
         Path(eradiate_root_dir), ignore_submodule_not_on_tag
     )
     sys.exit(code)
+
+
+@cli.command()
+def update_citation():
+    """
+    Update CITATION.cff file.
+    """
+    target_version = Version(os.environ["RELEASE_VERSION"])
+
+    citation_file = open("CITATION.cff", "r").read()
+    print(citation_file)
+
+    # Replace version
+    m = re.search(
+        r"^version: (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$",
+        citation_file,
+        flags=re.M,
+    )
+    if m:
+        old_version = Version(f"{m[1]}.{m[2]}.{m[3]}")
+        new_version = target_version
+        print(f"Replacing old version ({old_version}) with new version ({new_version})")
+        citation_file = citation_file.replace(m[0], f"version: {new_version}")
+    else:
+        raise RuntimeError("could not find release version line in CITATION.cff")
+
+    # Replace date
+    m = re.search(r"date-released:\ '(\d{4}-\d{2}-\d{2})'", citation_file)
+    if m:
+        old_date = m[1]
+        new_date = datetime.datetime.today()
+        print(f"Replacing old date ({old_date}) with new date ({new_date:%Y-%m-%d})")
+        citation_file = citation_file.replace(
+            m[0], f"date-released: '{new_date:%Y-%m-%d}'"
+        )
+    else:
+        raise RuntimeError("could not find release date line in CITATION.cff")
+
+    with open("CITATION.cff", "w") as f:
+        f.write(citation_file)
 
 
 if __name__ == "__main__":
