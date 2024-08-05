@@ -329,22 +329,44 @@ branch of the PR.
 
 .. _sec-maintainer_guide-release:
 
-Preparing a  release
---------------------
+Making a release of Eradiate
+----------------------------
 
-1. Make sure all tests pass.
-2. Make sure that dependencies are correct (check in particular the kernel version).
-   Use the release checker utility for this:
+1. Preparation
 
-   .. code:: shell
-      python requirements/release.py
+   1. Make sure main is up-to-date and all tests pass.
+   2. (Optional) Display allowed target versions and pick the appropriate one:
+      ``make bump-show``.
+   3. Set the variable ``export RELEASE_PART=X.Y.Z`` in your shell.
+   4. Create a new branch for the release:
+      ``git checkout main && git pull upstream main && git checkout -b bump/prepare-v$RELEASE_VERSION``
+   5. Make sure that dependencies are correct (check in particular the kernel
+      version). Use the release checker utility for this:
+      ``python requirements/release.py check-mitsuba``
+   6. Bump the version number using
+      `Bump My Version <https://github.com/callowayproject/bump-my-version>`_:
+      ``make bump``.
+   7. Update the change log.
+   8. Commit the changes: ``git commit -am 'Bump version to ${RELEASE_VERSION}'``
+   9. Update the version and release date fields in ``CITATION.cff``:
+      ``python requirements/release.py update-citation``
+   10. Push the changes: ``git push origin``.
 
-3. Update the change log.
-4. Bump the version number using `Bump My Version <https://github.com/callowayproject/bump-my-version>`_.
-5. Update the version and release date fields in `CITATION.cff`.
-6. Create a draft release on GitHub and update it.
-7. Using release candidates, make sure that built Pyhon wheels will work as
-   expected.
-8. Finalize release notes and create the release tag. **Make sure that the \
-   release commit is referenced only by one tag.**
-9. Build and upload Python wheels.
+2. Pull request
+
+   1. Create a pull request to check changes with peers.
+   2. Merge the pull request once everything is correct.
+
+4. Release publication
+
+   1. Create a draft release on GitHub and update it.
+   2. Using release candidates, make sure that built Pyhon wheels will work as
+      expected.
+   3. Finalize release notes and create the release tag. **Make sure that the
+      release commit is referenced only by one tag.**
+   4. Build and upload Python wheels.
+
+5. Post-release: Prepare the next development cycle
+
+   1. Set the variable ``export RELEASE_PART=X.Y.Z-dev0`` to the next dev
+      version.

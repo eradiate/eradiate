@@ -133,6 +133,18 @@ endif
 wheel:
 	$(PYTHON) -m build
 
+# -- Bump version numbers ------------------------------------------------------
+
+bump:
+	bump-my-version bump --new-version ${RELEASE_VERSION}
+
+bump-show:
+	bump-my-version show-bump
+
+bump-dry:
+	bump-my-version bump --new-version ${RELEASE_VERSION} --dry-run --verbose
+
+
 # -- Documentation -------------------------------------------------------------
 
 .PHONY: docs docs-html-plot
