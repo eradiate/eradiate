@@ -567,8 +567,8 @@ def _integral_filter_bounds_symmetry(
     # Compute symmetric indexes for which the enclosed CDF reaches the target fraction
     i_max = (len(xext) - 1) // 2
     for i in range(i_max):
-        i_left = i_xmean - i
-        i_right = i_xmean + i
+        i_left = max([i_xmean - i, 0])
+        i_right = min([i_xmean + i, len(xext) - 1])
         cs = cdf[i_right] - cdf[i_left]
         if cs >= 1.0 - fraction:
             break
