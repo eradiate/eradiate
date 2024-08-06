@@ -47,73 +47,15 @@ onboard Sentinel-3B and in the spectral band 5 has the identifier
 Dataset index
 -------------
 
-
-``sentinel_2a-msi``
-^^^^^^^^^^^^^^^^^^^
-
-.. dropdown:: Datastore paths
-
-    
-    * ``spectra/srf/sentinel_2a-msi-1.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-2.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-3.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-4.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-5.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-6.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-7.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-8.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-8a.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-9.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-10.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-11.nc``
-    
-    * ``spectra/srf/sentinel_2a-msi-12.nc``
-    
-
-.. image:: /fig/srf/sentinel_2a-msi.png
-
-``sentinel_2b-msi``
-^^^^^^^^^^^^^^^^^^^
+{% for entry in instruments %}
+``{{entry.name}}``
+{{'^' * ((entry.name|length) + 4)}}
 
 .. dropdown:: Datastore paths
 
-    
-    * ``spectra/srf/sentinel_2b-msi-1.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-2.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-3.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-4.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-5.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-6.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-7.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-8.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-8a.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-9.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-10.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-11.nc``
-    
-    * ``spectra/srf/sentinel_2b-msi-12.nc``
-    
+    {% for path in entry.paths %}
+    * ``{{path}}``
+    {% endfor %}
 
-.. image:: /fig/srf/sentinel_2b-msi.png
+.. image:: /fig/srf/{{entry.name}}.png
+{% endfor %}

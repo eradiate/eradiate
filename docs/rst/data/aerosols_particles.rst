@@ -22,7 +22,7 @@ Format
 
   * ``w`` float [length]
   * ``mu`` float [dimensionless]
-  * ``i``,  ``j`` int
+  * ``i``, ``j`` int
 
 * **Data variables** (when relevant, units are required and  specified in the
   units metadata field)
@@ -42,6 +42,7 @@ Format
 
 Dataset index
 -------------
+
 
 ``govaerts_2021-continental-extrapolated``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
