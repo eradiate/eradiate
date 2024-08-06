@@ -16,41 +16,40 @@ from ..util import DOCS_ROOT_DIR, jinja_environment, savefig, write_if_modified
 
 
 # Typical VIS/NIR domain split
-DOMAINS = {"VIS": [0, 1000], "NIR": [1000, 2500]}
+DOMAINS = {"VIS": [0, 1000], "NIR": [1000, 3000]}
 
 # List of instruments and bands
 INSTRUMENTS = {
-    "sentinel_2a-msi": [
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "8a",
-        "9",
-        "10",
-        "11",
-        "12",
+    "sentinel_2a-msi": [str(i) for i in range(1, 13)] + ["8a"],
+    "sentinel_2b-msi": [str(i) for i in range(1, 13)] + ["8a"],
+    "sentinel_3a-olci": [str(i) for i in range(1, 22)],
+    "sentinel_3a-slstr": [str(i) for i in range(1, 10)],
+    "sentinel_3b-olci": [str(i) for i in range(1, 22)],
+    "sentinel_3b-slstr": [str(i) for i in range(1, 10)],
+    "aqua-modis": [str(i) for i in range(1, 17)],
+    "terra-modis": [str(i) for i in range(1, 27)],
+    "jpss1-viirs": [f"i{i}" for i in range(1, 6)]
+    + [f"m{i}" for i in range(1, 17)]
+    + ["m16a", "m16b"],
+    "npp-viirs": [f"i{i}" for i in range(1, 6)]
+    + [f"m{i}" for i in range(1, 16)]
+    + ["m16a", "m16b"],
+    "metop_a-avhrr": ["1", "2", "3a", "3b", "4", "5"],
+    "metop_b-avhrr": ["1", "2", "3a", "3b", "4", "5"],
+    "metop_c-avhrr": ["1", "2", "3a", "3b", "4", "5"],
+    "metop_sg-metimage": [
+        f"vii{i}"
+        for i in ["4", "8", "12", "15", "16", "17", "20", "22", "23"]
+        + ["24", "25", "26", "28", "30", "33", "34", "35", "37", "39", "40"]
     ],
-    "sentinel_2b-msi": [
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "8a",
-        "9",
-        "10",
-        "11",
-        "12",
-    ],
+    "mtg_i-fci": ["nir13", "nir16", "nir22", "vis04"]
+    + ["vis05", "vis06", "vis08", "vis09"],
+    "mtg_i-li": ["1", "2"],
+    "proba_v-vegetation_left": ["blue", "red", "nir", "swir"],
+    "proba_v-vegetation_center": ["blue", "red", "nir", "swir"],
+    "proba_v-vegetation_right": ["blue", "red", "nir", "swir"],
 }
+
 
 # ------------------------------------------------------------------------------
 #                          Utility function definitions
@@ -127,15 +126,22 @@ def load_srfs(instrument_name, bands):
 
 
 def plot_srfs(ds, domains=None):
+    sns.set_theme(style="ticks")
+
     split = split_domains(ds, domains)
+    to_be_deleted = [k for k, v in split.items() if len(v) == 0]
+    for x in to_be_deleted:
+        del split[x]
 
     nrows = len(split)
 
-    fig, axs = plt.subplots(nrows, 1, layout="constrained")
+    fig, axs = plt.subplots(
+        nrows, 1, figsize=(8, 3 * nrows), layout="constrained", squeeze=False
+    )
 
     for irow, (domain, bands) in enumerate(split.items()):
-        ax = axs[irow]
-        ds.srf.sel(band=bands).plot(hue="band", ax=ax)
+        ax = axs[irow, 0]
+        ds.srf.sel(band=bands).interpolate_na("w").plot(hue="band", ax=ax)
         sns.move_legend(
             ax, loc="center left", ncols=2, bbox_to_anchor=(1, 0.5), title="Band"
         )
@@ -146,7 +152,7 @@ def plot_srfs(ds, domains=None):
             ax.set_xlabel("Wavelength [nm]")
 
         ax.set_ylabel("SRF [—]")
-        # ax.set_title(domain)
+        ax.set_title("")
 
     return fig, axs
 
@@ -182,7 +188,9 @@ def generate_summary():
     template = jinja_environment.get_template("srf.rst")
 
     for instrument in INSTRUMENTS.keys():
-        generate_srf_visual(instrument, outfile=outdir_visuals / f"{instrument}.png")
+        generate_srf_visual(
+            instrument, outfile=outdir_visuals / f"{instrument}.png", force=False
+        )
 
     instruments = [
         InstrumentInfo(

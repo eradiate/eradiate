@@ -297,6 +297,7 @@ def custom_step(app):
     data.absorption_databases.generate_summary()
     data.aerosols_particles.generate_summary()
     data.rami_scenes.generate_summary()
+    data.srf.generate_summary()
 
 
 def setup(app):
