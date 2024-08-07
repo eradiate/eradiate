@@ -212,8 +212,31 @@ def _chunk_array(array, len_chunk):
 
 
 def dashboard_particle_dataset(
-    ds: xr.Dataset, title=None, phase_wavelength_chunk_size=5
+    ds: xr.Dataset,
+    title: str | None = None,
+    phase_wavelength_chunk_size: int = 5,
+    palette="muted",
 ):
+    """
+    Create a summary dashboard plot for a particle dataset. The generated plot
+    displays the extinction coefficient, the albedo and phase function.
+
+    Parameters
+    ----------
+    ds : Dataset
+        Particle (aerosol, cloud, etc.) dataset.
+
+    title : str, optional
+        A title for the plot.
+
+    phase_wavelength_chunk_size : int, default: 5
+        The produced dashboard shows the phase function clustered in chunks on
+        a number of polar plots set by this chunk size.
+
+    palette : str, list, dict, or matplotlib.colors.Colormap, optional
+        A Seaborn palette specification used to colour the phase function line
+        plots.
+    """
     df = ds.phase.isel(i=0, j=0, drop=True).to_dataframe()[["phase"]]
     df = df.sort_values(["w", "mu"]).reset_index()
     df["theta"] = np.arccos(df["mu"])
@@ -261,7 +284,7 @@ def dashboard_particle_dataset(
             hue="w",
             hue_norm=PiecewiseNorm(levels=_df["w"].values),
             legend="full",
-            palette="Spectral",
+            palette=palette,
         )
         ax.set_rlim([phase_min * 0.5, phase_max * 5.0])
         ax.set_rscale("log")
@@ -274,7 +297,7 @@ def dashboard_particle_dataset(
         lgd_title = "wavelength"  # default value, overridden by metadata if any
         for field in ["long_name", "standard_name"]:
             if field in ds.w.attrs:
-                lgd_title = field
+                lgd_title = ds.w.attrs[field]
                 break
 
         if "units" in ds.w.attrs:
