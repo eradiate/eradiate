@@ -34,6 +34,27 @@ After the build is completed, the html document is located in
    by a dedicated script. See :ref:`sec-contributing-documentation-api-build`
    for more information.
 
+Editing the data documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Data documentation is, for a large part, automatically generated using a
+`Jinja <https://jinja.palletsprojects.com>`_ template-based system. The code to
+generate the data docs pages is located in the
+:code:`$ERADIATE_SOURCE_DIR/docs/generate` directory, and called upon
+``sphinx-build`` invocation as defined in ``conf.py`` (see the :code:`custom_step()`
+function in that file).
+
+Each custom build step may generate plots (see conditions below) and renders one
+of the Jinja templates located in the :code:`$ERADIATE_SOURCE_DIR/docs/generate/templates`
+directory. The static part of the documentation, as well as how dynamic content
+is generated, are defined there.
+
+Images are generated only if no image exists so that, usually, no data is
+required to generate the documentation, in particular when building the
+documentation as part of CI. Consequently, to re-render the plots, the existing
+ones must first be deleted. The plots are generated again upon the next call
+to ``sphinx-build``.
+
 Editing the API documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
