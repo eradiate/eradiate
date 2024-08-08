@@ -8,7 +8,7 @@ asv==0.6.3
     # via -r requirements/pip/tests.in
 asv-runner==0.2.1
     # via asv
-attrs==23.2.0
+attrs==24.2.0
     # via
     #   -r requirements/pip/main.in
     #   dessinemoi
@@ -76,7 +76,7 @@ lazy-loader==0.4
     # via -r requirements/pip/main.in
 markdown-it-py==3.0.0
     # via rich
-matplotlib==3.9.1
+matplotlib==3.9.1.post1
     # via -r requirements/pip/main.in
 mdurl==0.1.2
     # via markdown-it-py
@@ -153,7 +153,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 pytz==2024.1
     # via pandas
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via asv
 requests==2.32.3
     # via pooch
@@ -170,7 +170,7 @@ scipy==1.13.1
     #   -r requirements/pip/main.in
     #   joseki
     #   ussa1976
-sf-hamilton==1.72.1
+sf-hamilton==1.73.1
     # via -r requirements/pip/main.in
 shellingham==1.5.4
     # via
@@ -185,7 +185,7 @@ tomli==2.0.1
     #   asv
     #   build
     #   pytest
-tqdm==4.66.4
+tqdm==4.66.5
     # via -r requirements/pip/main.in
 typer==0.12.3
     # via -r requirements/pip/main.in
@@ -207,7 +207,7 @@ ussa1976==0.3.4
     # via joseki
 virtualenv==20.26.3
     # via asv
-xarray==2024.6.0
+xarray==2024.7.0
     # via
     #   -r requirements/pip/main.in
     #   joseki

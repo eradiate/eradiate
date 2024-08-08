@@ -10,7 +10,7 @@ appdirs==1.4.4
     # via pint
 asttokens==2.4.1
     # via stack-data
-attrs==23.2.0
+attrs==24.2.0
     # via
     #   -r requirements/pip/main.in
     #   dessinemoi
@@ -18,7 +18,7 @@ attrs==23.2.0
     #   jsonschema
     #   pinttrs
     #   referencing
-babel==2.15.0
+babel==2.16.0
     # via
     #   pydata-sphinx-theme
     #   sphinx
@@ -135,7 +135,7 @@ markupsafe==2.1.5
     # via
     #   jinja2
     #   nbconvert
-matplotlib==3.9.1
+matplotlib==3.9.1.post1
     # via
     #   -r requirements/pip/main.in
     #   seaborn
@@ -248,11 +248,11 @@ python-dateutil==2.9.0.post0
     #   pandas
 pytz==2024.1
     # via pandas
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via
     #   myst-parser
     #   pybtex
-pyzmq==26.0.3
+pyzmq==26.1.0
     # via jupyter-client
 referencing==0.35.1
     # via
@@ -266,7 +266,7 @@ rich==13.7.1
     # via
     #   -r requirements/pip/main.in
     #   typer
-rpds-py==0.19.1
+rpds-py==0.20.0
     # via
     #   jsonschema
     #   referencing
@@ -281,7 +281,7 @@ scipy==1.13.1
     #   ussa1976
 seaborn==0.13.2
     # via -r requirements/pip/docs.in
-sf-hamilton==1.72.1
+sf-hamilton==1.73.1
     # via -r requirements/pip/main.in
 shellingham==1.5.4
     # via
@@ -314,21 +314,21 @@ sphinx-book-theme==1.1.3
     # via -r requirements/pip/docs.in
 sphinx-copybutton==0.5.2
     # via -r requirements/pip/docs.in
-sphinx-design==0.6.0
+sphinx-design==0.6.1
     # via -r requirements/pip/docs.in
-sphinxcontrib-applehelp==1.0.8
+sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-bibtex==2.6.2
     # via -r requirements/pip/docs.in
-sphinxcontrib-devhelp==1.0.6
+sphinxcontrib-devhelp==2.0.0
     # via sphinx
-sphinxcontrib-htmlhelp==2.0.6
+sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
-sphinxcontrib-qthelp==1.0.8
+sphinxcontrib-qthelp==2.0.0
     # via sphinx
-sphinxcontrib-serializinghtml==1.1.10
+sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 stack-data==0.6.3
     # via ipython
@@ -340,7 +340,7 @@ tornado==6.4.1
     # via
     #   jupyter-client
     #   livereload
-tqdm==4.66.4
+tqdm==4.66.5
     # via -r requirements/pip/main.in
 traitlets==5.14.3
     # via
@@ -378,7 +378,7 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-xarray==2024.6.0
+xarray==2024.7.0
     # via
     #   -r requirements/pip/main.in
     #   joseki
