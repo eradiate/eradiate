@@ -1,0 +1,70 @@
+dims:
+  type: dict
+  allow_unknown: false
+  schema:
+    w: integer
+coords:
+  type: dict
+  allow_unknown: false
+  schema:
+    w:
+      required: true
+      type: dict
+      schema:
+        dims:
+            equal_list: [ w ]
+        dtype:
+          allowed: [ float32, float64 ]
+        shape:
+          type: list
+          items: [{"type": "integer"}]
+        attrs:
+          type: dict
+          schema:
+            standard_name: string
+            long_name: string
+            units:
+              units_compatible: nm
+data_vars:
+  type: dict
+  allow_unknown: false
+  schema:
+    srf:
+      required: true
+      type: dict
+      schema:
+        dims:
+          equal_list: [ w ]
+        dtype:
+          allowed: [ float32, float64 ]
+        shape:
+          type: list
+          items: [{"type": "integer"}]
+        attrs:
+          type: dict
+          schema:
+            standard_name: string
+            long_name: string
+            units:
+              units_compatible: dimensionless
+    srf_u:
+      required: false
+      type: dict
+      schema:
+        dims:
+          equal_list: [ w ]
+        dtype:
+          allowed: [ float32, float64 ]
+        shape:
+          type: list
+          items: [{"type": "integer"}]
+        attrs:
+          type: dict
+          schema:
+            standard_name: string
+            long_name: string
+            units:
+              units_compatible: dimensionless
+attrs:
+  required: true
+  type: dict
