@@ -337,7 +337,7 @@ Making a release of Eradiate
    1. Make sure main is up-to-date and all tests pass.
    2. (Optional) Display allowed target versions and pick the appropriate one:
       ``make bump-show``.
-   3. Set the variable ``export RELEASE_PART=X.Y.Z`` in your shell.
+   3. Set the variable ``export RELEASE_VERSION=X.Y.Z`` in your shell.
    4. Create a new branch for the release:
       ``git checkout main && git pull upstream main && git checkout -b bump/prepare-v$RELEASE_VERSION``
    5. Make sure that dependencies are correct (check in particular the kernel
