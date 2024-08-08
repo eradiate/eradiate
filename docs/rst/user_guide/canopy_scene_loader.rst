@@ -240,7 +240,7 @@ RAMI benchmark scenarios
 We provide a specific loader for scenes derived from the
 `RAMI-V scene list <https://rami-benchmark.jrc.ec.europa.eu/_www/phase_descr.php?strPhase=RAMI5>`_.
 The list of pre-configured scenes is available in the
-:doc:`data guide </rst/data/generated/rami_scenes>`. Shipped data are downloaded
+:doc:`data guide </rst/data/rami_scenes>`. Shipped data are downloaded
 automatically when a specific scenario is requested via the datastore. Due to
 their size and the number of files they contain, the scenarios are downloaded in
 a compressed format and, by default, extracted to the current working directory.
