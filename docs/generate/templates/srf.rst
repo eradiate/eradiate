@@ -49,11 +49,20 @@ Dataset index
 
 .. important::
 
-    The following datasets are processed to minimize the amount of
-    computation performed for parts of the spectrum that will result
-    in a low contribution to the final measure. Data are processed
-    to keep the total integral of the SRF equal to at least 99.9%
-    of that in the raw data. Raw data are also available, using a ``-raw`` suffix to the dataset ID (*e.g.* ``sentinel_3b-slstr-5-raw``).
+    The following datasets are processed to minimize the amount of computation
+    performed for parts of the spectrum that will result in a low contribution
+    to the final measure. Data are processed to keep the total integral of the
+    SRF equal to at least 99.9% of that in the raw data. All data are also
+    padded with a leading and trailing zero.
+
+    The data processing method might still yield a dataset with long tails with
+    values close to zero with a very low contribution to the final result. The
+    data is regularly revisited and optimized based on feedback from the
+    development team and users. We encourage users to visualize the SRF data
+    before using them to make sure that the data are processed to their liking.
+
+    Raw data are also available, using a ``-raw`` suffix to the dataset ID
+    (*e.g.* ``sentinel_3b-slstr-5-raw``).
 
 {% for entry in instruments %}
 ``{{entry.name}}``
