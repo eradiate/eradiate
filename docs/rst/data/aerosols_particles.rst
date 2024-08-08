@@ -43,59 +43,67 @@ Format
 Dataset index
 -------------
 
-
 ``govaerts_2021-continental-extrapolated``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Filename: ``spectra/particles/govaerts_2021-continental-extrapolated.nc``
+.. dropdown:: Data store path
+
+    ``spectra/particles/govaerts_2021-continental-extrapolated.nc``
 
 .. image:: /fig/particle_radprops/govaerts_2021-continental-extrapolated.png
-
 ``govaerts_2021-desert-extrapolated``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Filename: ``spectra/particles/govaerts_2021-desert-extrapolated.nc``
+.. dropdown:: Data store path
+
+    ``spectra/particles/govaerts_2021-desert-extrapolated.nc``
 
 .. image:: /fig/particle_radprops/govaerts_2021-desert-extrapolated.png
-
 ``sixsv-biomass_burning``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Filename: ``spectra/particles/sixsv-biomass_burning.nc``
+.. dropdown:: Data store path
+
+    ``spectra/particles/sixsv-biomass_burning.nc``
 
 .. image:: /fig/particle_radprops/sixsv-biomass_burning.png
-
 ``sixsv-continental``
 ^^^^^^^^^^^^^^^^^^^^^
 
-Filename: ``spectra/particles/sixsv-continental.nc``
+.. dropdown:: Data store path
+
+    ``spectra/particles/sixsv-continental.nc``
 
 .. image:: /fig/particle_radprops/sixsv-continental.png
-
 ``sixsv-desert``
 ^^^^^^^^^^^^^^^^
 
-Filename: ``spectra/particles/sixsv-desert.nc``
+.. dropdown:: Data store path
+
+    ``spectra/particles/sixsv-desert.nc``
 
 .. image:: /fig/particle_radprops/sixsv-desert.png
-
 ``sixsv-maritime``
 ^^^^^^^^^^^^^^^^^^
 
-Filename: ``spectra/particles/sixsv-maritime.nc``
+.. dropdown:: Data store path
+
+    ``spectra/particles/sixsv-maritime.nc``
 
 .. image:: /fig/particle_radprops/sixsv-maritime.png
-
 ``sixsv-stratospheric``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Filename: ``spectra/particles/sixsv-stratospheric.nc``
+.. dropdown:: Data store path
+
+    ``spectra/particles/sixsv-stratospheric.nc``
 
 .. image:: /fig/particle_radprops/sixsv-stratospheric.png
-
 ``sixsv-urban``
 ^^^^^^^^^^^^^^^
 
-Filename: ``spectra/particles/sixsv-urban.nc``
+.. dropdown:: Data store path
+
+    ``spectra/particles/sixsv-urban.nc``
 
 .. image:: /fig/particle_radprops/sixsv-urban.png

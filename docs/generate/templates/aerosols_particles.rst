@@ -47,7 +47,9 @@ Dataset index
 ``{{entry.keyword}}``
 {{'^' * ((entry.keyword|length) + 4)}}
 
-Filename: ``{{entry.fname}}``
+.. dropdown:: Data store path
+
+    ``{{entry.fname}}``
 
 .. image:: /fig/particle_radprops/{{entry.keyword}}.png
 {% endfor %}
