@@ -68,11 +68,12 @@ Format (CKD)
 Database index
 --------------
 
-
 ``gecko`` (mono)
 ^^^^^^^^^^^^^^^^
 
-Datastore path: ``spectra/absorption/mono/gecko``
+.. dropdown:: Data store path
+
+    ``spectra/absorption/mono/gecko``
 
 Spectral sampling: 0.01 cm⁻¹ in [250, 300] + [600, 3125] nm, 0.1 cm⁻¹ in [300, 600] nm
 
@@ -81,18 +82,21 @@ Spectral sampling: 0.01 cm⁻¹ in [250, 300] + [600, 3125] nm, 0.1 cm⁻¹ in [
 ``komodo`` (mono)
 ^^^^^^^^^^^^^^^^^
 
-Datastore path: ``spectra/absorption/mono/komodo``
+.. dropdown:: Data store path
+
+    ``spectra/absorption/mono/komodo``
 
 Spectral sampling: 1 cm⁻¹
 
 .. image:: /fig/absorption_databases/komodo.png
 
 
-
 ``monotropa`` (CKD)
 ^^^^^^^^^^^^^^^^^^^
 
-Datastore path: ``spectra/absorption/ckd/monotropa``
+.. dropdown:: Data store path
+
+    ``spectra/absorption/ckd/monotropa``
 
 Spectral bin size: 100 cm⁻¹
 
@@ -101,7 +105,9 @@ Spectral bin size: 100 cm⁻¹
 ``mycena`` (CKD)
 ^^^^^^^^^^^^^^^^
 
-Datastore path: ``spectra/absorption/ckd/mycena``
+.. dropdown:: Data store path
+
+    ``spectra/absorption/ckd/mycena``
 
 Spectral bin size: 10 nm
 
@@ -110,8 +116,11 @@ Spectral bin size: 10 nm
 ``panellus`` (CKD)
 ^^^^^^^^^^^^^^^^^^
 
-Datastore path: ``spectra/absorption/ckd/panellus``
+.. dropdown:: Data store path
+
+    ``spectra/absorption/ckd/panellus``
 
 Spectral bin size: 1 nm
 
 .. image:: /fig/absorption_databases/panellus.png
+

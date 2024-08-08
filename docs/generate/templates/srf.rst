@@ -59,11 +59,12 @@ Dataset index
 ``{{entry.name}}``
 {{'^' * ((entry.name|length) + 4)}}
 
-.. dropdown:: Datastore paths
+.. dropdown:: Data store paths
 
-{% for path in entry.paths -%}
+{% for path in entry.paths %}
     * ``{{path}}``
 {% endfor %}
 
 .. image:: /fig/srf/{{entry.name}}.png
+
 {% endfor %}

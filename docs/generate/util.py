@@ -30,5 +30,7 @@ def write_if_modified(filename, content):
 
 
 jinja_environment = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(LOCAL_DIR / "templates")
+    loader=jinja2.FileSystemLoader(LOCAL_DIR / "templates"),
+    trim_blocks=True,
+    lstrip_blocks=True,
 )
