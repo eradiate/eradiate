@@ -47,15 +47,23 @@ onboard Sentinel-3B and in the spectral band 5 has the identifier
 Dataset index
 -------------
 
+.. important::
+
+    The following datasets are processed to minimize the amount of
+    computation performed for parts of the spectrum that will result
+    in a low contribution to the final measure. Data are processed
+    to keep the total integral of the SRF equal to at least 99.9%
+    of that in the raw data. Raw data are also available, using a ``-raw`` suffix to the dataset ID (*e.g.* ``sentinel_3b-slstr-5-raw``).
+
 {% for entry in instruments %}
 ``{{entry.name}}``
 {{'^' * ((entry.name|length) + 4)}}
 
 .. dropdown:: Datastore paths
 
-    {% for path in entry.paths %}
+{% for path in entry.paths -%}
     * ``{{path}}``
-    {% endfor %}
+{% endfor %}
 
 .. image:: /fig/srf/{{entry.name}}.png
 {% endfor %}
