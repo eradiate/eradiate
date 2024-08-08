@@ -115,7 +115,13 @@ def gather_bitmaps(mode, experiment, raw_results, viewing_angles, solar_angles):
     # Apply the `gather_bitmaps` pipeline step and return the results
     var_name, var_metadata = experiment.measures[0].var
     return logic.gather_bitmaps(
-        mode.id, var_name, var_metadata, raw_results, viewing_angles, solar_angles
+        mode_id=mode.id,
+        var_name=var_name,
+        var_metadata=var_metadata,
+        gather_variance=False,
+        bitmaps=raw_results,
+        viewing_angles=viewing_angles,
+        solar_angles=solar_angles,
     )
 
 
@@ -123,7 +129,12 @@ def gather_bitmaps(mode, experiment, raw_results, viewing_angles, solar_angles):
 def aggregate_ckd_quad(mode, experiment, gather_bitmaps):
     var_name = experiment.measures[0].var[0]
     results_raw = gather_bitmaps[f"{var_name}_raw"]
-    return logic.aggregate_ckd_quad(mode.id, results_raw, experiment.spectral_set[0])
+    return logic.aggregate_ckd_quad(
+        mode_id=mode.id,
+        raw_data=results_raw,
+        spectral_set=experiment.spectral_set[0],
+        is_variance=False,
+    )
 
 
 @pytest.fixture
@@ -250,7 +261,7 @@ def test_extract_irradiance(
 @pytest.mark.parametrize("measure", ["hemispherical_distant"])
 def test_gather_bitmaps(mode, gather_bitmaps):
     # Routine creates the variables we expect
-    expected_variables = {"spp", "radiance_raw", "weights_raw"}
+    expected_variables = {"radiance_m2_raw", "spp", "radiance_raw", "weights_raw"}
     assert set(gather_bitmaps.keys()) == expected_variables
 
     # Each variable has the dimensions we expect
