@@ -6,6 +6,7 @@ import pandas as pd
 import seaborn as sns
 import xarray as xr
 
+import eradiate
 import eradiate.data as data
 
 from ..util import DOCS_ROOT_DIR, jinja_environment, savefig, write_if_modified
@@ -171,6 +172,8 @@ class InstrumentInfo:
 
 
 def generate_srf_visual(instrument: str, outfile: Path, force=False):
+    eradiate.plot.set_style()
+
     # Create summary plot for an instrument
     if outfile.is_file() and not force:  # Skip if file exists
         return

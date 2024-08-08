@@ -11,8 +11,8 @@ Eradiate Documentation
 
    rst/data/intro
    rst/data/aerosols_particles
+   rst/data/absorption_databases
    rst/data/atmosphere_thermoprops
-   rst/data/atmosphere_molecular_absorption
    rst/data/solar_irradiance
    rst/data/srf
    rst/data/rami_scenes
