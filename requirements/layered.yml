@@ -20,7 +20,7 @@ main:
     - "lazy_loader>=0.1"
     - "matplotlib>=3.3"
     - "netcdf4"
-    - "numpy"
+    - "numpy<2.0"  # Capped until uv dependency solving works properly on all platforms and environments
     - "pint"
     - "pinttrs>=23.2.0"
     - "pooch"
