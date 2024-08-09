@@ -34,7 +34,7 @@ dependencies:
   - lazy_loader>=0.1
   - matplotlib>=3.3
   - netcdf4
-  - numpy
+  - numpy<2.0
   - pint
   - pinttrs>=23.2.0
   - pooch

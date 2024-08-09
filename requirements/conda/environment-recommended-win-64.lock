@@ -54,7 +54,7 @@ https://conda.anaconda.org/conda-forge/win-64/libpng-1.6.43-h19919ed_0.conda#77e
 https://conda.anaconda.org/conda-forge/win-64/libxml2-2.12.7-h0f24e4e_4.conda#ed4d301f0d2149b34deb9c4fecafd836
 https://conda.anaconda.org/conda-forge/win-64/m2w64-gcc-libs-5.3.0-7.tar.bz2#fe759119b8b3bfa720b8762c6fdc35de
 https://conda.anaconda.org/conda-forge/win-64/pcre2-10.44-h3d7b363_0.conda#007d07ab5027e0bf49f6fa660a9f89a0
-https://conda.anaconda.org/conda-forge/win-64/python-3.12.4-h889d299_0_cpython.conda#4527737432f0fade2fc1e5852c672133
+https://conda.anaconda.org/conda-forge/win-64/python-3.12.5-h889d299_0_cpython.conda#db056d8b140ab2edd56a2f9bdb203dcd
 https://conda.anaconda.org/conda-forge/win-64/zlib-1.3.1-h2466b09_1.conda#f8e0a35bf6df768ad87ed7bbbc36ab04
 https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.6-h0ea2cb4_0.conda#9a17230f95733c04dc40a2b1e5491d74
 https://conda.anaconda.org/eradiate/noarch/aabbtree-2.8.0-py_0.tar.bz2#647bcce5f0af4974e507591d5420486b
@@ -81,7 +81,7 @@ https://conda.anaconda.org/conda-forge/noarch/json5-0.9.25-pyhd8ed1ab_0.conda#5d
 https://conda.anaconda.org/conda-forge/win-64/jsonpointer-3.0.0-py312h2e8e312_0.conda#6509bc42d9d26be656db3332da504913
 https://conda.anaconda.org/conda-forge/noarch/jupyterlab_widgets-3.0.11-pyhd8ed1ab_0.conda#fc0cb2abcfcec65ecbdcde4289b62fea
 https://conda.anaconda.org/conda-forge/win-64/kiwisolver-1.4.5-py312h0d7def4_1.conda#77c9d46fc8680bb08f4e1ebb6669e44e
-https://conda.anaconda.org/conda-forge/win-64/libglib-2.80.3-h7025463_1.conda#53c80e0ed9a3905ca7047c03756a5caa
+https://conda.anaconda.org/conda-forge/win-64/libglib-2.80.3-h7025463_2.conda#b60894793e7e4a555027bfb4e4ed1d54
 https://conda.anaconda.org/conda-forge/win-64/libhwloc-2.11.1-default_h8125262_1000.conda#933bad6e4658157f1aec9b171374fde2
 https://conda.anaconda.org/conda-forge/win-64/libtiff-4.6.0-hb151862_4.conda#7d35d9aa8f051d548116039f5813c8ec
 https://conda.anaconda.org/conda-forge/win-64/markupsafe-2.1.5-py312he70551f_0.conda#4950a739b19edaac1ed29ca9474e49ac
