@@ -33,13 +33,23 @@ def get_package_requirements(layered_yml_path):
         yaml = YAML()
         layered_yml = yaml.load(f.read())
 
-    return Version(
+    version_dependencies = Version(
+        [
+            x
+            for x in layered_yml["dependencies"]["packages"]
+            if x.startswith("eradiate-mitsuba")
+        ][0].split("==")[1]
+    )
+
+    version_optional = Version(
         [
             x
             for x in layered_yml["optional"]["packages"]
             if x.startswith("eradiate-mitsuba")
         ][0].split("==")[1]
     )
+
+    return version_dependencies, version_optional
 
 
 def get_mi_header_versions(header_path):
@@ -130,9 +140,10 @@ def _check_mitsuba_requirements(
 
     # Get required Mitsuba version
     print("Looking up required eradiat-mitsuba package version ...")
-    info["required_mitsuba_package"] = get_package_requirements(
-        eradiate_root_dir / "requirements/layered.yml"
-    )
+    (
+        info["required_mitsuba_package_dependencies"],
+        info["required_mitsuba_package_optional"],
+    ) = get_package_requirements(eradiate_root_dir / "requirements/layered.yml")
 
     # Get checked out Mitsuba version
     print("Looking up checked out Mitsuba Git commit ...")
@@ -170,7 +181,8 @@ def _check_mitsuba_requirements(
     diagnostics = {}
 
     mitsuba_versions = {
-        info["required_mitsuba_package"],
+        info["required_mitsuba_package_dependencies"],
+        info["required_mitsuba_package_optional"],
         info["eradiate_kernel_mitsuba_patch_version"],
         info["mi_header_mitsuba_patch_version"],
         info["submodule_latest_tag_version"],
@@ -178,8 +190,10 @@ def _check_mitsuba_requirements(
     if len(mitsuba_versions) > 1:
         diagnostics["mitsuba_version_mismatch"] = (
             "The following versions are not aligned:\n"
-            f"* eradiate-mitsuba package requirement [{info['required_mitsuba_package']}]\n"
-            "  retrieved from 'layered.yml'\n"
+            f"* eradiate-mitsuba package requirement [{info['required_mitsuba_package_dependencies']}]\n"
+            "  retrieved from 'layered.yml' ('dependencies' section)\n"
+            f"* eradiate-mitsuba package requirement [{info['required_mitsuba_package_optional']}]\n"
+            "  retrieved from 'layered.yml' ('optional' section)\n"
             f"* mitsuba submodule patch version [{info['mi_header_mitsuba_patch_version']}]\n"
             "  retrieved from 'mitsuba.h'\n"
             f"* mitsuba patch requirement [{info['eradiate_kernel_mitsuba_patch_version']}]\n"
