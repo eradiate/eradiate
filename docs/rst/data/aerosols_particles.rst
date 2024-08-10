@@ -51,6 +51,7 @@ Dataset index
     ``spectra/particles/govaerts_2021-continental-extrapolated.nc``
 
 .. image:: /fig/particle_radprops/govaerts_2021-continental-extrapolated.png
+
 ``govaerts_2021-desert-extrapolated``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -59,6 +60,7 @@ Dataset index
     ``spectra/particles/govaerts_2021-desert-extrapolated.nc``
 
 .. image:: /fig/particle_radprops/govaerts_2021-desert-extrapolated.png
+
 ``sixsv-biomass_burning``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -67,6 +69,7 @@ Dataset index
     ``spectra/particles/sixsv-biomass_burning.nc``
 
 .. image:: /fig/particle_radprops/sixsv-biomass_burning.png
+
 ``sixsv-continental``
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -75,6 +78,7 @@ Dataset index
     ``spectra/particles/sixsv-continental.nc``
 
 .. image:: /fig/particle_radprops/sixsv-continental.png
+
 ``sixsv-desert``
 ^^^^^^^^^^^^^^^^
 
@@ -83,6 +87,7 @@ Dataset index
     ``spectra/particles/sixsv-desert.nc``
 
 .. image:: /fig/particle_radprops/sixsv-desert.png
+
 ``sixsv-maritime``
 ^^^^^^^^^^^^^^^^^^
 
@@ -91,6 +96,7 @@ Dataset index
     ``spectra/particles/sixsv-maritime.nc``
 
 .. image:: /fig/particle_radprops/sixsv-maritime.png
+
 ``sixsv-stratospheric``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -99,6 +105,7 @@ Dataset index
     ``spectra/particles/sixsv-stratospheric.nc``
 
 .. image:: /fig/particle_radprops/sixsv-stratospheric.png
+
 ``sixsv-urban``
 ^^^^^^^^^^^^^^^
 
@@ -107,3 +114,4 @@ Dataset index
     ``spectra/particles/sixsv-urban.nc``
 
 .. image:: /fig/particle_radprops/sixsv-urban.png
+
