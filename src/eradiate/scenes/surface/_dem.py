@@ -512,7 +512,8 @@ class DEMSurface(Surface):
         id: str = "surface",
         geometry: SceneGeometry | str | dict = "plane_parallel",
         planet_radius: pint.Quantity | None = None,
-        bsdf: BSDF | None = None,
+        bsdf_mesh: BSDF | None = None,
+        bsdf_background: BSDF | None = None,
     ) -> DEMSurface:
         """
         Construct a :class:`.DEMSurface` instance from a mesh object and
@@ -521,7 +522,8 @@ class DEMSurface(Surface):
         Parameters
         ----------
         mesh : .BufferMeshShape or .FileMeshShape
-            DEM as a triangulated mesh.
+            DEM as a triangulated mesh. The BSDF of this shape will be
+            overridden by the ``bsdf_mesh`` parameter.
 
         xlon_lim : quantity
             Limits of the x/longitude range covered by the mesh.
@@ -540,17 +542,23 @@ class DEMSurface(Surface):
             Planet radius. Used only in case of a plane parallel geometry to
             convert between latitude/longitude and x/y coordinates.
 
-        bsdf : .BSDF, default: :class:`LambertianBSDF() <.LambertianBSDF>`
-            Scattering model attached to the surface.
+        bsdf_mesh : .BSDF, default: :class:`LambertianBSDF() <.LambertianBSDF>`
+            Scattering model attached to the mesh.
+
+        bsdf_background : .BSDF, default: :class:`LambertianBSDF() <.LambertianBSDF>`
+            Scattering model attached to the background shape.
 
         Returns
         -------
         .DEMSurface
         """
         geometry = SceneGeometry.convert(geometry)
-        bsdf = LambertianBSDF() if bsdf is None else bsdf
-        bsdf_id = f"{id}_bsdf"
-        mesh = attrs.evolve(mesh, bsdf=bsdf)
+
+        bsdf_mesh = LambertianBSDF() if bsdf_mesh is None else bsdf_mesh
+        bsdf_background = (
+            LambertianBSDF() if bsdf_background is None else bsdf_background
+        )
+        mesh = attrs.evolve(mesh, bsdf=bsdf_mesh)
 
         if isinstance(geometry, PlaneParallelGeometry):
             kernel_length_units = uck.get("length")
@@ -576,7 +584,7 @@ class DEMSurface(Surface):
                 [-0.5 + (0.5 / x_scale), -0.5 + (0.5 / y_scale), 0.0]
             )
             opacity_bsdf = OpacityMaskBSDF(
-                nested_bsdf=bsdf,
+                nested_bsdf=bsdf_background,
                 opacity_bitmap=opacity_array,
                 uv_trafo=opacity_mask_trafo,
             )
@@ -630,8 +638,7 @@ class DEMSurface(Surface):
                 ],
             )
             opacity_bsdf = OpacityMaskBSDF(
-                id=f"{bsdf_id}_shape_background",
-                nested_bsdf=bsdf,
+                nested_bsdf=bsdf_background,
                 opacity_bitmap=opacity_array,
                 uv_trafo=opacity_mask_trafo,
             )
