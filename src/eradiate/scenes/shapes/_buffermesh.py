@@ -23,13 +23,16 @@ class BufferMeshShape(ShapeInstance):
     """
     Buffer mesh shape [``buffer_mesh``].
 
-    This shape represents a triangulated mesh directly defined by lists of vertex
-    positions and faces.
+    This shape represents a triangulated mesh directly defined by lists of
+    vertex coordinates and face definitions.
 
     Notes
     -----
-    * The `buffermesh` class does not support the `to_world` parameter. Mesh vertices
-      must be transformed manually. The Eradiate documentation contains a tutorial.
+    * This class does not support the ``to_world`` parameter: mesh vertices
+      must be transformed manually.
+
+    * The optional ``texcoords`` field can hold a list of (u, v) texture
+      coordinates in the same order as vertex coordinates.
     """
 
     vertices: pint.Quantity = documented(
@@ -47,12 +50,19 @@ class BufferMeshShape(ShapeInstance):
     )
 
     faces: np.ndarray = documented(
-        attrs.field(
-            kw_only=True,
-            converter=np.array,
-        ),
-        doc="List of face definitions. specified either as a (n, 3) NumPy "
+        attrs.field(kw_only=True, converter=np.array),
+        doc="List of face definitions, specified either as a (n, 3) NumPy "
         "array or a list of triplets of vertex indices.",
+        type="ndarray",
+        init_type="array-like",
+    )
+
+    texcoords: np.ndarray | None = documented(
+        attrs.field(
+            kw_only=True, default=None, converter=attrs.converters.optional(np.array)
+        ),
+        doc="List of vertex texture coordinates, specified either as a (n, 2) "
+        "NumPy array or a list of pairs.",
         type="ndarray",
         init_type="array-like",
     )
@@ -66,11 +76,22 @@ class BufferMeshShape(ShapeInstance):
                 f"(n, 3), got {value.shape}"
             )
 
+    @texcoords.validator
+    def _texcoords_validator(self, attribute, value):
+        if value is None:
+            return
+
+        if value.ndim != 2 or value.shape[0] == 0 or value.shape[1] != 2:
+            raise ValueError(
+                f"while validating {attribute.name}, must be an array of shape "
+                f"(n, 2), got {value.shape}"
+            )
+
     def __attrs_post_init__(self):
         if self.to_world is not None:
             warnings.warn(
-                "A BufferMeshShape instance has its to_world field set: It will be ignored. "
-                "For information on how to transform mesh vertices, see the Eradiate documentation."
+                "Setting the 'to_world' field of a BufferMeshShape instance is "
+                "not supported: it will be ignored."
             )
 
         self.update()
@@ -97,7 +118,7 @@ class BufferMeshShape(ShapeInstance):
             face_count=self.faces.shape[0],
             vertex_count=self.vertices.shape[0],
             has_vertex_normals=False,
-            has_vertex_texcoords=False,
+            has_vertex_texcoords=self.texcoords is not None,
             props=props,
         )
 
@@ -105,6 +126,10 @@ class BufferMeshShape(ShapeInstance):
         mesh_params = mi.traverse(mesh)
         mesh_params["vertex_positions"] = vertices.ravel()
         mesh_params["faces"] = self.faces.ravel()
+
+        if self.texcoords is not None:
+            mesh_params["vertex_texcoords"] = self.texcoords.ravel()
+
         mesh_params.update()
 
         return mesh

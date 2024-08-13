@@ -1,4 +1,5 @@
 import mitsuba as mi
+import numpy as np
 import pytest
 
 from eradiate.exceptions import TraversalError
@@ -71,3 +72,24 @@ def test_buffer_mesh_traverse(mode_mono):
     # Traversal as part of an enclosing object should succeed
     scene = Scene(objects={"mesh": mesh})
     check_scene_element(scene, mi.Scene)
+
+
+@pytest.mark.parametrize(
+    "texcoords", [None, [[0, 0], [0, 1], [1, 1], [1, 0]]], ids=["no_uvs", "uvs"]
+)
+def test_buffer_mesh_texcoords(mode_mono, texcoords):
+    mesh = BufferMeshShape(
+        vertices=[[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]],
+        faces=[[0, 1, 2], [1, 2, 3]],
+        texcoords=texcoords,
+    )
+    mi_mesh = mesh.instance
+    mi_params = mi.traverse(mi_mesh)
+    assert "vertex_texcoords" in mi_params
+
+    if texcoords is None:
+        assert len(mi_params["vertex_texcoords"]) == 0
+    else:
+        np.testing.assert_array_equal(
+            np.array(mi_params["vertex_texcoords"]), np.ravel(texcoords)
+        )
