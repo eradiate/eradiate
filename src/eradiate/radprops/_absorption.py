@@ -11,7 +11,7 @@ import textwrap
 import warnings
 from collections.abc import Hashable, Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import attrs
 import numpy as np
@@ -27,12 +27,13 @@ from .. import config
 from .._mode import SpectralMode
 from ..attrs import documented, parse_docs
 from ..data import data_store
-from ..exceptions import InterpolationError, UnsupportedModeError
+from ..exceptions import DataError, InterpolationError, UnsupportedModeError
 from ..typing import PathLike
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 
 logger = logging.getLogger(__name__)
+
 
 # ------------------------------------------------------------------------------
 #                           Error handling components
@@ -91,6 +92,7 @@ def handle_error(error: InterpolationError, action: ErrorHandlingAction):
 ERROR_HANDLING_CONFIG_DEFAULT = ErrorHandlingConfiguration.convert(
     config.settings.ABSORPTION_DATABASE.ERROR_HANDLING
 )
+
 
 # ------------------------------------------------------------------------------
 #                           Database type definitions
@@ -391,34 +393,56 @@ class AbsorptionDatabase:
 
         filenames = glob.glob(os.path.join(dir_path, "*.nc"))
 
-        logger.debug("Loading index file")
+        def load_index(
+            index_filename: PathLike,
+            read_csv: Callable[[Path], pd.DataFrame],
+            make_index: Callable[[list[PathLike]], pd.DataFrame],
+            to_csv: Callable[[pd.DataFrame, Path], None],
+        ):
+            if index_filename.is_file():
+                try:
+                    df = read_csv(index_filename)
+                except pd.errors.EmptyDataError as e:
+                    raise DataError(
+                        f"Error loading index file '{index_filename}'"
+                    ) from e
+
+            elif fix:
+                logger.warning(
+                    f"Could not find index file '{index_filename}', building it"
+                )
+                df = make_index(filenames)
+                to_csv(df, index_filename)
+
+            else:
+                logger.critical(f"Could not find index file '{index_filename}'")
+                raise FileNotFoundError(
+                    errno.ENOENT, "Missing index file", index_filename
+                )
+
+            if df.empty:
+                raise DataError(f"Index loaded from '{index_filename}' is empty")
+
+            return df
+
         index_path = dir_path / "index.csv"
-        if index_path.is_file():
-            index = pd.read_csv(index_path)
-        elif fix:
-            logger.warning("Could not find index file, building it")
-            index = cls._make_index(filenames)
-            index.to_csv(index_path, index=False)
-        else:
-            logger.critical(f"Could not find index file '{index_path}'")
-            raise FileNotFoundError(errno.ENOENT, "Missing index file", index_path)
+        logger.debug(f"Loading index from '{index_path}'")
+        index = load_index(
+            index_filename=index_path,
+            read_csv=pd.read_csv,
+            make_index=cls._make_index,
+            to_csv=lambda df, filename: df.to_csv(filename, index=False),
+        )
         index = index.sort_values(by="wl_min [nm]").reset_index(drop=True)
 
-        logger.debug("Loading spectral coverage table file")
         spectral_coverage_path = dir_path / "spectral.csv"
-        if spectral_coverage_path.is_file():
-            spectral_coverage = pd.read_csv(spectral_coverage_path, index_col=(0, 1))
-        elif fix:
-            logger.warning("Could not find spectral coverage table, building it")
-            spectral_coverage = cls._make_spectral_coverage(filenames)
-            spectral_coverage.to_csv(dir_path / "spectral.csv")
-        else:
-            logger.critical(
-                f"Could not find spectral coverage table '{spectral_coverage_path}'"
-            )
-            raise FileNotFoundError(
-                errno.ENOENT, "Missing spectral coverage table", spectral_coverage_path
-            )
+        logger.debug(f"Loading spectral coverage table from '{spectral_coverage_path}'")
+        spectral_coverage = load_index(
+            index_filename=spectral_coverage_path,
+            read_csv=lambda df: pd.read_csv(df, index_col=(0, 1)),
+            make_index=cls._make_spectral_coverage,
+            to_csv=lambda df, filename: df.to_csv(filename),
+        )
 
         return cls(dir_path, index, spectral_coverage, metadata=metadata, lazy=lazy)
 
