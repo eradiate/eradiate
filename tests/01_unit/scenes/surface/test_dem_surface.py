@@ -11,6 +11,7 @@ from eradiate.scenes.geometry import SphericalShellGeometry
 from eradiate.scenes.shapes import RectangleShape, SphereShape
 from eradiate.scenes.surface import DEMSurface
 from eradiate.scenes.surface._dem import (
+    _dem_texcoords,
     _transform_vertices_spherical_shell_lonlat,
     mesh_from_dem,
     triangulate_grid,
@@ -307,3 +308,17 @@ def test_dem_surface_kernel_dict(mode_mono):
     template, params = traverse(scene)
     kernel_dict = template.render(KernelContext())
     assert isinstance(mi.load_dict(kernel_dict), mi.Scene)
+
+
+def test_dem_texcoords(mode_mono):
+    vertices = np.array([[-1, -1, 1], [2, -1, 1], [-1, 2, 0], [2, 2, 1]])
+    xlim = [-1.0, 2.0]
+    ylim = [-1.0, 2.0]
+
+    texcoords = _dem_texcoords(vertices[:, 0], vertices[:, 1], xlim, ylim)
+
+    assert texcoords.shape == (4, 2)
+    assert np.allclose(
+        texcoords,
+        np.array([[0, 0], [1, 0], [0, 1], [1, 1]]),
+    )
