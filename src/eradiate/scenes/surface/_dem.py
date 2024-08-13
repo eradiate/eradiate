@@ -205,10 +205,40 @@ def triangulate_grid(
     return vertices, faces
 
 
+def _dem_texcoords(xlon, ylat, xlon_lim, ylat_lim) -> np.ndarray:
+    """
+    Map the x and y coordinates of the elements of `vertices` to the [0, 1] range
+    using a linear scale within xlim and ylim respectively.
+
+    Parameters
+    ----------
+    xlon : array-like
+        An array of shape (N,) that contains the x/longitude coordinates of an
+        arbitrary number of vertices.
+
+    ylat : array-like
+        An array of shape (N,) that contains the y/latitude coordinates of an
+        arbitrary number of vertices.
+
+    xlon_lim : tuple[float, float]
+        Lower and upper bounds defining the linear transform that converts the x
+        coordinate to the u texture coordinate.
+
+    ylat_lim : tuple[float, float]
+        Lower and upper bounds defining the linear transform that converts the y
+        coordinate to the v texture coordinate.
+    """
+    uvs_x = (xlon - xlon_lim[0]) / (xlon_lim[1] - xlon_lim[0])
+    uvs_y = (ylat - ylat_lim[0]) / (ylat_lim[1] - ylat_lim[0])
+
+    return np.stack([uvs_x, uvs_y]).T
+
+
 def mesh_from_dem(
     da: xr.DataArray,
     geometry: str | dict | SceneGeometry,
     planet_radius: pint.Quantity | float | None = None,
+    add_texcoords: bool = False,
 ) -> tuple[BufferMeshShape, pint.Quantity, pint.Quantity]:
     """
     Construct a DEM surface mesh from a data array holding elevation data.
@@ -238,6 +268,9 @@ def mesh_from_dem(
         This parameter is unused otherwise. If a unitless value is passed, it is
         interpreted using
         :ref:`default config length units <sec-user_guide-unit_guide_user>`.
+
+    add_texcoords : bool, default: False
+        If ``True``, texture coordinates are added to the created mesh.
 
     Returns
     -------
@@ -283,6 +316,10 @@ def mesh_from_dem(
         dataset is centred at the equator, then reinterpreted in an ECEF frame.
         The returned extent is in longitude/latitude. *The projection is highly
         distorting and should not be used for quantitative applications.*
+
+    * The generated mesh can optionally be assigned texture coordinates used to
+      map spatially-varying data (*e.g.* textured reflectance value for a
+      Lambertian BSDF).
     """
     # Pre-process geometry parameter
     geometry = SceneGeometry.convert(geometry)
@@ -329,6 +366,8 @@ def mesh_from_dem(
     ylat_center = _middle(ylat)
     # Extract elevation data and ensure y-major layout
     elevation = to_quantity(da.transpose(xlon_dim, ylat_dim))
+    # By default, no texture coordinates are assigned
+    texcoords = None
 
     # Process vertex data depending on geometry and coordinate mode, generate triangulation
     if isinstance(geometry, PlaneParallelGeometry):
@@ -344,6 +383,12 @@ def mesh_from_dem(
 
             xlon_lim = (xlon.m.min(), xlon.m.max()) * xlon.u
             ylat_lim = (ylat.m.min(), ylat.m.max()) * ylat.u
+
+            # If relevant, assign texture coordinates
+            if add_texcoords:
+                texcoords = _dem_texcoords(
+                    vertices[:, 0], vertices[:, 1], xlon_lim.m, ylat_lim.m
+                )
 
         elif mode == "lonlat":
             x, y = _mercator(
@@ -361,7 +406,9 @@ def mesh_from_dem(
                 .swap_dims({"lon": "x", "lat": "y"})
                 .drop_vars(("lon", "lat"))
             )
-            return mesh_from_dem(da, geometry, planet_radius)
+            return mesh_from_dem(
+                da, geometry, planet_radius, add_texcoords=add_texcoords
+            )
 
         else:
             raise RuntimeError(f"unknown input mode {mode}")
@@ -383,17 +430,30 @@ def mesh_from_dem(
                 .swap_dims(({"x": "lon", "y": "lat"}))
                 .drop_vars(("x", "y"))
             )
-            return mesh_from_dem(da, geometry, planet_radius)
+            return mesh_from_dem(
+                da, geometry, planet_radius, add_texcoords=add_texcoords
+            )
 
         elif mode == "lonlat":
+            xlon = xlon.to(ureg.rad)
+            ylat = ylat.to(ureg.rad)
             vertices, faces = triangulate_grid(
-                xlon.m_as(ureg.rad),
-                ylat.m_as(ureg.rad),
-                elevation.m_as(length_kernel_u),
+                xlon.m, ylat.m, elevation.m_as(length_kernel_u)
             )
+
+            # If relevant, assign texture coordinates
+            xlon_lim = (xlon.m.min(), xlon.m.max()) * xlon.u
+            ylat_lim = (ylat.m.min(), ylat.m.max()) * ylat.u
+            if add_texcoords:
+                texcoords = _dem_texcoords(
+                    vertices[:, 0], vertices[:, 1], xlon_lim.m, ylat_lim.m
+                )
+
+            # Rotate mesh to Eradiate's local frame (located at the North pole)
             vertices = _transform_vertices_spherical_shell_lonlat(
                 vertices, planet_radius.m_as(length_kernel_u)
             )
+            # Recompute limits (returned afterwards)
             xlon_lim = (xlon.m.min(), xlon.m.max()) * xlon.u
             ylat_lim = (ylat.m.min(), ylat.m.max()) * ylat.u
 
@@ -404,7 +464,7 @@ def mesh_from_dem(
         raise TypeError(f"unhandled geometry type '{type(PlaneParallelGeometry)}'")
 
     # Create mesh instance
-    mesh = BufferMeshShape(vertices=vertices, faces=faces)
+    mesh = BufferMeshShape(vertices=vertices, faces=faces, texcoords=texcoords)
 
     return mesh, xlon_lim, ylat_lim
 
