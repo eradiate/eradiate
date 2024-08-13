@@ -22,7 +22,8 @@ class LogLevel(str, Enum):
 
 
 app = typer.Typer(
-    help="Eradiate — A modern radiative transfer model for Earth observation."
+    help="Eradiate — A modern radiative transfer model for Earth observation.",
+    pretty_exceptions_enable=False,
 )
 
 
@@ -30,8 +31,17 @@ app = typer.Typer(
 def cli(
     log_level: Annotated[
         LogLevel, typer.Option(help="Set log level.")
-    ] = LogLevel.WARNING
+    ] = LogLevel.WARNING,
+    debug: Annotated[
+        bool,
+        typer.Option(
+            help="Enable debug mode. This will notably print exceptions with locals."
+        ),
+    ] = False,
 ):
+    if debug:
+        app.pretty_exceptions_enable = True
+
     logging.basicConfig(
         level=log_level.upper(),
         format="%(message)s",
