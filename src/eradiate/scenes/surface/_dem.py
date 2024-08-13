@@ -512,6 +512,7 @@ class DEMSurface(Surface):
         id: str = "surface",
         geometry: SceneGeometry | str | dict = "plane_parallel",
         planet_radius: pint.Quantity | None = None,
+        bsdf: BSDF | None = None,
         bsdf_mesh: BSDF | None = None,
         bsdf_background: BSDF | None = None,
     ) -> DEMSurface:
@@ -542,6 +543,10 @@ class DEMSurface(Surface):
             Planet radius. Used only in case of a plane parallel geometry to
             convert between latitude/longitude and x/y coordinates.
 
+        bsdf : .BSDF, default: :class:`LambertianBSDF() <.LambertianBSDF>`
+            Alias to ``bsdf_mesh`` (**deprecated**). If both are defined,
+            ``bsdf_mesh`` takes precedence.
+
         bsdf_mesh : .BSDF, default: :class:`LambertianBSDF() <.LambertianBSDF>`
             Scattering model attached to the mesh.
 
@@ -554,10 +559,21 @@ class DEMSurface(Surface):
         """
         geometry = SceneGeometry.convert(geometry)
 
-        bsdf_mesh = LambertianBSDF() if bsdf_mesh is None else bsdf_mesh
+        if bsdf_mesh is None:
+            bsdf_mesh = LambertianBSDF() if bsdf is None else bsdf
+
+        else:
+            if bsdf is not None:
+                warnings.warn(
+                    "while calling DEMSurface.from_mesh(): "
+                    "both bsdf and bsdf_mesh parameters were specified; "
+                    "bsdf_mesh takes precedence"
+                )
+
         bsdf_background = (
             LambertianBSDF() if bsdf_background is None else bsdf_background
         )
+
         mesh = attrs.evolve(mesh, bsdf=bsdf_mesh)
 
         if isinstance(geometry, PlaneParallelGeometry):
