@@ -7,6 +7,8 @@ import numpy as np
 import pint
 import xarray as xr
 
+import eradiate
+
 from ._core import PhaseFunction
 from ...attrs import documented, parse_docs
 from ...kernel import InitParameter, UpdateParameter
@@ -78,16 +80,36 @@ class TabulatedPhaseFunction(PhaseFunction):
         "This parameter has no default.",
     )
 
+    force_polarized_phase: bool = documented(
+        attrs.field(
+            default=False,
+            converter=bool,
+            kw_only=True,
+        ),
+        doc="Flag that forcees the use of a polarized phase function.",
+        type="bool",
+        init_type="bool, optional",
+        default="False",
+    )
+
     _is_irregular: bool = attrs.field(default=False, init=False, repr=False)
+    _is_polarized: bool = attrs.field(default=False, init=False, repr=False)
 
     def __attrs_post_init__(self):
         # Check whether mu coordinate spacing is regular
         mu = self.data.mu.values
         dmu = mu[1:] - mu[:-1]
-        self._is_irregular = not np.allclose(dmu, dmu[0])
+
+        self._is_polarized = self.force_polarized_phase or (
+            eradiate.mode().is_polarized
+            and (self.data.i.shape[0] > 1 or self.data.j.shape[0] > 1)
+        )
+
+        # self._is_polarized = eradiate.mode().is_polarized
+        self._is_irregular = not np.allclose(dmu, dmu[0]) or self._is_polarized
 
     @singledispatchmethod
-    def eval(self, si: SpectralIndex) -> np.ndarray:
+    def eval(self, si: SpectralIndex, i, j) -> np.ndarray:
         """
         Evaluate phase function at a given spectral index.
 
@@ -109,14 +131,14 @@ class TabulatedPhaseFunction(PhaseFunction):
         raise NotImplementedError
 
     @eval.register(MonoSpectralIndex)
-    def _(self, si) -> np.ndarray:
-        return self.eval_mono(w=si.w)
+    def _(self, si, i, j) -> np.ndarray:
+        return self.eval_mono(w=si.w, i=i, j=j)
 
     @eval.register(CKDSpectralIndex)
-    def _(self, si) -> np.ndarray:
-        return self.eval_ckd(w=si.w, g=si.g)
+    def _(self, si, i, j) -> np.ndarray:
+        return self.eval_ckd(w=si.w, g=si.g, i=i, j=j)
 
-    def eval_mono(self, w: pint.Quantity) -> np.ndarray:
+    def eval_mono(self, w: pint.Quantity, i, j) -> np.ndarray:
         """
         Evaluate phase function in momochromatic modes.
 
@@ -124,6 +146,12 @@ class TabulatedPhaseFunction(PhaseFunction):
         ----------
         w : :class:`pint.Quantity`
             Wavelength.
+
+        i : int
+            Phase matrix row index
+
+        j : int
+            Phase matrix column index
 
         Returns
         -------
@@ -133,8 +161,12 @@ class TabulatedPhaseFunction(PhaseFunction):
         """
         w_units = self.data.w.attrs["units"]
 
+        # return default when phase matrix coefficient doesn't exist in data
+        if self.data.i.shape[0] - 1 < i or self.data.i.shape[0] - 1 < j:
+            return ""
+
         return (
-            self.data.isel(i=0, j=0)
+            self.data.isel(i=i, j=j)
             .interp(
                 w=w.m_as(w_units),
                 kwargs=dict(bounds_error=True),
@@ -142,7 +174,7 @@ class TabulatedPhaseFunction(PhaseFunction):
             .data
         )
 
-    def eval_ckd(self, w: pint.Quantity, g: float) -> np.ndarray:
+    def eval_ckd(self, w: pint.Quantity, g: float, i: int, j: int) -> np.ndarray:
         """
         Evaluate phase function in ckd modes.
 
@@ -150,6 +182,12 @@ class TabulatedPhaseFunction(PhaseFunction):
         ----------
         w : :class:`pint.Quantity`
             Spectral bin center wavelength.
+
+        i : int
+            Phase matrix row index
+
+        j : int
+            Phase matrix column index
 
         g : float
             Absorption coefficient cumulative probability.
@@ -160,16 +198,37 @@ class TabulatedPhaseFunction(PhaseFunction):
             Evaluated phase function as a 1D or 2D array depending on the shape
             of `w` (angle dimension comes last).
         """
-        return self.eval_mono(w=w)
+        return self.eval_mono(w=w, i=i, j=j)
 
     @property
     def template(self):
+        phase_function = "tabphase"
+        values_name = "values"
+
+        if self._is_polarized:
+            phase_function = "tabphase_polarized"
+            values_name = "m11"
+        else:
+            if self._is_irregular:
+                phase_function = "tabphase_irregular"
+
         result = {
-            "type": "tabphase" if not self._is_irregular else "tabphase_irregular",
-            "values": InitParameter(
-                lambda ctx: ",".join(map(str, self.eval(ctx.si))),
+            "type": phase_function,
+            values_name: InitParameter(
+                lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 0))),
             ),
         }
+
+        if self._is_polarized:
+            result["m12"] = InitParameter(
+                lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 1))),
+            )
+            result["m33"] = InitParameter(
+                lambda ctx: ",".join(map(str, self.eval(ctx.si, 2, 2))),
+            )
+            result["m34"] = InitParameter(
+                lambda ctx: ",".join(map(str, self.eval(ctx.si, 2, 3))),
+            )
 
         if self._is_irregular:
             result["nodes"] = InitParameter(
@@ -180,9 +239,30 @@ class TabulatedPhaseFunction(PhaseFunction):
 
     @property
     def params(self) -> dict[str, UpdateParameter]:
-        return {
-            "values": UpdateParameter(
-                lambda ctx: self.eval(ctx.si),
+        values_name = "values"
+
+        if eradiate.mode().is_polarized:
+            values_name = "m11"
+
+        result = {
+            values_name: UpdateParameter(
+                lambda ctx: self.eval(ctx.si, 0, 0),
                 UpdateParameter.Flags.SPECTRAL,
             )
         }
+
+        if eradiate.mode().is_polarized:
+            result["m12"] = UpdateParameter(
+                lambda ctx: self.eval(ctx.si, 0, 1),
+                UpdateParameter.Flags.SPECTRAL,
+            )
+            result["m33"] = UpdateParameter(
+                lambda ctx: self.eval(ctx.si, 2, 2),
+                UpdateParameter.Flags.SPECTRAL,
+            )
+            result["m34"] = UpdateParameter(
+                lambda ctx: self.eval(ctx.si, 2, 3),
+                UpdateParameter.Flags.SPECTRAL,
+            )
+
+        return result

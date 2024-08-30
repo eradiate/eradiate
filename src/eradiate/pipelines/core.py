@@ -5,6 +5,7 @@ Post-processing pipeline access points.
 from __future__ import annotations
 
 import importlib
+import logging
 
 from hamilton import telemetry
 from hamilton.base import DictResult, SimplePythonGraphAdapter
@@ -17,6 +18,8 @@ from .._mode import Mode
 from ..scenes.integrators import Integrator
 from ..scenes.measure import Measure
 from ..scenes.spectra import InterpolatedSpectrum
+
+logger = logging.getLogger(__name__)
 
 # Disable Hamilton telemetry (we don't want to bother our users with it)
 telemetry.disable_telemetry()
@@ -75,6 +78,12 @@ def config(
     result["calculate_variance"] = (
         integrator.moment if integrator is not None else False
     )
+
+    # Should we calculate the stokes vector?   
+    result["calculate_stokes"] = integrator.stokes if integrator is not None else False
+    
+    if result["calculate_stokes"] and result["var_name"] != "radiance":
+        logger.warning("Calculating stokes components on measures other than radiance.")
 
     return result
 

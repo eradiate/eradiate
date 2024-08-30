@@ -140,8 +140,12 @@ def albedo_srf(
 )
 @config.when(var_name="radiance", measure_distant=True)
 @extract_fields({"brdf": xr.DataArray, "brf": xr.DataArray})
-def bidirectional_reflectance(radiance: xr.DataArray, irradiance: xr.DataArray) -> dict:
-    result = logic.compute_bidirectional_reflectance(radiance, irradiance)
+def bidirectional_reflectance(
+    radiance: xr.DataArray, irradiance: xr.DataArray, calculate_stokes: bool
+) -> dict:
+    result = logic.compute_bidirectional_reflectance(
+        radiance, irradiance, calculate_stokes
+    )
     return {k: result[k] for k in result.keys()}
 
 
@@ -155,9 +159,11 @@ def bidirectional_reflectance(radiance: xr.DataArray, irradiance: xr.DataArray) 
 @config.when(var_name="radiance", measure_distant=True, apply_spectral_response=True)
 @extract_fields({"brdf_srf": xr.DataArray, "brf_srf": xr.DataArray})
 def bidirectional_reflectance_srf(
-    radiance_srf: xr.DataArray, irradiance_srf: xr.DataArray
+    radiance_srf: xr.DataArray, irradiance_srf: xr.DataArray, calculate_stokes: bool
 ) -> dict:
-    result = logic.compute_bidirectional_reflectance(radiance_srf, irradiance_srf)
+    result = logic.compute_bidirectional_reflectance(
+        radiance_srf, irradiance_srf, calculate_stokes
+    )
     return {"brdf_srf": result["brdf"], "brf_srf": result["brf"]}
 
 
@@ -174,38 +180,50 @@ def extract_irradiance(
     return logic.extract_irradiance(mode_id, illumination, spectral_set)
 
 
+def _tag_outputs_gather_bitmaps(var_name, calculate_variance, calculate_stokes):
+    fields = {
+        "spp": {"kind": "data"},
+        f"{var_name}_raw": {"kind": "data"},
+    }
+    if calculate_variance:
+        fields[f"{var_name}_m2_raw"] = {"kind": "data"}
+
+    return tag_outputs(**fields)
+
+
+def _extract_fields_gather_bitmaps(var_name, calculate_variance, calculate_stokes):
+    fields = {
+        # Requested sample count for the corresponding Mitsuba render pass
+        "spp": xr.DataArray,
+        # Raw pixel weights (equal to collected sampled count with a box filter)
+        "weights_raw": xr.DataArray,
+        # Main film pixel variable being processed
+        f"{var_name}_raw": xr.DataArray,
+        # Wavelength list, source from bitmap data
+        # "wavelengths": xr.DataArray,
+    }
+
+    if calculate_variance:
+        # 2nd moment of the main film
+        fields[f"{var_name}_m2_raw"] = xr.DataArray
+
+    return extract_fields(fields)
+
+
 @resolve(
     when=ResolveAt.CONFIG_AVAILABLE,
-    decorate_with=lambda var_name: tag_outputs(
-        **{
-            "spp": {"kind": "data"},
-            f"{var_name}_raw": {"kind": "data"},
-            f"{var_name}_m2_raw": {"kind": "data"},
-        }
-    ),
+    decorate_with=_tag_outputs_gather_bitmaps,
 )
 @resolve(
     when=ResolveAt.CONFIG_AVAILABLE,
-    decorate_with=lambda var_name: extract_fields(
-        {
-            # Requested sample count for the corresponding Mitsuba render pass
-            "spp": xr.DataArray,
-            # Raw pixel weights (equal to collected sampled count with a box filter)
-            "weights_raw": xr.DataArray,
-            # Main film pixel variable being processed
-            f"{var_name}_raw": xr.DataArray,
-            # Wavelength list, source from bitmap data
-            # "wavelengths": xr.DataArray,
-            # 2nd moment of the main film
-            f"{var_name}_m2_raw": xr.DataArray,
-        }
-    ),
+    decorate_with=_extract_fields_gather_bitmaps,
 )
 def gather_bitmaps(
     mode_id: str,
     var_name: str,
     var_metadata: dict,
     calculate_variance: bool,
+    calculate_stokes: bool,
     bitmaps: dict,
     viewing_angles: xr.Dataset,
     solar_angles: xr.Dataset,
@@ -215,6 +233,7 @@ def gather_bitmaps(
         var_name,
         var_metadata,
         calculate_variance,
+        calculate_stokes,
         bitmaps,
         viewing_angles,
         solar_angles,
@@ -236,3 +255,15 @@ def spectral_response(srf: Spectrum) -> xr.DataArray:
 @config.when(add_viewing_angles=True)
 def viewing_angles(angles: np.ndarray) -> xr.Dataset:
     return logic.viewing_angles(angles)
+
+
+@tag(**{"final": "true", "kind": "data"})
+@config.when(calculate_stokes=True)
+def dlp(radiance: xr.DataArray) -> xr.DataArray:
+    return logic.degree_of_linear_polarization(radiance)
+
+
+@tag(**{"final": "true", "kind": "data"})
+@config.when(calculate_stokes=True, apply_spectral_response=True)
+def dlp_srf(radiance_srf: xr.DataArray) -> xr.DataArray:
+    return logic.degree_of_linear_polarization(radiance_srf)

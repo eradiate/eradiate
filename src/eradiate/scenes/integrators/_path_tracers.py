@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import attrs
 
+import eradiate
+
 from ._core import Integrator
 from ...attrs import documented, parse_docs
 
@@ -60,6 +62,16 @@ class MonteCarloIntegrator(Integrator):
             result["rr_depth"] = self.rr_depth
         if self.hide_emitters is not None:
             result["hide_emitters"] = self.hide_emitters
+
+        if self.stokes and not eradiate.mode().is_polarized:
+            raise RuntimeError("stokes should only be set to True in polarized mode.")
+
+        if self.stokes:
+            result = {
+                "type": "stokes",
+                "integrator": result,
+                "meridian_align": self.meridian_align,
+            }
 
         if self.moment:
             result = {"type": "moment", "nested": result}
