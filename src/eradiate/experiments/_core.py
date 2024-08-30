@@ -477,27 +477,45 @@ class EarthObservationExperiment(Experiment, ABC):
             measure.sensor_id: measure for measure in self.measures
         }
 
+        def convert_to_y_format(img):
+            img_np = np.array(img, copy=False)[:, :, [0]]
+            return mi.Bitmap(img_np, mi.Bitmap.PixelFormat.Y)
+
+        # create a mapping from bitmap names to result names
+        mapping = {}
+        if self.integrator.stokes:
+            stokes = ["S0", "S1", "S2", "S3"]
+            iquv = ["I", "Q", "U", "V"]
+
+            if self.integrator.moment:
+                stokes = ["nested." + s for s in stokes]
+                stokes += ["m2_" + s for s in stokes]
+                iquv += ["m2_" + s for s in iquv]
+
+            for s, i in zip(stokes, iquv):
+                mapping[s] = i
+
+        else:
+            mapping = {"<root>": "bitmap"}
+            if self.integrator.moment:
+                mapping["m2_nested"] = "m2"
+
+        # gather results and info from measures
         for ctx_index, spectral_group_dict in mi_results.items():
             for sensor_id, mi_bitmap in spectral_group_dict.items():
-                if self.integrator.moment:
-                    split = mi_bitmap.split()
-                    m2 = split[1][1]
-                    m2_np = np.array(m2, copy=False)[:, :, [0]]
-                    m2 = mi.Bitmap(m2_np, mi.Bitmap.PixelFormat.Y)
+                measure = sensor_to_measure[sensor_id]
+                result_imgs = {"spp": spp if spp > 0 else measure.spp}
 
-                    measure = sensor_to_measure[sensor_id]
-                    measure.mi_results[ctx_index] = {
-                        "bitmap": split[0][1],
-                        "m2": m2,
-                        "spp": spp if spp > 0 else measure.spp,
-                    }
+                splits = mi_bitmap.split()
+                for split in splits:
+                    if split[0] in mapping:
+                        img = split[1]
+                        # convert any result that has more than one channel
+                        if img.pixel_format() != mi.Bitmap.PixelFormat.Y:
+                            img = convert_to_y_format(img)
+                        result_imgs[mapping[split[0]]] = img
 
-                else:
-                    measure = sensor_to_measure[sensor_id]
-                    measure.mi_results[ctx_index] = {
-                        "bitmap": mi_bitmap,
-                        "spp": spp if spp > 0 else measure.spp,
-                    }
+                measure.mi_results[ctx_index] = result_imgs
 
     def postprocess(self) -> None:
         # Inherit docstring

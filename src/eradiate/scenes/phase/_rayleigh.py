@@ -1,5 +1,7 @@
 import attrs
 
+import eradiate
+
 from ._core import PhaseFunction
 from ...attrs import parse_docs
 
@@ -18,4 +20,8 @@ class RayleighPhaseFunction(PhaseFunction):
 
     @property
     def template(self) -> dict:
-        return {"type": "rayleigh"}
+        phase_function = "rayleigh"
+        if eradiate.mode().is_polarized:
+            phase_function = "rayleigh_polarized"
+
+        return {"type": phase_function}

@@ -318,7 +318,7 @@ def compute_albedo(
 
 
 def compute_bidirectional_reflectance(
-    radiance_data: xr.DataArray, irradiance_data: xr.DataArray
+    radiance_data: xr.DataArray, irradiance_data: xr.DataArray, calculate_stokes: bool
 ) -> dict[str, xr.DataArray]:
     """
     Compute the spectral bidirectional reflectance distribution function
@@ -332,6 +332,9 @@ def compute_bidirectional_reflectance(
 
     irradiance_data : DataArray
         Irradiance record.
+
+    calculate_stokes : bool
+        Specifies whether the radiance is a Stokes vector
 
     Returns
     -------
@@ -350,7 +353,11 @@ def compute_bidirectional_reflectance(
     """
     # We assume that all quantities are stored in kernel units
 
-    brdf_data = radiance_data / irradiance_data
+    radiance = radiance_data
+    if calculate_stokes:
+        radiance = radiance_data.sel(stokes="I")
+
+    brdf_data = radiance / irradiance_data
     brdf_data.attrs = {
         "standard_name": "brdf",
         "long_name": "bi-directional reflection distribution function",
@@ -546,6 +553,7 @@ def gather_bitmaps(
     var_name: str,
     var_metadata: dict,
     gather_variance: bool,
+    calculate_stokes: bool,
     bitmaps: dict,
     viewing_angles: xr.Dataset,
     solar_angles: xr.Dataset,
@@ -567,6 +575,10 @@ def gather_bitmaps(
 
     gather_variance : bool
         Flag that specifies whether the variance bitmaps should be gathered.
+
+    gather_variance : bool
+        Flag that specifies whether the variable is calculated as a
+        stokes vector or not.
 
     bitmaps : dict
         A dictionary mapping spectral loop indexes to the corresponding bitmap.
@@ -626,9 +638,6 @@ def gather_bitmaps(
     for spectral_index_hashable, result_dict in bitmaps.items():
         spectral_index = spectral_index_hashable
 
-        da = bitmap_to_dataarray(result_dict["bitmap"])
-        spp = result_dict["spp"]
-
         # Set spectral coordinates
         all_coords = {
             spectral_dim: [spectral_coord]
@@ -637,8 +646,7 @@ def gather_bitmaps(
             )
         }
 
-        # Add spectral and sensor dimensions to img array
-        sensor_data[f"{var_name}_raw"].append(da.expand_dims(dim=all_coords))
+        spp = result_dict["spp"]
 
         # Package spp in a data array
         all_dims = list(all_coords.keys())
@@ -647,9 +655,42 @@ def gather_bitmaps(
             xr.DataArray(np.reshape(spp, spp_shape), coords=all_coords)
         )
 
-        if gather_variance:
-            da_var = bitmap_to_dataarray(result_dict["m2"])
-            sensor_data[f"{var_name}_m2_raw"].append(da_var.expand_dims(dim=all_coords))
+        if not calculate_stokes:
+            name = "bitmap"
+            da = bitmap_to_dataarray(result_dict[name])
+
+            # Add spectral and sensor dimensions to img array
+            sensor_data[f"{var_name}_raw"].append(da.expand_dims(dim=all_coords))
+
+            if gather_variance:
+                name = "m2"
+                da_m2 = bitmap_to_dataarray(result_dict[name])
+                sensor_data[f"{var_name}_m2_raw"].append(
+                    da_m2.expand_dims(dim=all_coords)
+                )
+
+        else:
+            components = ["I", "Q", "U", "V"]
+            stokes = []
+            for s in components:
+                stokes.append(bitmap_to_dataarray(result_dict[s]))
+            da = xr.concat(stokes, "stokes")
+            da = da.assign_coords({"stokes": components})
+
+            # Add spectral and sensor dimensions to img array
+            sensor_data[f"{var_name}_raw"].append(da.expand_dims(dim=all_coords))
+
+            if gather_variance:
+                m2_components = ["m2_" + s for s in components]
+                stokes_m2 = []
+                for s in m2_components:
+                    stokes_m2.append(bitmap_to_dataarray(result_dict[s]))
+                da_m2 = xr.concat(stokes_m2, "stokes")
+                da_m2 = da_m2.assign_coords({"stokes": components})
+
+                sensor_data[f"{var_name}_m2_raw"].append(
+                    da_m2.expand_dims(dim=all_coords)
+                )
 
     # Combine all the data
     result = {k: xr.combine_by_coords(v) if v else None for k, v in sensor_data.items()}
@@ -855,3 +896,22 @@ def moment2_to_variance(
     variance = (m2 - expectation * expectation) / spp
     variance.name = m2.name.replace("m2", "var")
     return variance
+
+
+def degree_of_linear_polarization(stokes_vec: xr.DataArray):
+    """
+    Calculate the degree of linear polarization from a stokes vector.
+
+    Parameters
+    ----------
+    stokes_vec : DataArray
+        The data's stokes vector ([I,Q,U,V]).
+
+    Returns
+    -------
+    DataArray
+        Degree of linear polarization (:math:`\sqrt{Q^2+U^2}/I`).
+    """
+    return np.sqrt(
+        stokes_vec.sel(stokes="Q") ** 2 + stokes_vec.sel(stokes="U") ** 2
+    ) / stokes_vec.sel(stokes="I")

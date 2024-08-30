@@ -211,6 +211,17 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="True",
     )
 
+    force_polarized_phase: bool = documented(
+        attrs.field(
+            default=False,
+            converter=bool,
+        ),
+        doc="Force the use of a polarized phase function implementation, even"
+        "when no polarization informaiton is available.",
+        type="bool",
+        default="False",
+    )
+
     @has_absorption.validator
     @has_scattering.validator
     def _switch_validator(self, attribute, value):
@@ -228,7 +239,11 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return None
 
     def update(self) -> None:
-        self._phase = TabulatedPhaseFunction(id=self.phase_id, data=self.dataset.phase)
+        self._phase = TabulatedPhaseFunction(
+            id=self.phase_id,
+            data=self.dataset.phase,
+            force_polarized_phase=self.force_polarized_phase,
+        )
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties

@@ -83,12 +83,33 @@ def _mode_registry() -> dict[str, Mode]:
                 "mi_double_precision": False,
                 "mi_polarized": False,
             },
+            "mono_polarized_single": {
+                "spectral_mode": SpectralMode.MONO,
+                "mi_backend": MitsubaBackend.SCALAR,
+                "mi_color_mode": MitsubaColorMode.MONO,
+                "mi_double_precision": False,
+                "mi_polarized": True,
+            },
             "mono_double": {
                 "spectral_mode": SpectralMode.MONO,
                 "mi_backend": MitsubaBackend.SCALAR,
                 "mi_color_mode": MitsubaColorMode.MONO,
                 "mi_double_precision": True,
                 "mi_polarized": False,
+            },
+            "mono_polarized_double": {
+                "spectral_mode": SpectralMode.MONO,
+                "mi_backend": MitsubaBackend.SCALAR,
+                "mi_color_mode": MitsubaColorMode.MONO,
+                "mi_double_precision": True,
+                "mi_polarized": True,
+            },
+            "mono_polarized": {
+                "spectral_mode": SpectralMode.MONO,
+                "mi_backend": MitsubaBackend.SCALAR,
+                "mi_color_mode": MitsubaColorMode.MONO,
+                "mi_double_precision": True,
+                "mi_polarized": True,
             },
             "ckd_single": {
                 "spectral_mode": SpectralMode.CKD,
@@ -97,12 +118,33 @@ def _mode_registry() -> dict[str, Mode]:
                 "mi_double_precision": False,
                 "mi_polarized": False,
             },
+            "ckd_polarized_single": {
+                "spectral_mode": SpectralMode.CKD,
+                "mi_backend": MitsubaBackend.SCALAR,
+                "mi_color_mode": MitsubaColorMode.MONO,
+                "mi_double_precision": False,
+                "mi_polarized": True,
+            },
             "ckd_double": {
                 "spectral_mode": SpectralMode.CKD,
                 "mi_backend": MitsubaBackend.SCALAR,
                 "mi_color_mode": MitsubaColorMode.MONO,
                 "mi_double_precision": True,
                 "mi_polarized": False,
+            },
+            "ckd_polarized_double": {
+                "spectral_mode": SpectralMode.CKD,
+                "mi_backend": MitsubaBackend.SCALAR,
+                "mi_color_mode": MitsubaColorMode.MONO,
+                "mi_double_precision": True,
+                "mi_polarized": True,
+            },
+            "ckd_polarized": {
+                "spectral_mode": SpectralMode.CKD,
+                "mi_backend": MitsubaBackend.SCALAR,
+                "mi_color_mode": MitsubaColorMode.MONO,
+                "mi_double_precision": True,
+                "mi_polarized": True,
             },
         }.items()
     }
@@ -250,6 +292,10 @@ class Mode:
     @property
     def is_double_precision(self) -> bool:
         return self.mi_double_precision is True
+
+    @property
+    def is_polarized(self) -> bool:
+        return self.mi_polarized is True
 
     @staticmethod
     def new(mode_id: str) -> Mode:
