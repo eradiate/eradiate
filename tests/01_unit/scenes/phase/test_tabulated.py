@@ -68,9 +68,9 @@ def test_tabulated_order(mode_mono, tmpdir):
     si = SpectralIndex.new()
 
     layer_mu_increasing = TabulatedPhaseFunction(data=da_mu_increasing)
-    phase_mu_increasing = layer_mu_increasing.eval(si)
+    phase_mu_increasing = layer_mu_increasing.eval(si,0,0)
 
     layer_mu_decreasing = TabulatedPhaseFunction(data=da_mu_decreasing)
-    phase_mu_decreasing = layer_mu_decreasing.eval(si)
+    phase_mu_decreasing = layer_mu_decreasing.eval(si,0,0)
 
     assert np.all(phase_mu_increasing == phase_mu_decreasing)
