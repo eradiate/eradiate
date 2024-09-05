@@ -60,8 +60,8 @@ class Shape:
         "generation: the kernel's default will be used. If a :class:`.BSDF` "
         "instance (or a corresponding dictionary specification) is passed, "
         "its `id` member is automatically overridden.",
-        type="BSDF or Ref or None",
-        init_type="BSDF or Ref or dict, optional",
+        type=".BSDF or .Ref or None",
+        init_type=".BSDF or .Ref or dict, optional",
     )
 
     to_world: "mitsuba.ScalarTransform4f" = documented(
