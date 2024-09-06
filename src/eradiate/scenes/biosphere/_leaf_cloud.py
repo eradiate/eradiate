@@ -403,9 +403,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     @property
     def l_horizontal(self):
         if self._l_horizontal is None:
-            self._l_horizontal = (
-                np.pi * self.leaf_radius**2 * self.n_leaves / self.lai
-            )
+            self._l_horizontal = np.pi * self.leaf_radius**2 * self.n_leaves / self.lai
         return self._l_horizontal
 
     @property

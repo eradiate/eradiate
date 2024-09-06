@@ -1,6 +1,7 @@
 """
 Manage files stored in the ``eradiate-data`` repository.
 """
+
 from __future__ import annotations
 
 import os

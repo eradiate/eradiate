@@ -34,6 +34,7 @@ from ..scenes.surface import BasicSurface, DEMSurface
 
 logger = logging.getLogger(__name__)
 
+
 @parse_docs
 @attrs.define
 class DEMExperiment(EarthObservationExperiment):
@@ -179,15 +180,20 @@ class DEMExperiment(EarthObservationExperiment):
         """
         Ensures that the integrator is compatible with the atmosphere and geometry.
         """
-        piecewise_compatible, msg = check_piecewise_compatible( self.geometry, self.atmosphere)
+        piecewise_compatible, msg = check_piecewise_compatible(
+            self.geometry, self.atmosphere
+        )
 
         if self.integrator is AUTO:
             if piecewise_compatible:
                 self.integrator = PiecewiseVolPathIntegrator()
             else:
                 self.integrator = VolPathIntegrator()
-        else :
-            if isinstance(self.integrator, PiecewiseVolPathIntegrator) and not piecewise_compatible:
+        else:
+            if (
+                isinstance(self.integrator, PiecewiseVolPathIntegrator)
+                and not piecewise_compatible
+            ):
                 raise ValueError(msg)
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:

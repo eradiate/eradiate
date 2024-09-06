@@ -30,7 +30,7 @@ app = typer.Typer(
 def cli(
     log_level: Annotated[
         LogLevel, typer.Option(help="Set log level.")
-    ] = LogLevel.WARNING
+    ] = LogLevel.WARNING,
 ):
     logging.basicConfig(
         level=log_level.upper(),

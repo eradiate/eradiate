@@ -3,6 +3,7 @@ Components related with pseudo-random number generation.
 
 Inspired by `SeedBank <https://github.com/lenskit/seedbank>`_.
 """
+
 from __future__ import annotations
 
 import attrs
