@@ -38,7 +38,7 @@ testpaths = "tests"
 
 [tool.ruff]
 exclude = ["docs/_ext/autodocsumm.py"]
-src = ["src", "tests"]
+include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
 
 [tool.ruff.lint]
 ignore = ["E501", "F821"]
