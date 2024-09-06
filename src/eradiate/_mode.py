@@ -334,7 +334,7 @@ def modes(filter: t.Callable[[Mode], bool] | None = None) -> dict[str, Mode]:
     >>> eradiate.modes(lambda x: x.is_ckd)
     """
     if filter is None:
-        filter = lambda x: True
+        filter = lambda x: True  # noqa: E731
 
     return {k: v for k, v in _mode_registry().items() if filter(v)}
 
