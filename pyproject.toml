@@ -37,7 +37,7 @@ filterwarnings = [
 testpaths = "tests"
 
 [tool.ruff]
-exclude = ["docs/_ext/autodocsumm.py"]
+exclude = ["docs/_ext/autodocsumm.py", "src/eradiate/test_tools/benchmark/asvdb.py"]
 include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
 
 [tool.ruff.lint]

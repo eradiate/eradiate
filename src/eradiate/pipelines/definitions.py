@@ -15,7 +15,6 @@ from hamilton.function_modifiers import (
     source,
     tag,
     tag_outputs,
-    value,
 )
 
 from . import logic
@@ -33,9 +32,7 @@ _MODE_IDS_CKD = set(modes(lambda x: x.is_ckd).keys())
 
 def _parameterize_aggregate_ckd_quad(var_name):
     # Tailored decorator for the aggregate_ckd_quad() task
-    cfg = {
-        var_name: {"raw_data": source(f"{var_name}_raw")}
-    }
+    cfg = {var_name: {"raw_data": source(f"{var_name}_raw")}}
     return parameterize(**cfg)
 
 

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import attrs
 import mitsuba as mi
-import pint
-import pinttr
 
 from ._core import BSDF
 from ..core import traverse
@@ -11,7 +9,6 @@ from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import documented, parse_docs
 from ...kernel import TypeIdLookupStrategy, UpdateParameter
-from ...units import unit_context_config as ucc
 
 
 @parse_docs
@@ -128,9 +125,7 @@ class HapkeBSDF(BSDF):
             "h": traverse(self.h)[0],
         }
 
-        result = {
-            "type": "hapke"
-        }
+        result = {"type": "hapke"}
 
         for obj_key, obj_values in objects.items():
             for key, value in obj_values.items():
