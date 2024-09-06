@@ -4,7 +4,6 @@
 
 [![pypi][pypi-badge]][pypi-url]
 [![docs][rtd-badge]][rtd-url]
-[![black][black-badge]][black-url]
 [![ruff][ruff-badge]][ruff-url]
 [![zenodo][zenodo-badge]][zenodo-url]
 
@@ -12,9 +11,7 @@
 [pypi-url]: https://pypi.org/project/eradiate/
 [rtd-badge]: https://img.shields.io/readthedocs/eradiate?logo=readthedocs&logoColor=white&style=flat-square
 [rtd-url]: https://eradiate.readthedocs.io/en/latest/
-[black-badge]: https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square
-[black-url]: https://github.com/psf/black/
-[ruff-badge]: https://img.shields.io/badge/%E2%9A%A1%EF%B8%8F-ruff-red?style=flat-square
+[ruff-badge]: https://img.shields.io/badge/%E2%9A%A1%EF%B8%8F-ruff-%23171029?style=flat-square
 [ruff-url]: https://ruff.rs
 [zenodo-badge]: https://img.shields.io/badge/doi-10.5281/zenodo.7224314-blue.svg?style=flat-square
 [zenodo-url]: https://zenodo.org/records/7224314
