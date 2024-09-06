@@ -13,8 +13,8 @@ from .._mode import Mode
 from ..exceptions import UnsupportedModeError
 from ..kernel import bitmap_to_dataarray
 from ..scenes.illumination import (
-    ConstantIllumination,
     AbstractDirectionalIllumination,
+    ConstantIllumination,
     Illumination,
 )
 from ..scenes.spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum

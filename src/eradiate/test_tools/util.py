@@ -1,21 +1,21 @@
 """
 Utilities for the Eradiate test suite.
 """
+
 from __future__ import annotations
 
 import os
 import typing as t
 from pathlib import Path
+from typing import Any, Callable, TypeVar
 
 import matplotlib.pyplot as plt
 import pytest
+from typing_extensions import ParamSpec, TypeAlias
 
 from ..data import data_store
 from ..exceptions import DataError
 from ..typing import PathLike
-
-from typing import Callable, TypeVar, Any
-from typing_extensions import ParamSpec, TypeAlias
 
 
 def skipif_data_not_found(path: PathLike, action: t.Callable | None = None) -> None:
@@ -74,12 +74,14 @@ def missing_artefact(filename: PathLike) -> None:
     else:
         raise ValueError(f"unsupported file extension {filename.suffix}")
 
-T = TypeVar('T')
-P = ParamSpec('P')
+
+T = TypeVar("T")
+P = ParamSpec("P")
 WrappedFuncDeco: TypeAlias = Callable[[Callable[P, T]], Callable[P, T]]
 
+
 def copy_doc(copy_func: Callable[..., Any]) -> WrappedFuncDeco[P, T]:
-    """Copies the doc string of the given function to another. 
+    """Copies the doc string of the given function to another.
     This function is intended to be used as a decorator.
 
     .. code-block:: python3
@@ -99,8 +101,9 @@ def copy_doc(copy_func: Callable[..., Any]) -> WrappedFuncDeco[P, T]:
 
     return wrapped
 
+
 def append_doc(copy_func: Callable[..., Any], prepend=False) -> WrappedFuncDeco[P, T]:
-    """Append the doc string of the given function to another. 
+    """Append the doc string of the given function to another.
     If prepend is true, will place the copied doc string in front
     of the decorated function's doc string.
     This function is intended to be used as a decorator.
@@ -121,7 +124,7 @@ def append_doc(copy_func: Callable[..., Any], prepend=False) -> WrappedFuncDeco[
         if prepend:
             func.__doc__ = copy_func.__doc__ + "\n" + func.__doc__
         else:
-            func.__doc__ = func.__doc__ + "\n" + copy_func.__doc__ 
+            func.__doc__ = func.__doc__ + "\n" + copy_func.__doc__
         return func
 
     return wrapped
