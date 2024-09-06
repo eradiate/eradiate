@@ -64,4 +64,3 @@ class Integrator(NodeSceneElement, ABC):
         init_type="bool, optional",
         default="False",
     )
-    

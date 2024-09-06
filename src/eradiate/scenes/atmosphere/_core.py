@@ -780,7 +780,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         if isinstance(self.geometry, PlaneParallelGeometry):
             to_world = self.geometry.atmosphere_volume_to_world
-            
+
             medium = "heterogeneous" if self.force_majorant else "piecewise"
             volumes = {
                 "albedo": {
@@ -861,7 +861,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         # Create medium dictionary
         result = {
             "type": medium,
-            **volumes
+            **volumes,
             # Note: "phase" is deliberately unset, this is left to the
             # Atmosphere.template property
         }

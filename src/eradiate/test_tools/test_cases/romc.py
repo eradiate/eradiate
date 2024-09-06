@@ -7,8 +7,8 @@ from eradiate.units import unit_registry as ureg
 
 def fetch_het01_brfpp():
     r"""
-    Fetches data necessary for test case het01_brfpp. 
-    Note that this function can be used to prefetch data 
+    Fetches data necessary for test case het01_brfpp.
+    Note that this function can be used to prefetch data
     before running a test case.
 
     Returns
@@ -27,7 +27,8 @@ def fetch_het01_brfpp():
 
     return data
 
-def create_het01_brfpp(prefetched_data = None):
+
+def create_het01_brfpp(prefetched_data=None):
     r"""
     Floating spheres (HET01)
     ========================
@@ -51,7 +52,7 @@ def create_het01_brfpp(prefetched_data = None):
     * Sensor: Distant reflectance measure, covering a plane, (76 angular points)
 
     """
-    if prefetched_data is None :
+    if prefetched_data is None:
         prefetched_data = fetch_het01_brfpp()
 
     leaf_spec_path = prefetched_data["leaf_spec_path"]
@@ -104,10 +105,11 @@ def create_het01_brfpp(prefetched_data = None):
         integrator={"type": "path", "max_depth": -1},
     )
 
+
 def fetch_het04a1_brfpp():
     r"""
-    Fetches data necessary for test case het04_brfpp. 
-    Note that this function can be used to prefetch data 
+    Fetches data necessary for test case het04_brfpp.
+    Note that this function can be used to prefetch data
     before running a test case.
 
     Returns
@@ -130,10 +132,11 @@ def fetch_het04a1_brfpp():
     data["leaf_pos_path_cyl"] = data_store.fetch(
         "tests/regression_test_specifications/het04/het04_cyl_positions.def"
     )
-    
+
     return data
 
-def create_het04a1_brfpp(prefetched_data = None):
+
+def create_het04a1_brfpp(prefetched_data=None):
     r"""
     Real zoom in (HET04a1)
     ======================
@@ -163,13 +166,13 @@ def create_het04a1_brfpp(prefetched_data = None):
       Disk, sphere and cylinder positioning follow the HET04 scenario of the
       RAMI-3 benchmark.
     * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
-    * Sensor: Distant reflectance measure, covering a plane, (76 angular points). 
+    * Sensor: Distant reflectance measure, covering a plane, (76 angular points).
       This test implements the variant a1 of the HET04
       scenario, in which the entire scene is targeted by the sensor.
 
     """
 
-    if prefetched_data is None :
+    if prefetched_data is None:
         prefetched_data = fetch_het04a1_brfpp()
 
     leaf_spec_path_sph = prefetched_data["leaf_spec_path_sph"]
@@ -236,10 +239,11 @@ def create_het04a1_brfpp(prefetched_data = None):
         integrator={"type": "path", "max_depth": -1},
     )
 
+
 def fetch_het06_brfpp():
     r"""
-    Fetches data necessary for test case het04_brfpp. 
-    Note that this function can be used to prefetch data 
+    Fetches data necessary for test case het04_brfpp.
+    Note that this function can be used to prefetch data
     before running a test case.
 
     Returns
@@ -256,7 +260,8 @@ def fetch_het06_brfpp():
 
     return data
 
-def create_het06_brfpp(prefetched_data = None):
+
+def create_het06_brfpp(prefetched_data=None):
     r"""
     Coniferous forest (HET06)
     =========================
@@ -289,7 +294,7 @@ def create_het06_brfpp(prefetched_data = None):
 
     """
 
-    if prefetched_data is None :
+    if prefetched_data is None:
         prefetched_data = fetch_het06_brfpp()
 
     tree_pos_path = prefetched_data["tree_pos_path"]

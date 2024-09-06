@@ -1,6 +1,7 @@
 """
 Helper tools for plugin tests.
 """
+
 from __future__ import annotations
 
 import drjit as dr

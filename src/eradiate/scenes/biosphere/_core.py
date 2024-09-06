@@ -288,12 +288,12 @@ class InstancedCanopyElement(CompositeSceneElement):
         for i, position in enumerate(self.instance_positions.m_as(length_units)):
             result[f"{self.canopy_element.id}_instance_{i}.type"] = "instance"
             result[f"{self.canopy_element.id}_instance_{i}.group.type"] = "ref"
-            result[
-                f"{self.canopy_element.id}_instance_{i}.group.id"
-            ] = self.canopy_element.id
-            result[
-                f"{self.canopy_element.id}_instance_{i}.to_world"
-            ] = mi.ScalarTransform4f.translate(position)
+            result[f"{self.canopy_element.id}_instance_{i}.group.id"] = (
+                self.canopy_element.id
+            )
+            result[f"{self.canopy_element.id}_instance_{i}.to_world"] = (
+                mi.ScalarTransform4f.translate(position)
+            )
 
         return result
 

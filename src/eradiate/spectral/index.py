@@ -24,6 +24,7 @@ For example, :class:`MonoSpectralIndex` is used in monochromatic mode.
    ``_normalize_spectral()`` post-init method of the
    :class:`.EarthObservationExperiment`.
 """
+
 from __future__ import annotations
 
 import typing as t
