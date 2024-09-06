@@ -82,7 +82,6 @@ class CuboidShape(ShapeNode):
                 self.center - 0.5 * self.edges, self.center + 0.5 * self.edges
             )
         else:
-
             new_points = transform_affine(
                 self.to_world,
                 np.array(
@@ -140,7 +139,6 @@ class CuboidShape(ShapeNode):
             )
             return np.all(cmp, axis=1)
         else:
-
             new_points = transform_affine(
                 self.to_world,
                 np.array(

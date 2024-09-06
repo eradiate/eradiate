@@ -48,7 +48,7 @@ class BlendPhaseFunction(PhaseFunction):
                 "have at least two components"
             )
 
-    weights: (np.ndarray | list[t.Callable[[KernelContext], np.ndarray]]) = documented(
+    weights: np.ndarray | list[t.Callable[[KernelContext], np.ndarray]] = documented(
         attrs.field(
             converter=lambda x: x if callable(x[0]) else np.array(x, dtype=np.float64),
             kw_only=True,
@@ -218,9 +218,9 @@ class BlendPhaseFunction(PhaseFunction):
                 result[f"{prefix}weight.grid"] = InitParameter(eval_conditional_weights)
 
                 if self.geometry is not None:
-                    result[
-                        f"{prefix}weight.to_world"
-                    ] = self.geometry.atmosphere_volume_to_world
+                    result[f"{prefix}weight.to_world"] = (
+                        self.geometry.atmosphere_volume_to_world
+                    )
 
             elif isinstance(self.geometry, SphericalShellGeometry):
                 # Same comment as above
@@ -237,9 +237,9 @@ class BlendPhaseFunction(PhaseFunction):
                 result[f"{prefix}weight.volume.grid"] = InitParameter(
                     eval_conditional_weights
                 )
-                result[
-                    f"{prefix}weight.to_world"
-                ] = self.geometry.atmosphere_volume_to_world
+                result[f"{prefix}weight.to_world"] = (
+                    self.geometry.atmosphere_volume_to_world
+                )
                 result[f"{prefix}weight.rmin"] = self.geometry.atmosphere_volume_rmin
 
             else:

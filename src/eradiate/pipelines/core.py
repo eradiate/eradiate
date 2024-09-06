@@ -72,7 +72,9 @@ def config(
     result["apply_spectral_response"] = isinstance(measure.srf, InterpolatedSpectrum)
 
     # Should we calculate the variance in the result?
-    result["calculate_variance"] = integrator.moment if integrator is not None else False
+    result["calculate_variance"] = (
+        integrator.moment if integrator is not None else False
+    )
 
     return result
 

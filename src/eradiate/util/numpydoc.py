@@ -1,6 +1,7 @@
 """
 Numpydoc docstring tools.
 """
+
 from __future__ import annotations
 
 import re

@@ -62,8 +62,8 @@ class MonteCarloIntegrator(Integrator):
             result["hide_emitters"] = self.hide_emitters
 
         if self.moment:
-            result = { "type":"moment", "nested":result }
-        
+            result = {"type": "moment", "nested": result}
+
         return result
 
 
@@ -122,6 +122,7 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
             result["use_spectral_mis"] = self.use_spectral_mis
 
         return result
+
 
 @parse_docs
 @attrs.define(eq=False, slots=False)
