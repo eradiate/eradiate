@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from eradiate.radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
 from eradiate.spectral.grid import CKDSpectralGrid, MonoSpectralGrid
 from eradiate.spectral.response import BandSRF, DeltaSRF, UniformSRF
@@ -102,6 +101,11 @@ def test_mono_spectral_grid_select_band_srf(band_srf_kwargs, expected_selected_w
     srf = BandSRF(**band_srf_kwargs)
     grid_selected = grid.select(srf)
     np.testing.assert_allclose(grid_selected.wavelengths.m, expected_selected_w.m)
+
+
+def test_mono_spectral_grid_default():
+    grid = MonoSpectralGrid.default()
+    np.testing.assert_allclose(grid.wavelengths.m, np.arange(280.0, 2401.0, 1.0))
 
 
 def test_ckd_spectral_grid_construct():
@@ -238,3 +242,11 @@ def test_ckd_grid_select_band_srf(band_srf_kwargs, expected_selected_wcenters):
     srf = BandSRF(**band_srf_kwargs)
     grid_selected = grid.select(srf)
     np.testing.assert_allclose(grid_selected.wcenters.m, expected_selected_wcenters.m)
+
+
+def test_ckd_spectral_grid_default():
+    grid = CKDSpectralGrid.default()
+    expected_wcenters = np.arange(280.0, 2401.0, 10.0)
+    np.testing.assert_allclose(grid.wcenters.m, expected_wcenters)
+    np.testing.assert_allclose(grid.wmins.m, expected_wcenters - 5.0)
+    np.testing.assert_allclose(grid.wmaxs.m, expected_wcenters + 5.0)
