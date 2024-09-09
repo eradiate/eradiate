@@ -180,7 +180,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         return max([component.top for component in self.components])
 
-    def spectral_set(
+    def spectral_grid(
         self,
         quad_spec: QuadSpec | None = None,
     ) -> None | BinSet | WavelengthSet:
@@ -190,7 +190,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         components_with_spectral_set = [
             component
             for component in self.components
-            if component.spectral_set(quad_spec=quad_spec) is not None
+            if component.spectral_grid(quad_spec=quad_spec) is not None
         ]
 
         # at most one component is allowed to have a spectral set
@@ -201,7 +201,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             )
 
         if len(components_with_spectral_set) == 1:
-            return components_with_spectral_set[0].spectral_set(quad_spec=quad_spec)
+            return components_with_spectral_set[0].spectral_grid(quad_spec=quad_spec)
 
         # Fall back
         return None

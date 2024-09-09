@@ -190,7 +190,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             absorption_data=self.absorption_data,
         )
 
-    def spectral_set(self, quad_spec: QuadSpec | None = None) -> None | SpectralSet:
+    def spectral_grid(self, quad_spec: QuadSpec | None = None) -> None | SpectralSet:
         if self.has_absorption:
             if eradiate.mode().is_mono:
                 return WavelengthSet.from_absorption_database(self.absorption_data)
