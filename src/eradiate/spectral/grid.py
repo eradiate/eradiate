@@ -13,6 +13,8 @@ from pinttrs.util import ensure_units
 
 import eradiate
 
+from . import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
+from .ckd_quad import CKDQuadConfig, CKDQuadPolicy
 from .response import BandSRF, DeltaSRF, SpectralResponseFunction, UniformSRF
 from .. import converters
 from ..attrs import define, documented
@@ -78,6 +80,13 @@ class SpectralGrid(ABC):
         -----
         The implementation of this method uses single dispatch based on the type
         of the ``srf`` parameter.
+        """
+        pass
+
+    @abstractmethod
+    def walk(self, **kwargs) -> t.Generator[SpectralIndex, None, None]:
+        """
+        A generator that yields a sequence of spectral index values.
         """
         pass
 
@@ -156,6 +165,11 @@ class MonoSpectralGrid(SpectralGrid):
         values = srf.eval(self.wavelengths)
         w_selected = self.wavelengths[values.m > 0.0]
         return MonoSpectralGrid(wavelengths=w_selected)
+
+    def walk(self) -> t.Generator[MonoSpectralIndex, None, None]:
+        # Inherit docstring
+        for w in self.wavelengths:
+            yield MonoSpectralIndex(w=w)
 
 
 @define(init=False)
@@ -341,3 +355,23 @@ class CKDSpectralGrid(SpectralGrid):
 
         # Build a new spectral grid that only contains selected bins
         return CKDSpectralGrid(self.wmins[selected], self.wmaxs[selected])
+
+    def walk(
+        self,
+        ckd_quad_config: CKDQuadConfig,
+        abs_db: CKDAbsorptionDatabase | None = None,
+    ) -> t.Generator[CKDSpectralIndex]:
+        # Inherit docstring
+
+        # Check parameter consistency
+        if ckd_quad_config.policy is not CKDQuadPolicy.FIXED and abs_db is None:
+            raise ValueError(
+                "while attempting CKD spectral grid walk with policy "
+                f"{ckd_quad_config.policy}: `abs_db` must be set (got None)"
+            )
+
+        # Walk the spectral dimension
+        for w in self.wcenters:
+            quad = ckd_quad_config.get_quad(abs_db, wcenter=w)
+            for g in quad.eval_nodes([0, 1]):
+                yield CKDSpectralIndex(w=w, g=g)
