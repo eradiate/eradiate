@@ -79,9 +79,9 @@ def config(
         integrator.moment if integrator is not None else False
     )
 
-    # Should we calculate the stokes vector?   
+    # Should we calculate the stokes vector?
     result["calculate_stokes"] = integrator.stokes if integrator is not None else False
-    
+
     if result["calculate_stokes"] and result["var_name"] != "radiance":
         logger.warning("Calculating stokes components on measures other than radiance.")
 

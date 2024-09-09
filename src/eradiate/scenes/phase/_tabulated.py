@@ -93,20 +93,23 @@ class TabulatedPhaseFunction(PhaseFunction):
     )
 
     _is_irregular: bool = attrs.field(default=False, init=False, repr=False)
-    _is_polarized: bool = attrs.field(default=False, init=False, repr=False)
+
+    @property
+    def has_polarized_data(self) -> bool:
+        return self.data.i.shape[0] == 4 or self.data.j.shape[0] == 4
+
+    @property
+    def is_polarized(self) -> bool:
+        return eradiate.mode().is_polarized and (
+            self.has_polarized_data or self.force_polarized_phase
+        )
 
     def __attrs_post_init__(self):
         # Check whether mu coordinate spacing is regular
         mu = self.data.mu.values
         dmu = mu[1:] - mu[:-1]
 
-        self._is_polarized = self.force_polarized_phase or (
-            eradiate.mode().is_polarized
-            and (self.data.i.shape[0] > 1 or self.data.j.shape[0] > 1)
-        )
-
-        # self._is_polarized = eradiate.mode().is_polarized
-        self._is_irregular = not np.allclose(dmu, dmu[0]) or self._is_polarized
+        self._is_irregular = not np.allclose(dmu, dmu[0]) or self.is_polarized
 
     @singledispatchmethod
     def eval(self, si: SpectralIndex, i, j) -> np.ndarray:
@@ -161,10 +164,6 @@ class TabulatedPhaseFunction(PhaseFunction):
         """
         w_units = self.data.w.attrs["units"]
 
-        # return default when phase matrix coefficient doesn't exist in data
-        if self.data.i.shape[0] - 1 < i or self.data.i.shape[0] - 1 < j:
-            return ""
-
         return (
             self.data.isel(i=i, j=j)
             .interp(
@@ -205,7 +204,7 @@ class TabulatedPhaseFunction(PhaseFunction):
         phase_function = "tabphase"
         values_name = "values"
 
-        if self._is_polarized:
+        if self.is_polarized:
             phase_function = "tabphase_polarized"
             values_name = "m11"
         else:
@@ -218,17 +217,28 @@ class TabulatedPhaseFunction(PhaseFunction):
                 lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 0))),
             ),
         }
+        print(f"is polarized: {self.is_polarized}")
+        print(f"has polarized data: {self.has_polarized_data}")
+        print(f"phase function: {phase_function}")
 
-        if self._is_polarized:
-            result["m12"] = InitParameter(
-                lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 1))),
-            )
-            result["m33"] = InitParameter(
-                lambda ctx: ",".join(map(str, self.eval(ctx.si, 2, 2))),
-            )
-            result["m34"] = InitParameter(
-                lambda ctx: ",".join(map(str, self.eval(ctx.si, 2, 3))),
-            )
+        if self.is_polarized:
+            if self.has_polarized_data:
+                result["m12"] = InitParameter(
+                    lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 1))),
+                )
+                result["m33"] = InitParameter(
+                    lambda ctx: ",".join(map(str, self.eval(ctx.si, 2, 2))),
+                )
+                result["m34"] = InitParameter(
+                    lambda ctx: ",".join(map(str, self.eval(ctx.si, 2, 3))),
+                )
+            else:
+                # case: no polarized data but forced polarized. Initialize the
+                # diagonal to have the same behaviour as with tabphase in
+                # polarized mode.
+                result["m33"] = InitParameter(
+                    lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 0))),
+                )
 
         if self._is_irregular:
             result["nodes"] = InitParameter(
@@ -241,7 +251,7 @@ class TabulatedPhaseFunction(PhaseFunction):
     def params(self) -> dict[str, UpdateParameter]:
         values_name = "values"
 
-        if eradiate.mode().is_polarized:
+        if self.is_polarized:
             values_name = "m11"
 
         result = {
@@ -251,18 +261,27 @@ class TabulatedPhaseFunction(PhaseFunction):
             )
         }
 
-        if eradiate.mode().is_polarized:
-            result["m12"] = UpdateParameter(
-                lambda ctx: self.eval(ctx.si, 0, 1),
-                UpdateParameter.Flags.SPECTRAL,
-            )
-            result["m33"] = UpdateParameter(
-                lambda ctx: self.eval(ctx.si, 2, 2),
-                UpdateParameter.Flags.SPECTRAL,
-            )
-            result["m34"] = UpdateParameter(
-                lambda ctx: self.eval(ctx.si, 2, 3),
-                UpdateParameter.Flags.SPECTRAL,
-            )
+        if self.is_polarized:
+            if self.has_polarized_data:
+                result["m12"] = UpdateParameter(
+                    lambda ctx: self.eval(ctx.si, 0, 1),
+                    UpdateParameter.Flags.SPECTRAL,
+                )
+                result["m33"] = UpdateParameter(
+                    lambda ctx: self.eval(ctx.si, 2, 2),
+                    UpdateParameter.Flags.SPECTRAL,
+                )
+                result["m34"] = UpdateParameter(
+                    lambda ctx: self.eval(ctx.si, 2, 3),
+                    UpdateParameter.Flags.SPECTRAL,
+                )
+            else:
+                # case: no polarized data but forced polarized. Initialize the
+                # diagonal to have the same behaviour as with tabphase in
+                # polarized mode.
+                result["m33"] = UpdateParameter(
+                    lambda ctx: self.eval(ctx.si, 0, 0),
+                    UpdateParameter.Flags.SPECTRAL,
+                )
 
         return result
