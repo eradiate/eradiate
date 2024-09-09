@@ -84,7 +84,7 @@ class HomogeneousAtmosphere(Atmosphere):
         # Inherit docstring
         self.phase.id = self.phase_id
 
-    def spectral_set(self, quad_spec: dict) -> None | BinSet | WavelengthSet:
+    def spectral_grid(self, quad_spec: dict) -> None | BinSet | WavelengthSet:
         return None
 
     # --------------------------------------------------------------------------

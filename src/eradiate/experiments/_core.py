@@ -20,7 +20,6 @@ from ..attrs import AUTO, define, documented
 from ..contexts import KernelContext, MultiGenerator
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
 from ..rng import SeedState
-from ..scenes.atmosphere import AbstractHeterogeneousAtmosphere
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
 from ..scenes.illumination import (
     AbstractDirectionalIllumination,
@@ -34,23 +33,18 @@ from ..scenes.measure import (
     MultiDistantMeasure,
     measure_factory,
 )
-from ..spectral.ckd import BinSet, QuadSpec
+from ..spectral.ckd import QuadSpec
+from ..spectral.grid import SpectralGrid
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
-from ..spectral.mono import WavelengthSet
 from ..units import unit_registry as ureg
 from ..util.misc import deduplicate_sorted, onedict_value
 
 logger = logging.getLogger(__name__)
 
 
-def _convert_spectral_set(value):
+def _convert_spectral_grid(value):
     if value is AUTO:
-        if eradiate.mode().is_ckd:
-            return BinSet.default()
-        elif eradiate.mode().is_mono:
-            return WavelengthSet.default()
-        else:
-            raise NotImplementedError(f"unsupported mode: {eradiate.mode().id}")
+        return SpectralGrid.default()
     else:
         return value
 
@@ -127,13 +121,11 @@ class Experiment(ABC):
         """
         return self._results
 
-    default_spectral_set: BinSet | WavelengthSet = documented(
+    default_spectral_grid: SpectralGrid = documented(
         attrs.field(
             default=AUTO,
-            validator=validators.auto_or(
-                attrs.validators.instance_of((BinSet, WavelengthSet))
-            ),
-            converter=_convert_spectral_set,
+            validator=validators.auto_or(attrs.validators.instance_of(SpectralGrid)),
+            converter=_convert_spectral_grid,
             repr=False,
         ),
         doc="Default spectral set. This attribute is used to set the "
@@ -148,14 +140,14 @@ class Experiment(ABC):
 
     # Mapping of measure index and WavelengthSet or BinSet depending on active
     # mode. This attribute is set by the '_normalize_spectral()' method.
-    _spectral_set = attrs.field(init=False, repr=False)
+    _spectral_grid = attrs.field(init=False, repr=False)
 
     @property
-    def spectral_set(self) -> dict[int, WavelengthSet | BinSet]:
+    def spectral_grid(self) -> dict[int, SpectralGrid]:
         """
         A dictionary mapping measure index to the associated spectral set.
         """
-        return self._spectral_set
+        return self._spectral_grid
 
     quad_spec: QuadSpec = attrs.field(
         factory=QuadSpec.default,
@@ -168,21 +160,19 @@ class Experiment(ABC):
 
     def _normalize_spectral(self) -> None:
         """
-        Setup spectral set based on active mode.
+        Assemble a spectral grid based on the various elements in the scene.
         """
-        # default value for spectral set
-        spectral_set = self.default_spectral_set
+        # Initialize with default
+        spectral_grid = self.default_spectral_grid
 
-        # if the atmosphere provides a spectral set, use it
+        # Override default with atmosphere-based grid if relevant
         atmosphere = getattr(self, "atmosphere", None)
-        if atmosphere and isinstance(atmosphere, AbstractHeterogeneousAtmosphere):
-            atmosphere_spectral_set = atmosphere.spectral_set(quad_spec=self.quad_spec)
-            if atmosphere_spectral_set is not None:
-                spectral_set = atmosphere_spectral_set
+        if atmosphere is not None and hasattr(atmosphere, "abs_db"):
+            spectral_grid = SpectralGrid.from_absorption_database(atmosphere.abs_db)
 
-        # finally, the spectral set is filtered by the SRF
-        self._spectral_set = {
-            i: measure.srf.select_in(spectral_set)
+        # Select subparts of the grid that are covered by the SRF
+        self._spectral_grid = {
+            i: spectral_grid.select(measure.srf)
             for i, measure in enumerate(self.measures)
         }
 
@@ -374,10 +364,10 @@ class EarthObservationExperiment(Experiment, ABC):
     def spectral_indices_mono(
         self, measure_index: int
     ) -> t.Generator[MonoSpectralIndex]:
-        yield from self.spectral_set[measure_index].spectral_indices()
+        yield from self.spectral_grid[measure_index].spectral_indices()
 
     def spectral_indices_ckd(self, measure_index: int) -> t.Generator[CKDSpectralIndex]:
-        yield from self.spectral_set[measure_index].spectral_indices()
+        yield from self.spectral_grid[measure_index].spectral_indices()
 
     def _spectral_index_generator(self):
         return MultiGenerator(
@@ -541,7 +531,7 @@ class EarthObservationExperiment(Experiment, ABC):
         measure = self.measures[i_measure]
         result = {
             "bitmaps": measure.mi_results,
-            "spectral_set": self.spectral_set[i_measure],
+            "spectral_set": self.spectral_grid[i_measure],
             "illumination": self.illumination,
             "srf": measure.srf,
         }

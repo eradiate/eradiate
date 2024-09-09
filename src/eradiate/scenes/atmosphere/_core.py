@@ -30,9 +30,8 @@ from ...kernel import (
 )
 from ...quad import Quad
 from ...radprops import ZGrid
-from ...spectral.ckd import BinSet, QuadSpec
+from ...spectral.ckd import QuadSpec
 from ...spectral.index import SpectralIndex
-from ...spectral.mono import WavelengthSet
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -147,27 +146,6 @@ class Atmosphere(CompositeSceneElement, ABC):
         -------
         .PhaseFunction
             Phase function associated with the atmosphere.
-        """
-        pass
-
-    # --------------------------------------------------------------------------
-    #                           Spectral set
-    # --------------------------------------------------------------------------
-
-    @abstractmethod
-    def spectral_set(self) -> None | BinSet | WavelengthSet:
-        """
-        The spectral set emitted by the atmosphere (optional).
-
-        Notes
-        -----
-        Typically, absorbing molecular atmosphere are characterized by an
-        absorption dataset which tabulates the absorption coefficient over
-        some spectral set, e.g. wavelengths, CKD bin, etc.
-        This property returns the spectral set associated with the absorption
-        dataset.
-        In experiments, the spectral set emitted by the atmosphere is given
-        the highest priority when creating the experiment's spectral set.
         """
         pass
 
@@ -696,10 +674,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         if quad_spec is None:
             quad_spec = QuadSpec.default()
 
-        w = self.spectral_set.wavelengths
+        w = self.spectral_grid.wavelengths
         wunits = symbol(ucc.get("wavelength"))
         transmittance = np.full(w.size, np.nan)
-        spectral_set = self.spectral_set(quad_spec=quad_spec)
+        spectral_set = self.spectral_grid(quad_spec=quad_spec)
         for i, si in enumerate(spectral_set.spectral_indices()):
             transmittance[i] = self.eval_transmittance(
                 si=si,
@@ -729,7 +707,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         if quad_spec is None:
             quad_spec = QuadSpec.default()
 
-        for si in self.spectral_set(quad_spec=quad_spec).spectral_indices():
+        for si in self.spectral_grid(quad_spec=quad_spec).spectral_indices():
             transmittance[si.as_hashable] = self.eval_transmittance(
                 si=si,
                 interaction=interaction,
@@ -741,7 +719,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         i = 0
 
         integrated = []
-        binset = self.spectral_set(quad_spec=quad_spec)
+        binset = self.spectral_grid(quad_spec=quad_spec)
         for _bin in binset.bins:
             ng = _bin.quad.weights.size  # number of quadrature g-points
             integrated.append(
@@ -752,7 +730,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             )
             i = i + ng
 
-        w = np.stack([bin.wcenter for bin in self.spectral_set().bins])
+        w = np.stack([bin.wcenter for bin in self.spectral_grid().bins])
         wunits = symbol(ucc.get("wavelength"))
 
         return xr.DataArray(

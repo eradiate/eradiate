@@ -14,14 +14,14 @@ from eradiate.spectral import CKDSpectralIndex
 
 def test_molecular_atmosphere_default_mono(mode_mono):
     atmosphere = MolecularAtmosphere()
-    si = atmosphere.spectral_set().spectral_indices().__next__()
+    si = atmosphere.spectral_grid().spectral_indices().__next__()
     template, _ = traverse(atmosphere)
     assert template.render(KernelContext(si=si))
 
 
 def test_molecular_atmosphere_default_ckd(mode_ckd):
     atmosphere = MolecularAtmosphere()
-    si = next(atmosphere.spectral_set().spectral_indices())
+    si = next(atmosphere.spectral_grid().spectral_indices())
     template, _ = traverse(atmosphere)
     assert template.render(KernelContext(si=si))
 
@@ -104,7 +104,7 @@ def test_molecular_atmosphere_switches(
         error_handler_config=absorption_database_error_handler_config,
     )
 
-    si = next(atmosphere.spectral_set().spectral_indices())
+    si = next(atmosphere.spectral_grid().spectral_indices())
     radprops = atmosphere.eval_radprops(si, optional_fields=True)
     npt.assert_allclose(radprops.sigma_s, 0.0)
 

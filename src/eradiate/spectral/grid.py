@@ -11,6 +11,8 @@ import pint
 import pinttrs
 from pinttrs.util import ensure_units
 
+import eradiate
+
 from .response import BandSRF, DeltaSRF, SpectralResponseFunction, UniformSRF
 from .. import converters
 from ..attrs import define, documented
@@ -34,6 +36,28 @@ class SpectralGrid(ABC):
         Convenience accessor to characteristic wavelengths of this spectral grid.
         """
         pass
+
+    @staticmethod
+    def default() -> SpectralGrid:
+        """
+        Generate a default spectral grid depending on the active mode.
+        """
+        if eradiate.mode().is_ckd:
+            return CKDSpectralGrid.default()
+        elif eradiate.mode().is_mono:
+            return MonoSpectralGrid.default()
+        else:
+            raise NotImplementedError(f"unsupported mode: {eradiate.mode().id}")
+
+    @staticmethod
+    def from_absorption_database(abs_db):
+        # TODO: Check if this is really acceptable design
+        if eradiate.mode().is_ckd:
+            return CKDSpectralGrid.from_absorption_database(abs_db)
+        elif eradiate.mode().is_mono:
+            return MonoSpectralGrid.from_absorption_database(abs_db)
+        else:
+            raise NotImplementedError(f"unsupported mode: {eradiate.mode().id}")
 
     @abstractmethod
     def select(self, srf: SpectralResponseFunction) -> SpectralGrid:
@@ -81,13 +105,13 @@ class MonoSpectralGrid(SpectralGrid):
     def wavelengths(self):
         return self._wavelengths
 
-    @classmethod
-    def default(cls) -> MonoSpectralGrid:
+    @staticmethod
+    def default() -> MonoSpectralGrid:
         """
-        Generate a default wavelength set that covers the default spectral range
-        with 1 nm spacing.
+        Generate a default monochromatic spectral grid that covers the default
+        spectral range with 1 nm spacing.
         """
-        return cls(
+        return MonoSpectralGrid(
             wavelengths=np.arange(
                 SPECTRAL_RANGE_MIN.m_as(ureg.nm),
                 SPECTRAL_RANGE_MAX.m_as(ureg.nm) + 0.1,
@@ -199,10 +223,47 @@ class CKDSpectralGrid(SpectralGrid):
         # Inherit docstring
         return self._wcenters
 
+    @staticmethod
+    def default() -> CKDSpectralGrid:
+        """
+        Generate a default CKD spectral that covers the default spectral range
+        with 10 nm spacing.
+        """
+        return CKDSpectralGrid.arange(
+            start=SPECTRAL_RANGE_MIN.m_as(ureg.nm),
+            stop=SPECTRAL_RANGE_MAX.m_as(ureg.nm) + 1.0,
+            step=10.0,
+        )
+
     @classmethod
     def arange(
-        cls, start: npt.ArrayLike, stop: npt.ArrayLike, step: float | pint.Quantity
+        cls,
+        start: float | pint.Quantity,
+        stop: float | pint.Quantity,
+        step: float | pint.Quantity,
     ) -> CKDSpectralGrid:
+        """
+        Generate a CKD spectral grid with equally-sized bins.
+
+        Parameters
+        ----------
+        start : quantity or float
+            Central wavelength of the first bin. If a unitless value is passed,
+            it is interpreted in default wavelength units (usually nm).
+
+        stop : quantity or float
+            Wavelength after which bin generation stops. If a unitless value is
+            passed, it is interpreted in default wavelength units (usually nm).
+
+        step : quantity or float
+            Spectral bin size. If a unitless value is passed, it is interpreted
+            in default wavelength units (usually nm).
+
+        Returns
+        -------
+        CKDSpectralGrid
+            Generated CKD spectral grid.
+        """
         w_u = ucc.get("wavelength")
         start_m = ensure_units(start, w_u).m_as(w_u)
         stop_m = ensure_units(stop, w_u).m_as(w_u)
@@ -215,13 +276,13 @@ class CKDSpectralGrid(SpectralGrid):
         return cls(wmins_m * w_u, wmaxs_m * w_u)
 
     @classmethod
-    def from_nodes(cls, wnodes: npt.ArrayLike):
+    def from_nodes(cls, wnodes: npt.ArrayLike) -> CKDSpectralGrid:
         wmins = wnodes[:-1]
         wmaxs = wnodes[1:]
         return cls(wmins=wmins, wmaxs=wmaxs)
 
     @classmethod
-    def from_absorption_database(cls, abs_db: CKDAbsorptionDatabase):
+    def from_absorption_database(cls, abs_db: CKDAbsorptionDatabase) -> CKDSpectralGrid:
         """
         Retrieve the spectral grid from a CKD absorption database.
         """
@@ -231,18 +292,6 @@ class CKDSpectralGrid(SpectralGrid):
         wmins = abs_db.spectral_coverage["wbound_lower [nm]"].values * ureg.nm
         wmaxs = abs_db.spectral_coverage["wbound_upper [nm]"].values * ureg.nm
         return cls(wmins, wmaxs)
-
-    @classmethod
-    def default(cls) -> CKDSpectralGrid:
-        """
-        Generate a default wavelength set that covers the default spectral range
-        with 1 nm spacing.
-        """
-        return cls.arange(
-            start=SPECTRAL_RANGE_MIN.m_as(ureg.nm),
-            stop=SPECTRAL_RANGE_MAX.m_as(ureg.nm) + 1.0,
-            step=10.0,
-        )
 
     @singledispatchmethod
     def select(self, srf: SpectralResponseFunction) -> CKDSpectralGrid:
