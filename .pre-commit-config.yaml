@@ -7,7 +7,9 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.1
+    rev: v0.6.4
+    # Important: If the version changes, do not forget to sync it with the
+    # linting CI workflow
     hooks:
       - id: ruff  # linter
         types_or: [ python, pyi, jupyter ]
