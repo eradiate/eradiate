@@ -14,6 +14,7 @@ from pinttrs.util import ensure_units
 from .response import BandSRF, DeltaSRF, SpectralResponseFunction, UniformSRF
 from .. import converters
 from ..attrs import define, documented
+from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
 from ..radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -79,6 +80,21 @@ class MonoSpectralGrid(SpectralGrid):
     @property
     def wavelengths(self):
         return self._wavelengths
+
+    @classmethod
+    def default(cls) -> MonoSpectralGrid:
+        """
+        Generate a default wavelength set that covers the default spectral range
+        with 1 nm spacing.
+        """
+        return cls(
+            wavelengths=np.arange(
+                SPECTRAL_RANGE_MIN.m_as(ureg.nm),
+                SPECTRAL_RANGE_MAX.m_as(ureg.nm) + 0.1,
+                1.0,
+            )
+            * ureg.nm
+        )
 
     @classmethod
     def from_absorption_database(cls, abs_db: MonoAbsorptionDatabase):
@@ -215,6 +231,18 @@ class CKDSpectralGrid(SpectralGrid):
         wmins = abs_db.spectral_coverage["wbound_lower [nm]"].values * ureg.nm
         wmaxs = abs_db.spectral_coverage["wbound_upper [nm]"].values * ureg.nm
         return cls(wmins, wmaxs)
+
+    @classmethod
+    def default(cls) -> CKDSpectralGrid:
+        """
+        Generate a default wavelength set that covers the default spectral range
+        with 1 nm spacing.
+        """
+        return cls.arange(
+            start=SPECTRAL_RANGE_MIN.m_as(ureg.nm),
+            stop=SPECTRAL_RANGE_MAX.m_as(ureg.nm) + 1.0,
+            step=10.0,
+        )
 
     @singledispatchmethod
     def select(self, srf: SpectralResponseFunction) -> CKDSpectralGrid:
