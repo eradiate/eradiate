@@ -14,9 +14,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
+        # Important: If the version changes, do not forget to sync it with the
+        # pre-commit hook
         run: |
           python -m pip install --upgrade pip
-          pip install ruff
+          pip install "ruff==0.6.4"
       - name: Lint
         run: ruff check --output-format=github
       - name: Format
