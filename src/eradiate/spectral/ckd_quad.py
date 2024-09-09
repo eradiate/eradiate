@@ -4,10 +4,12 @@ import enum
 import warnings
 
 import attrs
+import pint
 import xarray as xr
 
-from ..attrs import define
+from ..attrs import documented, frozen
 from ..quad import Quad, QuadType
+from ..radprops import CKDAbsorptionDatabase
 
 
 class CKDQuadPolicy(enum.Enum):
@@ -16,13 +18,68 @@ class CKDQuadPolicy(enum.Enum):
     ERROR_THRESHOLD = "error_threshold"
 
 
-@define
+@frozen
 class CKDQuadConfig:
-    type: QuadType = attrs.field(default="gauss_legendre", converter=QuadType)
-    ng_max: int = attrs.field(default=16, converter=int)
-    policy: CKDQuadPolicy = attrs.field(default="fixed", converter=CKDQuadPolicy)
+    """
+    This class holds configuration parameters for a CKD quadrature rule. Once
+    the quadrature definition is set, it can query an absorption database to
+    generate a quadrature rule for a specified spectral bin using its
+    :meth:`.get_quad` method.
+    """
 
-    def get_quad(self, abs_db=None, wcenter=None):
+    type: QuadType = documented(
+        attrs.field(default="gauss_legendre", converter=QuadType),
+        doc="Quadrature type.",
+        type=".QuadType",
+        init_type=".QuadType or str",
+        default='"gauss_legendre"',
+    )
+
+    ng_max: int = documented(
+        attrs.field(default=16, converter=int),
+        doc="Maximum number of quadrature points.",
+        type="int",
+        default="16",
+    )
+
+    policy: CKDQuadPolicy = documented(
+        attrs.field(default="fixed", converter=CKDQuadPolicy),
+        doc="Quadrature definition policy.",
+        type=".CKDQuadPolicy",
+        init_type=".CKDQuadPolicy or str",
+        default="fixed",
+    )
+
+    @classmethod
+    def convert(self, value) -> CKDQuadConfig:
+        if isinstance(value, dict):
+            return CKDQuadConfig(**value)
+        else:
+            return value
+
+    def get_quad(
+        self,
+        abs_db: CKDAbsorptionDatabase | None = None,
+        wcenter: pint.Quantity | float | None = None,
+    ):
+        """
+        Generate a quadrature rule for a specific bin, using information from a
+        specified molecular absorption database.
+
+        Parameters
+        ----------
+        abs_db : .CKDAbsorptionDatabase, optional
+            An absorption database with a transmittance error variable.
+
+        wcenter : quantity or float, optional
+            The central wavelength of the spectral bin for which the quadrature
+            rule is requested. Unitless values are interpreted in default
+            wavelength units (generally nm).
+
+        Returns
+        -------
+        .CKDQuad
+        """
         if abs_db is None:
             # If no spectral information is passed, use default policy
             ng = self.ng_max
