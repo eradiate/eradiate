@@ -33,7 +33,7 @@ from ..scenes.measure import (
     MultiDistantMeasure,
     measure_factory,
 )
-from ..spectral.ckd import QuadSpec
+from ..spectral.ckd_quad import CKDQuadConfig
 from ..spectral.grid import SpectralGrid
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_registry as ureg
@@ -121,38 +121,38 @@ class Experiment(ABC):
         """
         return self._results
 
-    default_spectral_grid: SpectralGrid = documented(
+    _default_spectral_grid: SpectralGrid = documented(
         attrs.field(
             default=AUTO,
             validator=validators.auto_or(attrs.validators.instance_of(SpectralGrid)),
             converter=_convert_spectral_grid,
             repr=False,
         ),
-        doc="Default spectral set. This attribute is used to set the "
-        "default value for :attr:`spectral_set`."
-        "If the value is :data:`AUTO`, the default spectral set is selected "
-        "based on the active mode. Otherwise, the value must be a "
-        ":class:`.BinSet` or :class:`.WavelengthSet` instance.",
-        type=":class:`.BinSet` or :class:`.WavelengthSet`",
-        init_type=":class:`.BinSet` or :class:`.WavelengthSet` or :data:`AUTO`",
-        default=":data:`AUTO`",
+        doc="Default spectral grid. This attribute is used to set the "
+        "default value for :attr:`_spectral_grid`. "
+        "If the value is :data:`AUTO`, the default spectral grid is "
+        "automatically generated based on the active mode. Otherwise, the "
+        "value must be a :class:`.SpectralGrid` instance.",
+        type=".SpectralGrid",
+        init_type=".SpectralGrid or .AUTO",
+        default=".AUTO",
     )
 
-    # Mapping of measure index and WavelengthSet or BinSet depending on active
-    # mode. This attribute is set by the '_normalize_spectral()' method.
-    _spectral_grid = attrs.field(init=False, repr=False)
+    # Grid used to walk the spectral dimension.
+    # This attribute is set by the '_normalize_spectral()' method.
+    _spectral_grid: dict[int, SpectralGrid] = attrs.field(init=False, repr=False)
 
     @property
     def spectral_grid(self) -> dict[int, SpectralGrid]:
         """
-        A dictionary mapping measure index to the associated spectral set.
+        A dictionary mapping measure index to the associated spectral grid.
         """
         return self._spectral_grid
 
-    quad_spec: QuadSpec = attrs.field(
-        factory=QuadSpec.default,
-        converter=QuadSpec.convert,
-        validator=attrs.validators.instance_of(QuadSpec),
+    quad_spec: CKDQuadConfig = attrs.field(
+        factory=CKDQuadConfig,
+        converter=CKDQuadConfig.convert,
+        validator=attrs.validators.instance_of(CKDQuadConfig),
     )
 
     def __attrs_post_init__(self):
@@ -163,7 +163,7 @@ class Experiment(ABC):
         Assemble a spectral grid based on the various elements in the scene.
         """
         # Initialize with default
-        spectral_grid = self.default_spectral_grid
+        spectral_grid = self._default_spectral_grid
 
         # Override default with atmosphere-based grid if relevant
         atmosphere = getattr(self, "atmosphere", None)

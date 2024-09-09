@@ -1,6 +1,10 @@
 import numpy as np
 import pytest
+
+from eradiate.quad import Quad
 from eradiate.radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
+from eradiate.spectral import CKDSpectralIndex
+from eradiate.spectral.ckd_quad import CKDQuadConfig
 from eradiate.spectral.grid import CKDSpectralGrid, MonoSpectralGrid
 from eradiate.spectral.response import BandSRF, DeltaSRF, UniformSRF
 from eradiate.units import unit_registry as ureg
@@ -106,6 +110,13 @@ def test_mono_spectral_grid_select_band_srf(band_srf_kwargs, expected_selected_w
 def test_mono_spectral_grid_default():
     grid = MonoSpectralGrid.default()
     np.testing.assert_allclose(grid.wavelengths.m, np.arange(280.0, 2401.0, 1.0))
+
+
+def test_mono_spectral_grid_walk():
+    grid = MonoSpectralGrid([300, 400, 500])
+    np.testing.assert_allclose(
+        [x.w.m_as("nm") for x in grid.walk()], grid.wavelengths.m
+    )
 
 
 def test_ckd_spectral_grid_construct():
@@ -244,9 +255,20 @@ def test_ckd_grid_select_band_srf(band_srf_kwargs, expected_selected_wcenters):
     np.testing.assert_allclose(grid_selected.wcenters.m, expected_selected_wcenters.m)
 
 
-def test_ckd_spectral_grid_default():
-    grid = CKDSpectralGrid.default()
-    expected_wcenters = np.arange(280.0, 2401.0, 10.0)
-    np.testing.assert_allclose(grid.wcenters.m, expected_wcenters)
-    np.testing.assert_allclose(grid.wmins.m, expected_wcenters - 5.0)
-    np.testing.assert_allclose(grid.wmaxs.m, expected_wcenters + 5.0)
+def test_ckd_grid_walk():
+    grid = CKDSpectralGrid.arange(540, 560, 10)
+    cqc = CKDQuadConfig(type="gauss_legendre", ng_max=4, policy="fixed")
+    expected_gs = Quad.gauss_legendre(4).eval_nodes([0, 1])
+
+    expected_sequence = [
+        CKDSpectralIndex(w, g) for w in grid.wcenters for g in expected_gs
+    ]
+    actual_sequence = list(grid.walk(cqc))
+
+    np.testing.assert_allclose(
+        [x.w.m_as("nm") for x in actual_sequence],
+        [x.w.m_as("nm") for x in expected_sequence],
+    )
+    np.testing.assert_allclose(
+        [x.g for x in actual_sequence], [x.g for x in expected_sequence]
+    )
