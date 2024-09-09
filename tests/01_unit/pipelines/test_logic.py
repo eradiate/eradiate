@@ -27,7 +27,7 @@ from eradiate.units import unit_registry as ureg
 # chains the operations that are unit-tested.
 
 
-@pytest.fixture(params=["mono", "ckd"])
+@pytest.fixture(params=["mono", "ckd", "mono_polarized", "ckd_polarized"])
 def mode_id(request):
     # This fixture parametrizes the `experiment` fixture against the selected
     # mode
@@ -81,6 +81,11 @@ def experiment(mode, srf, measure):
             "srf": srf_dict,
         },
     )
+
+    var_name, _ = exp.measures[0].var
+    exp.integrator.stokes = mode.is_polarized and var_name == "radiance"
+    exp.integrator.moment = True
+
     exp.process()
     return exp
 
@@ -114,11 +119,15 @@ def raw_results(experiment):
 def gather_bitmaps(mode, experiment, raw_results, viewing_angles, solar_angles):
     # Apply the `gather_bitmaps` pipeline step and return the results
     var_name, var_metadata = experiment.measures[0].var
+    calculate_stokes = mode.is_polarized and var_name == "radiance"
+    gather_variance = experiment.integrator.moment
+
     return logic.gather_bitmaps(
         mode_id=mode.id,
         var_name=var_name,
         var_metadata=var_metadata,
-        gather_variance=False,
+        gather_variance=gather_variance,
+        calculate_stokes=calculate_stokes,
         bitmaps=raw_results,
         viewing_angles=viewing_angles,
         solar_angles=solar_angles,
@@ -126,14 +135,39 @@ def gather_bitmaps(mode, experiment, raw_results, viewing_angles, solar_angles):
 
 
 @pytest.fixture
+def moment2_to_variance(experiment, gather_bitmaps):
+    var_name, _ = experiment.measures[0].var
+
+    results_raw = gather_bitmaps[f"{var_name}_raw"]
+    m2_raw = gather_bitmaps[f"{var_name}_m2_raw"]
+    spp = gather_bitmaps["spp"]
+
+    return logic.moment2_to_variance(results_raw, m2_raw, spp)
+
+
+@pytest.fixture
 def aggregate_ckd_quad(mode, experiment, gather_bitmaps):
     var_name = experiment.measures[0].var[0]
     results_raw = gather_bitmaps[f"{var_name}_raw"]
+    calculate_variance = False
+
     return logic.aggregate_ckd_quad(
         mode_id=mode.id,
         raw_data=results_raw,
         spectral_set=experiment.spectral_set[0],
-        is_variance=False,
+        is_variance=calculate_variance,
+    )
+
+
+@pytest.fixture
+def aggregate_ckd_quad_var(mode, experiment, moment2_to_variance):
+    calculate_variance = True
+
+    return logic.aggregate_ckd_quad(
+        mode_id=mode.id,
+        raw_data=moment2_to_variance,
+        spectral_set=experiment.spectral_set[0],
+        is_variance=calculate_variance,
     )
 
 
@@ -148,9 +182,9 @@ def apply_spectral_response(mode, measure, experiment, aggregate_ckd_quad):
 # ------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("mode_id", ["ckd"])
+@pytest.mark.parametrize("mode_id", ["ckd", "ckd_polarized"])
 @pytest.mark.parametrize("measure", ["hemispherical_distant"])
-def test_aggregate_ckd_quad(experiment, gather_bitmaps, aggregate_ckd_quad):
+def test_aggregate_ckd_quad(mode, experiment, gather_bitmaps, aggregate_ckd_quad):
     var_name = experiment.measures[0].var[0]
     raw = gather_bitmaps[f"{var_name}_raw"]
     result = aggregate_ckd_quad
@@ -167,7 +201,33 @@ def test_aggregate_ckd_quad(experiment, gather_bitmaps, aggregate_ckd_quad):
 
     # Variable checks
     # -- In the present case, the quadrature evaluates to 2/π
-    assert np.allclose(result.values, 2.0 / np.pi)
+    if not mode.is_polarized:
+        assert np.allclose(result.values, 2.0 / np.pi)
+    else:
+        assert np.allclose(result.sel(stokes="I").values, 2.0 / np.pi)
+
+    # -- Metadata of the variable for which aggregation is performed are copied
+    assert result.attrs == raw.attrs
+
+
+@pytest.mark.parametrize("mode_id", ["ckd", "ckd_polarized"])
+@pytest.mark.parametrize("measure", ["hemispherical_distant"])
+def test_aggregate_ckd_quad_var(experiment, gather_bitmaps, aggregate_ckd_quad_var):
+    var_name = experiment.measures[0].var[0]
+    raw = gather_bitmaps[f"{var_name}_m2_raw"]
+    result = aggregate_ckd_quad_var
+
+    # Dimension checks
+    expected_dims = set(raw.dims) - {"g"}
+    assert set(result.dims) == expected_dims
+
+    # Coordinate checks
+    expected_coords = (set(raw.coords) - {"g"}) | {"bin_wmin", "bin_wmax"}
+    assert set(result.coords) == expected_coords
+    assert result.bin_wmin.dims == ("w",)
+    assert result.bin_wmax.dims == ("w",)
+
+    # Variable checks
     # -- Metadata of the variable for which aggregation is performed are copied
     assert result.attrs == raw.attrs
 
@@ -261,7 +321,12 @@ def test_extract_irradiance(
 @pytest.mark.parametrize("measure", ["hemispherical_distant"])
 def test_gather_bitmaps(mode, gather_bitmaps):
     # Routine creates the variables we expect
-    expected_variables = {"radiance_m2_raw", "spp", "radiance_raw", "weights_raw"}
+    expected_variables = {
+        "spp",
+        "radiance_raw",
+        "radiance_m2_raw",
+        "weights_raw",
+    }
     assert set(gather_bitmaps.keys()) == expected_variables
 
     # Each variable has the dimensions we expect
@@ -276,8 +341,15 @@ def test_gather_bitmaps(mode, gather_bitmaps):
     solar_angle_sizes = {"sza": 1, "saa": 1}
     film_sizes = {"y_index": 32, "x_index": 32}
     all_sizes = {**spectral_sizes, **film_sizes, **solar_angle_sizes}
+    if mode.is_polarized:
+        all_sizes["stokes"] = 4
 
-    expected_sizes = {"spp": spectral_sizes, "radiance_raw": all_sizes}
+    expected_sizes = {
+        "spp": spectral_sizes,
+        "radiance_raw": all_sizes,
+        "radiance_m2_raw": all_sizes,
+    }
+
     for var, da in gather_bitmaps.items():  # noqa: F402
         if da is None:
             continue
@@ -286,8 +358,14 @@ def test_gather_bitmaps(mode, gather_bitmaps):
             f"got '{da.sizes}'"
         )
 
-    # Check radiance values
-    assert np.allclose(gather_bitmaps["radiance_raw"].values, 2.0 / np.pi)
+    if mode.is_polarized:
+        # Check radiance values
+        assert np.allclose(
+            gather_bitmaps["radiance_raw"].sel(stokes="I").values, 2.0 / np.pi
+        )
+    else:
+        # Check radiance values
+        assert np.allclose(gather_bitmaps["radiance_raw"].values, 2.0 / np.pi)
 
 
 @pytest.mark.parametrize("measure", ["distant_flux"])
@@ -298,7 +376,6 @@ def test_radiosity(mode, gather_bitmaps):
 
     # Configure and apply step
     result = logic.radiosity(sector_radiosity=sector_radiosity)
-
     # Check that radiosity dimensions are correct
     assert not {"x_index", "y_index"}.issubset(result.dims)
     # This setup conserves energy
@@ -312,3 +389,18 @@ def test_viewing_angles(experiment):
     result = logic.viewing_angles(experiment.measures[0].viewing_angles)
     assert isinstance(result, xr.Dataset)
     assert set(result.data_vars) == {"vaa", "vza"}
+
+
+@pytest.mark.parametrize("mode_id", ["mono_polarized", "ckd_polarized"])
+@pytest.mark.parametrize("measure", ["hemispherical_distant"])
+@pytest.mark.parametrize("srf", ["multi_delta"])
+def test_degree_of_linear_polarization(mode, aggregate_ckd_quad):
+    result = logic.degree_of_linear_polarization(aggregate_ckd_quad)
+
+    # Each variable has the dimensions we expect
+    spectral_sizes = {"w": 1}
+    solar_angle_sizes = {"sza": 1, "saa": 1}
+    film_sizes = {"y_index": 32, "x_index": 32}
+    expected_size = {**spectral_sizes, **film_sizes, **solar_angle_sizes}
+    assert isinstance(result, xr.DataArray)
+    assert result.sizes == expected_size

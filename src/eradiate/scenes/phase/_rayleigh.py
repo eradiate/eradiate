@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import attrs
 
 import eradiate
 
 from ._core import PhaseFunction
-from ...attrs import parse_docs
+from ...attrs import documented, parse_docs
 
 
 @parse_docs
@@ -18,10 +20,26 @@ class RayleighPhaseFunction(PhaseFunction):
     atmosphere.
     """
 
+    depolarization: float | None = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(float),
+        ),
+        doc="The ratio of intensities parallel and perpendicular to the"
+        "plane of scattering for light scattered at 90 deg. Only relevant"
+        "when using a polarization mode.",
+        type="float or None",
+        init_type="float, optional",
+        default="None",
+    )
+
     @property
     def template(self) -> dict:
         phase_function = "rayleigh"
         if eradiate.mode().is_polarized:
             phase_function = "rayleigh_polarized"
 
-        return {"type": phase_function}
+        result = {"type": phase_function}
+        if self.depolarization is not None:
+            result["depolarization"] = self.depolarization
+        return result
