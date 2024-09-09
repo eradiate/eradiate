@@ -93,14 +93,14 @@ def experiment(mode, srf, measure):
 @pytest.fixture
 def irradiance(mode_id, experiment):
     return logic.extract_irradiance(
-        mode_id, experiment.illumination, experiment.spectral_set[0]
+        mode_id, experiment.illumination, experiment.spectral_grid[0]
     )["irradiance"]
 
 
 @pytest.fixture
 def solar_angles(mode_id, experiment):
     return logic.extract_irradiance(
-        mode_id, experiment.illumination, experiment.spectral_set[0]
+        mode_id, experiment.illumination, experiment.spectral_grid[0]
     )["solar_angles"]
 
 
@@ -154,7 +154,7 @@ def aggregate_ckd_quad(mode, experiment, gather_bitmaps):
     return logic.aggregate_ckd_quad(
         mode_id=mode.id,
         raw_data=results_raw,
-        spectral_set=experiment.spectral_set[0],
+        spectral_set=experiment.spectral_grid[0],
         is_variance=calculate_variance,
     )
 

@@ -37,7 +37,7 @@ def test_heterogeneous_single_mono(
             geometry=geometry,
             molecular_atmosphere=atmosphere_us_standard_mono,
         )
-        si = atmosphere.spectral_set().spectral_indices().__next__()
+        si = atmosphere.spectral_grid().spectral_indices().__next__()
         kernel_context = KernelContext(si=si)
 
     else:
@@ -73,7 +73,7 @@ def test_heterogeneous_single_ckd(
         )
 
     # The scene element produces valid kernel dictionary specifications
-    spectral_set = atmosphere.spectral_set()
+    spectral_set = atmosphere.spectral_grid()
     if spectral_set is not None:
         si = list(spectral_set.spectral_indices())[0]
     else:
@@ -96,7 +96,7 @@ def test_heterogeneous_multi_mono(mode_mono, geometry, atmosphere_us_standard_mo
     )
 
     # particles phae function is tabulated for wavelengths starting at 350 nm
-    for si in atmosphere.spectral_set().spectral_indices():
+    for si in atmosphere.spectral_grid().spectral_indices():
         if si.w.m > 350:
             break
     kernel_context = KernelContext(si=si)
@@ -308,7 +308,7 @@ def test_heterogeneous_scale(mode_mono, atmosphere_us_standard_mono):
     assert template["medium_atmosphere.scale"] == 2.0
 
     # particles phae function is tabulated for wavelengths starting at 350 nm
-    for si in atmosphere.spectral_set().spectral_indices():
+    for si in atmosphere.spectral_grid().spectral_indices():
         if si.w.m > 350:
             break
 
