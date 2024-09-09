@@ -113,8 +113,9 @@ variant_groups = {
     "all_mono_ckd": [
         x for x in variants if (x.startswith("mono") or x.startswith("ckd"))
     ],
-    "all_single": [x for x in variants if x.endswith("single")],
-    "all_double": [x for x in variants if x.endswith("double")],
+    "all_single": [x for x in variants if "single" in x],
+    "all_double": [x for x in variants if "double" in x],
+    "all_polarized": [x for x in variants if "polarized" in x],
     "all": variants,
 }
 
