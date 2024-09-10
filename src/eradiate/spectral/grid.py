@@ -21,7 +21,7 @@ from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
 from ..radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
-from ..util.misc import summary_repr_quantity
+from ..util.misc import summary_repr
 
 # ------------------------------------------------------------------------------
 #                             Class implementations
@@ -102,7 +102,7 @@ class MonoSpectralGrid(SpectralGrid):
                 converters.on_quantity(np.unique),
                 converters.on_quantity(np.sort),
             ],
-            repr=summary_repr_quantity,
+            repr=summary_repr,
         ),
         doc="Wavelengths.",
         type="quantity",
@@ -174,7 +174,7 @@ class MonoSpectralGrid(SpectralGrid):
 @define(init=False)
 class CKDSpectralGrid(SpectralGrid):
     wmins: pint.Quantity = documented(
-        pinttrs.field(units=ucc.deferred("wavelength"), repr=summary_repr_quantity),
+        pinttrs.field(units=ucc.deferred("wavelength"), repr=summary_repr),
         doc="Lower bound of all bins. Unitless values are interpreted as default "
         "wavelength config units.",
         type="quantity",
@@ -182,7 +182,7 @@ class CKDSpectralGrid(SpectralGrid):
     )
 
     wmaxs: pint.Quantity = documented(
-        pinttrs.field(units=ucc.deferred("wavelength"), repr=summary_repr_quantity),
+        pinttrs.field(units=ucc.deferred("wavelength"), repr=summary_repr),
         doc="Upper bound of all bins. Unitless values are interpreted as default "
         "wavelength config units.",
         type="quantity",
@@ -190,7 +190,7 @@ class CKDSpectralGrid(SpectralGrid):
     )
 
     wcenters: pint.Quantity = documented(
-        pinttrs.field(units=ucc.deferred("wavelength"), repr=summary_repr_quantity),
+        pinttrs.field(units=ucc.deferred("wavelength"), repr=summary_repr),
         doc="Central wavelength of all bins. Unitless values are interpreted as "
         "default wavelength config units. "
         "If unset, bin centers are computed automatically from bin bounds. "
