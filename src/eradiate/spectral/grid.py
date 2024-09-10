@@ -4,7 +4,6 @@ import typing as t
 from abc import ABC, abstractmethod
 from functools import singledispatchmethod
 
-import attrs
 import numpy as np
 import numpy.typing as npt
 import pint
@@ -190,14 +189,26 @@ class CKDSpectralGrid(SpectralGrid):
         init_type="quantity or array-like",
     )
 
-    _wcenters: pint.Quantity = documented(
-        attrs.field(init=False, repr=summary_repr_quantity)
+    wcenters: pint.Quantity = documented(
+        pinttrs.field(units=ucc.deferred("wavelength"), repr=summary_repr_quantity),
+        doc="Central wavelength of all bins. Unitless values are interpreted as "
+        "default wavelength config units. "
+        "If unset, bin centers are computed automatically from bin bounds. "
+        "Bin centers are allowed to be different from the middle of the bin "
+        "interval and, when the grid is tied to a database, are expected to "
+        "match the values of the wavelength coordinate in the database. However, "
+        "this is considered as a workaround to deal with poorly indexed databases, "
+        "and users should try to set central wavelengths to the middle of spectral "
+        "bins.",
+        type="quantity, optional",
+        init_type="quantity or array-like",
     )
 
     def __init__(
         self,
         wmins: npt.ArrayLike,
         wmaxs: npt.ArrayLike,
+        wcenters: npt.ArrayLike | None = None,
         fix_bounds: bool | t.Literal["keep_min", "keep_max"] = "keep_min",
         epsilon: float = 1e-6,
     ):
@@ -220,18 +231,12 @@ class CKDSpectralGrid(SpectralGrid):
                     f"(min: {wmins_m[1:][fix_locations]}; max: {wmaxs_m[:-1][fix_locations]}"
                 )
 
-        # Finally initialize the object
-        self.__attrs_init__(wmins_m * w_u, wmaxs_m * w_u)
+        # Define bin centers if necessary
+        if wcenters is None:
+            wcenters = 0.5 * (wmins_m + wmaxs_m) * w_u
 
-    def __attrs_post_init__(self):
-        self._wcenters = 0.5 * (self.wmins + self.wmaxs)
-
-    @property
-    def wcenters(self):
-        """
-        Central wavelength of all bins.
-        """
-        return self._wcenters
+        # Initialize the object
+        self.__attrs_init__(wmins_m * w_u, wmaxs_m * w_u, wcenters)
 
     def wavelengths(self):
         # Inherit docstring
@@ -287,7 +292,7 @@ class CKDSpectralGrid(SpectralGrid):
         wmins_m = wcenters_m - 0.5 * width_m
         wmaxs_m = wcenters_m + 0.5 * width_m
 
-        return cls(wmins_m * w_u, wmaxs_m * w_u)
+        return cls(wmins_m * w_u, wmaxs_m * w_u, wcenters_m * w_u)
 
     @classmethod
     def from_nodes(cls, wnodes: npt.ArrayLike) -> CKDSpectralGrid:
@@ -305,7 +310,8 @@ class CKDSpectralGrid(SpectralGrid):
 
         wmins = abs_db.spectral_coverage["wbound_lower [nm]"].values * ureg.nm
         wmaxs = abs_db.spectral_coverage["wbound_upper [nm]"].values * ureg.nm
-        return cls(wmins, wmaxs)
+        wcenters = abs_db.spectral_coverage.index.get_level_values(1).values * ureg.nm
+        return cls(wmins, wmaxs, wcenters)
 
     @singledispatchmethod
     def select(self, srf: SpectralResponseFunction) -> CKDSpectralGrid:
