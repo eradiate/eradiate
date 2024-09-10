@@ -16,6 +16,7 @@ from . import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from .ckd_quad import CKDQuadConfig, CKDQuadPolicy
 from .response import BandSRF, DeltaSRF, SpectralResponseFunction, UniformSRF
 from .. import converters
+from .._mode import SubtypeDispatcher
 from ..attrs import define, documented
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
 from ..radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
@@ -30,6 +31,8 @@ from ..util.misc import summary_repr
 
 @define
 class SpectralGrid(ABC):
+    subtypes = SubtypeDispatcher()
+
     @property
     @abstractmethod
     def wavelengths(self):
@@ -43,12 +46,8 @@ class SpectralGrid(ABC):
         """
         Generate a default spectral grid depending on the active mode.
         """
-        if eradiate.mode().is_ckd:
-            return CKDSpectralGrid.default()
-        elif eradiate.mode().is_mono:
-            return MonoSpectralGrid.default()
-        else:
-            raise NotImplementedError(f"unsupported mode: {eradiate.mode().id}")
+        cls = SpectralGrid.subtypes.resolve()
+        return cls.default()
 
     @staticmethod
     def from_absorption_database(abs_db):
@@ -90,6 +89,7 @@ class SpectralGrid(ABC):
         pass
 
 
+@SpectralGrid.subtypes.register("mono")
 @define
 class MonoSpectralGrid(SpectralGrid):
     _wavelengths: pint.Quantity = documented(
@@ -171,6 +171,7 @@ class MonoSpectralGrid(SpectralGrid):
             yield MonoSpectralIndex(w=w)
 
 
+@SpectralGrid.subtypes.register("ckd")
 @define(init=False)
 class CKDSpectralGrid(SpectralGrid):
     wmins: pint.Quantity = documented(

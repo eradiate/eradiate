@@ -2,11 +2,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.spectral.index import (
-    CKDSpectralIndex,
-    MonoSpectralIndex,
-    SpectralIndex,
-)
+from eradiate.spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 
 
 def test_spectral_index_new(modes_all):
