@@ -34,12 +34,9 @@ import attrs
 import pint
 import pinttr
 
-import eradiate
-
 from .. import validators
-from .._mode import SpectralMode
+from .._mode import SpectralMode, SubtypeDispatcher
 from ..attrs import define, documented
-from ..exceptions import ModeError
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
@@ -53,6 +50,8 @@ class SpectralIndex(ABC):
     --------
     :class:`.MonoSpectralIndex`, :class:`.CKDSpectralIndex`
     """
+
+    subtypes = SubtypeDispatcher()
 
     @property
     @abstractmethod
@@ -100,19 +99,8 @@ class SpectralIndex(ABC):
         --------
         :class:`.MonoSpectralIndex`, :class:`.CKDSpectralIndex`
         """
-        if mode is None:
-            return SpectralIndex.new(eradiate.mode().spectral_mode, **kwargs)
-
-        if isinstance(mode, str):
-            mode = SpectralMode[mode.upper()]
-
-        try:
-            si_cls = SPECTRAL_MODE_DISPATCH[mode]
-            return si_cls(**kwargs)
-        except KeyError as e:
-            raise ModeError(
-                f"Spectral mode {mode} has no registered spectral index type."
-            ) from e
+        si_cls = SpectralIndex.subtypes.resolve(mode)
+        return si_cls(**kwargs)
 
     @staticmethod
     def from_dict(d: dict[str, t.Any]) -> SpectralIndex:
@@ -129,6 +117,7 @@ class SpectralIndex(ABC):
             raise ValueError(f"Cannot convert {value} to a spectral index.")
 
 
+@SpectralIndex.subtypes.register("mono")
 @define(eq=False, frozen=True, slots=True)
 class MonoSpectralIndex(SpectralIndex):
     """
@@ -168,6 +157,7 @@ class MonoSpectralIndex(SpectralIndex):
         return float(self.w.m_as(ureg.nm))
 
 
+@SpectralIndex.subtypes.register("ckd")
 @define(eq=False, frozen=True, slots=True)
 class CKDSpectralIndex(SpectralIndex):
     """
@@ -223,10 +213,3 @@ class CKDSpectralIndex(SpectralIndex):
     @property
     def as_hashable(self) -> t.Tuple[float, float]:
         return (float(self.w.m_as(ureg.nm)), self.g)
-
-
-#: Mapping of spectral modes to spectral index classes.
-SPECTRAL_MODE_DISPATCH: dict[SpectralMode, SpectralIndex] = {
-    SpectralMode.MONO: MonoSpectralIndex,
-    SpectralMode.CKD: CKDSpectralIndex,
-}
