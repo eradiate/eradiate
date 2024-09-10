@@ -7,6 +7,7 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.util.misc import (
+    MultiGenerator,
     Singleton,
     cache_by_id,
     camel_to_snake,
@@ -145,3 +146,15 @@ def test_cache_by_id(capsys):
     assert obj.f(1, 2) == (1, 2)
     captured = capsys.readouterr()
     assert captured.out == ""
+
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        ([range(5), range(10)], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+        ([[0, 1, 2, 3, 0, 2, 1], [0, 1, 2, 3, 0, 2, 1, 4]], [0, 1, 2, 3, 4]),
+        ([[3, 0, 2, 1], [0, 4, 2, 0, 1, 4]], [3, 0, 2, 1, 4]),
+    ],
+)
+def test_multi_generator(input, expected):
+    assert list(MultiGenerator(input)) == expected
