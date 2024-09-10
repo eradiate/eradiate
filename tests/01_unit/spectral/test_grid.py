@@ -122,11 +122,11 @@ def test_mono_spectral_grid_walk():
 def test_ckd_spectral_grid_construct():
     # Regular constructor
     grid = CKDSpectralGrid([495, 505], [505, 515])
-    np.testing.assert_array_equal(grid._wcenters.m_as("nm"), [500, 510])
+    np.testing.assert_array_equal(grid.wcenters.m_as("nm"), [500, 510])
 
     # Range constructor
     grid = CKDSpectralGrid.arange(500, 510, 10)
-    np.testing.assert_array_equal(grid._wcenters.m_as("nm"), [500, 510])
+    np.testing.assert_array_equal(grid.wcenters.m_as("nm"), [500, 510])
 
 
 @pytest.mark.parametrize(
@@ -158,12 +158,29 @@ def test_ckd_spectral_grid_construct_fix_mismatch(policy, expected):
         np.testing.assert_array_equal(grid.wmaxs.m_as("nm"), expected["max"])
 
 
+def test_ckd_spectral_grid_default():
+    grid = CKDSpectralGrid.default()
+    expected_wcenters = np.arange(280.0, 2401.0, 10.0)
+    np.testing.assert_allclose(grid.wcenters.m, expected_wcenters)
+    np.testing.assert_allclose(grid.wmins.m, expected_wcenters - 5.0)
+    np.testing.assert_allclose(grid.wmaxs.m, expected_wcenters + 5.0)
+
+
+def test_ckd_spectral_grid_arange():
+    grid = CKDSpectralGrid.arange(540.0, 560.0, 10.0)
+    np.testing.assert_allclose(grid.wmins.m, [535.0, 545.0, 555.0])
+    np.testing.assert_allclose(grid.wmaxs.m, [545.0, 555.0, 565.0])
+    np.testing.assert_allclose(grid.wcenters.m, [540.0, 550.0, 560.0])
+
+
 def test_ckd_spectral_grid_from_absorption_database():
+    # The 'monotropa' database is a notable problematic case: its wavelength
+    # coordinate is set to values that match the central wavenumber of each bin,
+    # and not to the middle of the spectral interval in the wavelength space.
     abs_db = CKDAbsorptionDatabase.from_name("monotropa")
     grid = CKDSpectralGrid.from_absorption_database(abs_db)
-    np.testing.assert_allclose(
-        grid.wcenters.m, abs_db.spectral_coverage.index.get_level_values(1).values
-    )
+    wcenters_expected = abs_db.spectral_coverage.index.get_level_values(1).values
+    np.testing.assert_allclose(grid.wcenters.m, wcenters_expected)
 
 
 @pytest.mark.parametrize(
