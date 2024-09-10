@@ -337,6 +337,42 @@ _active_mode: Mode | None = None
 
 
 # ------------------------------------------------------------------------------
+#                            Mode subtype dispatcher
+# ------------------------------------------------------------------------------
+
+
+@attrs.define
+class SubtypeDispatcher:
+    """
+    This is a very simple factory intended to map mode-specific flags to
+    mode-dependent subtypes.
+    Types can be registered with the :meth:`.register` method, and the
+    appropriate subtype can be resolved with the :meth:`.resolve` method.
+    """
+
+    _registry = attrs.field(factory=dict)
+
+    def register(self, key: SpectralMode | str):
+        if isinstance(key, str):
+            key = SpectralMode[key.upper()]
+
+        def wrapper(cls):
+            self._registry[key] = cls
+            return cls
+
+        return wrapper
+
+    def resolve(self, spectral_mode: SpectralMode | str | None = None):
+        if spectral_mode is None:
+            spectral_mode = _active_mode.spectral_mode
+
+        if isinstance(spectral_mode, str):
+            spectral_mode = SpectralMode[spectral_mode.upper()]
+
+        return self._registry[spectral_mode]
+
+
+# ------------------------------------------------------------------------------
 #                                Public API
 # ------------------------------------------------------------------------------
 

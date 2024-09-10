@@ -24,7 +24,7 @@ from pinttrs.util import ensure_units
 import eradiate
 
 from .. import config
-from .._mode import SpectralMode
+from .._mode import SubtypeDispatcher
 from ..attrs import define, documented
 from ..data import data_store
 from ..exceptions import InterpolationError, UnsupportedModeError
@@ -152,6 +152,8 @@ class AbsorptionDatabase:
       can instead be open lazily, triggering disk access only for the specific
       data that are used.
     """
+
+    subtypes = SubtypeDispatcher()
 
     _dir_path: Path = documented(
         attrs.field(converter=lambda x: Path(x).absolute().resolve()),
@@ -455,7 +457,7 @@ class AbsorptionDatabase:
         # If an operational mode is selected, we check if the user is instantiating
         # a DB type that is relevant to that mode
         if eradiate.mode() is not None:
-            cls_mode = MODE_TO_DB[eradiate.mode().spectral_mode]
+            cls_mode = AbsorptionDatabase.subtypes.resolve()
 
             if cls is not cls_mode:
                 warnings.warn(
@@ -830,6 +832,7 @@ class AbsorptionDatabase:
         return result, x_ds
 
 
+@AbsorptionDatabase.subtypes.register("mono")
 @attrs.define(repr=False, eq=False)
 class MonoAbsorptionDatabase(AbsorptionDatabase):
     """
@@ -881,6 +884,7 @@ class MonoAbsorptionDatabase(AbsorptionDatabase):
         return result.transpose("w", "z")
 
 
+@AbsorptionDatabase.subtypes.register("ckd")
 @attrs.define(repr=False, eq=False)
 class CKDAbsorptionDatabase(AbsorptionDatabase):
     """
@@ -974,9 +978,4 @@ KNOWN_DATABASES = {
         "cls": CKDAbsorptionDatabase,
         "path": "spectra/absorption/ckd/panellus",
     },
-}
-
-MODE_TO_DB = {
-    SpectralMode.MONO: MonoAbsorptionDatabase,
-    SpectralMode.CKD: CKDAbsorptionDatabase,
 }
