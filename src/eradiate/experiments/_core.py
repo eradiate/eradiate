@@ -17,7 +17,7 @@ import eradiate
 from .. import converters, validators
 from .. import pipelines as pl
 from ..attrs import AUTO, define, documented
-from ..contexts import KernelContext, MultiGenerator
+from ..contexts import KernelContext
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
 from ..rng import SeedState
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
@@ -37,7 +37,7 @@ from ..spectral.ckd_quad import CKDQuadConfig
 from ..spectral.grid import SpectralGrid
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_registry as ureg
-from ..util.misc import deduplicate_sorted, onedict_value
+from ..util.misc import MultiGenerator, deduplicate_sorted, onedict_value
 
 logger = logging.getLogger(__name__)
 
