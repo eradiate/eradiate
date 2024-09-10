@@ -511,6 +511,14 @@ def _(da: xr.DataArray):
     return f"<xarray.DataArray{desc}>"
 
 
+@summary_repr.register
+def _(x: pint.Quantity):
+    """
+    Return a brief summary representation of a Pint quantity.
+    """
+    return f"{summary_repr_vector(x.m)} {x.u:~}"
+
+
 def summary_repr_vector(a: np.ndarray, edgeitems: int = 4):
     """
     Return a brief summary representation of a Numpy vector.
@@ -524,13 +532,6 @@ def summary_repr_vector(a: np.ndarray, edgeitems: int = 4):
         )
     else:
         return np.array2string(a)
-
-
-def summary_repr_quantity(x: pint.Quantity):
-    """
-    Return a brief summary representation of a Pint quantity.
-    """
-    return f"{summary_repr_vector(x.m)} {x.u:~}"
 
 
 def find_runs(
