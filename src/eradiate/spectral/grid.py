@@ -367,6 +367,12 @@ class CKDSpectralGrid(SpectralGrid):
         ckd_quad_config: CKDQuadConfig,
         abs_db: CKDAbsorptionDatabase | None = None,
     ) -> t.Generator[Quad]:
+        """
+        Walk the spectral grid and retrieve, based on a quadrature configuration
+        and, if necessary, an absorption database, the spectral quadrature for
+        each spectral bin.
+        """
+
         # Check parameter consistency
         if ckd_quad_config.policy is not CKDQuadPolicy.FIXED and abs_db is None:
             raise ValueError(
