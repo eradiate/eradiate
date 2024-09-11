@@ -408,11 +408,29 @@ class CKDSpectralGrid(SpectralGrid):
         self,
         ckd_quad_config: CKDQuadConfig,
         abs_db: CKDAbsorptionDatabase | None = None,
-    ) -> t.Generator[Quad]:
+    ) -> t.Generator[tuple[float, Quad]]:
         """
         Walk the spectral grid and retrieve, based on a quadrature configuration
         and, if necessary, an absorption database, the spectral quadrature for
         each spectral bin.
+
+        Parameters
+        ----------
+        ckd_quad_config : .CKDQuadConfig
+            CKD quadrature configuration.
+
+        abs_db : .CKDAbsorptionDatabase, optional
+            Molecular absorption database used to build quadrature rules for
+            each spectral bin. This parameter is required only if an adaptive
+            quadrature generation policy is used, otherwise it is ignored.
+
+        Yields
+        ------
+        quad : .Quad
+            Quadrature rule for the current spectral bin.
+
+        w : quantity
+            Wavelength of the current spectral bin.
         """
 
         # Check parameter consistency
@@ -424,7 +442,7 @@ class CKDSpectralGrid(SpectralGrid):
 
         # Walk the spectral grid and get the quadrature for each bin
         for w in self.wcenters:
-            yield ckd_quad_config.get_quad(abs_db, wcenter=w)
+            yield w, ckd_quad_config.get_quad(abs_db, wcenter=w)
 
     def walk_indices(
         self,
@@ -433,10 +451,7 @@ class CKDSpectralGrid(SpectralGrid):
     ) -> t.Generator[CKDSpectralIndex]:
         # Inherit docstring
 
-        quads = self.walk_quads(ckd_quad_config, abs_db)
-
         # Walk the spectral dimension
-        for w in self.wcenters:
-            quad = next(quads)
+        for w, quad in self.walk_quads(ckd_quad_config, abs_db):
             for g in quad.eval_nodes([0, 1]):
                 yield CKDSpectralIndex(w=w, g=g)

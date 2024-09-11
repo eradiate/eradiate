@@ -8,7 +8,7 @@ from eradiate.exceptions import UnsupportedModeError
 from eradiate.experiments import CanopyExperiment
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
-from eradiate.scenes.spectra import MultiDeltaSpectrum
+from eradiate.spectral import DeltaSRF
 from eradiate.test_tools.types import check_scene_element
 
 
@@ -112,7 +112,7 @@ def test_canopy_experiment_run_detailed(modes_all_double):
     Note: This test is outdated, most of its content should be transferred to
     tests for measure post-processing pipelines.
     """
-    srf = MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm)
+    srf = DeltaSRF(wavelengths=550.0 * ureg.nm)
     if eradiate.mode().is_mono:
         expected_vars = {"brdf", "brf", "irradiance", "radiance"}
         expected_coords_radiance = {

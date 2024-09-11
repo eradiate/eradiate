@@ -12,13 +12,15 @@ from pinttr.util import always_iterable
 from .._mode import Mode
 from ..exceptions import UnsupportedModeError
 from ..kernel import bitmap_to_dataarray
+from ..quad import Quad
 from ..scenes.illumination import (
     AbstractDirectionalIllumination,
     ConstantIllumination,
     Illumination,
 )
-from ..scenes.spectra import InterpolatedSpectrum, Spectrum, UniformSpectrum
-from ..spectral.spectral_set import SpectralSet
+from ..scenes.spectra import Spectrum
+from ..spectral import BandSRF, SpectralResponseFunction, UniformSRF
+from ..spectral.grid import SpectralGrid
 from ..units import symbol, to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_context_kernel as uck
@@ -56,7 +58,11 @@ def _spectral_dims(mode: Mode | str) -> tuple[tuple[str, dict], ...]:
 
 
 def aggregate_ckd_quad(
-    mode_id: str, raw_data: xr.DataArray, spectral_set: SpectralSet, is_variance: bool
+    mode_id: str,
+    raw_data: xr.DataArray,
+    spectral_grid: SpectralGrid,
+    ckd_quads: list[Quad],
+    is_variance: bool,
 ) -> xr.DataArray:
     """
     Compute CKD quadrature.
@@ -80,7 +86,7 @@ def aggregate_ckd_quad(
     raw_data : DataArray
         A data array holding raw bitmap data indexed against pixel indices.
 
-    spectral_set : .WavelengthSet or .BinSet
+    spectral_grid : CKDSpectralGrid
         Spectral set for which the CKD quadrature is computed.
 
     is_variance : bool
@@ -123,15 +129,14 @@ def aggregate_ckd_quad(
 
     # -- Collect wavelengths associated with each bin
     wavelength_units = ucc.get("wavelength")
-    wavelengths = np.array(raw_data.coords["w"].values, dtype=float)
-    bin_wmins = spectral_set.wmins.m_as(wavelength_units)
-    bin_wmaxs = spectral_set.wmaxs.m_as(wavelength_units)
+    bin_wmins = spectral_grid.wmins.m_as(wavelength_units)
+    bin_wmaxs = spectral_grid.wmaxs.m_as(wavelength_units)
 
     # -- Proceed with actual storage initialization
     result = xr.full_like(raw_data, np.nan).isel(g=0, drop=True)
 
     # For each bin and each pixel, compute quadrature and store the result
-    for i_bin, (bin, w) in enumerate(zip(spectral_set.bins, wavelengths)):
+    for i_bin, (w, quad) in enumerate(zip(spectral_grid.wcenters, ckd_quads)):
         values_at_nodes = raw_data.sel(w=w).values
 
         # Rationale: Avoid using xarray's indexing in this loop for
@@ -141,7 +146,7 @@ def aggregate_ckd_quad(
             interval = (0.0, 1.0)
 
             if is_variance:
-                weights = bin.quad.weights.copy()
+                weights = quad.weights.copy()
                 if interval is not None:
                     weights *= 0.5 * (interval[1] - interval[0])
 
@@ -149,7 +154,7 @@ def aggregate_ckd_quad(
                 weighted_sum = float(np.dot(weights**2, variance))
                 result.values[(i_bin, *indexes)] = weighted_sum
             else:
-                result.values[(i_bin, *indexes)] = bin.quad.integrate(
+                result.values[(i_bin, *indexes)] = quad.integrate(
                     values_at_nodes[(slice(None), *indexes)],
                     interval=interval,
                 )
@@ -192,7 +197,9 @@ def aggregate_ckd_quad(
     return result
 
 
-def apply_spectral_response(spectral_data: xr.DataArray, srf: Spectrum) -> xr.DataArray:
+def apply_spectral_response(
+    spectral_data: xr.DataArray, srf: SpectralResponseFunction
+) -> xr.DataArray:
     """
     Apply SRF weighting (a.k.a convolution) to spectral data and turn it into
     a band aggregate.
@@ -202,7 +209,7 @@ def apply_spectral_response(spectral_data: xr.DataArray, srf: Spectrum) -> xr.Da
     spectral_data : DataArray
         Spectral data to process.
 
-    srf : Spectrum
+    srf : SpectralResponseFunction
         Spectral response function to apply.
 
     Returns
@@ -219,11 +226,11 @@ def apply_spectral_response(spectral_data: xr.DataArray, srf: Spectrum) -> xr.Da
     # Evaluate integral of spectral response function within selected interval
     wmin = to_quantity(spectral_data.coords["bin_wmin"]).min()
     wmax = to_quantity(spectral_data.coords["bin_wmax"]).max()
-    srf_int = srf.integral(wmin, wmax)
+    srf_int = srf.integrate(wmin, wmax)
 
-    if isinstance(srf, InterpolatedSpectrum):
+    if isinstance(srf, BandSRF):
         srf_w = srf.wavelengths
-    elif isinstance(srf, UniformSpectrum):
+    elif isinstance(srf, UniformSRF):
         srf_w = np.array([wmin.m_as(ureg.nm), wmax.m_as(ureg.nm)]) * ureg.nm
     else:
         raise TypeError(f"unhandled SRF type '{srf.__class__.__name__}'")
@@ -252,7 +259,7 @@ def apply_spectral_response(spectral_data: xr.DataArray, srf: Spectrum) -> xr.Da
         )
 
     srf_values = (
-        srf.eval_mono(w_m * w_units)
+        srf.eval(w_m * w_units)
         .reshape([-1 if dim == "w" else 1 for dim in spectral_values.dims])
         .magnitude
     )
@@ -377,7 +384,7 @@ def compute_bidirectional_reflectance(
 
 
 def extract_irradiance(
-    mode_id: str, illumination: Illumination, spectral_set: SpectralSet
+    mode_id: str, illumination: Illumination, spectral_grid: SpectralGrid
 ) -> dict:
     """
     Derive an irradiance dataset from the irradiance spectrum of an illuminant,
@@ -391,8 +398,8 @@ def extract_irradiance(
     illumination : Illumination
         The illuminant whose irradiance is to be evaluated.
 
-    spectral_set : .WavelengthSet or .BinSet
-        Spectral set driving the simulation.
+    spectral_grid : .SpectralGrid
+        Spectral grid driving the simulation.
 
     Returns
     -------
@@ -412,7 +419,7 @@ def extract_irradiance(
     """
     mode = Mode.new(mode_id)
     k_irradiance_units = uck.get("irradiance")
-    wavelengths = spectral_set.wavelengths
+    wavelengths = spectral_grid.wavelengths
     wavelength_metadata = _spectral_dims("mono")[0][1]
     wavelength_units = wavelength_metadata["units"]
 
@@ -449,8 +456,8 @@ def extract_irradiance(
     }
 
     if mode.is_ckd:
-        bin_wmins = spectral_set.wmins.m_as(wavelength_units)
-        bin_wmaxs = spectral_set.wmaxs.m_as(wavelength_units)
+        bin_wmins = spectral_grid.wmins.m_as(wavelength_units)
+        bin_wmaxs = spectral_grid.wmaxs.m_as(wavelength_units)
         spectral_coords.update(
             {
                 "bin_wmin": (
@@ -761,7 +768,7 @@ def radiosity(sector_radiosity: xr.DataArray) -> xr.DataArray:
     return result
 
 
-def spectral_response(srf: Spectrum) -> xr.DataArray:
+def spectral_response(srf: SpectralResponseFunction) -> xr.DataArray:
     """
     Evaluate a spectral response function as a data array.
 
@@ -780,7 +787,7 @@ def spectral_response(srf: Spectrum) -> xr.DataArray:
     # Evaluate SRF
     w_units = ucc.get("wavelength")
 
-    if isinstance(srf, InterpolatedSpectrum):
+    if isinstance(srf, BandSRF):
         srf_w = srf.wavelengths
         srf_values = pinttrs.util.ensure_units(srf.values, ureg.dimensionless)
 

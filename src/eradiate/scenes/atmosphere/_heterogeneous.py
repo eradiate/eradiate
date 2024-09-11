@@ -21,9 +21,7 @@ from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel import TypeIdLookupStrategy
 from ...radprops import ZGrid
-from ...spectral.ckd import BinSet, QuadSpec
 from ...spectral.index import SpectralIndex
-from ...spectral.mono import WavelengthSet
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
@@ -179,32 +177,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     def top(self) -> pint.Quantity:
         # Inherit docstring
         return max([component.top for component in self.components])
-
-    def spectral_grid(
-        self,
-        quad_spec: QuadSpec | None = None,
-    ) -> None | BinSet | WavelengthSet:
-        if quad_spec is None:
-            quad_spec = QuadSpec.default()
-
-        components_with_spectral_set = [
-            component
-            for component in self.components
-            if component.spectral_grid(quad_spec=quad_spec) is not None
-        ]
-
-        # at most one component is allowed to have a spectral set
-        if len(components_with_spectral_set) > 1:
-            raise ValueError(
-                "at most one component is allowed to have a spectral set",
-                components_with_spectral_set,
-            )
-
-        if len(components_with_spectral_set) == 1:
-            return components_with_spectral_set[0].spectral_grid(quad_spec=quad_spec)
-
-        # Fall back
-        return None
 
     def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
         # Inherit docstring
