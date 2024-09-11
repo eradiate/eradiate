@@ -67,9 +67,9 @@ def _mode_registry() -> dict[str, Mode]:
                 "mi_polarized": False,
             },
             "mono_polarized_single": {
-                "spectral_mode": SpectralMode.MONO,
-                "mi_backend": MitsubaBackend.SCALAR,
-                "mi_color_mode": MitsubaColorMode.MONO,
+                "spectral_mode": "mono",
+                "mi_backend": "scalar",
+                "mi_color_mode": "mono",
                 "mi_double_precision": False,
                 "mi_polarized": True,
             },
@@ -81,16 +81,9 @@ def _mode_registry() -> dict[str, Mode]:
                 "mi_polarized": False,
             },
             "mono_polarized_double": {
-                "spectral_mode": SpectralMode.MONO,
-                "mi_backend": MitsubaBackend.SCALAR,
-                "mi_color_mode": MitsubaColorMode.MONO,
-                "mi_double_precision": True,
-                "mi_polarized": True,
-            },
-            "mono_polarized": {
-                "spectral_mode": SpectralMode.MONO,
-                "mi_backend": MitsubaBackend.SCALAR,
-                "mi_color_mode": MitsubaColorMode.MONO,
+                "spectral_mode": "mono",
+                "mi_backend": "scalar",
+                "mi_color_mode": "mono",
                 "mi_double_precision": True,
                 "mi_polarized": True,
             },
@@ -102,9 +95,9 @@ def _mode_registry() -> dict[str, Mode]:
                 "mi_polarized": False,
             },
             "ckd_polarized_single": {
-                "spectral_mode": SpectralMode.CKD,
-                "mi_backend": MitsubaBackend.SCALAR,
-                "mi_color_mode": MitsubaColorMode.MONO,
+                "spectral_mode": "ckd",
+                "mi_backend": "scalar",
+                "mi_color_mode": "mono",
                 "mi_double_precision": False,
                 "mi_polarized": True,
             },
@@ -116,16 +109,9 @@ def _mode_registry() -> dict[str, Mode]:
                 "mi_polarized": False,
             },
             "ckd_polarized_double": {
-                "spectral_mode": SpectralMode.CKD,
-                "mi_backend": MitsubaBackend.SCALAR,
-                "mi_color_mode": MitsubaColorMode.MONO,
-                "mi_double_precision": True,
-                "mi_polarized": True,
-            },
-            "ckd_polarized": {
-                "spectral_mode": SpectralMode.CKD,
-                "mi_backend": MitsubaBackend.SCALAR,
-                "mi_color_mode": MitsubaColorMode.MONO,
+                "spectral_mode": "ckd",
+                "mi_backend": "scalar",
+                "mi_color_mode": "mono",
                 "mi_double_precision": True,
                 "mi_polarized": True,
             },
@@ -393,7 +379,9 @@ class Mode:
 _mode_registry().update(
     {
         "mono": _mode_registry()["mono_double"],
+        "mono_polarized": _mode_registry()["mono_polarized_double"],
         "ckd": _mode_registry()["ckd_double"],
+        "ckd_polarized": _mode_registry()["ckd_polarized_double"],
     }
 )
 
