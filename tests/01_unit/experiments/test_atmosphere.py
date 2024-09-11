@@ -10,7 +10,7 @@ from eradiate.experiments import AtmosphereExperiment
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.shapes import RectangleShape
-from eradiate.scenes.spectra import MultiDeltaSpectrum
+from eradiate.spectral.response import DeltaSRF
 from eradiate.test_tools.types import check_scene_element
 from eradiate.test_tools.util import skipif_data_not_found
 from eradiate.units import to_quantity
@@ -184,7 +184,7 @@ def test_atmosphere_experiment_run_basic(
         measures={
             "type": "mdistant",
             "id": "mdistant_measure",
-            "srf": MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
+            "srf": DeltaSRF(wavelengths=550.0 * ureg.nm),
         },
     )
     assert isinstance(eradiate.run(exp, spp=100), xr.Dataset)
@@ -209,7 +209,7 @@ def test_atmosphere_experiment_run_detailed(
                 "id": "toa_hsphere",
                 "film_resolution": (32, 32),
                 "spp": 100,
-                "srf": MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
+                "srf": DeltaSRF(wavelengths=550.0 * ureg.nm),
             },
         ],
         atmosphere=molecular_atmosphere,
@@ -273,7 +273,7 @@ def test_atmosphere_experiment_custom_atmosphere(mode_ckd, atmosphere_cams_lybia
                 "id": "toa_hsphere",
                 "film_resolution": (32, 32),
                 "spp": 100,
-                "srf": MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
+                "srf": DeltaSRF(wavelengths=550.0 * ureg.nm),
             },
         ],
         atmosphere=atmosphere_cams_lybia4_ckd,
