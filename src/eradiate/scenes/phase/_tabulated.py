@@ -216,9 +216,6 @@ class TabulatedPhaseFunction(PhaseFunction):
                 lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 0))),
             ),
         }
-        print(f"is polarized: {self.is_polarized}")
-        print(f"has polarized data: {self.has_polarized_data}")
-        print(f"phase function: {phase_function}")
 
         if self.is_polarized:
             if self.has_polarized_data:
