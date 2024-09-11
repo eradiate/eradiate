@@ -24,7 +24,7 @@ from pinttrs.util import ensure_units
 import eradiate
 
 from .. import config
-from .._mode import SubtypeDispatcher
+from .._mode import ModeFlag, SubtypeDispatcher
 from ..attrs import define, documented
 from ..data import data_store
 from ..exceptions import DataError, InterpolationError, UnsupportedModeError
@@ -153,7 +153,7 @@ class AbsorptionDatabase:
       data that are used.
     """
 
-    subtypes = SubtypeDispatcher()
+    subtypes = SubtypeDispatcher("AbsorptionDatabase")
 
     _dir_path: Path = documented(
         attrs.field(converter=lambda x: Path(x).absolute().resolve()),
@@ -854,7 +854,7 @@ class AbsorptionDatabase:
         return result, x_ds
 
 
-@AbsorptionDatabase.subtypes.register("mono")
+@AbsorptionDatabase.subtypes.register(ModeFlag.SPECTRAL_MODE_MONO)
 @attrs.define(repr=False, eq=False)
 class MonoAbsorptionDatabase(AbsorptionDatabase):
     """
@@ -906,7 +906,7 @@ class MonoAbsorptionDatabase(AbsorptionDatabase):
         return result.transpose("w", "z")
 
 
-@AbsorptionDatabase.subtypes.register("ckd")
+@AbsorptionDatabase.subtypes.register(ModeFlag.SPECTRAL_MODE_CKD)
 @attrs.define(repr=False, eq=False)
 class CKDAbsorptionDatabase(AbsorptionDatabase):
     """
