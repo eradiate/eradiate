@@ -910,7 +910,7 @@ def degree_of_linear_polarization(stokes_vec: xr.DataArray):
     Returns
     -------
     DataArray
-        Degree of linear polarization (:math:`\sqrt{Q^2+U^2}/I`).
+        Degree of linear polarization (:math:`\\sqrt{Q^2+U^2}/I`).
     """
     return np.sqrt(
         stokes_vec.sel(stokes="Q") ** 2 + stokes_vec.sel(stokes="U") ** 2
