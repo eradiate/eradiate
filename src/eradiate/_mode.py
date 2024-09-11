@@ -15,51 +15,34 @@ from .exceptions import UnsupportedModeError
 # ------------------------------------------------------------------------------
 
 
-class Flag(enum.Flag):
-    """
-    Small extension to :class:`enum.Flag` that adds a ``convert()`` class method
-    constructor.
-    """
-
-    @classmethod
-    def convert(cls, value: t.Any) -> Flag:
-        """
-        Try to convert a value to a flag. Strings are capitalized and converted
-        to the corresponding enum member.
-        """
-        if isinstance(value, str):
-            return cls[value.upper()]
-        else:
-            return cls(value)
-
-
-class SpectralMode(Flag):
-    """
-    Spectral dimension handling flags.
-    """
-
-    MONO = enum.auto()  #: Monochromatic (line-by-line) mode
-    CKD = enum.auto()  #: Correlated-k distribution mode
+class ModeFlag(enum.Flag):
+    NONE = 0
+    SPECTRAL_MODE_MONO = enum.auto()  #: Monochromatic (line-by-line) mode
+    SPECTRAL_MODE_CKD = enum.auto()  #: Correlated-k distribution mode
+    MI_BACKEND_SCALAR = enum.auto()  #: Scalar backend
+    MI_BACKEND_LLVM = enum.auto()  #: LLVM backend
+    MI_COLOR_MODE_MONO = enum.auto()  #: Monochromatic mode
+    MI_DOUBLE_PRECISION_NO = enum.auto()
+    MI_DOUBLE_PRECISION_YES = enum.auto()
+    MI_POLARIZED_NO = enum.auto()
+    MI_POLARIZED_YES = enum.auto()
+    ANY = (
+        SPECTRAL_MODE_MONO
+        | SPECTRAL_MODE_CKD
+        | MI_BACKEND_SCALAR
+        | MI_BACKEND_LLVM
+        | MI_COLOR_MODE_MONO
+        | MI_DOUBLE_PRECISION_NO
+        | MI_DOUBLE_PRECISION_YES
+        | MI_POLARIZED_NO
+        | MI_POLARIZED_YES
+    )
 
 
-_SPECTRAL_COORD_LABELS = {SpectralMode.MONO: "w", SpectralMode.CKD: "bd"}
-
-
-class MitsubaBackend(Flag):
-    """
-    Mitsuba backend flags.
-    """
-
-    SCALAR = enum.auto()  #: Scalar backend
-    LLVM = enum.auto()  #: LLVM backend
-
-
-class MitsubaColorMode(Flag):
-    """
-    Mitsuba color mode flags.
-    """
-
-    MONO = enum.auto()  #: Monochromatic mode
+_SPECTRAL_COORD_LABELS = {
+    ModeFlag.SPECTRAL_MODE_MONO: "w",
+    ModeFlag.SPECTRAL_MODE_CKD: "bd",
+}
 
 
 # ------------------------------------------------------------------------------
@@ -77,9 +60,9 @@ def _mode_registry() -> dict[str, Mode]:
         k: Mode(id=k, **v)
         for k, v in {
             "mono_single": {
-                "spectral_mode": SpectralMode.MONO,
-                "mi_backend": MitsubaBackend.SCALAR,
-                "mi_color_mode": MitsubaColorMode.MONO,
+                "spectral_mode": "mono",
+                "mi_backend": "scalar",
+                "mi_color_mode": "mono",
                 "mi_double_precision": False,
                 "mi_polarized": False,
             },
@@ -91,9 +74,9 @@ def _mode_registry() -> dict[str, Mode]:
                 "mi_polarized": True,
             },
             "mono_double": {
-                "spectral_mode": SpectralMode.MONO,
-                "mi_backend": MitsubaBackend.SCALAR,
-                "mi_color_mode": MitsubaColorMode.MONO,
+                "spectral_mode": "mono",
+                "mi_backend": "scalar",
+                "mi_color_mode": "mono",
                 "mi_double_precision": True,
                 "mi_polarized": False,
             },
@@ -112,9 +95,9 @@ def _mode_registry() -> dict[str, Mode]:
                 "mi_polarized": True,
             },
             "ckd_single": {
-                "spectral_mode": SpectralMode.CKD,
-                "mi_backend": MitsubaBackend.SCALAR,
-                "mi_color_mode": MitsubaColorMode.MONO,
+                "spectral_mode": "ckd",
+                "mi_backend": "scalar",
+                "mi_color_mode": "mono",
                 "mi_double_precision": False,
                 "mi_polarized": False,
             },
@@ -126,9 +109,9 @@ def _mode_registry() -> dict[str, Mode]:
                 "mi_polarized": True,
             },
             "ckd_double": {
-                "spectral_mode": SpectralMode.CKD,
-                "mi_backend": MitsubaBackend.SCALAR,
-                "mi_color_mode": MitsubaColorMode.MONO,
+                "spectral_mode": "ckd",
+                "mi_backend": "scalar",
+                "mi_color_mode": "mono",
                 "mi_double_precision": True,
                 "mi_polarized": False,
             },
@@ -150,6 +133,54 @@ def _mode_registry() -> dict[str, Mode]:
     }
 
 
+def _spectral_mode_converter(value: str | ModeFlag):
+    if isinstance(value, str):
+        value = value.upper()
+        if not value.startswith("SPECTRAL_MODE_"):
+            value = f"SPECTRAL_MODE_{value}"
+        return ModeFlag[value]
+    else:
+        return ModeFlag(value)
+
+
+def _mi_backend_converter(value: str | ModeFlag):
+    if isinstance(value, str):
+        value = value.upper()
+        if not value.startswith("MI_BACKEND_"):
+            value = f"MI_BACKEND_{value}"
+        return ModeFlag[value]
+    else:
+        return ModeFlag(value)
+
+
+def _mi_color_mode_converter(value: str | ModeFlag):
+    if isinstance(value, str):
+        value = value.upper()
+        if not value.startswith("MI_COLOR_MODE_"):
+            value = f"MI_COLOR_MODE_{value}"
+        return ModeFlag[value]
+    else:
+        return ModeFlag(value)
+
+
+def _mi_polarized_converter(value: bool | ModeFlag):
+    if isinstance(value, bool):
+        return ModeFlag.MI_POLARIZED_YES if value is True else ModeFlag.MI_POLARIZED_NO
+    else:
+        return ModeFlag(value)
+
+
+def _mi_double_precision_converter(value: bool | ModeFlag):
+    if isinstance(value, bool):
+        return (
+            ModeFlag.MI_DOUBLE_PRECISION_YES
+            if value is True
+            else ModeFlag.MI_DOUBLE_PRECISION_NO
+        )
+    else:
+        return ModeFlag(value)
+
+
 @frozen
 class Mode:
     """
@@ -167,40 +198,84 @@ class Mode:
         type="str",
     )
 
-    spectral_mode: SpectralMode = documented(
-        attrs.field(converter=SpectralMode.convert),
+    spectral_mode: t.Literal[
+        ModeFlag.SPECTRAL_MODE_MONO, ModeFlag.SPECTRAL_MODE_CKD
+    ] = documented(
+        attrs.field(
+            converter=_spectral_mode_converter,
+            validator=attrs.validators.in_(
+                {ModeFlag.SPECTRAL_MODE_MONO, ModeFlag.SPECTRAL_MODE_CKD}
+            ),
+        ),
         doc="Spectral dimension handling.",
-        type=":class:`.SpectralMode`",
-        init_type=":class:`.SpectralMode` or str",
+        type=".ModeFlag",
+        init_type=".ModeFlag or str",
     )
 
-    mi_backend: MitsubaBackend = documented(
-        attrs.field(converter=MitsubaBackend.convert),
-        doc="Mitsuba computational backend.",
-        type=":class:`.MitsubaBackend`",
-        init_type=":class:`.MitsubaBackend` or str",
+    mi_backend: t.Literal[ModeFlag.MI_BACKEND_SCALAR, ModeFlag.MI_BACKEND_LLVM] = (
+        documented(
+            attrs.field(
+                converter=_mi_backend_converter,
+                validator=attrs.validators.in_(
+                    {ModeFlag.MI_BACKEND_SCALAR, ModeFlag.MI_BACKEND_LLVM}
+                ),
+            ),
+            doc="Mitsuba computational backend.",
+            type=".ModeFlag",
+            init_type=".ModeFlag or str",
+        )
     )
 
-    mi_color_mode: MitsubaColorMode = documented(
-        attrs.field(converter=MitsubaColorMode.convert),
+    mi_color_mode: t.Literal[ModeFlag.MI_COLOR_MODE_MONO] = documented(
+        attrs.field(
+            converter=_mi_color_mode_converter,
+            validator=attrs.validators.in_({ModeFlag.MI_COLOR_MODE_MONO}),
+        ),
         doc="Mitsuba color mode.",
-        type=".MitsubaColorMode",
-        init_type=":class:`.MitsubaColorMode` or str",
+        type=".ModeFlag",
+        init_type=".ModeFlag or str",
     )
 
-    mi_polarized: bool = documented(
-        attrs.field(default=False, converter=bool),
-        doc="Mitsuba polarized mode.",
-        type="bool",
-        default="False",
+    mi_polarized: t.Literal[ModeFlag.MI_POLARIZED_NO, ModeFlag.MI_POLARIZED_YES] = (
+        documented(
+            attrs.field(
+                converter=_mi_polarized_converter,
+                validator=attrs.validators.in_(
+                    {ModeFlag.MI_POLARIZED_NO, ModeFlag.MI_POLARIZED_YES}
+                ),
+            ),
+            doc="Mitsuba polarized mode.",
+            type=".ModeFlag",
+            init_type=".ModeFlag or str",
+        )
     )
 
-    mi_double_precision: bool = documented(
-        attrs.field(default=True, converter=bool),
+    mi_double_precision: t.Literal[
+        ModeFlag.MI_DOUBLE_PRECISION_NO, ModeFlag.MI_DOUBLE_PRECISION_YES
+    ] = documented(
+        attrs.field(
+            converter=_mi_double_precision_converter,
+            validator=attrs.validators.in_(
+                {ModeFlag.MI_DOUBLE_PRECISION_NO, ModeFlag.MI_DOUBLE_PRECISION_YES}
+            ),
+        ),
         doc="Mitsuba double precision.",
-        type="bool",
-        default="True",
+        type=".ModeFlag",
+        init_type=".ModeFlag or str",
     )
+
+    @property
+    def mi_flags(self) -> ModeFlag:
+        return (
+            self.mi_backend
+            | self.mi_color_mode
+            | self.mi_polarized
+            | self.mi_double_precision
+        )
+
+    @property
+    def flags(self) -> ModeFlag:
+        return self.spectral_mode | self.mi_flags
 
     @property
     def spectral_coord_label(self) -> str:
@@ -214,40 +289,42 @@ class Mode:
         """
         Mitsuba variant associated with the selected mode.
         """
-
-        result = [self.mi_backend.name.lower(), self.mi_color_mode.name.lower()]
-        if self.mi_polarized:
+        result = [
+            self.mi_backend.name.lower().removeprefix("mi_backend_"),
+            self.mi_color_mode.name.lower().removeprefix("mi_color_mode_"),
+        ]
+        if self.mi_polarized is ModeFlag.MI_POLARIZED_YES:
             result.append("polarized")
-        if self.mi_double_precision:
+        if self.mi_double_precision is ModeFlag.MI_DOUBLE_PRECISION_YES:
             result.append("double")
         return "_".join(result)
 
     def check(
         self,
-        spectral_mode: None | SpectralMode | str = None,
-        mi_backend: None | MitsubaBackend | str = None,
-        mi_color_mode: None | MitsubaColorMode | str = None,
-        mi_polarized: bool | None = None,
-        mi_double_precision: bool | None = None,
-    ) -> bool:
+        spectral_mode: ModeFlag | str = ModeFlag.NONE,
+        mi_backend: ModeFlag | str = ModeFlag.NONE,
+        mi_color_mode: ModeFlag | str = ModeFlag.NONE,
+        mi_polarized: ModeFlag | bool = ModeFlag.NONE,
+        mi_double_precision: ModeFlag | bool = ModeFlag.NONE,
+    ) -> ModeFlag:
         """
         Check if the currently active mode has the passed flags.
 
         Parameters
         ----------
-        spectral_mode : :class:`.SpectralMode` or str, optional
+        spectral_mode : :.ModeFlag or str, optional
             Spectral mode to check. If unset, the check is skipped.
 
-        mi_backend : :class:`.MitsubaBackend` or str, optional
+        mi_backend : :.ModeFlag or str, optional
             Mitsuba backend to check. If unset, the check is skipped.
 
-        mi_color_mode : :class:`.MitsubaColorMode` or str, optional
+        mi_color_mode : .ModeFlag or str, optional
             Mitsuba color mode to check. If unset, the check is skipped.
 
-        mi_polarized : bool, optional
+        mi_polarized : .ModeFlag or bool, optional
             Mitsuba polarized mode to check. If unset, the check is skipped.
 
-        mi_double_precision : bool, optional
+        mi_double_precision : .ModeFlag or bool, optional
             Mitsuba double precision mode to check. If unset, the check is skipped.
 
         Returns
@@ -255,42 +332,30 @@ class Mode:
         bool
             ``True`` if current mode has the passed flags, ``False`` otherwise.
         """
-        outcome = True
-
-        if spectral_mode is not None:
-            outcome &= bool(self.spectral_mode & SpectralMode.convert(spectral_mode))
-
-        if mi_backend is not None:
-            outcome &= bool(self.mi_backend & MitsubaBackend.convert(mi_backend))
-
-        if mi_color_mode is not None:
-            outcome &= bool(
-                self.mi_color_mode & MitsubaColorMode.convert(mi_color_mode)
-            )
-
-        if mi_polarized is not None:
-            outcome &= self.mi_polarized == mi_polarized
-
-        if mi_double_precision is not None:
-            outcome &= self.mi_double_precision == mi_double_precision
-
-        return outcome
+        condition = (
+            _spectral_mode_converter(spectral_mode)
+            | _mi_backend_converter(mi_backend)
+            | _mi_color_mode_converter(mi_color_mode)
+            | _mi_polarized_converter(mi_polarized)
+            | _mi_double_precision_converter(mi_double_precision)
+        )
+        return condition & self.flags
 
     @property
     def is_mono(self) -> bool:
-        return self.spectral_mode is SpectralMode.MONO
+        return self.spectral_mode is ModeFlag.SPECTRAL_MODE_MONO
 
     @property
     def is_ckd(self) -> bool:
-        return self.spectral_mode is SpectralMode.CKD
+        return self.spectral_mode is ModeFlag.SPECTRAL_MODE_CKD
 
     @property
     def is_single_precision(self) -> bool:
-        return self.mi_double_precision is False
+        return self.mi_double_precision is ModeFlag.MI_DOUBLE_PRECISION_NO
 
     @property
     def is_double_precision(self) -> bool:
-        return self.mi_double_precision is True
+        return self.mi_double_precision is ModeFlag.MI_DOUBLE_PRECISION_YES
 
     @property
     def is_polarized(self) -> bool:
@@ -350,26 +415,56 @@ class SubtypeDispatcher:
     appropriate subtype can be resolved with the :meth:`.resolve` method.
     """
 
-    _registry = attrs.field(factory=dict)
+    _type_name: str = attrs.field()
+    _registry: dict[ModeFlag, t.Type] = attrs.field(factory=dict)
 
-    def register(self, key: SpectralMode | str):
-        if isinstance(key, str):
-            key = SpectralMode[key.upper()]
+    def register(self, mode_flags: ModeFlag | str) -> None:
+        """
+        Register a subtype against a combination of mode flags. This method is
+        meant to be used as a decorator.
+
+        Parameters
+        ----------
+        mode_flags : .ModeFlag or str
+            Mode flags against which the subtype is registered. If a string is
+            passed, it is converted to a :class:`.ModeFlag`.
+        """
+        if isinstance(mode_flags, str):
+            mode_flags = ModeFlag[mode_flags.upper()]
 
         def wrapper(cls):
-            self._registry[key] = cls
+            self._registry[mode_flags] = cls
             return cls
 
         return wrapper
 
-    def resolve(self, spectral_mode: SpectralMode | str | None = None):
-        if spectral_mode is None:
-            spectral_mode = _active_mode.spectral_mode
+    def resolve(self, mode_flags: ModeFlag | None = None) -> t.Type:
+        """
+        Resolve the subtype based against a set of mode flags.
 
-        if isinstance(spectral_mode, str):
-            spectral_mode = SpectralMode[spectral_mode.upper()]
+        Parameters
+        ----------
+        mode_flags : .ModeFlag, optional
+            A mode flag combination used to search the dispatcher's registry.
+            The first entry that validates the flag conditions is returned,
+            meaning that conflicting or redundant conditions will cause issues.
+            If unspecified, the flags of the currently active mode are used.
 
-        return self._registry[spectral_mode]
+        See Also
+        --------
+        :meth:`.Mode.flags`, :class:`.ModeFlag`
+        """
+        if mode_flags is None:
+            mode_flags = _active_mode.flags
+
+        for key, value in self._registry.items():
+            if mode_flags & key:
+                return value
+
+        raise NotImplementedError(
+            f"Type {self._type_name} has no registered subtype for mode flags "
+            f"{mode_flags}."
+        )
 
 
 # ------------------------------------------------------------------------------

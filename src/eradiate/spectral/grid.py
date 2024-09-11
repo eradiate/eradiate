@@ -10,16 +10,14 @@ import pint
 import pinttrs
 from pinttrs.util import ensure_units
 
-import eradiate
-
 from . import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from .ckd_quad import CKDQuadConfig, CKDQuadPolicy
 from .response import BandSRF, DeltaSRF, SpectralResponseFunction, UniformSRF
 from .. import converters
-from .._mode import SubtypeDispatcher
+from .._mode import ModeFlag, SubtypeDispatcher
 from ..attrs import define, documented
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
-from ..radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
+from ..radprops import AbsorptionDatabase, CKDAbsorptionDatabase, MonoAbsorptionDatabase
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.misc import summary_repr
@@ -31,7 +29,7 @@ from ..util.misc import summary_repr
 
 @define
 class SpectralGrid(ABC):
-    subtypes = SubtypeDispatcher()
+    subtypes = SubtypeDispatcher("SpectralGrid")
 
     @property
     @abstractmethod
@@ -50,14 +48,13 @@ class SpectralGrid(ABC):
         return cls.default()
 
     @staticmethod
-    def from_absorption_database(abs_db):
-        # TODO: Check if this is really acceptable design
-        if eradiate.mode().is_ckd:
-            return CKDSpectralGrid.from_absorption_database(abs_db)
-        elif eradiate.mode().is_mono:
-            return MonoSpectralGrid.from_absorption_database(abs_db)
-        else:
-            raise NotImplementedError(f"unsupported mode: {eradiate.mode().id}")
+    def from_absorption_database(abs_db: AbsorptionDatabase) -> SpectralGrid:
+        """
+        Retrieve the spectral grid from an absorption database. The returned
+        type depends on the currently active mode.
+        """
+        cls = SpectralGrid.subtypes.resolve()
+        return cls.from_absorption_database(abs_db)
 
     @abstractmethod
     def select(self, srf: SpectralResponseFunction) -> SpectralGrid:
@@ -89,7 +86,7 @@ class SpectralGrid(ABC):
         pass
 
 
-@SpectralGrid.subtypes.register("mono")
+@SpectralGrid.subtypes.register(ModeFlag.SPECTRAL_MODE_MONO)
 @define
 class MonoSpectralGrid(SpectralGrid):
     _wavelengths: pint.Quantity = documented(
@@ -171,7 +168,7 @@ class MonoSpectralGrid(SpectralGrid):
             yield MonoSpectralIndex(w=w)
 
 
-@SpectralGrid.subtypes.register("ckd")
+@SpectralGrid.subtypes.register(ModeFlag.SPECTRAL_MODE_CKD)
 @define(init=False)
 class CKDSpectralGrid(SpectralGrid):
     wmins: pint.Quantity = documented(
