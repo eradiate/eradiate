@@ -11,9 +11,7 @@ from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_facto
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel import InitParameter, TypeIdLookupStrategy, UpdateParameter
-from ...spectral.ckd import BinSet
 from ...spectral.index import SpectralIndex
-from ...spectral.mono import WavelengthSet
 from ...units import unit_context_kernel as uck
 from ...validators import has_quantity
 
@@ -83,9 +81,6 @@ class HomogeneousAtmosphere(Atmosphere):
     def update(self) -> None:
         # Inherit docstring
         self.phase.id = self.phase_id
-
-    def spectral_grid(self, quad_spec: dict) -> None | BinSet | WavelengthSet:
-        return None
 
     # --------------------------------------------------------------------------
     #                               Properties

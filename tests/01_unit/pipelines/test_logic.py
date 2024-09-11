@@ -15,7 +15,7 @@ import eradiate
 import eradiate.pipelines.logic as logic
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination
-from eradiate.spectral import BinSet, WavelengthSet
+from eradiate.spectral import CKDSpectralGrid, MonoSpectralGrid
 from eradiate.units import unit_registry as ureg
 
 # ------------------------------------------------------------------------------
@@ -93,14 +93,14 @@ def experiment(mode, srf, measure):
 @pytest.fixture
 def irradiance(mode_id, experiment):
     return logic.extract_irradiance(
-        mode_id, experiment.illumination, experiment.spectral_grid[0]
+        mode_id, experiment.illumination, experiment.spectral_grids[0]
     )["irradiance"]
 
 
 @pytest.fixture
 def solar_angles(mode_id, experiment):
     return logic.extract_irradiance(
-        mode_id, experiment.illumination, experiment.spectral_grid[0]
+        mode_id, experiment.illumination, experiment.spectral_grids[0]
     )["solar_angles"]
 
 
@@ -154,7 +154,8 @@ def aggregate_ckd_quad(mode, experiment, gather_bitmaps):
     return logic.aggregate_ckd_quad(
         mode_id=mode.id,
         raw_data=results_raw,
-        spectral_set=experiment.spectral_grid[0],
+        spectral_grid=experiment.spectral_grids[0],
+        ckd_quads=experiment.ckd_quads[0],
         is_variance=calculate_variance,
     )
 
@@ -166,7 +167,8 @@ def aggregate_ckd_quad_var(mode, experiment, moment2_to_variance):
     return logic.aggregate_ckd_quad(
         mode_id=mode.id,
         raw_data=moment2_to_variance,
-        spectral_set=experiment.spectral_set[0],
+        spectral_grid=experiment.spectral_grids[0],
+        ckd_quads=experiment.ckd_quads[0],
         is_variance=calculate_variance,
     )
 
@@ -291,14 +293,16 @@ def test_extract_irradiance(
 
     # Computation succeeds
     if mode.is_mono:
-        spectral_set = WavelengthSet(np.linspace(400.0, 500.0) * ureg.nm)
+        spectral_grid = MonoSpectralGrid(np.linspace(400.0, 500.0) * ureg.nm)
     elif mode.is_ckd:
-        spectral_set = BinSet.arange(400.0 * ureg.nm, 500.0 * ureg.nm, 10.0 * ureg.nm)
+        spectral_grid = CKDSpectralGrid.arange(
+            400.0 * ureg.nm, 500.0 * ureg.nm, 10.0 * ureg.nm
+        )
     else:
         raise NotImplementedError
 
     # Return value is a dictionary holding a data array and an optional dataset
-    result = logic.extract_irradiance(mode.id, illumination, spectral_set)
+    result = logic.extract_irradiance(mode.id, illumination, spectral_grid)
     assert set(result.keys()) == {"irradiance", "solar_angles"}
     assert isinstance(result["irradiance"], xr.DataArray)
 
@@ -334,7 +338,7 @@ def test_gather_bitmaps(mode, gather_bitmaps):
     if mode.is_mono:
         spectral_sizes = {"w": 1}
     elif mode.is_ckd:
-        spectral_sizes = {"w": 1, "g": 1}  # 1 is the default value
+        spectral_sizes = {"w": 1, "g": 16}  # 1 is the default value
     else:
         raise RuntimeError("Selected mode is not handled")
 

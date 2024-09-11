@@ -18,7 +18,9 @@ from .. import converters, validators
 from .. import pipelines as pl
 from ..attrs import AUTO, define, documented
 from ..contexts import KernelContext
+from ..exceptions import UnsupportedModeError
 from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
+from ..quad import Quad
 from ..rng import SeedState
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
 from ..scenes.illumination import (
@@ -107,6 +109,7 @@ class Experiment(ABC):
         default="AUTO",
     )
 
+    # Storage for results, for each computed measure
     _results: dict[str, xr.Dataset] = attrs.field(factory=dict, repr=False)
 
     @property
@@ -138,22 +141,43 @@ class Experiment(ABC):
         default=".AUTO",
     )
 
-    # Grid used to walk the spectral dimension.
-    # This attribute is set by the '_normalize_spectral()' method.
-    _spectral_grid: dict[int, SpectralGrid] = attrs.field(init=False, repr=False)
+    # Grid used to walk the spectral dimension for each measure.
+    # Set upon initialization by the '_normalize_spectral()' method.
+    _spectral_grids: dict[int, SpectralGrid] = attrs.field(
+        factory=dict, init=False, repr=False
+    )
 
     @property
-    def spectral_grid(self) -> dict[int, SpectralGrid]:
+    def spectral_grids(self) -> dict[int, SpectralGrid]:
         """
         A dictionary mapping measure index to the associated spectral grid.
         """
-        return self._spectral_grid
+        return self._spectral_grids
 
-    quad_config: CKDQuadConfig = attrs.field(
-        factory=CKDQuadConfig,
-        converter=CKDQuadConfig.convert,
-        validator=attrs.validators.instance_of(CKDQuadConfig),
+    ckd_quad_config: CKDQuadConfig = documented(
+        attrs.field(
+            factory=CKDQuadConfig,
+            converter=CKDQuadConfig.convert,
+            validator=attrs.validators.instance_of(CKDQuadConfig),
+        ),
+        doc="CKD quadrature rule generation configuration.",
+        type=".CKDQuadConfig",
+        init_type=".CKDQuadConfig or dict",
     )
+
+    # CKD quadrature configuration for each bin.
+    # Set upon initialization by the '_normalize_spectral()' method.
+    _ckd_quads: dict[int, list[Quad]] = attrs.field(
+        factory=dict, init=False, repr=False
+    )
+
+    @property
+    def ckd_quads(self) -> dict[int, list[Quad]]:
+        """
+        A dictionary mapping measure index to the associated CKD quadrature rule
+        (if relevant).
+        """
+        return self._ckd_quads
 
     def __attrs_post_init__(self):
         self._normalize_spectral()
@@ -167,14 +191,29 @@ class Experiment(ABC):
 
         # Override default with atmosphere-based grid if relevant
         atmosphere = getattr(self, "atmosphere", None)
-        if atmosphere is not None and hasattr(atmosphere, "abs_db"):
+        abs_db = None
+        if atmosphere is not None:
+            abs_db = getattr(self.atmosphere, "abs_db", None)
+        if abs_db is not None:
             spectral_grid = SpectralGrid.from_absorption_database(atmosphere.abs_db)
 
         # Select subparts of the grid that are covered by the SRF
-        self._spectral_grid = {
+        self._spectral_grids = {
             i: spectral_grid.select(measure.srf)
             for i, measure in enumerate(self.measures)
         }
+
+        # Get quadrature rules for all bins
+        ckd_quads = {}
+        for i, measure in enumerate(self.measures):
+            if eradiate.mode().is_ckd:
+                spectral_grid: CKDSpectralGrid = self._spectral_grids[i]
+                ckd_quads[i] = [
+                    x[1] for x in spectral_grid.walk_quads(self.ckd_quad_config, abs_db)
+                ]
+            else:
+                ckd_quads[i] = []
+        self._ckd_quads = ckd_quads
 
     def clear(self) -> None:
         """
@@ -357,19 +396,19 @@ class EarthObservationExperiment(Experiment, ABC):
         elif eradiate.mode().is_ckd:
             generator = self.spectral_indices_ckd
         else:
-            raise RuntimeError(f"unsupported mode '{eradiate.mode().id}'")
+            raise UnsupportedModeError
 
         yield from generator(measure_index)
 
     def spectral_indices_mono(
         self, measure_index: int
     ) -> t.Generator[MonoSpectralIndex]:
-        spectral_grid: MonoSpectralGrid = self.spectral_grid[measure_index]
+        spectral_grid: MonoSpectralGrid = self.spectral_grids[measure_index]
         yield from spectral_grid.walk_indices()
 
     def spectral_indices_ckd(self, measure_index: int) -> t.Generator[CKDSpectralIndex]:
-        spectral_grid: CKDSpectralGrid = self.spectral_grid[measure_index]
-        quad_config = self.quad_config
+        spectral_grid: CKDSpectralGrid = self.spectral_grids[measure_index]
+        quad_config = self.ckd_quad_config
         try:
             abs_db = self.atmosphere.abs_db
         except AttributeError:
@@ -446,11 +485,7 @@ class EarthObservationExperiment(Experiment, ABC):
         # Remove unused elements from Mitsuba scene parameter table
         self.mi_scene.drop_parameters()
 
-    def process(
-        self,
-        spp: int = 0,
-        seed_state: SeedState | None = None,
-    ) -> None:
+    def process(self, spp: int = 0, seed_state: SeedState | None = None) -> None:
         # Inherit docstring
 
         # Set up Mitsuba scene
@@ -461,10 +496,7 @@ class EarthObservationExperiment(Experiment, ABC):
         logger.info("Launching simulation")
 
         mi_results = mi_render(
-            self.mi_scene,
-            self.contexts,
-            seed_state=seed_state,
-            spp=spp,
+            self.mi_scene, self.contexts, seed_state=seed_state, spp=spp
         )
 
         # Assign collected results to the appropriate measure
@@ -538,7 +570,8 @@ class EarthObservationExperiment(Experiment, ABC):
         measure = self.measures[i_measure]
         result = {
             "bitmaps": measure.mi_results,
-            "spectral_set": self.spectral_grid[i_measure],
+            "spectral_grid": self.spectral_grids[i_measure],
+            "ckd_quads": self.ckd_quads[i_measure],
             "illumination": self.illumination,
             "srf": measure.srf,
         }

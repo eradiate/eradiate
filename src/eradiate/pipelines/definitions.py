@@ -22,10 +22,8 @@ from .._mode import modes
 from ..scenes.illumination import (
     Illumination,
 )
-from ..scenes.spectra import (
-    Spectrum,
-)
-from ..spectral.spectral_set import SpectralSet
+from ..spectral import SpectralResponseFunction
+from ..spectral.grid import SpectralGrid
 
 _MODE_IDS_CKD = set(modes(lambda x: x.is_ckd).keys())
 
@@ -42,9 +40,9 @@ def _parameterize_aggregate_ckd_quad(var_name):
     decorate_with=_parameterize_aggregate_ckd_quad,
 )
 def aggregate_ckd_quad(
-    mode_id: str, raw_data: xr.DataArray, spectral_set: SpectralSet
+    mode_id: str, raw_data: xr.DataArray, spectral_grid: SpectralGrid, ckd_quads: list
 ) -> xr.DataArray:
-    return logic.aggregate_ckd_quad(mode_id, raw_data, spectral_set, False)
+    return logic.aggregate_ckd_quad(mode_id, raw_data, spectral_grid, ckd_quads, False)
 
 
 def _parameterize_aggregate_ckd_quad_var(var_name):
@@ -62,9 +60,9 @@ def _parameterize_aggregate_ckd_quad_var(var_name):
     decorate_with=_parameterize_aggregate_ckd_quad_var,
 )
 def aggregate_ckd_quad_var(
-    mode_id: str, raw_data: xr.DataArray, spectral_set: SpectralSet
+    mode_id: str, raw_data: xr.DataArray, spectral_grid: SpectralGrid, ckd_quads: list
 ) -> xr.DataArray:
-    return logic.aggregate_ckd_quad(mode_id, raw_data, spectral_set, True)
+    return logic.aggregate_ckd_quad(mode_id, raw_data, spectral_grid, ckd_quads, True)
 
 
 def _parameterize_variance(var_name):
@@ -112,7 +110,9 @@ def _parameterize_apply_spectral_response(var_name, measure_distant):
 )
 @config.when_in(mode_id=_MODE_IDS_CKD)
 @config.when(apply_spectral_response=True)
-def apply_spectral_response(spectral_data: xr.DataArray, srf: Spectrum) -> xr.DataArray:
+def apply_spectral_response(
+    spectral_data: xr.DataArray, srf: SpectralResponseFunction
+) -> xr.DataArray:
     return logic.apply_spectral_response(spectral_data, srf)
 
 
@@ -175,9 +175,9 @@ def bidirectional_reflectance_srf(
 )
 @extract_fields({"irradiance": xr.DataArray, "solar_angles": xr.Dataset})
 def extract_irradiance(
-    mode_id: str, illumination: Illumination, spectral_set: SpectralSet
+    mode_id: str, illumination: Illumination, spectral_grid: SpectralGrid
 ) -> dict:
-    return logic.extract_irradiance(mode_id, illumination, spectral_set)
+    return logic.extract_irradiance(mode_id, illumination, spectral_grid)
 
 
 def _tag_outputs_gather_bitmaps(var_name, calculate_variance, calculate_stokes):
@@ -247,7 +247,7 @@ def radiosity(sector_radiosity: xr.DataArray) -> xr.DataArray:
 
 
 @config.when(apply_spectral_response=True)
-def spectral_response(srf: Spectrum) -> xr.DataArray:
+def spectral_response(srf: SpectralResponseFunction) -> xr.DataArray:
     return logic.spectral_response(srf)
 
 

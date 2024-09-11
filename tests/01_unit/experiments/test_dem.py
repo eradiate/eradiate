@@ -9,8 +9,8 @@ from eradiate.experiments import DEMExperiment
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.measure import MultiDistantMeasure
-from eradiate.scenes.spectra import MultiDeltaSpectrum
 from eradiate.scenes.surface import DEMSurface, mesh_from_dem
+from eradiate.spectral import DeltaSRF
 from eradiate.test_tools.types import check_scene_element
 
 
@@ -152,7 +152,7 @@ def test_dem_experiment_run_basic(modes_all_double):
     DEMExperiment runs successfully in all modes.
     """
     exp = DEMExperiment()
-    exp.measures[0].srf = MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm)
+    exp.measures[0].srf = DeltaSRF(wavelengths=550.0 * ureg.nm)
     eradiate.run(exp)
     assert isinstance(exp.results, dict)
 

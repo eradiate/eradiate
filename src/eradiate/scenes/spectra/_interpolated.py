@@ -10,8 +10,6 @@ from ._core import Spectrum
 from ... import converters, validators
 from ...attrs import define, documented
 from ...kernel import InitParameter, UpdateParameter
-from ...spectral.ckd import BinSet
-from ...spectral.mono import WavelengthSet
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -274,55 +272,3 @@ class InterpolatedSpectrum(Spectrum):
                 flags=UpdateParameter.Flags.SPECTRAL,
             )
         }
-
-    def select_in_wavelength_set(self, wset: WavelengthSet) -> WavelengthSet:
-        """
-        Selects the wavelengths that are included in the wavelength interval
-        where the spectrum evaluates to a non-zero value.
-
-        Parameters
-        ----------
-        wset : WavelengthSet
-            Wavelength set.
-
-        Returns
-        -------
-        WavelengthSet
-            Wavelength set.
-        """
-        wunits = "nm"
-        w = wset.wavelengths.m_as(wunits)
-        rw = self.wavelengths.m_as(wunits)
-        r = self.values.m
-        rinterp = np.interp(w, rw, r, left=0.0, right=0.0)
-        selected = w[rinterp > 0]
-        return WavelengthSet(selected * ureg(wunits))
-
-    def select_in_bin_set(self, binset: BinSet) -> BinSet:
-        bins = binset.bins
-        wunits = "nm"
-        xmin = np.array([bin.wmin.m_as(wunits) for bin in bins])
-        xmax = np.array([bin.wmax.m_as(wunits) for bin in bins])
-        r = self.values.m
-        w = self.wavelengths.m_as(wunits)
-        selected = select_method_2(xmin, xmax, w, r)
-        return BinSet(bins=list(np.array(bins)[selected]))
-
-
-def nonzero_integral(x, y):
-    from scipy.integrate import cumulative_trapezoid
-
-    cumsum = np.concatenate(((0.0,), cumulative_trapezoid(y, x)))
-    return cumsum[:-1] != cumsum[1:]
-
-
-def select_method_2(xmin, xmax, w, srf):
-    # Evaluate the SRF on the bin grid
-    resolution = (max(xmax) - min(xmax)) / (len(xmax) - 1)
-    epsilon = resolution * 1e-3
-    bins = np.unique((xmin, xmax))
-    precision_mask = np.ones((len(bins)), dtype=bool)
-    precision_mask[1:] = np.abs(np.diff(bins)) > epsilon
-    bins = bins[precision_mask]
-    srf_bins = np.interp(bins, w, srf, left=0, right=0)
-    return np.where(nonzero_integral(bins, srf_bins))[0]

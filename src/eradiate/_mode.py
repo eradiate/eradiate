@@ -406,7 +406,7 @@ class SubtypeDispatcher:
     _type_name: str = attrs.field()
     _registry: dict[ModeFlag, t.Type] = attrs.field(factory=dict)
 
-    def register(self, mode_flags: ModeFlag | str) -> None:
+    def register(self, mode_flags: ModeFlag | str) -> t.Callable[[t.Type], t.Type]:
         """
         Register a subtype against a combination of mode flags. This method is
         meant to be used as a decorator.
