@@ -365,7 +365,7 @@ class EarthObservationExperiment(Experiment, ABC):
         self, measure_index: int
     ) -> t.Generator[MonoSpectralIndex]:
         spectral_grid: MonoSpectralGrid = self.spectral_grid[measure_index]
-        yield from spectral_grid.walk()
+        yield from spectral_grid.walk_indices()
 
     def spectral_indices_ckd(self, measure_index: int) -> t.Generator[CKDSpectralIndex]:
         spectral_grid: CKDSpectralGrid = self.spectral_grid[measure_index]
@@ -374,7 +374,7 @@ class EarthObservationExperiment(Experiment, ABC):
             abs_db = self.atmosphere.abs_db
         except AttributeError:
             abs_db = None
-        yield from spectral_grid.walk(quad_config, abs_db)
+        yield from spectral_grid.walk_indices(quad_config, abs_db)
 
     def _spectral_index_generator(self):
         return MultiGenerator(

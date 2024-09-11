@@ -112,10 +112,10 @@ def test_mono_spectral_grid_default():
     np.testing.assert_allclose(grid.wavelengths.m, np.arange(280.0, 2401.0, 1.0))
 
 
-def test_mono_spectral_grid_walk():
+def test_mono_spectral_grid_walk_indices():
     grid = MonoSpectralGrid([300, 400, 500])
     np.testing.assert_allclose(
-        [x.w.m_as("nm") for x in grid.walk()], grid.wavelengths.m
+        [x.w.m_as("nm") for x in grid.walk_indices()], grid.wavelengths.m
     )
 
 
@@ -272,7 +272,7 @@ def test_ckd_grid_select_band_srf(band_srf_kwargs, expected_selected_wcenters):
     np.testing.assert_allclose(grid_selected.wcenters.m, expected_selected_wcenters.m)
 
 
-def test_ckd_grid_walk():
+def test_ckd_grid_walk_indices():
     grid = CKDSpectralGrid.arange(540, 560, 10)
     cqc = CKDQuadConfig(type="gauss_legendre", ng_max=4, policy="fixed")
     expected_gs = Quad.gauss_legendre(4).eval_nodes([0, 1])
@@ -280,7 +280,7 @@ def test_ckd_grid_walk():
     expected_sequence = [
         CKDSpectralIndex(w, g) for w in grid.wcenters for g in expected_gs
     ]
-    actual_sequence = list(grid.walk(cqc))
+    actual_sequence = list(grid.walk_indices(cqc))
 
     np.testing.assert_allclose(
         [x.w.m_as("nm") for x in actual_sequence],
