@@ -21,13 +21,11 @@ from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel import UpdateParameter
 from ...radprops import ZGrid
-from ...spectral.ckd import BinSet, QuadSpec
 from ...spectral.index import (
     CKDSpectralIndex,
     MonoSpectralIndex,
     SpectralIndex,
 )
-from ...spectral.mono import WavelengthSet
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -231,11 +229,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             )
 
     _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
-
-    def spectral_grid(
-        self, quad_spec: QuadSpec | None = None
-    ) -> None | BinSet | WavelengthSet:
-        return None
 
     def update(self) -> None:
         self._phase = TabulatedPhaseFunction(

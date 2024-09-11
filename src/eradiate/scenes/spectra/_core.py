@@ -10,13 +10,11 @@ import pint
 from ..core import NodeSceneElement
 from ..._factory import Factory
 from ...attrs import define, documented
-from ...spectral.ckd import BinSet
 from ...spectral.index import (
     CKDSpectralIndex,
     MonoSpectralIndex,
     SpectralIndex,
 )
-from ...spectral.mono import WavelengthSet
 from ...units import PhysicalQuantity
 
 
@@ -263,45 +261,4 @@ class Spectrum(NodeSceneElement, ABC):
         values are intepreted as dimnesionless). Note that leaving the
         ``quantity`` field unset is discouraged.
         """
-        raise NotImplementedError
-
-    @singledispatchmethod
-    def select_in(self, spectral_set) -> BinSet | WavelengthSet:
-        """
-        Select a subset of a spectral set.
-
-        Parameters
-        ----------
-        spectral_set : :class:`.BinSet` or :class:`.WavelengthSet`
-            Spectral set.
-
-        Returns
-        -------
-        subset : :class:`.BinSet` or :class:`.WavelengthSet`
-            Subset of the spectral set.
-
-        Notes
-        -----
-        This method is only relevant to subclasses used to represent
-        spectral response function (the default implementation raises a
-        :class:`NotImplementedError`). In this context, the spectral response
-        function acts as a sort of filter that *selects* a subset of a spectral
-        set, e.g. where the response is non-zero.
-        This method is useful for :class:`.Experiment` objects to determine
-        which spectral set is relevant for a given sensor.
-        """
-        raise NotImplementedError
-
-    @select_in.register(WavelengthSet)
-    def _(self, spectral_set) -> WavelengthSet:
-        return self.select_in_wavelength_set(spectral_set)
-
-    @select_in.register(BinSet)
-    def _(self, spectral_set) -> BinSet:
-        return self.select_in_bin_set(spectral_set)
-
-    def select_in_wavelength_set(self, wset) -> WavelengthSet:
-        raise NotImplementedError
-
-    def select_in_bin_set(self, binset) -> BinSet:
         raise NotImplementedError

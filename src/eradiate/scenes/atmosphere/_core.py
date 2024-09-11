@@ -30,7 +30,7 @@ from ...kernel import (
 )
 from ...quad import Quad
 from ...radprops import ZGrid
-from ...spectral.ckd import QuadSpec
+from ...spectral import CKDQuadConfig
 from ...spectral.index import SpectralIndex
 from ...units import symbol
 from ...units import unit_context_config as ucc
@@ -631,10 +631,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_transmittance_s(self, si: SpectralIndex) -> pint.Quantity:
         return self.eval_transmittance(si=si, interaction="scattering")
 
-    def eval_transmittance_accross_spectral_set(
+    def eval_transmittance_accross_spectral_grid(
         self,
         interaction: str = "extinction",
-        quad_spec: QuadSpec | None = None,
+        ckd_quad_config: CKDQuadConfig | None = None,
     ) -> xr.DataArray:
         """
         Evaluate the atmosphere's transmittance with respect to extinction
@@ -642,7 +642,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         Parameters
         ----------
-        quad_spec : :class:`.QuadSpec`, optional
+        ckd_quad_config : .QuadSpec, optional
             Quadrature specifications.
 
         Returns
@@ -654,14 +654,14 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         if eradiate.mode().is_mono:
             return self.eval_transmittance_accross_spectral_set_mono(
                 interaction=interaction,
-                quad_spec=quad_spec,
+                quad_spec=ckd_quad_config,
             )
         elif eradiate.mode().is_ckd:
-            if quad_spec is None:
-                quad_spec = QuadSpec.default()
+            if ckd_quad_config is None:
+                ckd_quad_config = CKDQuadConfig()
             return self.eval_transmittance_accross_spectral_set_ckd(
                 interaction=interaction,
-                quad_spec=quad_spec,
+                quad_spec=ckd_quad_config,
             )
         else:
             raise UnsupportedModeError(supported=["mono", "ckd"])

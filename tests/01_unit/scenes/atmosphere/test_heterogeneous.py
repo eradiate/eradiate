@@ -73,9 +73,9 @@ def test_heterogeneous_single_ckd(
         )
 
     # The scene element produces valid kernel dictionary specifications
-    spectral_set = atmosphere.spectral_grid()
-    if spectral_set is not None:
-        si = list(spectral_set.spectral_indices())[0]
+    spectral_grid = atmosphere.spectral_grid()
+    if spectral_grid is not None:
+        si = list(spectral_grid.spectral_indices())[0]
     else:
         si = SpectralIndex.new()
     kernel_context = KernelContext(si=si)

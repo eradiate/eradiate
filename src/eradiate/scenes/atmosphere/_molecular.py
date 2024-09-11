@@ -26,10 +26,7 @@ from ...radprops import (
     RadProfile,
     ZGrid,
 )
-from ...spectral.ckd import BinSet, QuadSpec
 from ...spectral.index import SpectralIndex
-from ...spectral.mono import WavelengthSet
-from ...spectral.spectral_set import SpectralSet
 from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
 
@@ -189,21 +186,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             has_absorption=self.has_absorption,
             absorption_data=self.absorption_data,
         )
-
-    def spectral_grid(self, quad_spec: QuadSpec | None = None) -> None | SpectralSet:
-        if self.has_absorption:
-            if eradiate.mode().is_mono:
-                return WavelengthSet.from_absorption_database(self.absorption_data)
-
-            elif eradiate.mode().is_ckd:
-                if quad_spec is None:
-                    quad_spec = QuadSpec.default()  # default
-                return BinSet.from_absorption_database(self.absorption_data, quad_spec)
-
-            else:
-                raise NotImplementedError
-        else:
-            return None
 
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties

@@ -76,13 +76,13 @@ class SpectralIndex(ABC):
         pass
 
     @staticmethod
-    def new(mode: SpectralMode | str | None = None, **kwargs) -> SpectralIndex:
+    def new(mode: ModeFlag | str | None = None, **kwargs) -> SpectralIndex:
         """
         Spectral index factory method.
 
         Parameters
         ----------
-        mode : :class:`.SpectralMode` or str, optional
+        mode : `.ModeFlag` or str, optional
             Spectral mode identifier. If ``None``, the current mode is used.
 
         Returns
@@ -99,6 +99,11 @@ class SpectralIndex(ABC):
         --------
         :class:`.MonoSpectralIndex`, :class:`.CKDSpectralIndex`
         """
+        if isinstance(mode, str):
+            mode = mode.upper()
+            if not mode.startswith("SPECTRAL_MODE_"):
+                mode = f"SPECTRAL_MODE_{mode}"
+            mode = ModeFlag[mode]
         si_cls = SpectralIndex.subtypes.resolve(mode)
         return si_cls(**kwargs)
 

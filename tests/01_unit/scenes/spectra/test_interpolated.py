@@ -9,7 +9,6 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.scenes.spectra import InterpolatedSpectrum, spectrum_factory
-from eradiate.spectral import Bin, BinSet
 from eradiate.spectral.index import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
 from eradiate.units import PhysicalQuantity
@@ -258,88 +257,3 @@ def test_interpolated_from_dataarray(mode_mono):
     spectrum = InterpolatedSpectrum.from_dataarray(quantity="reflectance", dataarray=da)
     assert np.all(spectrum.wavelengths.m_as(da.w.attrs["units"]) == da.w.values)
     assert np.all(spectrum.values.m_as(da.attrs["units"]) == da.values)
-
-
-@pytest.mark.parametrize(
-    "interpolated_kwargs, expected_selected_wcenters",
-    [
-        (
-            {
-                "wavelengths": np.linspace(500.0, 600.0, 11),
-                "values": ([0] + [1] * 9 + [0]) * ureg.dimensionless,
-            },
-            np.arange(505, 596, 10) * ureg.nm,
-        ),
-        (
-            {
-                "wavelengths": np.linspace(500.0, 600.0, 11),
-                "values": ([np.finfo(float).eps] + [1] * 9 + [np.finfo(float).eps])
-                * ureg.dimensionless,
-            },
-            np.arange(495, 596, 10) * ureg.nm,
-        ),
-        (
-            {
-                "wavelengths": np.linspace(500.0, 600.0, 11),
-                "values": ([0, 0] + [1] * 7 + [0, 0]) * ureg.dimensionless,
-            },
-            np.arange(515, 586, 10) * ureg.nm,
-        ),
-        (
-            {
-                "wavelengths": np.linspace(500.0, 600.0, 11),
-                "values": [0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0] * ureg.dimensionless,
-            },
-            [515, 525, 535, 555, 565, 575, 585] * ureg.nm,
-        ),
-        (
-            {
-                "wavelengths": np.linspace(500.0, 600.0, 11),
-                "values": [0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0] * ureg.dimensionless,
-            },
-            [515, 525, 555, 565, 575, 585, 595] * ureg.nm,
-        ),
-        (
-            {
-                "wavelengths": np.linspace(505.0, 605.0, 11),
-                "values": ([0, 0] + [1] * 7 + [0, 0]) * ureg.dimensionless,
-            },
-            np.arange(515, 596, 10) * ureg.nm,
-        ),
-    ],
-    ids=[
-        "connected_1",
-        "connected_2",
-        "connected_3",
-        "nonconnected_1",
-        "nonconnected_2",
-        "connected_misaligned",
-    ],
-)
-def test_interpolated_select_ckd(interpolated_kwargs, expected_selected_wcenters):
-    """
-    Unit tests for :meth:`.BinSet.select_from_srf`.
-    """
-    binset = BinSet.arange(start=280.0, stop=2400.0, step=10.0)
-    srf = InterpolatedSpectrum(**interpolated_kwargs)
-    selected = srf.select_in(binset)
-    assert np.allclose(selected.wcenters, expected_selected_wcenters)
-
-
-def test_interpolated_select_ckd_inaccurate_bin_bounds():
-    # Inaccurate bin bounds (due to numerical precision issues) are corrected by
-    # the bin selection method implementation
-    binset = BinSet(
-        bins=[
-            Bin(wmin=500.0, wmax=550.0),
-            Bin(wmin=550.0 + np.finfo("float16").eps, wmax=600.0),
-            # we use float16 so that even on Windows (where the default float
-            # type is float32), this test still works as expected
-        ]
-    )
-    srf = InterpolatedSpectrum(
-        wavelengths=np.linspace(500.0, 600.0, 11),
-        values=([0, 0] + [1] * 7 + [0, 0]) * ureg.dimensionless,
-    )
-    selected = srf.select_in(binset).wcenters
-    assert np.allclose(selected, [525.0, 575.0] * ureg.nm)
