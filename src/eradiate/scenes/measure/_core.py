@@ -118,7 +118,7 @@ def _srf_converter(value: t.Any) -> t.Any:
         try:
             ds = xr.load_dataset(value)
             return BandSRF.from_dataarray(ds.srf)
-        except FileNotFoundError:
+        except (FileNotFoundError, ValueError):
             pass
 
     if isinstance(value, str):
