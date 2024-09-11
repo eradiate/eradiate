@@ -31,6 +31,11 @@ def test_mono_spectral_grid_construct(wavelengths, expected):
     np.testing.assert_allclose(grid.wavelengths.m_as("nm"), expected)
 
 
+def test_mono_spectral_grid_default():
+    grid = MonoSpectralGrid.default()
+    np.testing.assert_allclose(grid.wavelengths.m, np.arange(280.0, 2401.0, 1.0))
+
+
 def test_mono_spectral_grid_from_absorption_database():
     abs_db = MonoAbsorptionDatabase.from_name("gecko")
     grid = MonoSpectralGrid.from_absorption_database(abs_db)
@@ -107,9 +112,11 @@ def test_mono_spectral_grid_select_band_srf(band_srf_kwargs, expected_selected_w
     np.testing.assert_allclose(grid_selected.wavelengths.m, expected_selected_w.m)
 
 
-def test_mono_spectral_grid_default():
-    grid = MonoSpectralGrid.default()
-    np.testing.assert_allclose(grid.wavelengths.m, np.arange(280.0, 2401.0, 1.0))
+def test_mono_spectral_grid_merge():
+    grid_1 = MonoSpectralGrid(wavelengths=np.arange(500.0, 601.0, 10.0))
+    grid_2 = MonoSpectralGrid(wavelengths=np.arange(550.0, 651.0, 10.0))
+    grid_3 = grid_1.merge(grid_2)
+    np.testing.assert_array_equal(grid_3.wavelengths.m, np.arange(500.0, 651.0, 10.0))
 
 
 def test_mono_spectral_grid_walk_indices():
@@ -270,6 +277,24 @@ def test_ckd_grid_select_band_srf(band_srf_kwargs, expected_selected_wcenters):
     srf = BandSRF(**band_srf_kwargs)
     grid_selected = grid.select(srf)
     np.testing.assert_allclose(grid_selected.wcenters.m, expected_selected_wcenters.m)
+
+
+def test_ckd_spectral_grid_merge():
+    # Merge two grids with an overlap
+    grid_1 = CKDSpectralGrid.arange(500.0, 601.0, 10.0)
+    grid_2 = CKDSpectralGrid.arange(550.0, 651.0, 10.0)
+    grid_3 = grid_1.merge(grid_2)
+    np.testing.assert_array_equal(grid_3.wmins.m, np.arange(495.0, 646.0, 10.0))
+    np.testing.assert_array_equal(grid_3.wmaxs.m, np.arange(505.0, 656.0, 10.0))
+    np.testing.assert_array_equal(grid_3.wcenters.m, np.arange(500.0, 651.0, 10.0))
+
+    # Merge two disjoint grids
+    grid_1 = CKDSpectralGrid.arange(550.0, 561.0, 10.0)
+    grid_2 = CKDSpectralGrid.arange(500.0, 511.0, 10.0)
+    grid_3 = grid_1.merge(grid_2)
+    np.testing.assert_array_equal(grid_3.wmins.m, [495.0, 505.0, 545.0, 555.0])
+    np.testing.assert_array_equal(grid_3.wmaxs.m, [505.0, 515.0, 555.0, 565.0])
+    np.testing.assert_array_equal(grid_3.wcenters.m, [500.0, 510.0, 550.0, 560.0])
 
 
 def test_ckd_grid_walk_indices():

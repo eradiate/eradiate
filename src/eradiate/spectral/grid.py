@@ -21,7 +21,7 @@ from ..quad import Quad
 from ..radprops import AbsorptionDatabase, CKDAbsorptionDatabase, MonoAbsorptionDatabase
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
-from ..util.misc import summary_repr
+from ..util.misc import deduplicate_sorted, summary_repr
 
 # ------------------------------------------------------------------------------
 #                             Class implementations
@@ -76,6 +76,13 @@ class SpectralGrid(ABC):
         -----
         The implementation of this method uses single dispatch based on the type
         of the ``srf`` parameter.
+        """
+        pass
+
+    @abstractmethod
+    def merge(self, other: SpectralGrid) -> SpectralGrid:
+        """
+        Merge two spectral grids, applying a boolean "OR" operation.
         """
         pass
 
@@ -162,6 +169,20 @@ class MonoSpectralGrid(SpectralGrid):
         values = srf.eval(self.wavelengths)
         w_selected = self.wavelengths[values.m > 0.0]
         return MonoSpectralGrid(wavelengths=w_selected)
+
+    def merge(self, other: MonoSpectralGrid) -> MonoSpectralGrid:
+        # Inherit docstring
+
+        # Collect all wavelengths
+        w_u = ucc.get("wavelength")
+        w_m = np.sort(
+            np.concatenate((self.wavelengths.m_as(w_u), other.wavelengths.m_as(w_u)))
+        )
+
+        # Remove duplicates
+        w_m = np.unique(w_m)
+
+        return MonoSpectralGrid(wavelengths=w_m * w_u)
 
     def walk_indices(self) -> t.Generator[MonoSpectralIndex, None, None]:
         # Inherit docstring
@@ -361,6 +382,27 @@ class CKDSpectralGrid(SpectralGrid):
 
         # Build a new spectral grid that only contains selected bins
         return CKDSpectralGrid(self.wmins[selected], self.wmaxs[selected])
+
+    def merge(self, other: CKDSpectralGrid) -> CKDSpectralGrid:
+        # Inherit docstring
+
+        # Collect spectral bin information
+        w_u = ucc.get("wavelength")
+        wmins = np.concatenate((self.wmins.m_as(w_u), other.wmins.m_as(w_u)))
+        wmaxs = np.concatenate((self.wmaxs.m_as(w_u), other.wmaxs.m_as(w_u)))
+        wcenters = np.concatenate((self.wcenters.m_as(w_u), other.wcenters.m_as(w_u)))
+
+        # Sort bins and remove duplicates
+        # TODO: Vectorize this for best performance, this is quick and dirty
+        w_m = sorted(
+            np.stack((wmins, wmaxs, wcenters)).T.tolist(),
+            key=lambda x: (x[0], x[1], x[2]),
+        )
+        w_m = np.array(deduplicate_sorted(w_m))
+
+        return CKDSpectralGrid(
+            wmins=w_m[:, 0] * w_u, wmaxs=w_m[:, 1] * w_u, wcenters=w_m[:, 2] * w_u
+        )
 
     def walk_quads(
         self,
