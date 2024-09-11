@@ -17,6 +17,7 @@ from .. import converters
 from .._mode import ModeFlag, SubtypeDispatcher
 from ..attrs import define, documented
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
+from ..quad import Quad
 from ..radprops import AbsorptionDatabase, CKDAbsorptionDatabase, MonoAbsorptionDatabase
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -79,7 +80,7 @@ class SpectralGrid(ABC):
         pass
 
     @abstractmethod
-    def walk(self, **kwargs) -> t.Generator[SpectralIndex, None, None]:
+    def walk_indices(self, **kwargs) -> t.Generator[SpectralIndex, None, None]:
         """
         A generator that yields a sequence of spectral index values.
         """
@@ -162,7 +163,7 @@ class MonoSpectralGrid(SpectralGrid):
         w_selected = self.wavelengths[values.m > 0.0]
         return MonoSpectralGrid(wavelengths=w_selected)
 
-    def walk(self) -> t.Generator[MonoSpectralIndex, None, None]:
+    def walk_indices(self) -> t.Generator[MonoSpectralIndex, None, None]:
         # Inherit docstring
         for w in self.wavelengths:
             yield MonoSpectralIndex(w=w)
@@ -236,9 +237,10 @@ class CKDSpectralGrid(SpectralGrid):
         # Initialize the object
         self.__attrs_init__(wmins_m * w_u, wmaxs_m * w_u, wcenters)
 
+    @property
     def wavelengths(self):
         # Inherit docstring
-        return self._wcenters
+        return self.wcenters
 
     @staticmethod
     def default() -> CKDSpectralGrid:
@@ -360,13 +362,11 @@ class CKDSpectralGrid(SpectralGrid):
         # Build a new spectral grid that only contains selected bins
         return CKDSpectralGrid(self.wmins[selected], self.wmaxs[selected])
 
-    def walk(
+    def walk_quads(
         self,
         ckd_quad_config: CKDQuadConfig,
         abs_db: CKDAbsorptionDatabase | None = None,
-    ) -> t.Generator[CKDSpectralIndex]:
-        # Inherit docstring
-
+    ) -> t.Generator[Quad]:
         # Check parameter consistency
         if ckd_quad_config.policy is not CKDQuadPolicy.FIXED and abs_db is None:
             raise ValueError(
@@ -374,8 +374,21 @@ class CKDSpectralGrid(SpectralGrid):
                 f"{ckd_quad_config.policy}: `abs_db` must be set (got None)"
             )
 
+        # Walk the spectral grid and get the quadrature for each bin
+        for w in self.wcenters:
+            yield ckd_quad_config.get_quad(abs_db, wcenter=w)
+
+    def walk_indices(
+        self,
+        ckd_quad_config: CKDQuadConfig,
+        abs_db: CKDAbsorptionDatabase | None = None,
+    ) -> t.Generator[CKDSpectralIndex]:
+        # Inherit docstring
+
+        quads = self.walk_quads(ckd_quad_config, abs_db)
+
         # Walk the spectral dimension
         for w in self.wcenters:
-            quad = ckd_quad_config.get_quad(abs_db, wcenter=w)
+            quad = next(quads)
             for g in quad.eval_nodes([0, 1]):
                 yield CKDSpectralIndex(w=w, g=g)
