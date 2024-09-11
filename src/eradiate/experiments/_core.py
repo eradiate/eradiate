@@ -34,7 +34,7 @@ from ..scenes.measure import (
     measure_factory,
 )
 from ..spectral.ckd_quad import CKDQuadConfig
-from ..spectral.grid import SpectralGrid
+from ..spectral.grid import CKDSpectralGrid, MonoSpectralGrid, SpectralGrid
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_registry as ureg
 from ..util.misc import MultiGenerator, deduplicate_sorted, onedict_value
@@ -149,7 +149,7 @@ class Experiment(ABC):
         """
         return self._spectral_grid
 
-    quad_spec: CKDQuadConfig = attrs.field(
+    quad_config: CKDQuadConfig = attrs.field(
         factory=CKDQuadConfig,
         converter=CKDQuadConfig.convert,
         validator=attrs.validators.instance_of(CKDQuadConfig),
@@ -364,10 +364,17 @@ class EarthObservationExperiment(Experiment, ABC):
     def spectral_indices_mono(
         self, measure_index: int
     ) -> t.Generator[MonoSpectralIndex]:
-        yield from self.spectral_grid[measure_index].spectral_indices()
+        spectral_grid: MonoSpectralGrid = self.spectral_grid[measure_index]
+        yield from spectral_grid.walk()
 
     def spectral_indices_ckd(self, measure_index: int) -> t.Generator[CKDSpectralIndex]:
-        yield from self.spectral_grid[measure_index].spectral_indices()
+        spectral_grid: CKDSpectralGrid = self.spectral_grid[measure_index]
+        quad_config = self.quad_config
+        try:
+            abs_db = self.atmosphere.abs_db
+        except AttributeError:
+            abs_db = None
+        yield from spectral_grid.walk(quad_config, abs_db)
 
     def _spectral_index_generator(self):
         return MultiGenerator(
