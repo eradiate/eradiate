@@ -35,7 +35,7 @@ import pint
 import pinttr
 
 from .. import validators
-from .._mode import SpectralMode, SubtypeDispatcher
+from .._mode import ModeFlag, SubtypeDispatcher
 from ..attrs import define, documented
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -51,7 +51,7 @@ class SpectralIndex(ABC):
     :class:`.MonoSpectralIndex`, :class:`.CKDSpectralIndex`
     """
 
-    subtypes = SubtypeDispatcher()
+    subtypes = SubtypeDispatcher("SpectralIndex")
 
     @property
     @abstractmethod
@@ -117,7 +117,7 @@ class SpectralIndex(ABC):
             raise ValueError(f"Cannot convert {value} to a spectral index.")
 
 
-@SpectralIndex.subtypes.register("mono")
+@SpectralIndex.subtypes.register(ModeFlag.SPECTRAL_MODE_MONO)
 @define(eq=False, frozen=True, slots=True)
 class MonoSpectralIndex(SpectralIndex):
     """
@@ -157,7 +157,7 @@ class MonoSpectralIndex(SpectralIndex):
         return float(self.w.m_as(ureg.nm))
 
 
-@SpectralIndex.subtypes.register("ckd")
+@SpectralIndex.subtypes.register(ModeFlag.SPECTRAL_MODE_CKD)
 @define(eq=False, frozen=True, slots=True)
 class CKDSpectralIndex(SpectralIndex):
     """
