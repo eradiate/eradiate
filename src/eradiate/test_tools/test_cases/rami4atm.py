@@ -78,10 +78,10 @@ def create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp():
                 "spp": 1000,
             }
         ],
-        "quad_spec": {
-            "type": "fixed",
-            "quad_type": "gauss_legendre",
-            "n": 16,
+        "ckd_quad_config": {
+            "policy": "fixed",
+            "type": "gauss_legendre",
+            "ng_max": 16,
         },
     }
 

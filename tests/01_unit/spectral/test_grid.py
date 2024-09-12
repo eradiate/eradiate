@@ -180,7 +180,7 @@ def test_ckd_spectral_grid_arange():
     np.testing.assert_allclose(grid.wcenters.m, [540.0, 550.0, 560.0])
 
 
-def test_ckd_spectral_grid_from_absorption_database():
+def test_ckd_spectral_grid_from_absorption_database(mode_ckd):
     # The 'monotropa' database is a notable problematic case: its wavelength
     # coordinate is set to values that match the central wavenumber of each bin,
     # and not to the middle of the spectral interval in the wavelength space.

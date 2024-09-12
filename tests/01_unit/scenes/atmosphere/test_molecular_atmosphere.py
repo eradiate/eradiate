@@ -5,23 +5,43 @@ import numpy as np
 import numpy.testing as npt
 import pytest
 
+import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
 from eradiate.scenes.atmosphere import MolecularAtmosphere
 from eradiate.scenes.core import Scene, traverse
-from eradiate.spectral import CKDSpectralIndex
+from eradiate.spectral import CKDSpectralIndex, SpectralIndex
+
+
+def _find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx]
+
+
+def default_spectral_index(atmosphere):
+    # This is a bit fragile (API stability is not guaranteed and units are not
+    # checked) but it works well in both mono and ckd modes
+    wavelengths = atmosphere.absorption_data._spectral_coverage.index.get_level_values(
+        1
+    ).values
+    w = _find_nearest(wavelengths, 550.0)
+    kwargs = {"w": w * ureg.nm}
+    if eradiate.mode().is_ckd:
+        kwargs["g"] = 0.5
+    return SpectralIndex.new(**kwargs)
 
 
 def test_molecular_atmosphere_default_mono(mode_mono):
     atmosphere = MolecularAtmosphere()
-    si = atmosphere.spectral_grid().spectral_indices().__next__()
+    si = default_spectral_index(atmosphere)
     template, _ = traverse(atmosphere)
     assert template.render(KernelContext(si=si))
 
 
 def test_molecular_atmosphere_default_ckd(mode_ckd):
     atmosphere = MolecularAtmosphere()
-    si = next(atmosphere.spectral_grid().spectral_indices())
+    si = default_spectral_index(atmosphere)
     template, _ = traverse(atmosphere)
     assert template.render(KernelContext(si=si))
 
@@ -40,7 +60,8 @@ def test_molecular_atmosphere_scale(
         scale=2.0,
     )
     template, _ = traverse(atmosphere)
-    kernel_dict = template.render(KernelContext())
+    si = default_spectral_index(atmosphere)
+    kernel_dict = template.render(KernelContext(si=si))
     assert kernel_dict["medium_atmosphere"]["scale"] == 2.0
 
 
@@ -104,7 +125,7 @@ def test_molecular_atmosphere_switches(
         error_handler_config=absorption_database_error_handler_config,
     )
 
-    si = next(atmosphere.spectral_grid().spectral_indices())
+    si = default_spectral_index(atmosphere)
     radprops = atmosphere.eval_radprops(si, optional_fields=True)
     npt.assert_allclose(radprops.sigma_s, 0.0)
 

@@ -42,7 +42,7 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
         "construct": "hplane",
         "zeniths": np.arange(-90, 91, 15),
         "azimuth": 0.0,
-        "srf": eradiate.scenes.spectra.MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
+        "srf": {"type": "delta", "wavelengths": 550.0 * ureg.nm},
     }
 
     # Particle layer only
