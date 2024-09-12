@@ -408,7 +408,7 @@ class CKDSpectralGrid(SpectralGrid):
         self,
         ckd_quad_config: CKDQuadConfig,
         abs_db: CKDAbsorptionDatabase | None = None,
-    ) -> t.Generator[tuple[float, Quad]]:
+    ) -> t.Generator[tuple[pint.Quantity, Quad]]:
         """
         Walk the spectral grid and retrieve, based on a quadrature configuration
         and, if necessary, an absorption database, the spectral quadrature for
