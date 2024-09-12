@@ -16,10 +16,8 @@ from . import spectral as spectral
 from . import units as units
 from . import validators as validators
 from . import xarray as xarray
-from ._mode import MitsubaBackend as MitsubaBackend
-from ._mode import MitsubaColorMode as MitsubaColorMode
 from ._mode import Mode as Mode
-from ._mode import SpectralMode as SpectralMode
+from ._mode import ModeFlag as ModeFlag
 from ._mode import mode as mode
 from ._mode import modes as modes
 from ._mode import set_mode as set_mode
