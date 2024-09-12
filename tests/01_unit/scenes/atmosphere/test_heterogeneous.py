@@ -13,8 +13,27 @@ from eradiate.scenes.atmosphere import (
 )
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import SceneGeometry
-from eradiate.spectral.index import CKDSpectralIndex, SpectralIndex
+from eradiate.spectral.index import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
+
+
+def _find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx]
+
+
+def default_spectral_index(atmosphere):
+    # This is a bit fragile (API stability is not guaranteed and units are not
+    # checked) but it works well in both mono and ckd modes
+    wavelengths = atmosphere.absorption_data._spectral_coverage.index.get_level_values(
+        1
+    ).values
+    w = _find_nearest(wavelengths, 550.0)
+    kwargs = {"w": w * ureg.nm}
+    if eradiate.mode().is_ckd:
+        kwargs["g"] = 0.5
+    return SpectralIndex.new(**kwargs)
 
 
 def test_heterogeneous_empty(modes_all_double):
@@ -34,10 +53,9 @@ def test_heterogeneous_single_mono(
     # Construct succeeds
     if component == "molecular":
         atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry,
-            molecular_atmosphere=atmosphere_us_standard_mono,
+            geometry=geometry, molecular_atmosphere=atmosphere_us_standard_mono
         )
-        si = atmosphere.spectral_grid().spectral_indices().__next__()
+        si = default_spectral_index(atmosphere.molecular_atmosphere)
         kernel_context = KernelContext(si=si)
 
     else:
@@ -45,7 +63,6 @@ def test_heterogeneous_single_mono(
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry, particle_layers=[component]
         )
-
         kernel_context = KernelContext()
 
     # The scene element produces valid kernel dictionary specifications
@@ -65,20 +82,17 @@ def test_heterogeneous_single_ckd(
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry, molecular_atmosphere=atmosphere_us_standard_ckd
         )
+        si = default_spectral_index(atmosphere.molecular_atmosphere)
+        kernel_context = KernelContext(si=si)
 
     else:
         component = ParticleLayer()
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry, particle_layers=[component]
         )
+        kernel_context = KernelContext()
 
     # The scene element produces valid kernel dictionary specifications
-    spectral_grid = atmosphere.spectral_grid()
-    if spectral_grid is not None:
-        si = list(spectral_grid.spectral_indices())[0]
-    else:
-        si = SpectralIndex.new()
-    kernel_context = KernelContext(si=si)
     check_scene_element(atmosphere, ctx=kernel_context)
 
 
@@ -95,13 +109,9 @@ def test_heterogeneous_multi_mono(mode_mono, geometry, atmosphere_us_standard_mo
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
 
-    # particles phae function is tabulated for wavelengths starting at 350 nm
-    for si in atmosphere.spectral_grid().spectral_indices():
-        if si.w.m > 350:
-            break
-    kernel_context = KernelContext(si=si)
-
     # The scene element produces valid kernel dictionary specifications
+    si = default_spectral_index(atmosphere.molecular_atmosphere)
+    kernel_context = KernelContext(si=si)
     check_scene_element(atmosphere, ctx=kernel_context)
 
 
@@ -117,10 +127,9 @@ def test_heterogeneous_multi_ckd(mode_ckd, geometry, atmosphere_us_standard_ckd)
         particle_layers=[ParticleLayer() for _ in range(2)],
     )
 
-    si = CKDSpectralIndex(w=550.0 * ureg.nm, g=0.5)
-    kernel_context = KernelContext(si=si)
-
     # The scene element produces valid kernel dictionary specifications
+    si = default_spectral_index(atmosphere.molecular_atmosphere)
+    kernel_context = KernelContext(si=si)
     check_scene_element(atmosphere, ctx=kernel_context)
 
 
@@ -307,14 +316,9 @@ def test_heterogeneous_scale(mode_mono, atmosphere_us_standard_mono):
     template, _ = traverse(atmosphere)
     assert template["medium_atmosphere.scale"] == 2.0
 
-    # particles phae function is tabulated for wavelengths starting at 350 nm
-    for si in atmosphere.spectral_grid().spectral_indices():
-        if si.w.m > 350:
-            break
-
-    kernel_context = KernelContext(si=si)
-
     # The scene element produces valid kernel dictionary specifications
+    si = default_spectral_index(atmosphere.molecular_atmosphere)
+    kernel_context = KernelContext(si=si)
     check_scene_element(atmosphere, ctx=kernel_context)
 
 

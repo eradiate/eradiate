@@ -91,9 +91,7 @@ def test_compare_canopy_atmosphere_vs_atmosphere(
         "zeniths": np.arange(-90, 91, 15),
         "azimuth": 0.0,
         "spp": 1e4,
-        "srf": ertsc.spectra.MultiDeltaSpectrum(
-            wavelengths=550 * ureg.nm,
-        ),
+        "srf": {"type": "delta", "wavelengths": 550 * ureg.nm},
     }
 
     onedim = ertxp.AtmosphereExperiment(
@@ -225,7 +223,7 @@ def test_compare_canopy_atmosphere_vs_canopy(
         "zeniths": np.arange(-90, 91, 15),
         "azimuth": 0.0,
         "spp": 1e4,
-        "srf": ertsc.spectra.MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
+        "srf": {"type": "delta", "wavelengths": 550.0 * ureg.nm},
     }
 
     rami = ertxp.CanopyExperiment(

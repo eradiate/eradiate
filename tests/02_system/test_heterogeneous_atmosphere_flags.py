@@ -54,9 +54,7 @@ def test_heterogeneous_atm_flags(
             "construct": "hplane",
             "azimuth": 0.0,
             "zeniths": np.arange(-75, 76, 5),
-            "srf": eradiate.scenes.spectra.MultiDeltaSpectrum(
-                wavelengths=550.0 * ureg.nm
-            ),
+            "srf": {"type": "delta", "wavelengths": 550.0 * ureg.nm},
         },
     )
 

@@ -170,7 +170,7 @@ def test_dem_experiment_run_detailed(modes_all_double):
                 "id": "toa_hsphere",
                 "film_resolution": (32, 32),
                 "spp": 1000,
-                "srf": MultiDeltaSpectrum(wavelengths=550.0 * ureg.nm),
+                "srf": {"type": "delta", "wavelengths": 550.0 * ureg.nm},
             },
         ]
     )
