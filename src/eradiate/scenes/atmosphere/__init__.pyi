@@ -18,3 +18,5 @@ from ._particle_dist import (
     particle_distribution_factory as particle_distribution_factory,
 )
 from ._particle_layer import ParticleLayer as ParticleLayer
+from ._util import eval_transmittance_ckd as eval_transmittance_ckd
+from ._util import eval_transmittance_mono as eval_transmittance_mono

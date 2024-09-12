@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Literal
 
 import attrs
 import mitsuba as mi
 import numpy as np
 import pint
 import xarray as xr
-
-import eradiate
 
 from ..core import (
     CompositeSceneElement,
@@ -20,17 +19,13 @@ from ..phase import PhaseFunction
 from ..shapes import Shape
 from ..._factory import Factory
 from ...attrs import define, documented, get_doc
-from ...cfconventions import ATTRIBUTES
 from ...contexts import KernelContext
-from ...exceptions import UnsupportedModeError
 from ...kernel import (
     InitParameter,
     TypeIdLookupStrategy,
     UpdateParameter,
 )
-from ...quad import Quad
 from ...radprops import ZGrid
-from ...spectral import CKDQuadConfig
 from ...spectral.index import SpectralIndex
 from ...units import symbol
 from ...units import unit_context_config as ucc
@@ -586,7 +581,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_transmittance(
         self,
         si: SpectralIndex,
-        interaction: str = "extinction",
+        interaction: Literal["extinction", "absorption", "scattering"] = "extinction",
     ) -> pint.Quantity:
         """
         Evaluate the atmosphere's transmittance with respect to specific
@@ -597,9 +592,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : :class:`.SpectralIndex`
             Spectral index.
 
-        interaction : str, optional, default: "extinction"
-            Interaction type. One of ``"extinction"``, ``"absorption"``,
-            ``"scattering"``.
+        interaction : {"extinction", "absorption", "scattering"}, optional, default: "extinction"
+            Interaction type.
 
         Returns
         -------
@@ -630,121 +624,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     def eval_transmittance_s(self, si: SpectralIndex) -> pint.Quantity:
         return self.eval_transmittance(si=si, interaction="scattering")
-
-    def eval_transmittance_accross_spectral_grid(
-        self,
-        interaction: str = "extinction",
-        ckd_quad_config: CKDQuadConfig | None = None,
-    ) -> xr.DataArray:
-        """
-        Evaluate the atmosphere's transmittance with respect to extinction
-        accross the spectral set emitted by the atmosphere.
-
-        Parameters
-        ----------
-        ckd_quad_config : .QuadSpec, optional
-            Quadrature specifications.
-
-        Returns
-        -------
-        DataArray
-            Atmosphere's transmittance with respect to extinction tabulated
-            against the spectral coordinate.
-        """
-        if eradiate.mode().is_mono:
-            return self.eval_transmittance_accross_spectral_set_mono(
-                interaction=interaction,
-                quad_spec=ckd_quad_config,
-            )
-        elif eradiate.mode().is_ckd:
-            if ckd_quad_config is None:
-                ckd_quad_config = CKDQuadConfig()
-            return self.eval_transmittance_accross_spectral_set_ckd(
-                interaction=interaction,
-                quad_spec=ckd_quad_config,
-            )
-        else:
-            raise UnsupportedModeError(supported=["mono", "ckd"])
-
-    def eval_transmittance_accross_spectral_set_mono(
-        self,
-        interaction: str = "extinction",
-        quad_spec: QuadSpec | None = None,
-    ) -> xr.DataArray:
-        if quad_spec is None:
-            quad_spec = QuadSpec.default()
-
-        w = self.spectral_grid.wavelengths
-        wunits = symbol(ucc.get("wavelength"))
-        transmittance = np.full(w.size, np.nan)
-        spectral_set = self.spectral_grid(quad_spec=quad_spec)
-        for i, si in enumerate(spectral_set.spectral_indices()):
-            transmittance[i] = self.eval_transmittance(
-                si=si,
-                interaction=interaction,
-            )
-
-        return xr.DataArray(
-            transmittance,
-            dims=["w"],
-            coords={
-                "w": (
-                    "w",
-                    w.m_as(wunits),
-                    ATTRIBUTES["radiation_wavelength"],
-                )
-            },
-            attrs={"units": "1", "long_name": "transmittance"},
-        )
-
-    def eval_transmittance_accross_spectral_set_ckd(
-        self,
-        interaction: str = "extinction",
-        quad_spec: QuadSpec | None = None,
-    ) -> xr.DataArray:
-        # compute transmittance at each spectral index
-        transmittance = {}
-        if quad_spec is None:
-            quad_spec = QuadSpec.default()
-
-        for si in self.spectral_grid(quad_spec=quad_spec).spectral_indices():
-            transmittance[si.as_hashable] = self.eval_transmittance(
-                si=si,
-                interaction=interaction,
-            )
-
-        # gather transmittance values that belong to the same CKD bin and
-        # compute the quadrature
-        t_values = np.stack(list(transmittance.values())).m_as("1")
-        i = 0
-
-        integrated = []
-        binset = self.spectral_grid(quad_spec=quad_spec)
-        for _bin in binset.bins:
-            ng = _bin.quad.weights.size  # number of quadrature g-points
-            integrated.append(
-                Quad.new("gauss_legendre", n=ng).integrate(
-                    t_values[i : i + ng],
-                    interval=[0, 1],  # range of g
-                )
-            )
-            i = i + ng
-
-        w = np.stack([bin.wcenter for bin in self.spectral_grid().bins])
-        wunits = symbol(ucc.get("wavelength"))
-
-        return xr.DataArray(
-            integrated,
-            dims=["w"],
-            coords={
-                "w": (
-                    "w",
-                    w.m_as(wunits),
-                    ATTRIBUTES["radiation_wavelength"],
-                )
-            },
-            attrs={"units": "1", "long_name": "transmittance"},
-        )
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
