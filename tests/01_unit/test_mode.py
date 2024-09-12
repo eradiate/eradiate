@@ -3,23 +3,44 @@
 import pytest
 
 import eradiate
-from eradiate import supported_mode, unsupported_mode
+from eradiate import ModeFlag, supported_mode, unsupported_mode
 from eradiate.exceptions import UnsupportedModeError
 
 
-def test_mode_mono(mode_mono):
+def test_modes_single(modes_all_single):
     mode = eradiate.mode()
-    assert mode.mi_variant == "scalar_mono_double"
+    assert mode.mi_double_precision is ModeFlag.MI_DOUBLE_PRECISION_NO
+    assert mode.is_single_precision is True
+    assert "_double" not in mode.mi_variant
 
 
-def test_mode_mono_single(mode_mono_single):
+def test_modes_double(modes_all_double):
     mode = eradiate.mode()
-    assert mode.mi_variant == "scalar_mono"
+    assert mode.mi_double_precision is ModeFlag.MI_DOUBLE_PRECISION_YES
+    assert mode.is_double_precision is True
+    assert "_double" in mode.mi_variant
 
 
-def test_mode_mono_double(mode_mono_double):
+def test_modes_mono(modes_all_mono):
     mode = eradiate.mode()
-    assert mode.mi_variant == "scalar_mono_double"
+    assert mode.spectral_mode is ModeFlag.SPECTRAL_MODE_MONO
+    assert mode.is_mono is True
+    assert "_mono" in mode.mi_variant
+
+
+def test_modes_ckd(modes_all_ckd):
+    mode = eradiate.mode()
+    assert mode.spectral_mode is ModeFlag.SPECTRAL_MODE_CKD
+    assert mode.is_ckd is True
+    assert mode.is_mono is False
+    assert "_mono" in mode.mi_variant
+
+
+def test_modes_polarized(modes_all_polarized):
+    mode = eradiate.mode()
+    assert mode.mi_polarized is ModeFlag.MI_POLARIZED_YES
+    assert mode.is_polarized is True
+    assert "_polarized" in mode.mi_variant
 
 
 def test_modes():

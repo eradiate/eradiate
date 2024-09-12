@@ -345,7 +345,7 @@ class Mode:
 
     @property
     def is_polarized(self) -> bool:
-        return self.mi_polarized is True
+        return self.mi_polarized is ModeFlag.MI_POLARIZED_YES
 
     @staticmethod
     def new(mode_id: str) -> Mode:
