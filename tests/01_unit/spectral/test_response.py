@@ -74,7 +74,7 @@ def test_band_srf():
 
     # Construct from ID
     srf = BandSRF.from_id("sentinel_2a-msi-3")
-    np.testing.assert_array_equal(srf.support().m_as("nm"), [537, 584])
+    np.testing.assert_array_equal(srf.support().m_as("nm"), [536.0, 583.0])
 
     # Integrate
     np.testing.assert_equal(

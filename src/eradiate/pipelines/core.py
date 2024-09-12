@@ -17,7 +17,7 @@ import eradiate
 from .._mode import Mode
 from ..scenes.integrators import Integrator
 from ..scenes.measure import Measure
-from ..scenes.spectra import InterpolatedSpectrum
+from ..spectral import BandSRF
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ def config(
     result["var_name"], result["var_metadata"] = measure.var
 
     # Shall we apply spectral response function weighting (a.k.a convolution)?
-    result["apply_spectral_response"] = isinstance(measure.srf, InterpolatedSpectrum)
+    result["apply_spectral_response"] = isinstance(measure.srf, BandSRF)
 
     # Should we calculate the variance in the result?
     result["calculate_variance"] = (
