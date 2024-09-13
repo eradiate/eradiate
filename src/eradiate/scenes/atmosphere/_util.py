@@ -89,7 +89,7 @@ def eval_transmittance_ckd(
 
     ckd_quad_config : CKDQuadConfig, optional
         CKD quadrature rule generation configuration. If unset, a conservative
-        default is used.
+        default is used (Gauss-Legendre, fixed, with 16 g-points).
 
     interaction : {"extinction", "absorption", "scattering"}, optional, default: "extinction"
         The interaction type for which transmittance is evaluated.
@@ -98,8 +98,17 @@ def eval_transmittance_ckd(
     -------
     transmittance : DataArray
     """
+    ckd_quad_config_default = {
+        "type": "gauss_legendre",
+        "ng_max": 16,
+        "policy": "fixed",
+    }
     if ckd_quad_config is None:
-        ckd_quad_config = CKDQuadConfig()
+        ckd_quad_config = ckd_quad_config_default
+
+    if isinstance(ckd_quad_config, dict):
+        ckd_quad_config = {**ckd_quad_config_default, **ckd_quad_config}
+        ckd_quad_config = CKDQuadConfig(**ckd_quad_config)
 
     # Check if a molecular absorption database is available
     abs_db = None
