@@ -39,12 +39,6 @@ class ModeFlag(enum.Flag):
     )
 
 
-_SPECTRAL_COORD_LABELS = {
-    ModeFlag.SPECTRAL_MODE_MONO: "w",
-    ModeFlag.SPECTRAL_MODE_CKD: "bd",
-}
-
-
 # ------------------------------------------------------------------------------
 #                              Mode definitions
 # ------------------------------------------------------------------------------
@@ -263,12 +257,8 @@ class Mode:
     def flags(self) -> ModeFlag:
         return self.spectral_mode | self.mi_flags
 
-    @property
-    def spectral_coord_label(self) -> str:
         """
-        Spectral coordinate label.
         """
-        return _SPECTRAL_COORD_LABELS[self.spectral_mode]
 
     @property
     def mi_variant(self):

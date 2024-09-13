@@ -104,11 +104,6 @@ spectrum_factory.register_lazy_batch(
             "uniform",
             {},
         ),
-        (
-            "_multi_delta.MultiDeltaSpectrum",
-            "multi_delta",
-            {},
-        ),
     ],
     cls_prefix="eradiate.scenes.spectra",
 )
