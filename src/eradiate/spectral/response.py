@@ -37,13 +37,38 @@ class SpectralResponseFunction(ABC):
 
     @abstractmethod
     def eval(self, w: npt.ArrayLike) -> pint.Quantity:
+        """
+        Evaluate the spectral response function for one or several wavelengths.
+        Evaluation is vectorized.
+
+        Parameters
+        ----------
+        w : array-like
+            One or several wavelengths at which the SRF is evaluated.
+
+        Returns
+        -------
+        quantity
+            The returned value as the same shape as ``w``.
+        """
         pass
 
 
 @define
 class UniformSRF(SpectralResponseFunction):
-    """
+    r"""
     A spectral response function uniform on a preset spectral interval.
+
+    It represents a function defined by:
+
+    .. math::
+
+       f(w) = \left\{
+       \begin{array}{r l}
+            \text{value} & \text{if} \ w \in [w_\mathrm{min}, w_\mathrm{max}] \\
+            0 & \text{otherwise}
+        \end{array}
+        \right.
     """
 
     wmin = documented(
@@ -51,7 +76,11 @@ class UniformSRF(SpectralResponseFunction):
             units=ucc.deferred("wavelength"),
             factory=lambda: 300.0 * ureg.nm,
             validator=validators.is_positive,
-        )
+        ),
+        doc="Lower bound of the interval.",
+        type="quantity",
+        init_type="quantity or float",
+        default="300 nm",
     )
 
     wmax = documented(
@@ -59,7 +88,11 @@ class UniformSRF(SpectralResponseFunction):
             units=ucc.deferred("wavelength"),
             factory=lambda: 2500.0 * ureg.nm,
             validator=validators.is_positive,
-        )
+        ),
+        doc="Upper bound of the interval.",
+        type="quantity",
+        init_type="quantity or float",
+        default="2500 nm",
     )
 
     value = documented(
@@ -67,7 +100,11 @@ class UniformSRF(SpectralResponseFunction):
             units=ucc.deferred("dimensionless"),
             factory=lambda: 1.0,
             validator=validators.is_positive,
-        )
+        ),
+        doc="The value to which the phase function evaluates in its interval.",
+        type="quantity",
+        init_type="quantity or float",
+        default="1.0",
     )
 
     def eval(self, w: npt.ArrayLike) -> pint.Quantity:
@@ -90,6 +127,8 @@ class UniformSRF(SpectralResponseFunction):
 class DeltaSRF(SpectralResponseFunction):
     """
     A spectral response function consisting of multiple Dirac delta distributions.
+
+    This SRF conventionally always evaluates to 0.
     """
 
     wavelengths: pint.Quantity = documented(
@@ -200,6 +239,10 @@ class BandSRF(SpectralResponseFunction):
     def support(self) -> pint.Quantity:
         """
         Return the interval in which the SRF is nonzero.
+
+        Returns
+        -------
+        quantity
 
         Note
         ----
