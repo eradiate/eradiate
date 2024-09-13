@@ -51,10 +51,10 @@ class CKDQuadConfig:
     )
 
     ng_max: int = documented(
-        attrs.field(default=16, converter=int),
+        attrs.field(default=1, converter=int),
         doc="Maximum number of quadrature points.",
         type="int",
-        default="16",
+        default="1",
     )
 
     policy: CKDQuadPolicy = documented(
