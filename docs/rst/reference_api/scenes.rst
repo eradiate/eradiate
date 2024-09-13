@@ -184,6 +184,14 @@ Quick access
    GaussianParticleDistribution
    UniformParticleDistribution
 
+**Utility functions**
+
+.. autosummary::
+   :toctree: generated/autosummary
+
+   eval_transmittance_mono
+   eval_transmittance_ckd
+
 .. _module-eradiate.scenes.biosphere:
 
 ``eradiate.scenes.biosphere``
@@ -542,6 +550,5 @@ Quick access
 
    UniformSpectrum
    InterpolatedSpectrum
-   MultiDeltaSpectrum
    SolarIrradianceSpectrum
    AirScatteringCoefficientSpectrum
