@@ -140,4 +140,5 @@ def create_rpv_afgl1986_brfpp(absorption_database_error_handler_config):
                 "error_handler_config": absorption_database_error_handler_config,
             },
         },
+        ckd_quad_config={"ng_max": 16},
     )
