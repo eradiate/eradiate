@@ -16,16 +16,20 @@ from .exceptions import UnsupportedModeError
 
 
 class ModeFlag(enum.Flag):
-    NONE = 0
+    """
+    Flags defining the various possible features associated to an Eradiate mode.
+    """
+
+    NONE = 0  #: No flags
     SPECTRAL_MODE_MONO = enum.auto()  #: Monochromatic (line-by-line) mode
     SPECTRAL_MODE_CKD = enum.auto()  #: Correlated-k distribution mode
-    MI_BACKEND_SCALAR = enum.auto()  #: Scalar backend
-    MI_BACKEND_LLVM = enum.auto()  #: LLVM backend
-    MI_COLOR_MODE_MONO = enum.auto()  #: Monochromatic mode
-    MI_DOUBLE_PRECISION_NO = enum.auto()
-    MI_DOUBLE_PRECISION_YES = enum.auto()
-    MI_POLARIZED_NO = enum.auto()
-    MI_POLARIZED_YES = enum.auto()
+    MI_BACKEND_SCALAR = enum.auto()  #: Mitsuba scalar backend
+    MI_BACKEND_LLVM = enum.auto()  #: Mitsuba LLVM backend
+    MI_COLOR_MODE_MONO = enum.auto()  #: Mitsuba monochromatic mode
+    MI_DOUBLE_PRECISION_NO = enum.auto()  #: Mitsuba single-precision
+    MI_DOUBLE_PRECISION_YES = enum.auto()  #: Mitsuba double-precision
+    MI_POLARIZED_NO = enum.auto()  #: Unpolarized
+    MI_POLARIZED_YES = enum.auto()  #: Polarized
     ANY = (
         SPECTRAL_MODE_MONO
         | SPECTRAL_MODE_CKD
@@ -36,7 +40,7 @@ class ModeFlag(enum.Flag):
         | MI_DOUBLE_PRECISION_YES
         | MI_POLARIZED_NO
         | MI_POLARIZED_YES
-    )
+    )  #: All flags
 
 
 # ------------------------------------------------------------------------------
@@ -246,6 +250,9 @@ class Mode:
 
     @property
     def mi_flags(self) -> ModeFlag:
+        """
+        Combined Mitsuba-specific flags.
+        """
         return (
             self.mi_backend
             | self.mi_color_mode
@@ -255,13 +262,13 @@ class Mode:
 
     @property
     def flags(self) -> ModeFlag:
+        """
+        All flags combined.
+        """
         return self.spectral_mode | self.mi_flags
 
-        """
-        """
-
     @property
-    def mi_variant(self):
+    def mi_variant(self) -> str:
         """
         Mitsuba variant associated with the selected mode.
         """
@@ -288,10 +295,10 @@ class Mode:
 
         Parameters
         ----------
-        spectral_mode : :.ModeFlag or str, optional
+        spectral_mode : .ModeFlag or str, optional
             Spectral mode to check. If unset, the check is skipped.
 
-        mi_backend : :.ModeFlag or str, optional
+        mi_backend : .ModeFlag or str, optional
             Mitsuba backend to check. If unset, the check is skipped.
 
         mi_color_mode : .ModeFlag or str, optional
@@ -342,12 +349,18 @@ class Mode:
         """
         Create a :class:`Mode` instance given its identifier. Available modes are:
 
-        * ``mono_single``: Monochromatic, single-precision
-        * ``mono_double``: Monochromatic, double-precision
         * ``mono``: Alias to ``mono_double``
-        * ``ckd_single``: CKD, single-precision
-        * ``ckd_double``: CKD, double-precision
         * ``ckd``: Alias to ``ckd_double``
+        * ``mono_polarized``: Alias to ``mono_polarized_double``
+        * ``ckd_polarized``: Alias to ``ckd_polarized_double``
+        * ``mono_single``: Monochromatic, single-precision
+        * ``mono_polarized_single``: Monochromatic, polarized, single-precision
+        * ``mono_double``: Monochromatic, double-precision
+        * ``mono_polarized_double``: Monochromatic, polarized, double-precision
+        * ``ckd_single``: CKD, single-precision
+        * ``ckd_polarized_single``: CKD, polarized, single-precision
+        * ``ckd_double``: CKD, double-precision
+        * ``ckd_polarized_double``: CKD, polarized, double-precision
 
         Parameters
         ----------
@@ -430,7 +443,7 @@ class SubtypeDispatcher:
 
         See Also
         --------
-        :meth:`.Mode.flags`, :class:`.ModeFlag`
+        :attr:`.Mode.flags`, :class:`.ModeFlag`
         """
         if mode_flags is None:
             mode_flags = _active_mode.flags
@@ -504,10 +517,18 @@ def set_mode(mode_id: str):
     .. admonition:: Valid mode IDs
        :class: info
 
-       * ``mono`` (monochromatic mode, single precision)
-       * ``mono_double`` (monochromatic mode, double-precision)
-       * ``ckd`` (CKD mode, single precision)
-       * ``ckd_double`` (CKD mode, double-precision)
+       * ``mono``: Alias to ``mono_double``
+       * ``ckd``: Alias to ``ckd_double``
+       * ``mono_polarized``: Alias to ``mono_polarized_double``
+       * ``ckd_polarized``: Alias to ``ckd_polarized_double``
+       * ``mono_single``: Monochromatic, single-precision
+       * ``mono_polarized_single``: Monochromatic, polarized, single-precision
+       * ``mono_double``: Monochromatic, double-precision
+       * ``mono_polarized_double``: Monochromatic, polarized, double-precision
+       * ``ckd_single``: CKD, single-precision
+       * ``ckd_polarized_single``: CKD, polarized, single-precision
+       * ``ckd_double``: CKD, double-precision
+       * ``ckd_polarized_double``: CKD, polarized, double-precision
        * ``none`` (no mode selected)
 
     Parameters
@@ -544,7 +565,7 @@ def supported_mode(**kwargs):
 
     Raises
     ------
-    .UnsupportedModeError
+    UnsupportedModeError
         Current mode does not pass the check.
     """
     if mode() is None or not mode().check(**kwargs):
@@ -562,7 +583,7 @@ def unsupported_mode(**kwargs):
 
     Raises
     ------
-    .UnsupportedModeError
+    UnsupportedModeError
         Current mode has the requested flags.
     """
     if mode() is None or mode().check(**kwargs):

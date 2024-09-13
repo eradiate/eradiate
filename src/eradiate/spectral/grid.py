@@ -30,6 +30,10 @@ from ..util.misc import deduplicate_sorted, summary_repr
 
 @define
 class SpectralGrid(ABC):
+    """
+    Abstract interface for all spectral grids.
+    """
+
     subtypes = SubtypeDispatcher("SpectralGrid")
 
     @property
@@ -60,7 +64,8 @@ class SpectralGrid(ABC):
     @abstractmethod
     def select(self, srf: SpectralResponseFunction) -> SpectralGrid:
         """
-        Select a subset of the spectral grid based on a spectral response function.
+        Select a subset of the spectral grid based on a spectral response
+        function.
 
         Parameters
         ----------
@@ -83,6 +88,16 @@ class SpectralGrid(ABC):
     def merge(self, other: SpectralGrid) -> SpectralGrid:
         """
         Merge two spectral grids, applying a boolean "OR" operation.
+
+        Parameters
+        ----------
+        other : SpectralGrid
+            Other spectral, of the same type, to merge with the current one.
+
+        Returns
+        -------
+        SpectralGrid
+            A new spectral grid of the same type that merges the two.
         """
         pass
 
@@ -90,6 +105,12 @@ class SpectralGrid(ABC):
     def walk_indices(self, **kwargs) -> t.Generator[SpectralIndex, None, None]:
         """
         A generator that yields a sequence of spectral index values.
+
+        Yields
+        ------
+        .SpectralIndex
+            Generated spectral index of a type aligned with the current active
+            mode.
         """
         pass
 
@@ -97,6 +118,11 @@ class SpectralGrid(ABC):
 @SpectralGrid.subtypes.register(ModeFlag.SPECTRAL_MODE_MONO)
 @define
 class MonoSpectralGrid(SpectralGrid):
+    """
+    A spectral grid consisting of discrete wavelengths, used in monochromatic
+    modes.
+    """
+
     _wavelengths: pint.Quantity = documented(
         pinttrs.field(
             units=ucc.deferred("wavelength"),
@@ -116,6 +142,7 @@ class MonoSpectralGrid(SpectralGrid):
 
     @property
     def wavelengths(self):
+        # Inherit docstring
         return self._wavelengths
 
     @staticmethod
@@ -193,6 +220,31 @@ class MonoSpectralGrid(SpectralGrid):
 @SpectralGrid.subtypes.register(ModeFlag.SPECTRAL_MODE_CKD)
 @define(init=False)
 class CKDSpectralGrid(SpectralGrid):
+    """
+    A spectral grid that splits the spectral dimensions into bins characterized
+    by their bounds.
+
+    Parameters
+    ----------
+    fix_bounds : {"keep_min", "keep_max"} or False, default: "keep_min"
+        Unless told no to, the constructor will detect lower and upper bound
+        values close to each other within a tolerance and flag them as matching.
+        If this parameter is set to ``"keep_min"`` or ``"keep_max"``, the
+        constructor make sure that matching bounds effectively match exactly.
+        If it is set to ``"raise"``, it will raise an exception. If it is set to
+        ``"ignore"``, no action will be taken. The tolerance is controlled by
+        the ``epsilon`` parameter.
+
+    epsilon : float, default: 1e-6
+        Absolute tolerance for matching bound detection.
+
+    Raises
+    ------
+    ValueError
+        If matching bound misalignment is detected and ``fix_bounds`` is set to
+        ``"raise"``.
+    """
+
     wmins: pint.Quantity = documented(
         pinttrs.field(units=ucc.deferred("wavelength"), repr=summary_repr),
         doc="Lower bound of all bins. Unitless values are interpreted as default "
@@ -229,7 +281,7 @@ class CKDSpectralGrid(SpectralGrid):
         wmins: npt.ArrayLike,
         wmaxs: npt.ArrayLike,
         wcenters: npt.ArrayLike | None = None,
-        fix_bounds: bool | t.Literal["keep_min", "keep_max"] = "keep_min",
+        fix_bounds: t.Literal["keep_min", "keep_max", "raise", "ignore"] = "keep_min",
         epsilon: float = 1e-6,
     ):
         # Ensure consistent units and appropriate dtype
@@ -245,11 +297,15 @@ class CKDSpectralGrid(SpectralGrid):
                 wmins_m[1:] = np.where(fix_locations, wmaxs_m[:-1], wmins_m[1:])
             elif fix_bounds == "keep_min":
                 wmaxs_m[:-1] = np.where(fix_locations, wmins_m[1:], wmaxs_m[:-1])
-            else:
+            elif fix_bounds == "raise":
                 raise ValueError(
                     "while constructing CKDSpectralGrid: bin bound mismatch "
                     f"(min: {wmins_m[1:][fix_locations]}; max: {wmaxs_m[:-1][fix_locations]}"
                 )
+            elif fix_bounds == "ignore":
+                pass
+            else:
+                raise ValueError(f'unknown bound fixing policy "{fix_bounds}"')
 
         # Define bin centers if necessary
         if wcenters is None:
@@ -325,6 +381,10 @@ class CKDSpectralGrid(SpectralGrid):
     def from_absorption_database(cls, abs_db: CKDAbsorptionDatabase) -> CKDSpectralGrid:
         """
         Retrieve the spectral grid from a CKD absorption database.
+
+        Parameters
+        ----------
+        abs_db : .CKDAbsorptionDatabase
         """
         if not isinstance(abs_db, CKDAbsorptionDatabase):
             raise TypeError
@@ -449,7 +509,26 @@ class CKDSpectralGrid(SpectralGrid):
         ckd_quad_config: CKDQuadConfig,
         abs_db: CKDAbsorptionDatabase | None = None,
     ) -> t.Generator[CKDSpectralIndex]:
-        # Inherit docstring
+        """
+        Walk the spectral grid and retrieve, based on a quadrature configuration
+        and, if necessary, an absorption database, the sequence of spectral
+        indexes driving the spectral loop.
+
+        Parameters
+        ----------
+        ckd_quad_config : .CKDQuadConfig
+            CKD quadrature configuration.
+
+        abs_db : .CKDAbsorptionDatabase, optional
+            Molecular absorption database used to build quadrature rules for
+            each spectral bin. This parameter is required only if an adaptive
+            quadrature generation policy is used, otherwise it is ignored.
+
+        Yields
+        ------
+        si : .CKDSpectralIndex
+            Generated spectral index.
+        """
 
         # Walk the spectral dimension
         for w, quad in self.walk_quads(ckd_quad_config, abs_db):

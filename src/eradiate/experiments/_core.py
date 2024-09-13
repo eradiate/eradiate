@@ -422,6 +422,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
     @property
     def context_init(self):
+        # Inherit docstring
         return KernelContext(
             si=self._spectral_index_generator().__next__(), kwargs=self._context_kwargs
         )

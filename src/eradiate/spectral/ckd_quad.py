@@ -13,9 +13,24 @@ from ..radprops import CKDAbsorptionDatabase
 
 
 class CKDQuadPolicy(enum.Enum):
-    FIXED = "fixed"
+    """
+    This enumeration defines flags mapping to policies defining the number of
+    CKD spectral quadrature points for a given spectral bin.
+
+    The ``"fixed"`` policy uses a constant number of quadrature points,
+    regardless of the spectral bin. The other policies will determine a number
+    of quadrature point based on molecular absorption data and an error
+    criterion, seeking to minimize or achieve an error on the total column
+    transmittance w.r.t. absorption for each spectral bin.
+    """
+
+    FIXED = "fixed"  #: Fixed number of quadrature points.
     MINIMIZE_ERROR = "minimize_error"
+    """Number of quadrature points that minimizes the error in each spectral bin
+    (not implemented yet)."""
     ERROR_THRESHOLD = "error_threshold"
+    """Optimal number of quadrature points that achieves the error threshold
+    (not implemented yet)."""
 
 
 @frozen
@@ -52,6 +67,11 @@ class CKDQuadConfig:
 
     @classmethod
     def convert(self, value) -> CKDQuadConfig:
+        """
+        Convert a value to a :class:`.CKDQuadConfig`. If ``value`` is a
+        dictionary, its values are passed to the constructor as keyword
+        arguments. Otherwise, ``value`` is returned unchanged.
+        """
         if isinstance(value, dict):
             return CKDQuadConfig(**value)
         else:

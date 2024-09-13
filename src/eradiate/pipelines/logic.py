@@ -86,8 +86,12 @@ def aggregate_ckd_quad(
     raw_data : DataArray
         A data array holding raw bitmap data indexed against pixel indices.
 
-    spectral_grid : CKDSpectralGrid
+    spectral_grid : .CKDSpectralGrid
         Spectral set for which the CKD quadrature is computed.
+
+    ckd_quads : list of .Quad
+        List of quadrature rules matching the spectral bins held by
+        ``spectral_grid``.
 
     is_variance : bool
         Flag that specifies whether the raw_data is a variance value.
@@ -201,7 +205,7 @@ def apply_spectral_response(
     spectral_data: xr.DataArray, srf: SpectralResponseFunction
 ) -> xr.DataArray:
     """
-    Apply SRF weighting (a.k.a convolution) to spectral data and turn it into
+    Apply SRF weighting (a.k.a. convolution) to spectral data and turn it into
     a band aggregate.
 
     Parameters
@@ -216,7 +220,7 @@ def apply_spectral_response(
     -------
     DataArray or None
         A data array where the spectral dimension is removed after applying
-        SRF weighting, or None if the SRF is a :class:`.MultiDeltaSpectrum`.
+        SRF weighting, or ``None`` if the SRF is a :class:`.DeltaSRF`.
     """
     if not {"bin_wmin", "bin_wmax"}.issubset(set(spectral_data.coords.keys())):
         raise ValueError(
@@ -309,7 +313,7 @@ def compute_albedo(
         A dictionary with the following content:
 
         ``albedo`` : :class:`xarray.DataArray`
-          An albedo data array.
+            An albedo data array.
     """
 
     # We assume that all quantities are stored in kernel units
@@ -349,9 +353,9 @@ def compute_bidirectional_reflectance(
         A dictionary with the following content:
 
         ``brdf`` : :class:`xarray.DataArray`
-          A BRDF data array.
+            A BRDF data array.
         ``brf`` : :class:`xarray.DataArray`
-          A BRF data array.
+            A BRF data array.
 
     Notes
     -----
@@ -580,12 +584,12 @@ def gather_bitmaps(
         A metadata dictionary to be attached to the data array holding the
         processed physical variable.
 
-    gather_variance : bool
-        Flag that specifies whether the variance bitmaps should be gathered.
+    calculate_stokes : bool
+        Flag that specifies whether the variable is calculated as a Stokes
+        vector or not.
 
     gather_variance : bool
-        Flag that specifies whether the variable is calculated as a
-        stokes vector or not.
+        Flag that specifies whether the variance bitmaps should be gathered.
 
     bitmaps : dict
         A dictionary mapping spectral loop indexes to the corresponding bitmap.
@@ -907,12 +911,12 @@ def moment2_to_variance(
 
 def degree_of_linear_polarization(stokes_vec: xr.DataArray):
     """
-    Calculate the degree of linear polarization from a stokes vector.
+    Calculate the degree of linear polarization from a Stokes vector.
 
     Parameters
     ----------
     stokes_vec : DataArray
-        The data's stokes vector ([I,Q,U,V]).
+        The data's Stokes vector ([I,Q,U,V]).
 
     Returns
     -------

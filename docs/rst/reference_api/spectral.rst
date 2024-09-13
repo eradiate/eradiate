@@ -5,6 +5,27 @@
 
 .. py:currentmodule:: eradiate.spectral
 
+Spectral grid
+-------------
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   SpectralGrid
+   MonoSpectralGrid
+   CKDSpectralGrid
+
+Spectral response functions
+---------------------------
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   SpectralResponseFunction
+   UniformSRF
+   BandSRF
+   DeltaSRF
+
 Spectral indexes
 ----------------
 
@@ -21,17 +42,5 @@ CKD spectral quadrature specification strategies
 .. autosummary::
    :toctree: generated/autosummary/
 
-   QuadSpec
-   QuadSpecFixed
-   QuadSpecMinError
-   QuadSpecErrorThreshold
-
-Utility containers
-------------------
-
-.. autosummary::
-   :toctree: generated/autosummary/
-
-   WavelengthSet
-   Bin
-   BinSet
+   CKDQuadConfig
+   CKDQuadPolicy
