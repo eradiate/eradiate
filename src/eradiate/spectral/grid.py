@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import typing as t
 from abc import ABC, abstractmethod
 from functools import singledispatchmethod
@@ -144,6 +145,34 @@ class MonoSpectralGrid(SpectralGrid):
     def wavelengths(self):
         # Inherit docstring
         return self._wavelengths
+
+    def plot(self, ax, lw=0.5, alpha=1.0):
+        ax.vlines(self.wavelengths.m, 0, 1, lw=lw, alpha=alpha)
+        return ax
+
+    def _repr_html_(self):
+        import base64
+        import io
+
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+
+        fig, ax = plt.subplots(1, 1, figsize=(6, 1))
+        self.plot(ax)
+        ax.set_xlabel(f"Wavelength [{self.wavelengths.u:~P}]")
+        sns.despine(left=True)
+        ax.axes.get_yaxis().set_visible(False)
+
+        img = io.BytesIO()
+        fig.savefig(img, format="png", bbox_inches="tight")
+        plt.close(fig)
+        img.seek(0)
+
+        return (
+            "<img "
+            f'src="data:image/png;base64, {base64.b64encode(img.getvalue()).decode("utf-8")}" '
+            "/>"
+        )
 
     @staticmethod
     def default() -> MonoSpectralGrid:
@@ -318,6 +347,53 @@ class CKDSpectralGrid(SpectralGrid):
     def wavelengths(self):
         # Inherit docstring
         return self.wcenters
+
+    def plot(self, ax, alpha=0.5):
+        import seaborn as sns
+        from cycler import cycler
+
+        w_u = ucc.get("wavelength")
+        color_cycle = cycler(color=sns.color_palette())
+
+        for wmin, wmax, wcenter, color in zip(
+            self.wmins.m_as(w_u),
+            self.wmaxs.m_as(w_u),
+            self.wcenters.m_as(w_u),
+            itertools.cycle(color_cycle),
+        ):
+            c = color["color"]
+            ax.fill_between(
+                [wmin, wmax], 0, 1, color=c, alpha=alpha, lw=0.5, ls=(0, (5, 5))
+            )
+            ax.vlines(wcenter, 0, 1, color=c, lw=0.5)
+
+        return ax
+
+    def _repr_html_(self):
+        import base64
+        import io
+
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+
+        w_u = ucc.get("wavelength")
+
+        fig, ax = plt.subplots(1, 1, figsize=(6, 1))
+        self.plot(ax)
+        ax.set_xlabel(f"Wavelength [{w_u:~P}]")
+        sns.despine(left=True)
+        ax.axes.get_yaxis().set_visible(False)
+
+        img = io.BytesIO()
+        fig.savefig(img, format="png", bbox_inches="tight")
+        plt.close(fig)
+        img.seek(0)
+
+        return (
+            "<img "
+            f'src="data:image/png;base64, {base64.b64encode(img.getvalue()).decode("utf-8")}" '
+            "/>"
+        )
 
     @staticmethod
     def default() -> CKDSpectralGrid:
