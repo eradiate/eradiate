@@ -25,7 +25,7 @@ from ...kernel import (
     TypeIdLookupStrategy,
     UpdateParameter,
 )
-from ...radprops import ZGrid
+from ...radprops import AbsorptionDatabase, ZGrid
 from ...spectral.index import SpectralIndex
 from ...units import symbol
 from ...units import unit_context_config as ucc
@@ -373,6 +373,17 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     # --------------------------------------------------------------------------
     #                       Radiative properties
     # --------------------------------------------------------------------------
+
+    @property
+    def absorption_data(self) -> AbsorptionDatabase | None:
+        """
+        Returns
+        -------
+        .AbsorptionDatabase or None
+            If relevant, the molecular absorption database associated with this
+            atmosphere.
+        """
+        return None
 
     def eval_radprops(
         self,

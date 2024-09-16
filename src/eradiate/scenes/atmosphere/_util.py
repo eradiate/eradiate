@@ -7,7 +7,7 @@ import pandas as pd
 import xarray as xr
 from tqdm.auto import tqdm
 
-from . import HeterogeneousAtmosphere, MolecularAtmosphere
+from . import HeterogeneousAtmosphere
 from ._core import AbstractHeterogeneousAtmosphere
 from ...cfconventions import ATTRIBUTES
 from ...spectral import (
@@ -112,12 +112,7 @@ def eval_transmittance_ckd(
 
     # Check if a molecular absorption database is available
     abs_db = None
-    if (
-        isinstance(atmosphere, HeterogeneousAtmosphere)
-        and atmosphere.molecular_atmosphere is not None
-    ):
-        abs_db = atmosphere.molecular_atmosphere.absorption_data
-    elif isinstance(atmosphere, MolecularAtmosphere):
+    if isinstance(atmosphere, HeterogeneousAtmosphere):
         abs_db = atmosphere.absorption_data
     else:
         pass

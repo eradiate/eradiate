@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import typing as t
+import warnings
 from abc import ABC, abstractmethod
 from datetime import datetime
 
@@ -42,13 +43,6 @@ from ..units import unit_registry as ureg
 from ..util.misc import MultiGenerator, deduplicate_sorted, onedict_value
 
 logger = logging.getLogger(__name__)
-
-
-def _convert_spectral_grid(value):
-    if value is AUTO:
-        return SpectralGrid.default()
-    else:
-        return value
 
 
 @define
@@ -124,22 +118,25 @@ class Experiment(ABC):
         """
         return self._results
 
-    _default_spectral_grid: SpectralGrid = documented(
+    _background_spectral_grid: SpectralGrid = documented(
         attrs.field(
             default=AUTO,
             validator=validators.auto_or(attrs.validators.instance_of(SpectralGrid)),
-            converter=_convert_spectral_grid,
             repr=False,
         ),
-        doc="Default spectral grid. This attribute is used to set the "
+        doc="Background spectral grid. This attribute is used to set the "
         "default value for :attr:`_spectral_grid`. "
-        "If the value is :data:`AUTO`, the default spectral grid is "
-        "automatically generated based on the active mode. Otherwise, the "
+        "If the value is :data:`AUTO`, the background spectral grid is "
+        "automatically generated depending on the active mode. Otherwise, the "
         "value must be a :class:`.SpectralGrid` instance.",
         type=".SpectralGrid",
         init_type=".SpectralGrid or .AUTO",
         default=".AUTO",
     )
+
+    @property
+    def background_spectral_grid(self) -> SpectralGrid:
+        return self._background_spectral_grid
 
     # Grid used to walk the spectral dimension for each measure.
     # Set upon initialization by the '_normalize_spectral()' method.
@@ -186,20 +183,28 @@ class Experiment(ABC):
         """
         Assemble a spectral grid based on the various elements in the scene.
         """
-        # Initialize with default
-        spectral_grid = self._default_spectral_grid
-
-        # Override default with atmosphere-based grid if relevant
+        # Collect atmosphere-based grid if relevant
         atmosphere = getattr(self, "atmosphere", None)
         abs_db = None
         if atmosphere is not None:
-            abs_db = getattr(self.atmosphere, "abs_db", None)
+            abs_db = getattr(atmosphere, "absorption_data", None)
         if abs_db is not None:
-            spectral_grid = SpectralGrid.from_absorption_database(atmosphere.abs_db)
+            if self._background_spectral_grid is not AUTO:
+                warnings.warn(
+                    "User-specified a background spectral grid is overridden by "
+                    "atmosphere spectral grid."
+                )
+            self._background_spectral_grid = SpectralGrid.from_absorption_database(
+                atmosphere.absorption_data
+            )
+
+        # If needed, set the background grid
+        if self._background_spectral_grid is AUTO:
+            self._background_spectral_grid = SpectralGrid.default()
 
         # Select subparts of the grid that are covered by the SRF
         self._spectral_grids = {
-            i: spectral_grid.select(measure.srf)
+            i: self.background_spectral_grid.select(measure.srf)
             for i, measure in enumerate(self.measures)
         }
 
