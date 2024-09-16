@@ -107,6 +107,40 @@ class UniformSRF(SpectralResponseFunction):
         default="1.0",
     )
 
+    def plot(self, ax, alpha=0.5):
+        w_u = ucc.get("wavelength")
+        x = [self.wmin.m_as(w_u), self.wmax.m_as(w_u)]
+        y = [self.value.m, self.value.m]
+
+        ax.fill_between(x, y, alpha=alpha)
+        ax.plot(x, y, marker=".")
+        ax.vlines(x, 0, 1)
+
+        return ax
+
+    def _repr_html_(self):
+        import base64
+        import io
+
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots(1, 1, figsize=(6, 1.5))
+
+        self.plot(ax)
+        w_u = ucc.get("wavelength")
+        ax.set_xlabel(f"Wavelength [{w_u:~P}]")
+
+        img = io.BytesIO()
+        fig.savefig(img, format="png", bbox_inches="tight")
+        plt.close(fig)
+        img.seek(0)
+
+        return (
+            "<img "
+            f'src="data:image/png;base64, {base64.b64encode(img.getvalue()).decode("utf-8")}" '
+            "/>"
+        )
+
     def eval(self, w: npt.ArrayLike) -> pint.Quantity:
         # Inherit docstring
 
@@ -150,6 +184,34 @@ class DeltaSRF(SpectralResponseFunction):
         type="quantity",
         init_type="array-like or quantity",
     )
+
+    def plot(self, ax):
+        ax.vlines(self.wavelengths.m, 0, 1)
+        return ax
+
+    def _repr_html_(self):
+        import base64
+        import io
+
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+
+        fig, ax = plt.subplots(1, 1, figsize=(6, 1))
+        self.plot(ax)
+        ax.set_xlabel(f"Wavelength [{self.wavelengths.u:~P}]")
+        sns.despine(left=True)
+        ax.axes.get_yaxis().set_visible(False)
+
+        img = io.BytesIO()
+        fig.savefig(img, format="png", bbox_inches="tight")
+        plt.close(fig)
+        img.seek(0)
+
+        return (
+            "<img "
+            f'src="data:image/png;base64, {base64.b64encode(img.getvalue()).decode("utf-8")}" '
+            "/>"
+        )
 
     def eval(self, w: npt.ArrayLike) -> pint.Quantity:
         # Inherit docstring
@@ -235,6 +297,38 @@ class BandSRF(SpectralResponseFunction):
     def from_id(cls, id: str):
         ds = data.load_dataset(f"spectra/srf/{id}.nc")
         return cls.from_dataarray(ds.srf)
+
+    def plot(self, ax, alpha=0.5, lw=1):
+        w_u = ucc.get("wavelength")
+        x = self.wavelengths.m_as(w_u)
+        y = self.values.m
+        if alpha:
+            ax.fill_between(x, y, alpha=alpha)
+        ax.plot(x, y, lw=lw, marker=".")
+        return ax
+
+    def _repr_html_(self):
+        import base64
+        import io
+
+        import matplotlib.pyplot as plt
+
+        w_u = ucc.get("wavelength")
+        fig, ax = plt.subplots(1, 1, figsize=(6, 1.5))
+
+        self.plot(ax)
+        ax.set_xlabel(f"Wavelength [{w_u:~P}]")
+
+        img = io.BytesIO()
+        fig.savefig(img, format="png", bbox_inches="tight")
+        plt.close(fig)
+        img.seek(0)
+
+        return (
+            "<img "
+            f'src="data:image/png;base64, {base64.b64encode(img.getvalue()).decode("utf-8")}" '
+            "/>"
+        )
 
     def support(self) -> pint.Quantity:
         """
