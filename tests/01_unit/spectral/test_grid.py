@@ -132,7 +132,7 @@ def test_ckd_spectral_grid_construct():
     np.testing.assert_array_equal(grid.wcenters.m_as("nm"), [500, 510])
 
     # Range constructor
-    grid = CKDSpectralGrid.arange(500, 510, 10)
+    grid = CKDSpectralGrid.arange(500, 520, 10)
     np.testing.assert_array_equal(grid.wcenters.m_as("nm"), [500, 510])
 
 
@@ -174,7 +174,7 @@ def test_ckd_spectral_grid_default():
 
 
 def test_ckd_spectral_grid_arange():
-    grid = CKDSpectralGrid.arange(540.0, 560.0, 10.0)
+    grid = CKDSpectralGrid.arange(540.0, 570.0, 10.0)
     np.testing.assert_allclose(grid.wmins.m, [535.0, 545.0, 555.0])
     np.testing.assert_allclose(grid.wmaxs.m, [545.0, 555.0, 565.0])
     np.testing.assert_allclose(grid.wcenters.m, [540.0, 550.0, 560.0])
@@ -209,7 +209,7 @@ def test_ckd_spectral_grid_from_absorption_database(mode_ckd):
     ],
 )
 def test_ckd_grid_select_delta_srf(delta_wavelengths, expected_selected_wcenters):
-    grid = CKDSpectralGrid.arange(start=500.0, stop=600.0, step=10.0)
+    grid = CKDSpectralGrid.arange(start=500.0, stop=610.0, step=10.0)
     srf = DeltaSRF(wavelengths=delta_wavelengths)
     selected = grid.select(srf)
     np.testing.assert_allclose(selected.wcenters.m, expected_selected_wcenters.m)
@@ -227,7 +227,7 @@ def test_ckd_grid_select_delta_srf(delta_wavelengths, expected_selected_wcenters
     ],
 )
 def test_ckd_grid_select_uniform_srf(uniform_bounds, expected_selected_wcenters):
-    grid = CKDSpectralGrid.arange(start=500.0, stop=600.0, step=10.0)
+    grid = CKDSpectralGrid.arange(start=500.0, stop=610.0, step=10.0)
     srf = UniformSRF(*uniform_bounds, 1.0)
     selected = grid.select(srf)
     np.testing.assert_allclose(selected.wcenters.m, expected_selected_wcenters.m)
