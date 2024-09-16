@@ -60,6 +60,6 @@ Guides
    atmosphere_experiment
    dem_experiment
    canopy_scene_loader
-   spectral_discretization
+   ../../src/user_guide/spectral_discretization.ipynb
    conventions
    unit_guide_user
