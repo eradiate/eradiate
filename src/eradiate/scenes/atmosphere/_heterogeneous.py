@@ -20,7 +20,7 @@ from ..phase import BlendPhaseFunction, PhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel import TypeIdLookupStrategy
-from ...radprops import ZGrid
+from ...radprops import AbsorptionDatabase, ZGrid
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
@@ -186,6 +186,14 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
     #                       Radiative properties
     # --------------------------------------------------------------------------
+
+    @property
+    def absorption_data(self) -> AbsorptionDatabase | None:
+        # Inherit docstring
+        if self.molecular_atmosphere is not None:
+            return self.molecular_atmosphere._absorption_data
+        else:
+            return None
 
     def eval_albedo(
         self, si: SpectralIndex, zgrid: ZGrid | None = None
