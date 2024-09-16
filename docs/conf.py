@@ -82,6 +82,7 @@ if not os.path.exists("tutorials"):
     os.symlink("../tutorials", "tutorials", target_is_directory=True)
 nbsphinx_execute = "never"
 nbsphinx_prolog = """
+{% if env.doc2path(env.docname, base=None).startswith("tutorials/") %}
 .. button-link:: https://github.com/eradiate/eradiate-tutorials/blob/main/{{ env.doc2path(env.docname, base=False)|replace("tutorials/", "") }}
    :color: primary
    :expand:
@@ -89,6 +90,7 @@ nbsphinx_prolog = """
    :fas:`external-link-alt` Go to notebook file
 
 ----
+{% endif %}
 """
 
 # -- Intersphinx configuration for cross-project referencing -------------------
