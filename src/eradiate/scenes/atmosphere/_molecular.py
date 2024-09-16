@@ -77,7 +77,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     function but can be set to other values.
     """
 
-    absorption_data: AbsorptionDatabase = documented(
+    _absorption_data: AbsorptionDatabase = documented(
         attrs.field(
             kw_only=True,
             factory=AbsorptionDatabase.default,
@@ -209,6 +209,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
     #                             Radiative properties
     # --------------------------------------------------------------------------
+
+    @property
+    def absorption_data(self) -> AbsorptionDatabase:
+        # Inherit docstring
+        return self._absorption_data
 
     @property
     def phase(self) -> PhaseFunction:
