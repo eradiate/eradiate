@@ -54,6 +54,37 @@ class SpectralGrid(ABC):
         return cls.default()
 
     @staticmethod
+    def arange(
+        start: float | pint.Quantity,
+        stop: float | pint.Quantity,
+        step: float | pint.Quantity,
+    ) -> SpectralGrid:
+        """
+        Generate a spectral grid from equally-spaced wavelengths.
+
+        Parameters
+        ----------
+        start : quantity or float
+            Central wavelength of the first bin. If a unitless value is passed,
+            it is interpreted in default wavelength units (usually nm).
+
+        stop : quantity or float
+            Wavelength after which bin generation stops. If a unitless value is
+            passed, it is interpreted in default wavelength units (usually nm).
+
+        step : quantity or float
+            Spectral bin size. If a unitless value is passed, it is interpreted
+            in default wavelength units (usually nm).
+
+        Returns
+        -------
+        SpectralGrid
+            Generated spectral grid.
+        """
+        cls = SpectralGrid.subtypes.resolve()
+        return cls.arange(start, stop, step)
+
+    @staticmethod
     def from_absorption_database(abs_db: AbsorptionDatabase) -> SpectralGrid:
         """
         Retrieve the spectral grid from an absorption database. The returned
@@ -188,6 +219,40 @@ class MonoSpectralGrid(SpectralGrid):
             )
             * ureg.nm
         )
+
+    @staticmethod
+    def arange(
+        start: float | pint.Quantity,
+        stop: float | pint.Quantity,
+        step: float | pint.Quantity,
+    ) -> MonoSpectralGrid:
+        """
+        Generate a spectral grid from equally-spaced wavelengths.
+
+        Parameters
+        ----------
+        start : quantity or float
+            Central wavelength of the first bin. If a unitless value is passed,
+            it is interpreted in default wavelength units (usually nm).
+
+        stop : quantity or float
+            Wavelength after which bin generation stops. If a unitless value is
+            passed, it is interpreted in default wavelength units (usually nm).
+
+        step : quantity or float
+            Spectral bin size. If a unitless value is passed, it is interpreted
+            in default wavelength units (usually nm).
+
+        Returns
+        -------
+        MonoSpectralGrid
+            Generated spectral grid.
+        """
+        w_u = ucc.get("wavelength")
+        start = ensure_units(start, w_u).m_as(w_u)
+        stop = ensure_units(stop, w_u).m_as(w_u)
+        step = ensure_units(step, w_u).m_as(w_u)
+        return MonoSpectralGrid(wavelengths=np.arange(start, stop, step) * w_u)
 
     @classmethod
     def from_absorption_database(cls, abs_db: MonoAbsorptionDatabase):
@@ -407,9 +472,8 @@ class CKDSpectralGrid(SpectralGrid):
             step=10.0,
         )
 
-    @classmethod
+    @staticmethod
     def arange(
-        cls,
         start: float | pint.Quantity,
         stop: float | pint.Quantity,
         step: float | pint.Quantity,
@@ -441,11 +505,11 @@ class CKDSpectralGrid(SpectralGrid):
         stop_m = ensure_units(stop, w_u).m_as(w_u)
         width_m = ensure_units(step, w_u).m_as(w_u)
 
-        wcenters_m = np.arange(start_m, stop_m + 0.1 * width_m, width_m)
+        wcenters_m = np.arange(start_m, stop_m, width_m)
         wmins_m = wcenters_m - 0.5 * width_m
         wmaxs_m = wcenters_m + 0.5 * width_m
 
-        return cls(wmins_m * w_u, wmaxs_m * w_u, wcenters_m * w_u)
+        return CKDSpectralGrid(wmins_m * w_u, wmaxs_m * w_u, wcenters_m * w_u)
 
     @classmethod
     def from_nodes(cls, wnodes: npt.ArrayLike) -> CKDSpectralGrid:
