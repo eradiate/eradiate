@@ -93,16 +93,17 @@ class SpectralGrid(ABC):
         cls = SpectralGrid.subtypes.resolve()
         return cls.from_absorption_database(abs_db)
 
-    @abstractmethod
-    def select(self, srf: SpectralResponseFunction) -> SpectralGrid:
+    def select(self, srf) -> SpectralGrid:
         """
         Select a subset of the spectral grid based on a spectral response
         function.
 
         Parameters
         ----------
-        srf : SpectralResponseFunction
-            Spectral response function used to filter spectral grid points.
+        srf
+            A value that is either a :class:`.SpectralResponseFunction` instance
+            or convertible to a :class:`.SpectralResponseFunction` by the
+            :meth:`.SpectralResponseFunction.convert` method.
 
         Returns
         -------
@@ -114,6 +115,13 @@ class SpectralGrid(ABC):
         The implementation of this method uses single dispatch based on the type
         of the ``srf`` parameter.
         """
+        # This function performs value conversion then calls the _select_impl()
+        # dispatching method.
+        srf = SpectralResponseFunction.convert(srf)
+        return self._select_impl(srf)
+
+    @abstractmethod
+    def _select_impl(self, srf: SpectralResponseFunction) -> SpectralGrid:
         pass
 
     @abstractmethod
@@ -266,16 +274,16 @@ class MonoSpectralGrid(SpectralGrid):
         return cls(wavelengths=w)
 
     @singledispatchmethod
-    def select(self, srf: SpectralResponseFunction) -> MonoSpectralGrid:
+    def _select_impl(self, srf: SpectralResponseFunction) -> MonoSpectralGrid:
         # Inherit docstring
         raise NotImplementedError(f"unsupported data type '{type(srf)}'")
 
-    @select.register
+    @_select_impl.register
     def _(self, srf: DeltaSRF):
         # Pass SRF wavelengths through
         return MonoSpectralGrid(wavelengths=srf.wavelengths)
 
-    @select.register
+    @_select_impl.register
     def _(self, srf: UniformSRF):
         w_m = self.wavelengths.m
         w_u = self.wavelengths.u
@@ -284,7 +292,7 @@ class MonoSpectralGrid(SpectralGrid):
         w_selected_m = w_m[(w_m >= wmin_m) & (w_m <= wmax_m)]
         return MonoSpectralGrid(wavelengths=w_selected_m * w_u)
 
-    @select.register
+    @_select_impl.register
     def _(self, srf: BandSRF):
         # Select all wavelengths for which the SRF evaluates to a nonzero value
         values = srf.eval(self.wavelengths)
@@ -535,11 +543,11 @@ class CKDSpectralGrid(SpectralGrid):
         return cls(wmins, wmaxs, wcenters)
 
     @singledispatchmethod
-    def select(self, srf: SpectralResponseFunction) -> CKDSpectralGrid:
+    def _select_impl(self, srf: SpectralResponseFunction) -> CKDSpectralGrid:
         # Inherit docstring
         raise NotImplementedError(f"unsupported data type '{type(srf)}'")
 
-    @select.register
+    @_select_impl.register
     def _(self, srf: DeltaSRF):
         w_u = srf.wavelengths.u
         w_m = srf.wavelengths.m
@@ -559,12 +567,12 @@ class CKDSpectralGrid(SpectralGrid):
 
         return CKDSpectralGrid(wmins=self.wmins[selected], wmaxs=self.wmaxs[selected])
 
-    @select.register
+    @_select_impl.register
     def _(self, srf: UniformSRF):
         selected = (self.wmaxs > srf.wmin) & (self.wmins < srf.wmax)
         return CKDSpectralGrid(wmins=self.wmins[selected], wmaxs=self.wmaxs[selected])
 
-    @select.register
+    @_select_impl.register
     def _(self, srf: BandSRF):
         w_u = self.wmins.u
         wmins_m = self.wmins.m_as(w_u)
