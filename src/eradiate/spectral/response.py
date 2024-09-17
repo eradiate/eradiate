@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import typing as t
 import warnings
 from abc import ABC, abstractmethod
 
@@ -13,6 +15,7 @@ from pinttrs.util import ensure_units
 
 from .. import converters, data, validators
 from ..attrs import define, documented
+from ..exceptions import DataError
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -34,6 +37,69 @@ class SpectralResponseFunction(ABC):
     """
     An interface defining the spectral response function of an instrument.
     """
+
+    @staticmethod
+    def convert(value) -> t.Any:
+        """
+        Converter for the ``Measure.srf`` field.
+
+        Notes
+        -----
+        Supported conversion protocols:
+
+        * :class:`dict`: Dispatch to subclass based on 'type' entry, then pass
+          dictionary to constructor as keyword arguments.
+        * Dataset, DataArray: Call :meth:`.BandSRF.from_dataarray`.
+        * Path-like: Attempt loading a dataset from the hard drive, then call
+          :meth:`.BandSRF.from_dataarray`.
+        * :class:`str`: Perform a NetCDF file lookup in the SRF database and load
+          it.
+
+        Anything else will pass through this converter without modification.
+        """
+        if isinstance(value, dict):
+            d = value.copy()
+            try:
+                type_id = d.pop("type")
+            except KeyError as e:
+                raise ValueError(
+                    "missing 'type' key in SRF specification dictionary"
+                ) from e
+
+            dispatch_table = {
+                "uniform": UniformSRF,
+                "delta": DeltaSRF,
+                "multi_delta": DeltaSRF,
+                "band": BandSRF,
+            }
+
+            try:
+                cls = dispatch_table[type_id]
+            except KeyError as e:
+                raise ValueError(f"unknown SRF type '{type_id}'") from e
+
+            return cls(**d)
+
+        if isinstance(value, xr.Dataset):
+            return BandSRF.from_dataarray(value.srf)
+
+        if isinstance(value, xr.DataArray):
+            return BandSRF.from_dataarray(value)
+
+        if isinstance(value, (str, os.PathLike)):
+            try:
+                ds = xr.load_dataset(value)
+                return BandSRF.from_dataarray(ds.srf)
+            except (FileNotFoundError, ValueError):
+                pass
+
+        if isinstance(value, str):
+            try:
+                return BandSRF.from_id(value)
+            except DataError:
+                pass
+
+        return value
 
     @abstractmethod
     def eval(self, w: npt.ArrayLike) -> pint.Quantity:

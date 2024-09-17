@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
+from eradiate.spectral import SpectralResponseFunction
 from eradiate.spectral.response import BandSRF, DeltaSRF, UniformSRF
 
 
@@ -111,3 +112,18 @@ def test_band_srf():
         wavelengths=[500, 550, 600], values=[0, 1, 0]
     ).integrate_cumulative([400, 500, 550, 600, 700])
     np.testing.assert_equal(integral.m_as("nm"), [0, 25, 50, 50])
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (DeltaSRF([550]), DeltaSRF),
+        ({"type": "delta", "wavelengths": [550]}, DeltaSRF),
+        ({"type": "uniform", "wmin": 500, "wmax": 600}, UniformSRF),
+        ("sentinel_2a-msi-3", BandSRF),
+    ],
+    ids=["instance", "dict_uniform", "dict_delta", "str_band"],
+)
+def test_convert(value, expected):
+    converted = SpectralResponseFunction.convert(value)
+    assert isinstance(converted, expected)
