@@ -153,7 +153,7 @@ class Experiment(ABC):
 
     ckd_quad_config: CKDQuadConfig = documented(
         attrs.field(
-            factory=CKDQuadConfig,
+            factory=lambda: CKDQuadConfig(ng_max=16),
             converter=CKDQuadConfig.convert,
             validator=attrs.validators.instance_of(CKDQuadConfig),
         ),
