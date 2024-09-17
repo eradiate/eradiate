@@ -338,7 +338,7 @@ def test_gather_bitmaps(mode, gather_bitmaps):
     if mode.is_mono:
         spectral_sizes = {"w": 1}
     elif mode.is_ckd:
-        spectral_sizes = {"w": 1, "g": 1}  # 1 is the default value
+        spectral_sizes = {"w": 1, "g": 16}  # 16 is the default value
     else:
         raise RuntimeError("Selected mode is not handled")
 
