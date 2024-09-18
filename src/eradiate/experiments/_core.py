@@ -40,7 +40,7 @@ from ..spectral.ckd_quad import CKDQuadConfig
 from ..spectral.grid import CKDSpectralGrid, MonoSpectralGrid, SpectralGrid
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_registry as ureg
-from ..util.misc import MultiGenerator, deduplicate_sorted, onedict_value
+from ..util.misc import deduplicate_sorted, onedict_value
 
 logger = logging.getLogger(__name__)
 
@@ -396,40 +396,36 @@ class EarthObservationExperiment(Experiment, ABC):
         :class:`.SpectralIndex`
             Spectral index.
         """
+
         if eradiate.mode().is_mono:
-            generator = self.spectral_indices_mono
+            spectral_grid: MonoSpectralGrid = self.spectral_grids[measure_index]
+
+            def generator():
+                yield from spectral_grid.walk_indices()
+
         elif eradiate.mode().is_ckd:
-            generator = self.spectral_indices_ckd
+            spectral_grid: CKDSpectralGrid = self.spectral_grids[measure_index]
+            quad_config = self.ckd_quad_config
+            try:
+                abs_db = self.atmosphere.abs_db
+            except (
+                AttributeError
+            ):  # There is either no atmosphere or no absorption database
+                abs_db = None
+
+            def generator():
+                yield from spectral_grid.walk_indices(quad_config, abs_db)
         else:
             raise UnsupportedModeError
 
-        yield from generator(measure_index)
-
-    def spectral_indices_mono(
-        self, measure_index: int
-    ) -> t.Generator[MonoSpectralIndex]:
-        spectral_grid: MonoSpectralGrid = self.spectral_grids[measure_index]
-        yield from spectral_grid.walk_indices()
-
-    def spectral_indices_ckd(self, measure_index: int) -> t.Generator[CKDSpectralIndex]:
-        spectral_grid: CKDSpectralGrid = self.spectral_grids[measure_index]
-        quad_config = self.ckd_quad_config
-        try:
-            abs_db = self.atmosphere.abs_db
-        except AttributeError:
-            abs_db = None
-        yield from spectral_grid.walk_indices(quad_config, abs_db)
-
-    def _spectral_index_generator(self):
-        return MultiGenerator(
-            [self.spectral_indices(i) for i in range(len(self.measures))]
-        )
+        yield from generator()
 
     @property
     def context_init(self):
         # Inherit docstring
+
         return KernelContext(
-            si=self._spectral_index_generator().__next__(), kwargs=self._context_kwargs
+            si=self.spectral_indices(0).__next__(), kwargs=self._context_kwargs
         )
 
     @property
@@ -452,14 +448,13 @@ class EarthObservationExperiment(Experiment, ABC):
         key = {
             MonoSpectralIndex: lambda si: si.w.m,
             CKDSpectralIndex: lambda si: (si.w.m, si.g),
-        }[type(sis[0])]
+        }[SpectralIndex.subtypes.resolve()]
 
         sis = deduplicate_sorted(
             sorted(sis, key=key), cmp=lambda x, y: key(x) == key(y)
         )
-        kwargs = self._context_kwargs
 
-        return [KernelContext(si, kwargs=kwargs) for si in sis]
+        return [KernelContext(si, kwargs=self._context_kwargs) for si in sis]
 
     @property
     @abstractmethod
