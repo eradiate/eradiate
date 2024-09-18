@@ -15,6 +15,13 @@ for mod_name in MOCK_MODULES:
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath("./_ext"))
 
+# -- RTD configuration ---------------------------------------------------------
+
+if os.environ.get("READTHEDOCS", "") == "True":
+    if "html_context" not in globals():
+        html_context = {}
+    html_context["READTHEDOCS"] = True
+
 # -- Project information -------------------------------------------------------
 
 project = "Eradiate"
