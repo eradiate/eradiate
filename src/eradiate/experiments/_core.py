@@ -124,14 +124,14 @@ class Experiment(ABC):
             validator=validators.auto_or(attrs.validators.instance_of(SpectralGrid)),
             repr=False,
         ),
-        doc="Background spectral grid. This attribute is used to set the "
-        "default value for :attr:`_spectral_grid`. "
-        "If the value is :data:`AUTO`, the background spectral grid is "
-        "automatically generated depending on the active mode. Otherwise, the "
-        "value must be a :class:`.SpectralGrid` instance.",
-        type=".SpectralGrid",
-        init_type=".SpectralGrid or .AUTO",
-        default=".AUTO",
+        doc="Background spectral grid. "
+        "If the value is :data:`.AUTO`, the background spectral grid is "
+        "automatically generated depending on the active mode and internal "
+        "experiment constraints. Otherwise, the value must be convertible to "
+        "a :class:`.SpectralGrid` instance.",
+        type=".SpectralGrid or AUTO",
+        init_type=".SpectralGrid or AUTO",
+        default="AUTO",
     )
 
     @property
