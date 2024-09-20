@@ -4,23 +4,23 @@ import sys
 import unittest.mock as mock
 from importlib.metadata import version
 
-# -- Mock Mitsuba modules (required to render CLI reference on RTD) ------------
+# -- RTD configuration ---------------------------------------------------------
 
-MOCK_MODULES = []
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
+RTD = os.environ.get("READTHEDOCS", "") == "True"
+if RTD:
+    if "html_context" not in globals():
+        html_context = {}
+    html_context["READTHEDOCS"] = True
+
+    # Mock Mitsuba modules (required to render on RTD)
+    MOCK_MODULES = ["mitsuba", "mitsuba.scalar_rgb", "drjit"]
+    for mod_name in MOCK_MODULES:
+        sys.modules[mod_name] = mock.Mock()
 
 # -- Path setup ----------------------------------------------------------------
 
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath("./_ext"))
-
-# -- RTD configuration ---------------------------------------------------------
-
-if os.environ.get("READTHEDOCS", "") == "True":
-    if "html_context" not in globals():
-        html_context = {}
-    html_context["READTHEDOCS"] = True
 
 # -- Project information -------------------------------------------------------
 
