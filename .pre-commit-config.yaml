@@ -24,3 +24,10 @@ repos:
     rev: v0.9.3
     hooks:
       - id: taplo-format
+  - repo: local
+    hooks:
+      - id: docs-lock
+        name: Lock Pip requirements for RTD build
+        entry: pixi run -e dev --no-progress --quiet docs-lock
+        pass_filenames: false
+        language: system

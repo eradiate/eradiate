@@ -3,14 +3,10 @@ build-backend = "setuptools.build_meta"
 requires = ["setuptools>=61"]
 
 [project]
-authors = [
-  { name = "The Eradiate Team" }
-]
+authors = [{ name = "The Eradiate Team" }]
 description = "A radiative transfer model for the Earth observation community"
 license = { text = "LGPLv3" }
-maintainers = [
-  { name = "The Eradiate Team" }
-]
+maintainers = [{ name = "The Eradiate Team" }]
 name = "eradiate"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -42,9 +38,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-optional = [
-  "eradiate-mitsuba==0.2.4",
-]
+optional = ["eradiate-mitsuba==0.2.4"]
 recommended = [
   "aabbtree", # Used by the leaf collision detection feature
   "astropy", # Used by the solar irradiance spectrum date-based scaling feature
@@ -59,6 +53,7 @@ docs = [
   "myst-parser",
   "nbsphinx>=0.9.0",
   "ipython", # Required for syntax highlighting in notebooks
+  "pytest", # Required for pytest-related function docs
   "seaborn",
   "sphinx-book-theme>=1.0",
   "sphinx",
@@ -67,10 +62,7 @@ docs = [
   "sphinx-copybutton",
   "sphinx-design",
 ]
-test = [
-  "pytest",
-  "pytest-json-report",
-]
+test = ["pytest", "pytest-json-report"]
 
 [project.scripts]
 eradiate = "eradiate.cli:main"
@@ -95,6 +87,7 @@ pandoc = "*"
 
 [tool.pixi.feature.dev.dependencies]
 pixi-pycharm = ">=0.0.6,<0.0.7"
+uv = ">=0.4.15,<0.5" # Used to lock docs dependencies
 
 [tool.pixi.activation]
 scripts = ["setpath.sh"]
@@ -128,11 +121,13 @@ docs-pdf = { cmd = "make -C docs latexpdf && echo \"Documentation PDF at docs/_b
 docs-serve = { cmd = "make -C docs serve" }
 docs-linkcheck = { cmd = "make -C docs linkcheck" }
 docs-render-tutorials = { cmd = "python tutorials/run.py run" }
+# Important: If the Python version changes, do not forget to sync it with the
+# 'build.tools.python' entry in .readthedocs.yml
+docs-lock = { cmd = "uv pip compile --no-progress --quiet --upgrade --build-isolation --python-version 3.9 --no-strip-extras --extra docs --extra recommended --output-file docs/requirements.txt pyproject.toml" }
 
 [tool.pixi.environments]
 prod = { features = ["py39", "optional", "recommended"] }
 test = { features = ["py39", "recommended", "test"] }
-rtd = { features = ["py39", "docs"] }
 dev = { features = ["py39", "recommended", "test", "docs", "dev"] }
 
 [tool.pytest.ini_options]
@@ -156,7 +151,7 @@ per-file-ignores = { "*.ipynb" = ["E402"] }
 select = ["I", "F", "E"]
 
 [tool.setuptools]
-include-package-data = true  # Required because of package data
+include-package-data = true # Required because of package data
 
 [tool.setuptools.package-data]
 # Required by PEP 561
