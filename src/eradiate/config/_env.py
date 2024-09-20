@@ -9,9 +9,13 @@ def _validate_source_dir(value: Path | None):
         # Import must be local and not use the lazy loader to avoid circular imports
         from ..kernel._versions import kernel_installed
 
+        # Detect whether kernel is installed
         kernel_is_installed, _ = kernel_installed()
 
-        if not kernel_is_installed:
+        # Detect Read the Docs build
+        rtd = os.environ.get("READTHEDOCS", "") == "True"
+
+        if not kernel_is_installed and not rtd:
             raise RuntimeError(
                 "Could not find a suitable production installation for the "
                 "Eradiate kernel. This is either because you are using Eradiate "
