@@ -291,15 +291,14 @@ Style
 ^^^^^
 
 * The Eradiate codebase is written following Python's
-  `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_. Its code formatter of
-  choice is `Black <https://black.readthedocs.io/>`_ and its linter of choice is
-  `ruff <https://github.com/charliermarsh/ruff>`_, for which a configuration is
-  provided as part of the ``pyproject.toml`` file.
-  Editor integration instructions are available
-  `for Black <https://black.readthedocs.io/en/stable/integrations/editors.html>`_
-  and `for ruff <https://beta.ruff.rs/docs/editor-integrations/>`_.
-  Both tools are part of our `pre-commit <https://pre-commit.com/>`_ hook set,
-  which we strong recommend to install.
+  `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_. Its code formatter and
+  linter of choice is `ruff <https://github.com/charliermarsh/ruff>`_, for which
+  a configuration is provided as part of the ``pyproject.toml`` file.
+  `Editor integration instructions <https://beta.ruff.rs/docs/editor-integrations/>`_
+  are available.
+  Both the linter and formatter are part of our
+  `pre-commit <https://pre-commit.com/>`_ hook set, which we strongly recommend
+  to install.
 
 * We write our docstrings following the
   `Numpydoc format <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
