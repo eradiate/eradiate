@@ -12,7 +12,7 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help serve html-plot rst-api rst-data rst-plugins clean clean_generated Makefile
+.PHONY: help serve html-plot clean clean_generated Makefile
 
 serve:
 	sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
@@ -22,26 +22,12 @@ html-plot:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-rst-api:
-	python generate_rst_api.py
-
-rst-data:
-	python generate_rst_data.py
-
-rst-plugins:
-	python generate_rst_plugins.py
-
-md-cli:
-	python generate_md_cli.py
-
 clean: clean_generated
 	rm -rf _build/*
 
 clean_generated:
-	rm -rf rst/data/generated/*
 	rm -rf rst/reference_api/generated/*
 	rm -rf rst/reference_plugins/generated/*
-	rm -rf examples/generated/*
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
