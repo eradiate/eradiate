@@ -29,5 +29,6 @@ repos:
       - id: docs-lock
         name: Lock Pip requirements for RTD build
         entry: pixi run -e dev --no-progress --quiet docs-lock
+        files: pixi.lock
         pass_filenames: false
         language: system
