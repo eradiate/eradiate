@@ -13,6 +13,8 @@ This section describes how the data shipped with Eradiate is managed.
 Overview
 ^^^^^^^^
 
+.. _eradiate-data: https://github.com/eradiate/eradiate-data/
+
 Eradiate ships data of various sizes and maturity levels. The current data
 management system tries to achieve a compromise between ease of use,
 reproducibility and bandwidth and storage efficiency.
@@ -26,18 +28,17 @@ aggregated as a :class:`.MultiDataStore` instance, accessible as the
 stores is referenced with an identifier:
 
 ``small_files``
-    A directory of files versioned in the
-    `eradiate-data <https://github.com/eradiate/eradiate-data>`_ GitHub
-    repository. This data store contains small files, and implementing
-    reproducibility with it is fairly simple. This is the location where data
-    goes by default, *i.e.* when it is small enough to fit there. The
-    ``small_files`` data store is accessed offline in a development setup,
-    *i.e.* when the Eradiate repository and its submodules are cloned locally,
-    or remotely when Eradiate is installed is user mode. This data store holds
-    a *registry* of files which it uses for integrity checks when it is accessed
-    online. Only files in the registry can be served by this data store,
-    regardless if it is accessed online or offline: files of the eradiate-data
-    repository which are not registered cannot be accessed through it.
+    A directory of files versioned in the `eradiate-data`_ GitHub repository.
+    This data store contains small files, and implementing reproducibility with
+    it is fairly simple. This is the location where data goes by default, *i.e.*
+    when it is small enough to fit there. The ``small_files`` data store is
+    accessed offline in a development setup, *i.e.* when the Eradiate repository
+    and its submodules are cloned locally, or remotely when Eradiate is
+    installed is user mode. This data store holds a *registry* of files which it
+    uses for integrity checks when it is accessed online. Only files in the
+    registry can be served by this data store, regardless if it is accessed
+    online or offline: files of the eradiate-data repository which are not
+    registered cannot be accessed through it.
 
 ``large_files_stable``
     A directory of files hosted remotely. The files in this data store are
@@ -85,11 +86,12 @@ local cache directory, the file is downloaded again.
 Modifying the data
 ^^^^^^^^^^^^^^^^^^
 
+.. _pre-commit: https://pre-commit.com/
+
 Each store requires a different protocol.
 
 ``small_files``
-    Install `pre-commit <https://pre-commit.com/>`_ and install the git hook
-    scripts:
+    Install `pre-commit`_ and install the git hook scripts:
 
     .. code:: bash
 
@@ -163,184 +165,54 @@ Each store requires a different protocol.
 Managing dependencies
 ---------------------
 
-Dependency management in a development environment requires care: loosely
-specified dependencies allow for more freedom when setting up an environment,
-but can also lead to reproducibility issues. To get a better understanding of
-the underlying problems, the two following posts are interesting reads, which
-the reader is strongly encouraged to study since most of the terminology used in
-this guide comes from them:
+.. _Pixi: https://pixi.sh/
+.. _Pixi Basic usage: https://pixi.sh/latest/basic_usage/
+.. _Pixi Python development: https://pixi.sh/latest/tutorials/python/
 
-* `Python Application Dependency Management in 2018 (Hynek Schlawak) <https://hynek.me/articles/python-app-deps-2018/>`_
-* `Reproducible and upgradable Conda environments: dependency management with conda-lock (Itamar Turner-Trauring) <https://pythonspeed.com/articles/conda-dependency-management/>`_
+Eradiate is managed using the `Pixi`_ project manager. It notably allows
+us to maintain a Conda-based setup with most dependencies sourced from PyPI,
+with layered requirements. Be sure to read the relevant entries in the Pixi
+documentation:
 
-Our dependency management system is designed with the following requirements:
+* `Pixi Basic usage`_
+* `Pixi Python development`_
 
-1. Support for Conda: The system should be usable with Conda.
-2. Support for Pip: The system should be usable with Pip.
-3. Simplicity: The system must be usable by users with little knowledge of it.
+We use the following requirement groups, which manifest as `features` in the
+Pixi model:
 
-Our system uses two tools (included in the development virtual environment):
+* ``optional``: Only contains the Eradiate kernel package. This is needed to
+  allow developers to install all dependencies except the kernel.
+* ``recommended``: Optional packages used by specific subcomponents of Eradiate.
+* ``docs``: Packages needed to compile the documentation.
+* ``test``: Packages needed to run the test suite.
 
-* `conda-lock <https://github.com/conda-incubator/conda-lock>`_
-* `pip-tools <https://github.com/jazzband/pip-tools>`_
+When adding new requirements, be sure to:
 
-Basic principles
-^^^^^^^^^^^^^^^^
+* Prioritize PyPI packages, using the ``--pypi`` option.
+* Register the new requirement to the appropriate group.
+* Check in the lock file after it is updated.
 
-We categorize our dependencies in seven layers:
+.. note::
 
-* ``main``: minimal requirements for eradiate to run in development mode
-* ``recommended``: convenient optional dependencies included in the production package. Installable through PyPI.
-* ``docs``: dependencies required to compile the docs in development mode
-* ``tests``: dependencies required for testing eradiate in development mode
-* ``dev``: dependencies specific to a development setup.
-* ``dependencies``: dependency list used by default by Setuptools in production packages. Includes the ``eradiate-mitsuba`` package. Used by users who install Eradiate through PyPI.
-* ``optional``: convenience development dependencies, including the ``eradiate-mitsuba`` package.
-
-Layers can include other layers. As a result, we have the following layer Directed Acyclic Graph (DAG):
-
-- ``docs`` includes ``main``;
-- ``tests`` includes ``main``;
-- ``dev`` includes ``recommended``, ``docs`` and ``tests``.
-- ``dependencies`` includes ``main``;
-- ``optional`` includes ``dev``;
-
-The following figure illustrates the layer DAG:
-
-.. only:: latex
-
-   .. figure:: ../fig/requirement_layers.png
-
-.. only:: not latex
-
-   .. figure:: ../fig/requirement_layers.svg
-
-The sets are defined in ``requirements/layered.yml``, where direct dependencies are
-specified with minimal constraint.
-
-.. warning:: This is the location from which all dependencies are sourced.
-   Dependencies shoud all be specified only in ``requirements/layered.yml``.
-
-We then have processes which will compile these dependencies into transitively
-pinned dependencies and write them as requirement (lock) files. The Conda and
-Pip pinning processes are different.
-
-The generated lock files are versioned and come along the source code they were
-used to write. Thus, a developer cloning the codebase will also get the
-information they need to reproduce the same environment as the other developers.
-
-The project's ``pyproject.toml`` file defines the metadata used by the Eradiate wheels.
-It thus includes the necessary pip lock files for production/users setups. These are
-the ``dependencies`` layer pip lock file, which includes the eradiate-mitsuba package, and
-the ``recommended`` layer pip lock file, as an optional dependency set.
-
-Lock files
-^^^^^^^^^^
-
-Lock files are stored in the ``requirements`` directory, alongside a series of
-utility scripts.
-
-* **Conda** dependencies are pinned using conda-lock. It uses a regular
-  environment YAML file as input. It can compile requirements for multiple
-  platforms, but cannot be used to extract subsets of an existing requirement
-  specification. The ``environment-dev.yml`` file is created by the
-  ``make_conda_env.py`` script, from a header ``environment.in`` and the data
-  found in ``requirements/layered.yml``. Our Conda lock files use the extension ``.lock``.
-* **Pip** dependencies are pinned using pip-tools. It uses a series of ``*.in``
-  files as input (one per requirement layer) which can be configured to define
-  subsets of each other, but cannot compile requirements for multiple platforms,
-  which basically means that we cannot use hashes to pin requirements with it.
-  The ``*.in`` input files are created by the ``make_pip_in_files.py`` script
-  from the data found in ``requirements/layered.yml`` and the requirement layer relations
-  defined in the ``requirements/layered.yml`` file. Our Pip lock files use the extension
-  ``.txt``.
-
-We can already see at this point that neither tool will perfectly fulfill our
-requirements, but the limitations we have observed so far have not (yet)
-proven to be critical.
-
-Initialising or updating an environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**With Conda**, use the following command in your active virtual environment:
-
-.. code:: bash
-
-   make conda-init
-
-.. note:: This command also executes the ``copy_envvars.py`` script, which
-   adds to your environment a script which will set environment variables
-   upon activation.
-
-**With Pip**, use the following command in your active virtual environment:
-
-.. code:: bash
-
-   make pip-init
-
-These commands will use their respective package manager to update the currently
-active environment with the pinned package versions.
-
-Updating lock files
-^^^^^^^^^^^^^^^^^^^
-
-When you want to update pinned dependencies (*e.g.* because you added or changed
-a dependency in ``requirements/layered.yml`` or because a dependency must be
-updated), you need to update the lock file.
-
-**With Conda**, use the following command in your active virtual environment:
-
-.. code:: bash
-
-   make conda-lock-all
-
-**With Pip**, use the following command in your active virtual environment:
-
-.. code:: bash
-
-   make pip-lock
-
-.. warning:: If you are developing in a Conda environment and want to update Pip
-   lock files, use instead:
-
-   .. code:: bash
-
-      make pip-compile
-
-   This command skips the Setuptools and pip-compile update which could disrupt
-   your Conda environment.
-
-Continuous integration
-----------------------
-
-Eradiate has a continuous integration scheme built in `Github Actions <https://docs.github.com/en/actions>`_ .
-The action is configured in the ``.github/workflows/ci.yml`` file.
-
-As per the documented installation process, Conda environment setup is handled using
-the appropriate Makefile and Mitsuba build configuration is done using the CMake preset.
-No CI-specific build setup operations are required.
-
-The CI workflow uses caching for the compiled Mitsuba binaries. The cache is identified by the commit hash of the
-``mitsuba`` submodule and the file hashes of all .cpp and .h files in ``src/plugins/src``.
-
-Since the entire pipeline takes more than one hour to complete, it is not triggered automatically.
-Instead, issuing a PR comment containing only ``run Eradiate CI`` will trigger the pipeline on the source
-branch of the PR.
+   Our Read The Docs build uses stock Python virtual environments and installs
+   dependencies with Pip. A specific requirement file is generated for that
+   purpose, using the ``docs-lock`` Pixi task. This task is automatically
+   executed upon committing, so the file is always up-to-date.
 
 .. _sec-maintainer_guide-release:
 
 Making a release of Eradiate
 ----------------------------
 
-.. _pixi_env_activation: https://pixi.sh/latest/features/environment/#activation
-.. _bump_my_version: https://github.com/callowayproject/bump-my-version
+.. _start a Pixi shell: https://pixi.sh/latest/features/environment/#activation
+.. _Bump My Version: https://github.com/callowayproject/bump-my-version
 .. [1] This applies only if the Pixi environment is not activated already, *e.g.*
        by a ``direnv`` script.
 
 1. **Preparation**
 
    1. Make sure main is up-to-date and all tests pass.
-   2. If necessary, [1]_ `start a Pixi shell <pixi_env_activation>`_:
+   2. If necessary, [1]_ `start a Pixi shell`_:
 
       .. code:: shell
 
@@ -372,7 +244,7 @@ Making a release of Eradiate
 
          python requirements/release.py check-mitsuba
 
-   7. Bump the version number using `Bump My Version <bump_my_version>`_:
+   7. Bump the version number using `Bump My Version`_:
 
       .. code:: shell
 
