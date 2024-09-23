@@ -12,9 +12,8 @@ Updating the source code
 
 In the cloned source directory, pull the latest update from GitHub:
 
-.. code:: bash
+.. code:: shell
 
-   cd $ERADIATE_SOURCE_DIR
    git pull
 
 Unfortunately, pulling from the main repository won't automatically keep the
@@ -22,7 +21,7 @@ submodules in sync, which can lead to various problems. After pulling the
 repository itself, it is essential to update the submodules. This is done using
 the following command in the cloned source directory:
 
-.. code:: bash
+.. code:: shell
 
    git submodule update --init --recursive
 
@@ -33,13 +32,13 @@ the following command in the cloned source directory:
    The following command installs a git alias named ``pullall`` that automates
    these two steps.
 
-   .. code:: bash
+   .. code:: shell
 
       git config --global alias.pullall '!f(){ git pull "$@" && git submodule update --init --recursive; }; f'
 
    Afterwards, simply write
 
-   .. code:: bash
+   .. code:: shell
 
       git pullall
 
@@ -53,24 +52,9 @@ Rebuilding the kernel
 
 After updating, it's always better to rebuild the kernel:
 
-.. code:: bash
+.. code:: shell
 
-   cd $ERADIATE_SOURCE_DIR
-   make kernel
-
-Updating your Conda environment
--------------------------------
-
-After updating the source code, an update of your Conda environment might be
-necessary. In that case, the ``conda-init`` target can be used:
-
-.. code:: bash
-
-   cd $ERADIATE_SOURCE_DIR
-   make conda-init
-
-If something goes wrong during that process, an environment reset should solve
-most issues (see :ref:`sec-developer_guide-dev_install-setup_conda`).
+   pixi run build-kernel
 
 Update data files
 -----------------
@@ -79,14 +63,14 @@ Optionally, you may want to make sure that the data files you'll use are
 up-to-date. For that purpose, you can refresh remote file registries and purge
 Eradiate's data cache:
 
-.. code:: bash
+.. code:: shell
 
-   eradiate data update-registries
-   eradiate data purge-cache --keep
+   pixi run -e dev eradiate data update-registries
+   pixi run -e dev eradiate data purge-cache --keep
 
 .. note::
    For a more aggressive cleanup, just run
 
-   .. code:: bash
+   .. code:: shell
 
-      eradiate data purge-cache
+      pixi run -e dev eradiate data purge-cache
