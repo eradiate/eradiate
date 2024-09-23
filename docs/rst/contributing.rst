@@ -19,17 +19,23 @@ Building the documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once Eradiate is installed, the documentation can be built using the following
-commands:
+command:
 
-.. code-block:: bash
+.. code:: shell
 
-    cd $ERADIATE_SOURCE_DIR
-    make docs
+    pixi run -e dev docs-build
 
 After the build is completed, the html document is located in
 :code:`$ERADIATE_SOURCE_DIR/docs/_build/html`.
 
+Alternatively, an automatically refreshed server can be started:
+
+.. code:: shell
+
+    pixi run -e dev docs-serve
+
 .. note::
+
    Some parts of the API documentation use static intermediate files generated
    by a dedicated script. See :ref:`sec-contributing-documentation-api-build`
    for more information.
@@ -206,21 +212,6 @@ be reused. For such cases, we provide the :func:`.get_doc` function:
            default="1.0",
        )
 
-.. _sec-contributing-documentation-api-build:
-
-Building API RST files
-**********************
-
-Parts of the API documentation are generated using a dedicated Python script.
-The generation process is integrated in the Sphinx configuration, but it can
-sometimes be useful to build those static files manually. This can be done with
-the ``docs-rst`` make target:
-
-.. code-block:: bash
-
-    cd $ERADIATE_SOURCE_DIR
-    make docs-rst
-
 Editing tutorials
 ^^^^^^^^^^^^^^^^^
 
@@ -235,9 +226,9 @@ The recommended way to edit tutorials is as follows:
 2. In another terminal, open a Sphinx server using the following command at the
    root of your local copy of Eradiate:
 
-   .. code:: bash
+   .. code:: shell
 
-      make docs-serve
+      pixi run -e dev docs-serve
 
 3. Browse to the tutorial you want to edit or create a new one using the
    tutorial template. You can now edit the content and see how it renders
@@ -247,7 +238,7 @@ The recommended way to edit tutorials is as follows:
 
       Make sure that the first cell is as follows:
 
-      .. code:: bash
+      .. code:: shell
 
          %reload_ext eradiate.notebook.tutorials
 
@@ -390,19 +381,17 @@ Testing
 Eradiate is shipped with a series of tests written with
 `pytest <https://docs.pytest.org/en/latest/>`_.
 
-At the highest level, there is a separation of tests for Mitsuba plugins which
-are maintained in the Eradiate codebase and tests for Eradiate's high-level
-code. The tests for Eradiate are then grouped by complexity. First unit tests
-are executed, followed by system tests and finally regression tests.
+Tests for Eradiate are grouped by complexity. First unit tests are executed,
+followed by system tests and finally regression tests.
 
 Running the test suite
 **********************
 
 To run the test suite, invoke ``pytest`` with the following command:
 
-.. code-block:: bash
+.. code:: shell
 
-    pytest tests
+   pixi run -e dev pytest
 
 Testing guidelines
 ******************
@@ -434,7 +423,7 @@ The following template can be copied to new test cases and the information
 filled in as needed. Note that we strongly suggest using string literals
 (prefixed with a ``r``) in order to avoid issues with escape sequences.
 
-.. code-block:: python
+.. code:: python
 
     r"""
     Test title
@@ -476,7 +465,7 @@ To run the regression tests isolated from the rest of the test suite, we
 introduced the ``regression`` fixture. To run only the regression tests, invoke
 pytest like this:
 
-.. code-block:: bash
+.. code:: shell
 
     pytest tests -m "regression" --artefact-dir <a directory of your choice>
 
@@ -499,13 +488,13 @@ means.
 To implement tests based on this framework, we provide helper classes which can
 be imported from the :mod:`eradiate.test_tools.regression` module:
 
-.. code-block:: python
+.. code:: python
 
     import eradiate.test_tools.regression as ttr
 
 Within your test case, you then instantiate one of the subclasses:
 
-.. code-block:: python
+.. code:: python
 
     result = your_eradiate_simulation()
 
@@ -529,7 +518,7 @@ filename.
 
 To handle the test result simply use an assertion:
 
-.. code-block:: python
+.. code:: python
 
     assert test.run()
 
@@ -585,7 +574,7 @@ it to track,
 `this post <https://stackoverflow.com/questions/23708231/git-shallow-clone-clone-depth-misses-remote-branches>`_
 contains probably what you need to do:
 
-.. code:: bash
+.. code:: shell
 
    cd my-shallow-submodule
    git remote set-branches origin '*'
@@ -595,8 +584,8 @@ contains probably what you need to do:
 Profiling
 ---------
 
-Tests are a very opportunity to profile Eradiate. We recommend running tests
-with `pytest-profiling <https://pypi.org/project/pytest-profiling/>`_ (see
+Tests are a very good opportunity to profile Eradiate. We recommend running
+tests with `pytest-profiling <https://pypi.org/project/pytest-profiling/>`_ (see
 documentation for usage instructions, it's basically about installing the
 package then running pytest with the ``--profile`` option).
 

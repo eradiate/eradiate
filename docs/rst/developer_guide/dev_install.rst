@@ -17,8 +17,11 @@ variants.
 Prerequisites
 -------------
 
-Before cloning the Git repository and compiling the code, ensure that your
-machine meets the requirements listed below.
+The development installation requires that the `Pixi <https://pixi.sh/>`_ package
+manager is installed on the host machine. This tool replaces Conda and a lot of
+in-house tools that were previously maintained by the development team.
+
+Next, make sure that your machine meets the requirements listed below:
 
 .. csv-table::
    :header: Requirement, Tested version
@@ -93,7 +96,7 @@ machine meets the requirements listed below.
       Linux package managers. For example, using the APT package manager, which
       is used in most Debian-based distributions, like Ubuntu:
 
-      .. code:: bash
+      .. code:: shell
 
          # Install build tools, compiler and libc++
          sudo apt install -y git cmake ninja-build clang-11 libc++-11-dev libc++abi-11-dev
@@ -123,14 +126,14 @@ machine meets the requirements listed below.
       Store. Make sure that your copy of the XCode is up-to-date. CMake and
       Ninja can be installed with the `Homebrew package manager <https://brew.sh/>`_:
 
-      .. code:: bash
+      .. code:: shell
 
          brew install cmake ninja
 
       Additionally, running the Xcode command line tools once might be
       necessary:
 
-      .. code:: bash
+      .. code:: shell
 
          xcode-select --install
 
@@ -141,13 +144,6 @@ machine meets the requirements listed below.
       `Visual Studio Community <https://visualstudio.microsoft.com/>`_. In
       addition, you will need to install `GNU Make <https://gnuwin32.sourceforge.net/packages/make.htm>`_
       and `CMake <https://cmake.org/>`_.
-
-Finally, Eradiate requires a fairly recent version of Python (at least 3.9)
-and **we highly recommend using the Conda environment and package  manager** to
-set up your Python environment. Conda can be installed notably as part of the
-Anaconda distribution, or using its lightweight counterparts Miniconda or
-Miniforge (we recommend using the latter for convenience).
-`See installation instructions here <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 .. _sec-developer_guide-dev_install-cloning:
 
@@ -170,13 +166,13 @@ following command:
 
    .. tab-item:: Latest main branch
 
-      .. code:: bash
+      .. code:: shell
 
          git clone --recursive https://github.com/eradiate/eradiate
 
    .. tab-item:: Specific branch or tag
 
-      .. code:: bash
+      .. code:: shell
 
          git clone --recursive --branch <ref> https://github.com/eradiate/eradiate
 
@@ -196,92 +192,61 @@ your Internet connection.
 
 .. _sec-developer_guide-dev_install-setup_conda:
 
-Setting up the Conda environment
---------------------------------
+Setting up the Python environment
+---------------------------------
 
-Eradiate ships a set of pinned Conda environment specifications in the form of
-*lock files*. They quickly set up a reproducible environment. We strongly
-recommend using these instead of a regular environment file since they provide
-an execution environment identical to the one used for development.
+Pixi maintains a *lock file* that allows to quickly set up a reproducible
+Python environment. To configure the develop environment, simply navigate to the
+root of the cloned repository and install it:
 
-In the following, we will use an environment named ``eradiate``, but this name
-can be changed to your liking. We will first create an empty environment:
+.. code:: shell
 
-.. code:: bash
+   pixi install -e dev
 
-   conda create --name eradiate
+.. note::
 
-.. warning::
-   * If an environment with the same name exists, you will be prompted for
-     overwrite.
-   * On Windows, you might be missing a global Python installation. This will
-     prevent development environment bootstrapping. A workaround can be to
-     install Python as part of your Conda environment setup:
+   Although Pixi environments are very similar to Conda environment, there are
+   some important differences. An important difference with a regular Conda
+   environment is that it is not globally available for activation. If you want
+   to activate your development environment from outside the project, this can
+   be done with the ``--manifest-path`` option of the ``pixi shell`` command:
 
-     .. code:: bash
+   .. code:: shell
 
-        conda create --name eradiate python=3.9
+      pixi shell --manifest-path /some/directory/pyproject.toml
 
-This produces an empty environment, which we then activate:
-
-.. code:: bash
-
-   conda activate eradiate
-
-We can now navigate to the repository where we cloned the source code and
-execute a GNU Make target which will initialise our empty environment properly:
-
-.. code:: bash
-
-   cd eradiate
-   make conda-init
-
-.. admonition:: Notes
-
-   * This target will not create a new Conda environment; it will instead
-     install and/or update dependencies in the currently activated one.
-   * This target will automatically select the appropriate lock file based
-     on the platform on which you are working. It will also install Eradiate to
-     your environment in development mode.
-   * In addition to installing dependencies, this target will automate
-     environment variable setup by sourcing ``setpath.sh`` upon environment
-     activation, following
-     `the approach recommended by the Conda user guide <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#saving-environment-variables>`_.
-   * Once the Conda environment is active, the Eradiate root directory can
-     be reached from everywhere through the ``$ERADIATE_SOURCE_DIR`` environment
-     variable.
-
-Once your Conda environment is configured, you should reactivate it:
-
-.. code:: bash
-
-   conda deactivate && conda activate eradiate
+   See the `Pixi CLI documentation <https://pixi.sh/latest/reference/cli/#shell>`_
+   for details.
 
 .. _sec-developer_guide-dev_install-compiling:
 
 Compiling the radiometric kernel
 --------------------------------
 
-We recommend using the using the Makefile rule to build the kernel:
+.. important::
 
-.. code:: bash
+   It is strongly recommended to activate the Pixi environment to compile the kernel:
 
-   make kernel
+   .. code:: shell
+
+      pixi shell -e dev
+
+We recommend using the using the dedicated Pixi task to build the kernel:
+
+.. code:: shell
+
+   pixi run build-kernel
 
 .. dropdown:: CMake Error: The source directory "..." does not exist
    :color: info
    :icon: info
 
-   This most probably means that your CMake version is too old
-   (see `Prerequisites`_). At this stage, you might also install CMake in your
-   Conda environment:
+   This most probably means that your CMake version is too old (see
+   `Prerequisites`_). Up-to-date versions of CMake can be installed from many
+   different sources: `pick you favourite <https://cliutils.gitlab.io/modern-cmake/chapters/intro/installing.html>`_.
 
-   .. code:: bash
-
-      conda install "cmake>=3.22"
-
-**Linux and macOS**: Inspect CMake's output to check if Clang is used as the C++ compiler. Search for
-lines starting with
+**Linux and macOS**: Inspect CMake's output to check if Clang is used as the C++
+compiler. Search for lines starting with
 
 .. code::
 
@@ -304,7 +269,7 @@ Clang.
       .. tab-item:: Linux
          :sync: linux
 
-         .. code:: bash
+         .. code:: shell
 
             export CC=clang-11
             export CXX=clang++-11
@@ -312,51 +277,22 @@ Clang.
       .. tab-item:: macOS
          :sync: macos
 
-         .. code:: bash
+         .. code:: shell
 
             export CC=clang
             export CXX=clang++
 
-**All platforms**: Inspect CMake's output to check if your Conda environment Python is used by
-CMake. Search for a line starting with:
+**All platforms**: Inspect CMake's output to check if your Conda environment
+Python is used by CMake. Search for a line starting with:
 
-.. tab-set::
+.. code::
 
-      .. tab-item:: Linux
-         :sync: linux
+   -- Found Python: ...
 
-         .. code::
-
-            -- Found Python: /home/<username>/miniconda3/envs/eradiate/...
-
-      .. tab-item:: macOS
-         :sync: macos
-
-         .. code::
-
-            -- Found Python: /Users/<username>/miniconda3/envs/eradiate/...
-
-      .. tab-item:: Windows
-         :sync: windows
-
-         .. code::
-
-            -- Found Python: C:/Users/<username>/miniconda3/envs/eradiate/...
-
-
-The content of this line may vary depending on how you installed Conda. If
-this path points to a Python binary not associated with a Conda virtual
-environment, do not proceed before fixing it.
-
-.. dropdown:: If the wrong Python binary is used by CMake ...
-   :color: info
-   :icon: info
-
-   It probably means you have not activated your Conda environment:
-
-   .. code:: bash
-
-      conda activate eradiate
+The content of this line may vary depending on the location of the project and
+your Pixi configuration. If this path points to a Python binary not associated
+with the target Pixi environment, but instead *e.g.* a global Python binary, do
+not proceed before fixing it.
 
 .. note::
 
@@ -378,7 +314,7 @@ Verifying the installation
 
 In a terminal, try and invoke the :program:`eradiate` command-line interface:
 
-.. code:: bash
+.. code:: shell
 
    eradiate show
 
@@ -394,30 +330,9 @@ use Eradiate |smile|
    Eradiate does not use any CUDA variant of Mitsuba. You can therefore
    hide your graphics card by setting
 
-   .. code:: bash
+   .. code:: shell
 
       export CUDA_VISIBLE_DEVICES=""
 
    Even doing so, you might still see a CUDA-related warning upon importing
    Eradiate. This is not a concern and it should be fixed in the future.
-
-Uninstall
----------
-
-To uninstall Eradiate from your system, simply remove the Conda environment you
-used to set it up and delete the directory where you cloned the code. If you
-followed the installation instructions, here is a possible workflow:
-
-1. Activate the Conda environment and delete the Eradiate source directory:
-
-   .. code:: bash
-
-      conda activate eradiate
-      rm -rf $ERADIATE_SOURCE_DIR
-
-2. Deactivate the Conda environment and delete it:
-
-   .. code:: bash
-
-      conda deactivate
-      conda env remove --name eradiate
