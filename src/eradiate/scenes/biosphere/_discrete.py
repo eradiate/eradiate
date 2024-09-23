@@ -63,7 +63,7 @@ class DiscreteCanopy(Canopy):
             ),
         ),
         doc="List of :class:`.CanopyElement` defining the canopy. Can be "
-        "initialised with a :class:`.InstancedCanopyElement`, which will be "
+        "initialized with a :class:`.InstancedCanopyElement`, which will be "
         "automatically wrapped into a list. Dictionary-based specifications are "
         "allowed as well.",
         type="list of :class:`.InstancedCanopyElement`",

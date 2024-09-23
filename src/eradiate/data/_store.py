@@ -106,5 +106,5 @@ def init_data_store(
     )
 
 
-# Initialise the data store upon module import
+# Initialize the data store upon module import
 init_data_store()

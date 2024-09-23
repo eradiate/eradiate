@@ -5,7 +5,7 @@ Design note: atmosphere
 =======================
 
 Eradiate internally represents the atmosphere as a cuboid and the surface as a
-rectangle. When positioning both shapes during kernel initialisation, they must
+rectangle. When positioning both shapes during kernel initialization, they must
 not overlap, *i.e.* be positioned at exactly the same altitude: ray-surface
 intersection would otherwise become unpredictable and results would be wrong.
 
