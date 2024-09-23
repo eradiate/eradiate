@@ -142,7 +142,7 @@ class ExponentialParticleDistribution(ParticleDistribution):
             self.__attrs_init__(1.0 / scale)
         else:
             raise ValueError(
-                "while initialising ExponentialParticleDistribution: "
+                "while initializing ExponentialParticleDistribution: "
                 "setting both rate and scale is not allowed"
             )
 

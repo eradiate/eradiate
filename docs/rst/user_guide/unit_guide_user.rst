@@ -100,7 +100,7 @@ abbreviated as ``ureg``), which must be used to define units.
      :func:`pint.set_application_registry` will not propagate to Eradiate and will
      break Eradiate's unit support.
 
-Another way of initialising our 100 km-high atmosphere would then
+Another way of initializing our 100 km-high atmosphere would then
 be
 
 .. doctest::

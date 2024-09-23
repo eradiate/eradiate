@@ -121,7 +121,7 @@ class SpotIllumination(Illumination):
         ),
         doc="Emitted power in the plane orthogonal to the illumination direction. "
         "Must be an intensity spectrum (in W/sr/nm or compatible unit). "
-        "Can be initialised with a dictionary processed by "
+        "Can be initialized with a dictionary processed by "
         ":meth:`.SpectrumFactory.convert`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
         init_type=":class:`~eradiate.scenes.spectra.Spectrum` or dict or float",

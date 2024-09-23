@@ -68,7 +68,7 @@ class SeedState:
         Returns
         -------
         numpy.random.Generator
-            Initialised RNG.
+            Initialized RNG.
         """
         seed = self.next(1)[0]
         return np.random.default_rng(seed=seed)

@@ -36,7 +36,7 @@ class HomogeneousAtmosphere(Atmosphere):
         ),
         doc="Atmosphere scattering coefficient value.\n"
         "\n"
-        "Can be initialised with a dictionary processed by "
+        "Can be initialized with a dictionary processed by "
         ":data:`~eradiate.scenes.spectra.spectrum_factory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum` or float",
         default=":class:`AirScatteringCoefficientSpectrum() "
@@ -55,7 +55,7 @@ class HomogeneousAtmosphere(Atmosphere):
         doc="Atmosphere absorption coefficient value. Defaults disable "
         "absorption.\n"
         "\n"
-        "Can be initialised with a dictionary processed by "
+        "Can be initialized with a dictionary processed by "
         ":data:`~eradiate.scenes.spectra.spectrum_factory`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
         default="0.0 km**-1",
@@ -69,7 +69,7 @@ class HomogeneousAtmosphere(Atmosphere):
         ),
         doc="Scattering phase function.\n"
         "\n"
-        "Can be initialised with a dictionary processed by "
+        "Can be initialized with a dictionary processed by "
         ":data:`~eradiate.scenes.phase.phase_function_factory`.",
         type=":class:`~eradiate.scenes.phase.PhaseFunction`",
         default=":class:`RayleighPhaseFunction() <.RayleighPhaseFunction>`",

@@ -94,7 +94,7 @@ Parameters
     Description of the function arguments, keywords and their respective types.
     This section documents constructor parameters. Note that argument types
     should reflect types expected by the constructor, which can be broader
-    than field types thanks to the ``attrs`` initialisation sequence.
+    than field types thanks to the ``attrs`` initialization sequence.
     `See the Numpy docstring style guide for more detail <https://numpydoc.readthedocs.io/en/latest/format.html#parameters>`__.
 Fields
     Description of class attributes. This section replaces the *Attributes*
@@ -167,7 +167,7 @@ to any other action. Then, each declared attribute can be documented using the
 
 In addition, a ``init_type`` argument lets the user specify if constructor
 argument types are different from the field type. This is particularly useful
-when a converter is systematically applied to field values upon initialisation:
+when a converter is systematically applied to field values upon initialization:
 
 .. code:: python
 
@@ -324,7 +324,7 @@ Code writing
    * Eradiate is built using the `attrs <https://www.attrs.org>`_
      library. It is strongly recommended to read the ``attrs`` documentation
      prior to writing additional classes. In particular, it is important to
-     understand the ``attrs`` initialisation sequence, as well as how callables
+     understand the ``attrs`` initialization sequence, as well as how callables
      can be used to set defaults and to create converters and validators.
    * Eradiate's unit handling is based on `Pint <https://pint.readthedocs.io>`_,
      whose documentation is also a very helpful read.
@@ -342,7 +342,7 @@ Prefer relative imports in library code
     We generally use relative imports in library code, and absolute imports in
     tests and application code.
 
-Minimise class initialisation code
+Minimize class initialization code
     Using ``attrs`` for class writing encourages to minimise the amount of
     complex logic implemented by constructors. Although ``attrs`` provides the
     ``__attrs_post_init__()`` method to do so, we try to avoid it as much as
@@ -350,7 +350,7 @@ Minimise class initialisation code
     is usually better implemented as a *class method constructor* (*e.g.*
     ``from_something()``).
 
-Initialisation from dictionaries
+Initialization from dictionaries
     A lot of Eradiate's classes can be instantiated using dictionaries. Most of
     them leverage factories for that purpose (see
     :ref:`sec-developer_guides-factory_guide`). This, in practice, reserves
@@ -358,7 +358,7 @@ Initialisation from dictionaries
     factory-registered classes cannot have ``type`` or ``construct`` fields.
 
     For classes unregistered to any factory, our convention is to implement
-    dictionary-based initialisation as a ``from_dict()`` class method
+    dictionary-based initialization as a ``from_dict()`` class method
     constructor. It should implement behaviour similar to what
     :meth:`.Factory.convert` does, *i.e.*:
 
@@ -554,7 +554,7 @@ repository as mentioned above.
 Test report
 ^^^^^^^^^^^
 
-Optionally, test results may be visualised using a report generated with a tool
+Optionally, test results may be visualized using a report generated with a tool
 located on a
 `dedicated repository <https://github.com/eradiate/eradiate-test-report>`_.
 
@@ -600,5 +600,5 @@ with `pytest-profiling <https://pypi.org/project/pytest-profiling/>`_ (see
 documentation for usage instructions, it's basically about installing the
 package then running pytest with the ``--profile`` option).
 
-Profiling stats can then be visualised with
+Profiling stats can then be visualized with
 `SnakeViz <https://jiffyclub.github.io/snakeviz/>`_.

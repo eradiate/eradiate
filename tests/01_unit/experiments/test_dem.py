@@ -16,7 +16,7 @@ from eradiate.test_tools.types import check_scene_element
 
 def test_dem_experiment_construct_default(modes_all_double):
     """
-    DEMExperiment initialises with default params in all modes
+    DEMExperiment initializes with default params in all modes
     """
     exp = DEMExperiment()
 

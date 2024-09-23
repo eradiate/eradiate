@@ -14,7 +14,7 @@ from eradiate.test_tools.types import check_scene_element
 
 def test_canopy_atmosphere_experiment_construct_default(mode_mono):
     """
-    CanopyAtmosphereExperiment initialises with default params in all modes
+    CanopyAtmosphereExperiment initializes with default params in all modes
     """
     exp = CanopyAtmosphereExperiment()
 

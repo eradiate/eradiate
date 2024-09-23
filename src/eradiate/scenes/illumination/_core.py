@@ -128,7 +128,7 @@ class AbstractDirectionalIllumination(Illumination, ABC):
         ),
         doc="Emitted power flux in the plane orthogonal to the illumination direction. "
         "Must be an irradiance spectrum (in W/m²/nm or compatible unit). "
-        "Can be initialised with a dictionary processed by "
+        "Can be initialized with a dictionary processed by "
         ":meth:`.SpectrumFactory.convert`.",
         type=":class:`~eradiate.scenes.spectra.Spectrum`",
         init_type=":class:`~eradiate.scenes.spectra.Spectrum` or dict or float",

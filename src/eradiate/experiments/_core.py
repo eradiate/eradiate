@@ -232,7 +232,7 @@ class Experiment(ABC):
     @abstractmethod
     def init(self) -> None:
         """
-        Generate kernel dictionary and initialise Mitsuba scene.
+        Generate kernel dictionary and initialize Mitsuba scene.
         """
         pass
 

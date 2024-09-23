@@ -26,7 +26,7 @@ which selects a programmatic component in Eradiate. In the following, the
 ``type`` value corresponding to each feature is specified in brackets.
 
 In addition to the ``type`` parameter, an object configuration dictionary should
-contain the parameters required to initialise the corresponding programmatic
+contain the parameters required to initialize the corresponding programmatic
 element. Each allowed option is referenced, as well as the corresponding class
 in the Eradiate codebase. Class documentation lists all their parameters and
 allowed values.
