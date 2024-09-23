@@ -14,8 +14,6 @@ anyio==4.6.0
     #   jupyter-server
 appdirs==1.4.4
     # via pint
-appnope==0.1.4
-    # via ipykernel
 argon2-cffi==23.1.0
     # via jupyter-server
 argon2-cffi-bindings==21.2.0
