@@ -88,6 +88,7 @@ pandoc = "*"
 [tool.pixi.feature.dev.dependencies]
 pixi-pycharm = ">=0.0.6,<0.0.7"
 uv = ">=0.4.15,<0.5" # Used to lock docs dependencies
+bump-my-version = ">=0.26.1,<0.27"
 
 [tool.pixi.activation]
 scripts = ["setpath.sh"]
@@ -118,11 +119,16 @@ docs-clean = { cmd = "make -C docs clean" }
 docs-pdf = { cmd = "make -C docs latexpdf && echo \"Documentation PDF at docs/_build/latex/eradiate.pdf\"" }
 
 [tool.pixi.feature.dev.tasks]
+# Version bump
+bump = { cmd = "bump-my-version bump --new-version $RELEASE_VERSION" }
+bump-show = { cmd = "bump-my-version show-bump" }
+bump-dry = { cmd = "bump-my-version bump --new-version $RELEASE_VERSION --dry-run --verbose" }
+# Docs build
 docs-serve = { cmd = "make -C docs serve" }
 docs-linkcheck = { cmd = "make -C docs linkcheck" }
 docs-render-tutorials = { cmd = "python tutorials/run.py run" }
-# Important: If the Python version changes, do not forget to sync it with the
-# 'build.tools.python' entry in .readthedocs.yml
+# -- Important: If the Python version changes, do not forget to sync it with the
+#    'build.tools.python' entry in .readthedocs.yml
 docs-lock = { cmd = "uv pip compile --no-progress --quiet --upgrade --build-isolation --python-version 3.9 --no-strip-extras --extra docs --extra recommended --output-file docs/requirements.txt pyproject.toml" }
 
 [tool.pixi.environments]
