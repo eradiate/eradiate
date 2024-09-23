@@ -30,7 +30,7 @@ class LambertianBSDF(BSDF):
                 validators.has_quantity("reflectance"),
             ],
         ),
-        doc="Reflectance spectrum. Can be initialised with a dictionary "
+        doc="Reflectance spectrum. Can be initialized with a dictionary "
         "processed by :data:`.spectrum_factory`.",
         type=".Spectrum",
         init_type=".Spectrum or dict or float",

@@ -245,7 +245,7 @@ class MeshTree(Tree):
             else [MeshTreeElement.convert(value)],
         ),
         doc="List of :class:`.CanopyElement` defining the canopy. Can be "
-        "initialised with a :class:`.InstancedCanopyElement`, which will be "
+        "initialized with a :class:`.InstancedCanopyElement`, which will be "
         "automatically wrapped into a list. Dictionary-based specifications are "
         "allowed as well.",
         type="list of .InstancedCanopyElement",
@@ -390,7 +390,7 @@ class MeshTreeElement:
         Parameters
         ----------
         d : dict
-            Configuration dictionary used for initialisation.
+            Configuration dictionary used for initialization.
 
         Returns
         -------

@@ -48,7 +48,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
 
     Notes
     -----
-    * A post-initialisation step will constrain the measure setup if a
+    * A post-initialization step will constrain the measure setup if a
       distant measure is used and set the target to [0, 0, 0].
     * This experiment supports arbitrary measure positioning, except for
       :class:`.MultiRadiancemeterMeasure`, for which subsensor origins are

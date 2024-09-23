@@ -46,7 +46,7 @@ the following command in the cloned source directory:
    to fetch the latest version of Eradiate and the appropriate versions of its
    nested submodules.
 
-The ``--init`` flag will ensure that any new submodule will be initialised.
+The ``--init`` flag will ensure that any new submodule will be initialized.
 
 Rebuilding the kernel
 ---------------------

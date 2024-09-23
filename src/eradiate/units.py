@@ -25,7 +25,6 @@ from pinttr.util import units_compatible
 
 logger = logging.getLogger(__name__)
 
-
 # -- Global data members -------------------------------------------------------
 
 # Joseki being a dependency of Eradiate, and given that it uses the application
@@ -104,7 +103,7 @@ class PhysicalQuantity(enum.Enum):
     def spectrum(cls):
         """
         Return a tuple containing a subset of :class:`PhysicalQuantity`
-        members suitable for :class:`.Spectrum` initialisation. This function
+        members suitable for :class:`.Spectrum` initialization. This function
         caches its results for improved efficiency.
         """
         return (
