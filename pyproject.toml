@@ -132,9 +132,16 @@ docs-render-tutorials = { cmd = "python tutorials/run.py run" }
 docs-lock = { cmd = "uv pip compile --no-progress --quiet --upgrade --build-isolation --python-version 3.9 --no-strip-extras --extra docs --extra recommended --output-file docs/requirements.txt pyproject.toml" }
 
 [tool.pixi.environments]
-prod = { features = ["py39", "optional", "recommended"] }
-test = { features = ["py39", "recommended", "test"] }
-dev = { features = ["py39", "recommended", "test", "docs", "dev"] }
+default = { solve-group = "default" }
+prod = { features = ["py39", "optional", "recommended"], solve-group = "default" }
+test = { features = ["py39", "recommended", "test"], solve-group = "default" }
+dev = { features = [
+  "py39",
+  "recommended",
+  "test",
+  "docs",
+  "dev",
+], solve-group = "default" }
 
 [tool.pytest.ini_options]
 filterwarnings = [
