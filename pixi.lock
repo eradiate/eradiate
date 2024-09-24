@@ -115,7 +115,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f9/77/3ac8a9bbef6c3be222c71bbe9587ff85adfa3fb85d83edba89c10823ae03/ussa1976-0.3.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/blosc-1.21.6-h7d75f6d_0.conda
@@ -215,7 +215,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f9/77/3ac8a9bbef6c3be222c71bbe9587ff85adfa3fb85d83edba89c10823ae03/ussa1976-0.3.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/blosc-1.21.6-h5499902_0.conda
@@ -315,7 +315,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f9/77/3ac8a9bbef6c3be222c71bbe9587ff85adfa3fb85d83edba89c10823ae03/ussa1976-0.3.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/win-64/blosc-1.21.6-h85f69ea_0.conda
@@ -427,7 +427,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ce/d9/5f4c13cecde62396b0d3fe530a50ccea91e7dfc1ccf0e09c228841bb5ba8/urllib3-2.2.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f9/77/3ac8a9bbef6c3be222c71bbe9587ff85adfa3fb85d83edba89c10823ae03/ussa1976-0.3.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
   dev:
     channels:
@@ -527,7 +527,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ec/f7/378254e6dd7ae6f31fe40c8649eea7d4832a42243acaf0f1fff9083b2bed/argon2_cffi_bindings-21.2.0-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a1/09/832b1188270df86d255f6c6868e7f0301ed7d0d6c9183ecb190752a1066f/astropy-5.3.2-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/c9/e4/5a42d21e39ef2efc671e0a32bad1316d9bce58ca4dd23c3a748892f5a890/astropy-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -678,7 +679,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/annotated-types-0.7.0-pyhd8ed1ab_0.conda
@@ -762,7 +763,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5a/e4/bf8034d25edaa495da3c8a3405627d2e35758e44ff6eaa7948092646fdcc/argon2_cffi_bindings-21.2.0-cp38-abi3-macosx_10_9_universal2.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a7/50/152bfa583a858695d31f5e494c38f88888248cbc86d0eca3c52e916ce8b5/astropy-5.3.2-cp39-cp39-macosx_10_9_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8c/61/f1f83afe2083b315994764d0bef955cc24284fdb709088b1d71788481278/astropy-6.0.1-cp39-cp39-macosx_10_9_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -913,7 +915,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/annotated-types-0.7.0-pyhd8ed1ab_0.conda
@@ -997,7 +999,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5a/e4/bf8034d25edaa495da3c8a3405627d2e35758e44ff6eaa7948092646fdcc/argon2_cffi_bindings-21.2.0-cp38-abi3-macosx_10_9_universal2.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/25/5a/59341243b1f39a1d681f056494d39315ff2256c132fa62aba5c8d18f70a8/astropy-5.3.2-cp39-cp39-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/a0/d7/6ddb875cde073667e529bff23dc7b5aa2ce58fef8544039adad8ae7616a6/astropy-6.0.1-cp39-cp39-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -1148,7 +1151,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/annotated-types-0.7.0-pyhd8ed1ab_0.conda
@@ -1243,7 +1246,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/37/2c/e34e47c7dee97ba6f01a6203e0383e15b60fb85d78ac9a15cd066f6fe28b/argon2_cffi_bindings-21.2.0-cp36-abi3-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/f8/38/68764d5f0ffd22f1ea61ab1ebe7207c96dd55443f7366de24e97c6a32e90/astropy-5.3.2-cp39-cp39-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/c7/6d/ef8f6dc050eaaecf09ff4d257157d41ab97a4a112fbe096e4d8e8a104fe1/astropy-6.0.1-cp39-cp39-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -1394,7 +1398,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
   prod:
     channels:
@@ -1476,7 +1480,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ec/f7/378254e6dd7ae6f31fe40c8649eea7d4832a42243acaf0f1fff9083b2bed/argon2_cffi_bindings-21.2.0-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a1/09/832b1188270df86d255f6c6868e7f0301ed7d0d6c9183ecb190752a1066f/astropy-5.3.2-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/c9/e4/5a42d21e39ef2efc671e0a32bad1316d9bce58ca4dd23c3a748892f5a890/astropy-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -1601,7 +1606,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/blosc-1.21.6-h7d75f6d_0.conda
@@ -1667,7 +1672,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5a/e4/bf8034d25edaa495da3c8a3405627d2e35758e44ff6eaa7948092646fdcc/argon2_cffi_bindings-21.2.0-cp38-abi3-macosx_10_9_universal2.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a7/50/152bfa583a858695d31f5e494c38f88888248cbc86d0eca3c52e916ce8b5/astropy-5.3.2-cp39-cp39-macosx_10_9_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8c/61/f1f83afe2083b315994764d0bef955cc24284fdb709088b1d71788481278/astropy-6.0.1-cp39-cp39-macosx_10_9_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -1792,7 +1798,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/blosc-1.21.6-h5499902_0.conda
@@ -1858,7 +1864,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5a/e4/bf8034d25edaa495da3c8a3405627d2e35758e44ff6eaa7948092646fdcc/argon2_cffi_bindings-21.2.0-cp38-abi3-macosx_10_9_universal2.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/25/5a/59341243b1f39a1d681f056494d39315ff2256c132fa62aba5c8d18f70a8/astropy-5.3.2-cp39-cp39-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/a0/d7/6ddb875cde073667e529bff23dc7b5aa2ce58fef8544039adad8ae7616a6/astropy-6.0.1-cp39-cp39-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -1983,7 +1990,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/win-64/blosc-1.21.6-h85f69ea_0.conda
@@ -2060,7 +2067,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/37/2c/e34e47c7dee97ba6f01a6203e0383e15b60fb85d78ac9a15cd066f6fe28b/argon2_cffi_bindings-21.2.0-cp36-abi3-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/f8/38/68764d5f0ffd22f1ea61ab1ebe7207c96dd55443f7366de24e97c6a32e90/astropy-5.3.2-cp39-cp39-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/c7/6d/ef8f6dc050eaaecf09ff4d257157d41ab97a4a112fbe096e4d8e8a104fe1/astropy-6.0.1-cp39-cp39-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -2185,7 +2193,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
   test:
     channels:
@@ -2267,7 +2275,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ec/f7/378254e6dd7ae6f31fe40c8649eea7d4832a42243acaf0f1fff9083b2bed/argon2_cffi_bindings-21.2.0-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a1/09/832b1188270df86d255f6c6868e7f0301ed7d0d6c9183ecb190752a1066f/astropy-5.3.2-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/c9/e4/5a42d21e39ef2efc671e0a32bad1316d9bce58ca4dd23c3a748892f5a890/astropy-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -2395,7 +2404,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/blosc-1.21.6-h7d75f6d_0.conda
@@ -2461,7 +2470,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5a/e4/bf8034d25edaa495da3c8a3405627d2e35758e44ff6eaa7948092646fdcc/argon2_cffi_bindings-21.2.0-cp38-abi3-macosx_10_9_universal2.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a7/50/152bfa583a858695d31f5e494c38f88888248cbc86d0eca3c52e916ce8b5/astropy-5.3.2-cp39-cp39-macosx_10_9_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/8c/61/f1f83afe2083b315994764d0bef955cc24284fdb709088b1d71788481278/astropy-6.0.1-cp39-cp39-macosx_10_9_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -2589,7 +2599,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/blosc-1.21.6-h5499902_0.conda
@@ -2655,7 +2665,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5a/e4/bf8034d25edaa495da3c8a3405627d2e35758e44ff6eaa7948092646fdcc/argon2_cffi_bindings-21.2.0-cp38-abi3-macosx_10_9_universal2.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/25/5a/59341243b1f39a1d681f056494d39315ff2256c132fa62aba5c8d18f70a8/astropy-5.3.2-cp39-cp39-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/a0/d7/6ddb875cde073667e529bff23dc7b5aa2ce58fef8544039adad8ae7616a6/astropy-6.0.1-cp39-cp39-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -2783,7 +2794,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/win-64/blosc-1.21.6-h85f69ea_0.conda
@@ -2860,7 +2871,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/37/2c/e34e47c7dee97ba6f01a6203e0383e15b60fb85d78ac9a15cd066f6fe28b/argon2_cffi_bindings-21.2.0-cp36-abi3-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/f8/38/68764d5f0ffd22f1ea61ab1ebe7207c96dd55443f7366de24e97c6a32e90/astropy-5.3.2-cp39-cp39-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/c7/6d/ef8f6dc050eaaecf09ff4d257157d41ab97a4a112fbe096e4d8e8a104fe1/astropy-6.0.1-cp39-cp39-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/86/4736ac618d82a20d87d2f92ae19441ebc7ac9e7a581d7e58bbe79233b24a/asttokens-2.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/fa/9f/3c3503693386c4b0f245eaf5ca6198e3b28879ca0a40bde6b0e319793453/async_lru-2.0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/21/5b6702a7f963e95456c0de2d495f67bf5fd62840ac655dc451586d23d39a/attrs-24.2.0-py3-none-any.whl
@@ -2988,7 +3000,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/02/88b65cc394961a60c43c70517066b6b679738caf78506a5da7b88ffcb643/widgetsnbextension-4.0.13-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/95/233e1f9c939f5ba314297315df709e6a5e823bf3cade7211991b15aa65d2/xarray-2024.7.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
       - pypi: .
 packages:
 - kind: conda
@@ -3189,16 +3201,16 @@ packages:
   requires_python: '>=3.8'
 - kind: pypi
   name: astropy
-  version: 5.3.2
-  url: https://files.pythonhosted.org/packages/25/5a/59341243b1f39a1d681f056494d39315ff2256c132fa62aba5c8d18f70a8/astropy-5.3.2-cp39-cp39-macosx_11_0_arm64.whl
-  sha256: b8f8b72e1b1786a5556681ea13d44b8529910d3a9f33bce363217300ed07e3b9
+  version: 6.0.1
+  url: https://files.pythonhosted.org/packages/8c/61/f1f83afe2083b315994764d0bef955cc24284fdb709088b1d71788481278/astropy-6.0.1-cp39-cp39-macosx_10_9_x86_64.whl
+  sha256: f18536d6f97faa81ed6c9af7bb2e27b376b41b27399f862e3b13387538c966b9
   requires_dist:
-  - numpy>=1.21
-  - pyerfa>=2.0
+  - numpy<2,>=1.22
+  - pyerfa>=2.0.1.1
+  - astropy-iers-data>=0.2024.2.26.0.28.55
   - pyyaml>=3.13
   - packaging>=19.0
-  - scipy>=1.5 ; extra == 'all'
-  - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'all'
+  - astropy[recommended] ; extra == 'all'
   - certifi ; extra == 'all'
   - dask[array] ; extra == 'all'
   - h5py ; extra == 'all'
@@ -3211,21 +3223,22 @@ packages:
   - pytz ; extra == 'all'
   - jplephem ; extra == 'all'
   - mpmath ; extra == 'all'
-  - asdf>=2.10.0 ; extra == 'all'
+  - asdf-astropy>=0.3 ; extra == 'all'
   - bottleneck ; extra == 'all'
   - ipython>=4.2 ; extra == 'all'
   - pytest>=7.0 ; extra == 'all'
   - typing-extensions>=3.10.0.1 ; extra == 'all'
-  - fsspec[http]>=2022.8.2 ; extra == 'all'
-  - s3fs>=2022.8.2 ; extra == 'all'
+  - fsspec[http]>=2023.4.0 ; extra == 'all'
+  - s3fs>=2023.4.0 ; extra == 'all'
   - pre-commit ; extra == 'all'
+  - astropy[recommended] ; extra == 'docs'
   - sphinx ; extra == 'docs'
-  - sphinx-astropy>=1.6 ; extra == 'docs'
+  - sphinx-astropy[confv2]>=1.9.1 ; extra == 'docs'
   - pytest>=7.0 ; extra == 'docs'
-  - scipy>=1.3 ; extra == 'docs'
-  - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'docs'
   - sphinx-changelog>=1.2.0 ; extra == 'docs'
-  - jinja2>=3.0 ; extra == 'docs'
+  - sphinx-design ; extra == 'docs'
+  - jinja2>=3.1.3 ; extra == 'docs'
+  - tomli ; python_full_version < '3.11' and extra == 'docs'
   - scipy>=1.5 ; extra == 'recommended'
   - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'recommended'
   - pytest>=7.0 ; extra == 'test'
@@ -3233,11 +3246,8 @@ packages:
   - pytest-astropy-header>=0.2.1 ; extra == 'test'
   - pytest-astropy>=0.10 ; extra == 'test'
   - pytest-xdist ; extra == 'test'
-  - pytest>=7.0 ; extra == 'test-all'
-  - pytest-doctestplus>=0.12 ; extra == 'test-all'
-  - pytest-astropy-header>=0.2.1 ; extra == 'test-all'
-  - pytest-astropy>=0.10 ; extra == 'test-all'
-  - pytest-xdist ; extra == 'test-all'
+  - threadpoolctl ; extra == 'test'
+  - astropy[test] ; extra == 'test-all'
   - objgraph ; extra == 'test-all'
   - ipython>=4.2 ; extra == 'test-all'
   - coverage[toml] ; extra == 'test-all'
@@ -3246,16 +3256,16 @@ packages:
   requires_python: '>=3.9'
 - kind: pypi
   name: astropy
-  version: 5.3.2
-  url: https://files.pythonhosted.org/packages/a1/09/832b1188270df86d255f6c6868e7f0301ed7d0d6c9183ecb190752a1066f/astropy-5.3.2-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl
-  sha256: 0ccc2df80b56f62a40887271a63030f8aa0c0a044c740b40f54e3cd02645a966
+  version: 6.0.1
+  url: https://files.pythonhosted.org/packages/a0/d7/6ddb875cde073667e529bff23dc7b5aa2ce58fef8544039adad8ae7616a6/astropy-6.0.1-cp39-cp39-macosx_11_0_arm64.whl
+  sha256: 764992af1ee1cd6d6f26373d09ddb5ede639d025ce9ff658b3b6580dc2ba4ec6
   requires_dist:
-  - numpy>=1.21
-  - pyerfa>=2.0
+  - numpy<2,>=1.22
+  - pyerfa>=2.0.1.1
+  - astropy-iers-data>=0.2024.2.26.0.28.55
   - pyyaml>=3.13
   - packaging>=19.0
-  - scipy>=1.5 ; extra == 'all'
-  - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'all'
+  - astropy[recommended] ; extra == 'all'
   - certifi ; extra == 'all'
   - dask[array] ; extra == 'all'
   - h5py ; extra == 'all'
@@ -3268,21 +3278,22 @@ packages:
   - pytz ; extra == 'all'
   - jplephem ; extra == 'all'
   - mpmath ; extra == 'all'
-  - asdf>=2.10.0 ; extra == 'all'
+  - asdf-astropy>=0.3 ; extra == 'all'
   - bottleneck ; extra == 'all'
   - ipython>=4.2 ; extra == 'all'
   - pytest>=7.0 ; extra == 'all'
   - typing-extensions>=3.10.0.1 ; extra == 'all'
-  - fsspec[http]>=2022.8.2 ; extra == 'all'
-  - s3fs>=2022.8.2 ; extra == 'all'
+  - fsspec[http]>=2023.4.0 ; extra == 'all'
+  - s3fs>=2023.4.0 ; extra == 'all'
   - pre-commit ; extra == 'all'
+  - astropy[recommended] ; extra == 'docs'
   - sphinx ; extra == 'docs'
-  - sphinx-astropy>=1.6 ; extra == 'docs'
+  - sphinx-astropy[confv2]>=1.9.1 ; extra == 'docs'
   - pytest>=7.0 ; extra == 'docs'
-  - scipy>=1.3 ; extra == 'docs'
-  - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'docs'
   - sphinx-changelog>=1.2.0 ; extra == 'docs'
-  - jinja2>=3.0 ; extra == 'docs'
+  - sphinx-design ; extra == 'docs'
+  - jinja2>=3.1.3 ; extra == 'docs'
+  - tomli ; python_full_version < '3.11' and extra == 'docs'
   - scipy>=1.5 ; extra == 'recommended'
   - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'recommended'
   - pytest>=7.0 ; extra == 'test'
@@ -3290,11 +3301,8 @@ packages:
   - pytest-astropy-header>=0.2.1 ; extra == 'test'
   - pytest-astropy>=0.10 ; extra == 'test'
   - pytest-xdist ; extra == 'test'
-  - pytest>=7.0 ; extra == 'test-all'
-  - pytest-doctestplus>=0.12 ; extra == 'test-all'
-  - pytest-astropy-header>=0.2.1 ; extra == 'test-all'
-  - pytest-astropy>=0.10 ; extra == 'test-all'
-  - pytest-xdist ; extra == 'test-all'
+  - threadpoolctl ; extra == 'test'
+  - astropy[test] ; extra == 'test-all'
   - objgraph ; extra == 'test-all'
   - ipython>=4.2 ; extra == 'test-all'
   - coverage[toml] ; extra == 'test-all'
@@ -3303,16 +3311,16 @@ packages:
   requires_python: '>=3.9'
 - kind: pypi
   name: astropy
-  version: 5.3.2
-  url: https://files.pythonhosted.org/packages/a7/50/152bfa583a858695d31f5e494c38f88888248cbc86d0eca3c52e916ce8b5/astropy-5.3.2-cp39-cp39-macosx_10_9_x86_64.whl
-  sha256: 8b934394f00c2ba84ba1cf12b0a29c2d5692f95e4f0b2eb28b5ce45830c75887
+  version: 6.0.1
+  url: https://files.pythonhosted.org/packages/c7/6d/ef8f6dc050eaaecf09ff4d257157d41ab97a4a112fbe096e4d8e8a104fe1/astropy-6.0.1-cp39-cp39-win_amd64.whl
+  sha256: eaff9388a2fed0757bd0b4c41c9346d0edea9e7e938a4bfa8070eaabbb538a23
   requires_dist:
-  - numpy>=1.21
-  - pyerfa>=2.0
+  - numpy<2,>=1.22
+  - pyerfa>=2.0.1.1
+  - astropy-iers-data>=0.2024.2.26.0.28.55
   - pyyaml>=3.13
   - packaging>=19.0
-  - scipy>=1.5 ; extra == 'all'
-  - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'all'
+  - astropy[recommended] ; extra == 'all'
   - certifi ; extra == 'all'
   - dask[array] ; extra == 'all'
   - h5py ; extra == 'all'
@@ -3325,21 +3333,22 @@ packages:
   - pytz ; extra == 'all'
   - jplephem ; extra == 'all'
   - mpmath ; extra == 'all'
-  - asdf>=2.10.0 ; extra == 'all'
+  - asdf-astropy>=0.3 ; extra == 'all'
   - bottleneck ; extra == 'all'
   - ipython>=4.2 ; extra == 'all'
   - pytest>=7.0 ; extra == 'all'
   - typing-extensions>=3.10.0.1 ; extra == 'all'
-  - fsspec[http]>=2022.8.2 ; extra == 'all'
-  - s3fs>=2022.8.2 ; extra == 'all'
+  - fsspec[http]>=2023.4.0 ; extra == 'all'
+  - s3fs>=2023.4.0 ; extra == 'all'
   - pre-commit ; extra == 'all'
+  - astropy[recommended] ; extra == 'docs'
   - sphinx ; extra == 'docs'
-  - sphinx-astropy>=1.6 ; extra == 'docs'
+  - sphinx-astropy[confv2]>=1.9.1 ; extra == 'docs'
   - pytest>=7.0 ; extra == 'docs'
-  - scipy>=1.3 ; extra == 'docs'
-  - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'docs'
   - sphinx-changelog>=1.2.0 ; extra == 'docs'
-  - jinja2>=3.0 ; extra == 'docs'
+  - sphinx-design ; extra == 'docs'
+  - jinja2>=3.1.3 ; extra == 'docs'
+  - tomli ; python_full_version < '3.11' and extra == 'docs'
   - scipy>=1.5 ; extra == 'recommended'
   - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'recommended'
   - pytest>=7.0 ; extra == 'test'
@@ -3347,11 +3356,8 @@ packages:
   - pytest-astropy-header>=0.2.1 ; extra == 'test'
   - pytest-astropy>=0.10 ; extra == 'test'
   - pytest-xdist ; extra == 'test'
-  - pytest>=7.0 ; extra == 'test-all'
-  - pytest-doctestplus>=0.12 ; extra == 'test-all'
-  - pytest-astropy-header>=0.2.1 ; extra == 'test-all'
-  - pytest-astropy>=0.10 ; extra == 'test-all'
-  - pytest-xdist ; extra == 'test-all'
+  - threadpoolctl ; extra == 'test'
+  - astropy[test] ; extra == 'test-all'
   - objgraph ; extra == 'test-all'
   - ipython>=4.2 ; extra == 'test-all'
   - coverage[toml] ; extra == 'test-all'
@@ -3360,16 +3366,16 @@ packages:
   requires_python: '>=3.9'
 - kind: pypi
   name: astropy
-  version: 5.3.2
-  url: https://files.pythonhosted.org/packages/f8/38/68764d5f0ffd22f1ea61ab1ebe7207c96dd55443f7366de24e97c6a32e90/astropy-5.3.2-cp39-cp39-win_amd64.whl
-  sha256: e1f304b138adfbe5996a45ea57e50de7b1efcd95475df36ecd6ef40efefcdbcc
+  version: 6.0.1
+  url: https://files.pythonhosted.org/packages/c9/e4/5a42d21e39ef2efc671e0a32bad1316d9bce58ca4dd23c3a748892f5a890/astropy-6.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+  sha256: ca9da00bfa95fbf8475d22aba6d7d046f3821a107b733fc7c7c35c74fcfa2bbf
   requires_dist:
-  - numpy>=1.21
-  - pyerfa>=2.0
+  - numpy<2,>=1.22
+  - pyerfa>=2.0.1.1
+  - astropy-iers-data>=0.2024.2.26.0.28.55
   - pyyaml>=3.13
   - packaging>=19.0
-  - scipy>=1.5 ; extra == 'all'
-  - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'all'
+  - astropy[recommended] ; extra == 'all'
   - certifi ; extra == 'all'
   - dask[array] ; extra == 'all'
   - h5py ; extra == 'all'
@@ -3382,21 +3388,22 @@ packages:
   - pytz ; extra == 'all'
   - jplephem ; extra == 'all'
   - mpmath ; extra == 'all'
-  - asdf>=2.10.0 ; extra == 'all'
+  - asdf-astropy>=0.3 ; extra == 'all'
   - bottleneck ; extra == 'all'
   - ipython>=4.2 ; extra == 'all'
   - pytest>=7.0 ; extra == 'all'
   - typing-extensions>=3.10.0.1 ; extra == 'all'
-  - fsspec[http]>=2022.8.2 ; extra == 'all'
-  - s3fs>=2022.8.2 ; extra == 'all'
+  - fsspec[http]>=2023.4.0 ; extra == 'all'
+  - s3fs>=2023.4.0 ; extra == 'all'
   - pre-commit ; extra == 'all'
+  - astropy[recommended] ; extra == 'docs'
   - sphinx ; extra == 'docs'
-  - sphinx-astropy>=1.6 ; extra == 'docs'
+  - sphinx-astropy[confv2]>=1.9.1 ; extra == 'docs'
   - pytest>=7.0 ; extra == 'docs'
-  - scipy>=1.3 ; extra == 'docs'
-  - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'docs'
   - sphinx-changelog>=1.2.0 ; extra == 'docs'
-  - jinja2>=3.0 ; extra == 'docs'
+  - sphinx-design ; extra == 'docs'
+  - jinja2>=3.1.3 ; extra == 'docs'
+  - tomli ; python_full_version < '3.11' and extra == 'docs'
   - scipy>=1.5 ; extra == 'recommended'
   - matplotlib!=3.4.0,!=3.5.2,>=3.3 ; extra == 'recommended'
   - pytest>=7.0 ; extra == 'test'
@@ -3404,17 +3411,25 @@ packages:
   - pytest-astropy-header>=0.2.1 ; extra == 'test'
   - pytest-astropy>=0.10 ; extra == 'test'
   - pytest-xdist ; extra == 'test'
-  - pytest>=7.0 ; extra == 'test-all'
-  - pytest-doctestplus>=0.12 ; extra == 'test-all'
-  - pytest-astropy-header>=0.2.1 ; extra == 'test-all'
-  - pytest-astropy>=0.10 ; extra == 'test-all'
-  - pytest-xdist ; extra == 'test-all'
+  - threadpoolctl ; extra == 'test'
+  - astropy[test] ; extra == 'test-all'
   - objgraph ; extra == 'test-all'
   - ipython>=4.2 ; extra == 'test-all'
   - coverage[toml] ; extra == 'test-all'
   - skyfield>=1.20 ; extra == 'test-all'
   - sgp4>=2.3 ; extra == 'test-all'
   requires_python: '>=3.9'
+- kind: pypi
+  name: astropy-iers-data
+  version: 0.2024.9.23.0.31.43
+  url: https://files.pythonhosted.org/packages/d5/dd/b293ce6a4a15f8814cbca6eec5dedc5567da1e840a79c4491d05f34d7e42/astropy_iers_data-0.2024.9.23.0.31.43-py3-none-any.whl
+  sha256: 0e32282741c935312d6d9cf98ae4cf814d6d46d1b765d2c41b0e4b5f29c884f2
+  requires_dist:
+  - pytest ; extra == 'docs'
+  - pytest ; extra == 'test'
+  - pytest-remotedata ; extra == 'test'
+  - hypothesis ; extra == 'test'
+  requires_python: '>=3.8'
 - kind: pypi
   name: asttokens
   version: 2.4.1
@@ -4255,7 +4270,7 @@ packages:
   name: eradiate
   version: 0.29.0.dev0
   path: .
-  sha256: 345b45cf701b68f32fc1aa44fbae882ebc681ea7a0963ff7094f69f4b3fb5fdd
+  sha256: 519eba0c20a3d222590e34469fa919189db2b0cc31326f6fc67a240f28753852
   requires_dist:
   - aenum
   - attrs>=22.2
@@ -4268,7 +4283,7 @@ packages:
   - lazy-loader>=0.1
   - matplotlib>=3.3
   - netcdf4
-  - numpy
+  - numpy<2
   - pint
   - pinttrs>=23.2.0
   - pooch
@@ -11049,9 +11064,9 @@ packages:
   timestamp: 1660346976440
 - kind: pypi
   name: zipp
-  version: 3.20.1
-  url: https://files.pythonhosted.org/packages/07/9e/c96f7a4cd0bf5625bb409b7e61e99b1130dc63a98cb8b24aeabae62d43e8/zipp-3.20.1-py3-none-any.whl
-  sha256: 9960cd8967c8f85a56f920d5d507274e74f9ff813a0ab8889a5b5be2daf44064
+  version: 3.20.2
+  url: https://files.pythonhosted.org/packages/62/8b/5ba542fa83c90e09eac972fc9baca7a88e7e7ca4b221a89251954019308b/zipp-3.20.2-py3-none-any.whl
+  sha256: a817ac80d6cf4b23bf7f2828b7cabf326f15a001bea8b1f9b49631780ba28350
   requires_dist:
   - pytest-checkdocs>=2.4 ; extra == 'check'
   - pytest-ruff>=0.2.1 ; sys_platform != 'cygwin' and extra == 'check'

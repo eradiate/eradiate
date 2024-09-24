@@ -15,6 +15,8 @@ from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
+_trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz
+
 
 @define(eq=False, slots=False, init=False)
 class InterpolatedSpectrum(Spectrum):
@@ -242,7 +244,7 @@ class InterpolatedSpectrum(Spectrum):
         interp = self.eval_mono(w * wavelength_units)
 
         # Compute integral
-        integral = np.trapz(interp, w)
+        integral = _trapezoid(interp, w)
 
         # Apply units
         return integral * ureg.dimensionless * wavelength_units
