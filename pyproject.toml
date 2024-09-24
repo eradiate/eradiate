@@ -23,7 +23,7 @@ dependencies = [
   "lazy_loader>=0.1",
   "matplotlib>=3.3",
   "netcdf4",
-  "numpy",
+  "numpy<2",
   "pint",
   "pinttrs>=23.2.0",
   "pooch",
@@ -106,7 +106,6 @@ build-kernel = { cmd = "cmake -S ext/mitsuba -B ext/mitsuba/build -G \"Visual St
 [tool.pixi.feature.py39.dependencies]
 # Used to constrain dev environment
 python = "3.9.*"
-numpy = "<2"
 
 [tool.pixi.feature.test.tasks]
 test = { cmd = "pytest" }

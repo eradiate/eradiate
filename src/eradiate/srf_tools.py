@@ -24,6 +24,8 @@ from .typing import PathLike
 from .units import to_quantity
 from .units import unit_registry as ureg
 
+_trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz
+
 
 def load_from_id(value: str) -> xr.Dataset:
     """Load an SRF dataset from its identifier."""
@@ -555,7 +557,7 @@ def _integral_filter_bounds_symmetry(
     x: npt.ArrayLike, y: npt.ArrayLike, fraction: float
 ) -> tuple[tuple[int, int], float]:
     # Insert mean in x array
-    xmean = np.trapz(y * x, x) / np.trapz(y, x)
+    xmean = _trapezoid(y * x, x) / _trapezoid(y, x)
     i_xmean = np.argwhere(x < xmean).max() + 1
     xext = np.insert(x, i_xmean, xmean)
     yext = np.insert(y, i_xmean, np.interp(xmean, x, y))
