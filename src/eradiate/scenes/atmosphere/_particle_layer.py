@@ -219,6 +219,19 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="False",
     )
 
+    particle_shape: str = documented(
+        attrs.field(
+            default="spherical",
+            kw_only=True,
+        ),
+        doc="Defines the shape of the particle. Only used in polarized mode."
+        "* spherical: 4 coefficients considered [m11, m12, m33, m34]."
+        "* spheroidal: 6 coefficients considered [m11, m12, m22, m33, m34, m44].",
+        type="str",
+        init_type="str, optional",
+        default="spherical",
+    )
+
     @has_absorption.validator
     @has_scattering.validator
     def _switch_validator(self, attribute, value):
@@ -235,6 +248,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             id=self.phase_id,
             data=self.dataset.phase,
             force_polarized_phase=self.force_polarized_phase,
+            particle_shape=self.particle_shape,
         )
 
     # --------------------------------------------------------------------------
