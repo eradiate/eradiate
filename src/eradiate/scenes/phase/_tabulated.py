@@ -85,10 +85,23 @@ class TabulatedPhaseFunction(PhaseFunction):
             converter=bool,
             kw_only=True,
         ),
-        doc="Flag that forcees the use of a polarized phase function.",
+        doc="Flag that forces the use of a polarized phase function.",
         type="bool",
         init_type="bool, optional",
         default="False",
+    )
+
+    particle_shape: str = documented(
+        attrs.field(
+            default="spherical",
+            kw_only=True,
+        ),
+        doc="Defines the shape of the particle. Only used in polarized mode."
+        "* spherical: 4 coefficients considered [m11, m12, m33, m34]."
+        "* spheroidal: 6 coefficients considered [m11, m12, m22, m33, m34, m44].",
+        type="str",
+        init_type="str, optional",
+        default="spherical",
     )
 
     _is_irregular: bool = attrs.field(default=False, init=False, repr=False)
@@ -228,11 +241,41 @@ class TabulatedPhaseFunction(PhaseFunction):
                 result["m34"] = InitParameter(
                     lambda ctx: ",".join(map(str, self.eval(ctx.si, 2, 3))),
                 )
+
+                if self.particle_shape == "spheroidal":
+                    result["m22"] = InitParameter(
+                        lambda ctx: ",".join(map(str, self.eval(ctx.si, 1, 1))),
+                    )
+
+                    result["m44"] = InitParameter(
+                        lambda ctx: ",".join(map(str, self.eval(ctx.si, 3, 3))),
+                    )
+
+                elif self.particle_shape == "spherical":
+                    result["m22"] = InitParameter(
+                        lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 0))),
+                    )
+
+                    result["m44"] = InitParameter(
+                        lambda ctx: ",".join(map(str, self.eval(ctx.si, 2, 2))),
+                    )
+
+                else:
+                    raise NotImplementedError
+
             else:
                 # case: no polarized data but forced polarized. Initialize the
                 # diagonal to have the same behaviour as with tabphase in
                 # polarized mode.
+                result["m22"] = InitParameter(
+                    lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 0))),
+                )
+
                 result["m33"] = InitParameter(
+                    lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 0))),
+                )
+
+                result["m44"] = InitParameter(
                     lambda ctx: ",".join(map(str, self.eval(ctx.si, 0, 0))),
                 )
 
@@ -271,11 +314,45 @@ class TabulatedPhaseFunction(PhaseFunction):
                     lambda ctx: self.eval(ctx.si, 2, 3),
                     UpdateParameter.Flags.SPECTRAL,
                 )
+
+                if self.particle_shape == "spheroidal":
+                    result["m22"] = UpdateParameter(
+                        lambda ctx: self.eval(ctx.si, 1, 1),
+                        UpdateParameter.Flags.SPECTRAL,
+                    )
+                    result["m44"] = UpdateParameter(
+                        lambda ctx: self.eval(ctx.si, 3, 3),
+                        UpdateParameter.Flags.SPECTRAL,
+                    )
+
+                elif self.particle_shape == "spherical":
+                    result["m22"] = UpdateParameter(
+                        lambda ctx: self.eval(ctx.si, 0, 0),
+                        UpdateParameter.Flags.SPECTRAL,
+                    )
+                    result["m44"] = UpdateParameter(
+                        lambda ctx: self.eval(ctx.si, 2, 2),
+                        UpdateParameter.Flags.SPECTRAL,
+                    )
+
+                else:
+                    raise NotImplementedError
+
             else:
                 # case: no polarized data but forced polarized. Initialize the
                 # diagonal to have the same behaviour as with tabphase in
                 # polarized mode.
+                result["m22"] = UpdateParameter(
+                    lambda ctx: self.eval(ctx.si, 0, 0),
+                    UpdateParameter.Flags.SPECTRAL,
+                )
+
                 result["m33"] = UpdateParameter(
+                    lambda ctx: self.eval(ctx.si, 0, 0),
+                    UpdateParameter.Flags.SPECTRAL,
+                )
+
+                result["m44"] = UpdateParameter(
                     lambda ctx: self.eval(ctx.si, 0, 0),
                     UpdateParameter.Flags.SPECTRAL,
                 )
