@@ -104,9 +104,7 @@ Documenting factories requires specific steps to work around Python's and
 Sphinx's limitations regarding data member documentation. Upon adding a new
 factory, please make sure you:
 
-* add your new factory instance to the ``docs/generate_rst_api.py`` script
+* add your new factory instance to the ``docs/generate/factories.py`` script
   (``FACTORIES`` variables);
-* update the special API RST files (see also
-  :ref:`sec-contributing-documentation-api-build`);
 * add your new factory to the list of instances in the
   :mod:`eradiate._factory` documentation (``docs/rst/reference/factory.rst``).
