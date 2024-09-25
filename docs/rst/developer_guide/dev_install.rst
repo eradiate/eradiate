@@ -203,17 +203,40 @@ root of the cloned repository and install it:
 
    pixi install -e dev
 
+Once installed, we **strongly recommend** to activate the Pixi environment in a
+shell, either by spawning a Pixi shell
+
+.. code:: shell
+
+   pixi shell -e dev
+
+or by activating the shell hook (discouraged by the Pixi documentation but
+useful in specific cases)
+
+.. code:: shell
+
+   eval "$(pixi shell-hook -e dev)"
+
+The `Pixi documentation <https://pixi.sh/latest/features/environment/#activation>`_
+provides more detail about activation modes and their respective trade-offs. The
+reason why we recommend this is that compiling the kernel often requires setting
+environment variables, which is not always convenient outside of a shell. Note
+that this is a recommendation, not a strict requirement: Pixi also allows to
+set environment variables upon environment activation; we simply do not want to
+encourage developers to modify their project manifest file for their particular
+setup.
+
 .. note::
 
    Although Pixi environments are very similar to Conda environment, there are
-   some important differences. An important difference with a regular Conda
-   environment is that it is not globally available for activation. If you want
-   to activate your development environment from outside the project, this can
-   be done with the ``--manifest-path`` option of the ``pixi shell`` command:
+   significant differences. One of them is that the environment is not globally
+   available for activation. If you want to activate your development
+   environment from outside the project, this can be done with the
+   ``--manifest-path`` option of the ``pixi shell`` command:
 
    .. code:: shell
 
-      pixi shell --manifest-path /some/directory/pyproject.toml
+      pixi shell --manifest-path /some/directory/pyproject.toml -e dev
 
    See the `Pixi CLI documentation <https://pixi.sh/latest/reference/cli/#shell>`_
    for details.
@@ -225,11 +248,8 @@ Compiling the radiometric kernel
 
 .. important::
 
-   It is strongly recommended to activate the Pixi environment to compile the kernel:
-
-   .. code:: shell
-
-      pixi shell -e dev
+   It is strongly recommended to activate the Pixi environment to compile the
+   kernel. See :ref:`sec-developer_guide-dev_install-setup_conda` for details.
 
 We recommend using the using the dedicated Pixi task to build the kernel:
 
@@ -248,12 +268,14 @@ We recommend using the using the dedicated Pixi task to build the kernel:
 **Linux and macOS**: Inspect CMake's output to check if Clang is used as the C++
 compiler. Search for lines starting with
 
-.. code::
+.. code:: text
 
-   -- Check for working C compiler: ...
-   -- Check for working CXX compiler: ...
+   -- The CXX compiler identification is <...>
+   -- The C compiler identification is <...>
+   -- Check for working CXX compiler: <...>
+   -- Check for working C compiler: <...>
 
-If you see ``gcc`` on this line, it very likely means that CMake is not using
+These lines should clearly indicate that the currently selected compiler is
 Clang.
 
 .. dropdown:: If Clang is not used by CMake ...
@@ -285,9 +307,9 @@ Clang.
 **All platforms**: Inspect CMake's output to check if your Conda environment
 Python is used by CMake. Search for a line starting with:
 
-.. code::
+.. code:: text
 
-   -- Found Python: ...
+   -- Found Python: <...>
 
 The content of this line may vary depending on the location of the project and
 your Pixi configuration. If this path points to a Python binary not associated
@@ -312,6 +334,8 @@ It completes within a few minutes on modern workstations.
 Verifying the installation
 --------------------------
 
+.. |smile| unicode:: U+1F642
+
 In a terminal, try and invoke the :program:`eradiate` command-line interface:
 
 .. code:: shell
@@ -320,8 +344,8 @@ In a terminal, try and invoke the :program:`eradiate` command-line interface:
 
 The command should print some information to the terminal. You are now ready to
 use Eradiate |smile|
-
-.. |smile| unicode:: U+1F642
+You probably also want to download part or all of Eradiate's built-in datasets:
+see the :ref:`data guide <sec-data-intro-download>` for more information.
 
 .. dropdown:: If you get a jit_cuda_compile() error ...
    :color: info
