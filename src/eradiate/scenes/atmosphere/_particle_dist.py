@@ -53,7 +53,9 @@ class ParticleDistribution(ABC):
 @define
 class UniformParticleDistribution(ParticleDistribution):
     r"""
-    Uniform particle distribution. Returns values given by the uniform PDF
+    Uniform particle distribution [``uniform``].
+
+    Returns values given by the uniform PDF
 
     .. math::
        f : x \mapsto \left\{
@@ -101,8 +103,9 @@ class UniformParticleDistribution(ParticleDistribution):
 @define(init=False)
 class ExponentialParticleDistribution(ParticleDistribution):
     r"""
-    Exponential particle distribution. Returns values given by the normalized
-    exponential PDF
+    Exponential particle distribution [``exponential``].
+
+    Returns values given by the normalized exponential PDF
 
     .. math::
        f : x \mapsto \dfrac{\lambda e^{-\lambda x}}{1 - e^{-\lambda}}
@@ -157,8 +160,9 @@ class ExponentialParticleDistribution(ParticleDistribution):
 @define
 class GaussianParticleDistribution(ParticleDistribution):
     r"""
-    Gaussian particle distribution. Returns values given by the Gaussian
-    PDF
+    Gaussian particle distribution [``gaussian``].
+
+    Returns values given by the Gaussian PDF
 
     .. math::
        f : x \mapsto \frac{1}{2 \pi \cdot \sigma}
@@ -201,7 +205,7 @@ class GaussianParticleDistribution(ParticleDistribution):
 @define
 class ArrayParticleDistribution(ParticleDistribution):
     """
-    Particle distribution specified by an array of values.
+    Particle distribution specified by an array of values [``array``].
     """
 
     values: np.typing.ArrayLike = documented(
@@ -330,7 +334,7 @@ class ArrayParticleDistribution(ParticleDistribution):
 class InterpolatorParticleDistribution(ParticleDistribution):
     """
     A flexible particle distribution which redirects its calls to an
-    encapsulated callable.
+    encapsulated callable [``interpolator``].
     """
 
     interpolator: t.Callable[[np.typing.ArrayLike], np.ndarray] = documented(
