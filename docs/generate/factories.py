@@ -21,7 +21,6 @@ class FactoryInfo:
 
 # List of (module, variable) pairs
 FACTORIES = [
-    ("eradiate.radprops", "rad_profile_factory"),
     ("eradiate.scenes.atmosphere", "atmosphere_factory"),
     ("eradiate.scenes.atmosphere", "particle_distribution_factory"),
     ("eradiate.scenes.biosphere", "biosphere_factory"),
