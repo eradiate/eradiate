@@ -26,12 +26,13 @@ from .asvdb import ASVDb
     help="Specify the directory to another ASV database in which the result should be archived. "
     "The path should point to the root of the database (where the asv.conf.json lives).",
 )
-@click.option(
-    "--git-ref",
-    default=None,
-    help="Specifies a range at which benchmarks should be run. Note that this will run using ASV's "
-    "contained environments and clone and build the project at each commit in the range.",
-)
+# NM - 25/09/24: Disable ASV git cloning features broken by the migration to pixi.
+# @click.option(
+#     "--git-ref",
+#     default=None,
+#     help="Specifies a range at which benchmarks should be run. Note that this will run using ASV's "
+#     "contained environments and clone and build the project at each commit in the range.",
+# )
 @click.option("-v", "--verbose", is_flag=True, help="increase verbosity")
 @click.option(
     "-e",
@@ -80,11 +81,13 @@ def benchmark(
 
     cmd = ["asv", "run"]
 
-    if git_ref:
-        cmd.append(git_ref)
-    else:
-        cmd.append("-E")
-        cmd.append("existing:same")
+    # NM - 25/09/24: Disable ASV git cloning features broken by the migration to pixi.
+    # if git_ref:
+    #     cmd.append(git_ref)
+    # else:
+
+    cmd.append("-E")
+    cmd.append("existing:same")
 
     # Pass arguments to ASV
     if verbose:
@@ -101,7 +104,8 @@ def benchmark(
 
     # By default, dev environment will use the checked out commit hash
     # and prod the commit corresponding to their version tag.
-    if set_commit_hash is None and git_ref is None:
+    # if set_commit_hash is None and git_ref is None:
+    if set_commit_hash is None:
         version = eradiate.__version__
         if "dev" in version:
             set_commit_hash, _ = utils.get_commit_info()
@@ -166,10 +170,12 @@ def benchmark(
 
         if set_commit_hash:
             commit_list.append(set_commit_hash[:8])
-        elif git_ref:
-            commit_list_raw = utils.get_command_output(f"git rev-list {git_ref}")
-            commit_list_raw = commit_list_raw.split("\n")
-            commit_list = [commit[:8] for commit in commit_list_raw]
+
+        # NM - 25/09/24: Disable ASV git cloning features broken by the migration to pixi.
+        # elif git_ref:
+        #     commit_list_raw = utils.get_command_output(f"git rev-list {git_ref}")
+        #     commit_list_raw = commit_list_raw.split("\n")
+        #     commit_list = [commit[:8] for commit in commit_list_raw]
 
         # filter by machine name and commit hash
         for result in results:

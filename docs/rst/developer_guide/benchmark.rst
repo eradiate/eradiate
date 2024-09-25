@@ -24,10 +24,11 @@ If you want to archive results to a separate **asv database**, add the
 ``--archive-dir=<dir>`` argument. The path should point to the root
 of the database, where the ``asv.conf.json`` file exists.
 
-ASV also offers the possibility to run benchmarks on previous commits
-and branches. It will clone and build the project in a new environment
-and run the benchmarks on those. To use this, specify the ``--git-ref=<range>``
-as a range, e.g. ``main^!`` for the last commit of the ``main`` branch:
+.. NM - 25/09/24: Disable ASV git cloning features broken by the migration to pixi.
+.. ASV also offers the possibility to run benchmarks on previous commits
+.. and branches. It will clone and build the project in a new environment
+.. and run the benchmarks on those. To use this, specify the ``--git-ref=<range>``
+.. as a range, e.g. ``main^!`` for the last commit of the ``main`` branch:
 
 .. code:: bash
 

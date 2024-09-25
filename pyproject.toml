@@ -62,7 +62,7 @@ docs = [
   "sphinx-copybutton",
   "sphinx-design",
 ]
-test = ["pytest", "pytest-json-report"]
+test = ["pytest", "pytest-json-report", "asv==0.6.*"]
 
 [project.scripts]
 eradiate = "eradiate.cli:main"
