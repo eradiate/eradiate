@@ -13,19 +13,10 @@ from pinttr.util import ensure_units
 
 import eradiate
 
-from .._factory import Factory
 from ..attrs import documented, frozen
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
-
-rad_profile_factory = Factory()
-rad_profile_factory.register_lazy_batch(
-    [
-        ("_atmosphere.AtmosphereRadProfile", "atmosphere", {}),
-    ],
-    cls_prefix="eradiate.radprops",
-)
 
 
 @ureg.wraps(
@@ -286,10 +277,6 @@ class RadProfile(ABC):
     An abstract base class for radiative property profiles. Classes deriving
     from this one must implement methods which return the albedo and collision
     coefficients as Pint-wrapped Numpy arrays.
-
-    See Also
-    --------
-    :data:`.rad_profile_factory`
     """
 
     @property
