@@ -23,6 +23,10 @@ authors:
   - given-names: Nicolas
     family-names: Misk
     affiliation: Rayference
+  - given-names: Nicolae
+    family-names: Marton
+    affiliation: Rayference
+    orcid: 'https://orcid.org/0000-0002-0465-8577'
   - given-names: Yves
     family-names: Govaerts
     affiliation: Rayference
