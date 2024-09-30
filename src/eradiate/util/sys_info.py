@@ -81,7 +81,7 @@ def show() -> dict:
     try:
         eradiate_mitsuba_version = version("eradiate-mitsuba")
     except PackageNotFoundError:
-        eradiate_mitsuba_version = "not installed [DEV|DEBUG]"
+        eradiate_mitsuba_version = f"{mi.ERD_MI_VERSION}, not installed [DEV|DEBUG]"
     result["eradiate_mitsuba_version"] = eradiate_mitsuba_version
     result["mitsuba_compiler"] = import_module("mitsuba.config").CXX_COMPILER
 
