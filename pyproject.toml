@@ -94,8 +94,11 @@ bump-my-version = ">=0.26.1,<0.27"
 scripts = ["setpath.sh"]
 
 [tool.pixi.tasks]
-build-kernel = { cmd = "cmake -S ext/mitsuba -B ext/mitsuba/build -DCMAKE_BUILD_TYPE=Release -GNinja --preset eradiate && ninja -C ext/mitsuba/build" }
-build-wheel = { cmd = "python -m build" }
+kernel-build = { cmd = "cmake -S ext/mitsuba -B ext/mitsuba/build -DCMAKE_BUILD_TYPE=Release -GNinja --preset eradiate && ninja -C ext/mitsuba/build" }
+kernel-clean = { cmd = "rm -rf ext/mitsuba/build/" }
+wheel-build = { cmd = "python -m build" }
+build-kernel = { depends-on = ["kernel-build"] }
+build-wheel = { depends-on = ["wheel-build"] }
 
 [tool.pixi.target.win-64.activation]
 scripts = ["setpath.bat"]
