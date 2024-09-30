@@ -98,10 +98,14 @@ def test_mi_traverse(mode_mono):
     assert set(mi_wrapper.parameters.keys()) == {
         "my_bsdf.reflectance.value",
         "disk_1.to_world",
+        "disk_1.silhouette_sampling_weight",
         "disk_2.bsdf.reflectance.value",
         "disk_2.to_world",
+        "disk_2.silhouette_sampling_weight",
         "rectangle_1.to_world",
+        "rectangle_1.silhouette_sampling_weight",
         "rectangle_2.to_world",
+        "rectangle_2.silhouette_sampling_weight",
     }
 
     # Parameter ID should be resolved in accordance with the declared lookup strategy
