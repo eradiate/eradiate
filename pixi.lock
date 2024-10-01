@@ -3941,7 +3941,7 @@ packages:
   name: eradiate
   version: 0.29.0.dev0
   path: .
-  sha256: aa1384e975da430ae84ca1801cc2e5f64cbfb140e3075d6001ac01dc31be4daf
+  sha256: 5827275fadb34624d6410ac11a24b34414986f170485d9875fcd22782c0621bc
   requires_dist:
   - aenum
   - attrs>=22.2

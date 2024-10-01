@@ -119,6 +119,7 @@ doctest = { cmd = "make -C docs doctest" }
 
 [tool.pixi.feature.docs.tasks]
 docs = { cmd = "make -C docs html && echo \"Documentation index at docs/_build/html/index.html\"" }
+docs-build = { depends-on = ["docs"] }
 docs-clean = { cmd = "make -C docs clean" }
 docs-pdf = { cmd = "make -C docs latexpdf && echo \"Documentation PDF at docs/_build/latex/eradiate.pdf\"" }
 
