@@ -23,7 +23,7 @@ dependencies = [
   "lazy_loader>=0.1",
   "matplotlib>=3.3",
   "netcdf4",
-  "numpy<2", # Capped to avoid Astropy 6.1+ / Python 3.9 conflict
+  "numpy<2", # Capped to avoid Astropy 6.1+ / Python 3.9 conflict, sync with Conda requirement
   "pint",
   "pinttrs>=23.2.0",
   "pooch",
@@ -77,6 +77,9 @@ repository = "https://github.com/eradiate/eradiate"
 channels = ["conda-forge"]
 platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
 
+[tool.pixi.dependencies]
+numpy = "<2" # Be sure to sync with PyPI requirement
+
 [tool.pixi.pypi-dependencies]
 eradiate = { path = ".", editable = true }
 
@@ -91,17 +94,20 @@ uv = ">=0.4.15,<0.5" # Used to lock docs dependencies
 scripts = ["setpath.sh"]
 
 [tool.pixi.tasks]
-kernel-build = { cmd = "cmake -S ext/mitsuba -B ext/mitsuba/build -DCMAKE_BUILD_TYPE=Release -GNinja --preset eradiate && ninja -C ext/mitsuba/build" }
+kernel-configure = { cmd = "cmake -S ext/mitsuba -B ext/mitsuba/build -DCMAKE_BUILD_TYPE=Release -GNinja --preset eradiate" }
+kernel-build = { cmd = "cmake --build ext/mitsuba/build", depends-on = [
+  "kernel-configure",
+] }
 kernel-clean = { cmd = "rm -rf ext/mitsuba/build/" }
-wheel-build = { cmd = "python -m build" }
 build-kernel = { depends-on = ["kernel-build"] }
+wheel-build = { cmd = "python -m build" }
 build-wheel = { depends-on = ["wheel-build"] }
+
+[tool.pixi.target.win-64.dependencies]
+ninja = "*"
 
 [tool.pixi.target.win-64.activation]
 scripts = ["setpath.bat"]
-
-[tool.pixi.target.win-64.tasks]
-kernel-build = { cmd = "cmake -S ext/mitsuba -B ext/mitsuba/build -G \"Visual Studio 17 2022\" -A x64 --preset eradiate && cmake --build ext/mitsuba/build --config Release" }
 
 [tool.pixi.feature.py39.dependencies]
 python = "3.9.*" # Used to constrain dev environment
@@ -127,7 +133,11 @@ docs-linkcheck = { cmd = "make -C docs linkcheck" }
 docs-render-tutorials = { cmd = "python tutorials/run.py run" }
 # -- Important: If the Python version changes, do not forget to sync it with the
 #    'build.tools.python' entry in .readthedocs.yml
-docs-lock = { cmd = "uv pip compile --no-progress --quiet --upgrade --build-isolation --python-version 3.9 --no-strip-extras --extra docs --extra recommended --output-file docs/requirements.txt pyproject.toml" }
+docs-lock = { cmd = """
+  uv pip compile --no-progress --quiet --upgrade --build-isolation
+    --python-version 3.9 --no-strip-extras --extra docs --extra recommended
+    --output-file docs/requirements.txt pyproject.toml
+""" }
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
