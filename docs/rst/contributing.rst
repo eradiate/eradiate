@@ -34,12 +34,6 @@ Alternatively, an automatically refreshed server can be started:
 
     pixi run -e dev docs-serve
 
-.. note::
-
-   Some parts of the API documentation use static intermediate files generated
-   by a dedicated script. See :ref:`sec-contributing-documentation-api-build`
-   for more information.
-
 Editing the data documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
