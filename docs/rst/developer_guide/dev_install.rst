@@ -53,7 +53,7 @@ Next, make sure that your machine meets the requirements listed below:
             clang,     11.1.0-6
             libc++,    11
             libc++abi, 11
-            python,    3.9.18 (miniconda3)
+            python,    3.9.18
 
       .. tab-item:: macOS
          :sync: macos
@@ -69,7 +69,7 @@ Next, make sure that your machine meets the requirements listed below:
             cmake,  3.22.1
             ninja,  1.10.2
             clang,  Apple clang version 13.0.0 (clang-1300.0.29.30)
-            python, 3.9.18 (miniconda3)
+            python, 3.9.18
 
       .. tab-item:: Windows
          :sync: windows
@@ -84,8 +84,8 @@ Next, make sure that your machine meets the requirements listed below:
             git,    2.43.0.windows.1
             cmake,  3.22.1
             ninja,  1.10.2
-            clang,  Apple clang version 13.0.0 (clang-1300.0.29.30)
-            python, 3.9.18 (miniconda3)
+            MSVC,   2022
+            python, 3.9.18
 
 .. tab-set::
 
@@ -142,8 +142,8 @@ Next, make sure that your machine meets the requirements listed below:
 
       On Windows, you will need to install the MSVC compiler, *e.g* through
       `Visual Studio Community <https://visualstudio.microsoft.com/>`_. In
-      addition, you will need to install `GNU Make <https://gnuwin32.sourceforge.net/packages/make.htm>`_
-      and `CMake <https://cmake.org/>`_.
+      addition, you will need to install `CMake <https://cmake.org/>`_.
+      The build procedure is tested in a Powershell developer session.
 
 .. _sec-developer_guide-dev_install-cloning:
 
@@ -255,7 +255,7 @@ We recommend using the using the dedicated Pixi task to build the kernel:
 
 .. code:: shell
 
-   pixi run build-kernel
+   pixi run kernel-build
 
 .. dropdown:: CMake Error: The source directory "..." does not exist
    :color: info
