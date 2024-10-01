@@ -10,8 +10,8 @@ import sys
 from pathlib import Path
 
 import click
+import tomlkit
 from packaging.version import Version
-from ruamel.yaml import YAML
 
 
 def _run(cmd, cwd=".", show_output=False):
@@ -28,28 +28,19 @@ def _run(cmd, cwd=".", show_output=False):
     return out
 
 
-def get_package_requirements(layered_yml_path):
-    with open(layered_yml_path, "r") as f:
-        yaml = YAML()
-        layered_yml = yaml.load(f.read())
-
-    version_dependencies = Version(
-        [
-            x
-            for x in layered_yml["dependencies"]["packages"]
-            if x.startswith("eradiate-mitsuba")
-        ][0].split("==")[1]
-    )
+def get_package_requirements(pyproject_path):
+    with open(pyproject_path, "r") as f:
+        pyproject = tomlkit.load(f)
 
     version_optional = Version(
         [
             x
-            for x in layered_yml["optional"]["packages"]
+            for x in pyproject["project"]["optional-dependencies"]["optional"]
             if x.startswith("eradiate-mitsuba")
         ][0].split("==")[1]
     )
 
-    return version_dependencies, version_optional
+    return version_optional
 
 
 def get_mi_header_versions(header_path):
@@ -140,10 +131,9 @@ def _check_mitsuba_requirements(
 
     # Get required Mitsuba version
     print("Looking up required eradiat-mitsuba package version ...")
-    (
-        info["required_mitsuba_package_dependencies"],
-        info["required_mitsuba_package_optional"],
-    ) = get_package_requirements(eradiate_root_dir / "requirements/layered.yml")
+    info["required_mitsuba_package_optional"] = get_package_requirements(
+        "pyproject.toml"
+    )
 
     # Get checked out Mitsuba version
     print("Looking up checked out Mitsuba Git commit ...")
@@ -181,7 +171,6 @@ def _check_mitsuba_requirements(
     diagnostics = {}
 
     mitsuba_versions = {
-        info["required_mitsuba_package_dependencies"],
         info["required_mitsuba_package_optional"],
         info["eradiate_kernel_mitsuba_patch_version"],
         info["mi_header_mitsuba_patch_version"],
@@ -190,10 +179,8 @@ def _check_mitsuba_requirements(
     if len(mitsuba_versions) > 1:
         diagnostics["mitsuba_version_mismatch"] = (
             "The following versions are not aligned:\n"
-            f"* eradiate-mitsuba package requirement [{info['required_mitsuba_package_dependencies']}]\n"
-            "  retrieved from 'layered.yml' ('dependencies' section)\n"
             f"* eradiate-mitsuba package requirement [{info['required_mitsuba_package_optional']}]\n"
-            "  retrieved from 'layered.yml' ('optional' section)\n"
+            "  retrieved from 'pyproject.toml' ('optional' group)\n"
             f"* mitsuba submodule patch version [{info['mi_header_mitsuba_patch_version']}]\n"
             "  retrieved from 'mitsuba.h'\n"
             f"* mitsuba patch requirement [{info['eradiate_kernel_mitsuba_patch_version']}]\n"
@@ -232,7 +219,7 @@ def _check_mitsuba_requirements(
     print()
     if diagnostics:
         messages = [diag for diag in diagnostics.values()]
-        print("\n".join(messages))
+        print("\n\n".join(messages))
         return 1
     else:
         print("No issues detected")
