@@ -5,8 +5,8 @@ Upon import, this module checks if the kernel dependencies are correctly set up.
 from importlib.metadata import PackageNotFoundError, version
 
 # Internal constants
-REQUIRED_MITSUBA_VERSION = "3.4.1"
-REQUIRED_MITSUBA_PATCH_VERSION = "0.2.4"
+REQUIRED_MITSUBA_VERSION = "3.5.2"
+REQUIRED_MITSUBA_PATCH_VERSION = "0.3.0"
 
 
 def find_drjit():
