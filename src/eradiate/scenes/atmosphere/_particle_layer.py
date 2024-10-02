@@ -5,6 +5,7 @@ Particle layers.
 from __future__ import annotations
 
 from functools import singledispatchmethod
+from typing import Literal
 
 import attrs
 import numpy as np
@@ -69,10 +70,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     bottom: pint.Quantity = documented(
         pinttr.field(
             default=ureg.Quantity(0.0, ureg.km),
-            validator=[
-                is_positive,
-                pinttr.validators.has_compatible_units,
-            ],
+            validator=[is_positive, pinttr.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="Bottom altitude of the particle layer.\n"
@@ -87,10 +85,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         pinttr.field(
             units=ucc.deferred("length"),
             default=ureg.Quantity(1.0, ureg.km),
-            validator=[
-                is_positive,
-                pinttr.validators.has_compatible_units,
-            ],
+            validator=[is_positive, pinttr.validators.has_compatible_units],
         ),
         doc="Top altitude of the particle layer.\n"
         "\n"
@@ -131,10 +126,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         pinttr.field(
             units=ucc.deferred("wavelength"),
             default=550 * ureg.nm,
-            validator=[
-                is_positive,
-                pinttr.validators.has_compatible_units,
-            ],
+            validator=[is_positive, pinttr.validators.has_compatible_units],
         ),
         doc="Reference wavelength at which the extinction optical thickness is "
         "specified.\n"
@@ -149,10 +141,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         pinttr.field(
             units=ucc.deferred("dimensionless"),
             default=ureg.Quantity(0.2, ureg.dimensionless),
-            validator=[
-                is_positive,
-                pinttr.validators.has_compatible_units,
-            ],
+            validator=[is_positive, pinttr.validators.has_compatible_units],
         ),
         doc="Extinction optical thickness at the reference wavelength.\n"
         "\n"
@@ -180,15 +169,12 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         "If a string is passed, it is interpreted as an identifier for a "
         "particle radiative property dataset in the Eradiate data store.",
         type="Dataset",
-        init_type="Dataset or path-like or str, optional",
-        default="govaerts_2021-continental",
+        init_type="Dataset or path-like or str",
+        default='"govaerts_2021-continental"',
     )
 
     has_absorption: bool = documented(
-        attrs.field(
-            default=True,
-            converter=bool,
-        ),
+        attrs.field(default=True, converter=bool),
         doc="Absorption bypass switch. If ``True``, the absorption coefficient "
         "is computed. Else, the absorption coefficient is not computed and "
         "instead set to zero.",
@@ -197,39 +183,12 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     )
 
     has_scattering: bool = documented(
-        attrs.field(
-            default=True,
-            converter=bool,
-        ),
+        attrs.field(default=True, converter=bool),
         doc="Scattering bypass switch. If ``True``, the scattering coefficient "
         "is computed. Else, the scattering coefficient is not computed and "
         "instead set to zero.",
         type="bool",
         default="True",
-    )
-
-    force_polarized_phase: bool = documented(
-        attrs.field(
-            default=False,
-            converter=bool,
-        ),
-        doc="Force the use of a polarized phase function implementation, even"
-        "when no polarization informaiton is available.",
-        type="bool",
-        default="False",
-    )
-
-    particle_shape: str = documented(
-        attrs.field(
-            default="spherical",
-            kw_only=True,
-        ),
-        doc="Defines the shape of the particle. Only used in polarized mode."
-        "* spherical: 4 coefficients considered [m11, m12, m33, m34]."
-        "* spheroidal: 6 coefficients considered [m11, m12, m22, m33, m34, m44].",
-        type="str",
-        init_type="str, optional",
-        default="spherical",
     )
 
     @has_absorption.validator
@@ -240,6 +199,24 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
                 f"while validating {attribute.name}: at least one of "
                 "'has_absorption' and 'has_scattering' must be True"
             )
+
+    force_polarized_phase: bool = documented(
+        attrs.field(default=False, converter=bool),
+        doc="Force the use of a polarized phase function implementation, even"
+        "when no polarization information is available.",
+        type="bool",
+        default="False",
+    )
+
+    particle_shape: Literal["spherical", "spheroidal"] = documented(
+        attrs.field(default="spherical", kw_only=True),
+        doc="Defines the shape of the particle. Only used in polarized mode.\n\n"
+        '* ``"spherical"``: 4 coefficients considered [m11, m12, m33, m34].\n'
+        '* ``"spheroidal"``: 6 coefficients considered [m11, m12, m22, m33, m34, m44].',
+        type="str",
+        init_type='{"spherical", "spheroidal"}',
+        default='"spherical"',
+    )
 
     _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
 
