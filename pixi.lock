@@ -1310,9 +1310,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/d5/50/83c593b07763e1161326b3b8c6686f0f4b0f24d5526546bee538c89837d6/decorator-5.1.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/41/46/901d5ead7526648197b736774ae4867818b31d4b7c7576549fbeeaf993bf/dessinemoi-24.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/2a/21/ec519206d03d64aa1689807e725334837ba313419c6c44724b18b76c3f53/drjit-0.4.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/c8/3b/def11290b6d7d88d3073426ab0cd3071d4dd04f094c490f0024087b0cee4/drjit-0.4.6-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/e2/14/c8a7d861262139688fa465d2e27ff7113764d6fa03b15b9c7b666729ea2e/dynaconf-3.2.6-py2.py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/1d/e3/0f77e30d6f307475e1a3ab64cc0e1b09d6da9839423b122398518224876b/eradiate_mitsuba-0.2.4-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/c8/56/9bee58c0529c5e9cc35a26fc6df8a9f6b7c9e874734214e914eb4c0a749a/eradiate_mitsuba-0.3.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/02/cc/b7e31358aac6ed1ef2bb790a9746ac2c69bcb3c8588b41616914eb106eaf/exceptiongroup-1.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b5/fd/afcd0496feca3276f509df3dbd5dae726fcc756f1a08d9e25abe1733f962/executing-2.1.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6d/ca/086311cdfc017ec964b2436fe0c98c1f4efcb7e4c328956a22456e497655/fastjsonschema-2.20.0-py3-none-any.whl
@@ -1481,9 +1481,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/d5/50/83c593b07763e1161326b3b8c6686f0f4b0f24d5526546bee538c89837d6/decorator-5.1.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/41/46/901d5ead7526648197b736774ae4867818b31d4b7c7576549fbeeaf993bf/dessinemoi-24.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a7/65/395fb83b966a346267872d306b3fc373d9307a45dd2ec7a1a9e3c4baaf5f/drjit-0.4.4-cp39-cp39-macosx_10_14_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/67/1b/675a6533f836f00d1292f75fa0f934320a6c756922c974d97c0fe7c3d893/drjit-0.4.6-cp39-cp39-macosx_10_14_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/e2/14/c8a7d861262139688fa465d2e27ff7113764d6fa03b15b9c7b666729ea2e/dynaconf-3.2.6-py2.py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/88/33/01cfbfd21fa34fae5799a91aa315e233fc90ca99f073aa2782af31426653/eradiate_mitsuba-0.2.4-cp39-cp39-macosx_10_14_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/5d/a7/0fcf0b58492c9089350e574fc4048a10784d8c8440d6adb5b7944ba8bac2/eradiate_mitsuba-0.3.0-cp39-cp39-macosx_10_14_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/02/cc/b7e31358aac6ed1ef2bb790a9746ac2c69bcb3c8588b41616914eb106eaf/exceptiongroup-1.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b5/fd/afcd0496feca3276f509df3dbd5dae726fcc756f1a08d9e25abe1733f962/executing-2.1.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6d/ca/086311cdfc017ec964b2436fe0c98c1f4efcb7e4c328956a22456e497655/fastjsonschema-2.20.0-py3-none-any.whl
@@ -1652,9 +1652,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/d5/50/83c593b07763e1161326b3b8c6686f0f4b0f24d5526546bee538c89837d6/decorator-5.1.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/41/46/901d5ead7526648197b736774ae4867818b31d4b7c7576549fbeeaf993bf/dessinemoi-24.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/4e/43/afc6fc01f19277005013f9d7bcf6e825fa7a17667ca3584bbe95bd77209d/drjit-0.4.4-cp39-cp39-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/0c/08/fd2f427c90925f028bf25fa24552c3d58e6ff4718b55bf1d4c9bde16c4fc/drjit-0.4.6-cp39-cp39-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/e2/14/c8a7d861262139688fa465d2e27ff7113764d6fa03b15b9c7b666729ea2e/dynaconf-3.2.6-py2.py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ba/82551b5a4f5e32d61c2f0be7c45cc125a488e434b459b85d768ab32132da/eradiate_mitsuba-0.2.4-cp39-cp39-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/82/ff/f6d916bd599754e66f8f56e8ee193c0df95e7eadf08467628f084a209cc6/eradiate_mitsuba-0.3.0-cp39-cp39-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/02/cc/b7e31358aac6ed1ef2bb790a9746ac2c69bcb3c8588b41616914eb106eaf/exceptiongroup-1.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b5/fd/afcd0496feca3276f509df3dbd5dae726fcc756f1a08d9e25abe1733f962/executing-2.1.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6d/ca/086311cdfc017ec964b2436fe0c98c1f4efcb7e4c328956a22456e497655/fastjsonschema-2.20.0-py3-none-any.whl
@@ -1828,9 +1828,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/d5/50/83c593b07763e1161326b3b8c6686f0f4b0f24d5526546bee538c89837d6/decorator-5.1.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/41/46/901d5ead7526648197b736774ae4867818b31d4b7c7576549fbeeaf993bf/dessinemoi-24.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/02/5c/bc33a0e9c74f356b17d0e3b273828f64575a57399a8510207339098fd88f/drjit-0.4.4-cp39-cp39-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/18/23/7d2a8533caa2b4178f2dd7ef9fde8fdbede7bc0bf15c92bbaf5333e5ebb7/drjit-0.4.6-cp39-cp39-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/e2/14/c8a7d861262139688fa465d2e27ff7113764d6fa03b15b9c7b666729ea2e/dynaconf-3.2.6-py2.py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/b6/d6/d115c86b1e276ee7eea40e5b31efa8d65738d19fda08f263dc4bc3ad6813/eradiate_mitsuba-0.2.4-cp39-cp39-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/5e/27/954ec2a323bd531c229a6ee1a4a93368cb1c52a6545b8784db582ae2d03b/eradiate_mitsuba-0.3.0-cp39-cp39-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/02/cc/b7e31358aac6ed1ef2bb790a9746ac2c69bcb3c8588b41616914eb106eaf/exceptiongroup-1.2.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b5/fd/afcd0496feca3276f509df3dbd5dae726fcc756f1a08d9e25abe1733f962/executing-2.1.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6d/ca/086311cdfc017ec964b2436fe0c98c1f4efcb7e4c328956a22456e497655/fastjsonschema-2.20.0-py3-none-any.whl
@@ -3886,27 +3886,27 @@ packages:
   requires_python: '>=3.9'
 - kind: pypi
   name: drjit
-  version: 0.4.4
-  url: https://files.pythonhosted.org/packages/02/5c/bc33a0e9c74f356b17d0e3b273828f64575a57399a8510207339098fd88f/drjit-0.4.4-cp39-cp39-win_amd64.whl
-  sha256: 0f0d49eedbdfb74ae37e72eed320119760eacdc253f606eaa26c830a1392d35d
+  version: 0.4.6
+  url: https://files.pythonhosted.org/packages/0c/08/fd2f427c90925f028bf25fa24552c3d58e6ff4718b55bf1d4c9bde16c4fc/drjit-0.4.6-cp39-cp39-macosx_11_0_arm64.whl
+  sha256: 609fc23f2241d22e96b04a9f2d2aef8025972a0b0fcf9b7d25bb4d57d0d53215
   requires_python: '>=3.8'
 - kind: pypi
   name: drjit
-  version: 0.4.4
-  url: https://files.pythonhosted.org/packages/2a/21/ec519206d03d64aa1689807e725334837ba313419c6c44724b18b76c3f53/drjit-0.4.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-  sha256: 63de4059e334a2d26fccf40887a5fca59da6c8d60caabbb238395473e2271f8e
+  version: 0.4.6
+  url: https://files.pythonhosted.org/packages/18/23/7d2a8533caa2b4178f2dd7ef9fde8fdbede7bc0bf15c92bbaf5333e5ebb7/drjit-0.4.6-cp39-cp39-win_amd64.whl
+  sha256: 452370365c834b7a1d03366c63ebce63881faf66f8e6cd162ca6b517faabdb02
   requires_python: '>=3.8'
 - kind: pypi
   name: drjit
-  version: 0.4.4
-  url: https://files.pythonhosted.org/packages/4e/43/afc6fc01f19277005013f9d7bcf6e825fa7a17667ca3584bbe95bd77209d/drjit-0.4.4-cp39-cp39-macosx_11_0_arm64.whl
-  sha256: 7b4dcff29d1958ee5f1ed4df9877779e69df7ba4ac0ebdfc52c025638a39403f
+  version: 0.4.6
+  url: https://files.pythonhosted.org/packages/67/1b/675a6533f836f00d1292f75fa0f934320a6c756922c974d97c0fe7c3d893/drjit-0.4.6-cp39-cp39-macosx_10_14_x86_64.whl
+  sha256: a4d8c0316412a6adf05a6d513bca81bbc563a24e9383f2d0c8bba7520ea356fd
   requires_python: '>=3.8'
 - kind: pypi
   name: drjit
-  version: 0.4.4
-  url: https://files.pythonhosted.org/packages/a7/65/395fb83b966a346267872d306b3fc373d9307a45dd2ec7a1a9e3c4baaf5f/drjit-0.4.4-cp39-cp39-macosx_10_14_x86_64.whl
-  sha256: 35b83fe7072f7088d37218cafc07219f093ea334f474705f52947a544a3726b5
+  version: 0.4.6
+  url: https://files.pythonhosted.org/packages/c8/3b/def11290b6d7d88d3073426ab0cd3071d4dd04f094c490f0024087b0cee4/drjit-0.4.6-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+  sha256: 00bc884b85f9bcc7164c189e4db425bffa962bc32f54c154ee99da69b3eb3a55
   requires_python: '>=3.8'
 - kind: pypi
   name: dynaconf
@@ -3941,7 +3941,7 @@ packages:
   name: eradiate
   version: 0.29.0.dev0
   path: .
-  sha256: 5827275fadb34624d6410ac11a24b34414986f170485d9875fcd22782c0621bc
+  sha256: 6a1a297ec7a3cddfe37a0415c266e92e39863fb9e2c71a8d3f64e6d7ad9c3257
   requires_dist:
   - aenum
   - attrs>=22.2
@@ -3966,7 +3966,7 @@ packages:
   - tqdm
   - shellingham!=1.5.1
   - xarray>=0.19,!=0.20.*
-  - eradiate-mitsuba==0.2.4 ; extra == 'optional'
+  - eradiate-mitsuba==0.3.0 ; extra == 'optional'
   - aabbtree ; extra == 'recommended'
   - astropy ; extra == 'recommended'
   - ipython ; extra == 'recommended'
@@ -3994,35 +3994,35 @@ packages:
   editable: true
 - kind: pypi
   name: eradiate-mitsuba
-  version: 0.2.4
-  url: https://files.pythonhosted.org/packages/0b/ba/82551b5a4f5e32d61c2f0be7c45cc125a488e434b459b85d768ab32132da/eradiate_mitsuba-0.2.4-cp39-cp39-macosx_11_0_arm64.whl
-  sha256: 60d42eb9434ce7e86e1cb5652004420ec4649ed5b935c878fbc53aca3d5f64a5
+  version: 0.3.0
+  url: https://files.pythonhosted.org/packages/5d/a7/0fcf0b58492c9089350e574fc4048a10784d8c8440d6adb5b7944ba8bac2/eradiate_mitsuba-0.3.0-cp39-cp39-macosx_10_14_x86_64.whl
+  sha256: 5dbc961c7b3c1d266746947a535058b74e8a73a20cfa351aef6495d05ceb04be
   requires_dist:
-  - drjit==0.4.4
+  - drjit==0.4.6
   requires_python: '>=3.8'
 - kind: pypi
   name: eradiate-mitsuba
-  version: 0.2.4
-  url: https://files.pythonhosted.org/packages/1d/e3/0f77e30d6f307475e1a3ab64cc0e1b09d6da9839423b122398518224876b/eradiate_mitsuba-0.2.4-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
-  sha256: 90d6e6f31e420e18c2a1c749ce396657d8686335cddb15db13aa6ecf79fc86e0
+  version: 0.3.0
+  url: https://files.pythonhosted.org/packages/5e/27/954ec2a323bd531c229a6ee1a4a93368cb1c52a6545b8784db582ae2d03b/eradiate_mitsuba-0.3.0-cp39-cp39-win_amd64.whl
+  sha256: e10001d0695fc7dc785ec30984c4a0abcfeec493a4784d59b2b936ca4d58cd55
   requires_dist:
-  - drjit==0.4.4
+  - drjit==0.4.6
   requires_python: '>=3.8'
 - kind: pypi
   name: eradiate-mitsuba
-  version: 0.2.4
-  url: https://files.pythonhosted.org/packages/88/33/01cfbfd21fa34fae5799a91aa315e233fc90ca99f073aa2782af31426653/eradiate_mitsuba-0.2.4-cp39-cp39-macosx_10_14_x86_64.whl
-  sha256: 65d388df355c99e690657f9e3deecbbdb0d79773aec0089394ab64ff7f9f40e0
+  version: 0.3.0
+  url: https://files.pythonhosted.org/packages/82/ff/f6d916bd599754e66f8f56e8ee193c0df95e7eadf08467628f084a209cc6/eradiate_mitsuba-0.3.0-cp39-cp39-macosx_11_0_arm64.whl
+  sha256: c8aaa3c88e1044bb728729a6cafef67eb615f9159d09950e37455ef2fa6cf5b7
   requires_dist:
-  - drjit==0.4.4
+  - drjit==0.4.6
   requires_python: '>=3.8'
 - kind: pypi
   name: eradiate-mitsuba
-  version: 0.2.4
-  url: https://files.pythonhosted.org/packages/b6/d6/d115c86b1e276ee7eea40e5b31efa8d65738d19fda08f263dc4bc3ad6813/eradiate_mitsuba-0.2.4-cp39-cp39-win_amd64.whl
-  sha256: 3b87143d4b77dbe209f9ae0f7dcf604f3cdaefa764e0891a7fe959cc7b2f2e70
+  version: 0.3.0
+  url: https://files.pythonhosted.org/packages/c8/56/9bee58c0529c5e9cc35a26fc6df8a9f6b7c9e874734214e914eb4c0a749a/eradiate_mitsuba-0.3.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+  sha256: dd67ac703fc71ae63aff5bc7e8061c8ec0fba861702f692a95594437a3a8975e
   requires_dist:
-  - drjit==0.4.4
+  - drjit==0.4.6
   requires_python: '>=3.8'
 - kind: pypi
   name: exceptiongroup
