@@ -38,7 +38,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-optional = ["eradiate-mitsuba==0.2.4"]
+optional = ["eradiate-mitsuba==0.3.0"]
 recommended = [
   "aabbtree", # Used by the leaf collision detection feature
   "astropy", # Used by the solar irradiance spectrum date-based scaling feature
