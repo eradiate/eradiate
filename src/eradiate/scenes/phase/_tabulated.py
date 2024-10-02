@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import singledispatchmethod
+from typing import Literal
 
 import attrs
 import numpy as np
@@ -80,28 +81,21 @@ class TabulatedPhaseFunction(PhaseFunction):
     )
 
     force_polarized_phase: bool = documented(
-        attrs.field(
-            default=False,
-            converter=bool,
-            kw_only=True,
-        ),
+        attrs.field(default=False, converter=bool, kw_only=True),
         doc="Flag that forces the use of a polarized phase function.",
         type="bool",
-        init_type="bool, optional",
+        init_type="bool",
         default="False",
     )
 
-    particle_shape: str = documented(
-        attrs.field(
-            default="spherical",
-            kw_only=True,
-        ),
-        doc="Defines the shape of the particle. Only used in polarized mode."
-        "* spherical: 4 coefficients considered [m11, m12, m33, m34]."
-        "* spheroidal: 6 coefficients considered [m11, m12, m22, m33, m34, m44].",
+    particle_shape: Literal["spherical", "spheroidal"] = documented(
+        attrs.field(default="spherical", kw_only=True),
+        doc="Defines the shape of the particle. Only used in polarized mode.\n\n"
+        '* ``"spherical"``: 4 coefficients considered [m11, m12, m33, m34].\n'
+        '* ``"spheroidal"``: 6 coefficients considered [m11, m12, m22, m33, m34, m44].',
         type="str",
-        init_type="str, optional",
-        default="spherical",
+        init_type='{"spherical", "spheroidal"}',
+        default='"spherical"',
     )
 
     _is_irregular: bool = attrs.field(default=False, init=False, repr=False)
@@ -124,7 +118,7 @@ class TabulatedPhaseFunction(PhaseFunction):
         self._is_irregular = not np.allclose(dmu, dmu[0]) or self.is_polarized
 
     @singledispatchmethod
-    def eval(self, si: SpectralIndex, i, j) -> np.ndarray:
+    def eval(self, si: SpectralIndex, i: int, j: int) -> np.ndarray:
         """
         Evaluate phase function at a given spectral index.
 
