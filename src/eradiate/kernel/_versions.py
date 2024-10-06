@@ -17,8 +17,11 @@ def find_drjit():
 
     except (ImportError, ModuleNotFoundError) as e:
         raise ImportError(
-            "Could not import module 'drjit'; did you build the kernel and add "
-            "it to your $PYTHONPATH?"
+            "Could not import module 'drjit'. If you are an end-user, you need "
+            "to install the radiometric kernel by adding the 'kernel' extra to "
+            "the installation command (e.g. pip install 'eradiate[kernel]'). "
+            "If you are a developer, you have to build the kernel and add "
+            "it to your $PYTHONPATH."
         ) from e
 
 
@@ -30,8 +33,11 @@ def find_mitsuba():
 
     except (ImportError, ModuleNotFoundError) as e:
         raise ImportError(
-            "Could not import module 'mitsuba'; did you build the kernel and add "
-            "it to your $PYTHONPATH?"
+            "Could not import module 'mitsuba'. If you are an end-user, you need "
+            "to install the radiometric kernel by adding the 'kernel' extra to "
+            "the installation command (e.g. pip install 'eradiate[kernel]'). "
+            "If you are a developer, you have to build the kernel and add "
+            "it to your $PYTHONPATH."
         ) from e
 
 

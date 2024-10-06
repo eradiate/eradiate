@@ -8,12 +8,12 @@ Installation
    Windows support is currently experimental. Please report issues on our
    `issue tracker <https://github.com/eradiate/eradiate/issues>`_.
 
-Eradiate is delivered through PyPI and can be installed using the ``pip``. This
-is the recommended way to install Eradiate.
+Eradiate is delivered through PyPI and can be installed using the ``pip``
+command:
 
 .. code:: bash
 
-   pip install eradiate
+   pip install 'eradiate[kernel]'
 
 This will install the latest stable version of Eradiate, along with all the
 dependencies necessary to run it. If you want to install the latest development
@@ -23,8 +23,8 @@ version, please refer to the :ref:`sec-developer_guide-dev_install`.
 
    Eradiate uses a modified version of the Mitsuba 3 renderer, distributed on
    PyPI as ``eradiate-mitsuba``. That package conflicts with the ``mitsuba``
-   package distributed by the Mitsuba team and both cannot be installed
-   together.
+   package distributed by the Mitsuba team. Both are incompatible with each
+   other.
 
    The ``eradiate`` PyPI package lists ``eradiate-mitsuba`` as a dependency. A
    normal usage pattern should result in the correct flavour of Mitsuba being
