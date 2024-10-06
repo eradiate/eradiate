@@ -15,9 +15,6 @@ import sys
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 
-import drjit as dr
-import mitsuba as mi
-
 
 def _run(command):
     """Returns (return-code, stdout, stderr)"""
@@ -63,6 +60,9 @@ def _get_cpu_info():
 
 
 def show() -> dict:
+    import drjit as dr
+    import mitsuba as mi
+
     mi.set_variant("scalar_rgb")
     result = {}
 

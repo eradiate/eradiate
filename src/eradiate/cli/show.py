@@ -1,4 +1,4 @@
-import mitsuba as mi
+import joseki  # noqa: F401  # Put import at top to mitigate undesired log output
 import typer
 from rich.console import Console
 
@@ -14,7 +14,6 @@ def main():
 
     console = Console(color_system=None)
     error_console = Console(stderr=True, color_system=None)
-    sys_info = eradiate.util.sys_info.show()
 
     def section(title, newline=True):
         if newline:
@@ -35,6 +34,7 @@ def main():
     for w in warnings:
         warning("• " + w)
 
+    sys_info = eradiate.util.sys_info.show()
     section("System")
     message(f"CPU: {sys_info['cpu_info']}")
     message(f"OS: {sys_info['os']}")
@@ -49,8 +49,13 @@ def main():
     message(f"• scipy {sys_info['scipy']}")
     message(f"• xarray {sys_info['xarray']}")
 
-    section("Available Mitsuba variants")
-    message("\n".join([f"• {variant}" for variant in mi.variants()]))
+    try:
+        import mitsuba as mi
+
+        section("Available Mitsuba variants")
+        message("\n".join([f"• {variant}" for variant in mi.variants()]))
+    except ImportError:
+        pass
 
     section("Configuration")
     for var in ["SOURCE_DIR", "ENV"]:

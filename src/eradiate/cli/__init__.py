@@ -1,5 +1,5 @@
 """
-The Eradiate command-line interface, built with Click and Rich.
+The Eradiate command-line interface, built with Typer and Rich.
 """
 
 import logging

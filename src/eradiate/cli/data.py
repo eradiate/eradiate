@@ -12,13 +12,6 @@ from typing_extensions import Annotated
 
 import eradiate
 
-from ..data._util import get_file_list, known_file_lists
-from ..exceptions import DataError
-from ..radprops._absorption import (
-    KNOWN_DATABASES as KNOWN_MOLECULAR_ABSORPTION_DATABASES,
-)
-from ..radprops._absorption import AbsorptionDatabase
-
 app = typer.Typer()
 console = Console(color_system=None)
 
@@ -160,6 +153,9 @@ def fetch(
     """
     Fetch files from the Eradiate data store.
     """
+    from eradiate.data._util import get_file_list, known_file_lists
+    from eradiate.exceptions import DataError
+
     if list:
         print("Known file lists:")
         for file_list in known_file_lists():
@@ -330,6 +326,11 @@ def check(
     """
     Check data for availability and integrity, optionally fix them.
     """
+    from eradiate.radprops import AbsorptionDatabase
+    from eradiate.radprops._absorption import (
+        KNOWN_DATABASES as KNOWN_MOLECULAR_ABSORPTION_DATABASES,
+    )
+
     if list:
         print("Known keywords:")
         for key in KNOWN_MOLECULAR_ABSORPTION_DATABASES.keys():

@@ -11,9 +11,6 @@ import xarray as xr
 from rich.console import Console
 from typing_extensions import Annotated
 
-from eradiate import srf_tools
-from eradiate import unit_registry as ureg
-
 app = typer.Typer()
 console = Console(color_system=None)
 
@@ -64,6 +61,7 @@ def trim(
     Trim a spectral response function.
     Remove all-except-last leading zeros and all-except-first trailing zeros.
     """
+    from eradiate import srf_tools
 
     srf_tools.trim_and_save(
         srf=filename,
@@ -94,6 +92,8 @@ def text_input_to_quantity(
     quantity, optional
         Converted quantity.
     """
+    from eradiate import unit_registry as ureg
+
     if value is None:
         return None
     else:
@@ -196,6 +196,8 @@ def filter(
     """
     Filter a spectral response function data set.
     """
+    from eradiate import srf_tools
+
     # input conversion
     input_path = Path(filename).absolute()
     srf = xr.load_dataset(input_path)
