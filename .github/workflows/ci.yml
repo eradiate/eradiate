@@ -26,7 +26,7 @@ jobs:
           cd ext/mitsuba
           echo "MITSUBA_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Cache Mitsuba
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: build
           key:
@@ -83,7 +83,7 @@ jobs:
           cd ext/mitsuba
           echo "MITSUBA_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Cache Mitsuba
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: build
           key:
