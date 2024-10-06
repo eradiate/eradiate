@@ -368,7 +368,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-1.26.4-py39h474f0d3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/openssl-3.3.2-hb9d3cd8_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pandoc-3.4-ha770c72_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.6-unix_1234567_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.7-unix_1234567_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/python-3.9.20-h13acc7a_1_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/python_abi-3.9-5_cp39.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/readline-8.2-h8228510_1.conda
@@ -589,7 +589,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/numpy-1.26.4-py39h28c39a1_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/openssl-3.3.2-hd23fc13_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pandoc-3.4-h694c41f_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.6-unix_1234567_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.7-unix_1234567_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/python-3.9.20-hf24efe3_1_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/python_abi-3.9-5_cp39.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/readline-8.2-h9e318b2_1.conda
@@ -811,7 +811,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/numpy-1.26.4-py39h7aa2656_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/openssl-3.3.2-h8359307_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pandoc-3.4-hce30654_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.6-unix_1234567_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.7-unix_1234567_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/python-3.9.20-h9e33284_1_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/python_abi-3.9-5_cp39.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/readline-8.2-h92ec313_1.conda
@@ -1033,7 +1033,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/numpy-1.26.4-py39hddb5d58_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/openssl-3.3.2-h2466b09_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pandoc-3.4-h57928b3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.6-win_1234567_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.7-win_1234567_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pthreads-win32-2.9.1-hfa6e2cd_3.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/win-64/python-3.9.20-hfaddaf0_1_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/python_abi-3.9-5_cp39.conda
@@ -3941,7 +3941,7 @@ packages:
   name: eradiate
   version: 0.29.0.dev0
   path: .
-  sha256: 6a1a297ec7a3cddfe37a0415c266e92e39863fb9e2c71a8d3f64e6d7ad9c3257
+  sha256: e32cf17e786c0ed14f034ea11aef1891cfc966ec5e2be6b67caa49ecdae43f43
   requires_dist:
   - aenum
   - attrs>=22.2
@@ -3966,7 +3966,7 @@ packages:
   - tqdm
   - shellingham!=1.5.1
   - xarray>=0.19,!=0.20.*
-  - eradiate-mitsuba==0.3.0 ; extra == 'optional'
+  - eradiate-mitsuba==0.3.0 ; extra == 'kernel'
   - aabbtree ; extra == 'recommended'
   - astropy ; extra == 'recommended'
   - ipython ; extra == 'recommended'
@@ -7143,38 +7143,38 @@ packages:
   requires_python: '>=3.8'
 - kind: conda
   name: pixi-pycharm
-  version: 0.0.6
+  version: 0.0.7
   build: unix_1234567_0
   subdir: noarch
   noarch: generic
-  url: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.6-unix_1234567_0.conda
-  sha256: 156dd789a87ea8b6d7c329efbc202d7f21564d5afabbad9c6ac14017fb47c641
-  md5: c140222c6019ef59c509f4740663fa75
+  url: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.7-unix_1234567_0.conda
+  sha256: 33cc70a3b3c841d6975da698f222dec0c072f2ba299427afce1f56beb2fe99ad
+  md5: 0c3718a067719449788558e9c7791617
   depends:
   - __unix
   - python >=3.8
   license: BSD-3-Clause
   license_family: BSD
   purls: []
-  size: 8833
-  timestamp: 1719726313982
+  size: 8848
+  timestamp: 1728058667930
 - kind: conda
   name: pixi-pycharm
-  version: 0.0.6
+  version: 0.0.7
   build: win_1234567_0
   subdir: noarch
   noarch: generic
-  url: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.6-win_1234567_0.conda
-  sha256: 569f2a3c8b3680a1905dcd9c0ca05523c6ab4f2b4b720a7068d8267ad3ef70d8
-  md5: cb165db90fb6f09710c5a5fd81775bfa
+  url: https://conda.anaconda.org/conda-forge/noarch/pixi-pycharm-0.0.7-win_1234567_0.conda
+  sha256: e6434c128089191069d965037a48cba7070425cf77aa3756ce593a45c1b4724f
+  md5: b0cef105fa4cf45b3c70b5bae4f04d17
   depends:
   - __win
   - python >=3.8
   license: BSD-3-Clause
   license_family: BSD
   purls: []
-  size: 8629
-  timestamp: 1719726272617
+  size: 8680
+  timestamp: 1728058643923
 - kind: pypi
   name: platformdirs
   version: 4.3.6

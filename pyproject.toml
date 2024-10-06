@@ -38,7 +38,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-optional = ["eradiate-mitsuba==0.3.0"]
+kernel = ["eradiate-mitsuba==0.3.0"]
 recommended = [
   "aabbtree", # Used by the leaf collision detection feature
   "astropy", # Used by the solar irradiance spectrum date-based scaling feature
@@ -87,7 +87,7 @@ eradiate = { path = ".", editable = true }
 pandoc = "*"
 
 [tool.pixi.feature.dev.dependencies]
-pixi-pycharm = ">=0.0.6,<0.0.7"
+pixi-pycharm = ">=0.0.7,<0.0.8"
 uv = ">=0.4.15,<0.5" # Used to lock docs dependencies
 
 [tool.pixi.activation]
@@ -142,7 +142,7 @@ docs-lock = { cmd = """
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
-prod = { features = ["py39", "optional", "recommended"], solve-group = "default" }
+prod = { features = ["py39", "kernel", "recommended"], solve-group = "default" }
 test = { features = ["py39", "recommended", "test"], solve-group = "default" }
 dev = { features = [
   "py39",
