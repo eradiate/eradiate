@@ -218,52 +218,46 @@ Making a release of Eradiate
 
          pixi shell -e dev
 
-   3. (Optional) Display allowed target versions and pick the appropriate one:
-
-      .. code:: shell
-
-         pixi run bump-show
-
-   4. In your shell, set the variable ``RELEASE_VERSION`` to the target version
+   3. In your shell, set the variable ``RELEASE_VERSION`` to the target version
       value:
 
       .. code:: shell
 
          export RELEASE_VERSION=X.Y.Z
 
-   5. Create a new branch for the release:
+   4. Create a new branch for the release:
 
       .. code:: shell
 
          git checkout main && git pull upstream main && git checkout -b bump/prepare-v$RELEASE_VERSION``
 
-   6. Make sure that dependencies are correct (check in particular the kernel
+   5. Make sure that dependencies are correct (check in particular the kernel
       version). Use the release checker utility for this:
 
       .. code:: shell
 
          python requirements/release.py check-mitsuba
 
-   7. Bump the version number using `Bump My Version`_:
+   6. Bump the version number using `Bump My Version`_:
 
       .. code:: shell
 
          pixi run bump
 
-   8. Update the change log.
-   9. Commit the changes:
+   7. Update the change log.
+   8. Commit the changes:
 
       .. code:: shell
 
          git commit -am 'Bump version to ${RELEASE_VERSION}'
 
-   10. Update the version and release date fields in ``CITATION.cff``:
+   9. Update the version and release date fields in ``CITATION.cff``:
 
-       .. code:: shell
+      .. code:: shell
 
-          python requirements/release.py update-citation
+         python requirements/release.py update-citation
 
-   11. Push the changes:
+   10. Push the changes:
 
        .. code:: shell
 
