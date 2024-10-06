@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       upload:
-        description: 'Upload wheels to PyPI? (0: no, 1: yes)'
+        description: 'Upload wheels to PyPI? (0: no, 1: yes, 2: publish to TestPyPI)'
         required: true
         default: '0'
 
@@ -59,3 +59,26 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+
+  publish-test:
+    name: Publish to TestPyPI
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/eradiate
+
+    steps:
+      - name: Download all dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish to TestPyPI
+        if: ${{ github.event.inputs.upload == '2'}}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          user: __token__
+          password: ${{ secrets.TESTPYPI_API_TOKEN }}
