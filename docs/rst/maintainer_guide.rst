@@ -249,7 +249,7 @@ Making a release of Eradiate
 
       .. code:: shell
 
-         git commit -am 'Bump version to ${RELEASE_VERSION}'
+         git commit -am 'Bump version to $RELEASE_VERSION'
 
    9. Update the version and release date fields in ``CITATION.cff``:
 
