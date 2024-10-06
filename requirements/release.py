@@ -35,7 +35,7 @@ def get_package_requirements(pyproject_path):
     version_optional = Version(
         [
             x
-            for x in pyproject["project"]["optional-dependencies"]["optional"]
+            for x in pyproject["project"]["optional-dependencies"]["kernel"]
             if x.startswith("eradiate-mitsuba")
         ][0].split("==")[1]
     )
