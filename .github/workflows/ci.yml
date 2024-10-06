@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.comment.body == 'run Eradiate CI' }}
     steps:
-      - uses: xt0rted/pull-request-comment-branch@v1
+      - uses: xt0rted/pull-request-comment-branch@v2
         id: comment-branch
       - uses: actions/checkout@v2
         with:
@@ -67,7 +67,7 @@ jobs:
     if: ${{ github.event.comment.body == 'run Eradiate CI' }}
     needs: build
     steps:
-      - uses: xt0rted/pull-request-comment-branch@v1
+      - uses: xt0rted/pull-request-comment-branch@v2
         id: comment-branch
       - uses: actions/checkout@v2
         with:
