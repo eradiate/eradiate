@@ -20,7 +20,13 @@ from .. import pipelines as pl
 from ..attrs import AUTO, define, documented
 from ..contexts import KernelContext
 from ..exceptions import UnsupportedModeError
-from ..kernel import MitsubaObjectWrapper, mi_render, mi_traverse
+from ..kernel import (
+    KernelDictTemplate,
+    MitsubaObjectWrapper,
+    UpdateMapTemplate,
+    mi_render,
+    mi_traverse,
+)
 from ..quad import Quad
 from ..rng import SeedState
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
@@ -359,6 +365,46 @@ class EarthObservationExperiment(Experiment, ABC):
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )
 
+    kdict: KernelDictTemplate = documented(
+        attrs.field(factory=KernelDictTemplate, converter=KernelDictTemplate),
+        doc="Additional kernel dictionary template appended to the "
+        "experiment-controlled template.",
+        type=".KernelDictTemplate",
+        init_type="mapping",
+        default="{}",
+    )
+
+    kpmap: UpdateMapTemplate = documented(
+        attrs.field(factory=UpdateMapTemplate, converter=UpdateMapTemplate),
+        doc="Additional scene parameter update map template appended to the "
+        "experiment-controlled template.",
+        type=".UpdateMapTemplate",
+        init_type="mapping",
+        default="{}",
+    )
+
+    def kdict_base(self) -> KernelDictTemplate:
+        # This is inefficient and exists at the moment only for debugging purposes
+        return traverse(self.scene)[0]
+
+    def kdict_full(self) -> KernelDictTemplate:
+        # Return the user-defined kdict template merged with additional scene
+        # element contributions
+        kdict = self.kdict_base()
+        kdict.update(self.kdict)
+        return kdict
+
+    def kpmap_base(self) -> UpdateMapTemplate:
+        # This is inefficient and exists at the moment only for debugging purposes
+        return traverse(self.scene)[1]
+
+    def kpmap_full(self) -> UpdateMapTemplate:
+        # Return the user-defined kpmap template merged with additional scene
+        # element contributions
+        kpmap = self.kpmap_base()
+        kpmap.update(self.kpmap)
+        return kpmap
+
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         """
         Generate additional metadata applied to dataset after post-processing.
@@ -475,6 +521,8 @@ class EarthObservationExperiment(Experiment, ABC):
         logger.info("Initializing kernel scene")
 
         kdict_template, umap_template = traverse(self.scene)
+        kdict_template.update(self.kdict)
+        umap_template.update(self.kpmap)
         try:
             self.mi_scene = mi_traverse(
                 mi.load_dict(kdict_template.render(ctx=self.context_init)),
