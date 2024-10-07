@@ -16,6 +16,7 @@ $ eradiate [OPTIONS] COMMAND [ARGS]...
 **Options**:
 
 * `--log-level [CRITICAL|ERROR|WARNING|INFO|DEBUG|NOTSET]`: Set log level.  [default: WARNING]
+* `--debug / --no-debug`: Enable debug mode. This will notably print exceptions with locals.  [default: no-debug]
 * `--install-completion`: Install completion for the current shell.
 * `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 * `--help`: Show this message and exit.

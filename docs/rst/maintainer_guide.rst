@@ -229,7 +229,7 @@ Making a release of Eradiate
 
       .. code:: shell
 
-         git checkout main && git pull upstream main && git checkout -b bump/prepare-v$RELEASE_VERSION``
+         git checkout main && git pull upstream main && git checkout -b bump/prepare-v$RELEASE_VERSION
 
    5. Make sure that dependencies are correct (check in particular the kernel
       version). Use the release checker utility for this:
@@ -249,7 +249,7 @@ Making a release of Eradiate
 
       .. code:: shell
 
-         git commit -am 'Bump version to $RELEASE_VERSION'
+         git commit -am "Bump version to $RELEASE_VERSION"
 
    9. Update the version and release date fields in ``CITATION.cff``:
 
@@ -271,8 +271,14 @@ Making a release of Eradiate
 3. **Release publication**
 
    1. Create a draft release on GitHub and update it.
-   2. Using release candidates, make sure that built Pyhon wheels will work as
-      expected.
+   2. Using release candidates on Test PyPI, make sure that built Pyhon wheels
+      will work as expected. A typical installation command of a Test PyPI
+      release is
+
+      .. code:: shell
+
+         python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ 'eradiate[kernel]==0.30.0rc4'
+
    3. Finalize release notes and create the release tag. **Make sure that the
       release commit is referenced only by one tag.**
    4. Build and upload Python wheels.
