@@ -140,6 +140,7 @@ class MitsubaObjectWrapper:
 def mi_traverse(
     obj: mi.Object,
     umap_template: UpdateMapTemplate | None = None,
+    name_id_override: str | list[str] | bool | None = None,
 ) -> MitsubaObjectWrapper:
     """
     Traverse a node of the Mitsuba scene graph and return a container holding
@@ -153,6 +154,13 @@ def mi_traverse(
     umap_template : .UpdateMapTemplate, optional
         An additional update map template which is to be updated during
         traversal. This is used to perform parameter lookup during traversal.
+
+    name_id_override : str or list of str, optional
+        If set, this argument will be used to select nodes in the scene tree
+        whose names will be "pinned" to their ID. Passed values are used as
+        regular expressions, with all that it implies regarding ID string
+        matching. If this parameter is set to ``True``, a regex that matches
+        anything is used.
 
     Returns
     -------
@@ -177,6 +185,19 @@ def mi_traverse(
         if v.parameter_id is None and v.lookup_strategy is not None
     }
 
+    if name_id_override is None or name_id_override is False:
+        name_id_override = []
+
+    if name_id_override is True:
+        name_id_override = [r".*"]
+
+    if type(name_id_override) is not list:
+        name_id_override = [name_id_override]
+
+    import re
+
+    regexps = [re.compile(k).match for k in name_id_override]
+
     class SceneTraversal(mi.TraversalCallback):
         def __init__(
             self,
@@ -194,10 +215,17 @@ def mi_traverse(
             self.hierarchy = dict() if hierarchy is None else hierarchy
             self.prefixes = set() if prefixes is None else prefixes
 
+            node_id = node.id()
+            if name_id_override and node_id:
+                for r in regexps:
+                    if r(node_id):
+                        name = node.id()
+                        break
+
             if name is not None:
                 ctr, name_len = 1, len(name)
                 while name in self.prefixes:
-                    name = "%s_%i" % (name[:name_len], ctr)
+                    name = f"{name[:name_len]}_{ctr}"
                     ctr += 1
                 self.prefixes.add(name)
 

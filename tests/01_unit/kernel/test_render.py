@@ -2,6 +2,7 @@ from itertools import product
 
 import mitsuba as mi
 import numpy as np
+import pytest
 
 from eradiate import KernelContext
 from eradiate.kernel import (
@@ -14,6 +15,30 @@ from eradiate.kernel import (
 )
 from eradiate.spectral.index import SpectralIndex
 from eradiate.units import unit_registry as ureg
+
+SCENE_DICTS = {
+    "referenced_bsdf": {
+        "type": "scene",
+        "bsdf": {"type": "diffuse", "id": "my_bsdf"},
+        # Leading underscores ensures that shapes will be traverse first
+        "_rectangle_1": {
+            "type": "rectangle",
+            "bsdf": {"type": "ref", "id": "my_bsdf"},
+        },
+        "_rectangle_2": {
+            "type": "rectangle",
+            "bsdf": {"type": "ref", "id": "my_bsdf"},
+        },
+        "_disk_1": {
+            "type": "disk",
+            "bsdf": {"type": "ref", "id": "my_bsdf"},
+        },
+        "_disk_2": {
+            "type": "disk",
+            "bsdf": {"type": "diffuse"},
+        },
+    }
+}
 
 
 def test_type_id_lookup_strategy(mode_mono):
@@ -51,7 +76,7 @@ def test_type_id_lookup_strategy(mode_mono):
         )
 
 
-def test_mi_traverse(mode_mono):
+def test_mi_traverse_lookup(mode_mono):
     mi_scene = mi.load_dict(
         {
             "type": "scene",
@@ -113,6 +138,54 @@ def test_mi_traverse(mode_mono):
         mi_wrapper.umap_template["my_bsdf.reflectance.value"].parameter_id
         == "my_bsdf.reflectance.value"
     )
+
+
+@pytest.mark.parametrize(
+    "scene_dict, name_id_override, expected",
+    [
+        (
+            "referenced_bsdf",
+            False,
+            {
+                "_disk_1.bsdf.reflectance.value",
+                "_disk_1.to_world",
+                "_disk_1.silhouette_sampling_weight",
+                "_disk_2.bsdf.reflectance.value",
+                "_disk_2.to_world",
+                "_disk_2.silhouette_sampling_weight",
+                "_rectangle_1.to_world",
+                "_rectangle_1.silhouette_sampling_weight",
+                "_rectangle_2.to_world",
+                "_rectangle_2.silhouette_sampling_weight",
+            },
+        ),
+        (
+            "referenced_bsdf",
+            "my_bsdf",
+            {
+                "_disk_1.silhouette_sampling_weight",
+                "_disk_1.to_world",
+                "_disk_2.bsdf.reflectance.value",
+                "_disk_2.silhouette_sampling_weight",
+                "_disk_2.to_world",
+                "_rectangle_1.silhouette_sampling_weight",
+                "_rectangle_1.to_world",
+                "_rectangle_2.silhouette_sampling_weight",
+                "_rectangle_2.to_world",
+                "my_bsdf.reflectance.value",
+            },
+        ),
+    ],
+    ids=["referenced_bsdf-no_override", "referenced_bsdf-selected_override"],
+)
+def test_mi_traverse_name_id_override(
+    mode_mono, scene_dict, name_id_override, expected
+):
+    mi_scene = mi.load_dict(SCENE_DICTS[scene_dict])
+
+    mi_wrapper = mi_traverse(mi_scene, name_id_override=name_id_override)
+    assert isinstance(mi_wrapper.parameters, mi.SceneParameters)
+    assert set(mi_wrapper.parameters.keys()) == expected
 
 
 def test_mi_render(mode_mono):
