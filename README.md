@@ -30,8 +30,8 @@ equation.
   <summary>
   Solar reflective spectral region
   </summary>
-  Eradiate ships spectral data within from 280 nm to 2400 nm. This range can be
-  extended with additional data (just ask for it!).
+  Eradiate ships spectral data in the solar reflective region (at least from
+  280 nm to 2500 nm).
   </details>
 
   <details>
@@ -40,10 +40,10 @@ equation.
   </summary>
   These are true monochromatic simulations (as opposed to narrow band
   simulations).
-  Eradiate provides monochromatic absorption datasets spanning the wavelength
-  range [250, 3125] nm.
-  It also supports user-defined absorption data provided it complies with the
-  dataset format specifications.
+  Eradiate provides
+  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/absorption_databases.html">monochromatic absorption databases</a> covering the [250, 3125] nm interval.
+  User-defined absorption databases are also supported (see the
+  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/absorption_databases.html#format-monochromatic">database format</a>).
   </details>
 
   <details>
@@ -54,11 +54,21 @@ equation.
   The correlated <em>k</em>-distribution (CKD) method with configurable
   quadrature rule is used. This method achieves a trade-off between performance
   and accuracy for the simulation of absorption by gases.
-  Eradiate ships with absorption datasets suitable for use within the CKD
-  method in spectral bands of variable width (including 1 nm and 10 nm
-  wavelength bands and 100 cm^-1 wavenumber bands), from 250 nm up to 3125 nm.
-  It also supports user-defined absorption data provided it complies with the
-  dataset format specifications.
+  Eradiate provides
+  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/absorption_databases.html">CKD-ready absorption databases</a>
+  for the [250, 3125] nm
+  interval, with various spectral bin sizes (100 cm⁻¹, 1 nm, 10 nm).
+  User-defined absorption databases are also supported (see the
+  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/absorption_databases.html#format-ckd">database format</a>).
+  </details>
+
+  <details>
+  <summary>
+  Polarization
+  </summary>
+  Eradiate optionally supports polarized light simulation. This feature can be
+  switched on or off to achieve the best compromise between accuracy and
+  performance.
   </details>
   </li>
 
@@ -68,7 +78,7 @@ equation.
   <summary>
   One-dimensional atmospheric profiles
   </summary>
-  Both standard profiles, e.g. the AFGL (1986) profiles, and customized
+  Both standard profiles, <em>e.g.</em> the AFGL (1986) profiles, and customized
   profiles are supported.
   </details>
 
@@ -85,9 +95,9 @@ equation.
 
   <details>
   <summary>
-  Lambertian and RPV reflection models
+  Lambertian, RPV, Ross Thick-Li Sparse and Hapke reflection models
   </summary>
-  Model parameters can be varied against the spectral dimensions.
+  All models can be parametrized against the spectral dimension.
   </details>
 
   <details>
@@ -111,16 +121,19 @@ equation.
 
   <details>
   <summary>
-  Directional illumination model
+  Directional or finite-size illumination model
   </summary>
-  An ideal illumination model with a Delta angular distribution.
+  Eradiate supports both ideal (Delta angular distribution), and realistic
+  (finite angular size) illumination models.
   </details>
 
   <details>
   <summary>
   Many irradiance datasets
   </summary>
-  Pick your favourite—or bring your own.
+  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/solar_irradiance.html#available-datasets">Pick your favourite</a>
+  or
+  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/solar_irradiance.html">bring your own</a>.
   </details>
   </li>
 
@@ -144,8 +157,10 @@ equation.
   <summary>
   Many instrument spectral response functions
   </summary>
-  Our SRF data is very close to the original data, and we provide advice to
-  further clean up the data, trading off accuracy for performance.
+  Our <a href="https://eradiate.readthedocs.io/en/stable/rst/data/srf.html">SRF data</a>
+  is very close to the original data, and we provide advice to
+  further clean up the data and find the right balance between accuracy and
+  performance.
   </details>
   </li>
 
@@ -155,8 +170,7 @@ equation.
   <summary>
   Mitsuba renderer as radiometric kernel
   </summary>
-  We leverage the advanced Python API of this cutting-edge C++ rendering
-  library.
+  We leverage the advanced Python API of a cutting-edge C++ rendering system.
   </details>
 
   <details>
@@ -164,7 +178,9 @@ equation.
   State-of-the-art volumetric path tracing algorithm
   </summary>
   Mitsuba ships a null-collision-based volumetric path tracer which performs
-  well in the cases Eradiate is used for.
+  well in many of the cases Eradiate is used for. We also provide a
+  special-purpose path tracing algorithm for plane-parallel geometries that can
+  perform up to 2 orders of magnitude faster than the null-collision algorithm.
   </details>
   </li>
 
@@ -224,7 +240,8 @@ equation.
   <summary>
   Standard data formats (mostly NetCDF)
   </summary>
-  Eradiate uses predominantly xarray data structures for I/O.
+  Eradiate uses predominantly <a href="https://xarray.dev">Xarray</a> data
+  structures for I/O.
   </details>
   </li>
 </ul>
