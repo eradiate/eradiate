@@ -1,3 +1,4 @@
+# Old tentative CI file, kept for future deployment of a new, scalable CI
 # This is a basic CI pipeline, which will build eradiate and
 # run the test suite on it.
 name: Eradiate build and test
@@ -36,7 +37,7 @@ jobs:
         id: cache
       - name: Build
         shell: bash -l {0}
-        run: |          
+        run: |
           sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y   \
           git              \
           ninja-build      \
@@ -53,7 +54,7 @@ jobs:
           make conda-init
           conda deactivate
           conda activate eradiate
-          
+
           export CC=clang-11
           export CXX=clang++-11
 
