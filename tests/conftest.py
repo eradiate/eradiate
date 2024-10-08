@@ -1,10 +1,13 @@
 import os
 
+import matplotlib as mpl
 import pytest
 
 import eradiate
 
+mpl.use("Agg")
 eradiate.plot.set_style()
+
 
 # ------------------------------------------------------------------------------
 #               Customizable output dir for test artifacts
@@ -75,6 +78,7 @@ def pytest_configure(config):
 # This improves assert handling when using the check_scene_element() function
 pytest.register_assert_rewrite("eradiate.test_tools.types.check_scene_element")
 
+
 # ------------------------------------------------------------------------------
 #                                 Mode fixtures
 # ------------------------------------------------------------------------------
@@ -122,7 +126,6 @@ variant_groups = {
 for name, variants in variant_groups.items():
     generate_fixture_group(name, variants)
 del generate_fixture_group
-
 
 # ------------------------------------------------------------------------------
 #                                 Other fixtures
