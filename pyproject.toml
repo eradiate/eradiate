@@ -79,6 +79,7 @@ platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
 
 [tool.pixi.dependencies]
 numpy = "<2" # Be sure to sync with PyPI requirement
+pixi-pycharm = ">=0.0.7,<0.0.8"
 
 [tool.pixi.pypi-dependencies]
 eradiate = { path = ".", editable = true }
@@ -87,7 +88,6 @@ eradiate = { path = ".", editable = true }
 pandoc = "*"
 
 [tool.pixi.feature.dev.dependencies]
-pixi-pycharm = ">=0.0.7,<0.0.8"
 uv = ">=0.4.15,<0.5" # Used to lock docs dependencies
 
 [tool.pixi.activation]
