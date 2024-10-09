@@ -100,6 +100,43 @@ class UpdateParameter:
         return self.evaluator(ctx)
 
 
+def dict_parameter(maybe_fn=None):
+    """
+    This function wraps another one into a :class:`.UpdateParameter` instance.
+    It is primarily meant to be used as a decorator.
+
+    Parameters
+    ----------
+    maybe_fn : callable, optional
+    """
+    return InitParameter if maybe_fn is None else InitParameter(maybe_fn)
+
+
+def scene_parameter(
+    maybe_fn=None, flags: UpdateParameter.Flags = UpdateParameter.Flags.ALL
+):
+    """
+    This decorator wraps the function to which it is applied into an
+    :class:`.UpdateParameter` instance.
+
+    Parameters
+    ----------
+    maybe_fn : callable, optional
+
+    flags : .UpdateParameter.Flags, optional
+        Scene parameter flags used for filtering during a scene parameter loop.
+
+    Returns
+    -------
+    callable
+    """
+
+    def wrap(f):
+        return UpdateParameter(f, flags=flags)
+
+    return wrap if maybe_fn is None else wrap(maybe_fn)
+
+
 @attrs.define(slots=False)
 class KernelDictTemplate(UserDict):
     """
