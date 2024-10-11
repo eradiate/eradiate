@@ -6,7 +6,6 @@ from typing import List, Optional
 
 import typer
 from rich.console import Console
-from rich.logging import RichHandler
 from ruamel.yaml import YAML
 from typing_extensions import Annotated
 
@@ -15,11 +14,7 @@ import eradiate
 app = typer.Typer()
 console = Console(color_system=None)
 
-FORMAT = "%(message)s"
-logging.basicConfig(
-    level="INFO", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
-)
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 @app.callback()

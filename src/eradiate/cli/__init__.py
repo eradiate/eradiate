@@ -43,7 +43,7 @@ def cli(
         app.pretty_exceptions_enable = True
 
     logging.basicConfig(
-        level=log_level.upper(),
+        level=log_level.name,
         format="%(message)s",
         datefmt="[%X]",
         handlers=[RichHandler(rich_tracebacks=True)],
