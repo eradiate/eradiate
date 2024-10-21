@@ -242,7 +242,7 @@ def dashboard_particle_dataset(
     df["theta"] = np.arccos(df["mu"])
     phase_min = df["phase"].min()
     phase_max = df["phase"].max()
-    print(f"{phase_min = }, {phase_max = }")
+    # print(f"{phase_min = }, {phase_max = }")
 
     w_chunks = [
         (chunk.min(), chunk.max())
