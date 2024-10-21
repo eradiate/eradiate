@@ -330,6 +330,7 @@ Quick access
    CheckerboardBSDF
    HapkeBSDF
    LambertianBSDF
+   OceanLegacyBSDF
    MQDiffuseBSDF
    OpacityMaskBSDF
    RPVBSDF
