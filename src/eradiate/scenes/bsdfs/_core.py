@@ -16,6 +16,7 @@ bsdf_factory.register_lazy_batch(
         ("_opacity_mask.OpacityMaskBSDF", "opacity_mask", {}),
         ("_rpv.RPVBSDF", "rpv", {}),
         ("_rtls.RTLSBSDF", "rtls", {}),
+        ("_ocean_legacy.OceanLegacyBSDF", "ocean_legacy", {}),
     ],
     cls_prefix="eradiate.scenes.bsdfs",
 )
