@@ -257,44 +257,8 @@ class AbsorptionDatabase:
 
     @staticmethod
     def _make_index(filenames) -> pd.DataFrame:
-        headers = [
-            "filename",
-            "wn_min [cm^-1]",
-            "wn_max [cm^-1]",
-            "wl_min [nm]",
-            "wl_max [nm]",
-        ]
-        rows = []
-
-        for filename in filenames:
-            filename = Path(filename)
-            with xr.open_dataset(filename) as ds:
-                w_u = ureg(ds.w.units)
-
-                if w_u.check("[length]^-1"):  # wavenumber mode
-                    wn_min = float(ds.w.min()) * w_u
-                    wn_max = float(ds.w.max()) * w_u
-                    wl_min = 1.0 / wn_max
-                    wl_max = 1.0 / wn_min
-                elif w_u.check("[length]"):  # wavelength mode
-                    wl_min = float(ds.w.min()) * w_u
-                    wl_max = float(ds.w.max()) * w_u
-                    wn_min = 1.0 / wl_max
-                    wn_max = 1.0 / wl_min
-                else:
-                    raise ValueError(f"Cannot interpret units '{w_u}'")
-
-                rows.append(
-                    [
-                        filename.name,
-                        wn_min.m_as("1/cm"),
-                        wn_max.m_as("1/cm"),
-                        wl_min.m_as("nm"),
-                        wl_max.m_as("nm"),
-                    ]
-                )
-
-        return pd.DataFrame(rows, columns=headers)
+        # Implementation is concrete class-specific
+        raise NotImplementedError
 
     @staticmethod
     def _make_spectral_coverage(filenames) -> pd.DataFrame:
@@ -865,6 +829,47 @@ class MonoAbsorptionDatabase(AbsorptionDatabase):
     AbsorptionDatabase
     """
 
+    @staticmethod
+    def _make_index(filenames) -> pd.DataFrame:
+        headers = [
+            "filename",
+            "wn_min [cm^-1]",
+            "wn_max [cm^-1]",
+            "wl_min [nm]",
+            "wl_max [nm]",
+        ]
+        rows = []
+
+        for filename in filenames:
+            filename = Path(filename)
+            with xr.open_dataset(filename) as ds:
+                w_u = ureg(ds.w.units)
+
+                if w_u.check("[length]^-1"):  # wavenumber mode
+                    wn_min = float(ds.w.min()) * w_u
+                    wn_max = float(ds.w.max()) * w_u
+                    wl_min = 1.0 / wn_max
+                    wl_max = 1.0 / wn_min
+                elif w_u.check("[length]"):  # wavelength mode
+                    wl_min = float(ds.w.min()) * w_u
+                    wl_max = float(ds.w.max()) * w_u
+                    wn_min = 1.0 / wl_max
+                    wn_max = 1.0 / wl_min
+                else:
+                    raise ValueError(f"Cannot interpret units '{w_u}'")
+
+                rows.append(
+                    [
+                        filename.name,
+                        wn_min.m_as("1/cm"),
+                        wn_max.m_as("1/cm"),
+                        wl_min.m_as("nm"),
+                        wl_max.m_as("nm"),
+                    ]
+                )
+
+        return pd.DataFrame(rows, columns=headers).sort_values("wl_min [nm]")
+
     @classmethod
     def from_dict(cls, value: dict) -> MonoAbsorptionDatabase:
         # Inherit docstring
@@ -916,6 +921,47 @@ class CKDAbsorptionDatabase(AbsorptionDatabase):
     --------
     AbsorptionDatabase
     """
+
+    @staticmethod
+    def _make_index(filenames) -> pd.DataFrame:
+        headers = [
+            "filename",
+            "wn_min [cm^-1]",
+            "wn_max [cm^-1]",
+            "wl_min [nm]",
+            "wl_max [nm]",
+        ]
+        rows = []
+
+        for filename in filenames:
+            filename = Path(filename)
+            with xr.open_dataset(filename) as ds:
+                w_u = ureg(ds.w.units)
+
+                if w_u.check("[length]^-1"):  # wavenumber mode
+                    wn_min = float(ds.wbounds.sel(wbv="lower").min()) * w_u
+                    wn_max = float(ds.wbounds.sel(wbv="upper").max()) * w_u
+                    wl_min = 1.0 / wn_max
+                    wl_max = 1.0 / wn_min
+                elif w_u.check("[length]"):  # wavelength mode
+                    wl_min = float(ds.wbounds.sel(wbv="lower").min()) * w_u
+                    wl_max = float(ds.wbounds.sel(wbv="upper").max()) * w_u
+                    wn_min = 1.0 / wl_max
+                    wn_max = 1.0 / wl_min
+                else:
+                    raise ValueError(f"Cannot interpret units '{w_u}'")
+
+                rows.append(
+                    [
+                        filename.name,
+                        wn_min.m_as("1/cm"),
+                        wn_max.m_as("1/cm"),
+                        wl_min.m_as("nm"),
+                        wl_max.m_as("nm"),
+                    ]
+                )
+
+        return pd.DataFrame(rows, columns=headers).sort_values("wl_min [nm]")
 
     @classmethod
     def from_dict(cls, value: dict) -> CKDAbsorptionDatabase:
