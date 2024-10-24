@@ -282,7 +282,7 @@ The most general citation is as follows:
 
 ```bibtex
 @software{Eradiate,
-    author = {Leroy, Vincent and Nollet, Yvan and Schunke, Sebastian and Misk, Nicolas and Govaerts, Yves},
+    author = {Leroy, Vincent and Nollet, Yvan and Schunke, Sebastian and Misk, Nicolas and Marton, Nicolae and Govaerts, Yves},
     license = {LGPL-3.0},
     title = {Eradiate radiative transfer model},
     url = {https://github.com/eradiate/eradiate},
@@ -291,20 +291,21 @@ The most general citation is as follows:
 }
 ```
 
-If you want to reference a specific version, you can update the previous citation
-with `doi`, `year` and `version` fields populated with metadata retrieved from our
+If you want to reference a specific version, you can update the previous
+citation with `doi`, `year` and `version` fields populated with metadata
+retrieved from our
 [Zenodo records](https://zenodo.org/search?q=parent.id%3A7224314&f=allversions%3Atrue&l=list&p=1&s=10&sort=version).
 Example:
 
 ```bibtex
 @software{Eradiate,
-    author = {Leroy, Vincent and Nollet, Yvan and Schunke, Sebastian and Misk, Nicolas and Govaerts, Yves},
+    author = {Leroy, Vincent and Nollet, Yvan and Schunke, Sebastian and Misk, Nicolas and Marton, Nicolae and Govaerts, Yves},
     license = {LGPL-3.0},
     title = {Eradiate radiative transfer model},
     url = {https://github.com/eradiate/eradiate},
-    doi = {10.5281/zenodo.10411036},
-    year = {2023},
-    version = {0.25.0},
+    doi = {10.5281/zenodo.13897261},
+    year = {2024},
+    version = {0.29.0},
 }
 ```
 
