@@ -25,7 +25,7 @@ from ..scenes.illumination import (
 from ..spectral import SpectralResponseFunction
 from ..spectral.grid import SpectralGrid
 
-_MODE_IDS_CKD = set(modes(lambda x: x.is_ckd).keys())
+_MODE_IDS_CKD = set(modes(lambda x: x.is_ckd))
 
 
 def _parameterize_aggregate_ckd_quad(var_name):

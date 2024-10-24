@@ -475,7 +475,9 @@ def mode() -> Mode | None:
     return _active_mode
 
 
-def modes(filter: t.Callable[[Mode], bool] | None = None) -> dict[str, Mode]:
+def modes(
+    filter: t.Callable[[Mode], bool] | None = None, asdict: bool = False
+) -> list[str] | dict[str, Mode]:
     """
     Get list of registered operational modes.
 
@@ -485,9 +487,13 @@ def modes(filter: t.Callable[[Mode], bool] | None = None) -> dict[str, Mode]:
         A callable used to filter the returned modes. Operates on a
         :class:`.Mode` instance.
 
+    asdict : bool, default: False
+        If ``True``, returns a mode ID → mode instance dictionary; otherwise,
+        returns a list of mode IDs only.
+
     Returns
     -------
-    modes: dict[str, .Mode]
+    modes : list[str] or dict[str, .Mode]
         List of registered operational modes.
 
     Examples
@@ -503,7 +509,10 @@ def modes(filter: t.Callable[[Mode], bool] | None = None) -> dict[str, Mode]:
     if filter is None:
         filter = lambda x: True  # noqa: E731
 
-    return {k: v for k, v in _mode_registry().items() if filter(v)}
+    if not asdict:
+        return [k for k, v in _mode_registry().items() if filter(v)]
+    else:
+        return {k: v for k, v in _mode_registry().items() if filter(v)}
 
 
 def set_mode(mode_id: str):
