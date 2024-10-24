@@ -475,6 +475,51 @@ class RadProfile(ABC):
         raise NotImplementedError
 
     @singledispatchmethod
+    def eval_depolarization_factor(
+        self,
+        si: SpectralIndex,
+        zgrid: ZGrid | None = None,
+    ) -> pint.Quantity:
+        """
+        Evaluate depolarization factor at given spectral index.
+
+        Parameters
+        ----------
+        si : :class:`.SpectralIndex`
+            Spectral index.
+
+        zgrid : :class:`.ZGrid`, optional
+            The altitude grid for which the depolarization factor is evaluated.
+            If unset, a profile-specific default is used.
+
+        Returns
+        -------
+        quantity
+            Evaluated depolarization factor as an array with length equal
+            to the number of layers if it is parametrized over layers,
+            otherwise as an array of length 1.
+        """
+        raise NotImplementedError
+
+    @eval_depolarization_factor.register(MonoSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_depolarization_factor_mono(w=si.w, zgrid=zgrid)
+
+    @eval_depolarization_factor.register(CKDSpectralIndex)
+    def _(self, si, zgrid: ZGrid) -> pint.Quantity:
+        return self.eval_depolarization_factor_ckd(w=si.w, g=si.g, zgrid=zgrid)
+
+    def eval_depolarization_factor_mono(
+        self, w: pint.Quantity, zgrid: ZGrid
+    ) -> pint.Quantity:
+        raise NotImplementedError
+
+    def eval_depolarization_factor_ckd(
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
+    ) -> pint.Quantity:
+        raise NotImplementedError
+
+    @singledispatchmethod
     def eval_dataset(
         self,
         si: SpectralIndex,

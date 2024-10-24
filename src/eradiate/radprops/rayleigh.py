@@ -156,3 +156,71 @@ def air_refractive_index(
     index = 1 + x_scaled * 1e-8
 
     return index
+
+
+def bates_depolarization(wavelength: pint.Quantity = ureg.Quantity(550.0, "nm")):
+    """
+    Compute depolarization using Bates' King factor :cite:`Bates1984RayleighScatteringAir`.
+    Only parametrized on wavelength.
+
+    Parameters
+    ----------
+    wavelength : quantity
+        Wavelength.
+
+    Returns
+    -------
+    Quantity : scalar
+        The depolarization factor parametrized on the wavelength. [dimensionless]
+    """
+    # The Bates (1984) dataset is indexed by wavelengths in microns
+    # as well, meaning that this conversion is anyway necessary.
+    w = wavelength.to("micron")
+
+    BATES_1984_DATA = _BATES_1984_DATA().data
+    f_left = BATES_1984_DATA.f.values[0]
+    f_right = BATES_1984_DATA.f.values[-1]
+    king_factor = BATES_1984_DATA.f.interp(
+        w=w.magnitude, kwargs={"fill_value": (f_left, f_right)}
+    ).values
+
+    depol = 6 * (king_factor - 1) / (7 * king_factor + 3)
+    return np.atleast_1d(depol) * ureg.dimensionless
+
+
+def bodhaine_depolarization(
+    wavelength: pint.Quantity = ureg.Quantity(550.0, "nm"),
+    x_CO2: pint.Quantity = ureg.Quantity(0.0004, "dimensionless"),
+):
+    """
+    Compute depolarization using Bodhaine's King factor :cite:p:`Bodhaine1999RayleighOpticalDepth`.
+    Parametrized over wavelength and CO2 concentration, other components
+    are assumed to be at a fixed proportion. Valid at 273.15 K,
+    1013.25 mb, for dry air.
+
+    Parameters
+    ----------
+    wavelength : quantity
+        Wavelength.
+
+    x_CO2 : quantity
+        Array of CO2 mole fraction in the atmosphere.
+
+    Returns
+    -------
+    quantity : array of shape (N,)
+        Array of depolarization factor for each level [dimensionless]
+    """
+    w_um = wavelength.m_as("um")
+
+    # part per volume by percent
+    C_CO2 = x_CO2.m_as("%")
+    total = 78.084 + 20.946 + 0.934 + C_CO2
+
+    # from Bates (1984), wavelength is in micron
+    F_N2 = 1.034 + 3.17 * 1e-4 * 1 / w_um**2
+    F_O2 = 1.096 + 1.385 * 1e-3 * 1 / w_um**2 + 1.448 * 1e-4 * 1 / w_um**4
+    F_air = (78.084 * F_N2 + 20.946 * F_O2 + 0.934 * 1.00 + C_CO2 * 1.15) / total
+
+    # calculate the depolarization
+    return 6 * (F_air - 1) / (7 * F_air + 3) * ureg.dimensionless

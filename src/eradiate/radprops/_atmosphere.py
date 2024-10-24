@@ -13,7 +13,7 @@ from joseki.profiles.core import interp
 
 from ._absorption import AbsorptionDatabase
 from ._core import RadProfile, ZGrid, make_dataset
-from .rayleigh import compute_sigma_s_air
+from .rayleigh import bates_depolarization, bodhaine_depolarization, compute_sigma_s_air
 from ..attrs import define, documented
 from ..converters import convert_thermoprops
 from ..units import to_quantity
@@ -100,6 +100,15 @@ class AtmosphereRadProfile(RadProfile):
         "instead set to zero.",
         type="bool",
         default="True",
+    )
+
+    rayleigh_depolarization: None | np.ndarray | str = documented(
+        attrs.field(kw_only=True, default=None),
+        doc="Depolarization factor of the rayleigh phase function."
+        " - None  : default scalar value is used."
+        " - float : scalar value is used for the whole medium."
+        " - str   : name of the function used to calculate the factor."
+        "Available functions are :['bates', 'bodhaine'].",
     )
 
     _zgrid: ZGrid | None = attrs.field(default=None, init=False)
@@ -233,3 +242,38 @@ class AtmosphereRadProfile(RadProfile):
             sigma_a=self.eval_sigma_a_ckd(w=w, g=g, zgrid=zgrid),
             sigma_s=self.eval_sigma_s_ckd(w=w, g=g, zgrid=zgrid),
         ).squeeze()
+
+    def eval_depolarization_factor_mono(
+        self, w: pint.Quantity, zgrid: ZGrid
+    ) -> pint.Quantity:
+        if self.has_scattering:
+            if isinstance(self.rayleigh_depolarization, np.ndarray):
+                return np.atleast_1d(self.rayleigh_depolarization) * ureg.dimensionless
+
+            elif isinstance(self.rayleigh_depolarization, str):
+                if self.rayleigh_depolarization == "bates":
+                    return bates_depolarization(wavelength=w)
+
+                elif self.rayleigh_depolarization == "bodhaine":
+                    thermoprops = self._thermoprops_interp(zgrid)
+                    depol = bodhaine_depolarization(
+                        wavelength=w,
+                        x_CO2=to_quantity(thermoprops.x_CO2),
+                    )
+                    return 0.5 * (depol[1:] + depol[:-1])
+                else:
+                    NotImplementedError
+
+            elif self.rayleigh_depolarization is None:
+                return np.atleast_1d(0.0) * ureg.dimensionless
+
+        else:
+            return np.atleast_1d(0.0) * ureg.dimensionless
+
+    def eval_depolarization_factor_ckd(
+        self,
+        w: pint.Quantity,
+        g: float,
+        zgrid: ZGrid,
+    ) -> pint.Quantity:
+        return self.eval_depolarization_factor_mono(w=w, zgrid=zgrid)

@@ -14,7 +14,7 @@ import eradiate
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ..core import traverse
-from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
+from ..phase import PhaseFunction, RayleighPhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...converters import convert_thermoprops
@@ -113,19 +113,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         init_type="Dataset or path-like or dict",
     )
 
-    _phase: PhaseFunction = documented(
-        attrs.field(
-            kw_only=True,
-            factory=lambda: RayleighPhaseFunction(),
-            converter=phase_function_factory.convert,
-            validator=attrs.validators.instance_of(PhaseFunction),
-        ),
-        doc="Phase function.",
-        type=":class:`.PhaseFunction`",
-        init_type=":class:`.PhaseFunction` or dict",
-        default=":class:`RayleighPhaseFunction() <.RayleighPhaseFunction>`",
-    )
-
     has_absorption: bool = documented(
         attrs.field(kw_only=True, default=True, converter=bool),
         doc="Absorption switch. If ``True``, the absorption coefficient is "
@@ -140,6 +127,21 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         "computed. Else, the scattering coefficient is set to zero.",
         type="bool",
         default="True",
+    )
+
+    rayleigh_depolarization: np.ndarray | str = documented(
+        attrs.field(
+            converter=lambda x: x
+            if isinstance(x, str)
+            else np.array(x, dtype=np.float64),
+            kw_only=True,
+            default=np.array(0.0),
+        ),
+        doc="Depolarization factor of the rayleigh phase function."
+        " - None  : default scalar value is used."
+        " - float : scalar value is used for the whole medium."
+        " - str   : name of the function used to calculate the factor."
+        "Available functions are :['bates', 'bodhaine'].",
     )
 
     @has_absorption.validator
@@ -185,6 +187,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             has_scattering=self.has_scattering,
             has_absorption=self.has_absorption,
             absorption_data=self.absorption_data,
+            rayleigh_depolarization=self.rayleigh_depolarization,
         )
 
     # --------------------------------------------------------------------------
@@ -218,7 +221,15 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def phase(self) -> PhaseFunction:
         # Inherit docstring
-        return self._phase
+
+        def eval_depolarization_factor(si: SpectralIndex) -> np.ndarray:
+            return self.eval_depolarization_factor(si).m_as("dimensionless")
+
+        # pass callable for depolarization to phase function for InitParams and UpdateParams.
+        depolarization = eval_depolarization_factor
+        return RayleighPhaseFunction(
+            depolarization=depolarization, geometry=self.geometry
+        )
 
     @property
     def radprops_profile(self) -> RadProfile:
@@ -257,6 +268,14 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_sigma_s(
+            si,
+            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+        )
+
+    def eval_depolarization_factor(
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
+    ) -> pint.Quantity:
+        return self.radprops_profile.eval_depolarization_factor(
             si,
             zgrid=self.geometry.zgrid if zgrid is None else zgrid,
         )
