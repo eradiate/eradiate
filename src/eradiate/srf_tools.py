@@ -1001,7 +1001,7 @@ def filter_srf(
     save(ds=filtered, path=output_path, verbose=verbose, dry_run=dry_run)
 
 
-@ureg.wraps(ret=None, args=("nm", "nm", None, "nm", "nm", None), strict=False)
+@ureg.wraps(ret=None, args=("nm", "nm", None, "nm", "nm", None, None), strict=False)
 def make_gaussian(
     wl_center: pint.Quantity,
     fwhm: pint.Quantity,
@@ -1009,6 +1009,7 @@ def make_gaussian(
     wl: pint.Quantity | None = None,
     wl_res: pint.Quantity | float = 1.0,
     pad: bool = False,
+    normalize: bool = True,
 ) -> xr.Dataset:
     """
     Generate a Gaussian spectral response function dataset from central
@@ -1034,10 +1035,14 @@ def make_gaussian(
 
     wl_res : quantity or float, optional
         Resolution of the automatic spectral mesh if relevant.
-        If passed as an array, the value is interpreted as being given in nm.
+        If passed as a float, the value is interpreted as being given in nm.
 
     pad : bool, default: False
         If True, pad SRF data with leading and trailing zeros.
+
+    normalize : bool, default: True
+        If ``True``, the generated SRF data is normalized to have a maximum
+        equal to 1.
 
     Returns
     -------
@@ -1060,12 +1065,25 @@ def make_gaussian(
     wl_max = wl_center + cutoff * sigma
     wl_mask = (wl >= wl_min) & (wl <= wl_max)
 
+    if pad:  # Apply zero-padding if requested
+        i_min = np.argwhere(wl_mask).min() - 1
+        i_max = np.argwhere(wl_mask).max() + 1
+        wl_mask[[i_min, i_max]] = True
+        values_result = values[wl_mask]
+        values_result[[0, -1]] = 0.0
+    else:  # Otherwise just select
+        values_result = values[wl_mask]
+
     # Build output dataset
+    if normalize:
+        values_result /= values_result.max()
+    wl_result = wl[wl_mask]
+
     result = xr.Dataset(
         data_vars={
             "srf": (
                 ["w"],
-                values[wl_mask],
+                values_result,
                 {
                     "standard_name": "spectral_response_function",
                     "long_name": "spectral response function",
@@ -1076,7 +1094,7 @@ def make_gaussian(
         coords={
             "w": (
                 ["w"],
-                wl[wl_mask],
+                wl_result,
                 {
                     "standard_name": "radiation_wavelength",
                     "long_name": "wavelength",
@@ -1091,9 +1109,5 @@ def make_gaussian(
         "long_name": "spectral response function uncertainty",
         "units": "dimensionless",
     }
-
-    # Pad if requested
-    if pad:
-        result = pad_zeros(result)
 
     return result
