@@ -16,6 +16,10 @@
 [zenodo-badge]: https://img.shields.io/badge/doi-10.5281/zenodo.7224314-blue.svg?style=flat-square
 [zenodo-url]: https://zenodo.org/records/7224314
 
+![Development supported by ESA and the European Commission (light mode)](docs/_static/esa_copernicus-logos-light.svg#gh-light-mode-only)
+
+![Development supported by ESA and the European Commission (dark mode)](docs/_static/esa_copernicus-logos-dark.svg#gh-dark-mode-only)
+
 Eradiate is a modern radiative transfer simulation software package for Earth
 observation applications. Its main focus is accuracy, and for that purpose, it
 uses the Monte Carlo ray tracing method to solve the radiative transfer
