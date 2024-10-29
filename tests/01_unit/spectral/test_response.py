@@ -3,7 +3,7 @@ import pytest
 
 from eradiate import unit_registry as ureg
 from eradiate.spectral import SpectralResponseFunction
-from eradiate.spectral.response import BandSRF, DeltaSRF, UniformSRF
+from eradiate.spectral.response import BandSRF, DeltaSRF, UniformSRF, make_gaussian
 
 
 def test_uniform_srf():
@@ -127,3 +127,63 @@ def test_band_srf():
 def test_convert(value, expected):
     converted = SpectralResponseFunction.convert(value)
     assert isinstance(converted, expected)
+
+
+@pytest.mark.parametrize(
+    "wl_center, fwhm, cutoff, wl, pad, expected_srf, expected_w",
+    [
+        (
+            0.0,
+            1.0,
+            3.0,
+            np.linspace(-5, 5, 11),
+            False,
+            [0.0625, 1.0, 0.0625],
+            [-1.0, 0.0, 1.0],
+        ),
+        (
+            0.0,
+            3.0,
+            3.0,
+            np.linspace(-5, 5, 11),
+            False,
+            [0.0625, 0.291632, 0.734867, 1.0, 0.734867, 0.291632, 0.0625],
+            [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0],
+        ),
+        (
+            0.0,
+            1.0,
+            3.0,
+            np.linspace(-1, 1, 11),
+            False,
+            [
+                0.0625,
+                0.169576,
+                0.368567,
+                0.641713,
+                0.895025,
+                1.0,
+                0.895025,
+                0.641713,
+                0.368567,
+                0.169576,
+                0.0625,
+            ],
+            np.linspace(-1, 1, 11),
+        ),
+        (550.0, 1.0, 3.0, None, False, [0.0625, 1.0, 0.0625], [549.0, 550.0, 551.0]),
+        (
+            550.0,
+            1.0,
+            3.0,
+            None,
+            True,
+            [0.0, 0.0625, 1.0, 0.0625, 0.0],
+            [548.0, 549.0, 550.0, 551.0, 552.0],
+        ),
+    ],
+)
+def test_make_gaussian(wl_center, fwhm, cutoff, wl, pad, expected_srf, expected_w):
+    ds = make_gaussian(wl_center, fwhm, cutoff=cutoff, wl=wl, pad=pad)
+    np.testing.assert_allclose(ds.srf.data, expected_srf, rtol=1e-5)
+    np.testing.assert_allclose(ds.w.data, expected_w, rtol=1e-5)
