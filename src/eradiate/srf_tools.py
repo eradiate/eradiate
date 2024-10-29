@@ -23,6 +23,7 @@ from .exceptions import DataError
 from .typing import PathLike
 from .units import to_quantity
 from .units import unit_registry as ureg
+from .util.deprecation import deprecated
 
 _trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz
 
@@ -1001,16 +1002,13 @@ def filter_srf(
     save(ds=filtered, path=output_path, verbose=verbose, dry_run=dry_run)
 
 
-@ureg.wraps(ret=None, args=("nm", "nm", None, "nm", "nm", None, None), strict=False)
-def make_gaussian(
-    wl_center: pint.Quantity,
-    fwhm: pint.Quantity,
-    cutoff: float = 3.0,
-    wl: pint.Quantity | None = None,
-    wl_res: pint.Quantity | float = 1.0,
-    pad: bool = False,
-    normalize: bool = True,
-) -> xr.Dataset:
+@deprecated(
+    deprecated_in="0.29.2",
+    removed_in="0.31.0",
+    details="eradiate.srf_tools.make_gaussian is moved to "
+    "eradiate.spectral.response.make_gaussian",
+)
+def make_gaussian(*args, **kwargs) -> xr.Dataset:
     """
     Generate a Gaussian spectral response function dataset from central
     wavelength and full width at half maximum values.
@@ -1050,64 +1048,6 @@ def make_gaussian(
         A dataset compliant with the Eradiate SRF format. The uncertainty
         variable is set to NaN.
     """
-    # Generate default mesh if necessary
-    if wl is None:
-        wl = np.arange(0.0, 5001.0, wl_res)
+    from eradiate.spectral.response import make_gaussian as _make_gaussian
 
-    # Infer standard deviation
-    sigma = 0.5 * fwhm / np.sqrt(2.0 * np.log(2.0))
-
-    # Build baseline distribution
-    values = np.exp(-0.5 * np.power((wl - wl_center) / sigma, 2)) / (sigma * np.sqrt(2))
-
-    # Prepare cutoff selection
-    wl_min = wl_center - cutoff * sigma
-    wl_max = wl_center + cutoff * sigma
-    wl_mask = (wl >= wl_min) & (wl <= wl_max)
-
-    if pad:  # Apply zero-padding if requested
-        i_min = np.argwhere(wl_mask).min() - 1
-        i_max = np.argwhere(wl_mask).max() + 1
-        wl_mask[[i_min, i_max]] = True
-        values_result = values[wl_mask]
-        values_result[[0, -1]] = 0.0
-    else:  # Otherwise just select
-        values_result = values[wl_mask]
-
-    # Build output dataset
-    if normalize:
-        values_result /= values_result.max()
-    wl_result = wl[wl_mask]
-
-    result = xr.Dataset(
-        data_vars={
-            "srf": (
-                ["w"],
-                values_result,
-                {
-                    "standard_name": "spectral_response_function",
-                    "long_name": "spectral response function",
-                    "units": "dimensionless",
-                },
-            ),
-        },
-        coords={
-            "w": (
-                ["w"],
-                wl_result,
-                {
-                    "standard_name": "radiation_wavelength",
-                    "long_name": "wavelength",
-                    "units": "nm",
-                },
-            )
-        },
-    )
-    result["srf_u"] = xr.full_like(result.srf, np.nan)
-    result.srf_u.attrs = {
-        "standard_name": "spectral_response_function_uncertainty",
-        "long_name": "spectral response function uncertainty",
-        "units": "dimensionless",
-    }
-
-    return result
+    return _make_gaussian(*args, **kwargs)

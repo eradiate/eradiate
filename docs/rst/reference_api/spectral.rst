@@ -26,6 +26,14 @@ Spectral response functions
    BandSRF
    DeltaSRF
 
+Spectral response utilities
+---------------------------
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   response.make_gaussian
+
 Spectral indexes
 ----------------
 
