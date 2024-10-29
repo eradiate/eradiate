@@ -236,7 +236,7 @@ Making a release of Eradiate
 
       .. code:: shell
 
-         python requirements/release.py check-mitsuba
+         python resources/release.py check-mitsuba
 
    6. Bump the version number using `Bump My Version`_:
 
@@ -255,7 +255,7 @@ Making a release of Eradiate
 
       .. code:: shell
 
-         python requirements/release.py update-citation
+         python resources/release.py update-citation
 
    10. Push the changes:
 
