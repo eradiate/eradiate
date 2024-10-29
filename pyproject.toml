@@ -8,7 +8,7 @@ description = "A radiative transfer model for the Earth observation community"
 license = { text = "LGPLv3" }
 maintainers = [{ name = "The Eradiate Team" }]
 name = "eradiate"
-readme = "README.md"
+readme = "resources/README_PyPI.md"
 requires-python = ">=3.9"
 version = "0.29.2-dev0"
 dependencies = [

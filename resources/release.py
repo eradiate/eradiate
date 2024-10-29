@@ -298,5 +298,21 @@ def update_citation():
         f.write(citation_file)
 
 
+@cli.command()
+def update_pypi_readme():
+    """
+    Update README for PyPI.
+    """
+    split_str = "Eradiate is a modern radiative transfer simulation software package"
+
+    with open("README.md", "r") as f:
+        readme_content = f.read()
+
+    stripped_content = split_str + readme_content.split(split_str)[1]
+
+    with open("resources/README_pypi.md", "w") as f:
+        f.write(stripped_content)
+
+
 if __name__ == "__main__":
     cli()
