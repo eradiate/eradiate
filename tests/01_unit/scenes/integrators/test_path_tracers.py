@@ -194,4 +194,4 @@ def test_stokes_moment_construct(mode_mono_polarized_single, integrator_cls, kwa
 
     kdict_template, _ = traverse(integrator)
     assert kdict_template.data["type"] == "moment"
-    assert kdict_template.data["nested"]["type"] == "stokes"
+    assert kdict_template.data["nested.type"] == "stokes"

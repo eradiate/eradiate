@@ -161,11 +161,11 @@ class KernelDictTemplate(UserDict):
     data: dict = attrs.field(factory=dict, converter=flatten)
 
     def __setitem__(self, key, value):
-        # Inherit docstring
-
         if isinstance(value, Mapping):
             value = flatten(value, name=key)
-        self.data.update(value)
+            self.data.update(value)
+        else:
+            super().__setitem__(key, value)
 
     def render(
         self, ctx: KernelContext, nested: bool = True, drop: bool = True
@@ -176,7 +176,7 @@ class KernelDictTemplate(UserDict):
 
         Parameters
         ----------
-        ctx : :class:`.KernelContext`
+        ctx : .KernelContext
             A kernel dictionary context.
 
         nested : bool, optional
