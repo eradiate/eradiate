@@ -8,13 +8,14 @@ from __future__ import annotations
 import enum
 import typing as t
 from collections import UserDict
+from collections.abc import Mapping
 
 import attrs
 import mitsuba as mi
 
 from ..attrs import define, documented
 from ..contexts import KernelContext
-from ..util.misc import nest
+from ..util.misc import flatten, nest
 
 
 @define
@@ -150,9 +151,21 @@ class KernelDictTemplate(UserDict):
     interpreted by the :func:`mitsuba.load_dict` function, or an
     :class:`.InitParameter` object which must be rendered before the template
     can be instantiated.
+
+    Notes
+    -----
+    If a nested mapping is used for initialization or assignment, it is
+    automatically flattened.
     """
 
-    data: dict[str, InitParameter] = attrs.field(factory=dict)
+    data: dict = attrs.field(factory=dict, converter=flatten)
+
+    def __setitem__(self, key, value):
+        # Inherit docstring
+
+        if isinstance(value, Mapping):
+            value = flatten(value, name=key)
+        self.data.update(value)
 
     def render(
         self, ctx: KernelContext, nested: bool = True, drop: bool = True

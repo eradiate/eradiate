@@ -10,6 +10,19 @@ from eradiate.kernel import (
 )
 
 
+def test_kernel_dict_template_init():
+    template = KernelDictTemplate({"foo": {"bar": 0}, "bar": {"baz": {"qux": 0}}})
+    assert template.data == {"foo.bar": 0, "bar.baz.qux": 0}
+
+
+def test_kernel_dict_template_setitem():
+    template = KernelDictTemplate()
+    template["foo"] = {"bar": 0}
+    template["bar"] = {"baz": {"qux": 0}}
+    template["baz"] = 0
+    assert template.data == {"foo.bar": 0, "bar.baz.qux": 0, "baz": 0}
+
+
 def test_kernel_dict_template_render():
     template = KernelDictTemplate(
         {
