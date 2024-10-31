@@ -1,6 +1,7 @@
 """Functions to compute Rayleigh scattering in air."""
 
 import numpy as np
+import numpy.typing as npt
 import pint
 from scipy.constants import physical_constants
 
@@ -22,13 +23,44 @@ _STANDARD_AIR_NUMBER_DENSITY = _LOSCHMIDT * (273.15 / 288.15)
 class _BATES_1984_DATA(metaclass=Singleton):
     # Lazy loader for Bates (1984) King correction data
     def __init__(self):
-        self._data = None
+        self._king_factor = None
+        self._wavelength = None
 
     @property
-    def data(self):
-        if self._data is None:
-            self._data = data.load_dataset("spectra/optics/bates_1984.nc")
-        return self._data
+    def king_factor(self):
+        if self._king_factor is None:
+            self._load_dataset()
+        return self._king_factor
+
+    @property
+    def wavelength(self):
+        if self._wavelength is None:
+            self._load_dataset()
+        return self._wavelength
+
+    def interp(self, w: npt.ArrayLike = np.array([0.550])):
+        """
+        Interpolate ``king_factor`` over the ``wavelength`` dimension.
+
+        Parameters
+        ----------
+        w : array-like
+            wavelengths (in micron) at wich to interpolate Bates' King factor.
+
+        Returns
+        -------
+        ndarray
+            Bates' King factor
+        """
+        left = self.king_factor[0]
+        right = self.king_factor[-1]
+
+        return np.interp(w, self.wavelength, self.king_factor, left=left, right=right)
+
+    def _load_dataset(self):
+        bates_data = data.load_dataset("spectra/optics/bates_1984.nc")
+        self._king_factor = bates_data.f.values
+        self._wavelength = bates_data.w.values
 
 
 def compute_sigma_s_air(
@@ -82,12 +114,8 @@ def compute_sigma_s_air(
     # as well, meaning that this conversion is anyway necessary.
     w = wavelength.to("micron")
 
-    BATES_1984_DATA = _BATES_1984_DATA().data
-    f_left = BATES_1984_DATA.f.values[0]
-    f_right = BATES_1984_DATA.f.values[-1]
-    king_factor = BATES_1984_DATA.f.interp(
-        w=w.magnitude, kwargs={"fill_value": (f_left, f_right)}
-    ).values
+    BATES_1984_DATA = _BATES_1984_DATA()
+    king_factor = BATES_1984_DATA.interp(w.m_as("micron"))
 
     refractive_index = air_refractive_index(wavelength=w, number_density=number_density)
     if isinstance(w.magnitude, np.ndarray) and isinstance(
@@ -158,7 +186,7 @@ def air_refractive_index(
     return index
 
 
-def bates_depolarization(wavelength: pint.Quantity = ureg.Quantity(550.0, "nm")):
+def depolarization_bates(wavelength: pint.Quantity = ureg.Quantity(550.0, "nm")):
     """
     Compute depolarization using Bates' King factor :cite:`Bates1984RayleighScatteringAir`.
     Only parametrized on wavelength.
@@ -175,20 +203,16 @@ def bates_depolarization(wavelength: pint.Quantity = ureg.Quantity(550.0, "nm"))
     """
     # The Bates (1984) dataset is indexed by wavelengths in microns
     # as well, meaning that this conversion is anyway necessary.
-    w = wavelength.to("micron")
+    w = wavelength.m_as("micron")
 
-    BATES_1984_DATA = _BATES_1984_DATA().data
-    f_left = BATES_1984_DATA.f.values[0]
-    f_right = BATES_1984_DATA.f.values[-1]
-    king_factor = BATES_1984_DATA.f.interp(
-        w=w.magnitude, kwargs={"fill_value": (f_left, f_right)}
-    ).values
+    BATES_1984_DATA = _BATES_1984_DATA()
+    king_factor = BATES_1984_DATA.interp(w)
 
     depol = 6 * (king_factor - 1) / (7 * king_factor + 3)
     return np.atleast_1d(depol) * ureg.dimensionless
 
 
-def bodhaine_depolarization(
+def depolarization_bodhaine(
     wavelength: pint.Quantity = ureg.Quantity(550.0, "nm"),
     x_CO2: pint.Quantity = ureg.Quantity(0.0004, "dimensionless"),
 ):

@@ -3,6 +3,7 @@
 import mitsuba as mi
 import numpy as np
 import numpy.testing as npt
+import pint
 import pytest
 
 import eradiate
@@ -137,3 +138,37 @@ def test_molecular_atmosphere_switches(
             has_scattering=False,
             error_handler_config=absorption_database_error_handler_config,
         )
+
+
+def test_molecular_atmosphere_depolarization(mode_ckd):
+    atmosphere = MolecularAtmosphere(rayleigh_depolarization=0.5)
+    si = default_spectral_index(atmosphere)
+    depol = atmosphere.eval_depolarization_factor(si)
+    template, _ = traverse(atmosphere)
+    assert template.render(KernelContext(si=si))
+    assert isinstance(depol, pint.Quantity)
+    assert len(depol) == 1
+
+    atmosphere = MolecularAtmosphere(rayleigh_depolarization=[0.1, 0.3, 0.6])
+    si = default_spectral_index(atmosphere)
+    depol = atmosphere.eval_depolarization_factor(si)
+    template, _ = traverse(atmosphere)
+    assert template.render(KernelContext(si=si))
+    assert isinstance(depol, pint.Quantity)
+    assert len(depol) == 3
+
+    atmosphere = MolecularAtmosphere(rayleigh_depolarization="bates")
+    si = default_spectral_index(atmosphere)
+    depol = atmosphere.eval_depolarization_factor(si)
+    template, _ = traverse(atmosphere)
+    assert template.render(KernelContext(si=si))
+    assert isinstance(depol, pint.Quantity)
+    assert len(depol) == 1
+
+    atmosphere = MolecularAtmosphere(rayleigh_depolarization="bodhaine")
+    si = default_spectral_index(atmosphere)
+    depol = atmosphere.eval_depolarization_factor(si)
+    template, _ = traverse(atmosphere)
+    assert template.render(KernelContext(si=si))
+    assert isinstance(depol, pint.Quantity)
+    assert len(depol) == atmosphere.geometry.zgrid.n_layers
