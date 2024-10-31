@@ -388,7 +388,7 @@ class RadProfile(ABC):
 
         Parameters
         ----------
-        si : :class:`.SpectralIndex`
+        si : .SpectralIndex
             Spectral index.
 
         zgrid : .ZGrid, optional
@@ -443,10 +443,10 @@ class RadProfile(ABC):
 
         Parameters
         ----------
-        si : :class:`.SpectralIndex`
+        si : .SpectralIndex
             Spectral index.
 
-        zgrid : :class:`.ZGrid`, optional
+        zgrid : .ZGrid, optional
             The altitude grid for which the scattering coefficient is evaluated.
             If unset, a profile-specific default is used.
 
@@ -485,10 +485,10 @@ class RadProfile(ABC):
 
         Parameters
         ----------
-        si : :class:`.SpectralIndex`
+        si : .SpectralIndex
             Spectral index.
 
-        zgrid : :class:`.ZGrid`, optional
+        zgrid : .ZGrid, optional
             The altitude grid for which the depolarization factor is evaluated.
             If unset, a profile-specific default is used.
 

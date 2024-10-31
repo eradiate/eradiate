@@ -13,7 +13,7 @@ from joseki.profiles.core import interp
 
 from ._absorption import AbsorptionDatabase
 from ._core import RadProfile, ZGrid, make_dataset
-from .rayleigh import bates_depolarization, bodhaine_depolarization, compute_sigma_s_air
+from .rayleigh import compute_sigma_s_air, depolarization_bates, depolarization_bodhaine
 from ..attrs import define, documented
 from ..converters import convert_thermoprops
 from ..units import to_quantity
@@ -102,13 +102,21 @@ class AtmosphereRadProfile(RadProfile):
         default="True",
     )
 
-    rayleigh_depolarization: None | np.ndarray | str = documented(
-        attrs.field(kw_only=True, default=None),
+    rayleigh_depolarization: np.ndarray | str = documented(
+        attrs.field(
+            converter=lambda x: x
+            if isinstance(x, str)
+            else np.array(x, dtype=np.float64),
+            kw_only=True,
+            factory=lambda: np.array(0.0),
+        ),
         doc="Depolarization factor of the rayleigh phase function."
-        " - None  : default scalar value is used."
-        " - float : scalar value is used for the whole medium."
-        " - str   : name of the function used to calculate the factor."
-        "Available functions are :['bates', 'bodhaine'].",
+        " Accepts a ``str`` or ``ndarray``. ``str`` will be interpreted"
+        " as the name of the function used to calculate the depolarization factor"
+        " from atmospheric properties. Available names are {``bates``, ``bodhaine``}."
+        " A ``ndarray`` will be interpreted as a description of the depolarization "
+        " factor at different levels of the atmosphere. Must be shaped (N,) with "
+        " N the number of layers.",
     )
 
     _zgrid: ZGrid | None = attrs.field(default=None, init=False)
@@ -252,11 +260,11 @@ class AtmosphereRadProfile(RadProfile):
 
             elif isinstance(self.rayleigh_depolarization, str):
                 if self.rayleigh_depolarization == "bates":
-                    return bates_depolarization(wavelength=w)
+                    return depolarization_bates(wavelength=w)
 
                 elif self.rayleigh_depolarization == "bodhaine":
                     thermoprops = self._thermoprops_interp(zgrid)
-                    depol = bodhaine_depolarization(
+                    depol = depolarization_bodhaine(
                         wavelength=w,
                         x_CO2=to_quantity(thermoprops.x_CO2),
                     )
@@ -264,8 +272,8 @@ class AtmosphereRadProfile(RadProfile):
                 else:
                     NotImplementedError
 
-            elif self.rayleigh_depolarization is None:
-                return np.atleast_1d(0.0) * ureg.dimensionless
+            else:
+                NotImplementedError
 
         else:
             return np.atleast_1d(0.0) * ureg.dimensionless

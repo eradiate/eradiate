@@ -31,10 +31,10 @@ class RayleighPhaseFunction(PhaseFunction):
         attrs.field(
             converter=lambda x: x if callable(x) else np.array(x, dtype=np.float64),
             kw_only=True,
-            default=np.array([0.0]),
+            factory=lambda: np.array([0.0]),
         ),
-        doc="The ratio of intensities parallel and perpendicular to the"
-        "plane of scattering for light scattered at 90 deg. Only relevant"
+        doc="The ratio of intensities parallel and perpendicular to the "
+        "plane of scattering for light scattered at 90 deg. Only relevant "
         "when using a polarization mode.",
         type="ndarray, callable or None",
         init_type="array-like, callable, or None",
@@ -62,7 +62,7 @@ class RayleighPhaseFunction(PhaseFunction):
         elif isinstance(self.depolarization, np.ndarray):
             depolarization = np.atleast_1d(self.depolarization)
         elif self.depolarization is None:
-            depolarization = np.zeros(1)
+            depolarization = np.zeros((1,))
         else:
             NotImplementedError
 
@@ -74,7 +74,7 @@ class RayleighPhaseFunction(PhaseFunction):
 
         Parameters
         ----------
-        si: :class:`.SpectralIndex`
+        si: .SpectralIndex
             Spectral context.
 
         Returns

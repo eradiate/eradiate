@@ -135,13 +135,15 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             if isinstance(x, str)
             else np.array(x, dtype=np.float64),
             kw_only=True,
-            default=np.array(0.0),
+            factory=lambda: np.array(0.0),
         ),
         doc="Depolarization factor of the rayleigh phase function."
-        " - None  : default scalar value is used."
-        " - float : scalar value is used for the whole medium."
-        " - str   : name of the function used to calculate the factor."
-        "Available functions are :['bates', 'bodhaine'].",
+        " Accepts a ``str``, ``ndarray``, or ``None``. ``str`` will be interpreted"
+        " as the name of the function used to calculate the depolarization factor"
+        " from atmospheric properties. Available names are {``bates``, ``bodhaine``}."
+        " A ``ndarray`` will be interpreted as a description of the depolarization "
+        " factor at different levels of the atmosphere. Must be shaped (N,) with "
+        " N the number of layers.",
     )
 
     @has_absorption.validator
@@ -226,9 +228,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             return self.eval_depolarization_factor(si).m_as("dimensionless")
 
         # pass callable for depolarization to phase function for InitParams and UpdateParams.
-        depolarization = eval_depolarization_factor
         return RayleighPhaseFunction(
-            depolarization=depolarization, geometry=self.geometry
+            depolarization=eval_depolarization_factor, geometry=self.geometry
         )
 
     @property
