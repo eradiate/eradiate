@@ -5,7 +5,9 @@ import typing as t
 import warnings
 
 import attrs
+import drjit as dr
 import mitsuba as mi
+from mitsuba.python.util import SceneParameters as _MitsubaSceneParameters
 from tqdm.auto import tqdm
 
 from ._kernel_dict import UpdateMapTemplate
@@ -137,6 +139,44 @@ class MitsubaObjectWrapper:
             self.parameters.keep(keys)
 
 
+class SceneParameters(_MitsubaSceneParameters):
+    def __init__(self, properties=None, hierarchy=None, aliases=None):
+        super().__init__(properties, hierarchy)
+        self.aliases = aliases if aliases is not None else {}
+
+    def set_dirty(self, key: str):
+        # Inherit docstring
+
+        value, _, node, flags = self.properties[key]
+
+        is_nondifferentiable = flags & mi.ParamFlags.NonDifferentiable.value
+        if is_nondifferentiable and dr.grad_enabled(value):
+            mi.Log(
+                mi.LogLevel.Warn,
+                f"Parameter '{key}' is marked as non-differentiable but has "
+                "gradients enabled, unexpected results may occur!",
+            )
+
+        node_key = key  # Key of current node
+        while node is not None:
+            parent, depth = self.hierarchy[node]
+
+            name = node_key
+            if parent is not None:
+                if "." not in name and depth > 0:
+                    # We've hit the top level from an ID-aliased node:
+                    # Resolve the alias to finish climbing the hierarchy
+                    node_key = self.aliases[name]
+                node_key, name = node_key.rsplit(".", 1)
+
+            self.nodes_to_update.setdefault((depth, node), set())
+            self.nodes_to_update[(depth, node)].add(name)
+
+            node = parent
+
+        return self.properties[key]
+
+
 def mi_traverse(
     obj: mi.Object,
     umap_template: UpdateMapTemplate | None = None,
@@ -209,17 +249,21 @@ def mi_traverse(
             name=None,
             depth=0,
             flags=+mi.ParamFlags.Differentiable,
+            aliases=None,
         ):
             mi.TraversalCallback.__init__(self)
             self.properties = dict() if properties is None else properties
             self.hierarchy = dict() if hierarchy is None else hierarchy
             self.prefixes = set() if prefixes is None else prefixes
+            self.aliases = dict() if aliases is None else aliases
 
             node_id = node.id()
             if name_id_override and node_id:
                 for r in regexps:
                     if r(node_id):
-                        name = node.id()
+                        if node_id != name:
+                            self.aliases[node_id] = name
+                        name = node_id
                         break
 
             if name is not None:
@@ -266,6 +310,7 @@ def mi_traverse(
                 name=name if self.name is None else f"{self.name}.{name}",
                 depth=self.depth + 1,
                 flags=self.flags | flags,
+                aliases=self.aliases,
             )
             node.traverse(cb)
 
@@ -281,7 +326,7 @@ def mi_traverse(
 
     return MitsubaObjectWrapper(
         obj=obj,
-        parameters=mi.SceneParameters(cb.properties, cb.hierarchy),
+        parameters=SceneParameters(cb.properties, cb.hierarchy, cb.aliases),
         umap_template=umap_template,
     )
 
