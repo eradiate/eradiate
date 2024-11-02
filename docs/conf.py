@@ -13,7 +13,7 @@ if RTD:
     html_context["READTHEDOCS"] = True
 
     # Mock Mitsuba modules (required to render on RTD)
-    MOCK_MODULES = ["mitsuba", "mitsuba.scalar_rgb", "drjit"]
+    MOCK_MODULES = ["mitsuba", "mitsuba.python.util", "mitsuba.scalar_rgb", "drjit"]
     for mod_name in MOCK_MODULES:
         sys.modules[mod_name] = mock.Mock()
 
