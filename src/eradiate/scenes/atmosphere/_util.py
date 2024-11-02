@@ -7,8 +7,8 @@ import pandas as pd
 import xarray as xr
 from tqdm.auto import tqdm
 
-from . import HeterogeneousAtmosphere
 from ._core import AbstractHeterogeneousAtmosphere
+from ._heterogeneous import HeterogeneousAtmosphere
 from ...cfconventions import ATTRIBUTES
 from ...spectral import (
     CKDQuadConfig,
