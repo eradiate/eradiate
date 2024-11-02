@@ -11,8 +11,8 @@ import pint
 import pinttrs
 from pinttrs.util import ensure_units
 
-from . import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from .ckd_quad import CKDQuadConfig, CKDQuadPolicy
+from .index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from .response import BandSRF, DeltaSRF, SpectralResponseFunction, UniformSRF
 from .. import converters
 from .._mode import ModeFlag, SubtypeDispatcher

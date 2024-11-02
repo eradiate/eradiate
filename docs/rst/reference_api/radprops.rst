@@ -15,8 +15,6 @@
 
 .. rubric:: Classes
 
-**Factory**: :data:`rad_profile_factory`
-
 .. autosummary::
    :recursive:
    :toctree: generated/autosummary/
