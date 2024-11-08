@@ -145,6 +145,7 @@ def load_rami_scenario(
     version: RAMIScenarioVersion = RAMIScenarioVersion.ORIGINAL,
     padding: int = 0,
     unpack_folder: typing.Optional[Path] = None,
+    spectral_data: typing.Optional[dict] = None,
 ) -> dict:
     """
     Load a scenario based on its name and version.
@@ -159,6 +160,8 @@ def load_rami_scenario(
         The padding to apply to the scenario, defaults to 0.
     unpack_folder : Path, optional
         The folder to unpack the scenario to, defaults to None (current working directory).
+    spectral_data : dict[str, t.Any or dict[str, t.Any]] or None
+        Spectral data to apply to the scenario, defaults to None (keep original).
 
     Returns
     -------
@@ -180,4 +183,4 @@ def load_rami_scenario(
             zip_ref.extractall(scenario_folder)
 
     # Load the scenario
-    return load_scenario(scenario_folder, padding)
+    return load_scenario(scenario_folder, padding, spectral_data=spectral_data)
