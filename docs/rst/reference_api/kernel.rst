@@ -20,6 +20,8 @@ Mitsuba scene templating
    UpdateParameter
    TypeIdLookupStrategy
    UpdateMapTemplate
+   dict_parameter
+   scene_parameter
 
 Mitsuba scene traversal and rendering
 -------------------------------------
