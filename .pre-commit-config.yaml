@@ -32,3 +32,9 @@ repos:
         files: pixi.lock
         pass_filenames: false
         language: system
+      - id: readme-pypi
+        name: Update README for PyPI entries
+        entry: python resources/release.py update-pypi-readme
+        files: README.md
+        pass_filenames: false
+        language: system
