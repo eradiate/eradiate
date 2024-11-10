@@ -310,7 +310,7 @@ def update_pypi_readme():
 
     stripped_content = split_str + readme_content.split(split_str)[1]
 
-    with open("resources/README_pypi.md", "w") as f:
+    with open("resources/README_PyPI.md", "w") as f:
         f.write(stripped_content)
 
 
