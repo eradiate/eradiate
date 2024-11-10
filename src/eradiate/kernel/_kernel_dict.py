@@ -103,12 +103,16 @@ class UpdateParameter:
 
 def dict_parameter(maybe_fn=None):
     """
-    This function wraps another one into a :class:`.UpdateParameter` instance.
+    This function wraps another one into a :class:`.InitParameter` instance.
     It is primarily meant to be used as a decorator.
 
     Parameters
     ----------
     maybe_fn : callable, optional
+
+    Returns
+    -------
+    callable
     """
     return InitParameter if maybe_fn is None else InitParameter(maybe_fn)
 
@@ -117,8 +121,8 @@ def scene_parameter(
     maybe_fn=None, flags: UpdateParameter.Flags = UpdateParameter.Flags.ALL
 ):
     """
-    This decorator wraps the function to which it is applied into an
-    :class:`.UpdateParameter` instance.
+    This function wraps another one into a :class:`.UpdateParameter` instance.
+    It is primarily meant to be used as a decorator.
 
     Parameters
     ----------
