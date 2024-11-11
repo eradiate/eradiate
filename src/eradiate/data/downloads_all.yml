@@ -372,7 +372,7 @@
 - spectra/absorption/mono/gecko/metadata.json
 - spectra/absorption/mono/komodo/komodo.nc
 - spectra/absorption/mono/komodo/metadata.json
-# Absorption coefficient datasets (CKD): monotropa
+# Absorption coefficient datasets (CKD)
 - spectra/absorption/ckd/monotropa/metadata.json
 - spectra/absorption/ckd/monotropa/index.csv
 - spectra/absorption/ckd/monotropa/monotropa-3200_3300.nc
