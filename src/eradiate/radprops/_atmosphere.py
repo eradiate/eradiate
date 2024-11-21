@@ -59,14 +59,14 @@ class AtmosphereRadProfile(RadProfile):
             converter=convert_thermoprops,
             repr=summary_repr,
         ),
-        doc="Atmosphere's thermophysical properties.",
+        doc="Thermophysical property dataset. If a path is passed, Eradiate will "
+        "look it up and load it. If a dictionary is passed, it will be passed "
+        "as keyword argument to ``joseki.make()``. The default is "
+        '``joseki.make(identifier="afgl_1986-us_standard",  z=np.linspace(0.0, 120.0, 121) * ureg.km)``. '
+        "See `the Joseki docs <https://rayference.github.io/joseki/latest/reference/#src.joseki.core.make>`_ "
+        "for details.",
         type="Dataset",
-        default=(
-            "`joseki.make <https://rayference.github.io/joseki/latest/reference/#src.joseki.core.make>`_"
-            ' with ``identifier`` set to "afgl_1986-us_standard" and '
-            '``z`` set to "np.linspace(0.0, 120.0, 121) * ureg.km" and '
-            '``additional_molecules`` set to "False".'
-        ),
+        init_type="Dataset or path-like or dict",
     )
 
     @thermoprops.validator
@@ -110,13 +110,13 @@ class AtmosphereRadProfile(RadProfile):
             kw_only=True,
             factory=lambda: np.array(0.0),
         ),
-        doc="Depolarization factor of the rayleigh phase function."
-        " Accepts a ``str`` or ``ndarray``. ``str`` will be interpreted"
-        " as the name of the function used to calculate the depolarization factor"
-        " from atmospheric properties. Available names are {``bates``, ``bodhaine``}."
-        " A ``ndarray`` will be interpreted as a description of the depolarization "
-        " factor at different levels of the atmosphere. Must be shaped (N,) with "
-        " N the number of layers.",
+        type='ndarray or {"bates", "bodhaine"}',
+        doc="Depolarization factor of the rayleigh phase function. "
+        "``str`` will be interpreted as the name of the function used to "
+        "calculate the depolarization factor from atmospheric properties. "
+        "A ``ndarray`` will be interpreted as a description of the depolarization "
+        "factor at different levels of the atmosphere. Must be shaped (N,) with "
+        "N the number of layers.",
     )
 
     _zgrid: ZGrid | None = attrs.field(default=None, init=False)
@@ -270,10 +270,10 @@ class AtmosphereRadProfile(RadProfile):
                     )
                     return 0.5 * (depol[1:] + depol[:-1])
                 else:
-                    NotImplementedError
+                    raise NotImplementedError
 
             else:
-                NotImplementedError
+                raise NotImplementedError
 
         else:
             return np.atleast_1d(0.0) * ureg.dimensionless
