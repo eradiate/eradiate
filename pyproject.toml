@@ -9,7 +9,7 @@ license = { text = "LGPLv3" }
 maintainers = [{ name = "The Eradiate Team" }]
 name = "eradiate"
 readme = "resources/README_PyPI.md"
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.13"
 version = "0.29.3-dev0"
 dependencies = [
   "aenum",

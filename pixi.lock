@@ -3953,7 +3953,7 @@ packages:
   name: eradiate
   version: 0.29.3.dev0
   path: .
-  sha256: 8e37b6bd3e415c6131ee2aacf6edd1beb14b476d6eb9fac14f05109c2bd8e8c8
+  sha256: 2c44a155387c0ba5e51f443fc366aa14aae2448cf7be5160bb459a1e11f4f81a
   requires_dist:
   - aenum
   - attrs>=22.2
@@ -4002,7 +4002,7 @@ packages:
   - pytest-json-report ; extra == 'test'
   - asv==0.6.* ; extra == 'test'
   - bump-my-version>=0.28.0,<0.29.0 ; extra == 'dev'
-  requires_python: '>=3.9'
+  requires_python: '>=3.9,<3.13'
   editable: true
 - kind: pypi
   name: eradiate-mitsuba
