@@ -137,13 +137,13 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             kw_only=True,
             factory=lambda: np.array(0.0),
         ),
-        doc="Depolarization factor of the rayleigh phase function."
-        " Accepts a ``str``, ``ndarray``, or ``None``. ``str`` will be interpreted"
-        " as the name of the function used to calculate the depolarization factor"
-        " from atmospheric properties. Available names are {``bates``, ``bodhaine``}."
-        " A ``ndarray`` will be interpreted as a description of the depolarization "
-        " factor at different levels of the atmosphere. Must be shaped (N,) with "
-        " N the number of layers.",
+        type='ndarray or {"bates", "bodhaine"}',
+        doc="Depolarization factor of the rayleigh phase function. "
+        "``str`` will be interpreted as the name of the function used to "
+        "calculate the depolarization factor from atmospheric properties. "
+        "A ``ndarray`` will be interpreted as a description of the depolarization "
+        "factor at different levels of the atmosphere. Must be shaped (N,) with "
+        "N the number of layers.",
     )
 
     @has_absorption.validator
