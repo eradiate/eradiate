@@ -5,6 +5,7 @@ import typing as t
 import warnings
 from abc import ABC, abstractmethod
 
+import attrs
 import numpy as np
 import numpy.typing as npt
 import pint
@@ -17,7 +18,7 @@ from .. import converters, validators
 from ..attrs import define, documented
 from ..data import fresolver
 from ..exceptions import DataError
-from ..units import to_quantity
+from ..units import symbol, to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.misc import summary_repr
@@ -318,6 +319,14 @@ class BandSRF(SpectralResponseFunction):
         init_type="array-like",
     )
 
+    name: str | None = documented(
+        attrs.field(converter=attrs.converters.optional(str), default=None),
+        doc="Name of this SRF.",
+        default=None,
+        type="str or None",
+        init_type="str, optional",
+    )
+
     @values.validator
     @wavelengths.validator
     def _values_wavelengths_validator(self, attribute, value):
@@ -363,6 +372,27 @@ class BandSRF(SpectralResponseFunction):
             raise DataError(f"could not load SRF with identifier '{id}'") from e
 
         return cls.from_dataarray(ds["srf"])
+
+    def to_dataarray(self) -> xr.DataArray:
+        attrs = {"units": symbol(self.values.u)}
+        if self.name:
+            attrs["name"] = self.name
+
+        return xr.DataArray(
+            self.values.m,
+            {
+                "w": (
+                    "w",
+                    self.wavelengths.m,
+                    {
+                        "standard_name": "radiation_wavelength",
+                        "long_name": "wavelength",
+                        "units": symbol(self.wavelengths.u),
+                    },
+                )
+            },
+            attrs=attrs,
+        )
 
     def plot(self, ax, alpha=0.5, lw=1):
         w_u = ucc.get("wavelength")

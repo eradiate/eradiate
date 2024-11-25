@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import xarray as xr
 
 from eradiate import unit_registry as ureg
 from eradiate.spectral import SpectralResponseFunction
@@ -112,6 +113,11 @@ def test_band_srf():
         wavelengths=[500, 550, 600], values=[0, 1, 0]
     ).integrate_cumulative([400, 500, 550, 600, 700])
     np.testing.assert_equal(integral.m_as("nm"), [0, 25, 50, 50])
+
+    # Export to xarray
+    da = BandSRF(wavelengths=[500, 550, 600], values=[0, 1, 0]).to_dataarray()
+    expected = xr.DataArray(np.array([0, 1, 0]), coords={"w": [500, 550, 600]})
+    assert xr.testing.assert_equal(da, expected)
 
 
 @pytest.mark.parametrize(
