@@ -81,7 +81,7 @@ class MonteCarloIntegrator(Integrator):
 @define(eq=False, slots=False)
 class PathIntegrator(MonteCarloIntegrator):
     """
-    A thin interface to the path tracer kernel plugin.
+    A thin interface to the path tracer kernel plugin [``path``].
 
     This integrator samples paths using random walks starting from the sensor.
     It supports multiple scattering and does not account for volume
@@ -96,7 +96,7 @@ class PathIntegrator(MonteCarloIntegrator):
 @define(eq=False, slots=False)
 class VolPathIntegrator(MonteCarloIntegrator):
     """
-    A thin interface to the volumetric path tracer kernel plugin.
+    A thin interface to the volumetric path tracer kernel plugin [``volpath``].
 
     This integrator samples paths using random walks starting from the sensor.
     It supports multiple scattering and accounts for volume interactions.
@@ -110,8 +110,9 @@ class VolPathIntegrator(MonteCarloIntegrator):
 @define(eq=False, slots=False)
 class VolPathMISIntegrator(MonteCarloIntegrator):
     """
-    A thin interface to the volumetric path tracer (with spectral multiple
-    importance sampling) kernel plugin
+    A thin interface to the volumetric path tracer kernel plugin [``volpathmis``].
+
+    This plugin implements spectral multiple importance sampling
     :cite:`Miller2019NullscatteringPathIntegral`.
     """
 
@@ -135,7 +136,7 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
 @define(eq=False, slots=False)
 class PiecewiseVolPathIntegrator(MonteCarloIntegrator):
     """
-    A thin interface to the piecewise volumetric path tracer kernel plugin.
+    A thin interface to the piecewise volumetric path tracer kernel plugin [``piecewise_volpath``].
 
     This integrator samples paths using random walks starting from the sensor.
     It supports multiple scattering and accounts for 1D volume interactions.

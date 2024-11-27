@@ -58,7 +58,7 @@ class Integrator(NodeSceneElement, ABC):
             default=False,
             converter=attrs.converters.optional(bool),
         ),
-        doc="If true, calculates the variance of the output film",
+        doc="If ``True``, calculates the variance of the output film.",
         type="bool",
         init_type="bool, optional",
         default="False",
@@ -69,8 +69,8 @@ class Integrator(NodeSceneElement, ABC):
             default=False,
             converter=attrs.converters.optional(bool),
         ),
-        doc="If ```True```, calculates and outputs the polarized components of"
-        "the Stokes vector. Note that this will only work with a polarized"
+        doc="If ``True``, calculate and output the polarized components of "
+        "the Stokes vector. Note that this will only work with a polarized "
         "mode and a sensor that measures radiance.",
         type="bool",
         init_type="bool, optional",
@@ -82,9 +82,10 @@ class Integrator(NodeSceneElement, ABC):
             default=True,
             converter=attrs.converters.optional(bool),
         ),
-        doc="If ```True```, align the Stokes vector to the meridian plane. Otherwise"
-        "default to aligning to the sensor's x-axis. This parameter is only"
-        "relevant in polarized mode, when measuring radiance with ``stokes=True``.",
+        doc="If ``True``, align the Stokes vector to the meridian plane. "
+        "Otherwise, default to aligning to the sensor's x-axis. This parameter "
+        "is only relevant in polarized mode, when measuring radiance with "
+        "``stokes=True``.",
         type="bool",
         init_type="bool, optional",
         default="True",
