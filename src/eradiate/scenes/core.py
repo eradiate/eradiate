@@ -9,8 +9,8 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
-from pinttr.util import ensure_units
+import pinttrs
+from pinttrs.util import ensure_units
 
 from .._factory import Factory
 from ..attrs import define, documented, frozen
@@ -412,7 +412,7 @@ class BoundingBox:
     """
 
     min: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             units=ucc.get("length"),
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),
@@ -422,7 +422,7 @@ class BoundingBox:
     )
 
     max: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             units=ucc.get("length"),
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),
@@ -470,7 +470,7 @@ class BoundingBox:
             return cls(*value)
 
         elif isinstance(value, Mapping):
-            return cls(**pinttr.interpret_units(value, ureg=ureg))
+            return cls(**pinttrs.interpret_units(value, ureg=ureg))
 
         else:
             return value

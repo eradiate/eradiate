@@ -6,7 +6,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ._core import Surface
 from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
@@ -22,7 +22,7 @@ def _edges_converter(value):
     # Basic unit conversion and array reshaping
     length_units = ucc.get("length")
     value = np.reshape(
-        pinttr.util.ensure_units(value, default_units=length_units).m_as(length_units),
+        pinttrs.util.ensure_units(value, default_units=length_units).m_as(length_units),
         (-1,),
     )
 
@@ -103,7 +103,7 @@ class CentralPatchSurface(Surface):
     )
 
     patch_edges: pint.Quantity | None = documented(
-        pinttr.field(
+        pinttrs.field(
             default=None,
             converter=attrs.converters.optional(_edges_converter),
             units=ucc.deferred("length"),

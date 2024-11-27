@@ -6,7 +6,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ._core import ShapeInstance
 from ..core import BoundingBox, traverse
@@ -35,8 +35,8 @@ class BufferMeshShape(ShapeInstance):
     """
 
     vertices: pint.Quantity = documented(
-        pinttr.field(
-            validator=pinttr.validators.has_compatible_units,
+        pinttrs.field(
+            validator=pinttrs.validators.has_compatible_units,
             units=ucc.deferred("length"),
             kw_only=True,
         ),

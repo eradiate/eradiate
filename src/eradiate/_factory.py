@@ -5,7 +5,7 @@ from collections.abc import MutableMapping
 
 import attrs
 import dessinemoi
-import pinttr
+import pinttrs
 
 from .units import unit_registry as ureg
 
@@ -18,7 +18,7 @@ class Factory(dessinemoi.Factory):
     This factory subclass extends the original :class:`dessinemoi.Factory` type
     by adding the following functionality to its :meth:`convert` method:
 
-    * unit interpretation using :func:`pinttr.interpret_units`;
+    * unit interpretation using :func:`pinttrs.interpret_units`;
     * class method constructor selection using the ``"construct"`` key
       (overrides the default dict constructor if any; reserves the
       ``"construct"`` parameter).
@@ -33,7 +33,7 @@ class Factory(dessinemoi.Factory):
     ) -> t.Any:
         if isinstance(value, MutableMapping):
             # Interpret units and copy value to avoid unintended mutation
-            value_copy = pinttr.interpret_units(value, ureg=ureg)
+            value_copy = pinttrs.interpret_units(value, ureg=ureg)
 
             # Query registry
             type_id = value_copy.pop("type")

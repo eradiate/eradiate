@@ -3,8 +3,8 @@ from __future__ import annotations
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
-from pinttr.util import ensure_units
+import pinttrs
+from pinttrs.util import ensure_units
 
 from ._core import ShapeNode
 from ..bsdfs import BSDF
@@ -34,7 +34,7 @@ class SphereShape(ShapeNode):
     """
 
     center: pint.Quantity = documented(
-        pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
+        pinttrs.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Location of the centre of the sphere. Unit-enabled field "
         "(default: ``ucc['length']``).",
         type="quantity",
@@ -43,7 +43,7 @@ class SphereShape(ShapeNode):
     )
 
     radius: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             factory=lambda: 1.0 * ucc.get("length"), units=ucc.deferred("length")
         ),
         doc="Sphere radius. Unit-enabled field (default: ``ucc['length']``).",
@@ -155,9 +155,9 @@ class SphereShape(ShapeNode):
             A sphere shape which can be used as the surface in a spherical shell
             geometry.
         """
-        altitude = pinttr.util.ensure_units(altitude, default_units=ucc.get("length"))
+        altitude = pinttrs.util.ensure_units(altitude, default_units=ucc.get("length"))
 
-        planet_radius = pinttr.util.ensure_units(
+        planet_radius = pinttrs.util.ensure_units(
             planet_radius, default_units=ucc.get("length")
         )
 
@@ -201,9 +201,9 @@ class SphereShape(ShapeNode):
             A sphere shape which can be used as the stencil of a participating
             medium in a spherical shell geometry.
         """
-        top = pinttr.util.ensure_units(top, default_units=ucc.get("length"))
+        top = pinttrs.util.ensure_units(top, default_units=ucc.get("length"))
 
-        planet_radius = pinttr.util.ensure_units(
+        planet_radius = pinttrs.util.ensure_units(
             planet_radius, default_units=ucc.get("length")
         )
 

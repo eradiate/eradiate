@@ -8,7 +8,7 @@ from pathlib import Path
 import attrs
 import mitsuba as mi
 import pint
-import pinttr
+import pinttrs
 
 from ._core import CanopyElement, biosphere_factory
 from ._leaf_cloud import LeafCloud
@@ -88,7 +88,7 @@ class AbstractTree(Tree):
     )
 
     trunk_height: pint.Quantity = documented(
-        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttrs.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Trunk height. Unit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="quantity or float",
@@ -96,7 +96,7 @@ class AbstractTree(Tree):
     )
 
     trunk_radius: pint.Quantity = documented(
-        pinttr.field(default=0.1 * ureg.m, units=ucc.deferred("length")),
+        pinttrs.field(default=0.1 * ureg.m, units=ucc.deferred("length")),
         doc="Trunk radius. Unit-enabled field (default: ucc['length']).",
         type="quantity",
         init_type="quantity or float, optional",
@@ -120,7 +120,7 @@ class AbstractTree(Tree):
     )
 
     leaf_cloud_extra_offset: pint.Quantity = documented(
-        pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
+        pinttrs.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Additional offset for the leaf cloud. 3-vector. "
         "Unit-enabled field (default: ucc['length'])",
         type="quantity",
@@ -239,7 +239,7 @@ class MeshTree(Tree):
         attrs.field(
             factory=list,
             converter=lambda value: [
-                MeshTreeElement.convert(x) for x in pinttr.util.always_iterable(value)
+                MeshTreeElement.convert(x) for x in pinttrs.util.always_iterable(value)
             ]
             if not isinstance(value, dict)
             else [MeshTreeElement.convert(value)],
@@ -399,7 +399,7 @@ class MeshTreeElement:
         """
 
         # Pre-process dict: apply units to unit-enabled fields
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
+        d_copy = pinttrs.interpret_units(d, ureg=ureg)
 
         # Perform object creation
         return MeshTreeElement(**d_copy)

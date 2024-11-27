@@ -7,7 +7,7 @@ import drjit as dr
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 from numpy.typing import ArrayLike
 
 from ._core import Illumination
@@ -36,9 +36,9 @@ class SpotIllumination(Illumination):
     """
 
     origin: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             factory=lambda: [1.0, 1.0, 1.0] * ureg.m,
-            validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
+            validator=[validators.has_len(3), pinttrs.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="A 3-vector specifying the position of the spot.\n"
@@ -50,9 +50,9 @@ class SpotIllumination(Illumination):
     )
 
     target: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             factory=lambda: [0, 0, 0] * ureg.m,
-            validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
+            validator=[validators.has_len(3), pinttrs.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="Point location targeted by the spot.\n"
@@ -107,7 +107,7 @@ class SpotIllumination(Illumination):
             )
 
     beam_width: pint.Quantity = documented(
-        pinttr.field(default=10.0 * ureg.deg, units=ucc.deferred("angle")),
+        pinttrs.field(default=10.0 * ureg.deg, units=ucc.deferred("angle")),
         doc="Spot light beam width.\n\nUnit-enabled field (default: degree).",
         type="quantity",
         init_type="quantity or float",
@@ -192,9 +192,9 @@ class SpotIllumination(Illumination):
                 "The from_size_at_target constructor computes the origin position."
             )
 
-        target = pinttr.util.ensure_units(target, default_units=ucc.get("length"))
+        target = pinttrs.util.ensure_units(target, default_units=ucc.get("length"))
         half_angle = (
-            pinttr.util.ensure_units(beam_width, default_units=ureg.radian) / 2.0
+            pinttrs.util.ensure_units(beam_width, default_units=ureg.radian) / 2.0
         )
         tan_divergence = np.tan(half_angle)
         distance = spot_radius / tan_divergence
