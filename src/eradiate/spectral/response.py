@@ -373,6 +373,92 @@ class BandSRF(SpectralResponseFunction):
 
         return cls.from_dataarray(ds["srf"])
 
+    @classmethod
+    @ureg.wraps(
+        ret=None, args=(None, "nm", "nm", None, "nm", "nm", None, None), strict=False
+    )
+    def gaussian(
+        cls,
+        wl_center: pint.Quantity,
+        fwhm: pint.Quantity,
+        cutoff: float = 3.0,
+        wl: pint.Quantity | None = None,
+        wl_res: pint.Quantity | float = 1.0,
+        pad: bool = False,
+        normalize: bool = True,
+    ) -> BandSRF:
+        """
+        Generate a Gaussian spectral response function dataset from central
+        wavelength and full width at half maximum values.
+
+        Parameters
+        ----------
+        wl_center : quantity or float
+            Central wavelength of the Gaussian distribution.
+            If passed as a float, the value is interpreted as being given in nm.
+
+        fwhm : quantity or float
+            Full width at half maximum of the Gaussian distribution.
+            If passed as a float, the value is interpreted as being given in nm.
+
+        cutoff : float, default: 3.0
+            Cut-off, in multiples of the standard deviation σ.
+
+        wl : quantity or array-like, optional
+            Mesh used to evaluate the discretized distribution. If unset, a regular
+            mesh with spacing given by ``wl_res`` is used.
+            If passed as an array, the value is interpreted as being given in nm.
+
+        wl_res : quantity or float, optional
+            Resolution of the automatic spectral mesh if relevant.
+            If passed as a float, the value is interpreted as being given in nm.
+
+        pad : bool, default: False
+            If True, pad SRF data with leading and trailing zeros.
+
+        normalize : bool, default: True
+            If ``True``, the generated SRF data is normalized to have a maximum
+            equal to 1.
+
+        Returns
+        -------
+        Dataset
+            A dataset compliant with the Eradiate SRF format. The uncertainty
+            variable is set to NaN.
+        """
+        # Generate default mesh if necessary
+        if wl is None:
+            wl = np.arange(0.0, 5001.0, wl_res)
+
+        # Infer standard deviation
+        sigma = 0.5 * fwhm / np.sqrt(2.0 * np.log(2.0))
+
+        # Build baseline distribution
+        values = np.exp(-0.5 * np.power((wl - wl_center) / sigma, 2)) / (
+            sigma * np.sqrt(2)
+        )
+
+        # Prepare cutoff selection
+        wl_min = wl_center - cutoff * sigma
+        wl_max = wl_center + cutoff * sigma
+        wl_mask = (wl >= wl_min) & (wl <= wl_max)
+
+        if pad:  # Apply zero-padding if requested
+            i_min = np.argwhere(wl_mask).min() - 1
+            i_max = np.argwhere(wl_mask).max() + 1
+            wl_mask[[i_min, i_max]] = True
+            values_result = values[wl_mask]
+            values_result[[0, -1]] = 0.0
+        else:  # Otherwise just select
+            values_result = values[wl_mask]
+
+        # Build output dataset
+        if normalize:
+            values_result /= values_result.max()
+        wl_result = wl[wl_mask]
+
+        return cls(wavelengths=wl_result, values=values_result)
+
     def to_dataarray(self) -> xr.DataArray:
         attrs = {"units": symbol(self.values.u)}
         if self.name:
@@ -393,6 +479,31 @@ class BandSRF(SpectralResponseFunction):
             },
             attrs=attrs,
         )
+
+    def to_dataset(self) -> xr.Dataset:
+        """
+        Returns
+        -------
+        Dataset
+            A dataset compliant with the Eradiate SRF format. The uncertainty
+            variable is set to NaN.
+        """
+        srf = self.to_dataarray()
+        srf_u = xr.full_like(srf, np.nan)
+
+        result = xr.Dataset({"srf": srf, "srf_u": srf_u})
+        result["srf"].attrs = {
+            "standard_name": "spectral_response_function",
+            "long_name": "spectral response function",
+            "units": "dimensionless",
+        }
+        result["srf_u"].attrs = {
+            "standard_name": "spectral_response_function_uncertainty",
+            "long_name": "spectral response function uncertainty",
+            "units": "dimensionless",
+        }
+
+        return result
 
     def plot(self, ax, alpha=0.5, lw=1):
         w_u = ucc.get("wavelength")
@@ -524,113 +635,11 @@ class BandSRF(SpectralResponseFunction):
         return spi.cumulative_trapezoid(values_m, w_m) * w_u
 
 
-@ureg.wraps(ret=None, args=("nm", "nm", None, "nm", "nm", None, None), strict=False)
-def make_gaussian(
-    wl_center: pint.Quantity,
-    fwhm: pint.Quantity,
-    cutoff: float = 3.0,
-    wl: pint.Quantity | None = None,
-    wl_res: pint.Quantity | float = 1.0,
-    pad: bool = False,
-    normalize: bool = True,
-) -> xr.Dataset:
+def make_gaussian(*args, **kwargs) -> xr.Dataset:
     """
-    Generate a Gaussian spectral response function dataset from central
-    wavelength and full width at half maximum values.
-
-    Parameters
-    ----------
-    wl_center : quantity or float
-        Central wavelength of the Gaussian distribution.
-        If passed as a float, the value is interpreted as being given in nm.
-
-    fwhm : quantity or float
-        Full width at half maximum of the Gaussian distribution.
-        If passed as a float, the value is interpreted as being given in nm.
-
-    cutoff : float, default: 3.0
-        Cut-off, in multiples of the standard deviation σ.
-
-    wl : quantity or array-like, optional
-        Mesh used to evaluate the discretized distribution. If unset, a regular
-        mesh with spacing given by ``wl_res`` is used.
-        If passed as an array, the value is interpreted as being given in nm.
-
-    wl_res : quantity or float, optional
-        Resolution of the automatic spectral mesh if relevant.
-        If passed as a float, the value is interpreted as being given in nm.
-
-    pad : bool, default: False
-        If True, pad SRF data with leading and trailing zeros.
-
-    normalize : bool, default: True
-        If ``True``, the generated SRF data is normalized to have a maximum
-        equal to 1.
-
-    Returns
-    -------
-    Dataset
-        A dataset compliant with the Eradiate SRF format. The uncertainty
-        variable is set to NaN.
+    This is a compatibility function that wraps chained calls to
+    :meth:`BandSRF.gaussian` and :meth:`BandSRF.to_dataset`. All arguments are
+    forwarded to :meth:`BandSRF.gaussian`.
     """
-    # Generate default mesh if necessary
-    if wl is None:
-        wl = np.arange(0.0, 5001.0, wl_res)
-
-    # Infer standard deviation
-    sigma = 0.5 * fwhm / np.sqrt(2.0 * np.log(2.0))
-
-    # Build baseline distribution
-    values = np.exp(-0.5 * np.power((wl - wl_center) / sigma, 2)) / (sigma * np.sqrt(2))
-
-    # Prepare cutoff selection
-    wl_min = wl_center - cutoff * sigma
-    wl_max = wl_center + cutoff * sigma
-    wl_mask = (wl >= wl_min) & (wl <= wl_max)
-
-    if pad:  # Apply zero-padding if requested
-        i_min = np.argwhere(wl_mask).min() - 1
-        i_max = np.argwhere(wl_mask).max() + 1
-        wl_mask[[i_min, i_max]] = True
-        values_result = values[wl_mask]
-        values_result[[0, -1]] = 0.0
-    else:  # Otherwise just select
-        values_result = values[wl_mask]
-
-    # Build output dataset
-    if normalize:
-        values_result /= values_result.max()
-    wl_result = wl[wl_mask]
-
-    result = xr.Dataset(
-        data_vars={
-            "srf": (
-                ["w"],
-                values_result,
-                {
-                    "standard_name": "spectral_response_function",
-                    "long_name": "spectral response function",
-                    "units": "dimensionless",
-                },
-            ),
-        },
-        coords={
-            "w": (
-                ["w"],
-                wl_result,
-                {
-                    "standard_name": "radiation_wavelength",
-                    "long_name": "wavelength",
-                    "units": "nm",
-                },
-            )
-        },
-    )
-    result["srf_u"] = xr.full_like(result.srf, np.nan)
-    result.srf_u.attrs = {
-        "standard_name": "spectral_response_function_uncertainty",
-        "long_name": "spectral response function uncertainty",
-        "units": "dimensionless",
-    }
-
-    return result
+    srf = BandSRF.gaussian(*args, **kwargs)
+    return srf.to_dataset()
