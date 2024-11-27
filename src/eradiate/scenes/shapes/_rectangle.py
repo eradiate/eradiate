@@ -4,7 +4,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ._core import ShapeNode
 from ..bsdfs import BSDF
@@ -25,7 +25,7 @@ def _edges_converter(value):
     # Basic unit conversion and array reshaping
     length_units = ucc.get("length")
     value = np.reshape(
-        pinttr.util.ensure_units(value, default_units=length_units).m_as(length_units),
+        pinttrs.util.ensure_units(value, default_units=length_units).m_as(length_units),
         (-1,),
     )
 
@@ -53,7 +53,7 @@ class RectangleShape(ShapeNode):
     """
 
     edges: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             factory=lambda: [1, 1],
             converter=_edges_converter,
             units=ucc.deferred("length"),
@@ -66,7 +66,7 @@ class RectangleShape(ShapeNode):
     )
 
     center: pint.Quantity = documented(
-        pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
+        pinttrs.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Cartesian coordinates of the rectangle's central point. "
         "Unit-enabled field (default: ``ucc['length]``).",
         type="quantity",
@@ -156,7 +156,7 @@ class RectangleShape(ShapeNode):
             A rectangle shape which can be used as the surface in a
             plane parallel geometry.
         """
-        altitude = pinttr.util.ensure_units(altitude, default_units=ucc.get("length"))
+        altitude = pinttrs.util.ensure_units(altitude, default_units=ucc.get("length"))
         return cls(
             edges=width,
             center=[0.0, 0.0, altitude.m] * altitude.units,

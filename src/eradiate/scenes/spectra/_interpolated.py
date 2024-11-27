@@ -3,7 +3,7 @@ from __future__ import annotations
 import attrs
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 import xarray as xr
 
 from ._core import Spectrum
@@ -43,11 +43,11 @@ class InterpolatedSpectrum(Spectrum):
     """
 
     wavelengths: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             units=ucc.deferred("wavelength"),
             converter=[
                 np.atleast_1d,
-                pinttr.converters.to_units(ucc.deferred("wavelength")),
+                pinttrs.converters.to_units(ucc.deferred("wavelength")),
             ],
             kw_only=True,
         ),
@@ -91,8 +91,8 @@ class InterpolatedSpectrum(Spectrum):
                 )
 
             expected_units = ucc.get(self.quantity)
-            if not pinttr.util.units_compatible(expected_units, value.units):
-                raise pinttr.exceptions.UnitsError(
+            if not pinttrs.util.units_compatible(expected_units, value.units):
+                raise pinttrs.exceptions.UnitsError(
                     value.units,
                     expected_units,
                     extra_msg=f"while validating '{attribute.name}', got units "
@@ -143,7 +143,7 @@ class InterpolatedSpectrum(Spectrum):
         # If a quantity is set and a unitless value is passed, it is
         # automatically applied appropriate units
         if quantity is not None and not isinstance(values, pint.Quantity):
-            values = pinttr.util.ensure_units(values, default_units=ucc.get(quantity))
+            values = pinttrs.util.ensure_units(values, default_units=ucc.get(quantity))
 
         self.__attrs_init__(
             id=id, quantity=quantity, wavelengths=wavelengths, values=values

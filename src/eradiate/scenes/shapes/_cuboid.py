@@ -5,8 +5,8 @@ import typing as t
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
-from pinttr.util import ensure_units
+import pinttrs
+from pinttrs.util import ensure_units
 
 from ._core import ShapeNode
 from ..bsdfs import BSDF
@@ -23,7 +23,7 @@ def _edges_converter(x):
     # Basic unit conversion and array reshaping
     length_units = ucc.get("length")
     x = np.reshape(
-        pinttr.util.ensure_units(x, default_units=length_units).m_as(length_units),
+        pinttrs.util.ensure_units(x, default_units=length_units).m_as(length_units),
         (-1,),
     )
 
@@ -50,7 +50,7 @@ class CuboidShape(ShapeNode):
     """
 
     center: pint.Quantity = documented(
-        pinttr.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
+        pinttrs.field(factory=lambda: [0, 0, 0], units=ucc.deferred("length")),
         doc="Coordinates of the centre of the cube. "
         "Unit-enabled field (default: ``ucc['length']``).",
         type="quantity",
@@ -59,7 +59,7 @@ class CuboidShape(ShapeNode):
     )
 
     edges: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             factory=lambda: [1, 1, 1],
             converter=_edges_converter,
             units=ucc.deferred("length"),
@@ -280,14 +280,14 @@ class CuboidShape(ShapeNode):
             A cuboid shape which can be used as the atmosphere in a plane
             parallel geometry.
         """
-        top = pinttr.util.ensure_units(top, default_units=ucc.get("length"))
-        bottom = pinttr.util.ensure_units(bottom, default_units=ucc.get("length"))
-        width = pinttr.util.ensure_units(width, default_units=ucc.get("length"))
+        top = pinttrs.util.ensure_units(top, default_units=ucc.get("length"))
+        bottom = pinttrs.util.ensure_units(bottom, default_units=ucc.get("length"))
+        width = pinttrs.util.ensure_units(width, default_units=ucc.get("length"))
 
         if bottom_offset is None:
             bottom_offset = -0.01 * (top - bottom)
         else:
-            bottom_offset = pinttr.util.ensure_units(
+            bottom_offset = pinttrs.util.ensure_units(
                 bottom_offset, default_units=ucc.get("length")
             )
 

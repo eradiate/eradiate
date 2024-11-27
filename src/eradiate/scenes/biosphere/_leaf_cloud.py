@@ -7,7 +7,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 import scipy as sp
 import scipy.special
 
@@ -251,7 +251,7 @@ class LeafCloudParams:
     )
 
     _leaf_radius = documented(
-        pinttr.field(default=None, units=ucc.deferred("length")),
+        pinttrs.field(default=None, units=ucc.deferred("length")),
         doc="Leaf radius.\n\nUnit-enabled field (default: ucc['length']).",
         type="float",
     )
@@ -335,7 +335,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     """
 
     _l_horizontal = documented(
-        pinttr.field(default=None, units=ucc.deferred("length")),
+        pinttrs.field(default=None, units=ucc.deferred("length")),
         doc="Leaf cloud horizontal extent. *Suggested default: 30 m.*\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
@@ -343,7 +343,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     )
 
     _l_vertical = documented(
-        pinttr.field(default=None, units=ucc.deferred("length")),
+        pinttrs.field(default=None, units=ucc.deferred("length")),
         doc="Leaf cloud vertical extent. *Suggested default: 3 m.*\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
@@ -351,7 +351,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     )
 
     _lai = documented(
-        pinttr.field(default=None, units=ureg.dimensionless),
+        pinttrs.field(default=None, units=ureg.dimensionless),
         doc="Leaf cloud leaf area index (LAI). *Physical range: [0, 10]; "
         "suggested default: 3.*\n"
         "\n"
@@ -360,7 +360,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     )
 
     _hdo = documented(
-        pinttr.field(default=None, units=ucc.deferred("length")),
+        pinttrs.field(default=None, units=ucc.deferred("length")),
         doc="Mean horizontal distance between leaves.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
@@ -368,7 +368,7 @@ class CuboidLeafCloudParams(LeafCloudParams):
     )
 
     _hvr = documented(
-        pinttr.field(default=None),
+        pinttrs.field(default=None),
         doc="Ratio of mean horizontal leaf distance and vertical leaf cloud extent. "
         "*Suggested default: 0.1.*",
         type="float",
@@ -451,7 +451,7 @@ class SphereLeafCloudParams(LeafCloudParams):
     """
 
     _radius = documented(
-        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttrs.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
@@ -477,21 +477,21 @@ class EllipsoidLeafCloudParams(LeafCloudParams):
     """
 
     _a = documented(
-        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttrs.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
     )
 
     _b = documented(
-        pinttr.field(default=None, units=ucc.deferred("length")),
+        pinttrs.field(default=None, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
     )
 
     _c = documented(
-        pinttr.field(default=None, units=ucc.deferred("length")),
+        pinttrs.field(default=None, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
@@ -538,14 +538,14 @@ class CylinderLeafCloudParams(LeafCloudParams):
     """
 
     _radius = documented(
-        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttrs.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
     )
 
     _l_vertical = documented(
-        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttrs.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud vertical extent.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
@@ -572,14 +572,14 @@ class ConeLeafCloudParams(LeafCloudParams):
     """
 
     _radius = documented(
-        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttrs.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud radius.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
     )
 
     _l_vertical = documented(
-        pinttr.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
+        pinttrs.field(default=1.0 * ureg.m, units=ucc.deferred("length")),
         doc="Leaf cloud vertical extent.\n\nUnit-enabled field (default: ucc[length]).",
         type="float",
         default="1 m",
@@ -641,7 +641,7 @@ class LeafCloud(CanopyElement):
     )
 
     leaf_positions: pint.Quantity = documented(
-        pinttr.field(factory=list, units=ucc.deferred("length")),
+        pinttrs.field(factory=list, units=ucc.deferred("length")),
         doc="Leaf positions in cartesian coordinates as a (n, 3)-array.\n"
         "\n"
         "Unit-enabled field (default: ucc['length']).",
@@ -659,10 +659,10 @@ class LeafCloud(CanopyElement):
     )
 
     leaf_radii: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             factory=list,
             validator=[
-                pinttr.validators.has_compatible_units,
+                pinttrs.validators.has_compatible_units,
                 attrs.validators.deep_iterable(member_validator=validators.is_positive),
             ],
             units=ucc.deferred("length"),

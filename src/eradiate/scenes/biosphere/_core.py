@@ -7,7 +7,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ..core import CompositeSceneElement
 from ... import validators
@@ -71,11 +71,11 @@ class Canopy(CompositeSceneElement, ABC):
     )
 
     size: pint.Quantity | None = documented(
-        pinttr.field(
+        pinttrs.field(
             default=None,
             validator=attrs.validators.optional(
                 [
-                    pinttr.validators.has_compatible_units,
+                    pinttrs.validators.has_compatible_units,
                     validators.on_quantity(validators.is_vector3),
                 ]
             ),
@@ -155,7 +155,7 @@ class InstancedCanopyElement(CompositeSceneElement):
     )
 
     instance_positions: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             factory=list,
             units=ucc.deferred("length"),
         ),

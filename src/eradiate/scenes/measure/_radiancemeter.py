@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ._core import Measure
 from ... import validators
@@ -28,9 +28,9 @@ class RadiancemeterMeasure(Measure):
     # --------------------------------------------------------------------------
 
     origin: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             default=ureg.Quantity([0.0, 0.0, 0.0], ureg.m),
-            validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
+            validator=[validators.has_len(3), pinttrs.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="A 3-element vector specifying the position of the radiance meter.\n"
@@ -42,9 +42,9 @@ class RadiancemeterMeasure(Measure):
     )
 
     target: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             default=ureg.Quantity([0.0, 0.0, 1.0], ureg.m),
-            validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
+            validator=[validators.has_len(3), pinttrs.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="A 3-element vector specifying the location targeted by the sensor.\n"

@@ -7,7 +7,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from .shapes import CuboidShape, RectangleShape, Shape, SphereShape
 from ..attrs import define, documented
@@ -33,7 +33,7 @@ class SceneGeometry(ABC):
     """
 
     toa_altitude: pint.Quantity = documented(
-        pinttr.field(default=120.0 * ureg.km, units=ucc.deferred("length")),
+        pinttrs.field(default=120.0 * ureg.km, units=ucc.deferred("length")),
         doc="Top-of-atmosphere level altitude. "
         'Unit-enabled field (default: ``ucc["length"]``).',
         default="120 km",
@@ -42,7 +42,7 @@ class SceneGeometry(ABC):
     )
 
     ground_altitude: pint.Quantity = documented(
-        pinttr.field(default=0.0 * ureg.km, units=ucc.deferred("length")),
+        pinttrs.field(default=0.0 * ureg.km, units=ucc.deferred("length")),
         doc="Baseline ground altitude. "
         'Unit-enabled field (default: ``ucc["length"]``).',
         default="0 km",
@@ -135,7 +135,7 @@ class SceneGeometry(ABC):
             else:
                 raise ValueError(f"unknown geometry type '{geometry_type}'")
 
-            return geometry_cls(**pinttr.interpret_units(value, ureg=ureg))
+            return geometry_cls(**pinttrs.interpret_units(value, ureg=ureg))
 
         return value
 
@@ -180,7 +180,7 @@ class PlaneParallelGeometry(SceneGeometry):
     """
 
     width: pint.Quantity = documented(
-        pinttr.field(default=1e6 * ureg.km, units=ucc.deferred("length")),
+        pinttrs.field(default=1e6 * ureg.km, units=ucc.deferred("length")),
         doc="Cuboid shape width.",
         type="quantity",
         init_type="quantity or float",
@@ -224,7 +224,7 @@ class SphericalShellGeometry(SceneGeometry):
     """
 
     planet_radius: pint.Quantity = documented(
-        pinttr.field(default=EARTH_RADIUS, units=ucc.deferred("length")),
+        pinttrs.field(default=EARTH_RADIUS, units=ucc.deferred("length")),
         doc="Planet radius. Defaults to Earth's radius.",
         type="quantity",
         init_type="quantity or float",

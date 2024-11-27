@@ -32,7 +32,7 @@ from abc import ABC, abstractmethod
 
 import attrs
 import pint
-import pinttr
+import pinttrs
 
 from .. import validators
 from .._mode import ModeFlag, SubtypeDispatcher
@@ -109,7 +109,7 @@ class SpectralIndex(ABC):
 
     @staticmethod
     def from_dict(d: dict[str, t.Any]) -> SpectralIndex:
-        d_copy = pinttr.interpret_units(d, ureg=ureg)
+        d_copy = pinttrs.interpret_units(d, ureg=ureg)
         return SpectralIndex.new(**d_copy)
 
     @staticmethod
@@ -134,7 +134,7 @@ class MonoSpectralIndex(SpectralIndex):
     """
 
     w: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             default=550.0 * ureg.nm,
             units=ucc.deferred("wavelength"),
             on_setattr=None,
@@ -174,7 +174,7 @@ class CKDSpectralIndex(SpectralIndex):
     """
 
     w: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             default=550.0 * ureg.nm,
             units=ucc.deferred("wavelength"),
             on_setattr=None,

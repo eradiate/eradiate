@@ -8,8 +8,8 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
-from pinttr.util import ensure_units
+import pinttrs
+from pinttrs.util import ensure_units
 
 from ._core import Measure
 from ..core import BoundingBox
@@ -96,7 +96,7 @@ class Target:
 
 def _target_point_rectangle_xyz_converter(x):
     return converters.on_quantity(float)(
-        pinttr.converters.to_units(ucc.deferred("length"))(x)
+        pinttrs.converters.to_units(ucc.deferred("length"))(x)
     )
 
 
@@ -112,7 +112,7 @@ class TargetPoint(Target):
     """
 
     # Target point in config units
-    xyz: pint.Quantity = pinttr.field(units=ucc.deferred("length"))
+    xyz: pint.Quantity = pinttrs.field(units=ucc.deferred("length"))
 
     @xyz.validator
     def _xyz_validator(self, attribute, value):
@@ -332,7 +332,7 @@ class AbstractDistantMeasure(Measure, ABC):
     )
 
     ray_offset: pint.Quantity | None = documented(
-        pinttr.field(default=None, units=ucc.deferred("length")),
+        pinttrs.field(default=None, units=ucc.deferred("length")),
         doc="Manually control the distance between the target and ray origins. "
         "If unset, ray origins are positioned outside of the scene and this "
         "measure is rigorously distant.",

@@ -7,9 +7,9 @@ from functools import singledispatchmethod
 import attrs
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 import xarray as xr
-from pinttr.util import ensure_units
+from pinttrs.util import ensure_units
 
 import eradiate
 
@@ -176,7 +176,7 @@ class ZGrid:
     """
 
     levels: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             units=ucc.deferred("length"),
             on_setattr=None,  # frozen instance: on_setattr must be disabled
         ),
@@ -185,12 +185,12 @@ class ZGrid:
         doc="Grid node altitudes.\n\nUnit-enabled field (default: ``ucc['length']``).",
     )
 
-    _layers: pint.Quantity = pinttr.field(
+    _layers: pint.Quantity = pinttrs.field(
         units=ucc.deferred("length"),
         on_setattr=None,  # frozen instance: on_setattr must be disabled
     )
 
-    _layer_height: pint.Quantity = pinttr.field(
+    _layer_height: pint.Quantity = pinttrs.field(
         units=ucc.deferred("length"),
         on_setattr=None,  # frozen instance: on_setattr must be disabled
     )
@@ -200,7 +200,7 @@ class ZGrid:
         if not np.isscalar(value.magnitude):
             raise ValueError("layer height must be a scalar")
 
-    _total_height: pint.Quantity = pinttr.field(
+    _total_height: pint.Quantity = pinttrs.field(
         units=ucc.deferred("length"),
         on_setattr=None,  # frozen instance: on_setattr must be disabled
     )

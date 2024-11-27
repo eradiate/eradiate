@@ -8,7 +8,7 @@ from copy import deepcopy
 import attrs
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ._core import Canopy, InstancedCanopyElement, biosphere_factory
 from ._leaf_cloud import CuboidLeafCloudParams, LeafCloud
@@ -54,7 +54,7 @@ class DiscreteCanopy(Canopy):
             factory=list,
             converter=lambda value: [
                 _instanced_canopy_elements_converter(x)
-                for x in pinttr.util.always_iterable(value)
+                for x in pinttrs.util.always_iterable(value)
             ]
             if not isinstance(value, MutableMapping)
             else [_instanced_canopy_elements_converter(value)],

@@ -3,7 +3,7 @@ from __future__ import annotations
 import attrs
 import mitsuba as mi
 import pint
-import pinttr
+import pinttrs
 
 from ._core import BSDF
 from ..core import traverse
@@ -80,7 +80,7 @@ class RTLSBSDF(BSDF):
     )
 
     h: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             default=2.0,
             units=ucc.deferred("dimensionless"),
         ),
@@ -91,7 +91,7 @@ class RTLSBSDF(BSDF):
     )
 
     r: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             default=1.0,
             units=ucc.deferred("dimensionless"),
         ),
@@ -102,7 +102,7 @@ class RTLSBSDF(BSDF):
     )
 
     b: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             default=1.0,
             units=ucc.deferred("dimensionless"),
         ),

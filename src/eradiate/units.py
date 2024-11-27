@@ -18,10 +18,10 @@ from functools import lru_cache
 from importlib.resources import files
 
 import pint
-import pinttr
+import pinttrs
 import xarray
-from pinttr.exceptions import UnitsError
-from pinttr.util import units_compatible
+from pinttrs.exceptions import UnitsError
+from pinttrs.util import units_compatible
 
 logger = logging.getLogger(__name__)
 
@@ -120,26 +120,26 @@ class PhysicalQuantity(enum.Enum):
 
 
 def _make_unit_context():
-    uctx = pinttr.UnitContext(
+    uctx = pinttrs.UnitContext(
         interpret_str=True, ureg=unit_registry, key_converter=PhysicalQuantity
     )
 
     # fmt: off
     for key, value in {
         # We allow for dimensionless quantities
-        PhysicalQuantity.DIMENSIONLESS: pinttr.UnitGenerator(unit_registry.dimensionless),  # noqa: E501
+        PhysicalQuantity.DIMENSIONLESS: pinttrs.UnitGenerator(unit_registry.dimensionless),  # noqa: E501
         # Basic quantities must be named after their SI name
         # https://en.wikipedia.org/wiki/International_System_of_Units
-        PhysicalQuantity.LENGTH: pinttr.UnitGenerator(unit_registry.m),
-        PhysicalQuantity.TIME: pinttr.UnitGenerator(unit_registry.s),
-        PhysicalQuantity.MASS: pinttr.UnitGenerator(unit_registry.kg),
+        PhysicalQuantity.LENGTH: pinttrs.UnitGenerator(unit_registry.m),
+        PhysicalQuantity.TIME: pinttrs.UnitGenerator(unit_registry.s),
+        PhysicalQuantity.MASS: pinttrs.UnitGenerator(unit_registry.kg),
         # Derived quantity names are more flexible
-        PhysicalQuantity.ALBEDO: pinttr.UnitGenerator(unit_registry.dimensionless),
-        PhysicalQuantity.ANGLE: pinttr.UnitGenerator(unit_registry.deg),
-        PhysicalQuantity.REFLECTANCE: pinttr.UnitGenerator(unit_registry.dimensionless),
-        PhysicalQuantity.TRANSMITTANCE: pinttr.UnitGenerator(unit_registry.dimensionless),  # noqa: E501
-        PhysicalQuantity.WAVELENGTH: pinttr.UnitGenerator(unit_registry.nm),
-        PhysicalQuantity.WAVENUMBER: pinttr.UnitGenerator(unit_registry.cm ** -1),
+        PhysicalQuantity.ALBEDO: pinttrs.UnitGenerator(unit_registry.dimensionless),
+        PhysicalQuantity.ANGLE: pinttrs.UnitGenerator(unit_registry.deg),
+        PhysicalQuantity.REFLECTANCE: pinttrs.UnitGenerator(unit_registry.dimensionless),
+        PhysicalQuantity.TRANSMITTANCE: pinttrs.UnitGenerator(unit_registry.dimensionless),  # noqa: E501
+        PhysicalQuantity.WAVELENGTH: pinttrs.UnitGenerator(unit_registry.nm),
+        PhysicalQuantity.WAVENUMBER: pinttrs.UnitGenerator(unit_registry.cm ** -1),
     }.items():
         uctx.register(key, value)
     # fmt: on
@@ -147,11 +147,11 @@ def _make_unit_context():
     # The following quantities will update automatically based on their parent units
     uctx.register(
         PhysicalQuantity.COLLISION_COEFFICIENT,
-        pinttr.UnitGenerator(lambda: uctx.get(PhysicalQuantity.LENGTH) ** -1),
+        pinttrs.UnitGenerator(lambda: uctx.get(PhysicalQuantity.LENGTH) ** -1),
     )
     uctx.register(
         PhysicalQuantity.INTENSITY,
-        pinttr.UnitGenerator(
+        pinttrs.UnitGenerator(
             lambda: unit_registry.watt
             / unit_registry.steradian
             / uctx.get(PhysicalQuantity.WAVELENGTH)
@@ -159,7 +159,7 @@ def _make_unit_context():
     )
     uctx.register(
         PhysicalQuantity.IRRADIANCE,
-        pinttr.UnitGenerator(
+        pinttrs.UnitGenerator(
             lambda: unit_registry.watt
             / uctx.get(PhysicalQuantity.LENGTH) ** 2
             / uctx.get(PhysicalQuantity.WAVELENGTH)
@@ -167,7 +167,7 @@ def _make_unit_context():
     )
     uctx.register(
         PhysicalQuantity.RADIANCE,
-        pinttr.UnitGenerator(
+        pinttrs.UnitGenerator(
             lambda: unit_registry.watt
             / uctx.get(PhysicalQuantity.LENGTH) ** 2
             / unit_registry.steradian
@@ -245,12 +245,12 @@ def to_quantity(da: xarray.DataArray) -> pint.Quantity:
 def interpret_quantities(
     d: dict[str, t.Any],
     quantity_map: dict[str, str],
-    uctx: pinttr.UnitContext,
+    uctx: pinttrs.UnitContext,
     force: bool = False,
 ):
     """
     Advanced unit interpretation and wrapping for dictionaries. This function
-    first calls :func:`pinttr.interpret_units` to interpret units attached to
+    first calls :func:`pinttrs.interpret_units` to interpret units attached to
     a given field. Then, it converts quantities and possibly applies default
     units to fields specified in ``quantity_map`` based on ``uctx``.
 
@@ -263,7 +263,7 @@ def interpret_quantities(
         Dictionary mapping fields to quantity identifiers (see
         :class:`.PhysicalQuantity` for valid quantity IDs).
 
-    uctx : :class:`pinttr.UnitContext`
+    uctx : :class:`pinttrs.UnitContext`
         Unit context containing quantity and default units definitions.
 
     force : bool, default: False
@@ -278,7 +278,7 @@ def interpret_quantities(
 
     Raises
     ------
-    :class:`pinttr.UnitsError`:
+    :class:`pinttrs.UnitsError`:
         If a field and its mapped quantity have incompatible units.
 
     See Also
@@ -288,7 +288,7 @@ def interpret_quantities(
     ureg = uctx.ureg
 
     # Interpret unit fields
-    result = pinttr.interpret_units(d, ureg)
+    result = pinttrs.interpret_units(d, ureg)
 
     # Convert to or apply default units based on the unit map
     if quantity_map is None:

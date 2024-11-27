@@ -3,7 +3,7 @@ from __future__ import annotations
 import attrs
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ._core import Measure
 from ...attrs import define, documented
@@ -30,7 +30,7 @@ class MultiRadiancemeterMeasure(Measure):
     # --------------------------------------------------------------------------
 
     origins: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             default=ureg.Quantity([[0.0, 0.0, 0.0]], ureg.m),
             units=ucc.deferred("length"),
         ),

@@ -10,7 +10,7 @@ from collections.abc import Sequence
 import attrs
 import mitsuba as mi
 import numpy as np
-import pinttr
+import pinttrs
 import xarray as xr
 
 import eradiate
@@ -147,7 +147,7 @@ class Experiment(ABC):
         attrs.field(
             factory=lambda: MeasureRegistry([MultiDistantMeasure()]),
             converter=lambda value: MeasureRegistry(
-                pinttr.util.always_iterable(value)
+                pinttrs.util.always_iterable(value)
                 if not isinstance(value, dict)
                 else [measure_factory.convert(value)]
             ),
