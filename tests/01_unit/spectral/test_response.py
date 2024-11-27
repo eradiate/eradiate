@@ -4,7 +4,7 @@ import xarray as xr
 
 from eradiate import unit_registry as ureg
 from eradiate.spectral import SpectralResponseFunction
-from eradiate.spectral.response import BandSRF, DeltaSRF, UniformSRF, make_gaussian
+from eradiate.spectral.response import BandSRF, DeltaSRF, UniformSRF
 
 
 def test_uniform_srf():
@@ -117,7 +117,7 @@ def test_band_srf():
     # Export to xarray
     da = BandSRF(wavelengths=[500, 550, 600], values=[0, 1, 0]).to_dataarray()
     expected = xr.DataArray(np.array([0, 1, 0]), coords={"w": [500, 550, 600]})
-    assert xr.testing.assert_equal(da, expected)
+    xr.testing.assert_equal(da, expected)
 
 
 @pytest.mark.parametrize(
@@ -189,7 +189,13 @@ def test_convert(value, expected):
         ),
     ],
 )
-def test_make_gaussian(wl_center, fwhm, cutoff, wl, pad, expected_srf, expected_w):
-    ds = make_gaussian(wl_center, fwhm, cutoff=cutoff, wl=wl, pad=pad)
+def test_band_srf_gaussian(wl_center, fwhm, cutoff, wl, pad, expected_srf, expected_w):
+    if pad is False:
+        with pytest.warns(UserWarning):
+            srf = BandSRF.gaussian(wl_center, fwhm, cutoff=cutoff, wl=wl, pad=pad)
+    else:
+        srf = BandSRF.gaussian(wl_center, fwhm, cutoff=cutoff, wl=wl, pad=pad)
+
+    ds = srf.to_dataset()
     np.testing.assert_allclose(ds.srf.data, expected_srf, rtol=1e-5)
     np.testing.assert_allclose(ds.w.data, expected_w, rtol=1e-5)
