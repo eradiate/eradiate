@@ -3,7 +3,7 @@ from __future__ import annotations
 import attrs
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ._core import Spectrum
 from ...attrs import define, documented
@@ -49,8 +49,8 @@ class UniformSpectrum(Spectrum):
             else:
                 expected_units = ucc.get(self.quantity)
 
-                if not pinttr.util.units_compatible(expected_units, value.units):
-                    raise pinttr.exceptions.UnitsError(
+                if not pinttrs.util.units_compatible(expected_units, value.units):
+                    raise pinttrs.exceptions.UnitsError(
                         value.units,
                         expected_units,
                         extra_msg=f"while validating {attribute.name}, got units "
@@ -68,7 +68,7 @@ class UniformSpectrum(Spectrum):
         # If a quantity is set and a unitless value is passed, it is
         # automatically applied appropriate units
         if quantity is not None and not isinstance(value, pint.Quantity):
-            value = pinttr.util.ensure_units(value, ucc.get(quantity))
+            value = pinttrs.util.ensure_units(value, ucc.get(quantity))
 
         self.__attrs_init__(id=id, quantity=quantity, value=value)
 

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import attrs
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ._distant import AbstractDistantMeasure
 from ... import converters, frame
@@ -85,7 +85,7 @@ class Layout(ABC):
             return value
 
         if isinstance(value, dict):
-            d = pinttr.interpret_units(value, ureg=ureg)
+            d = pinttrs.interpret_units(value, ureg=ureg)
             type_key = d.pop("type")
             cls = {
                 "angles": AngleLayout,
@@ -140,7 +140,7 @@ class Layout(ABC):
 
 
 def _angles_converter(value):
-    value = pinttr.util.ensure_units(value, ucc.deferred("angle"))
+    value = pinttrs.util.ensure_units(value, ucc.deferred("angle"))
     angle_units = value.u
     magnitude = np.reshape(value.m_as(ureg.deg), (-1, 2))
     zeniths = magnitude[:, 0]
@@ -156,7 +156,7 @@ class AngleLayout(Layout):
     """
 
     _angles: pint.Quantity = documented(
-        pinttr.ib(
+        pinttrs.field(
             converter=_angles_converter,
             units=ucc.deferred("angle"),
         ),
@@ -193,9 +193,9 @@ class AzimuthRingLayout(Layout):
     """
 
     zenith: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             converter=attrs.converters.pipe(
-                pinttr.converters.to_units(ucc.deferred("angle")),
+                pinttrs.converters.to_units(ucc.deferred("angle")),
                 lambda x: converters.on_quantity(float)(x),
             ),
             units=ucc.deferred("angle"),
@@ -216,9 +216,9 @@ class AzimuthRingLayout(Layout):
             )
 
     azimuths: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             converter=attrs.converters.pipe(
-                pinttr.converters.to_units(ucc.deferred("angle")),
+                pinttrs.converters.to_units(ucc.deferred("angle")),
                 lambda x: np.reshape(x, (-1,)),
                 lambda x: x % (360.0 * ureg.deg),
             ),
@@ -287,9 +287,9 @@ class HemispherePlaneLayout(Layout):
     """
 
     zeniths: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             converter=attrs.converters.pipe(
-                pinttr.converters.to_units(ucc.deferred("angle")),
+                pinttrs.converters.to_units(ucc.deferred("angle")),
                 lambda x: np.reshape(x, (-1,)),
             ),
             units=ucc.deferred("angle"),
@@ -302,9 +302,9 @@ class HemispherePlaneLayout(Layout):
     )
 
     azimuth: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             converter=attrs.converters.pipe(
-                pinttr.converters.to_units(ucc.deferred("angle")),
+                pinttrs.converters.to_units(ucc.deferred("angle")),
                 lambda x: x % (360 * ureg.deg),
             ),
             units=ucc.deferred("angle"),
@@ -334,9 +334,9 @@ class GridLayout(Layout):
     """
 
     zeniths: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             converter=attrs.converters.pipe(
-                pinttr.converters.to_units(ucc.deferred("angle")),
+                pinttrs.converters.to_units(ucc.deferred("angle")),
                 lambda x: np.reshape(x, (-1,)),
             ),
             units=ucc.deferred("angle"),
@@ -358,9 +358,9 @@ class GridLayout(Layout):
             )
 
     azimuths: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             converter=attrs.converters.pipe(
-                pinttr.converters.to_units(ucc.deferred("angle")),
+                pinttrs.converters.to_units(ucc.deferred("angle")),
                 lambda x: np.reshape(x, (-1,)),
             ),
             units=ucc.deferred("angle"),

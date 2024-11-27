@@ -4,7 +4,7 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ._core import Measure
 from ... import validators
@@ -56,9 +56,9 @@ class PerspectiveCameraMeasure(Measure):
         return self._film_resolution
 
     origin: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             factory=lambda: [1, 1, 1] * ureg.m,
-            validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
+            validator=[validators.has_len(3), pinttrs.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="A 3-vector specifying the position of the camera.\n"
@@ -70,9 +70,9 @@ class PerspectiveCameraMeasure(Measure):
     )
 
     target: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             factory=lambda: [0, 0, 0] * ureg.m,
-            validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
+            validator=[validators.has_len(3), pinttrs.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
         doc="Point location targeted by the camera.\n"
@@ -117,7 +117,7 @@ class PerspectiveCameraMeasure(Measure):
             )
 
     far_clip: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             default=1e4 * ureg.km,
             units=ucc.deferred("length"),
         ),
@@ -130,7 +130,7 @@ class PerspectiveCameraMeasure(Measure):
     )
 
     fov: pint.Quantity = documented(
-        pinttr.field(default=50.0 * ureg.deg, units=ureg.deg),
+        pinttrs.field(default=50.0 * ureg.deg, units=ureg.deg),
         doc="Camera field of view.\n\nUnit-enabled field (default: degree).",
         type="quantity",
         init_type="quantity or float",

@@ -5,7 +5,7 @@ import drjit as dr
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttr
+import pinttrs
 
 from ._distant import AbstractDistantMeasure
 from ... import frame, validators
@@ -78,9 +78,9 @@ class HemisphericalDistantMeasure(AbstractDistantMeasure):
     )
 
     orientation: pint.Quantity = documented(
-        pinttr.field(
+        pinttrs.field(
             default=ureg.Quantity(0.0, ureg.deg),
-            validator=[validators.is_positive, pinttr.validators.has_compatible_units],
+            validator=[validators.is_positive, pinttrs.validators.has_compatible_units],
             units=ucc.deferred("angle"),
         ),
         doc="Azimuth angle defining the orientation of the sensor in the "

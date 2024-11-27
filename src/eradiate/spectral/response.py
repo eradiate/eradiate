@@ -159,7 +159,7 @@ class UniformSRF(SpectralResponseFunction):
     value = documented(
         pinttrs.field(
             units=ucc.deferred("dimensionless"),
-            factory=lambda: 1.0,
+            default=1.0,
             validator=validators.is_positive,
         ),
         doc="The value to which the phase function evaluates in its interval.",
