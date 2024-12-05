@@ -216,6 +216,7 @@ class BlendPhaseFunction(PhaseFunction):
 
                 result[f"{prefix}weight.type"] = "gridvolume"
                 result[f"{prefix}weight.grid"] = InitParameter(eval_conditional_weights)
+                result[f"{prefix}weight.filter_type"] = "nearest"
 
                 if self.geometry is not None:
                     result[f"{prefix}weight.to_world"] = (
@@ -237,6 +238,7 @@ class BlendPhaseFunction(PhaseFunction):
                 result[f"{prefix}weight.volume.grid"] = InitParameter(
                     eval_conditional_weights
                 )
+                result[f"{prefix}weight.volume.filter_type"] = "nearest"
                 result[f"{prefix}weight.to_world"] = (
                     self.geometry.atmosphere_volume_to_world
                 )
