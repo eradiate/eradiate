@@ -243,12 +243,14 @@ def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
         "phase_1.type": "rayleigh",
         "weight.type": "gridvolume",
         "weight.grid": np.reshape(phase.eval_conditional_weights(ctx.si), (-1, 1, 1)),
+        "weight.filter_type": "nearest",
     }
     if "geometry" in kwargs:
         geometry = SceneGeometry.convert(kwargs["geometry"])
         expected["weight.to_world"] = np.array(
             geometry.atmosphere_volume_to_world.matrix
         )
+
     assert_cmp_dict(kernel_dict, expected)
 
     # Check that the parameter map is correct
@@ -317,11 +319,13 @@ def test_blend_phase_kernel_dict_3_components(mode_mono, kwargs, expected_mi_wei
         "type": "blendphase",
         "weight.type": "gridvolume",
         "weight.grid": np.reshape(expected_mi_weights[0], (-1, 1, 1)),
+        "weight.filter_type": "nearest",
         "phase_0.type": "hg",
         "phase_0.g": -0.1,
         "phase_1.type": "blendphase",
         "phase_1.weight.type": "gridvolume",
         "phase_1.weight.grid": np.reshape(expected_mi_weights[1], (-1, 1, 1)),
+        "phase_1.weight.filter_type": "nearest",
         "phase_1.phase_0.type": "rayleigh",
         "phase_1.phase_1.type": "hg",
         "phase_1.phase_1.g": 0.1,
