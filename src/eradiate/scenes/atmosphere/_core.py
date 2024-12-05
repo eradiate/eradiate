@@ -660,6 +660,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         ),
                     ),
                     "to_world": to_world,
+                    "filter_type": "nearest",
                 },
                 "sigma_t": {
                     "type": "gridvolume",
@@ -674,6 +675,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         ),
                     ),
                     "to_world": to_world,
+                    "filter_type": "nearest",
                 },
             }
 
@@ -695,6 +697,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                                 ).astype(np.float32)
                             ),
                         ),
+                        "filter_type": "nearest",
                     },
                     "to_world": to_world,
                     "rmin": volume_rmin,
@@ -713,6 +716,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                                 ).astype(np.float32)
                             ),
                         ),
+                        "filter_type": "nearest",
                     },
                     "to_world": to_world,
                     "rmin": volume_rmin,

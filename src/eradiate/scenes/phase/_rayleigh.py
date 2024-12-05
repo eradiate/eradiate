@@ -109,6 +109,7 @@ class RayleighPhaseFunction(PhaseFunction):
                     ),
                 )
                 result["depolarization.to_world"] = to_world
+                result["depolarization.filter_type"] = "nearest"
 
             elif isinstance(self.geometry, SphericalShellGeometry):
                 volume_rmin = self.geometry.atmosphere_volume_rmin
@@ -124,6 +125,7 @@ class RayleighPhaseFunction(PhaseFunction):
                         ).astype(np.float32),
                     ),
                 )
+                result["depolarization.volume.filter_type"] = "nearest"
                 result["depolarization.to_world"] = to_world
                 result["depolarization.rmin"] = volume_rmin
 
