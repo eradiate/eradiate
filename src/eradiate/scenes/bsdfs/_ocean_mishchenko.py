@@ -19,12 +19,11 @@ class OceanMishchenkoBSDF(BSDF):
     """
     Ocean Mishchenko BSDF [``ocean_mishchenko``].
 
-    This BSDF implements the 6SV ocean surface model as described in
-    :cite:t:`Kotchenova2006The6SVRTM`. This model treats the ocean as an opaque
-    surface, and models the sunglint, whitecap and underlight components
-    of the ocean reflectance. It depends on wind properties and
-    pigmentation and chlorinity which makes it suitable to represent
-    case I waters as defined by :cite:t:`Morel1988ModelingUpperOcean`.
+    This plugin implements the polarized ocean surface model as implemented
+    by :cite:t:`Mishchenko1997AerosolRetrievalPolarization`. This model treats
+    the ocean as an opaque surface and models the polarized sunglint. It depends
+    on wind speed and the index of refraction of the water and external medium
+    (assumed to be air).
 
     See Also
     --------
