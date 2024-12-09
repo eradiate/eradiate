@@ -257,3 +257,10 @@ def test_interpolated_from_dataarray(mode_mono):
     spectrum = InterpolatedSpectrum.from_dataarray(quantity="reflectance", dataarray=da)
     assert np.all(spectrum.wavelengths.m_as(da.w.attrs["units"]) == da.w.values)
     assert np.all(spectrum.values.m_as(da.attrs["units"]) == da.values)
+
+
+def test_nan(mode_mono):
+    with pytest.raises(ValueError):
+        InterpolatedSpectrum(
+            wavelengths=[500.0, 550.0, 600.0], values=[1.0, np.nan, 1.0]
+        )

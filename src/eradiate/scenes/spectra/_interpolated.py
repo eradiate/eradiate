@@ -56,9 +56,13 @@ class InterpolatedSpectrum(Spectrum):
 
     @wavelengths.validator
     def _wavelengths_validator(self, attribute, value):
-        # wavelength must be monotonically increasing
+        # Wavelengths must be monotonically increasing
         if not np.all(np.diff(value) > 0):
             raise ValueError("wavelengths must be monotonically increasing")
+
+        # Check values
+        if np.any(np.isnan(value)):
+            raise ValueError("Detected NaN in 'wavelengths'")
 
     values: pint.Quantity = documented(
         attrs.field(
@@ -121,6 +125,10 @@ class InterpolatedSpectrum(Spectrum):
                 f"must have the same shape, got {self.wavelengths.shape} and "
                 f"{self.values.shape}"
             )
+
+        # Check values
+        if np.any(np.isnan(value)):
+            raise ValueError("Detected NaN in 'values'")
 
     def __init__(
         self,
