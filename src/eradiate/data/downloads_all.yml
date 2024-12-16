@@ -744,6 +744,7 @@
 - spectra/absorption/ckd/monotropa/monotropa-39800_39900.nc
 - spectra/absorption/ckd/monotropa/monotropa-39900_40000.nc
 # Absorption coefficient datasets (CKD): panellus
+- spectra/absorption/ckd/panellus/metadata.json
 - spectra/absorption/ckd/panellus/index.csv
 - spectra/absorption/ckd/panellus/panellus-250_251.nc
 - spectra/absorption/ckd/panellus/panellus-251_252.nc
@@ -2735,7 +2736,6 @@
 - spectra/absorption/ckd/panellus/panellus-2237_2238.nc
 - spectra/absorption/ckd/panellus/panellus-2238_2239.nc
 - spectra/absorption/ckd/panellus/panellus-2239_2240.nc
-
 - spectra/absorption/ckd/panellus/panellus-2240_2241.nc
 - spectra/absorption/ckd/panellus/panellus-2241_2242.nc
 - spectra/absorption/ckd/panellus/panellus-2242_2243.nc
