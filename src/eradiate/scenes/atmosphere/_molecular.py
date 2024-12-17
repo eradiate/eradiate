@@ -91,7 +91,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         default=":meth:`AbsorptionDatabase.default() <.AbsorptionDatabase.default>`",
     )
 
-    _thermoprops: xr.Dataset = documented(
+    _thermoprops: xr.Dataset | None = documented(
         attrs.field(
             kw_only=True,
             factory=lambda: joseki.make(
@@ -99,8 +99,10 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 z=np.linspace(0.0, 120.0, 121) * ureg.km,
                 additional_molecules=False,
             ),
-            converter=convert_thermoprops,
-            validator=attrs.validators.instance_of(xr.Dataset),
+            converter=attrs.converters.optional(convert_thermoprops),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(xr.Dataset)
+            ),
             repr=summary_repr,
         ),
         doc="Thermophysical property dataset. If a path is passed, Eradiate will "
@@ -109,8 +111,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         '``joseki.make(identifier="afgl_1986-us_standard",  z=np.linspace(0.0, 120.0, 121) * ureg.km)``. '
         "See `the Joseki docs <https://rayference.github.io/joseki/latest/reference/#src.joseki.core.make>`_ "
         "for details.",
-        type="Dataset",
-        init_type="Dataset or path-like or dict",
+        type="Dataset or None",
+        init_type="Dataset or path-like or dict or None",
     )
 
     has_absorption: bool = documented(
@@ -155,13 +157,22 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 "'has_absorption' and 'has_scattering' must be True"
             )
 
-    _radprops_profile: AtmosphereRadProfile | None = attrs.field(
-        default=None,
-        validator=attrs.validators.optional(
-            attrs.validators.instance_of(AtmosphereRadProfile)
+    _radprops_profile: RadProfile | None = documented(
+        attrs.field(
+            kw_only=True,
+            default=None,
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(RadProfile)
+            ),
         ),
-        init=False,
-        repr=False,
+        doc="Radiative properties object. "
+        "The default is None. If ``thermoprops`` is not None, "
+        "``radprops_profile`` will automatically create an .AtmosphereRadProfile. "
+        "Note that at least ``thermoprops`` or ``radprops_profile`` should be set "
+        "to a valid value. ",
+        type=".RadProfile or None",
+        init_type=".RadProfile or None",
+        default="None",
     )
 
     error_handler_config: ErrorHandlingConfiguration | None = documented(
@@ -184,13 +195,14 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         self.phase.id = self.phase_id
 
-        self._radprops_profile = AtmosphereRadProfile(
-            thermoprops=self.thermoprops,
-            has_scattering=self.has_scattering,
-            has_absorption=self.has_absorption,
-            absorption_data=self.absorption_data,
-            rayleigh_depolarization=self.rayleigh_depolarization,
-        )
+        if self.thermoprops is not None:
+            self._radprops_profile = AtmosphereRadProfile(
+                thermoprops=self.thermoprops,
+                has_scattering=self.has_scattering,
+                has_absorption=self.has_absorption,
+                absorption_data=self.absorption_data,
+                rayleigh_depolarization=self.rayleigh_depolarization,
+            )
 
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties
