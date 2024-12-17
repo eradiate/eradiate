@@ -21,6 +21,7 @@
 
    ZGrid
    RadProfile
+   ArrayRadProfile
    AtmosphereRadProfile
    AbsorptionDatabase
    MonoAbsorptionDatabase
