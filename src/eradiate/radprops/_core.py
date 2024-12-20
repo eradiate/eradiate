@@ -281,6 +281,14 @@ class RadProfile(ABC):
 
     @property
     @abstractmethod
+    def zbounds(self) -> tuple[pint.Quantity, pint.Quantity]:
+        """
+        Bounds of the z profile.
+        """
+        pass
+
+    @property
+    @abstractmethod
     def zgrid(self) -> ZGrid:
         """
         Default altitude grid used for profile evaluation.

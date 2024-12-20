@@ -15,7 +15,6 @@ from ..scenes.measure import (
 )
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, Surface, surface_factory
-from ..units import to_quantity
 
 
 def measure_inside_atmosphere(atmosphere: Atmosphere, measure: Measure) -> bool:
@@ -108,23 +107,21 @@ def check_geometry_atmosphere(
         extent.
     """
 
-    if atmosphere.thermoprops:
-        z = to_quantity(atmosphere.thermoprops.z)
-        thermoprops_zbounds = z[[0, -1]]
-        geometry_zbounds = geometry.zgrid.levels[[0, -1]]
-        suggested_solution = (
-            "Try to set the experiment geometry so that it does not go beyond "
-            "the vertical extent of the molecular atmosphere."
+    radprops_zbounds = atmosphere.radprops_profile.zbounds
+    geometry_zbounds = geometry.zgrid.levels[[0, -1]]
+    suggested_solution = (
+        "Try to set the experiment geometry so that it does not go beyond "
+        "the vertical extent of the molecular atmosphere."
+    )
+    if (geometry_zbounds[0] < radprops_zbounds[0]) or (
+        geometry_zbounds[1] > radprops_zbounds[1]
+    ):
+        raise ValueError(
+            "Attribtues 'geometry' and 'atmosphere' are incompatible: "
+            f"'geometry.zgrid' bounds ({geometry_zbounds}) go beyond the "
+            f"bounds of 'atmosphere.thermoprops' ({radprops_zbounds}). "
+            f"{suggested_solution}"
         )
-        if (geometry_zbounds[0] < thermoprops_zbounds[0]) or (
-            geometry_zbounds[1] > thermoprops_zbounds[1]
-        ):
-            raise ValueError(
-                "Attribtues 'geometry' and 'atmosphere' are incompatible: "
-                f"'geometry.zgrid' bounds ({geometry_zbounds}) go beyond the "
-                f"bounds of 'atmosphere.thermoprops' ({thermoprops_zbounds}). "
-                f"{suggested_solution}"
-            )
 
 
 def check_piecewise_compatible(

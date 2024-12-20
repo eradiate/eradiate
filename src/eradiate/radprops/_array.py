@@ -35,10 +35,10 @@ class ArrayRadProfile(RadProfile):
         attrs.field(
             default=None,
         ),
-        doc="``DataArray`` of absorption coefficients "
+        doc="``DataArray`` of absorption coefficients. "
         "The ``DataArray`` is composed of two dimensions ``{w, z}`` representing the "
         "wavelength and altitude respectively. Note that ``w`` must be of length "
-        "2 minimum to be correctly interpolated. ",
+        "2 minimum to be correctly interpolated.",
         type="DataArray or None",
         init_type="DataArray or None",
         default="None",
@@ -48,10 +48,10 @@ class ArrayRadProfile(RadProfile):
         attrs.field(
             default=None,
         ),
-        doc="``DataArray`` of scattering coefficients "
+        doc="``DataArray`` of scattering coefficients. "
         "The ``DataArray`` is composed of two dimensions ``{w, z}`` representing the "
         "wavelength and altitude respectively. Note that ``w`` must be of length "
-        "2 minimum to be correctly interpolated. ",
+        "2 minimum to be correctly interpolated.",
         type="DataArray or None",
         init_type="DataArray or None",
         default="None",
@@ -94,16 +94,19 @@ class ArrayRadProfile(RadProfile):
         "A ``ndarray`` will be interpreted as a description of the depolarization "
         "factor at different levels of the atmosphere. Must be shaped (N,) with "
         "N the number of layers.",
+        init_type="array-like, optional",
+        default="[0]",
     )
 
-    interpolation_method: str = documented(
+    interpolation_method: t.Literal["nearest", "linear"] = documented(
         attrs.field(
             default="nearest",
             converter=str,
-            validator=attrs.validators.instance_of(str),
+            validator=attrs.validators.in_(["nearest", "linear"]),
         ),
-        doc="Method of interpolation of the absorption and scattering coefficients. ",
+        doc="Method of interpolation of the absorption and scattering coefficients.",
         type="str",
+        init_type="{'nearest', 'linear'}",
         default="nearest",
     )
 
@@ -113,8 +116,9 @@ class ArrayRadProfile(RadProfile):
             converter=dict,
             validator=attrs.validators.instance_of(dict),
         ),
-        doc="Interpolation arguments passed to xarray during interpolation. ",
+        doc="Keyword arguments passed to :meth:`xarray.DataArray.interp` when called.",
         type="dict",
+        init_type="dict, optional",
     )
 
     def __attrs_post_init__(self):
@@ -122,6 +126,14 @@ class ArrayRadProfile(RadProfile):
 
     def update(self) -> None:
         pass
+
+    @property
+    def zbounds(self) -> tuple[pint.Quantity, pint.Quantity]:
+        z_sigma_s = to_quantity(self.sigma_s.z)
+        z_sigma_a = to_quantity(self.sigma_a.z)
+        z_max = min(z_sigma_s.max(), z_sigma_a.max())
+        z_min = max(z_sigma_s.min(), z_sigma_a.min())
+        return z_min, z_max
 
     @property
     def levels(self) -> pint.Quantity:
