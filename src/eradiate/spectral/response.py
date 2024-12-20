@@ -21,12 +21,6 @@ from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.misc import summary_repr
 
-# TODO:
-#  * Propagate to measure and other intermediate components
-#  * Add plotting facilities
-#  * Documentation
-
-
 # ------------------------------------------------------------------------------
 #                             Class implementations
 # ------------------------------------------------------------------------------
