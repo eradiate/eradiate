@@ -165,11 +165,11 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 attrs.validators.instance_of(RadProfile)
             ),
         ),
-        doc="Radiative properties object. "
-        "The default is None. If ``thermoprops`` is not None, "
-        "``radprops_profile`` will automatically create an .AtmosphereRadProfile. "
-        "Note that at least ``thermoprops`` or ``radprops_profile`` should be set "
-        "to a valid value. ",
+        doc="Radiative property profile. "
+        "If ``thermoprops`` is not ``None``, this field is automatically "
+        "overridden with an :class:`.AtmosphereRadProfile` during initialization. "
+        "Note that at least ``thermoprops`` or ``radprops_profile`` should not "
+        "be ``None``.",
         type=".RadProfile or None",
         init_type=".RadProfile or None",
         default="None",

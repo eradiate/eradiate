@@ -117,6 +117,8 @@ class AtmosphereRadProfile(RadProfile):
         "A ``ndarray`` will be interpreted as a description of the depolarization "
         "factor at different levels of the atmosphere. Must be shaped (N,) with "
         "N the number of layers.",
+        init_type="array-like or str, optional",
+        default="[0]",
     )
 
     _zgrid: ZGrid | None = attrs.field(default=None, init=False)
@@ -126,6 +128,11 @@ class AtmosphereRadProfile(RadProfile):
 
     def update(self) -> None:
         self._zgrid = ZGrid(levels=self.levels)
+
+    @property
+    def zbounds(self) -> tuple[pint.Quantity, pint.Quantity]:
+        z = to_quantity(self.thermoprops.z)
+        return tuple(z[[0, -1]])
 
     @property
     def levels(self) -> pint.Quantity:
