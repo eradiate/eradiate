@@ -28,7 +28,7 @@ INSTRUMENTS = {
     "sentinel_3b-olci": [str(i) for i in range(1, 22)],
     "sentinel_3b-slstr": [str(i) for i in range(1, 10)],
     "aqua-modis": [str(i) for i in range(1, 17)],
-    "terra-modis": [str(i) for i in range(1, 27)],
+    "terra-modis": [str(i) for i in range(1, 17)],
     "jpss1-viirs": [f"i{i}" for i in range(1, 6)]
     + [f"m{i}" for i in range(1, 17)]
     + ["m16a", "m16b"],
@@ -43,9 +43,14 @@ INSTRUMENTS = {
         for i in ["4", "8", "12", "15", "16", "17", "20", "22", "23"]
         + ["24", "25", "26", "28", "30", "33", "34", "35", "37", "39", "40"]
     ],
+    "msg1-seviri": ["vis06", "vis08", "nir16", "hrv"],
+    "msg2-seviri": ["vis06", "vis08", "nir16", "hrv"],
+    "msg3-seviri": ["vis06", "vis08", "nir16", "hrv"],
+    "msg4-seviri": ["vis06", "vis08", "nir16", "hrv"],
     "mtg_i-fci": ["nir13", "nir16", "nir22", "vis04"]
     + ["vis05", "vis06", "vis08", "vis09"],
     "mtg_i-li": ["1", "2"],
+    "parasol-polder": ["443", "490", "565", "670", "763", "765", "865", "910", "1020"],
     "proba_v-vegetation_left": ["blue", "red", "nir", "swir"],
     "proba_v-vegetation_center": ["blue", "red", "nir", "swir"],
     "proba_v-vegetation_right": ["blue", "red", "nir", "swir"],
