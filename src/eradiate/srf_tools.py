@@ -882,7 +882,7 @@ def filter_srf(
     wmax: pint.Quantity | None = None,
     percentage: float | None = None,
     pad: bool = False,
-) -> None:
+) -> xr.Dataset:
     """
     Filter a spectral response function data set.
 
@@ -935,6 +935,11 @@ def filter_srf(
 
     pad : bool, default: False
         If True, pad SRF data with leading and trailing zeros.
+
+    Returns
+    -------
+    filtered : Dataset
+        Filtered dataset.
 
     Notes
     -----
@@ -1000,6 +1005,8 @@ def filter_srf(
             return
 
     save(ds=filtered, path=output_path, verbose=verbose, dry_run=dry_run)
+
+    return filtered
 
 
 @deprecated(
