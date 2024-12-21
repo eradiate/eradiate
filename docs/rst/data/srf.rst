@@ -3,9 +3,9 @@
 Spectral response functions
 ===========================
 
-A spectral response function dataset provides tabulated values of the spectral
-response of a radiometric instrument.
-Eradiate's built-in particle SRF datasets are managed by the data store
+A spectral response function (SRF) dataset provides tabulated values of the
+spectral response of a radiometric instrument.
+Eradiate's built-in SRF datasets are managed by the data store
 (see :ref:`sec-data-intro` for details).
 
 Format
@@ -51,15 +51,18 @@ Dataset index
 
     The following datasets are processed to minimize the amount of computation
     performed for parts of the spectrum that will result in a low contribution
-    to the final measure. Data are processed to keep the total integral of the
-    SRF equal to at least 99.9% of that in the raw data. All data are also
-    padded with a leading and trailing zero.
+    to the final measure. All data are also padded with a leading and trailing
+    zero.
 
-    The data processing method might still yield a dataset with long tails with
-    values close to zero with a very low contribution to the final result. The
-    data is regularly revisited and optimized based on feedback from the
-    development team and users. We encourage users to visualize the SRF data
-    before using them to make sure that the data are processed to their liking.
+    The default data processing method, which keeps the total integral of the
+    SRF equal to at least 99.9% of that in the raw data, might still yield a
+    dataset with long tails with values close to zero with a very low
+    contribution to the final result. The  data is regularly revisited and
+    optimized based on feedback from the development team and users. We
+    strongly advise users to visualize the SRF data before using them to make
+    sure that the data are processed to their liking. If necessary, Eradiate
+    ships an SRF processing toolbox
+    (see :doc:`/tutorials/howto/srf_filtering/srf_filtering`).
 
     Raw data are also available, using a ``-raw`` suffix to the dataset ID
     (*e.g.* ``sentinel_3b-slstr-5-raw``).
@@ -243,16 +246,6 @@ Dataset index
     * ``spectra/srf/terra-modis-14.nc``
     * ``spectra/srf/terra-modis-15.nc``
     * ``spectra/srf/terra-modis-16.nc``
-    * ``spectra/srf/terra-modis-17.nc``
-    * ``spectra/srf/terra-modis-18.nc``
-    * ``spectra/srf/terra-modis-19.nc``
-    * ``spectra/srf/terra-modis-20.nc``
-    * ``spectra/srf/terra-modis-21.nc``
-    * ``spectra/srf/terra-modis-22.nc``
-    * ``spectra/srf/terra-modis-23.nc``
-    * ``spectra/srf/terra-modis-24.nc``
-    * ``spectra/srf/terra-modis-25.nc``
-    * ``spectra/srf/terra-modis-26.nc``
 
 .. image:: /fig/srf/terra-modis.png
 
@@ -387,6 +380,54 @@ Dataset index
 
 .. image:: /fig/srf/metop_sg-metimage.png
 
+``msg1-seviri``
+^^^^^^^^^^^^^^^
+
+.. dropdown:: Data store paths
+
+    * ``spectra/srf/msg1-seviri-vis06.nc``
+    * ``spectra/srf/msg1-seviri-vis08.nc``
+    * ``spectra/srf/msg1-seviri-nir16.nc``
+    * ``spectra/srf/msg1-seviri-hrv.nc``
+
+.. image:: /fig/srf/msg1-seviri.png
+
+``msg2-seviri``
+^^^^^^^^^^^^^^^
+
+.. dropdown:: Data store paths
+
+    * ``spectra/srf/msg2-seviri-vis06.nc``
+    * ``spectra/srf/msg2-seviri-vis08.nc``
+    * ``spectra/srf/msg2-seviri-nir16.nc``
+    * ``spectra/srf/msg2-seviri-hrv.nc``
+
+.. image:: /fig/srf/msg2-seviri.png
+
+``msg3-seviri``
+^^^^^^^^^^^^^^^
+
+.. dropdown:: Data store paths
+
+    * ``spectra/srf/msg3-seviri-vis06.nc``
+    * ``spectra/srf/msg3-seviri-vis08.nc``
+    * ``spectra/srf/msg3-seviri-nir16.nc``
+    * ``spectra/srf/msg3-seviri-hrv.nc``
+
+.. image:: /fig/srf/msg3-seviri.png
+
+``msg4-seviri``
+^^^^^^^^^^^^^^^
+
+.. dropdown:: Data store paths
+
+    * ``spectra/srf/msg4-seviri-vis06.nc``
+    * ``spectra/srf/msg4-seviri-vis08.nc``
+    * ``spectra/srf/msg4-seviri-nir16.nc``
+    * ``spectra/srf/msg4-seviri-hrv.nc``
+
+.. image:: /fig/srf/msg4-seviri.png
+
 ``mtg_i-fci``
 ^^^^^^^^^^^^^
 
@@ -412,6 +453,23 @@ Dataset index
     * ``spectra/srf/mtg_i-li-2.nc``
 
 .. image:: /fig/srf/mtg_i-li.png
+
+``parasol-polder``
+^^^^^^^^^^^^^^^^^^
+
+.. dropdown:: Data store paths
+
+    * ``spectra/srf/parasol-polder-443.nc``
+    * ``spectra/srf/parasol-polder-490.nc``
+    * ``spectra/srf/parasol-polder-565.nc``
+    * ``spectra/srf/parasol-polder-670.nc``
+    * ``spectra/srf/parasol-polder-763.nc``
+    * ``spectra/srf/parasol-polder-765.nc``
+    * ``spectra/srf/parasol-polder-865.nc``
+    * ``spectra/srf/parasol-polder-910.nc``
+    * ``spectra/srf/parasol-polder-1020.nc``
+
+.. image:: /fig/srf/parasol-polder.png
 
 ``proba_v-vegetation_left``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -448,4 +506,3 @@ Dataset index
     * ``spectra/srf/proba_v-vegetation_right-swir.nc``
 
 .. image:: /fig/srf/proba_v-vegetation_right.png
-

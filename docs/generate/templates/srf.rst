@@ -3,9 +3,9 @@
 Spectral response functions
 ===========================
 
-A spectral response function dataset provides tabulated values of the spectral
-response of a radiometric instrument.
-Eradiate's built-in particle SRF datasets are managed by the data store
+A spectral response function (SRF) dataset provides tabulated values of the
+spectral response of a radiometric instrument.
+Eradiate's built-in SRF datasets are managed by the data store
 (see :ref:`sec-data-intro` for details).
 
 Format
@@ -51,15 +51,18 @@ Dataset index
 
     The following datasets are processed to minimize the amount of computation
     performed for parts of the spectrum that will result in a low contribution
-    to the final measure. Data are processed to keep the total integral of the
-    SRF equal to at least 99.9% of that in the raw data. All data are also
-    padded with a leading and trailing zero.
+    to the final measure. All data are also padded with a leading and trailing
+    zero.
 
-    The data processing method might still yield a dataset with long tails with
-    values close to zero with a very low contribution to the final result. The
-    data is regularly revisited and optimized based on feedback from the
-    development team and users. We encourage users to visualize the SRF data
-    before using them to make sure that the data are processed to their liking.
+    The default data processing method, which keeps the total integral of the
+    SRF equal to at least 99.9% of that in the raw data, might still yield a
+    dataset with long tails with values close to zero with a very low
+    contribution to the final result. The  data is regularly revisited and
+    optimized based on feedback from the development team and users. We
+    strongly advise users to visualize the SRF data before using them to make
+    sure that the data are processed to their liking. If necessary, Eradiate
+    ships an SRF processing toolbox
+    (see :doc:`/tutorials/howto/srf_filtering/srf_filtering`).
 
     Raw data are also available, using a ``-raw`` suffix to the dataset ID
     (*e.g.* ``sentinel_3b-slstr-5-raw``).
