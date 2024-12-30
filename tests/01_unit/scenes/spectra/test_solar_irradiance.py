@@ -22,7 +22,7 @@ from eradiate.units import PhysicalQuantity
         "dataset_doesnt_exist",
     ],
 )
-def test_solar_irradiance_construct(modes_all, tested, expected):
+def test_solar_irradiance_construct(mode_mono, tested, expected):
     if isinstance(expected, SolarIrradianceSpectrum):
         s = SolarIrradianceSpectrum(**tested)
         assert s.quantity is PhysicalQuantity.IRRADIANCE
