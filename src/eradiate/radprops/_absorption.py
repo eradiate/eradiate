@@ -804,8 +804,12 @@ class AbsorptionDatabase:
         x_ds_scalar = [coord for coord in x_ds if ds[coord].size == 1]
         x_ds_array = set(x_ds) - set(x_ds_scalar)
 
+        x_thermoprops = [dv for dv in thermoprops.data_vars if dv.startswith("x_")]
+        x_missing = set(x_ds_array) - set(x_thermoprops)
+        x_ds_array = x_ds_array - x_missing
+
         # -- Select on scalar coordinates
-        result = result.isel(**{x: 0 for x in x_ds_scalar})
+        result = result.isel(**{x: 0 for x in x_ds_scalar + list(x_missing)})
 
         # -- Interpolate on array coordinates
         bounds_error = error_handling_config.x.bounds is ErrorHandlingAction.RAISE
