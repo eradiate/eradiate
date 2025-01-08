@@ -5,6 +5,7 @@ Array radiative profile.
 from __future__ import annotations
 
 import typing as t
+import warnings
 
 import attrs
 import numpy as np
@@ -129,10 +130,22 @@ class ArrayRadProfile(RadProfile):
 
     @property
     def zbounds(self) -> tuple[pint.Quantity, pint.Quantity]:
-        z_sigma_s = to_quantity(self.sigma_s.z)
-        z_sigma_a = to_quantity(self.sigma_a.z)
-        z_max = min(z_sigma_s.max(), z_sigma_a.max())
-        z_min = max(z_sigma_s.min(), z_sigma_a.min())
+        z_max = np.inf
+        z_min = -1.0
+        if self.sigma_s is not None and self.has_scattering:
+            z_sigma_s = to_quantity(self.sigma_s.z)
+            z_max = pint.Quantity(z_max, z_sigma_s.units)
+            z_min = pint.Quantity(z_min, z_sigma_s.units)
+            z_max = min(z_max, z_sigma_s.max())
+            z_min = max(z_min, z_sigma_s.min())
+
+        if self.sigma_a is not None and self.has_absorption:
+            z_sigma_a = to_quantity(self.sigma_a.z)
+            z_max = pint.Quantity(z_max, z_sigma_a.units)
+            z_min = pint.Quantity(z_min, z_sigma_a.units)
+            z_max = min(z_max, z_sigma_a.max())
+            z_min = max(z_min, z_sigma_a.min())
+
         return z_min, z_max
 
     @property
@@ -183,6 +196,10 @@ class ArrayRadProfile(RadProfile):
     def eval_sigma_a_ckd(
         self, w: pint.Quantity, g: float, zgrid: ZGrid
     ) -> pint.Quantity:
+        warnings.warn(
+            "You are using ArrayRadProps in CKD mode, this is not standard "
+            "behaviour and might provide erroneous results."
+        )
         return self.eval_sigma_a_mono(w=w, zgrid=zgrid)
 
     def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
