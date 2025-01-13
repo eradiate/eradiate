@@ -535,7 +535,10 @@ class CKDSpectralGrid(SpectralGrid):
         abs_db : .CKDAbsorptionDatabase
         """
         if not isinstance(abs_db, CKDAbsorptionDatabase):
-            raise TypeError
+            raise TypeError(
+                "CKD spectral grid can only be derived from a "
+                f"CKDAbsorptionDatabase instance, got a {type(abs_db).__name__}"
+            )
 
         wmins = abs_db.spectral_coverage["wbound_lower [nm]"].values * ureg.nm
         wmaxs = abs_db.spectral_coverage["wbound_upper [nm]"].values * ureg.nm
