@@ -23,7 +23,7 @@ def test_data():
     )
 
 
-def test_array(modes_all_double, test_data):
+def test_array(modes_all_mono, test_data):
     zgrid = eradiate.scenes.geometry.ZGrid(np.linspace(0, 1000, 11))
     si = eradiate.spectral.SpectralIndex.new(w=550 * ureg.nm)
 
@@ -42,7 +42,7 @@ def test_array(modes_all_double, test_data):
     assert np.all(sigma_s.m_as("1/m") == test_data.isel(w=0).values)
 
 
-def test_resample_array(modes_all_double, test_data):
+def test_resample_array(modes_all_mono, test_data):
     zgrid = eradiate.scenes.geometry.ZGrid(np.linspace(0, 1000, 21))
     si = eradiate.spectral.SpectralIndex.new(w=550 * ureg.nm)
 
@@ -65,7 +65,7 @@ def test_resample_array(modes_all_double, test_data):
     assert np.all(sigma_s.m_as("1/m") == gt)
 
 
-def test_array_zeros(modes_all_double, test_data):
+def test_array_zeros(modes_all_mono, test_data):
     zgrid = eradiate.scenes.geometry.ZGrid(np.linspace(0, 1000, 11))
     si = eradiate.spectral.SpectralIndex.new(w=550 * ureg.nm)
 
