@@ -110,7 +110,8 @@ class BlendPhaseFunction(PhaseFunction):
         for component in self.components:
             component.update()
 
-            if isinstance(component, BlendPhaseFunction):
+            # TODO: not very elegant, probably needs a refactor.
+            if hasattr(component, "geometry"):
                 component.geometry = self.geometry
 
     @cache_by_id

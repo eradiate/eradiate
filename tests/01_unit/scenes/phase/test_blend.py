@@ -241,6 +241,9 @@ def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
         "type": "blendphase",
         "phase_0.type": "isotropic",
         "phase_1.type": "rayleigh",
+        "phase_1.depolarization.type": "gridvolume",
+        "phase_1.depolarization.grid": np.zeros(1).reshape((-1, 1, 1)),
+        "phase_1.depolarization.filter_type": "nearest",
         "weight.type": "gridvolume",
         "weight.grid": np.reshape(phase.eval_conditional_weights(ctx.si), (-1, 1, 1)),
         "weight.filter_type": "nearest",
@@ -250,11 +253,14 @@ def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
         expected["weight.to_world"] = np.array(
             geometry.atmosphere_volume_to_world.matrix
         )
+        expected["phase_1.depolarization.to_world"] = np.array(
+            geometry.atmosphere_volume_to_world.matrix
+        )
 
     assert_cmp_dict(kernel_dict, expected)
 
     # Check that the parameter map is correct
-    assert set(params.keys()) == {"weight.data"}
+    assert set(params.keys()) == {"weight.data", "phase_1.depolarization.data"}
 
 
 @pytest.mark.parametrize(
@@ -327,6 +333,9 @@ def test_blend_phase_kernel_dict_3_components(mode_mono, kwargs, expected_mi_wei
         "phase_1.weight.grid": np.reshape(expected_mi_weights[1], (-1, 1, 1)),
         "phase_1.weight.filter_type": "nearest",
         "phase_1.phase_0.type": "rayleigh",
+        "phase_1.phase_0.depolarization.type": "gridvolume",
+        "phase_1.phase_0.depolarization.grid": np.zeros(1).reshape((-1, 1, 1)),
+        "phase_1.phase_0.depolarization.filter_type": "nearest",
         "phase_1.phase_1.type": "hg",
         "phase_1.phase_1.g": 0.1,
     }
@@ -337,6 +346,9 @@ def test_blend_phase_kernel_dict_3_components(mode_mono, kwargs, expected_mi_wei
             geometry.atmosphere_volume_to_world.matrix
         )
         expected["phase_1.weight.to_world"] = expected["weight.to_world"].copy()
+        expected["phase_1.phase_0.depolarization.to_world"] = expected[
+            "weight.to_world"
+        ].copy()
 
     assert_cmp_dict(expected, kernel_dict)
 
@@ -346,4 +358,5 @@ def test_blend_phase_kernel_dict_3_components(mode_mono, kwargs, expected_mi_wei
         "phase_0.g",
         "phase_1.weight.data",
         "phase_1.phase_1.g",
+        "phase_1.phase_0.depolarization.data",
     }
