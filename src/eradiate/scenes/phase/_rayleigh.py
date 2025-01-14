@@ -90,81 +90,75 @@ class RayleighPhaseFunction(PhaseFunction):
     def template(self) -> dict:
         if eradiate.mode().is_polarized:
             result = {"type": "rayleigh_polarized"}
-
-            if self.geometry is None or isinstance(
-                self.geometry, PlaneParallelGeometry
-            ):
-                if self.geometry is None:
-                    to_world = mi.ScalarTransform4f()
-                else:
-                    to_world = self.geometry.atmosphere_volume_to_world
-
-                result["depolarization.type"] = "gridvolume"
-                result["depolarization.grid"] = InitParameter(
-                    lambda ctx: mi.VolumeGrid(
-                        np.reshape(
-                            self.eval_depolarization_factor(ctx.si),
-                            (-1, 1, 1),
-                        ).astype(np.float32),
-                    ),
-                )
-                result["depolarization.to_world"] = to_world
-                result["depolarization.filter_type"] = "nearest"
-
-            elif isinstance(self.geometry, SphericalShellGeometry):
-                volume_rmin = self.geometry.atmosphere_volume_rmin
-                to_world = self.geometry.atmosphere_volume_to_world
-
-                result["depolarization.type"] = "sphericalcoordsvolume"
-                result["depolarization.volume.type"] = "gridvolume"
-                result["depolarization.volume.grid"] = InitParameter(
-                    lambda ctx: mi.VolumeGrid(
-                        np.reshape(
-                            self.eval_depolarization_factor(ctx.si),
-                            (-1, 1, 1),
-                        ).astype(np.float32),
-                    ),
-                )
-                result["depolarization.volume.filter_type"] = "nearest"
-                result["depolarization.to_world"] = to_world
-                result["depolarization.rmin"] = volume_rmin
-
-            return result
         else:
-            return {"type": "rayleigh"}
+            result = {"type": "rayleigh"}
+
+        if self.geometry is None or isinstance(self.geometry, PlaneParallelGeometry):
+            result["depolarization.type"] = "gridvolume"
+            result["depolarization.grid"] = InitParameter(
+                lambda ctx: mi.VolumeGrid(
+                    np.reshape(
+                        self.eval_depolarization_factor(ctx.si),
+                        (-1, 1, 1),
+                    ).astype(np.float32),
+                ),
+            )
+            result["depolarization.filter_type"] = "nearest"
+
+            if self.geometry is not None:
+                result["depolarization.to_world"] = (
+                    self.geometry.atmosphere_volume_to_world
+                )
+
+        elif isinstance(self.geometry, SphericalShellGeometry):
+            volume_rmin = self.geometry.atmosphere_volume_rmin
+            to_world = self.geometry.atmosphere_volume_to_world
+
+            result["depolarization.type"] = "sphericalcoordsvolume"
+            result["depolarization.volume.type"] = "gridvolume"
+            result["depolarization.volume.grid"] = InitParameter(
+                lambda ctx: mi.VolumeGrid(
+                    np.reshape(
+                        self.eval_depolarization_factor(ctx.si),
+                        (-1, 1, 1),
+                    ).astype(np.float32),
+                ),
+            )
+            result["depolarization.volume.filter_type"] = "nearest"
+            result["depolarization.to_world"] = to_world
+            result["depolarization.rmin"] = volume_rmin
+
+        return result
 
     @property
     def params(self) -> dict[str, UpdateParameter]:
         result = {}
 
-        if eradiate.mode().is_polarized:
-            if self.geometry is None or isinstance(
-                self.geometry, PlaneParallelGeometry
-            ):
-                result["depolarization.data"] = UpdateParameter(
-                    lambda ctx: np.reshape(
-                        self.eval_depolarization_factor(ctx.si),
-                        (-1, 1, 1, 1),
-                    ).astype(np.float32),
-                    UpdateParameter.Flags.SPECTRAL,
-                    # lookup_strategy=TypeIdLookupStrategy(
-                    #     node_type=mi.PhaseFunction,
-                    #     node_id=self.phase.id,
-                    #     parameter_relpath=,
-                    # ),
-                )
+        if self.geometry is None or isinstance(self.geometry, PlaneParallelGeometry):
+            result["depolarization.data"] = UpdateParameter(
+                lambda ctx: np.reshape(
+                    self.eval_depolarization_factor(ctx.si),
+                    (-1, 1, 1, 1),
+                ).astype(np.float32),
+                UpdateParameter.Flags.SPECTRAL,
+                # lookup_strategy=TypeIdLookupStrategy(
+                #     node_type=mi.PhaseFunction,
+                #     node_id=self.phase.id,
+                #     parameter_relpath=,
+                # ),
+            )
 
-            elif isinstance(self.geometry, SphericalShellGeometry):
-                result["depolarization.volume.data"] = UpdateParameter(
-                    lambda ctx: np.reshape(
-                        self.eval_depolarization_factor(ctx.si),
-                        (1, 1, -1, 1),
-                    ).astype(np.float32),
-                    UpdateParameter.Flags.SPECTRAL,
-                    # lookup_strategy=TypeIdLookupStrategy(
-                    #     node_type=mi.PhaseFunction,
-                    #     node_id=self.phase.id,
-                    #     parameter_relpath=,
-                    # ),
-                )
+        elif isinstance(self.geometry, SphericalShellGeometry):
+            result["depolarization.volume.data"] = UpdateParameter(
+                lambda ctx: np.reshape(
+                    self.eval_depolarization_factor(ctx.si),
+                    (1, 1, -1, 1),
+                ).astype(np.float32),
+                UpdateParameter.Flags.SPECTRAL,
+                # lookup_strategy=TypeIdLookupStrategy(
+                #     node_type=mi.PhaseFunction,
+                #     node_id=self.phase.id,
+                #     parameter_relpath=,
+                # ),
+            )
         return result
