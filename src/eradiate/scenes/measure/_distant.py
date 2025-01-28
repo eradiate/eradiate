@@ -544,7 +544,7 @@ class MultiPixelDistantMeasure(AbstractDistantMeasure):
         -------
         DistantMeasure
         """
-        azimuth_convention = kwargs.pop("azimuth_convention", None)
+        azimuth_convention = kwargs.get("azimuth_convention", None)
         if azimuth_convention is None:
             azimuth_convention = settings.azimuth_convention
 
