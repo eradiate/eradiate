@@ -245,6 +245,7 @@ class Experiment(ABC):
     @abstractmethod
     def process(
         self,
+        measures: None | int | list[int] = None,
         spp: int = 0,
         seed_state: SeedState | None = None,
     ) -> None:
@@ -253,6 +254,10 @@ class Experiment(ABC):
 
         Parameters
         ----------
+        measures : int or list of int, optional
+            Indices of the measures that will be processed. By default, all
+            measures are processed.
+
         spp : int, optional
             Sample count. If set to 0, the value set in the original scene
             definition takes precedence.
@@ -265,9 +270,15 @@ class Experiment(ABC):
         pass
 
     @abstractmethod
-    def postprocess(self) -> None:
+    def postprocess(self, measures: None | int | list[int] = None) -> None:
         """
         Post-process raw results and store them in :attr:`results`.
+
+        Parameters
+        ----------
+        measures : int or list of int, optional
+            Indices of the measures that will be processed. By default, all
+            measures are processed.
         """
         pass
 
@@ -534,30 +545,53 @@ class EarthObservationExperiment(Experiment, ABC):
         # Remove unused elements from Mitsuba scene parameter table
         self.mi_scene.drop_parameters()
 
-    def process(self, spp: int = 0, seed_state: SeedState | None = None) -> None:
+    def process(
+        self,
+        measures: None | int | list[int] = None,
+        spp: int = 0,
+        seed_state: SeedState | None = None,
+    ) -> None:
         # Inherit docstring
 
         # Set up Mitsuba scene
         if self.mi_scene is None:
             self.init()
 
+        # Collect active sensor IDs
+        if measures is None:
+            measures = self.measures
+        else:
+            if isinstance(measures, int):
+                measures = [measures]
+            measures = [self.measures[i] for i in measures]
+
+        active_sensors = [measure.sensor_id for measure in measures]
+        mi_sensors = self.mi_scene.obj.sensors()
+        active_sensors = [
+            i for i, sensor in enumerate(mi_sensors) if sensor.id() in active_sensors
+        ]
+
         # Run Mitsuba for each context
         logger.info("Launching simulation")
 
         mi_results = mi_render(
-            self.mi_scene, self.contexts, seed_state=seed_state, spp=spp
+            self.mi_scene,
+            self.contexts,
+            sensors=active_sensors,
+            seed_state=seed_state,
+            spp=spp,
         )
 
         # Assign collected results to the appropriate measure
         sensor_to_measure: dict[str, Measure] = {
-            measure.sensor_id: measure for measure in self.measures
+            measure.sensor_id: measure for measure in measures
         }
 
         def convert_to_y_format(img):
             img_np = np.array(img, copy=False)[:, :, [0]]
             return mi.Bitmap(img_np, mi.Bitmap.PixelFormat.Y)
 
-        # create a mapping from bitmap names to result names
+        # Map bitmap names to result names
         mapping = {}
         if self.integrator.stokes:
             stokes = ["S0", "S1", "S2", "S3"]
@@ -593,13 +627,19 @@ class EarthObservationExperiment(Experiment, ABC):
 
                 measure.mi_results[ctx_index] = result_imgs
 
-    def postprocess(self) -> None:
+    def postprocess(self, measures: None | int | list[int] = None) -> None:
         # Inherit docstring
         logger.info("Post-processing results")
-        measures = self.measures
+
+        if measures is None:
+            measures = list(range(len(self.measures)))
+        else:
+            if isinstance(measures, int):
+                measures = [measures]
 
         # Run pipelines
-        for i, measure in enumerate(measures):
+        for i in measures:
+            measure = self.measures[i]
             drv: Driver = self.pipeline(measure)
             inputs = self._pipeline_inputs(i)
             outputs = pl.outputs(drv)
@@ -641,6 +681,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
 def run(
     exp: Experiment,
+    measures: None | int | list[int] = None,
     spp: int = 0,
     seed_state: SeedState | None = None,
 ) -> xr.Dataset | dict[str, xr.Dataset]:
@@ -653,6 +694,10 @@ def run(
     ----------
     exp : Experiment
         Reference to the experiment object which will be processed.
+
+    measures : int or list of int, optional
+        Indices of the measures that will be processed. By default, all measures
+        are processed.
 
     spp : int, optional, default: 0
         Optional parameter to override the number of samples per pixel for all
@@ -671,6 +716,6 @@ def run(
         If several measures are defined, a dictionary mapping measure IDs to
         the corresponding result dataset is returned.
     """
-    exp.process(spp=spp, seed_state=seed_state)
-    exp.postprocess()
+    exp.process(spp=spp, measures=measures, seed_state=seed_state)
+    exp.postprocess(measures=measures)
     return exp.results if len(exp.results) > 1 else onedict_value(exp.results)
