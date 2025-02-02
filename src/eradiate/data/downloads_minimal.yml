@@ -52,6 +52,9 @@
 - spectra/srf/sentinel_2a-msi-8a.nc
 - spectra/srf/sentinel_2a-msi-9-raw.nc
 - spectra/srf/sentinel_2a-msi-9.nc
+# Absorption database (monochromatic): komodo
+- spectra/absorption/mono/komodo/metadata.json
+- spectra/absorption/mono/komodo/komodo.nc
 # Absorption coefficient datasets (CKD): mycena
 - spectra/absorption/ckd/mycena/index.csv
 - spectra/absorption/ckd/mycena/metadata.json
