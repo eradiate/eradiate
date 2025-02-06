@@ -17,13 +17,13 @@ on:
         required: true
         type: choice
         options:
-        - ubuntu-latest
-        default: 'ubuntu-latest'
+        - ubuntu
+        default: 'ubuntu'
 
 jobs:
   build:
     name: Build distribution
-    runs-on: [self-hosted, "${{ inputs.operating-system }}"]
+    runs-on: [self-hosted, ars, "${{ inputs.operating-system }}"]
 
     steps:
       - uses: actions/checkout@v4
