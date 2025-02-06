@@ -17,8 +17,12 @@ on:
         required: true
         type: choice
         options:
-        - ubuntu
-        default: 'ubuntu'
+        - linux_x86_64
+        - ubuntu_x86_64
+        - windows_x86_64
+        - macos_13
+        - macos_15
+        default: 'linux_x86_64'
 
 jobs:
   build:
