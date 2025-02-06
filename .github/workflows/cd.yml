@@ -13,11 +13,17 @@ on:
         description: 'Upload wheels to PyPI? (0: no, 1: yes, 2: publish to TestPyPI)'
         required: true
         default: '0'
+      operating-system:
+        required: true
+        type: choice
+        options:
+        - ubuntu-latest
+        default: 'ubuntu-latest'
 
 jobs:
   build:
     name: Build distribution
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, "${{ inputs.chosen-os }}"]
 
     steps:
       - uses: actions/checkout@v4
