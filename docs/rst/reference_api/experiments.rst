@@ -15,6 +15,7 @@ Concrete classes
    CanopyExperiment
    CanopyAtmosphereExperiment
    DEMExperiment
+   MeasureRegistry
 
 Interfaces
 ----------
