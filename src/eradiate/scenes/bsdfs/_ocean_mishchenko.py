@@ -91,6 +91,12 @@ class OceanMishchenkoBSDF(BSDF):
         default="1.000277f",
     )
 
+    shadowing: bool = documented(
+        attrs.field(
+            default=True,
+        )
+    )
+
     def default_shininess(self, u: pint.Quantity):
         """
         Parametrizes the Blinn-Phong distribution function with respect to the
@@ -111,6 +117,7 @@ class OceanMishchenkoBSDF(BSDF):
             "type": "ocean_mishchenko",
             "shininess": self.default_shininess(self.wind_speed),
             "wind_speed": self.wind_speed.m_as("m/s"),
+            "shadowing": self.shadowing,
         }
 
         for obj_key, obj_values in objects.items():
