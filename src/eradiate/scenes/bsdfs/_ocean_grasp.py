@@ -71,7 +71,7 @@ class OceanGraspBSDF(BSDF):
         "processed by :data:`.spectrum_factory`.",
         type=".Spectrum",
         init_type=".Spectrum or dict or float",
-        default="0.",
+        default="0.0",
     )
 
     ext_ior: Spectrum = documented(
@@ -88,13 +88,23 @@ class OceanGraspBSDF(BSDF):
         "is assumed to be zero. ",
         type=".Spectrum",
         init_type=".Spectrum or dict or float",
-        default="1.000277f",
+        default="1.000277",
     )
 
-    shadowing: bool = documented(
+    water_body_reflectance: Spectrum = documented(
         attrs.field(
-            default=True,
-        )
+            default=0.0,
+            converter=spectrum_factory.converter("dimensionless"),
+            validator=[
+                attrs.validators.instance_of(Spectrum),
+                validators.has_quantity("dimensionless"),
+            ],
+        ),
+        doc="Diffuse reflectance of radiations that underwent one or more  "
+        "scattering events within the water body.",
+        type=".Spectrum",
+        init_type=".Spectrum or dict or float",
+        default="0.0",
     )
 
     @property
@@ -104,13 +114,13 @@ class OceanGraspBSDF(BSDF):
             "eta": traverse(self.eta)[0],
             "k": traverse(self.k)[0],
             "ext_ior": traverse(self.ext_ior)[0],
+            "water_body_reflectance": traverse(self.water_body_reflectance)[0],
         }
 
         result = {
             "type": "ocean_grasp",
             "wavelength": InitParameter(lambda ctx: ctx.si.w.m_as("nm")),
             "wind_speed": self.wind_speed.m_as("m/s"),
-            "shadowing": self.shadowing,
         }
 
         for obj_key, obj_values in objects.items():
@@ -129,6 +139,7 @@ class OceanGraspBSDF(BSDF):
             "eta": traverse(self.eta)[1],
             "k": traverse(self.k)[1],
             "ext_ior": traverse(self.ext_ior)[1],
+            "water_body_reflectance": traverse(self.water_body_reflectance)[1],
         }
 
         result = {}
