@@ -5,6 +5,7 @@ import logging
 import typing as t
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 
 import attrs
 import mitsuba as mi
@@ -17,7 +18,7 @@ import eradiate
 
 from .. import converters, validators
 from .. import pipelines as pl
-from ..attrs import AUTO, define, documented
+from ..attrs import AUTO, define, documented, frozen
 from ..contexts import KernelContext
 from ..exceptions import UnsupportedModeError
 from ..kernel import (
@@ -51,6 +52,78 @@ from ..util.misc import deduplicate_sorted, onedict_value
 logger = logging.getLogger(__name__)
 
 
+@frozen(init=False)
+class MeasureRegistry(Sequence):
+    """
+    A simple list wrapper holding measures, with additional lookup methods and
+    metadata.
+
+    The constructor converts dictionaries automatically and checks for duplicate
+    IDs (raises a {class}`ValueError` if it finds any).
+    """
+
+    _measures: list[Measure] = attrs.field(
+        converter=list,
+        validator=attrs.validators.deep_iterable(
+            member_validator=attrs.validators.instance_of(Measure)
+        ),
+    )
+    _id_to_idx: dict[str, int] = attrs.field(factory=dict, repr=False)
+    _idx_to_id: dict[int, str] = attrs.field(factory=dict, repr=False)
+
+    def __init__(self, measures: t.Sequence):
+        # Convert all values to a measure
+        measures = [measure_factory.convert(x) for x in measures]
+
+        # Check for duplicate IDs
+        values = dict(zip(*np.unique([m.id for m in measures], return_counts=True)))
+        duplicate_ids = [k for k, v in values.items() if v > 1]
+        if duplicate_ids:
+            raise ValueError(f"duplicate measure ids: {duplicate_ids}")
+
+        # Update index and ID registries
+        id_to_idx = {m.id: i for i, m in enumerate(measures)}
+        idx_to_id = {i: m.id for i, m in enumerate(measures)}
+
+        # Finalize initialization
+        self.__attrs_init__(measures=measures, id_to_idx=id_to_idx, idx_to_id=idx_to_id)
+
+    def __getitem__(self, index):
+        return self._measures[index]
+
+    def __len__(self):
+        return len(self._measures)
+
+    def get_index(self, value: str | int) -> int:
+        """
+        Get the index corresponding to a given measure ID. Integers are passed
+        through.
+        """
+        if isinstance(value, str):
+            return self._id_to_idx[value]
+        elif isinstance(value, int):
+            return value
+        else:
+            raise TypeError(f"unhandled type {type(value)}")
+
+    def get_id(self, value: str | int) -> str:
+        """
+        Get the ID corresponding to a given index. Strings are passed through.
+        """
+        if isinstance(value, str):
+            return value
+        elif isinstance(value, int):
+            return self._idx_to_id[value]
+        else:
+            raise TypeError(f"unhandled type {type(value)}")
+
+    def resolve(self, value: str | int) -> Measure:
+        """
+        Resolve a measure based on its ID or index.
+        """
+        return self[self.get_index(value)]
+
+
 @define
 class Experiment(ABC):
     """
@@ -68,16 +141,13 @@ class Experiment(ABC):
         init=False,
     )
 
-    measures: list[Measure] = documented(
+    measures: MeasureRegistry = documented(
         attrs.field(
-            factory=lambda: [MultiDistantMeasure()],
-            converter=lambda value: (
-                [measure_factory.convert(x) for x in pinttr.util.always_iterable(value)]
+            factory=lambda: MeasureRegistry([MultiDistantMeasure()]),
+            converter=lambda value: MeasureRegistry(
+                pinttr.util.always_iterable(value)
                 if not isinstance(value, dict)
                 else [measure_factory.convert(value)]
-            ),
-            validator=attrs.validators.deep_iterable(
-                member_validator=attrs.validators.instance_of(Measure)
             ),
         ),
         doc="List of measure specifications. The passed list may contain "
@@ -85,7 +155,7 @@ class Experiment(ABC):
         ":data:`.measure_factory`. "
         "Optionally, a single :class:`.Measure` or dictionary specification "
         "may be passed and will automatically be wrapped into a list.",
-        type="list of :class:`.Measure`",
+        type=".MeasureRegistry",
         init_type="list of :class:`.Measure` or list of dict or "
         ":class:`.Measure` or dict",
         default=":class:`MultiDistantMeasure() <.MultiDistantMeasure>`",
@@ -554,7 +624,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
     def process(
         self,
-        measures: None | int | list[int] = None,
+        measures: None | int | str | list[int | str] = None,
         spp: int = 0,
         seed_state: SeedState | None = None,
     ) -> None:
@@ -568,9 +638,9 @@ class EarthObservationExperiment(Experiment, ABC):
         if measures is None:
             measures = self.measures
         else:
-            if isinstance(measures, int):
+            if isinstance(measures, (int, str)):
                 measures = [measures]
-            measures = [self.measures[i] for i in measures]
+            measures = [self.measures.resolve(i) for i in measures]
 
         active_sensors = [measure.sensor_id for measure in measures]
         mi_sensors = self.mi_scene.obj.sensors()
@@ -641,8 +711,8 @@ class EarthObservationExperiment(Experiment, ABC):
         if measures is None:
             measures = list(range(len(self.measures)))
         else:
-            if isinstance(measures, int):
-                measures = [measures]
+            if isinstance(measures, (int, str)):
+                measures = [self.measures.get_index(measures)]
 
         # Run pipelines
         for i in measures:
@@ -653,10 +723,10 @@ class EarthObservationExperiment(Experiment, ABC):
             result = drv.execute(final_vars=outputs, inputs=inputs)
             self.results[measure.id] = xr.Dataset({var: result[var] for var in outputs})
 
-    def pipeline(self, measure: Measure | int) -> Driver:
+    def pipeline(self, measure: Measure | int | str) -> Driver:
         # Inherit docstring
-        if isinstance(measure, int):
-            measure = self.measures[measure]
+        if isinstance(measure, (int, str)):
+            measure = self.measures.resolve(measure)
         config = pl.config(measure, integrator=self.integrator)
         return eradiate.pipelines.driver(config)
 
@@ -688,7 +758,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
 def run(
     exp: Experiment,
-    measures: None | int | list[int] = None,
+    measures: None | int | str | list[int | str] = None,
     spp: int = 0,
     seed_state: SeedState | None = None,
 ) -> xr.Dataset | dict[str, xr.Dataset]:
@@ -702,7 +772,7 @@ def run(
     exp : Experiment
         Reference to the experiment object which will be processed.
 
-    measures : int or list of int, optional
+    measures : int or str or list of int or str, optional
         Indices of the measures that will be processed. By default, all measures
         are processed.
 
