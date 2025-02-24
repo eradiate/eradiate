@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import attrs
 import pint
 import pinttrs
 
@@ -81,6 +82,12 @@ class OceanLegacyBSDF(BSDF):
         default="0.3 mg/m^3",
     )
 
+    shininess: float | None = documented(
+        attrs.field(
+            default=None,
+        )
+    )
+
     def default_shininess(self, u: pint.Quantity):
         """
         Parametrizes the Blinn-Phong distribution function with respect to the
@@ -94,7 +101,9 @@ class OceanLegacyBSDF(BSDF):
         result = {
             "type": "ocean_legacy",
             "wavelength": InitParameter(lambda ctx: ctx.si.w.m_as("nm")),
-            "shininess": self.default_shininess(self.wind_speed),
+            "shininess": self.shininess
+            if self.shininess is not None
+            else self.default_shininess(self.wind_speed),
             "wind_speed": self.wind_speed.m_as("m/s"),
             "wind_direction": self.wind_direction.m_as("deg"),
             "chlorinity": self.chlorinity.m_as("g/kg"),
