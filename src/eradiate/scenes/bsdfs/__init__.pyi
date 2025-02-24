@@ -5,6 +5,7 @@ from ._core import bsdf_factory as bsdf_factory
 from ._hapke import HapkeBSDF as HapkeBSDF
 from ._lambertian import LambertianBSDF as LambertianBSDF
 from ._mqdiffuse import MQDiffuseBSDF as MQDiffuseBSDF
+from ._ocean_grasp import OceanGraspBSDF as OceanGraspBSDF
 from ._ocean_legacy import OceanLegacyBSDF as OceanLegacyBSDF
 from ._ocean_mishchenko import OceanMishchenkoBSDF as OceanMishchenkoBSDF
 from ._opacity_mask import OpacityMaskBSDF as OpacityMaskBSDF
