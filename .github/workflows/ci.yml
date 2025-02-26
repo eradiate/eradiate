@@ -33,20 +33,25 @@ jobs:
       - name: Save HTML log
         uses: actions/upload-artifact@v4
         with:
+          name: log_html
           path: ./log.html
       - name: Save HTML report
         uses: actions/upload-artifact@v4
         with:
+          name: report_html
           path: ./report.html
       - name: Save PDF log
         uses: actions/upload-artifact@v4
         with:
+          name: log_pdf
           path: ./log.pdf
       - name: Save PDF report
         uses: actions/upload-artifact@v4
         with:
+          name: report_pdf
           path: ./report.pdf
       - name: Save test outputs
         uses: actions/upload-artifact@v4
         with:
+          name: output_xml
           path: ./output.xml
