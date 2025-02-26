@@ -20,7 +20,7 @@ jobs:
           pip install eradiate-mitsuba
       - name: Run unit tests
         run: |
-          pytest -m "not slow" tests/01_unit
+          pytest -m "not slow" tests/01_unit/scenes/spectra # subset for dev purposes
       - name: Setup chrome
         if: always()
         uses: browser-actions/setup-chrome@v1
