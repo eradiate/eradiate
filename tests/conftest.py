@@ -10,6 +10,15 @@ eradiate.plot.set_style()
 
 
 # ------------------------------------------------------------------------------
+#                      Robot Configuration and fixtures
+# ------------------------------------------------------------------------------
+
+
+# Load necessary robot plugin for pytest interoperability
+pytest_plugins = ("robotframework",)
+
+
+# ------------------------------------------------------------------------------
 #               Customizable output dir for test artifacts
 # ------------------------------------------------------------------------------
 
