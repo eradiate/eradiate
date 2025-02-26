@@ -23,7 +23,24 @@ def test_instantiate():
         threshold=0.05,
     )
 
+    assert tt.IndependantStudentTTest(
+        name="t-test",
+        archive_dir="tests/",
+        value=xr.Dataset(),
+        reference=xr.Dataset(),
+        threshold=0.05,
+    )
+
+    assert tt.PairedStudentTTest(
+        name="t-test",
+        archive_dir="tests/",
+        value=xr.Dataset(),
+        reference=xr.Dataset(),
+        threshold=0.05,
+    )
+
     # assert all arguments except reference are needed
+    # only one subclass of RegressionTest (Chi2Test) is tested
     with pytest.raises(TypeError):
         assert tt.Chi2Test(
             archive_dir="tests/",
