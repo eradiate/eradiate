@@ -62,7 +62,7 @@ docs = [
   "sphinx-copybutton",
   "sphinx-design",
 ]
-test = ["pytest", "pytest-json-report", "asv==0.6.*"]
+test = ["pytest", "pytest-json-report", "asv==0.6.*", "robotframework", "pytest-robotframework"]
 dev = ["bump-my-version>=0.28.0,<0.29.0"]
 
 [project.scripts]
