@@ -30,3 +30,23 @@ jobs:
           rebot --expandkeywords name:* ./output.xml
           chrome --no-sandbox --virtual-time-budget=10000 --headless --print-to-pdf=./log.pdf    ./log.html    --no-pdf-header-footer
           chrome --no-sandbox --virtual-time-budget=10000 --headless --print-to-pdf=./report.pdf ./report.html --no-pdf-header-footer
+      - name: Save HTML log
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./log.html
+      - name: Save HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./report.html
+      - name: Save PDF log
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./log.pdf
+      - name: Save PDF report
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./report.pdf
+      - name: Save test outputs
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./output.xml
