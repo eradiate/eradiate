@@ -22,8 +22,10 @@ jobs:
         run: |
           pytest -m "not slow" tests/01_unit
       - name: Setup chrome
+        if: always()
         uses: browser-actions/setup-chrome@v1
       - name: Robot report
+        if: always()
         run: |
           rebot --expandkeywords name:* ./output.xml
           chrome --no-sandbox --virtual-time-budget=10000 --headless --print-to-pdf=./log.pdf    ./log.html    --no-pdf-header-footer
