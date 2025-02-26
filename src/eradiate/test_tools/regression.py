@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-import typing as t
+import typing
 from abc import ABC, abstractmethod
 from io import StringIO
 from pathlib import Path
@@ -12,6 +12,7 @@ import mitsuba as mi
 import numpy as np
 import xarray as xr
 from robot.api import logger
+from scipy.stats import t
 
 from .. import data
 from ..attrs import define, documented
@@ -217,7 +218,7 @@ class RegressionTest(ABC):
     """
 
     # Name used for the reference metric. Must be set be subclasses.
-    METRIC_NAME: t.ClassVar[str | None] = None
+    METRIC_NAME: typing.ClassVar[str | None] = None
 
     name: str = documented(
         attrs.field(validator=attrs.validators.instance_of(str)),
@@ -462,7 +463,7 @@ class Chi2Test(RegressionTest):
 
     # The algorithm is adapted from Mitsuba's testing framework.
 
-    METRIC_NAME = "p-value"
+    METRIC_NAME = "X² p-value"
 
     def _evaluate(self) -> tuple[bool, float]:
         ref_np = self.reference.brf.values
@@ -485,5 +486,141 @@ class Chi2Test(RegressionTest):
             histo_res_sorted, histo_ref_sorted, 5
         )
         p_value = 1.0 - rlgamma(dof / 2.0, chi2val / 2.0)
+
+        return p_value > self.threshold, p_value
+
+
+@define
+class IndependantStudentTTest(RegressionTest):
+    """
+    Independant Student's T-test
+    ============================
+
+    This implementation of a Student's T-test is following the assumption of
+    independance of the two groups that are tested. The bias of the mean values
+    of the two groups is assumed to be the result of chance under the null
+    hypothesis. It is a two-tailed test.
+
+    It is less sensitive to outliers than the paired Student's T-test.
+    """
+
+    METRIC_NAME = "T-test p-value"
+
+    def _evaluate(self) -> tuple[bool, float]:
+        if self.variable + "_var" not in self.reference:
+            raise ValueError(
+                f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+        if self.variable + "_var" not in self.value:
+            raise ValueError(
+                f"The target value for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+
+        ref_np = self.reference[self.variable].values.ravel()
+        result_np = self.value[self.variable].values.ravel()
+
+        var_ref_np = self.reference[self.variable + "_var"].values.ravel()
+        var_res_np = self.value[self.variable + "_var"].values.ravel()
+
+        # Calculate mean values over observations and associated variances
+        R_res = np.mean(result_np)
+        R_ref = np.mean(ref_np)
+        var_R_res = np.sum(var_res_np) / var_res_np.size**2
+        var_R_ref = np.sum(var_ref_np) / var_ref_np.size**2
+        bias_mean = R_res - R_ref
+
+        # Calculate T-statistic and associated degree of freedom of its
+        # T-distribution using a pooled standard deviation
+
+        s_p = np.sqrt(
+            ((var_res_np.size - 1.0) * var_R_res + (var_ref_np.size - 1.0) * var_R_ref)
+            / (var_res_np.size + var_ref_np.size - 2)
+        )
+        t_prim = bias_mean / (
+            s_p * np.sqrt(1.0 / var_res_np.size + 1.0 / var_ref_np.size)
+        )
+
+        dof = (var_res_np.size + var_ref_np.size) - 2
+
+        assert dof > 0
+
+        # Calculate p-value of the two-tailed t-test using the T distribution
+        # survival function for the null hypothesis.
+        p_value = t.sf(np.abs(t_prim), dof) * 2
+
+        passed = p_value > self.threshold
+
+        if not passed:
+            logger.info(f"bias = {bias_mean}", also_console=True)
+            logger.info(f"s_p  = {s_p}", also_console=True)
+            logger.info(f"t'   = {t_prim}", also_console=True)
+            logger.info(f"dof  = {dof}", also_console=True)
+
+        return passed, p_value
+
+
+@define
+class PairedStudentTTest(RegressionTest):
+    """
+    Paired Student's T-test
+    =======================
+
+    This implementation of a Student's T-test is following the assumption of
+    paired samples within two groups that are tested. The mean of the bias
+    between the paired values is assumed to be the result of chance under the
+    null hypothesis. It is a two-tailed test.
+
+    The paired test allow to introduce a covariance factor between the pairs.
+    By default, this covariance is equal to zero, thus assuming independance of
+    the two variables.
+
+    Contrary to the independant Student's T-test, this paired version of the
+    test requires an equal degree of freedom of the two groups.
+    """
+
+    METRIC_NAME = "paired T-test p-value"
+
+    cov: np.typing.ArrayLike | float = documented(
+        attrs.field(kw_only=True, default=0.0),
+        doc="Covariance between observation, defaults to zero",
+        type=np.typing.ArrayLike | float,
+        init_type="float",
+    )
+
+    def _evaluate(self) -> tuple[bool, float]:
+        if self.variable + "_var" not in self.reference:
+            raise ValueError(
+                f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+        if self.variable + "_var" not in self.value:
+            raise ValueError(
+                f"The target value for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+
+        ref_np = self.reference[self.variable].values.ravel()
+        result_np = self.value[self.variable].values.ravel()
+
+        var_ref_np = self.reference[self.variable + "_var"].values.ravel()
+        var_res_np = self.value[self.variable + "_var"].values.ravel()
+
+        assert ref_np.shape == result_np.shape
+        assert ref_np.shape == var_ref_np.shape
+        assert ref_np.shape == var_res_np.shape
+
+        # Calculate paired mean value and associated variance
+        D_mean = np.mean(result_np - ref_np)
+        var_D = (var_res_np + var_ref_np) - 2 * self.cov
+        var_D_mean = np.sum(var_D) / var_D.size**2
+
+        # Calculate T-statistic and associated degree of freedom of its
+        # T-distribution
+        t_prim = D_mean / (var_D_mean / np.sqrt(var_D.size))
+        dof = var_D.size - 1
+
+        assert dof > 0
+
+        # Calculate p-value of the two-tailed t-test using the T distribution
+        # survival function for the null hypothesis.
+        p_value = t.sf(np.abs(t_prim), dof) * 2
 
         return p_value > self.threshold, p_value
