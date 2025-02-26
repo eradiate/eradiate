@@ -1,0 +1,30 @@
+name: Eradiate test
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  robot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[doc,recommended,test,dev]
+          pip install eradiate-mitsuba
+      - name: Run unit tests
+        run: |
+          pytest tests/01_unit
+      - name: Setup chrome
+        uses: browser-actions/setup-chrome@v1
+      - name: Robot report
+        run: |
+          rebot --expandkeywords name:* ./output.xml
+          chrome --no-sandbox --virtual-time-budget=10000 --headless --print-to-pdf=./log.pdf    ./log.html    --no-pdf-header-footer
+          chrome --no-sandbox --virtual-time-budget=10000 --headless --print-to-pdf=./report.pdf ./report.html --no-pdf-header-footer
