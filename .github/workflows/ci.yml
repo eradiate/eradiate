@@ -20,7 +20,7 @@ jobs:
           pip install eradiate-mitsuba
       - name: Run unit tests
         run: |
-          pytest tests/01_unit
+          pytest -m "not slow" tests/01_unit
       - name: Setup chrome
         uses: browser-actions/setup-chrome@v1
       - name: Robot report
