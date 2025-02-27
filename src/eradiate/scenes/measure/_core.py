@@ -135,7 +135,7 @@ class Measure(NodeSceneElement, ABC):
         "``'sentinel_2a-msi-4'`` it tries to serve the corresponding dataset "
         "from the Eradiate data store.",
         type=".SpectralResponseFunction",
-        init_type="Path-like or str or .SpectralResponseFunction or dict",
+        init_type="path-like or str or .SpectralResponseFunction or dict",
         default=":class:`DeltaSRF(wavelengths=550.0 * ureg.nm) <.DeltaSRF>`",
     )
 
