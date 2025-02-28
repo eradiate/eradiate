@@ -34,13 +34,13 @@ FILE_LIST_LOADERS: dict[str, FileListLoader] = {
 }
 
 for name, rule in {
-    "komodo": lambda x: x.startswith("spectra/absorption/mono/komodo"),
-    "gecko": lambda x: x.startswith("spectra/absorption/mono/gecko"),
-    "monotropa": lambda x: x.startswith("spectra/absorption/ckd/monotropa"),
-    "mycena": lambda x: x.startswith("spectra/absorption/ckd/mycena_v2"),
-    "mycena_v1": lambda x: x.startswith("spectra/absorption/ckd/mycena_v1"),
-    "mycena_v2": lambda x: x.startswith("spectra/absorption/ckd/mycena_v2"),
-    "panellus": lambda x: x.startswith("spectra/absorption/ckd/panellus"),
+    "komodo": lambda x: x.startswith("spectra/absorption/mono/komodo/"),
+    "gecko": lambda x: x.startswith("spectra/absorption/mono/gecko/"),
+    "monotropa": lambda x: x.startswith("spectra/absorption/ckd/monotropa/"),
+    "mycena": lambda x: x.startswith("spectra/absorption/ckd/mycena_v2/"),
+    "mycena_v1": lambda x: x.startswith("spectra/absorption/ckd/mycena/"),
+    "mycena_v2": lambda x: x.startswith("spectra/absorption/ckd/mycena_v2/"),
+    "panellus": lambda x: x.startswith("spectra/absorption/ckd/panellus/"),
 }.items():
     FILE_LIST_LOADERS[name] = FileListLoader(
         FILE_LIST_LOADERS["all"].file_list, filter=rule
