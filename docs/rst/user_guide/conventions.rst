@@ -15,10 +15,15 @@ Local coordinate definition
 
 .. only:: not latex
 
-   .. margin::
+    .. figure:: ../../fig/cartesian-coordinate-system.svg
+        :figclass: light-only
+        :align: right
+        :width: 300
 
-      .. figure:: ../../fig/cartesian-coordinate-system.svg
-         :width: 100%
+    .. figure:: ../../fig/cartesian-coordinate-system-dark.svg
+        :figclass: dark-only
+        :align: right
+        :width: 300
 
 Internally, Eradiate and its radiometric kernel Mitsuba use Cartesian
 coordinates to locate scene objects. When relevant, during scene construction,
@@ -27,7 +32,7 @@ origin location.
 
 .. only:: latex
 
-   .. image:: ../../fig/cartesian-coordinate-system.png
+    .. image:: ../../fig/cartesian-coordinate-system.png
 
 Note that this does not mean that Eradiate always uses an East, North,
 up (ENU) coordinate system: this is only relevant when planetary curvature can
@@ -38,10 +43,15 @@ Spherical coordinates
 
 .. only:: not latex
 
-   .. margin::
+    .. figure:: ../../fig/spherical-coordinate-system.svg
+        :figclass: light-only
+        :align: right
+        :width: 250
 
-      .. figure:: ../../fig/spherical-coordinate-system.svg
-         :width: 100%
+    .. figure:: ../../fig/spherical-coordinate-system-dark.svg
+        :figclass: dark-only
+        :align: right
+        :width: 250
 
 Internally, Eradiate also uses the spherical coordinate system with the
 ISO 80000-2:2019 convention :cite:`ISO201980000QuantitiesUnits` (commonly used
@@ -57,7 +67,7 @@ in physics) where:
 
 .. only:: latex
 
-   .. image:: ../../fig/spherical-coordinate-system.png
+    .. image:: ../../fig/spherical-coordinate-system.png
 
 Local illumination and viewing angle definition
 -----------------------------------------------
@@ -82,11 +92,11 @@ Azimuth definition conventions
 
 .. admonition:: Summary
 
-   Eradiate works internally with the *East right* convention, which aligns the
-   0° azimuth with the X axis and orients azimuth values counter-clockwise. If
-   you work with geophysical data, chances are that you will prefer the
-   *North left* convention, which aligns the 0° with the Y axis and increments
-   azimuth values clockwise.
+    Eradiate works internally with the *East right* convention, which aligns the
+    0° azimuth with the X axis and orients azimuth values counter-clockwise. If
+    you work with geophysical data, chances are that you will prefer the
+    *North left* convention, which aligns the 0° with the Y axis and increments
+    azimuth values clockwise.
 
 For convenience, Eradiate defines a set of azimuth definition conventions,
 exposed to the user through a dedicated interface. All azimuth angle conventions
@@ -107,59 +117,27 @@ corresponds to the - sign.
 
 .. only:: not latex
 
-   .. list-table:: Eradiate's built-in azimuth conventions.
-      :align: center
-      :header-rows: 1
-      :stub-columns: 1
-      :widths: 1 4 4
+    .. figure:: ../../fig/azimuth.svg
+        :figclass: light-only
+        :align: center
+        :width: 500
 
-      * -
-        - Right
-        - Left
+        Eradiate's built-in azimuth conventions.
 
-      * - East
-        - .. image:: ../../fig/azimuth-east_right.svg
-        - .. image:: ../../fig/azimuth-east_left.svg
+    .. figure:: ../../fig/azimuth-dark.svg
+        :figclass: dark-only
+        :align: center
+        :width: 500
 
-      * - North
-        - .. image:: ../../fig/azimuth-north_right.svg
-        - .. image:: ../../fig/azimuth-north_left.svg
-
-      * - West
-        - .. image:: ../../fig/azimuth-west_right.svg
-        - .. image:: ../../fig/azimuth-west_left.svg
-
-      * - South
-        - .. image:: ../../fig/azimuth-south_right.svg
-        - .. image:: ../../fig/azimuth-south_left.svg
+        Eradiate's built-in azimuth conventions.
 
 .. only:: latex
 
-   .. list-table:: Eradiate's built-in azimuth conventions.
-      :align: center
-      :header-rows: 1
-      :stub-columns: 1
-      :widths: auto
+    .. figure:: ../../fig/azimuth.png
+        :align: center
+        :width: 500
 
-      * -
-        - Right
-        - Left
-
-      * - East
-        - .. image:: ../../fig/azimuth-east_right.png
-        - .. image:: ../../fig/azimuth-east_left.png
-
-      * - North
-        - .. image:: ../../fig/azimuth-north_right.png
-        - .. image:: ../../fig/azimuth-north_left.png
-
-      * - West
-        - .. image:: ../../fig/azimuth-west_right.png
-        - .. image:: ../../fig/azimuth-west_left.png
-
-      * - South
-        - .. image:: ../../fig/azimuth-south_right.png
-        - .. image:: ../../fig/azimuth-south_left.png
+        Eradiate's built-in azimuth conventions.
 
 Objects and functions taking angular parameters provide, when relevant, an
 option to specify which convention is used. Manual conversion can be performed
@@ -174,4 +152,4 @@ the illumination direction. From this follows:
 
 .. important::
 
-   *On principal plane plots, the illumination is located to the right.*
+    *On principal plane plots, the illumination is located to the right.*
