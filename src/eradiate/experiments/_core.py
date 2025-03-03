@@ -236,9 +236,15 @@ class Experiment(ABC):
             measure.mi_results.clear()
 
     @abstractmethod
-    def init(self) -> None:
+    def init(self, drop_parameters: bool = True) -> None:
         """
         Generate kernel dictionary and initialize Mitsuba scene.
+
+        Parameters
+        ----------
+        drop_parameters : bool
+            If ``True``, drop Mitsuba scene parameters that are not used (*i.e.*
+            that do not have an updater associated).
         """
         pass
 
@@ -526,7 +532,7 @@ class EarthObservationExperiment(Experiment, ABC):
         """
         return Scene(objects={**self.scene_objects, **self.extra_objects})
 
-    def init(self):
+    def init(self, drop_parameters: bool = True):
         # Inherit docstring
 
         logger.info("Initializing kernel scene")
@@ -543,7 +549,8 @@ class EarthObservationExperiment(Experiment, ABC):
             raise RuntimeError(f"(while loading kernel scene dictionary){e}") from e
 
         # Remove unused elements from Mitsuba scene parameter table
-        self.mi_scene.drop_parameters()
+        if drop_parameters:
+            self.mi_scene.drop_parameters()
 
     def process(
         self,
