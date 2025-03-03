@@ -118,7 +118,12 @@ def dict_parameter(maybe_fn=None):
 
 
 def scene_parameter(
-    maybe_fn=None, flags: UpdateParameter.Flags = UpdateParameter.Flags.ALL
+    maybe_fn=None,
+    *,
+    flags: UpdateParameter.Flags = UpdateParameter.Flags.ALL,
+    node_type: type,
+    node_id: str,
+    parameter_relpath: str,
 ):
     """
     This function wraps another one into a :class:`.UpdateParameter` instance.
@@ -127,9 +132,22 @@ def scene_parameter(
     Parameters
     ----------
     maybe_fn : callable, optional
+        A callable that takes as an argument a :class:`.KernelContext` instance.
 
     flags : .UpdateParameter.Flags, optional
         Scene parameter flags used for filtering during a scene parameter loop.
+
+    node_type : type
+        Type of the node that is expected to hold the parameter updated by the
+        wrapped callable.
+
+    node_id : str
+        ID of the node that is expected to hold the parameter updated by the
+        wrapped callable.
+
+    parameter_relpath : str
+        Relative path (from the looked up node) of the parameter updated by the
+        wrapped callable.
 
     Returns
     -------
@@ -137,7 +155,17 @@ def scene_parameter(
     """
 
     def wrap(f):
-        return UpdateParameter(f, flags=flags)
+        from eradiate.kernel import TypeIdLookupStrategy
+
+        return UpdateParameter(
+            f,
+            flags=flags,
+            lookup_strategy=TypeIdLookupStrategy(
+                node_type=node_type,
+                node_id=node_id,
+                parameter_relpath=parameter_relpath,
+            ),
+        )
 
     return wrap if maybe_fn is None else wrap(maybe_fn)
 
