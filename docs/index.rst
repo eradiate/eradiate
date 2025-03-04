@@ -1,3 +1,5 @@
+:layout: simple
+
 Eradiate Documentation
 ======================
 
