@@ -244,6 +244,21 @@ html_theme_options = {
     "dark_logo": "_static/eradiate-logo-typo-white.svg",
     "accent_color": "indigo",
     "github_url": "https://github.com/eradiate/eradiate",
+    "nav_links_align": "center",
+    "nav_links": [
+        {"title": "User guide", "url": "rst/user_guide/index"},
+        {"title": "Tutorials", "url": "tutorials/index"},
+        {"title": "Data guide", "url": "rst/data/intro"},
+        {
+            "title": "Reference",
+            "children": [
+                {"title": "API", "url": "rst/reference_api/index"},
+                {"title": "Plugin reference", "url": "rst/reference_plugins/index"},
+                {"title": "Command-line interface", "url": "src/reference_cli"},
+            ],
+        },
+        {"title": "Release notes", "url": "src/release_notes/index"},
+    ],
 }
 
 html_short_title = "Eradiate"
