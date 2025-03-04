@@ -23,25 +23,25 @@ Python and C++17. It relies on a radiometric kernel based on the
 .. grid:: 1 2 auto auto
    :gutter: 3
 
-   .. grid-item-card:: :fas:`download` User Guide
+   .. grid-item-card:: :material-regular:`download;1.5em` User Guide
       :link: sec-user_guide
       :link-type: ref
 
       Learn about Eradiate, how to get it and how to use it.
 
-   .. grid-item-card:: :fas:`graduation-cap` Tutorials
+   .. grid-item-card:: :material-regular:`school;1.5em` Tutorials
       :link: sec-tutorials
       :link-type: ref
 
       A practical introduction to Eradiate.
 
-   .. grid-item-card:: :fas:`database` Data guide
+   .. grid-item-card:: :material-regular:`dns;1.5em` Data guide
       :link: sec-data-intro
       :link-type: ref
 
       Information about data formats and shipped datasets.
 
-   .. grid-item-card:: :fas:`file-code` Reference
+   .. grid-item-card:: :material-regular:`description;1.5em` Reference
       :link: sec-reference_api
       :link-type: ref
 
