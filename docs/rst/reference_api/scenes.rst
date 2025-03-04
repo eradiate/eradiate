@@ -9,74 +9,74 @@ Quick access
 .. grid:: 1 2 auto auto
     :gutter: 3
 
-    .. grid-item-card:: :fas:`gear` Core
+    .. grid-item-card:: :material-regular:`settings;1.5em` Core
         :link: module-eradiate.scenes.core
         :link-type: ref
 
         ``eradiate.scenes.core``
 
-    .. grid-item-card:: :fas:`globe` Geometry
+    .. grid-item-card:: :material-regular:`language;1.5em` Geometry
         :link: module-eradiate.scenes.geometry
         :link-type: ref
 
         ``eradiate.scenes.geometry``
 
-    .. grid-item-card:: :fas:`cloud` Atmosphere
+    .. grid-item-card:: :material-regular:`cloud;1.5em` Atmosphere
         :link: module-eradiate.scenes.atmosphere
         :link-type: ref
 
         ``eradiate.scenes.atmosphere``
 
-    .. grid-item-card:: :fas:`tree` Biosphere
+    .. grid-item-card:: :material-regular:`forest;1.5em` Biosphere
         :link: module-eradiate.scenes.biosphere
         :link-type: ref
 
         ``eradiate.scenes.biosphere``
 
-    .. grid-item-card:: :fas:`mountain` Surface
+    .. grid-item-card:: :material-regular:`landscape;1.5em` Surface
         :link: module-eradiate.scenes.surface
         :link-type: ref
 
         ``eradiate.scenes.surface``
 
-    .. grid-item-card:: :fas:`arrow-trend-up` BSDFs
+    .. grid-item-card:: :material-regular:`trending_up;1.5em` BSDFs
         :link: module-eradiate.scenes.bsdfs
         :link-type: ref
 
         ``eradiate.scenes.bsdfs``
 
 
-    .. grid-item-card:: :fas:`cubes` Shapes
+    .. grid-item-card:: :material-regular:`dashboard;1.5em` Shapes
         :link: module-eradiate.scenes.shapes
         :link-type: ref
 
         ``eradiate.scenes.shapes``
 
-    .. grid-item-card:: :fas:`sun` Illumination
+    .. grid-item-card:: :material-regular:`sunny;1.5em` Illumination
         :link: module-eradiate.scenes.illumination
         :link-type: ref
 
         ``eradiate.scenes.illumination``
 
-    .. grid-item-card:: :fas:`video` Measure
+    .. grid-item-card:: :material-regular:`videocam;1.5em` Measure
         :link: module-eradiate.scenes.measure
         :link-type: ref
 
         ``eradiate.scenes.measure``
 
-    .. grid-item-card:: :fas:`arrow-trend-down` Phase functions
+    .. grid-item-card:: :material-regular:`trending_down;1.5em` Phase functions
         :link: module-eradiate.scenes.phase
         :link-type: ref
 
         ``eradiate.scenes.phase``
 
-    .. grid-item-card:: :fas:`server` Integrators
+    .. grid-item-card:: :material-regular:`dns;1.5em` Integrators
         :link: module-eradiate.scenes.integrators
         :link-type: ref
 
         ``eradiate.scenes.integrators``
 
-    .. grid-item-card:: :fas:`rainbow` Spectra
+    .. grid-item-card:: :material-regular:`looks;1.5em` Spectra
         :link: module-eradiate.scenes.spectra
         :link-type: ref
 

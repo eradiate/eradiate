@@ -26,25 +26,25 @@ Quick access
 .. grid:: 1 2 auto auto
     :gutter: 3
 
-    .. grid-item-card:: :fas:`circle-play` Core
+    .. grid-item-card:: :material-regular:`play_circle;1.5em` Core
         :link: eradiate_core
         :link-type: doc
 
         ``eradiate``
 
-    .. grid-item-card:: :fas:`globe` Scenes
+    .. grid-item-card:: :material-regular:`public;1.5em` Scenes
         :link: scenes
         :link-type: doc
 
         ``eradiate.scenes``
 
-    .. grid-item-card:: :fas:`vials` Experiments
+    .. grid-item-card:: :material-regular:`science;1.5em` Experiments
         :link: experiments
         :link-type: doc
 
         ``eradiate.experiments``
 
-    .. grid-item-card:: :fas:`gears` Configuration
+    .. grid-item-card:: :material-regular:`settings;1.5em` Configuration
         :link: config
         :link-type: doc
 
