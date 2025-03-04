@@ -527,7 +527,9 @@
 - spectra/srf/terra-modis-16-raw.nc
 # Absorption coefficient datasets (monochromatic)
 - spectra/absorption/mono/gecko/gecko.nc
+- spectra/absorption/mono/gecko/index.csv
 - spectra/absorption/mono/gecko/metadata.json
+- spectra/absorption/mono/komodo/index.csv
 - spectra/absorption/mono/komodo/komodo.nc
 - spectra/absorption/mono/komodo/metadata.json
 # Absorption coefficient datasets (CKD): monotropa
