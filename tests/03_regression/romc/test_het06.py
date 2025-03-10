@@ -1,4 +1,5 @@
 import pytest
+from robot.api import logger
 
 import eradiate
 from eradiate.test_tools.regression import Chi2Test
@@ -25,6 +26,8 @@ def test_het06_brfpp(mode_mono_double, artefact_dir, session_timestamp):
 
     exp = create_het06_brfpp()
     result = eradiate.run(exp)
+
+    logger.info(result._repr_html_(), html=True)
 
     test = Chi2Test(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-het06.nc",

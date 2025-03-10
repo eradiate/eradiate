@@ -1,4 +1,5 @@
 import pytest
+from robot.api import logger
 
 import eradiate
 from eradiate.test_tools.regression import Chi2Test
@@ -34,6 +35,8 @@ def test_rpv_afgl1986_continental_brfpp(
         absorption_database_error_handler_config
     )
     result = eradiate.run(exp, spp=10000)
+
+    logger.info(result._repr_html_(), html=True)
 
     test = Chi2Test(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986_continental.nc",
