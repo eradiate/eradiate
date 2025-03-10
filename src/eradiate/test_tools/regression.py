@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import typing as t
 from abc import ABC, abstractmethod
+from io import StringIO
 from pathlib import Path
 
 import attrs
@@ -10,6 +11,7 @@ import matplotlib.pyplot as plt
 import mitsuba as mi
 import numpy as np
 import xarray as xr
+from robot.api import logger
 
 from .. import data
 from ..attrs import define, documented
@@ -22,33 +24,44 @@ def regression_test_plots(
     ref: np.typing.ArrayLike,
     result: np.typing.ArrayLike,
     vza: np.typing.ArrayLike,
-    filename: PathLike,
     metric: tuple[str, float],
+    ref_var: t.Optional[np.typing.ArrayLike] = None,
+    result_var: t.Optional[np.typing.ArrayLike] = None,
 ) -> None:
     """
-    Create regression test report plots.
+    Create regression test report plots. Plot errorbars if both ref_var and
+    result_var are set.
 
     Parameters
     ----------
     ref : array-like
-        BRF values for the reference data
+        Variable values for the reference data
 
     result : array-like
-        BRF values for the simulation result
+        Variable values for the simulation result
 
     vza : array-like
         VZA values for plotting
 
-    filename : path-like
-        Path to the output file for the plot
-
     metric : tuple
         A tuple of the form (metric name, value) to be added to the plots.
+
+    ref_var: array-like (optional)
+        Variable variance for the reference data
+
+    result_var : array-like (optional)
+        Variable variance for the simulation result
+
     """
     fig, axes = plt.subplots(2, 2, figsize=(8, 6))
 
-    axes[0][0].plot(vza, ref, label="reference")
-    axes[0][0].plot(vza, result, label="result")
+    if ref_var is None or result_var is None:
+        axes[0][0].plot(vza, ref, label="reference")
+        axes[0][0].plot(vza, result, label="result")
+    else:
+        axes[0][0].errorbar(vza, ref, yerr=np.sqrt(ref_var), label="reference")
+        axes[0][0].errorbar(vza, result, yerr=np.sqrt(result_var), label="result")
+
     axes[0][0].set_title("Reference and test result")
     handles, labels = axes[0][0].get_legend_handles_labels()
 
@@ -62,17 +75,51 @@ def regression_test_plots(
 
     axes[0][1].set_axis_off()
     axes[0][1].legend(handles=handles, labels=labels, loc="upper center")
-    axes[0][1].text(
-        0.5, 0.5, f"{metric[0]}: {metric[1]:.4}", horizontalalignment="center"
-    )
+
+    if metric[1] is None:
+        axes[0][1].text(
+            0.5,
+            0.5,
+            f'Metric "{metric[0]}" is not available',
+            horizontalalignment="center",
+        )
+    else:
+        axes[0][1].text(
+            0.5, 0.5, f"{metric[0]}: {metric[1]:.4}", horizontalalignment="center"
+        )
 
     plt.tight_layout()
-    plt.savefig(filename)
-    plt.close()
+
+
+def render_svg_report():
+    str_i = StringIO()
+    plt.savefig(str_i, format="svg", transparent=True)
+    svg = str_i.getvalue()
+
+    return "\n".join(
+        [
+            "<svg",
+            'version="1.1"',
+            'baseProfile="full"',
+            'width="810" height="540" viewBox="0 0 810 540"'
+            'xmlns="http://www.w3.org/2000/svg">',
+            "<style>",
+            "    path {",
+            "        fill: var(--text-color);",
+            "        stroke: var(--text-color);",
+            "    }",
+            "    #legend_1 > :first-child {",
+            "        opacity: 0.1;",
+            "    }",
+            "</style>",
+            svg,
+            "</svg>",
+        ]
+    )
 
 
 def reference_converter(
-    value: os.PathLike | xr.Dataset | None,
+    value: os.PathLike | xr.Dataset | str | bytes | None,
 ) -> xr.Dataset | None:
     """
     A converter for handling the reference data attribute.
@@ -109,7 +156,19 @@ def reference_converter(
         if isinstance(value, (str, os.PathLike, bytes)):
             # Try to open a file if it is directly referenced
             if os.path.isfile(value):
+                logger.info(
+                    f'Loading reference dataset "{str(value)}" from disk',
+                    also_console=True,
+                )
                 return xr.load_dataset(value)
+
+            logger.info(
+                f'Attempting to serve reference dataset "{str(value)}" from the data store',
+                also_console=True,
+            )
+            logger.info(
+                f"Fetched path: {data.data_store.fetch(value)}", also_console=True
+            )
 
             # Try to serve the file from the data store
             return data.load_dataset(value)
@@ -169,6 +228,14 @@ class RegressionTest(ABC):
         default="None",
     )
 
+    variable: str = documented(
+        attrs.field(kw_only=True, default="brf"),
+        doc="Tested variable",
+        type="str",
+        init_type="str",
+        default="brf",
+    )
+
     threshold: float = documented(
         attrs.field(kw_only=True),
         doc="Threshold for test evaluation",
@@ -201,6 +268,9 @@ class RegressionTest(ABC):
         bool
             Result of the test criterion comparison.
         """
+
+        logger.info(f"Regression test {self.name} results:", also_console=True)
+
         fname = self.name
         ext = ".nc"
         archive_dir = os.path.abspath(self.archive_dir)
@@ -213,7 +283,10 @@ class RegressionTest(ABC):
         # if no valid reference is found, store the results as new ref and fail
         # the test
         if not self.reference:
-            print("No reference data was found! Storing test results as reference.")
+            logger.info(
+                f"No reference data was found! Storing test results as reference to {fname_reference}",
+                also_console=True,
+            )
             self._archive(self.value, fname_reference)
             self._plot(reference_only=True, metric_value=None)
             return False
@@ -221,13 +294,29 @@ class RegressionTest(ABC):
         # else (we have a reference value), evaluate the test metric
         try:
             passed, metric_value = self._evaluate()
+            logger.info(
+                "Test passed" if passed else "Test did not pass", also_console=True
+            )
+            logger.info(
+                f"Metric value: {self.METRIC_NAME} = {metric_value}", also_console=True
+            )
+            logger.info(f"Metric threshold: {self.threshold}", also_console=True)
+            logger.info(f"Variable: {self.variable}", also_console=True)
         except Exception as e:
-            print("An exception occurred during test execution!")
+            logger.info(
+                "An exception occurred during test evaluation!", also_console=True
+            )
             self._plot(reference_only=False, metric_value=None)
             raise e
 
         # we got a metric: report the results in the archive directory
+        logger.info(
+            f"Saving current output dataset to {fname_result}", also_console=True
+        )
         self._archive(self.value, fname_result)
+        logger.info(
+            f"Saving reference dataset locally to {fname_reference}", also_console=True
+        )
         self._archive(self.reference, fname_reference)
         self._plot(reference_only=False, metric_value=metric_value)
 
@@ -254,7 +343,6 @@ class RegressionTest(ABC):
         Create an archive file for test result and reference storage
         """
         os.makedirs(os.path.dirname(fname_output), exist_ok=True)
-        print(f"Saving dataset to {fname_output}")
         dataset.to_netcdf(fname_output)
 
     def _plot(self, metric_value: float | None, reference_only: bool) -> None:
@@ -275,37 +363,40 @@ class RegressionTest(ABC):
         """
         vza = np.squeeze(self.value.vza.values)
 
-        if "brf_srf" in self.value.data_vars:  # Handle spectral results
-            brf = np.squeeze(self.value.brf_srf.values)
+        if self.variable == "brf_srf":  # Handle spectral results
+            val = np.squeeze(self.value.brf_srf.values)
         else:  # Handle monochromatic results
-            brf = np.squeeze(self.value.brf.values)
+            val = np.squeeze(self.value[self.variable].values)
 
         fname = self.name
         ext = ".png"
+
         archive_dir = os.path.abspath(self.archive_dir)
         fname_plot = os.path.join(archive_dir, fname + ext)
         os.makedirs(os.path.dirname(fname_plot), exist_ok=True)
-        print(f"Saving plot to {fname_plot}")
 
         if reference_only:
             plt.figure(figsize=(8, 6))
-            plt.plot(vza, brf)
+            plt.plot(vza, val)
             plt.xlabel("VZA [deg]")
-            plt.ylabel("BRF in principal plane [-]")
+            plt.ylabel(f"{self.variable.upper()} in principal plane [-]")
             plt.title("Simulation result, can be used as new reference")
             plt.tight_layout()
-            plt.savefig(fname_plot)
-            plt.close()
 
         else:
-            if "brf_srf" in self.value.data_vars:  # Handle spectral results
-                brf_ref = np.squeeze(self.reference.brf_srf.values)
+            if self.variable == "brf_srf":  # Handle spectral results
+                ref = np.squeeze(self.reference.brf_srf.values)
             else:  # Handle monochromatic results
-                brf_ref = np.squeeze(self.reference.brf.values)
+                ref = np.squeeze(self.reference[self.variable].values)
 
-            regression_test_plots(
-                brf_ref, brf, vza, fname_plot, (self.METRIC_NAME, metric_value)
-            )
+            regression_test_plots(ref, val, vza, (self.METRIC_NAME, metric_value))
+
+        html_svg = render_svg_report()
+        logger.info(html_svg, html=True, also_console=False)
+        logger.info(f"Saving PNG report chart to {fname_plot}", also_console=True)
+
+        plt.savefig(fname_plot)
+        plt.close()
 
 
 @define
