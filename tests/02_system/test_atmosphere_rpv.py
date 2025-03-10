@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import xarray as xr
+from robot.api import logger
 
 import eradiate
 from eradiate import unit_registry as ureg
@@ -705,7 +706,7 @@ def test_rpv_vs_lambertian(
         plt.title(title)
         plt.tight_layout()
 
-        print(f"Saving figure to {fname_plot}")
+        logger.info(f"Saving figure to {fname_plot}", also_console=True)
         fig.savefig(fname_plot, dpi=200)
         plt.close()
 
