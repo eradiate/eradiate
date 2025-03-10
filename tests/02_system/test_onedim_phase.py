@@ -5,6 +5,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from robot.api import logger
 
 import eradiate
 from eradiate import unit_registry as ureg
@@ -21,7 +22,7 @@ def make_figure(fname_plot, brf_1, brf_2):
     plt.title(f"w = {to_quantity(brf_1.w).squeeze():~}")
     plt.tight_layout()
 
-    print(f"Saving figure to {fname_plot}")
+    logger.info(f"Saving figure to {fname_plot}", also_console=True)
     fig.savefig(fname_plot, dpi=200)
     plt.close()
 

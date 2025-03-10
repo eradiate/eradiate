@@ -1,4 +1,5 @@
 import pytest
+from robot.api import logger
 
 import eradiate
 from eradiate.test_tools.regression import Chi2Test
@@ -29,6 +30,8 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
 
     exp = create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp()
     result = eradiate.run(exp)
+
+    logger.info(result._repr_html_(), html=True)
 
     test = Chi2Test(
         name=(
