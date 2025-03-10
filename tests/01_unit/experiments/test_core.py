@@ -1,12 +1,9 @@
 import pytest
 import xarray as xr
 
-import eradiate.kernel.logging
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.experiments._core import MeasureRegistry
 from eradiate.units import unit_registry as ureg
-
-eradiate.kernel.install_logging()
 
 
 @pytest.fixture()
