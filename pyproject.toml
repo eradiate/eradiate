@@ -113,9 +113,14 @@ scripts = ["setpath.bat"]
 python = "3.9.*" # Used to constrain dev environment
 
 [tool.pixi.feature.test.tasks]
-test = { cmd = "pytest" }
-test-quick = { cmd = "pytest -m \"not slow and not regression\"" }
+test = { cmd = "pytest -p no:robotframework" }
+test-quick = { cmd = "pytest -m \"not slow and not regression\"  -p no:robotframework" }
 doctest = { cmd = "make -C docs doctest" }
+test-report = { cmd = "pytest --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow" }
+unit-report = { cmd = "pytest --robot-tagstatinclude unit --robot-tagstatinclude slow -m unit" }
+system-report = { cmd = "pytest --robot-tagstatinclude system --robot-tagstatinclude slow -m system" }
+regression-report = { cmd = "pytest --robot-tagstatinclude regression --robot-tagstatinclude slow -m regression" }
+slow-report = { cmd = "pytest --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow -m slow" }
 
 [tool.pixi.feature.docs.tasks]
 docs = { cmd = "make -C docs html && echo \"Documentation index at docs/_build/html/index.html\"" }
@@ -161,6 +166,7 @@ filterwarnings = [
   # Remove the following when transition to NumPy 2 is complete
   "ignore:numpy.core is deprecated and has been renamed to numpy._core.",
 ]
+markers = ["unit", "system", "regression"]
 testpaths = "tests"
 
 [tool.ruff]
