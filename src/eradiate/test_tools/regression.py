@@ -12,7 +12,7 @@ import mitsuba as mi
 import numpy as np
 import xarray as xr
 from robot.api import logger
-from scipy.stats import t
+from scipy.stats import norm, t
 
 from .. import data
 from ..attrs import define, documented
@@ -624,3 +624,68 @@ class PairedStudentTTest(RegressionTest):
         p_value = t.sf(np.abs(t_prim), dof) * 2
 
         return p_value > self.threshold, p_value
+
+
+@define
+class ZTest(RegressionTest):
+    """
+    Z-Test with Šidák correction factor
+    ===================================
+
+    Implement a Z-test, testing the significance of paired differences between
+    a set of observations and a set of references. It considers the observations
+    variance.
+
+    Paired tests are aggregated into one p-value using a Šidák correction. The
+    test passes if the null hypothesis is accepted for at least 99.75% of the
+    paired Z-tests
+
+    This paired Z-test requires an equal degree of freedom of the two groups.
+    """
+
+    METRIC_NAME = "Z-test p-value"
+
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
+        if self.variable + "_var" not in self.value:
+            raise ValueError(
+                f"The target value for this Z-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+
+        ref_np = self.reference[self.variable].values.ravel()
+        result_np = self.value[self.variable].values.ravel()
+
+        var_res_np = self.value[self.variable + "_var"].values.ravel()
+
+        assert ref_np.shape == result_np.shape
+        assert ref_np.shape == var_res_np.shape
+
+        # Calculate Z-statistic
+        z = (result_np - ref_np) / np.sqrt(var_res_np)
+
+        # Calculate p-value of the two-tailed z-test null hypothesis
+        p_values = norm.sf(np.abs(z)) * 2
+
+        alpha_0 = 1.0 - (1.0 - self.threshold) ** (1.0 / result_np.size)
+        accept_null = p_values > alpha_0
+
+        passed = np.count_nonzero(accept_null) >= 0.9975 * result_np.size
+
+        if diagnostic_chart:
+            plt.grid()
+            plt.hist(z, bins=50, label="Z values")
+            x = np.linspace(-4.0, 4.0, 100)
+            y = norm.pdf(x, 0.0, 1.0)
+            plt.axvline(0.0, color="red", linestyle="--")
+            plt.title("Z-statistic")
+            plt.legend(loc="upper left")
+            ax2 = plt.twinx()
+            ax2.plot(x, y, label="target Z distribution form", color="black")
+            ax2.legend(loc="upper right")
+            ax2.set_ylim([0.0, max(y) * 1.1])
+            chart = render_svg_chart()
+            plt.close()
+            logger.info(chart, html=True)
+
+            logger.info(f"alpha_0 = {alpha_0}", also_console=True)
+
+        return passed, min(p_values)

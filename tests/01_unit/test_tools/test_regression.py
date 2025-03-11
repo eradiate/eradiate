@@ -38,6 +38,14 @@ def test_instantiate():
         reference=xr.Dataset(),
         threshold=0.05,
     )
+    
+    assert tt.ZTest(
+        name="z-test",
+        archive_dir="tests/",
+        value=xr.Dataset(),
+        reference=xr.Dataset(),
+        threshold=0.05,
+    )
 
     # assert all arguments except reference are needed
     # only one subclass of RegressionTest (Chi2Test) is tested
