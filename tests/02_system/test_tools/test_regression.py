@@ -1,6 +1,8 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import xarray as xr
+from robot.api import logger
 
 import eradiate
 import eradiate.test_tools.regression as tt
@@ -13,6 +15,21 @@ test_types = {
     "t_test": tt.IndependantStudentTTest,
     "sidak_t_test": tt.SidakTTest,
 }
+
+
+def _generate_antithetic_normal(mean=0, std=1, n=11):
+    """
+    Generate antithetic normal distribution to ensure the mean of the samples
+    is close to the theoretical mean, even with lower sample counts. For testing
+    purposes only.
+    """
+
+    if n % 2 != 0:
+        raise ValueError("n must be even for antithetic pairing.")
+    half_n = n // 2
+    samples1 = np.random.normal(loc=mean, scale=std, size=half_n)
+    samples2 = 2 * mean - samples1
+    return np.concatenate([samples1, samples2])
 
 
 @pytest.mark.parametrize(
@@ -139,9 +156,138 @@ def test_t_test_static_var(
         nb_passed >= nb_iterations * (1 - threshold) * 0.9975
     )  # allow a bit of margin
 
+    obs_ds = xr.Dataset(
+        coords=dict(index=("index", np.arange(len(obs), dtype=int))),
+        data_vars=dict(
+            test_variable=("index", obs),
+            test_variable_var=("index", np.ones((len(obs),)) * std_obs**2),
+        ),
+    )
+
+    test = test_types[test_type](
+        name=test_type,
+        reference=ref_ds,
+        value=obs_ds,
+        variable="test_variable",
+        archive_dir=tmp_path,
+        threshold=threshold,
+    )
+
+    passed, p_value = test._evaluate()
+
+    logger.info(f"p-value: {p_value}; threshold: {threshold}")
+    logger.info(f"mean_ref: {mean_ref}; mean_obs: {mean_obs}")
+    logger.info(f"std_ref: {std_ref}; std_obs: {std_obs}")
+
+    assert passed == accept
+
+
+@pytest.mark.parametrize(
+    "mean_ref,mean_obs,std_obs,manual_obs_outliers,accept, threshold",
+    [
+        (0.0, 0.0, 0.1, None, True, 0.01),  # Basic case, mean is 0
+        (5.0, 5.0, 1.0, None, True, 0.01),  # Basic case, mean is 5
+        (0.0, 5.0, 1.0, None, False, 0.99),  # Basic case, mean is different
+        (0.0, 5e-3 - 4, 1.0, None, False, 5e-4),  # Slight bias
+        (5.0, 5.0, 1e-2, None, True, 0.99),  # Basic case, low variance
+        (5.0, 5.0, 2.0, None, True, 0.99),  # High observation variance
+        (
+            5.0,
+            5.0 - 5e-3,
+            1e-4,
+            None,
+            False,
+            1e-4,
+        ),  # High observation variance, slight bias
+        (
+            5.0,
+            5.0,
+            1.0,
+            np.random.normal(20.0, 0.2, 100),
+            False,
+            1e-5,
+        ),  # Clear Outliers
+    ],
+)
+@pytest.mark.parametrize(
+    "ref_size,obs_size",
+    [
+        (4096, 4096),
+    ],
+)
+@pytest.mark.slow
+def test_z_test_static_var(
+    mean_ref,
+    mean_obs,
+    std_obs,
+    threshold,
+    accept,
+    ref_size,
+    obs_size,
+    manual_obs_outliers,
+    tmp_path,
+):
+    # reference variance is assumed to be small
+    ref = _generate_antithetic_normal(mean=mean_ref, std=std_obs / 20, n=ref_size)
+    obs = _generate_antithetic_normal(mean=mean_obs, std=std_obs, n=obs_size)
+    if manual_obs_outliers is not None:
+        obs = np.append(obs, manual_obs_outliers)
+        ref = np.append(ref, [mean_ref for _ in manual_obs_outliers])
+
+    ref_ds = xr.Dataset(
+        coords=dict(index=("index", np.arange(len(ref), dtype=int))),
+        data_vars=dict(
+            test_variable=("index", ref),
+        ),
+    )
+
+    obs_ds = xr.Dataset(
+        coords=dict(index=("index", np.arange(len(obs), dtype=int))),
+        data_vars=dict(
+            test_variable=("index", obs),
+            test_variable_var=("index", np.ones((len(obs),)) * std_obs**2),
+        ),
+    )
+
+    test = tt.ZTest(
+        name="z-test",
+        reference=ref_ds,
+        value=obs_ds,
+        variable="test_variable",
+        archive_dir=tmp_path,
+        threshold=threshold,
+    )
+
+    logger.info(f"Expecting Z-test to pass: {accept}", also_console=True)
+    passed, p_value = test._evaluate(diagnostic_chart=True)
+    logger.info(f"Z-test did pass: {passed}", also_console=True)
+    logger.info(f"min p-value: {p_value}; threshold: {threshold}", also_console=True)
+    logger.info(f"mean_ref: {mean_ref}; mean_obs: {mean_obs}", also_console=True)
+    logger.info(f"std_obs: {std_obs}", also_console=True)
+
+    if passed != accept:
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+
+        ax1.grid()
+        ax1.hist(obs, bins=50)
+        ax1.axvline(mean_obs, color="red", linestyle="--")
+        ax1.set_title("Observation sample")
+
+        ax2.grid()
+        ax2.hist(ref, label="variable", bins=50)
+        ax2.axvline(mean_ref, color="red", linestyle="--", label="metric")
+        ax2.set_title("Reference sample")
+
+        plt.legend()
+
+        chart = tt.render_svg_chart()
+        plt.close()
+        logger.info(chart, html=True)
+
+    assert passed == accept
+
 
 @append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp)
-@pytest.mark.slow
 @pytest.mark.parametrize(
     "spp1, spp2",
     [
