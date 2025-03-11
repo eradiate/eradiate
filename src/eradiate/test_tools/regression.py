@@ -91,11 +91,13 @@ def regression_test_plots(
     plt.tight_layout()
 
 
-def render_svg_report():
+def render_svg_chart():
     str_i = StringIO()
     plt.savefig(str_i, format="svg", transparent=True)
     svg = str_i.getvalue()
 
+    # Include some CSS in the SVG to render nicely in Robot report's dark and
+    # light modes
     return "\n".join(
         [
             "<svg",
@@ -107,9 +109,6 @@ def render_svg_report():
             "    path {",
             "        fill: var(--text-color);",
             "        stroke: var(--text-color);",
-            "    }",
-            "    #legend_1 > :first-child {",
-            "        opacity: 0.1;",
             "    }",
             "</style>",
             svg,
@@ -391,7 +390,7 @@ class RegressionTest(ABC):
 
             regression_test_plots(ref, val, vza, (self.METRIC_NAME, metric_value))
 
-        html_svg = render_svg_report()
+        html_svg = render_svg_chart()
         logger.info(html_svg, html=True, also_console=False)
         logger.info(f"Saving PNG report chart to {fname_plot}", also_console=True)
 
