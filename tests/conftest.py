@@ -7,6 +7,8 @@ import eradiate
 
 mpl.use("Agg")
 eradiate.plot.set_style()
+# Required for HTML rendering in Robot
+mpl.rcParams["legend.framealpha"] = 0.15
 
 
 # ------------------------------------------------------------------------------
