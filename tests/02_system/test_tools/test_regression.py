@@ -13,7 +13,8 @@ from eradiate.test_tools.util import append_doc
 
 test_types = {
     "t_test": tt.IndependantStudentTTest,
-    "sidak_t_test": tt.SidakTTest,
+    "paired_t_test": tt.PairedStudentTTest,
+    "z_test": tt.ZTest,
 }
 
 
@@ -33,128 +34,66 @@ def _generate_antithetic_normal(mean=0, std=1, n=11):
 
 
 @pytest.mark.parametrize(
-    "mean_ref,mean_obs,var_ref,var_obs,manual_obs_outliers, accept",
+    "mean_ref,mean_obs,std_ref,std_obs,manual_obs_outliers,accept, threshold",
     [
-        (0.0, 0.0, 1.0, 1.0, None, True),  # Basic case, mean is 0
-        (4.0, 4.0, 1.0, 1.0, None, True),  # Mean is the same
+        (0.0, 0.0, 1.0, 1.0, None, True, 0.99),  # Basic case, mean is 0
+        (5.0, 5.0, 1.0, 1.0, None, True, 0.99),  # Basic case, mean is 5
+        (0.0, 1.0, 1.0, 1.0, None, False, 0.05),  # Basic case, mean is different
+        (0.0, 5e-3, 1.0, 1.0, None, False, 5e-4),  # Slight bias
+        (5.0, 5.0, 1e-4, 1e-4, None, True, 0.99),  # Basic case, low variance
+        (5.0, 5.0, 1e-4, 1.5, None, True, 0.99),  # High observation variance
         (
-            0.0,
-            0.0,
-            1.0,
-            0.5,
-            None,
-            True,
-        ),  # Mean is zero, variances vary between ref and obs
-        (0.0, 4.0, 1.0, 1.0, None, False),  # Different mean
-        (0.0, 4.0, 2.0, 1.0, None, False),  # Different mean, different variance
-        (
-            0.0,
-            0.01,
-            1.0,
-            1.0,
-            None,
-            True,
-        ),  # small relative mean variations are discarded
-        (
-            0.1,
-            1.8,
-            0.5,
-            0.4,
+            5.0,
+            5.0 - 5e-3,
+            1e-4,
+            1.5,
             None,
             False,
-        ),  # larger relative mean variations are detected
-        (2.0, 2.0, 0.1, 0.2, [-300], False),  # introducing a sharp outlier
-        (2.0, 2.0, 0.1, 0.2, [3.0], True),  # introducing a small outlier
-    ],
-)
-@pytest.mark.parametrize(
-    "threshold",
-    [
-        0.05,
-        0.01,
-        0.002,
-        0.0005,
+            1e-4,
+        ),  # High observation variance, slight bias
+        (5.0, 5.0, 1.0, 1.0, [15.0], False, 1e-5),  # Outlier larger than 2 sigma
     ],
 )
 @pytest.mark.parametrize(
     "test_type",
     [
         "t_test",
+        "paired_t_test",
     ],
 )
 @pytest.mark.parametrize(
-    "ref_size,obs_size,nb_iterations",
+    "ref_size,obs_size",
     [
-        (256, 256, 10000),
+        (1024, 1024),
     ],
 )
+@pytest.mark.slow
 def test_t_test_static_var(
     mean_ref,
     mean_obs,
-    var_ref,
-    var_obs,
+    std_ref,
+    std_obs,
     threshold,
     accept,
     ref_size,
     obs_size,
-    nb_iterations,
     manual_obs_outliers,
     test_type,
+    tmp_path,
 ):
-    nb_passed = 0
-    p_values = []
+    ref = _generate_antithetic_normal(mean=mean_ref, std=std_ref, n=ref_size)
+    obs = _generate_antithetic_normal(mean=mean_obs, std=std_obs, n=obs_size)
+    if manual_obs_outliers is not None:
+        obs = np.append(obs, manual_obs_outliers)
+        ref = np.append(ref, [mean_ref for _ in manual_obs_outliers])
 
-    for _ in range(nb_iterations):
-        ref = np.random.normal(loc=mean_ref, scale=np.sqrt(var_ref), size=ref_size)
-        ref_ds = xr.Dataset(
-            coords=dict(index=("index", np.arange(ref_size, dtype=int))),
-            data_vars=dict(
-                test_variable=("index", ref),
-                test_variable_var=("index", np.ones((ref_size,)) * var_ref),
-            ),
-        )
-
-        obs = np.random.normal(loc=mean_obs, scale=np.sqrt(var_obs), size=obs_size)
-        if manual_obs_outliers is not None:
-            positions = np.random.randint(0, obs_size, len(manual_obs_outliers))
-            obs[positions] = manual_obs_outliers
-        obs_ds = xr.Dataset(
-            coords=dict(index=("index", np.arange(obs_size, dtype=int))),
-            data_vars=dict(
-                test_variable=("index", obs),
-                test_variable_var=("index", np.ones((obs_size,)) * var_obs),
-            ),
-        )
-
-        try:
-            test = test_types[test_type](
-                name="t-test",
-                reference=ref_ds,
-                value=obs_ds,
-                variable="test_variable",
-                archive_dir="tests/",
-                threshold=threshold,
-            )
-        except TypeError:
-            test = test_types[test_type](
-                name="t-test",
-                reference=ref_ds,
-                value=obs_ds,
-                variable="test_variable",
-                archive_dir="tests/",
-                threshold=threshold,
-                spo=20000,
-            )
-
-        passed, p_value = test._evaluate()
-        p_values.append(p_value)
-
-        if passed == accept:
-            nb_passed += 1
-
-    assert (
-        nb_passed >= nb_iterations * (1 - threshold) * 0.9975
-    )  # allow a bit of margin
+    ref_ds = xr.Dataset(
+        coords=dict(index=("index", np.arange(len(ref), dtype=int))),
+        data_vars=dict(
+            test_variable=("index", ref),
+            test_variable_var=("index", np.ones((len(ref),)) * std_ref**2),
+        ),
+    )
 
     obs_ds = xr.Dataset(
         coords=dict(index=("index", np.arange(len(obs), dtype=int))),
