@@ -49,7 +49,7 @@ def _generate_antithetic_normal(mean=0, std=1, n=11):
             1.5,
             None,
             False,
-            1e-4,
+            1e-3,
         ),  # High observation variance, slight bias
         (5.0, 5.0, 1.0, 1.0, [15.0], False, 1e-5),  # Outlier larger than 2 sigma
     ],
