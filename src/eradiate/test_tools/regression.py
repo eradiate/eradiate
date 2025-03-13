@@ -349,7 +349,7 @@ class RegressionTest(ABC):
         return passed
 
     @abstractmethod
-    def _evaluate(self) -> tuple[bool, float]:
+    def _evaluate(self, diagnostic_chart: bool = False) -> tuple[bool, float]:
         """
         Evaluate the test results and perform a comparison to the reference
         based on the criterion defined in the specialized class.
@@ -465,7 +465,7 @@ class Chi2Test(RegressionTest):
 
     METRIC_NAME = "X² p-value"
 
-    def _evaluate(self) -> tuple[bool, float]:
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
         ref_np = self.reference.brf.values
 
         result_np = self.value.brf.values
@@ -506,7 +506,7 @@ class IndependantStudentTTest(RegressionTest):
 
     METRIC_NAME = "T-test p-value"
 
-    def _evaluate(self) -> tuple[bool, float]:
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
         if self.variable + "_var" not in self.reference:
             raise ValueError(
                 f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
@@ -550,11 +550,36 @@ class IndependantStudentTTest(RegressionTest):
 
         passed = p_value > self.threshold
 
-        if not passed:
-            logger.info(f"bias = {bias_mean}", also_console=True)
-            logger.info(f"s_p  = {s_p}", also_console=True)
-            logger.info(f"t'   = {t_prim}", also_console=True)
-            logger.info(f"dof  = {dof}", also_console=True)
+        if diagnostic_chart:
+            plt.grid()
+            start, end = t.ppf(0.0001, dof), t.ppf(0.9999, dof)
+            if t_prim > start and t_prim < end:
+                fx = np.linspace(-np.abs(t_prim), np.abs(t_prim), 100)
+                fy = t(dof).pdf(fx)
+                plt.fill_between(np.zeros((100,)), fy)
+                plt.axvline(t.ppf(-self.threshold / 2.0, dof, color="red"))
+                plt.axvline(t.ppf(self.threshold / 2.0, dof, color="red"))
+            else:
+                plt.axvline(t_prim, label="T value")
+            x = np.linspace(start, end, 100)
+            y = t(dof).pdf(x)
+            plt.axvline(0.0, color="red", linestyle="--")
+            plt.title("T-statistic")
+            plt.legend(loc="upper left")
+            ax2 = plt.twinx()
+            ax2.plot(x, y, label="target T distribution form", color="black")
+            ax2.legend(loc="upper right")
+            ax2.set_ylim([0.0, max(y) * 1.1])
+            chart = render_svg_chart()
+            plt.close()
+            logger.info(chart, html=True)
+
+        logger.info(f"bias    = {bias_mean}", also_console=True)
+        logger.info(f"s_p     = {s_p}", also_console=True)
+        logger.info(f"t'      = {t_prim}", also_console=True)
+        logger.info(f"dof     = {dof}", also_console=True)
+        logger.info(f"p-value = {p_value}", also_console=True)
+        logger.info(f"alpha   = {self.threshold}", also_console=True)
 
         return passed, p_value
 
@@ -587,7 +612,7 @@ class PairedStudentTTest(RegressionTest):
         init_type="float",
     )
 
-    def _evaluate(self) -> tuple[bool, float]:
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
         if self.variable + "_var" not in self.reference:
             raise ValueError(
                 f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
@@ -623,7 +648,40 @@ class PairedStudentTTest(RegressionTest):
         # survival function for the null hypothesis.
         p_value = t.sf(np.abs(t_prim), dof) * 2
 
-        return p_value > self.threshold, p_value
+        passed = p_value > self.threshold
+
+        if diagnostic_chart:
+            plt.grid()
+            start, end = t.ppf(0.0001, dof), t.ppf(0.9999, dof)
+            if t_prim > start and t_prim < end:
+                fx = np.linspace(-np.abs(t_prim), np.abs(t_prim), 100)
+                fy = t(dof).pdf(fx)
+                plt.fill_between(np.zeros((100,)), fy)
+                plt.axvline(t.ppf(-self.threshold / 2.0, dof, color="red"))
+                plt.axvline(t.ppf(self.threshold / 2.0, dof, color="red"))
+            else:
+                plt.axvline(t_prim, label="T value")
+            x = np.linspace(start, end, 100)
+            y = t(dof).pdf(x)
+            plt.axvline(0.0, color="red", linestyle="--")
+            plt.title("T-statistic")
+            plt.legend(loc="upper left")
+            ax2 = plt.twinx()
+            ax2.plot(x, y, label="target T distribution form", color="black")
+            ax2.legend(loc="upper right")
+            ax2.set_ylim([0.0, max(y) * 1.1])
+            chart = render_svg_chart()
+            plt.close()
+            logger.info(chart, html=True)
+
+        logger.info(f"bias     = {D_mean}", also_console=True)
+        logger.info(f"var mean = {var_D_mean}", also_console=True)
+        logger.info(f"t'       = {t_prim}", also_console=True)
+        logger.info(f"dof      = {dof}", also_console=True)
+        logger.info(f"p-value  = {p_value}", also_console=True)
+        logger.info(f"alpha    = {self.threshold}", also_console=True)
+
+        return passed, p_value
 
 
 @define
@@ -687,5 +745,14 @@ class ZTest(RegressionTest):
             logger.info(chart, html=True)
 
             logger.info(f"alpha_0 = {alpha_0}", also_console=True)
+
+        logger.info(f"min p-value = {min(p_values)}", also_console=True)
+        logger.info(f"max p-value = {max(p_values)}", also_console=True)
+        logger.info(
+            f"n passed    = {np.count_nonzero(accept_null)}/{0.99 * result_np.size}",
+            also_console=True,
+        )
+        logger.info(f"alpha_1     = {self.threshold}", also_console=True)
+        logger.info(f"alpha_0     = {alpha_0}", also_console=True)
 
         return passed, min(p_values)
