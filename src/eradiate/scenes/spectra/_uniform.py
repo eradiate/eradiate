@@ -23,7 +23,7 @@ class UniformSpectrum(Spectrum):
     value: pint.Quantity = documented(
         attrs.field(
             converter=lambda x: float(x) if isinstance(x, int) else x,
-            repr=lambda x: f"{x:~P}",
+            repr=lambda x: str(x),
             kw_only=True,
         ),
         doc="Uniform spectrum value. If a quantity is passed, units are "

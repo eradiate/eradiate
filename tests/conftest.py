@@ -1,3 +1,4 @@
+import logging
 import os
 
 import matplotlib as mpl
@@ -7,6 +8,17 @@ import eradiate
 
 mpl.use("Agg")
 eradiate.plot.set_style()
+# Required for HTML rendering in Robot
+mpl.rcParams["legend.framealpha"] = 0.15
+
+
+# ------------------------------------------------------------------------------
+#                      Robot Configuration and fixtures
+# ------------------------------------------------------------------------------
+
+
+# Load necessary robot plugin for pytest interoperability
+pytest_plugins = ("robotframework",)
 
 
 # ------------------------------------------------------------------------------
@@ -19,7 +31,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--artefact-dir",
         action="store",
-        default=os.path.join(eradiate_source_dir, "build/test_artefacts/"),
+        default=os.path.join(eradiate_source_dir, "test_artefacts/"),
     )
 
 
@@ -69,6 +81,20 @@ def pytest_configure(config):
         "regression: marks tests as potentially very slow regression tests "
         "(deselect with -m 'not regression')",
     )
+
+    # Disable Eradiate and Mitsuba's progressbars
+    eradiate.config.settings.progress = 0
+
+    # Mitsuba's logger is configured to be silent, unless Pytest's configuration
+    # explicitely requires an increased verbosity (e.g, passing -v option to its
+    # CLI)
+    eradiate.kernel.install_logging()
+    pytest_verbosity = config.get_verbosity()
+    if pytest_verbosity <= 1:
+        logging.getLogger("mitsuba").setLevel(logging.WARNING)
+
+    # Silent Joseki
+    logging.getLogger("joseki").setLevel(logging.WARNING)
 
 
 # ------------------------------------------------------------------------------
