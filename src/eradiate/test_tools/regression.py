@@ -756,3 +756,67 @@ class ZTest(RegressionTest):
         logger.info(f"alpha_0     = {alpha_0}", also_console=True)
 
         return passed, min(p_values)
+
+
+@define
+class SidakTTest(RegressionTest):
+    METRIC_NAME = "Sidak T-test p-value"
+
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
+        if self.variable + "_var" not in self.reference:
+            raise ValueError(
+                f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+
+        ref_np = self.reference[self.variable].values.ravel()
+        result_np = self.value[self.variable].values.ravel()
+
+        assert ref_np.shape == result_np.shape
+
+        var_ref_np = self.reference[self.variable + "_var"].values.ravel()
+        var_res_np = self.value[self.variable + "_var"].values.ravel()
+
+        assert var_ref_np.shape == var_res_np.shape
+
+        # Calculate T-statistic
+        t_prim = (result_np - ref_np) / np.sqrt(var_res_np + var_ref_np)
+
+        # Calculate p-value of the two-tailed t-test using the T distribution
+        # survival function for the null hypothesis that there is no difference
+        # between the two mean distributions. It is assumed that the sample size
+        # is large enough for the T distribution to converge to a normal one.
+        p_values = norm.sf(np.abs(t_prim)) * 2
+
+        # Calculate the Šidák correction
+        alpha_0 = 1.0 - (1.0 - self.threshold) ** (1.0 / result_np.size)
+        accept_null = p_values > alpha_0
+
+        passed = np.count_nonzero(accept_null) >= 0.9975 * result_np.size
+
+        if diagnostic_chart:
+            plt.grid()
+            start, end = norm.ppf(0.0001), norm.ppf(0.9999)
+            plt.hist(t_prim, bins=50, label="T values")
+            x = np.linspace(start, end, 100)
+            y = norm.pdf(x)
+            plt.axvline(0.0, color="red", linestyle="--")
+            plt.title("T-statistic")
+            plt.legend(loc="upper left")
+            ax2 = plt.twinx()
+            ax2.plot(x, y, label="target T distribution form", color="black")
+            ax2.legend(loc="upper right")
+            ax2.set_ylim([0.0, max(y) * 1.1])
+            chart = render_svg_chart()
+            plt.close()
+            logger.info(chart, html=True)
+
+        logger.info(f"min p-value = {min(p_values)}", also_console=True)
+        logger.info(f"max p-value = {max(p_values)}", also_console=True)
+        logger.info(
+            f"n passed    = {np.count_nonzero(accept_null)}/{0.99 * result_np.size}",
+            also_console=True,
+        )
+        logger.info(f"alpha_1     = {self.threshold}", also_console=True)
+        logger.info(f"alpha_0     = {alpha_0}", also_console=True)
+
+        return passed, min(p_values)
