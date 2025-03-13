@@ -15,6 +15,8 @@ test_types = {
     "t_test": tt.IndependantStudentTTest,
     "paired_t_test": tt.PairedStudentTTest,
     "z_test": tt.ZTest,
+    "chi2": tt.Chi2Test,
+    "sidak_t_test": tt.SidakTTest,
 }
 
 
@@ -59,6 +61,7 @@ def _generate_antithetic_normal(mean=0, std=1, n=11):
     [
         "t_test",
         "paired_t_test",
+        "sidak_t_test",
     ],
 )
 @pytest.mark.parametrize(
@@ -112,7 +115,7 @@ def test_t_test_static_var(
         threshold=threshold,
     )
 
-    passed, p_value = test._evaluate()
+    passed, p_value = test._evaluate(diagnostic_chart=True)
 
     logger.info(f"p-value: {p_value}; threshold: {threshold}")
     logger.info(f"mean_ref: {mean_ref}; mean_obs: {mean_obs}")
@@ -227,15 +230,98 @@ def test_z_test_static_var(
 
 
 @append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp)
+@pytest.mark.slow
 @pytest.mark.parametrize(
-    "spp1, spp2",
+    "spp",
+    [64],
+)
+@pytest.mark.parametrize(
+    "test_type",
     [
-        (16, 16),
-        (256, 256),
-        (256, 1024),
+        "t_test",  # Still a good sanity check. This test can't be used this way in practice because it tests samples and not means and variances of a set of samples
+        "paired_t_test",  # Still a good sanity check.
+        "z_test",
+        "chi2",  # Still a good sanity check.
+        "sidak_t_test",
     ],
 )
-def test_t_test_same_simulation(mode_ckd_double, spp1, spp2):
+def test_stats_same_simulation(mode_ckd_double, test_type, spp):
+    r"""
+    Student's T-test system test for type I error detection
+    =======================================================
+
+    This is a system test, which compares a simulation result of the current
+    branch to itself with varying SPP. It tests the Student T-test
+    implementation against false positives
+
+    Expected behaviour
+    ------------------
+
+    This test should demonstrate that the two distributions show no mean bias
+    wrt their variance.
+
+    """
+
+    exp1 = create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp()
+    exp1.integrator.moment = True
+    result = eradiate.run(exp1, spp=spp)
+
+    logger.info("Displaying test dataset")
+    logger.info(result._repr_html_(), html=True)
+
+    r1np = result.radiance.sum(dim="w").squeeze().values
+    s1np = np.sqrt(result.radiance_var.sum(dim="w").squeeze().values)
+
+    plt.grid()
+    plt.errorbar(x=result.vza, y=r1np, yerr=3 * s1np, label="test value")
+    plt.title("Spectrally summed radiance and associated $3\\sigma$")
+    plt.xlabel("vza [degree]")
+    plt.ylabel(f"radiance [{result.radiance_srf.attrs['units']}]")
+    plt.legend()
+    chart = tt.render_svg_chart()
+    plt.close()
+    logger.info(chart, html=True)
+
+    logger.info("The test should pass, even considering a large significance level")
+
+    test = test_types[test_type](
+        name="type_I_error_test",
+        value=result,
+        reference=result,
+        threshold=0.99,
+        archive_dir="tests/",
+        variable="radiance",
+    )
+
+    passed, p_value = test._evaluate()
+    logger.info(f"Test passed: {passed}")
+    logger.info(f"P-value: {p_value}")
+
+    assert passed
+
+
+@append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp)
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "spp1, spp2",
+    [(1024, 10000), (4096, 10000)],
+)
+@pytest.mark.parametrize(
+    "test_type",  # Only these two test types implement a set of statistical
+    # tests based on the mean and variance of a set of samples (i.e. observation
+    # of a set pixels at a given wavelength, expressed in terms of mean and
+    # variance)
+    [
+        # "z_test",
+        # "sidak_t_test"
+        "t_test",
+        "paired_t_test",
+        "z_test",
+        "chi2",
+        "sidak_t_test",
+    ],
+)
+def test_stats_same_setup(mode_ckd_double, test_type, spp1, spp2):
     r"""
     Student's T-test system test for type I error detection
     =======================================================
@@ -256,30 +342,70 @@ def test_t_test_same_simulation(mode_ckd_double, spp1, spp2):
     exp1.integrator.moment = True
     result1 = eradiate.run(exp1, spp=spp1)
 
+    logger.info("Displaying test values dataset")
+    logger.info(result1._repr_html_(), html=True)
+
     exp2 = create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp()
     exp2.integrator.moment = True
     result2 = eradiate.run(exp2, spp=spp2)
 
-    # The test should pass, even considering a large significance level
-    test = tt.IndependantStudentTTest(
+    logger.info("Displaying test reference dataset")
+    logger.info(result2._repr_html_(), html=True)
+
+    r1np = result1.radiance.sum(dim="w").squeeze().values
+    r2np = result2.radiance.sum(dim="w").squeeze().values
+    s1np = np.sqrt(result1.radiance_var.sum(dim="w").squeeze().values)
+    s2np = np.sqrt(result2.radiance_var.sum(dim="w").squeeze().values)
+
+    plt.grid()
+    plt.errorbar(x=result1.vza, y=r1np, yerr=3 * s1np, label="test value")
+    plt.errorbar(x=result2.vza, y=r2np, yerr=3 * s2np, label="test reference")
+    plt.title("Spectrally summed radiance and associated $3\\sigma$")
+    plt.xlabel("vza [degree]")
+    plt.ylabel(f"radiance [{result1.radiance_srf.attrs['units']}]")
+    plt.legend()
+    chart = tt.render_svg_chart()
+    plt.close()
+    logger.info(chart, html=True)
+
+    logger.info("The test should pass, even considering a large significance level")
+
+    test = test_types[test_type](
         name="type_I_error_test",
         value=result1,
         reference=result2,
-        threshold=0.9,
+        threshold=0.5,
         archive_dir="tests/",
         variable="radiance",
     )
 
-    passed, p_value = test._evaluate()
+    passed, p_value = test._evaluate(diagnostic_chart=True)
+    logger.info(f"Test passed: {passed}")
 
     assert passed
 
 
 @append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp)
 @pytest.mark.slow
-@pytest.mark.parametrize("spp", [64, 256, 1024])
-@pytest.mark.parametrize("sigma_scale", [2.0, 3.0])
-def test_t_test_biased_simulation(mode_ckd_double, spp, sigma_scale):
+@pytest.mark.parametrize("bias", [0.005, 0.01, 0.02, 0.03])
+@pytest.mark.parametrize(
+    "test_type",  # Only these two test types implement a set of statistical
+    # tests based on the mean and variance of a set of samples (i.e. observation
+    # of a set pixels at a given wavelength, expressed in terms of mean and
+    # variance)
+    [
+        # "z_test",
+        # "sidak_t_test",
+        # "t_test"
+        "t_test",
+        "paired_t_test",
+        "z_test",
+        "chi2",
+        "sidak_t_test",
+    ],
+)
+@pytest.mark.parametrize("spp", [10000])
+def test_t_test_biased_simulation(mode_ckd_double, test_type, spp, bias):
     r"""
     Student's T-test system test for type II error detection
     ========================================================
@@ -305,20 +431,20 @@ def test_t_test_biased_simulation(mode_ckd_double, spp, sigma_scale):
     exp2.integrator.moment = True
     result2 = eradiate.run(exp2, spp=spp)
 
-    result2["radiance"] = result2.radiance + sigma_scale * np.sqrt(
-        result1.radiance_var + result2.radiance_var
-    )
+    result2["radiance"] = (
+        result2.radiance + (result1.radiance.mean() - result2.radiance.mean())
+    ) * (1.0 + bias)
 
     # The test should not pass, even considering a small significance level
-    test = tt.IndependantStudentTTest(
+    test = test_types[test_type](
         name="type_II_error_test",
         value=result1,
         reference=result2,
-        threshold=0.001,
+        threshold=0.01,
         archive_dir="tests/",
         variable="radiance",
     )
 
-    passed, p_value = test._evaluate()
+    passed, p_value = test._evaluate(diagnostic_chart=True)
 
     assert not passed
