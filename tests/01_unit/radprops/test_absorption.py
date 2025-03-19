@@ -74,7 +74,7 @@ class TestCKDAbsorptionDatabase:
         assert db.lazy is False
 
         # The dict converter accepts kwargs and can be used to override defaults
-        db = MonoAbsorptionDatabase.from_dict(
+        db = CKDAbsorptionDatabase.from_dict(
             {"construct": "from_name", "name": "monotropa", "lazy": True}
         )
         assert db.lazy is True
