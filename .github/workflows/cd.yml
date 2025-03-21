@@ -46,6 +46,8 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/p/eradiate
+    permissions:
+      id-token: write
 
     steps:
       - name: Download all dists
@@ -56,9 +58,6 @@ jobs:
       - name: Publish to PyPI
         if: ${{ github.event.inputs.upload == '1'}}
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
 
   publish-test:
     name: Publish to TestPyPI
@@ -68,6 +67,8 @@ jobs:
     environment:
       name: testpypi
       url: https://test.pypi.org/p/eradiate
+    permissions:
+      id-token: write
 
     steps:
       - name: Download all dists
@@ -80,5 +81,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
-          user: __token__
-          password: ${{ secrets.TESTPYPI_API_TOKEN }}
