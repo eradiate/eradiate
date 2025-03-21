@@ -236,7 +236,7 @@ Making a release of Eradiate
 
       .. code:: shell
 
-         python resources/release.py check-mitsuba
+         pixi run release check-mitsuba
 
    6. Bump the version number using `Bump My Version`_:
 
@@ -255,13 +255,13 @@ Making a release of Eradiate
 
       .. code:: shell
 
-         python resources/release.py update-citation
+         pixi run release update-citation
 
    10. Update the PyPI README content:
 
        .. code:: shell
 
-          python resources/release.py update-pypi-readme
+          pixi run release update-pypi-readme
 
    11. Push the changes:
 
