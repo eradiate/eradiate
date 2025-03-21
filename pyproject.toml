@@ -88,7 +88,7 @@ eradiate = { path = ".", editable = true }
 pandoc = "*"
 
 [tool.pixi.feature.dev.dependencies]
-uv = ">=0.4.15,<0.5" # Used to lock docs dependencies
+uv = "0.6.*" # Used to lock docs dependencies
 
 [tool.pixi.activation]
 scripts = ["setpath.sh"]
@@ -124,6 +124,7 @@ docs-clean = { cmd = "make -C docs clean" }
 docs-pdf = { cmd = "make -C docs latexpdf && echo \"Documentation PDF at docs/_build/latex/eradiate.pdf\"" }
 
 [tool.pixi.feature.dev.tasks]
+release = { cmd = "python resources/release.py" }
 # Version bump
 bump = { cmd = "bump-my-version bump --new-version $RELEASE_VERSION" }
 bump-show = { cmd = "bump-my-version show-bump" }
