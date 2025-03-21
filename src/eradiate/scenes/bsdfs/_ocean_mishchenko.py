@@ -93,16 +93,14 @@ class OceanMishchenkoBSDF(BSDF):
 
     shadowing: bool = documented(
         attrs.field(
+            converter=bool,
+            validator=attrs.validators.instance_of(bool),
             default=True,
-        )
+        ),
+        doc="Indicates whether evaluation of BRDF computes shadowing and masking.",
+        type="bool",
+        default="True",
     )
-
-    def default_shininess(self, u: pint.Quantity):
-        """
-        Parametrizes the Blinn-Phong distribution function with respect to the
-        wind speed.
-        """
-        return (37.2455 - u.m_as("m/s")) ** 1.15
 
     @property
     def template(self) -> dict:
@@ -115,7 +113,6 @@ class OceanMishchenkoBSDF(BSDF):
 
         result = {
             "type": "ocean_mishchenko",
-            "shininess": self.default_shininess(self.wind_speed),
             "wind_speed": self.wind_speed.m_as("m/s"),
             "shadowing": self.shadowing,
         }
