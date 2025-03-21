@@ -82,18 +82,16 @@ class OceanLegacyBSDF(BSDF):
         default="0.3 mg/m^3",
     )
 
-    shininess: float | None = documented(
+    shadowing: bool = documented(
         attrs.field(
-            default=None,
-        )
+            converter=bool,
+            validator=attrs.validators.instance_of(bool),
+            default=True,
+        ),
+        doc="Indicates whether evaluation of BRDF computes shadowing and masking.",
+        type="bool",
+        default="True",
     )
-
-    def default_shininess(self, u: pint.Quantity):
-        """
-        Parametrizes the Blinn-Phong distribution function with respect to the
-        wind speed.
-        """
-        return (37.2455 - u.m_as("m/s")) ** 1.15
 
     @property
     def template(self) -> dict:
@@ -101,13 +99,11 @@ class OceanLegacyBSDF(BSDF):
         result = {
             "type": "ocean_legacy",
             "wavelength": InitParameter(lambda ctx: ctx.si.w.m_as("nm")),
-            "shininess": self.shininess
-            if self.shininess is not None
-            else self.default_shininess(self.wind_speed),
             "wind_speed": self.wind_speed.m_as("m/s"),
             "wind_direction": self.wind_direction.m_as("deg"),
             "chlorinity": self.chlorinity.m_as("g/kg"),
             "pigmentation": self.pigmentation.m_as("mg/m^3"),
+            "shadowing": self.shadowing,
         }
 
         if self.id is not None:
