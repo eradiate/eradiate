@@ -14,6 +14,8 @@ bsdf_factory.register_lazy_batch(
         ("_lambertian.LambertianBSDF", "lambertian", {}),
         ("_mqdiffuse.MQDiffuseBSDF", "mqdiffuse", {}),
         ("_ocean_legacy.OceanLegacyBSDF", "ocean_legacy", {}),
+        ("_ocean_grasp.OceanGraspBSDF", "ocean_grasp", {}),
+        ("_ocean_mishchenko.OceanMishchenkoBSDF", "ocean_mishchenko", {}),
         ("_opacity_mask.OpacityMaskBSDF", "opacity_mask", {}),
         ("_rpv.RPVBSDF", "rpv", {}),
         ("_rtls.RTLSBSDF", "rtls", {}),
