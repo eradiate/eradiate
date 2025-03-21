@@ -259,11 +259,11 @@ Making a release of Eradiate
 
    10. Update the PyPI README content:
 
-      .. code:: shell
+       .. code:: shell
 
-         python resources/release.py update-pypi-readme
+          python resources/release.py update-pypi-readme
 
-   10. Push the changes:
+   11. Push the changes:
 
        .. code:: shell
 
