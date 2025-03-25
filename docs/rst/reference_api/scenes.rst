@@ -331,6 +331,7 @@ Quick access
    HapkeBSDF
    LambertianBSDF
    MQDiffuseBSDF
+   OceanGraspBSDF
    OceanLegacyBSDF
    OceanMishchenkoBSDF
    OpacityMaskBSDF
