@@ -12,6 +12,8 @@ anyio==4.9.0
     # via
     #   httpx
     #   jupyter-server
+appnope==0.1.4
+    # via ipykernel
 argon2-cffi==23.1.0
     # via jupyter-server
 argon2-cffi-bindings==21.2.0
@@ -412,7 +414,7 @@ rich==13.9.4
     # via
     #   eradiate (pyproject.toml)
     #   typer
-rpds-py==0.23.1
+rpds-py==0.24.0
     # via
     #   jsonschema
     #   referencing
@@ -429,7 +431,7 @@ seaborn==0.13.2
     # via eradiate (pyproject.toml)
 send2trash==1.8.3
     # via jupyter-server
-setuptools==78.0.2
+setuptools==78.1.0
     # via jupyterlab
 sf-hamilton==1.87.0
     # via eradiate (pyproject.toml)
@@ -524,7 +526,7 @@ typer==0.15.2
     # via eradiate (pyproject.toml)
 types-python-dateutil==2.9.0.20241206
     # via arrow
-typing-extensions==4.12.2
+typing-extensions==4.13.0
     # via
     #   anyio
     #   async-lru
