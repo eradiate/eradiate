@@ -170,7 +170,7 @@ class SceneGeometry(ABC):
 @define
 class PlaneParallelGeometry(SceneGeometry):
     """
-    Plane parallel geometry.
+    Plane parallel geometry [``plane_parallel``].
 
     A plane parallel atmosphere is translation-invariant in the X and Y
     directions. However, Eradiate represents it with a finite 3D geometry
@@ -216,7 +216,7 @@ class PlaneParallelGeometry(SceneGeometry):
 @define
 class SphericalShellGeometry(SceneGeometry):
     """
-    Spherical shell geometry.
+    Spherical shell geometry [``spherical_shell``].
 
     A spherical shell atmosphere has a spherical symmetry. Eradiate represents
     it with a finite 3D geometry consisting of a sphere. By default, the
