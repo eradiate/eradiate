@@ -2788,7 +2788,7 @@ packages:
   - pytest>=7.0 ; extra == 'test'
   - pytest-mock>=3.6.1 ; extra == 'test'
   - trustme ; extra == 'test'
-  - uvloop>=0.21.0b1 ; platform_python_implementation == 'CPython' and platform_system != 'Windows' and extra == 'test'
+  - uvloop>=0.21.0b1 ; platform_python_implementation == 'CPython' and sys_platform != 'win32' and extra == 'test'
   - trio>=0.26.1 ; extra == 'trio'
   requires_python: '>=3.9'
 - pypi: https://files.pythonhosted.org/packages/3b/00/2344469e2084fb287c2e0b57b72910309874c3245463acd6cf5e3db69324/appdirs-1.4.4-py2.py3-none-any.whl
@@ -3124,7 +3124,7 @@ packages:
   - virtualenv
   - pyyaml ; platform_python_implementation != 'PyPy'
   - pympler ; platform_python_implementation != 'PyPy'
-  - colorama ; platform_system == 'Windows'
+  - colorama ; sys_platform == 'win32'
   - tomli ; python_full_version < '3.11'
   - ruff ; extra == 'dev'
   - isort>=5.11.5 ; extra == 'dev'
@@ -3144,8 +3144,8 @@ packages:
   - flaky ; extra == 'test'
   - pytest-rerunfailures ; extra == 'test'
   - scipy ; platform_python_implementation != 'PyPy' and extra == 'test'
-  - python-hglib ; platform_system != 'Windows' and extra == 'test'
-  - rpy2 ; platform_python_implementation != 'PyPy' and platform_system != 'Windows' and extra == 'test'
+  - python-hglib ; sys_platform != 'win32' and extra == 'test'
+  - rpy2 ; platform_python_implementation != 'PyPy' and sys_platform != 'win32' and extra == 'test'
   - virtualenv ; extra == 'virtualenv'
   - packaging ; extra == 'virtualenv'
   requires_python: '>=3.7'
@@ -3161,7 +3161,7 @@ packages:
   - virtualenv
   - pyyaml ; platform_python_implementation != 'PyPy'
   - pympler ; platform_python_implementation != 'PyPy'
-  - colorama ; platform_system == 'Windows'
+  - colorama ; sys_platform == 'win32'
   - tomli ; python_full_version < '3.11'
   - ruff ; extra == 'dev'
   - isort>=5.11.5 ; extra == 'dev'
@@ -3181,8 +3181,8 @@ packages:
   - flaky ; extra == 'test'
   - pytest-rerunfailures ; extra == 'test'
   - scipy ; platform_python_implementation != 'PyPy' and extra == 'test'
-  - python-hglib ; platform_system != 'Windows' and extra == 'test'
-  - rpy2 ; platform_python_implementation != 'PyPy' and platform_system != 'Windows' and extra == 'test'
+  - python-hglib ; sys_platform != 'win32' and extra == 'test'
+  - rpy2 ; platform_python_implementation != 'PyPy' and sys_platform != 'win32' and extra == 'test'
   - virtualenv ; extra == 'virtualenv'
   - packaging ; extra == 'virtualenv'
   requires_python: '>=3.7'
@@ -3198,7 +3198,7 @@ packages:
   - virtualenv
   - pyyaml ; platform_python_implementation != 'PyPy'
   - pympler ; platform_python_implementation != 'PyPy'
-  - colorama ; platform_system == 'Windows'
+  - colorama ; sys_platform == 'win32'
   - tomli ; python_full_version < '3.11'
   - ruff ; extra == 'dev'
   - isort>=5.11.5 ; extra == 'dev'
@@ -3218,8 +3218,8 @@ packages:
   - flaky ; extra == 'test'
   - pytest-rerunfailures ; extra == 'test'
   - scipy ; platform_python_implementation != 'PyPy' and extra == 'test'
-  - python-hglib ; platform_system != 'Windows' and extra == 'test'
-  - rpy2 ; platform_python_implementation != 'PyPy' and platform_system != 'Windows' and extra == 'test'
+  - python-hglib ; sys_platform != 'win32' and extra == 'test'
+  - rpy2 ; platform_python_implementation != 'PyPy' and sys_platform != 'win32' and extra == 'test'
   - virtualenv ; extra == 'virtualenv'
   - packaging ; extra == 'virtualenv'
   requires_python: '>=3.7'
@@ -3235,7 +3235,7 @@ packages:
   - virtualenv
   - pyyaml ; platform_python_implementation != 'PyPy'
   - pympler ; platform_python_implementation != 'PyPy'
-  - colorama ; platform_system == 'Windows'
+  - colorama ; sys_platform == 'win32'
   - tomli ; python_full_version < '3.11'
   - ruff ; extra == 'dev'
   - isort>=5.11.5 ; extra == 'dev'
@@ -3255,8 +3255,8 @@ packages:
   - flaky ; extra == 'test'
   - pytest-rerunfailures ; extra == 'test'
   - scipy ; platform_python_implementation != 'PyPy' and extra == 'test'
-  - python-hglib ; platform_system != 'Windows' and extra == 'test'
-  - rpy2 ; platform_python_implementation != 'PyPy' and platform_system != 'Windows' and extra == 'test'
+  - python-hglib ; sys_platform != 'win32' and extra == 'test'
+  - rpy2 ; platform_python_implementation != 'PyPy' and sys_platform != 'win32' and extra == 'test'
   - virtualenv ; extra == 'virtualenv'
   - packaging ; extra == 'virtualenv'
   requires_python: '>=3.7'
@@ -3613,7 +3613,7 @@ packages:
   version: 8.1.7
   sha256: ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28
   requires_dist:
-  - colorama ; platform_system == 'Windows'
+  - colorama ; sys_platform == 'win32'
   - importlib-metadata ; python_full_version < '3.8'
   requires_python: '>=3.7'
 - pypi: https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl
@@ -3829,8 +3829,8 @@ packages:
   requires_python: '>=3.8'
 - pypi: .
   name: eradiate
-  version: 0.30.0.dev0
-  sha256: b0cd628f581aac5aa19c6645f862d491e9820cd93dc4dc6cdbe9a5437f5b3ff4
+  version: 0.30.0
+  sha256: 2a887cb722fab84cb24a3769ad8ce977fa6c1b30636462b83ba518535a65f1d5
   requires_dist:
   - aenum
   - attrs>=22.2
@@ -4271,7 +4271,7 @@ packages:
   version: 6.29.5
   sha256: afdb66ba5aa354b09b91379bac28ae4afebbb30e8b39510c9690afb7a10421b5
   requires_dist:
-  - appnope ; platform_system == 'Darwin'
+  - appnope ; sys_platform == 'darwin'
   - comm>=0.1.1
   - debugpy>=1.6.5
   - ipython>=7.23.1
@@ -6882,7 +6882,7 @@ packages:
   version: '1.1'
   sha256: 5b223d6027d0619584116a0cbc28e8d2e378f7a79c1e5e024f9ff3b673c58506
   requires_dist:
-  - pywin32>=226 ; platform_system == 'Windows'
+  - pywin32>=226 ; sys_platform == 'win32'
   requires_python: '>=3.6'
 - pypi: https://files.pythonhosted.org/packages/e5/0c/0e3c05b1c87bb6a1c76d281b0f35e78d2d80ac91b5f8f524cebf77f51049/pyparsing-3.1.4-py3-none-any.whl
   name: pyparsing
@@ -8032,7 +8032,7 @@ packages:
   version: 4.66.5
   sha256: 90279a3770753eafc9194a0364852159802111925aa30eb3f9d85b0e805ac7cd
   requires_dist:
-  - colorama ; platform_system == 'Windows'
+  - colorama ; sys_platform == 'win32'
   - pytest>=6 ; extra == 'dev'
   - pytest-cov ; extra == 'dev'
   - pytest-timeout ; extra == 'dev'
