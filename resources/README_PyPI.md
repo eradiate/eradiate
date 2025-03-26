@@ -77,7 +77,7 @@ equation.
 
   <details>
   <summary>
-  Lambertian, RPV, Ross Thick-Li Sparse and Hapke reflection models
+  Lambertian, RPV, Ross Thick-Li Sparse, Hapke and ocean surface reflection models
   </summary>
   All models can be parametrized against the spectral dimension.
   </details>
