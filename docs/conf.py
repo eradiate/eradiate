@@ -34,10 +34,8 @@ if "dev" in release:
 
 # -- General configuration -----------------------------------------------------
 
-
-html_theme = "sphinx_book_theme"
+html_theme = "shibuya"
 html_title = ""
-html_logo = "_static/eradiate-logo-typo-darkgrey.svg"
 
 templates_path = ["_templates"]  # Path to templates, relative to this directory.
 exclude_patterns = ["_build", "tutorials/README.md", "generate"]
@@ -94,7 +92,7 @@ nbsphinx_prolog = """
    :color: primary
    :expand:
 
-   :fas:`external-link-alt` Go to notebook file
+   :material-regular:`link;1.5em` Go to notebook file
 
 ----
 {% endif %}
@@ -242,18 +240,12 @@ rst_prolog = r"""
 # -- HTML output customisation -------------------------------------------------
 
 html_theme_options = {
-    "repository_url": "https://github.com/eradiate/eradiate",
-    "repository_branch": "main",
-    "use_repository_button": True,
-    "use_issues_button": True,
-    "use_sidenotes": True,
-    "logo": {
-        "image_light": "_static/eradiate-logo-typo-black.svg",
-        "image_dark": "_static/eradiate-logo-typo-white.svg",
-    },
+    "light_logo": "_static/eradiate-logo-typo-black.svg",
+    "dark_logo": "_static/eradiate-logo-typo-white.svg",
+    "accent_color": "indigo",
+    "github_url": "https://github.com/eradiate/eradiate",
 }
 
-html_css_files = ["theme_overrides.css"]
 html_short_title = "Eradiate"
 html_favicon = "fig/icon_eradiate.png"
 html_show_sourcelink = False
