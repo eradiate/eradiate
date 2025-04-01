@@ -10,7 +10,7 @@ from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...kernel import InitParameter, TypeIdLookupStrategy, UpdateParameter
+from ...kernel import DictParameter, SceneParameter, TypeIdLookupStrategy
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_kernel as uck
 from ...validators import has_quantity
@@ -192,12 +192,12 @@ class HomogeneousAtmosphere(Atmosphere):
         # Inherit docstring
         return {
             "type": "homogeneous",
-            "sigma_t": InitParameter(
+            "sigma_t": DictParameter(
                 lambda ctx: self.eval_sigma_t(ctx.si).m_as(
                     uck.get("collision_coefficient")
                 ),
             ),
-            "albedo": InitParameter(
+            "albedo": DictParameter(
                 lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo"))
             ),
             # Note: "phase" is deliberately unset, this is left to the
@@ -205,25 +205,25 @@ class HomogeneousAtmosphere(Atmosphere):
         }
 
     @property
-    def _params_medium(self) -> dict[str, UpdateParameter]:
+    def _params_medium(self) -> dict[str, SceneParameter]:
         # Inherit docstring
         return {
             # Note: "value" appears twice because the mi.Spectrum is
             # encapsulated in a mi.ConstVolume
-            "sigma_t.value.value": UpdateParameter(
+            "sigma_t.value.value": SceneParameter(
                 lambda ctx: self.eval_sigma_t(ctx.si).m_as(
                     uck.get("collision_coefficient")
                 ),
-                UpdateParameter.Flags.SPECTRAL,
+                SceneParameter.Flags.SPECTRAL,
                 lookup_strategy=TypeIdLookupStrategy(
                     node_type=mi.Medium,
                     node_id=self.medium_id,
                     parameter_relpath="sigma_t.value.value",
                 ),
             ),
-            "albedo.value.value": UpdateParameter(
+            "albedo.value.value": SceneParameter(
                 lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo")),
-                UpdateParameter.Flags.SPECTRAL,
+                SceneParameter.Flags.SPECTRAL,
                 lookup_strategy=TypeIdLookupStrategy(
                     node_type=mi.Medium,
                     node_id=self.medium_id,
@@ -233,7 +233,7 @@ class HomogeneousAtmosphere(Atmosphere):
         }
 
     @property
-    def _params_phase(self) -> dict[str, UpdateParameter]:
+    def _params_phase(self) -> dict[str, SceneParameter]:
         # Inherit docstring
         _, params = traverse(self.phase)
         return params.data

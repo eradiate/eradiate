@@ -11,7 +11,7 @@ from ..core import NodeSceneElement
 from ... import validators
 from ..._factory import Factory
 from ...attrs import define, documented, get_doc
-from ...kernel import InitParameter
+from ...kernel import DictParameter
 from ...spectral.response import DeltaSRF, SpectralResponseFunction
 from ...units import unit_registry as ureg
 
@@ -226,18 +226,18 @@ class Measure(NodeSceneElement, ABC):
             "film.rfilter.type": "box",
             "sampler.type": self.sampler,
             "sampler.sample_count": self.spp,
-            "medium.type": InitParameter(
+            "medium.type": DictParameter(
                 lambda ctx: (
                     "ref"
                     if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
-                    else InitParameter.UNUSED
+                    else DictParameter.UNUSED
                 ),
             ),
-            "medium.id": InitParameter(
+            "medium.id": DictParameter(
                 lambda ctx: (
                     ctx.kwargs[f"{self.sensor_id}.atmosphere_medium_id"]
                     if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
-                    else InitParameter.UNUSED
+                    else DictParameter.UNUSED
                 ),
             ),
         }
