@@ -5,7 +5,7 @@ import pint
 
 from ._core import Spectrum
 from ...attrs import define
-from ...kernel import InitParameter, UpdateParameter
+from ...kernel import DictParameter, SceneParameter
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...units import PhysicalQuantity
 from ...units import unit_context_kernel as uck
@@ -44,22 +44,22 @@ class AirScatteringCoefficientSpectrum(Spectrum):
 
         return {
             "type": "uniform",
-            "value": InitParameter(
-                evaluator=lambda ctx: float(
+            "value": DictParameter(
+                func=lambda ctx: float(
                     self.eval(ctx.si).m_as(uck.get("collision_coefficient"))
                 )
             ),
         }
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
 
         return {
-            "value": UpdateParameter(
-                evaluator=lambda ctx: float(
+            "value": SceneParameter(
+                func=lambda ctx: float(
                     self.eval(ctx.si).m_as(uck.get("collision_coefficient"))
                 ),
-                flags=UpdateParameter.Flags.SPECTRAL,
+                flags=SceneParameter.Flags.SPECTRAL,
             )
         }

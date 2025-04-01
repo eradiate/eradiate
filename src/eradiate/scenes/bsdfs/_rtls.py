@@ -10,7 +10,7 @@ from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
-from ...kernel import TypeIdLookupStrategy, UpdateParameter
+from ...kernel import SceneParameter, TypeIdLookupStrategy
 from ...units import unit_context_config as ucc
 
 
@@ -95,7 +95,7 @@ class RTLSBSDF(BSDF):
             default=1.0,
             units=ucc.deferred("dimensionless"),
         ),
-        doc="Crown horizontal radius. " "Must not be zero.",
+        doc="Crown horizontal radius. Must not be zero.",
         type="quantity",
         init_type="quantity or float",
         default="1.0",
@@ -106,7 +106,7 @@ class RTLSBSDF(BSDF):
             default=1.0,
             units=ucc.deferred("dimensionless"),
         ),
-        doc="Crown vertical radius. " "Must not be zero.",
+        doc="Crown vertical radius. Must not be zero.",
         type="quantity",
         init_type="quantity or float",
         default="1.0",
@@ -146,7 +146,7 @@ class RTLSBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
         objects = {
             "f_iso": traverse(self.f_iso)[1],

@@ -22,9 +22,9 @@ from ..attrs import AUTO, define, documented, frozen
 from ..contexts import KernelContext
 from ..exceptions import UnsupportedModeError
 from ..kernel import (
-    KernelDictTemplate,
+    KernelDict,
+    KernelSceneParameterMap,
     MitsubaObjectWrapper,
-    UpdateMapTemplate,
     mi_render,
     mi_traverse,
 )
@@ -452,40 +452,40 @@ class EarthObservationExperiment(Experiment, ABC):
         default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
     )
 
-    kdict: KernelDictTemplate = documented(
-        attrs.field(factory=KernelDictTemplate, converter=KernelDictTemplate),
+    kdict: KernelDict = documented(
+        attrs.field(factory=KernelDict, converter=KernelDict),
         doc="Additional kernel dictionary template appended to the "
         "experiment-controlled template.",
-        type=".KernelDictTemplate",
+        type=".KernelDict",
         init_type="mapping",
         default="{}",
     )
 
-    kpmap: UpdateMapTemplate = documented(
-        attrs.field(factory=UpdateMapTemplate, converter=UpdateMapTemplate),
+    kpmap: KernelSceneParameterMap = documented(
+        attrs.field(factory=KernelSceneParameterMap, converter=KernelSceneParameterMap),
         doc="Additional scene parameter update map template appended to the "
         "experiment-controlled template.",
-        type=".UpdateMapTemplate",
+        type=".KernelSceneParameterMap",
         init_type="mapping",
         default="{}",
     )
 
-    def kdict_base(self) -> KernelDictTemplate:
+    def kdict_base(self) -> KernelDict:
         # This is inefficient and exists at the moment only for debugging purposes
         return traverse(self.scene)[0]
 
-    def kdict_full(self) -> KernelDictTemplate:
+    def kdict_full(self) -> KernelDict:
         # Return the user-defined kdict template merged with additional scene
         # element contributions
         kdict = self.kdict_base()
         kdict.update(self.kdict)
         return kdict
 
-    def kpmap_base(self) -> UpdateMapTemplate:
+    def kpmap_base(self) -> KernelSceneParameterMap:
         # This is inefficient and exists at the moment only for debugging purposes
         return traverse(self.scene)[1]
 
-    def kpmap_full(self) -> UpdateMapTemplate:
+    def kpmap_full(self) -> KernelSceneParameterMap:
         # Return the user-defined kpmap template merged with additional scene
         # element contributions
         kpmap = self.kpmap_base()
