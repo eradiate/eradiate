@@ -15,7 +15,7 @@ from pinttr.util import ensure_units
 from .._factory import Factory
 from ..attrs import define, documented, frozen
 from ..exceptions import TraversalError
-from ..kernel import KernelDictTemplate, UpdateMapTemplate, UpdateParameter
+from ..kernel import KernelDict, KernelSceneParameterMap, SceneParameter
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
@@ -56,17 +56,17 @@ class SceneElement(ABC):
         self.update()
 
     @property
-    def params(self) -> dict[str, UpdateParameter] | None:
+    def params(self) -> dict[str, SceneParameter] | None:
         """
         Returns
         -------
-        dict[str, :class:`.UpdateParameter`] or None
+        dict[str, :class:`.SceneParameter`] or None
             A dictionary mapping parameter paths, consisting of dot-separated
             strings, to a corresponding update protocol.
 
         See Also
         --------
-        :class:`.UpdateParameter`, :class:`.UpdateMapTemplate`
+        :class:`.SceneParameter`, :class:`.KernelSceneParameterMap`
         """
         return None
 
@@ -111,12 +111,12 @@ class NodeSceneElement(SceneElement, ABC):
             A flat dictionary mapping dot-separated strings describing the path
             of an item in the nested scene dictionary to values. Values may be
             objects which can be directly used by the :func:`mitsuba.load_dict`
-            function, or :class:`.InitParameter` instances which must be
+            function, or :class:`.DictParameter` instances which must be
             rendered.
 
         See Also
         --------
-        :class:`.InitParameter`, :class:`.KernelDictTemplate`
+        :class:`.DictParameter`, :class:`.KernelDict`
         """
         pass
 
@@ -191,12 +191,12 @@ class CompositeSceneElement(SceneElement, ABC):
             A flat dictionary mapping dot-separated strings describing the path
             of an item in the nested scene dictionary to values. Values may be
             objects which can be directly used by the :func:`mitsuba.load_dict`
-            function, or :class:`.InitParameter` instances which must be
+            function, or :class:`.DictParameter` instances which must be
             rendered.
 
         See Also
         --------
-        :class:`.InitParameter`, :class:`.KernelDictTemplate`
+        :class:`.DictParameter`, :class:`.KernelDict`
         """
         return {}
 
@@ -371,7 +371,7 @@ class SceneTraversal:
         self.template[self.name] = obj
 
 
-def traverse(node: NodeSceneElement) -> tuple[KernelDictTemplate, UpdateMapTemplate]:
+def traverse(node: NodeSceneElement) -> tuple[KernelDict, KernelSceneParameterMap]:
     """
     Traverse a scene element tree and collect kernel dictionary template and
     parameter update table data.
@@ -383,10 +383,10 @@ def traverse(node: NodeSceneElement) -> tuple[KernelDictTemplate, UpdateMapTempl
 
     Returns
     -------
-    kdict_template : .KernelDictTemplate
+    kdict_template : .KernelDict
         Kernel dictionary template corresponding to the traversed scene element.
 
-    umap_template : .UpdateMapTemplate
+    umap_template : .KernelSceneParameterMap
         Kernel parameter table associated with the traversed scene element.
     """
     # Traverse scene element tree
@@ -394,7 +394,7 @@ def traverse(node: NodeSceneElement) -> tuple[KernelDictTemplate, UpdateMapTempl
     node.traverse(cb)
 
     # Use collected data to generate the kernel dictionary
-    return KernelDictTemplate(cb.template), UpdateMapTemplate(cb.params)
+    return KernelDict(cb.template), KernelSceneParameterMap(cb.params)
 
 
 # -- Misc (to be moved elsewhere) ----------------------------------------------
