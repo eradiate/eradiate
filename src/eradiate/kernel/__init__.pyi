@@ -4,10 +4,10 @@ from . import transform as transform
 from ._bitmap import bitmap_to_dataarray as bitmap_to_dataarray
 from ._bitmap import bitmap_to_dataset as bitmap_to_dataset
 from ._bsdf import eval_bsdf as eval_bsdf
-from ._kernel_dict import InitParameter as InitParameter
-from ._kernel_dict import KernelDictTemplate as KernelDictTemplate
-from ._kernel_dict import UpdateMapTemplate as UpdateMapTemplate
-from ._kernel_dict import UpdateParameter as UpdateParameter
+from ._kernel_dict import DictParameter as DictParameter
+from ._kernel_dict import KernelDict as KernelDict
+from ._kernel_dict import KernelSceneParameterMap as KernelSceneParameterMap
+from ._kernel_dict import SceneParameter as SceneParameter
 from ._kernel_dict import dict_parameter as dict_parameter
 from ._kernel_dict import scene_parameter as scene_parameter
 from ._render import MitsubaObjectWrapper as MitsubaObjectWrapper

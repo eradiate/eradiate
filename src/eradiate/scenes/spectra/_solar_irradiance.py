@@ -13,7 +13,7 @@ import xarray as xr
 from ._core import Spectrum
 from ... import converters, data, validators
 from ...attrs import define, documented
-from ...kernel import InitParameter, UpdateParameter
+from ...kernel import DictParameter, SceneParameter
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -205,10 +205,8 @@ class SolarIrradianceSpectrum(Spectrum):
 
         return {
             "type": "uniform",
-            "value": InitParameter(
-                evaluator=lambda ctx: float(
-                    self.eval(ctx.si).m_as(uck.get("irradiance"))
-                )
+            "value": DictParameter(
+                func=lambda ctx: float(self.eval(ctx.si).m_as(uck.get("irradiance")))
             ),
         }
 
@@ -217,10 +215,8 @@ class SolarIrradianceSpectrum(Spectrum):
         # Inherit docstring
 
         return {
-            "value": UpdateParameter(
-                evaluator=lambda ctx: float(
-                    self.eval(ctx.si).m_as(uck.get("irradiance"))
-                ),
-                flags=UpdateParameter.Flags.SPECTRAL,
+            "value": SceneParameter(
+                func=lambda ctx: float(self.eval(ctx.si).m_as(uck.get("irradiance"))),
+                flags=SceneParameter.Flags.SPECTRAL,
             )
         }

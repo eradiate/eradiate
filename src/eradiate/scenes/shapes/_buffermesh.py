@@ -12,7 +12,7 @@ from ._core import ShapeInstance
 from ..core import BoundingBox, traverse
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...kernel import UpdateParameter
+from ...kernel import SceneParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
@@ -153,7 +153,7 @@ class BufferMeshShape(ShapeInstance):
         self.instance.write_ply(filename)
 
     @property
-    def params(self) -> dict[str, UpdateParameter] | None:
+    def params(self) -> dict[str, SceneParameter] | None:
         if self.bsdf is None:
             return None
 

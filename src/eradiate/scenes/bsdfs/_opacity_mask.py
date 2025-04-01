@@ -9,7 +9,7 @@ from ._lambertian import LambertianBSDF
 from ..core import traverse
 from ... import converters
 from ...attrs import define, documented
-from ...kernel import TypeIdLookupStrategy, UpdateParameter
+from ...kernel import SceneParameter, TypeIdLookupStrategy
 
 
 def _to_bitmap(value):
@@ -104,7 +104,7 @@ class OpacityMaskBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit Docstring
 
         result = {}

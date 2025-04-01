@@ -13,7 +13,7 @@ from ..core import CompositeSceneElement
 from ... import validators
 from ..._factory import Factory
 from ...attrs import define, documented, get_doc
-from ...kernel import UpdateParameter
+from ...kernel import SceneParameter
 from ...typing import PathLike
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -121,7 +121,7 @@ class CanopyElement(CompositeSceneElement, ABC):
         pass
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
         return flatten({**self._params_bsdfs, **self._params_shapes})
 

@@ -10,7 +10,7 @@ import mitsuba as mi
 from mitsuba.python.util import SceneParameters as _MitsubaSceneParameters
 from tqdm.auto import tqdm
 
-from ._kernel_dict import UpdateMapTemplate
+from ._kernel_dict import KernelSceneParameterMap
 from .. import config
 from ..attrs import define, documented, frozen
 from ..contexts import KernelContext
@@ -99,17 +99,19 @@ class MitsubaObjectWrapper:
         default="None",
     )
 
-    umap_template: UpdateMapTemplate | None = documented(
+    umap_template: KernelSceneParameterMap | None = documented(
         attrs.field(
             default=None,
             repr=lambda x: (
-                "UpdateMapTemplate[...]" if isinstance(x, UpdateMapTemplate) else str(x)
+                "KernelSceneParameterMap[...]"
+                if isinstance(x, KernelSceneParameterMap)
+                else str(x)
             ),
         ),
         doc="An update map template, which can be rendered and used to update "
         "Mitsuba scene parameters depending on context information.",
-        type=".UpdateMapTemplate",
-        init_type=".UpdateMapTemplate, optional",
+        type=".KernelSceneParameterMap",
+        init_type=".KernelSceneParameterMap, optional",
         default="None",
     )
 
@@ -179,7 +181,7 @@ class SceneParameters(_MitsubaSceneParameters):
 
 def mi_traverse(
     obj: mi.Object,
-    umap_template: UpdateMapTemplate | None = None,
+    umap_template: KernelSceneParameterMap | None = None,
     name_id_override: str | list[str] | bool | None = None,
 ) -> MitsubaObjectWrapper:
     """
@@ -191,7 +193,7 @@ def mi_traverse(
     obj : mitsuba.Object
         Mitsuba scene graph node to be traversed.
 
-    umap_template : .UpdateMapTemplate, optional
+    umap_template : .KernelSceneParameterMap, optional
         An additional update map template which is to be updated during
         traversal. This is used to perform parameter lookup during traversal.
 
@@ -214,9 +216,9 @@ def mi_traverse(
     """
 
     umap_template = (
-        UpdateMapTemplate(data=umap_template.data.copy())
+        KernelSceneParameterMap(data=umap_template.data.copy())
         if umap_template is not None
-        else UpdateMapTemplate()
+        else KernelSceneParameterMap()
     )
 
     lookups = {
