@@ -7,7 +7,7 @@ import pinttr
 
 from ._core import Spectrum
 from ...attrs import define, documented
-from ...kernel import InitParameter, UpdateParameter
+from ...kernel import DictParameter, SceneParameter
 from ...units import PhysicalQuantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -96,22 +96,18 @@ class UniformSpectrum(Spectrum):
 
         return {
             "type": "uniform",
-            "value": InitParameter(
-                evaluator=lambda ctx: float(
-                    self.eval(ctx.si).m_as(uck.get(self.quantity))
-                )
+            "value": DictParameter(
+                func=lambda ctx: float(self.eval(ctx.si).m_as(uck.get(self.quantity)))
             ),
         }
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
 
         return {
-            "value": UpdateParameter(
-                evaluator=lambda ctx: float(
-                    self.eval(ctx.si).m_as(uck.get(self.quantity))
-                ),
-                flags=UpdateParameter.Flags.SPECTRAL,
+            "value": SceneParameter(
+                func=lambda ctx: float(self.eval(ctx.si).m_as(uck.get(self.quantity))),
+                flags=SceneParameter.Flags.SPECTRAL,
             )
         }

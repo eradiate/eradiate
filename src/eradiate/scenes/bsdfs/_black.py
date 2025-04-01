@@ -3,7 +3,7 @@ from __future__ import annotations
 import attrs
 
 from ._core import BSDF
-from ...kernel import UpdateParameter
+from ...kernel import SceneParameter
 
 
 @attrs.define(eq=False, slots=False)
@@ -30,6 +30,6 @@ class BlackBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
         return {}

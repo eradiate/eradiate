@@ -6,10 +6,10 @@ import pytest
 
 from eradiate import KernelContext
 from eradiate.kernel import (
+    KernelSceneParameterMap,
     MitsubaObjectWrapper,
+    SceneParameter,
     TypeIdLookupStrategy,
-    UpdateMapTemplate,
-    UpdateParameter,
     mi_render,
     mi_traverse,
 )
@@ -100,11 +100,11 @@ def test_mi_traverse_lookup(mode_mono):
         }
     )
 
-    umap_template = UpdateMapTemplate(
+    umap_template = KernelSceneParameterMap(
         {
-            "my_bsdf.reflectance.value": UpdateParameter(
-                evaluator=lambda x: x,
-                flags=UpdateParameter.Flags.ALL,
+            "my_bsdf.reflectance.value": SceneParameter(
+                func=lambda x: x,
+                flags=SceneParameter.Flags.ALL,
                 lookup_strategy=TypeIdLookupStrategy(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
@@ -211,11 +211,11 @@ def test_mi_render(mode_mono):
         }
     )
 
-    umap_template = UpdateMapTemplate(
+    umap_template = KernelSceneParameterMap(
         {
-            "my_bsdf.reflectance.value": UpdateParameter(
-                evaluator=lambda ctx: ctx.kwargs["r"],
-                flags=UpdateParameter.Flags.ALL,
+            "my_bsdf.reflectance.value": SceneParameter(
+                func=lambda ctx: ctx.kwargs["r"],
+                flags=SceneParameter.Flags.ALL,
                 lookup_strategy=TypeIdLookupStrategy(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
@@ -280,11 +280,11 @@ def test_mi_render_multisensor(mode_mono):
         }
     )
 
-    umap_template = UpdateMapTemplate(
+    umap_template = KernelSceneParameterMap(
         {
-            "my_bsdf.reflectance.value": UpdateParameter(
-                evaluator=lambda ctx: ctx.kwargs["r"],
-                flags=UpdateParameter.Flags.ALL,
+            "my_bsdf.reflectance.value": SceneParameter(
+                func=lambda ctx: ctx.kwargs["r"],
+                flags=SceneParameter.Flags.ALL,
                 lookup_strategy=TypeIdLookupStrategy(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",

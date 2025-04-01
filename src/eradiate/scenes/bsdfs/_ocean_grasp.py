@@ -10,7 +10,7 @@ from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
-from ...kernel import InitParameter, TypeIdLookupStrategy, UpdateParameter
+from ...kernel import DictParameter, SceneParameter, TypeIdLookupStrategy
 from ...units import unit_registry as ureg
 
 
@@ -119,7 +119,7 @@ class OceanGraspBSDF(BSDF):
 
         result = {
             "type": "ocean_grasp",
-            "wavelength": InitParameter(lambda ctx: ctx.si.w.m_as("nm")),
+            "wavelength": DictParameter(lambda ctx: ctx.si.w.m_as("nm")),
             "wind_speed": self.wind_speed.m_as("m/s"),
         }
 
@@ -133,7 +133,7 @@ class OceanGraspBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
         objects = {
             "eta": traverse(self.eta)[1],
@@ -156,5 +156,5 @@ class OceanGraspBSDF(BSDF):
                     else None,
                 )
 
-        result["wavelength"] = UpdateParameter(lambda ctx: ctx.si.w.m_as("nm"))
+        result["wavelength"] = SceneParameter(lambda ctx: ctx.si.w.m_as("nm"))
         return result

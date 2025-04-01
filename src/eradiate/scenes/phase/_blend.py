@@ -12,7 +12,7 @@ from ..core import traverse
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ...attrs import documented
 from ...contexts import KernelContext
-from ...kernel import InitParameter, UpdateParameter
+from ...kernel import DictParameter, SceneParameter
 from ...spectral.index import SpectralIndex
 from ...util.misc import cache_by_id
 
@@ -215,7 +215,7 @@ class BlendPhaseFunction(PhaseFunction):
                     )
 
                 result[f"{prefix}weight.type"] = "gridvolume"
-                result[f"{prefix}weight.grid"] = InitParameter(eval_conditional_weights)
+                result[f"{prefix}weight.grid"] = DictParameter(eval_conditional_weights)
                 result[f"{prefix}weight.filter_type"] = "nearest"
 
                 if self.geometry is not None:
@@ -235,7 +235,7 @@ class BlendPhaseFunction(PhaseFunction):
 
                 result[f"{prefix}weight.type"] = "sphericalcoordsvolume"
                 result[f"{prefix}weight.volume.type"] = "gridvolume"
-                result[f"{prefix}weight.volume.grid"] = InitParameter(
+                result[f"{prefix}weight.volume.grid"] = DictParameter(
                     eval_conditional_weights
                 )
                 result[f"{prefix}weight.volume.filter_type"] = "nearest"
@@ -256,7 +256,7 @@ class BlendPhaseFunction(PhaseFunction):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         result = {}
 
         for i in range(len(self.components) - 1):
@@ -283,9 +283,9 @@ class BlendPhaseFunction(PhaseFunction):
                     ).astype(np.float32)
 
                 # Assign conditional weight to second component
-                result[f"{prefix}weight.data"] = UpdateParameter(
+                result[f"{prefix}weight.data"] = SceneParameter(
                     eval_conditional_weights,
-                    UpdateParameter.Flags.SPECTRAL,
+                    SceneParameter.Flags.SPECTRAL,
                 )
 
             elif isinstance(self.geometry, SphericalShellGeometry):
@@ -297,9 +297,9 @@ class BlendPhaseFunction(PhaseFunction):
                     ).astype(np.float32)
 
                 # Assign conditional weight to second component
-                result[f"{prefix}weight.volume.data"] = UpdateParameter(
+                result[f"{prefix}weight.volume.data"] = SceneParameter(
                     eval_conditional_weights,
-                    UpdateParameter.Flags.SPECTRAL,
+                    SceneParameter.Flags.SPECTRAL,
                 )
 
             else:

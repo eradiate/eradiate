@@ -6,7 +6,7 @@ import pinttrs
 
 from ._core import BSDF
 from ...attrs import define, documented
-from ...kernel import InitParameter, UpdateParameter
+from ...kernel import DictParameter, SceneParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...validators import is_positive
@@ -98,7 +98,7 @@ class OceanLegacyBSDF(BSDF):
         # Inherit docstring
         result = {
             "type": "ocean_legacy",
-            "wavelength": InitParameter(lambda ctx: ctx.si.w.m_as("nm")),
+            "wavelength": DictParameter(lambda ctx: ctx.si.w.m_as("nm")),
             "wind_speed": self.wind_speed.m_as("m/s"),
             "wind_direction": self.wind_direction.m_as("deg"),
             "chlorinity": self.chlorinity.m_as("g/kg"),
@@ -112,7 +112,7 @@ class OceanLegacyBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
-        result = {"wavelength": UpdateParameter(lambda ctx: ctx.si.w.m_as("nm"))}
+    def params(self) -> dict[str, SceneParameter]:
+        result = {"wavelength": SceneParameter(lambda ctx: ctx.si.w.m_as("nm"))}
 
         return result

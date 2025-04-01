@@ -6,7 +6,7 @@ import pytest
 
 from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.kernel._kernel_dict import KernelDictTemplate
+from eradiate.kernel._kernel_dict import KernelDict
 from eradiate.scenes.biosphere import MeshTree, MeshTreeElement
 from eradiate.scenes.core import traverse
 from eradiate.test_tools.types import check_scene_element
@@ -170,7 +170,7 @@ def test_mesh_tree_element_load(mode_mono, tmp_file, request):
         reflectance=0.5,
         transmittance=0.5,
     )
-    template = KernelDictTemplate(
+    template = KernelDict(
         flatten(
             {
                 "type": "scene",

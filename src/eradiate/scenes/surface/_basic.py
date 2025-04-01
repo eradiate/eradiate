@@ -11,7 +11,7 @@ from ..core import Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, SphereShape, shape_factory
 from ...attrs import define, documented
 from ...exceptions import OverriddenValueWarning, TraversalError
-from ...kernel import TypeIdLookupStrategy, UpdateParameter
+from ...kernel import SceneParameter, TypeIdLookupStrategy
 
 
 @define(eq=False, slots=False)
@@ -119,7 +119,7 @@ class BasicSurface(Surface):
 
         for key, param in umap_template.items():
             # If no lookup strategy is set, we must add one
-            if isinstance(param, UpdateParameter) and param.lookup_strategy is None:
+            if isinstance(param, SceneParameter) and param.lookup_strategy is None:
                 param = attrs.evolve(
                     param,
                     lookup_strategy=TypeIdLookupStrategy(

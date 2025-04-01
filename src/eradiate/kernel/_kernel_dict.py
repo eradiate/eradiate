@@ -19,7 +19,7 @@ from ..util.misc import flatten, nest
 
 
 @define
-class InitParameter:
+class DictParameter:
     """
     This class declares an Eradiate parameter in a Mitsuba scene dictionary. It
     holds an evaluation protocol for this parameter depending on context
@@ -29,7 +29,7 @@ class InitParameter:
     #: Sentinel value indicating that a parameter is not used
     UNUSED: t.ClassVar[object] = object()
 
-    evaluator: t.Callable = documented(
+    func: t.Callable = documented(
         attrs.field(validator=attrs.validators.is_callable()),
         doc="A callable that returns the value of the parameter for a given "
         "context, with signature ``f(ctx: KernelContext) -> Any``.",
@@ -37,11 +37,11 @@ class InitParameter:
     )
 
     def __call__(self, ctx: KernelContext) -> t.Any:
-        return self.evaluator(ctx)
+        return self.func(ctx)
 
 
 @define
-class UpdateParameter:
+class SceneParameter:
     """
     This class declares an Eradiate parameter in a Mitsuba scene parameter
     update map. It holds an evaluation protocol depending on context
@@ -65,7 +65,7 @@ class UpdateParameter:
         GEOMETRIC = enum.auto()  #: Triggers a scene rebuild
         ALL = SPECTRAL | GEOMETRIC
 
-    evaluator: t.Callable = documented(
+    func: t.Callable = documented(
         attrs.field(validator=attrs.validators.is_callable()),
         doc="A callable that returns the value of the parameter for a given "
         "context, with signature ``f(ctx: KernelContext) -> Any``.",
@@ -98,12 +98,12 @@ class UpdateParameter:
     )
 
     def __call__(self, ctx: KernelContext) -> t.Any:
-        return self.evaluator(ctx)
+        return self.func(ctx)
 
 
 def dict_parameter(maybe_fn=None):
     """
-    This function wraps another one into a :class:`.InitParameter` instance.
+    This function wraps another one into a :class:`.DictParameter` instance.
     It is primarily meant to be used as a decorator.
 
     Parameters
@@ -114,19 +114,19 @@ def dict_parameter(maybe_fn=None):
     -------
     callable
     """
-    return InitParameter if maybe_fn is None else InitParameter(maybe_fn)
+    return DictParameter if maybe_fn is None else DictParameter(maybe_fn)
 
 
 def scene_parameter(
     maybe_fn=None,
     *,
-    flags: UpdateParameter.Flags = UpdateParameter.Flags.ALL,
+    flags: SceneParameter.Flags = SceneParameter.Flags.ALL,
     node_type: type,
     node_id: str,
     parameter_relpath: str,
 ):
     """
-    This function wraps another one into a :class:`.UpdateParameter` instance.
+    This function wraps another one into a :class:`.SceneParameter` instance.
     It is primarily meant to be used as a decorator.
 
     Parameters
@@ -134,7 +134,7 @@ def scene_parameter(
     maybe_fn : callable, optional
         A callable that takes as an argument a :class:`.KernelContext` instance.
 
-    flags : .UpdateParameter.Flags, optional
+    flags : .SceneParameter.Flags, optional
         Scene parameter flags used for filtering during a scene parameter loop.
 
     node_type : type
@@ -157,7 +157,7 @@ def scene_parameter(
     def wrap(f):
         from eradiate.kernel import TypeIdLookupStrategy
 
-        return UpdateParameter(
+        return SceneParameter(
             f,
             flags=flags,
             lookup_strategy=TypeIdLookupStrategy(
@@ -171,7 +171,7 @@ def scene_parameter(
 
 
 @attrs.define(slots=False)
-class KernelDictTemplate(UserDict):
+class KernelDict(UserDict):
     """
     A dict-like structure which defines the structure of an instantiable
     Mitsuba scene dictionary.
@@ -181,7 +181,7 @@ class KernelDictTemplate(UserDict):
 
     Each entry can be either a hard-coded value which can be directly
     interpreted by the :func:`mitsuba.load_dict` function, or an
-    :class:`.InitParameter` object which must be rendered before the template
+    :class:`.DictParameter` object which must be rendered before the template
     can be instantiated.
 
     Notes
@@ -228,8 +228,8 @@ class KernelDictTemplate(UserDict):
         result = {}
 
         for k, v in list(self.items()):
-            value = v(ctx) if isinstance(v, InitParameter) else v
-            if (value is InitParameter.UNUSED) and drop:
+            value = v(ctx) if isinstance(v, DictParameter) else v
+            if (value is DictParameter.UNUSED) and drop:
                 continue
             else:
                 result[k] = value
@@ -238,72 +238,26 @@ class KernelDictTemplate(UserDict):
 
 
 @attrs.define(slots=False)
-class UpdateMapTemplate(UserDict):
+class KernelSceneParameterMap(UserDict):
     """
     A dict-like structure which contains the structure of a Mitsuba scene
     parameter update map.
 
-    Entries are indexed by dot-separated paths which can then be expanded to
-    a nested dictionary using the :meth:`.render` method.
+    Each entry maps a string key to a :class:`.SceneParameter` instance that
+    implements an update protocol for a Mitsuba scene parameter.
     """
 
-    data: dict[str, UpdateParameter] = attrs.field(factory=dict)
-
-    def remove(self, keys: str | list[str]) -> None:
-        """
-        Remove all parameters matching the given regular expression.
-
-        Parameters
-        ----------
-        keys : str or list of str
-            Regular expressions matching the parameters to remove.
-
-        Notes
-        -----
-        This method mutates the parameter map.
-        """
-        if not isinstance(keys, list):
-            keys = [keys]
-
-        import re
-
-        regexps = [re.compile(k).match for k in keys]
-        keys = [k for k in self.keys() if any(r(k) for r in regexps)]
-
-        for key in keys:
-            del self.data[key]
-
-    def keep(self, keys: str | list[str]) -> None:
-        """
-        Keep only parameters matching the given regular expression.
-
-        Parameters
-        ----------
-        keys : str or list of str
-            Regular expressions matching the parameters to keep.
-
-        Notes
-        -----
-        This method mutates the parameter map.
-        """
-        if not isinstance(keys, list):
-            keys = [keys]
-
-        import re
-
-        regexps = [re.compile(k).match for k in keys]
-        keys = [k for k in self.keys() if any(r(k) for r in regexps)]
-        result = {k: self.data[k] for k in keys}
-        self.data = result
+    data: dict[str, SceneParameter] = attrs.field(factory=dict)
 
     def render(
         self,
         ctx: KernelContext,
-        flags: UpdateParameter.Flags = UpdateParameter.Flags.ALL,
+        flags: SceneParameter.Flags = SceneParameter.Flags.ALL,
         drop: bool = False,
     ) -> dict:
         """
-        Evaluate the parameter map for a set of arguments.
+        Evaluate the parameter map for a given kernel context and for selected
+        flags.
 
         Parameters
         ----------
@@ -326,7 +280,7 @@ class UpdateMapTemplate(UserDict):
         Raises
         ------
         ValueError
-            If a value is not a :class:`.UpdateParameter`.
+            If a value is not a :class:`.SceneParameter`.
 
         ValueError
             If ``drop`` is ``False`` and the rendered parameter map contains an
@@ -340,7 +294,7 @@ class UpdateMapTemplate(UserDict):
         ):  # Ensures correct iteration even if the loop mutates the mapping
             v = self[k]
 
-            if isinstance(v, UpdateParameter):
+            if isinstance(v, SceneParameter):
                 key = k if v.parameter_id is None else v.parameter_id
 
                 if v.flags & flags:
@@ -348,7 +302,7 @@ class UpdateMapTemplate(UserDict):
                 else:
                     unused.append(k)
                     if not drop:
-                        result[key] = UpdateParameter.UNUSED
+                        result[key] = SceneParameter.UNUSED
 
         # Check for leftover empty values
         if not drop and unused:
