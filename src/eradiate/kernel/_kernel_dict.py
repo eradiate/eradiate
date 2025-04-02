@@ -40,6 +40,15 @@ class DictParameter:
         return self.func(ctx)
 
 
+class KernelSceneParameterFlags(enum.Flag):
+    NONE = 0
+    SPECTRAL = enum.auto()  #: Has a spectral dependence
+    GEOMETRIC = (
+        enum.auto()
+    )  #: Changes the scene geometry and triggers an acceleration structure update
+    ALL = SPECTRAL | GEOMETRIC
+
+
 @define
 class SceneParameter:
     """
@@ -55,16 +64,6 @@ class SceneParameter:
     #: Sentinel value indicating that a parameter is not used
     UNUSED: t.ClassVar[object] = object()
 
-    class Flags(enum.Flag):
-        """
-        Update parameter flags.
-        """
-
-        NONE = 0
-        SPECTRAL = enum.auto()  #: Varies during the spectral loop
-        GEOMETRIC = enum.auto()  #: Triggers a scene rebuild
-        ALL = SPECTRAL | GEOMETRIC
-
     func: t.Callable = documented(
         attrs.field(validator=attrs.validators.is_callable()),
         doc="A callable that returns the value of the parameter for a given "
@@ -72,12 +71,12 @@ class SceneParameter:
         type="callable",
     )
 
-    flags: Flags = documented(
-        attrs.field(default=Flags.ALL),
+    flags: KernelSceneParameterFlags = documented(
+        attrs.field(default=KernelSceneParameterFlags.ALL),
         doc="Flags specifying parameter attributes. By default, the declared "
         "parameter will pass all filters.",
-        type=".Flags",
-        default=".Flags.ALL",
+        type=".KernelSceneParameterFlags",
+        default=".KernelSceneParameterFlags.ALL",
     )
 
     lookup_strategy: None | (t.Callable[[mi.Object, str], str | None]) = documented(
@@ -120,7 +119,7 @@ def dict_parameter(maybe_fn=None):
 def scene_parameter(
     maybe_fn=None,
     *,
-    flags: SceneParameter.Flags = SceneParameter.Flags.ALL,
+    flags: KernelSceneParameterFlags = KernelSceneParameterFlags.ALL,
     node_type: type,
     node_id: str,
     parameter_relpath: str,
@@ -134,7 +133,7 @@ def scene_parameter(
     maybe_fn : callable, optional
         A callable that takes as an argument a :class:`.KernelContext` instance.
 
-    flags : .SceneParameter.Flags, optional
+    flags : .KernelSceneParameterFlags, optional
         Scene parameter flags used for filtering during a scene parameter loop.
 
     node_type : type
@@ -252,7 +251,7 @@ class KernelSceneParameterMap(UserDict):
     def render(
         self,
         ctx: KernelContext,
-        flags: SceneParameter.Flags = SceneParameter.Flags.ALL,
+        flags: KernelSceneParameterFlags = KernelSceneParameterFlags.ALL,
         drop: bool = False,
     ) -> dict:
         """
@@ -271,11 +270,14 @@ class KernelSceneParameterMap(UserDict):
         drop : bool, optional
             If ``True``, drop unused parameters. Parameters may be unused either
             because they were filtered out by the flags or because context
-            information implied it.
+            information implied it. If ``False``, any unused parameter will
+            raise an exception.
 
         Returns
         -------
-        dict
+        params : dict
+            A mapping that can be used to update values in a
+            :class:`mitsuba.SceneParameters`.
 
         Raises
         ------
@@ -289,9 +291,7 @@ class KernelSceneParameterMap(UserDict):
         unused = []
         result = {}
 
-        for k in list(
-            self.keys()
-        ):  # Ensures correct iteration even if the loop mutates the mapping
+        for k in list(self.keys()):
             v = self[k]
 
             if isinstance(v, SceneParameter):

@@ -12,7 +12,7 @@ from ..core import traverse
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ...attrs import documented
 from ...contexts import KernelContext
-from ...kernel import DictParameter, SceneParameter
+from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...spectral.index import SpectralIndex
 from ...util.misc import cache_by_id
 
@@ -285,7 +285,7 @@ class BlendPhaseFunction(PhaseFunction):
                 # Assign conditional weight to second component
                 result[f"{prefix}weight.data"] = SceneParameter(
                     eval_conditional_weights,
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                 )
 
             elif isinstance(self.geometry, SphericalShellGeometry):
@@ -299,7 +299,7 @@ class BlendPhaseFunction(PhaseFunction):
                 # Assign conditional weight to second component
                 result[f"{prefix}weight.volume.data"] = SceneParameter(
                     eval_conditional_weights,
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                 )
 
             else:
