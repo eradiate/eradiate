@@ -6,7 +6,12 @@ import pinttrs
 
 from ._core import BSDF
 from ...attrs import define, documented
-from ...kernel import DictParameter, SceneParameter
+from ...kernel import (
+    DictParameter,
+    KernelSceneParameterFlags,
+    SceneParameter,
+    SearchSceneParameter,
+)
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...validators import is_positive
@@ -113,6 +118,18 @@ class OceanLegacyBSDF(BSDF):
 
     @property
     def params(self) -> dict[str, SceneParameter]:
-        result = {"wavelength": SceneParameter(lambda ctx: ctx.si.w.m_as("nm"))}
+        import mitsuba as mi
+
+        result = {
+            "wavelength": SceneParameter(
+                func=lambda ctx: ctx.si.w.m_as("nm"),
+                flags=KernelSceneParameterFlags.SPECTRAL,
+                tracks="wavelength"
+                if self.id is None
+                else SearchSceneParameter(
+                    node_type=mi.BSDF, node_id=self.id, parameter_relpath="wavelength"
+                ),
+            ),
+        }
 
         return result

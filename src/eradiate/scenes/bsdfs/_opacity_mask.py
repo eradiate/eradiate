@@ -113,13 +113,13 @@ class OpacityMaskBSDF(BSDF):
         for key, param in traverse(self.nested_bsdf)[1].items():
             result[f"nested_bsdf.{key}"] = attrs.evolve(
                 param,
-                tracks=SearchSceneParameter(
+                tracks=f"nested_bsdf.{key}"
+                if self.id is None
+                else SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id=self.id,
                     parameter_relpath=f"nested_bsdf.{key}",
-                )
-                if self.id is not None
-                else None,
+                ),
             )
 
         return result

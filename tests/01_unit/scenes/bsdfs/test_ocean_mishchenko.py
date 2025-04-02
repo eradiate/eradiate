@@ -19,12 +19,12 @@ from eradiate.test_tools.types import check_scene_element
     ],
     ids=["noargs", "uniform", "mixed"],
 )
-def test_ocean_legacy_construct(modes_all, kwargs):
+def test_ocean_mishchenko_construct(modes_all, kwargs):
     # Default constructor
     assert OceanMishchenkoBSDF(**kwargs)
 
 
-def test_ocean_legacy(modes_all_double):
+def test_ocean_mishchenko(modes_all_double):
     bsdf = OceanMishchenkoBSDF(
         wind_speed=15.0,
         eta=1.33,

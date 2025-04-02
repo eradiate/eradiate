@@ -62,13 +62,13 @@ class LambertianBSDF(BSDF):
         for key, param in params.items():
             result[f"reflectance.{key}"] = attrs.evolve(
                 param,
-                tracks=SearchSceneParameter(
+                tracks=f"reflectance.{key}"
+                if self.id is not None
+                else SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id=self.id,
                     parameter_relpath=f"reflectance.{key}",
-                )
-                if self.id is not None
-                else None,
+                ),
             )
 
         return result

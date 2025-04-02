@@ -159,13 +159,13 @@ class RTLSBSDF(BSDF):
             for key, param in obj_params.items():
                 result[f"{obj_key}.{key}"] = attrs.evolve(
                     param,
-                    tracks=SearchSceneParameter(
+                    tracks=f"{obj_key}.{key}"
+                    if self.id is None
+                    else SearchSceneParameter(
                         node_type=mi.BSDF,
                         node_id=self.id,
                         parameter_relpath=f"{obj_key}.{key}",
-                    )
-                    if self.id is not None
-                    else None,
+                    ),
                 )
 
         return result

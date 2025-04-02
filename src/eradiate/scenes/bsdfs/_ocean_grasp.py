@@ -158,13 +158,15 @@ class OceanGraspBSDF(BSDF):
                         parameter_relpath=f"{obj_key}.{key}",
                     )
                     if self.id is not None
-                    else None,
+                    else f"{obj_key}.{key}",
                 )
 
         result["wavelength"] = SceneParameter(
             func=lambda ctx: ctx.si.w.m_as("nm"),
             flags=KernelSceneParameterFlags.SPECTRAL,
-            tracks=SearchSceneParameter(
+            tracks="wavelength"
+            if self.id is None
+            else SearchSceneParameter(
                 node_type=mi.BSDF, node_id=self.id, parameter_relpath="wavelength"
             ),
         )

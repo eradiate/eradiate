@@ -61,5 +61,8 @@ class AirScatteringCoefficientSpectrum(Spectrum):
                     self.eval(ctx.si).m_as(uck.get("collision_coefficient"))
                 ),
                 flags=KernelSceneParameterFlags.SPECTRAL,
+                # kernel dict is emitted without an ID: we cannot do a search,
+                # so we assume we know the parameter already
+                tracks="value",
             )
         }
