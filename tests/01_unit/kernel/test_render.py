@@ -10,7 +10,7 @@ from eradiate.kernel import (
     KernelSceneParameterMap,
     MitsubaObjectWrapper,
     SceneParameter,
-    TypeIdLookupStrategy,
+    SearchSceneParameter,
     mi_render,
     mi_traverse,
 )
@@ -66,7 +66,7 @@ def test_type_id_lookup_strategy(mode_mono):
         }
     )
 
-    lookup_strategy = TypeIdLookupStrategy(
+    lookup_strategy = SearchSceneParameter(
         node_type=mi.BSDF, node_id="my_bsdf", parameter_relpath="reflectance.value"
     )
 
@@ -106,7 +106,7 @@ def test_mi_traverse_lookup(mode_mono):
             "my_bsdf.reflectance.value": SceneParameter(
                 func=lambda x: x,
                 flags=KernelSceneParameterFlags.ALL,
-                lookup_strategy=TypeIdLookupStrategy(
+                lookup_strategy=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
                     parameter_relpath="reflectance.value",
@@ -217,7 +217,7 @@ def test_mi_render(mode_mono):
             "my_bsdf.reflectance.value": SceneParameter(
                 func=lambda ctx: ctx.kwargs["r"],
                 flags=KernelSceneParameterFlags.ALL,
-                lookup_strategy=TypeIdLookupStrategy(
+                lookup_strategy=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
                     parameter_relpath="reflectance.value",
@@ -286,7 +286,7 @@ def test_mi_render_multisensor(mode_mono):
             "my_bsdf.reflectance.value": SceneParameter(
                 func=lambda ctx: ctx.kwargs["r"],
                 flags=KernelSceneParameterFlags.ALL,
-                lookup_strategy=TypeIdLookupStrategy(
+                lookup_strategy=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
                     parameter_relpath="reflectance.value",

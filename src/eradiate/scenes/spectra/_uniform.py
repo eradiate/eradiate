@@ -7,7 +7,12 @@ import pinttr
 
 from ._core import Spectrum
 from ...attrs import define, documented
-from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
+from ...kernel import (
+    DictParameter,
+    KernelSceneParameterFlags,
+    SceneParameter,
+    scene_parameter,
+)
 from ...units import PhysicalQuantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -106,8 +111,10 @@ class UniformSpectrum(Spectrum):
         # Inherit docstring
 
         return {
-            "value": SceneParameter(
-                func=lambda ctx: float(self.eval(ctx.si).m_as(uck.get(self.quantity))),
+            "value": scene_parameter(
                 flags=KernelSceneParameterFlags.SPECTRAL,
-            )
+                # kernel dict is emitted without an ID: we cannot do a search,
+                # so we assume we know the parameter already
+                tracks="value",
+            )(lambda ctx: float(self.eval(ctx.si).m_as(uck.get(self.quantity))))
         }

@@ -9,7 +9,6 @@ from eradiate.constants import EARTH_RADIUS
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.measure import MultiDistantMeasure
-from eradiate.scenes.shapes import RectangleShape
 from eradiate.spectral.response import DeltaSRF
 from eradiate.test_tools.types import check_scene_element
 from eradiate.test_tools.util import skipif_data_not_found
@@ -34,26 +33,6 @@ def test_atmosphere_experiment_construct_illuminations(modes_all_double, illumin
     types.
     """
     assert AtmosphereExperiment(illumination={"type": illumination})
-
-
-def test_atmosphere_experiment_extra_objects(mode_mono):
-    """
-    Extra objects can be added to the scene.
-    """
-    exp = AtmosphereExperiment(
-        extra_objects={
-            "reference_surface": {
-                "factory": "shape",
-                "type": "rectangle",
-                "id": "reference_surface",
-                "bsdf": {"type": "lambertian"},
-            }
-        }
-    )
-    assert isinstance(exp.extra_objects["reference_surface"], RectangleShape)
-    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
-    assert mi_wrapper.obj.shapes()[0].id() == "reference_surface"
-    assert "reference_surface.bsdf.reflectance.value" in mi_wrapper.parameters.keys()
 
 
 def test_atmosphere_experiment_construct_measures(modes_all_double):

@@ -13,11 +13,7 @@ import eradiate
 from ._core import PhaseFunction
 from ...attrs import define, documented
 from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
-from ...spectral.index import (
-    CKDSpectralIndex,
-    MonoSpectralIndex,
-    SpectralIndex,
-)
+from ...spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ...util.misc import summary_repr
 
 

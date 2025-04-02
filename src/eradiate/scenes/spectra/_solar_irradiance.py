@@ -218,5 +218,8 @@ class SolarIrradianceSpectrum(Spectrum):
             "value": SceneParameter(
                 func=lambda ctx: float(self.eval(ctx.si).m_as(uck.get("irradiance"))),
                 flags=KernelSceneParameterFlags.SPECTRAL,
+                # kernel dict is emitted without an ID: we cannot do a search,
+                # so we assume we know the parameter already
+                tracks="value",
             )
         }

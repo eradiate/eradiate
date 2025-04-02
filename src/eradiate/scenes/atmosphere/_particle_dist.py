@@ -338,7 +338,7 @@ class InterpolatorParticleDistribution(ParticleDistribution):
     """
 
     interpolator: t.Callable[[np.typing.ArrayLike], np.ndarray] = documented(
-        attrs.field(validator=attrs.validators.is_callable, kw_only=True),
+        attrs.field(validator=attrs.validators.is_callable(), kw_only=True),
         type="callable",
         doc="A callable with signature "
         ":code:`f(x: np.typing.ArrayLike) -> np.ndarray`. Typically, "

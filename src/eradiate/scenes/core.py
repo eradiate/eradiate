@@ -394,6 +394,9 @@ def traverse(node: NodeSceneElement) -> tuple[KernelDict, KernelSceneParameterMa
     node.traverse(cb)
 
     # Use collected data to generate the kernel dictionary
+    from rich.pretty import pprint
+
+    pprint(cb.params)
     return KernelDict(cb.template), KernelSceneParameterMap(cb.params)
 
 

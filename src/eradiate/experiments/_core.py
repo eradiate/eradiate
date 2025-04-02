@@ -417,23 +417,6 @@ class EarthObservationExperiment(Experiment, ABC):
     emitter.
     """
 
-    extra_objects: dict[str, SceneElement] = documented(
-        attrs.field(
-            default=None,
-            converter=_extra_objects_converter,
-            validator=attrs.validators.deep_mapping(
-                key_validator=attrs.validators.instance_of(str),
-                value_validator=attrs.validators.instance_of(SceneElement),
-            ),
-        ),
-        doc="Dictionary of extra objects to be added to the scene. "
-        "The keys of this dictionary are used to identify the objects "
-        "in the kernel dictionary.",
-        type="dict",
-        init_type="dict or None",
-        default="None",
-    )
-
     illumination: AbstractDirectionalIllumination | ConstantIllumination = documented(
         attrs.field(
             factory=DirectionalIllumination,
@@ -600,7 +583,7 @@ class EarthObservationExperiment(Experiment, ABC):
         Return a scene object used for kernel dictionary template and parameter
         table generation.
         """
-        return Scene(objects={**self.scene_objects, **self.extra_objects})
+        return Scene(objects=self.scene_objects)
 
     def init(self, drop_parameters: bool = True):
         # Inherit docstring
@@ -613,7 +596,7 @@ class EarthObservationExperiment(Experiment, ABC):
         try:
             self.mi_scene = mi_traverse(
                 mi.load_dict(kdict_template.render(ctx=self.context_init)),
-                umap_template=umap_template,
+                kpmap=umap_template,
             )
         except RuntimeError as e:
             raise RuntimeError(f"(while loading kernel scene dictionary){e}") from e

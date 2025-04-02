@@ -10,7 +10,12 @@ from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
-from ...kernel import DictParameter, SceneParameter, TypeIdLookupStrategy
+from ...kernel import (
+    DictParameter,
+    KernelSceneParameterFlags,
+    SceneParameter,
+    SearchSceneParameter,
+)
 from ...units import unit_registry as ureg
 
 
@@ -147,7 +152,7 @@ class OceanGraspBSDF(BSDF):
             for key, param in obj_params.items():
                 result[f"{obj_key}.{key}"] = attrs.evolve(
                     param,
-                    lookup_strategy=TypeIdLookupStrategy(
+                    tracks=SearchSceneParameter(
                         node_type=mi.BSDF,
                         node_id=self.id,
                         parameter_relpath=f"{obj_key}.{key}",
@@ -156,5 +161,11 @@ class OceanGraspBSDF(BSDF):
                     else None,
                 )
 
-        result["wavelength"] = SceneParameter(lambda ctx: ctx.si.w.m_as("nm"))
+        result["wavelength"] = SceneParameter(
+            func=lambda ctx: ctx.si.w.m_as("nm"),
+            flags=KernelSceneParameterFlags.SPECTRAL,
+            tracks=SearchSceneParameter(
+                node_type=mi.BSDF, node_id=self.id, parameter_relpath="wavelength"
+            ),
+        )
         return result

@@ -10,7 +10,7 @@ from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
-from ...kernel import SceneParameter, TypeIdLookupStrategy
+from ...kernel import SceneParameter, SearchSceneParameter
 from ...units import unit_context_config as ucc
 
 
@@ -159,7 +159,7 @@ class RTLSBSDF(BSDF):
             for key, param in obj_params.items():
                 result[f"{obj_key}.{key}"] = attrs.evolve(
                     param,
-                    lookup_strategy=TypeIdLookupStrategy(
+                    tracks=SearchSceneParameter(
                         node_type=mi.BSDF,
                         node_id=self.id,
                         parameter_relpath=f"{obj_key}.{key}",

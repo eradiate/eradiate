@@ -10,56 +10,14 @@ import mitsuba as mi
 from mitsuba.python.util import SceneParameters as _MitsubaSceneParameters
 from tqdm.auto import tqdm
 
-from ._kernel_dict import KernelSceneParameterMap
+from . import SearchSceneParameter
+from ._kernel_dict import KernelSceneParameterMap, SceneParameter
 from .. import config
-from ..attrs import define, documented, frozen
+from ..attrs import define, documented
 from ..contexts import KernelContext
 from ..rng import SeedState, root_seed_state
 
 logger = logging.getLogger(__name__)
-
-
-# ------------------------------------------------------------------------------
-#                         Parameter lookup strategies
-# ------------------------------------------------------------------------------
-
-
-@frozen
-class TypeIdLookupStrategy:
-    """
-    This parameter ID lookup strategy searches for a Mitsuba type and object ID
-    match.
-
-    Instances are callables which take, as argument, the current node during
-    a Mitsuba scene tree traversal and, optionally, its path in the Mitsuba
-    scene tree. If the lookup succeeds, the full parameter path is returned.
-    """
-
-    node_type: type = documented(
-        attrs.field(validator=attrs.validators.instance_of(type)),
-        doc="Type of the node which will be looked up.",
-        type="type",
-    )
-
-    node_id: str = documented(
-        attrs.field(validator=attrs.validators.instance_of(str)),
-        doc="ID of the node which will be looked up.",
-        type="str",
-    )
-
-    parameter_relpath: str = documented(
-        attrs.field(validator=attrs.validators.instance_of(str)),
-        doc="Parameter path relative to its parent object.",
-        type="str",
-    )
-
-    def __call__(self, node, node_path: str | None = None) -> str | None:
-        if isinstance(node, self.node_type) and node.id() == self.node_id:
-            prefix = f"{node_path}." if node_path is not None else ""
-            return f"{prefix}{self.parameter_relpath}"
-
-        else:
-            return None
 
 
 # ------------------------------------------------------------------------------
@@ -99,7 +57,7 @@ class MitsubaObjectWrapper:
         default="None",
     )
 
-    umap_template: KernelSceneParameterMap | None = documented(
+    kpmap: KernelSceneParameterMap | None = documented(
         attrs.field(
             default=None,
             repr=lambda x: (
@@ -122,21 +80,18 @@ class MitsubaObjectWrapper:
         map template :attr:`.umap_template`. For parameters associated with a
         lookup protocol, the looked up parameter ID is checked and used.
         """
-        if self.umap_template is not None:
+        if self.kpmap is not None:
             keys = []
-            for name, param in self.umap_template.items():
-                if param.lookup_strategy is not None:
-                    if param.parameter_id is not None:
-                        keys.append(param.parameter_id)
-                    else:
-                        warnings.warn(
-                            f"Parameter '{name}' has a lookup strategy but the "
-                            "associated parameter ID is undefined; was a "
-                            "parameter lookup performed during the Mitsuba "
-                            "scene traversal?"
-                        )
+            for name, param in self.kpmap.items():
+                if isinstance(param.tracks, str):
+                    keys.append(param.tracks)
                 else:
-                    keys.append(name)
+                    warnings.warn(
+                        f"Parameter '{name}': the Mitsuba parameter search "
+                        "protocol was not resolved to track this parameter to "
+                        "an existing Mitsuba scene parameter; was a parameter "
+                        "search performed during the Mitsuba scene traversal?"
+                    )
 
             self.parameters.keep(keys)
 
@@ -181,7 +136,7 @@ class SceneParameters(_MitsubaSceneParameters):
 
 def mi_traverse(
     obj: mi.Object,
-    umap_template: KernelSceneParameterMap | None = None,
+    kpmap: KernelSceneParameterMap | None = None,
     name_id_override: str | list[str] | bool | None = None,
 ) -> MitsubaObjectWrapper:
     """
@@ -193,7 +148,7 @@ def mi_traverse(
     obj : mitsuba.Object
         Mitsuba scene graph node to be traversed.
 
-    umap_template : .KernelSceneParameterMap, optional
+    kpmap : .KernelSceneParameterMap, optional
         An additional update map template which is to be updated during
         traversal. This is used to perform parameter lookup during traversal.
 
@@ -215,16 +170,14 @@ def mi_traverse(
     This is a reimplementation of the :func:`mitsuba.traverse` function.
     """
 
-    umap_template = (
-        KernelSceneParameterMap(data=umap_template.data.copy())
-        if umap_template is not None
+    kpmap = (
+        KernelSceneParameterMap(data=kpmap.data.copy())
+        if kpmap is not None
         else KernelSceneParameterMap()
     )
 
-    lookups = {
-        k: v
-        for k, v in umap_template.items()
-        if v.parameter_id is None and v.lookup_strategy is not None
+    lookups: dict[str, SceneParameter] = {
+        k: v for k, v in kpmap.items() if isinstance(v.tracks, SearchSceneParameter)
     }
 
     if name_id_override is None or name_id_override is False:
@@ -282,10 +235,10 @@ def mi_traverse(
             self.flags = flags
 
             # Try and recover a parameter ID from this node
-            for name, uparam in list(lookups.items()):
-                lookup_result = uparam.lookup_strategy(self.node, self.name)
+            for name, param in list(lookups.items()):
+                lookup_result = param.tracks(self.node, self.name)
                 if lookup_result is not None:
-                    uparam.parameter_id = lookup_result
+                    param.tracks = lookup_result
                     del lookups[
                         name
                     ]  # Remove successful lookups to accelerate future searches
@@ -329,7 +282,7 @@ def mi_traverse(
     return MitsubaObjectWrapper(
         obj=obj,
         parameters=SceneParameters(cb.properties, cb.hierarchy, cb.aliases),
-        umap_template=umap_template,
+        kpmap=kpmap,
     )
 
 

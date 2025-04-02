@@ -21,10 +21,11 @@ from ..._factory import Factory
 from ...attrs import define, documented, get_doc
 from ...contexts import KernelContext
 from ...kernel import (
-    DictParameter,
     KernelSceneParameterFlags,
     SceneParameter,
-    TypeIdLookupStrategy,
+    SearchSceneParameter,
+    dict_parameter,
+    scene_parameter,
 )
 from ...radprops import AbsorptionDatabase, ZGrid
 from ...spectral.index import SpectralIndex
@@ -652,7 +653,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             volumes = {
                 "albedo": {
                     "type": "gridvolume",
-                    "grid": DictParameter(
+                    "grid": dict_parameter(
                         lambda ctx: mi.VolumeGrid(
                             np.reshape(
                                 self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
@@ -665,7 +666,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 },
                 "sigma_t": {
                     "type": "gridvolume",
-                    "grid": DictParameter(
+                    "grid": dict_parameter(
                         lambda ctx: mi.VolumeGrid(
                             np.reshape(
                                 self.eval_sigma_t(ctx.si).m_as(
@@ -690,7 +691,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     "type": "sphericalcoordsvolume",
                     "volume": {
                         "type": "gridvolume",
-                        "grid": DictParameter(
+                        "grid": dict_parameter(
                             lambda ctx: mi.VolumeGrid(
                                 np.reshape(
                                     self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
@@ -707,7 +708,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     "type": "sphericalcoordsvolume",
                     "volume": {
                         "type": "gridvolume",
-                        "grid": DictParameter(
+                        "grid": dict_parameter(
                             lambda ctx: mi.VolumeGrid(
                                 np.reshape(
                                     self.eval_sigma_t(ctx.si).m_as(
@@ -747,61 +748,65 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         # Inherit docstring
         if isinstance(self.geometry, PlaneParallelGeometry):
             return {
-                "albedo.data": SceneParameter(
-                    lambda ctx: np.reshape(
-                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
-                        (-1, 1, 1, 1),
-                    ).astype(np.float32),
-                    KernelSceneParameterFlags.SPECTRAL,
-                    lookup_strategy=TypeIdLookupStrategy(
+                "albedo.data": scene_parameter(
+                    flags=KernelSceneParameterFlags.SPECTRAL,
+                    tracks=SearchSceneParameter(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
                         parameter_relpath="albedo.data",
                     ),
+                )(
+                    lambda ctx: np.reshape(
+                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
+                        (-1, 1, 1, 1),
+                    ).astype(np.float32)
                 ),
-                "sigma_t.data": SceneParameter(
+                "sigma_t.data": scene_parameter(
+                    flags=KernelSceneParameterFlags.SPECTRAL,
+                    tracks=SearchSceneParameter(
+                        node_type=mi.Medium,
+                        node_id=self.medium_id,
+                        parameter_relpath="sigma_t.data",
+                    ),
+                )(
                     lambda ctx: np.reshape(
                         self.eval_sigma_t(ctx.si).m_as(
                             uck.get("collision_coefficient")
                         ),
                         (-1, 1, 1, 1),
                     ).astype(np.float32),
-                    KernelSceneParameterFlags.SPECTRAL,
-                    lookup_strategy=TypeIdLookupStrategy(
-                        node_type=mi.Medium,
-                        node_id=self.medium_id,
-                        parameter_relpath="sigma_t.data",
-                    ),
                 ),
             }
 
         elif isinstance(self.geometry, SphericalShellGeometry):
             return {
-                "albedo.volume.data": SceneParameter(
-                    lambda ctx: np.reshape(
-                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
-                        (1, 1, -1, 1),
-                    ).astype(np.float32),
-                    KernelSceneParameterFlags.SPECTRAL,
-                    lookup_strategy=TypeIdLookupStrategy(
+                "albedo.volume.data": scene_parameter(
+                    flags=KernelSceneParameterFlags.SPECTRAL,
+                    tracks=SearchSceneParameter(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
                         parameter_relpath="albedo.volume.data",
                     ),
+                )(
+                    lambda ctx: np.reshape(
+                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
+                        (1, 1, -1, 1),
+                    ).astype(np.float32)
                 ),
-                "sigma_t.volume.data": SceneParameter(
+                "sigma_t.volume.data": scene_parameter(
+                    flags=KernelSceneParameterFlags.SPECTRAL,
+                    tracks=SearchSceneParameter(
+                        node_type=mi.Medium,
+                        node_id=self.medium_id,
+                        parameter_relpath="sigma_t.volume.data",
+                    ),
+                )(
                     lambda ctx: np.reshape(
                         self.eval_sigma_t(ctx.si).m_as(
                             uck.get("collision_coefficient")
                         ),
                         (1, 1, -1, 1),
-                    ).astype(np.float32),
-                    KernelSceneParameterFlags.SPECTRAL,
-                    lookup_strategy=TypeIdLookupStrategy(
-                        node_type=mi.Medium,
-                        node_id=self.medium_id,
-                        parameter_relpath="sigma_t.volume.data",
-                    ),
+                    ).astype(np.float32)
                 ),
             }
 

@@ -12,7 +12,13 @@ from ._core import PhaseFunction
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
+from ...kernel import (
+    DictParameter,
+    KernelSceneParameterFlags,
+    SceneParameter,
+    SearchSceneParameter,
+    scene_parameter,
+)
 from ...spectral.index import SpectralIndex
 
 
@@ -64,7 +70,7 @@ class RayleighPhaseFunction(PhaseFunction):
         elif self.depolarization is None:
             depolarization = np.zeros((1,))
         else:
-            NotImplementedError
+            raise NotImplementedError
 
         return depolarization
 
@@ -89,7 +95,7 @@ class RayleighPhaseFunction(PhaseFunction):
     @property
     def template(self) -> dict:
         if eradiate.mode().is_polarized:
-            result = {"type": "rayleigh_polarized"}
+            result = {"type": "rayleigh_polarized", "id": self.id}
 
             if self.geometry is None or isinstance(
                 self.geometry, PlaneParallelGeometry
@@ -141,30 +147,34 @@ class RayleighPhaseFunction(PhaseFunction):
             if self.geometry is None or isinstance(
                 self.geometry, PlaneParallelGeometry
             ):
-                result["depolarization.data"] = SceneParameter(
+                result["depolarization.data"] = scene_parameter(
+                    flags=KernelSceneParameterFlags.SPECTRAL,
+                    tracks=SearchSceneParameter(
+                        node_type=mi.PhaseFunction,
+                        node_id=self.id,
+                        parameter_relpath="depolarization.data",
+                    ),
+                )(
                     lambda ctx: np.reshape(
                         self.eval_depolarization_factor(ctx.si),
                         (-1, 1, 1, 1),
                     ).astype(np.float32),
-                    KernelSceneParameterFlags.SPECTRAL,
-                    # lookup_strategy=TypeIdLookupStrategy(
-                    #     node_type=mi.PhaseFunction,
-                    #     node_id=self.phase.id,
-                    #     parameter_relpath=,
-                    # ),
                 )
 
             elif isinstance(self.geometry, SphericalShellGeometry):
-                result["depolarization.volume.data"] = SceneParameter(
-                    lambda ctx: np.reshape(
-                        self.eval_depolarization_factor(ctx.si),
-                        (1, 1, -1, 1),
-                    ).astype(np.float32),
-                    KernelSceneParameterFlags.SPECTRAL,
-                    # lookup_strategy=TypeIdLookupStrategy(
-                    #     node_type=mi.PhaseFunction,
-                    #     node_id=self.phase.id,
-                    #     parameter_relpath=,
-                    # ),
+                result["depolarization.volume.data"] = (
+                    scene_parameter(
+                        flags=KernelSceneParameterFlags.SPECTRAL,
+                        tracks=SearchSceneParameter(
+                            node_type=mi.PhaseFunction,
+                            node_id=self.id,
+                            parameter_relpath="depolarization.volume.data",
+                        ),
+                    )(
+                        lambda ctx: np.reshape(
+                            self.eval_depolarization_factor(ctx.si),
+                            (1, 1, -1, 1),
+                        ).astype(np.float32)
+                    ),
                 )
         return result

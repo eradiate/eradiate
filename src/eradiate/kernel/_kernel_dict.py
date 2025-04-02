@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import enum
 import typing as t
+import warnings
 from collections import UserDict
 from collections.abc import Mapping
 
 import attrs
-import mitsuba as mi
 
-from ..attrs import define, documented
+from ..attrs import define, documented, frozen
 from ..contexts import KernelContext
 from ..util.misc import flatten, nest
 
@@ -49,7 +49,56 @@ class KernelSceneParameterFlags(enum.Flag):
     ALL = SPECTRAL | GEOMETRIC
 
 
-@define
+@frozen
+class SearchSceneParameter:
+    """
+    This class implements a scene parameter search protocol that consists in
+    checking if a Mitsuba scene tree node has expected type and object ID.
+
+    Instances are callables which take, as argument, the current node during
+    a Mitsuba scene tree traversal and, optionally, its path in the Mitsuba
+    scene tree (if no path is passed, it is assumed that the node is the root).
+    If the lookup succeeds, the full parameter path (node path and relative
+    parameter path concatenated) is returned.
+    """
+
+    node_type: type = documented(
+        attrs.field(validator=attrs.validators.instance_of(type)),
+        doc="Type of the node which will be looked up.",
+        type="type",
+    )
+
+    node_id: str = documented(
+        attrs.field(validator=attrs.validators.instance_of(str)),
+        doc="ID of the node which will be looked up.",
+        type="str",
+    )
+
+    parameter_relpath: str = documented(
+        attrs.field(validator=attrs.validators.instance_of(str)),
+        doc="Parameter path relative to its parent object.",
+        type="str",
+    )
+
+    def __call__(self, node, node_path: str | None = None) -> str | None:
+        if isinstance(node, self.node_type) and node.id() == self.node_id:
+            prefix = f"{node_path}." if node_path is not None else ""
+            return f"{prefix}{self.parameter_relpath}"
+        else:
+            return None
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(**d)
+
+    @classmethod
+    def convert(cls, value):
+        if isinstance(value, dict):
+            return cls.from_dict(value)
+        return value
+
+
+@define(kw_only=True)
 class SceneParameter:
     """
     This class declares an Eradiate parameter in a Mitsuba scene parameter
@@ -79,21 +128,15 @@ class SceneParameter:
         default=".KernelSceneParameterFlags.ALL",
     )
 
-    lookup_strategy: None | (t.Callable[[mi.Object, str], str | None]) = documented(
-        attrs.field(default=None),
-        doc="A callable that searches a Mitsuba scene tree node for a desired "
-        "parameter ID: with signature "
-        "``f(node: mi.Object, node_relpath: str) -> Optional[str]``.",
-        type="callable or None",
-        init_type="callable, optional",
-        default="None",
-    )
-
-    parameter_id: str | None = documented(
-        attrs.field(default=None),
-        doc="The full ID of the Mitsuba scene parameter to update.",
-        type="str or None",
-        init_type="str, optional",
+    tracks: str | SearchSceneParameter = documented(
+        attrs.field(
+            converter=SearchSceneParameter.convert,
+            validator=attrs.validators.instance_of((str, SearchSceneParameter)),
+        ),
+        doc="Path to the tracked Mitsuba scene parameter, or a search protocol "
+        "to look it up during Mitsuba scene tree traversal.",
+        type="str or .SearchSceneParameter",
+        init_type="str or .SearchSceneParameter or dict",
     )
 
     def __call__(self, ctx: KernelContext) -> t.Any:
@@ -120,9 +163,10 @@ def scene_parameter(
     maybe_fn=None,
     *,
     flags: KernelSceneParameterFlags = KernelSceneParameterFlags.ALL,
-    node_type: type,
-    node_id: str,
-    parameter_relpath: str,
+    node_type: type = None,
+    node_id: str = None,
+    parameter_relpath: str = None,
+    tracks: str | SearchSceneParameter | dict = None,
 ):
     """
     This function wraps another one into a :class:`.SceneParameter` instance.
@@ -136,35 +180,29 @@ def scene_parameter(
     flags : .KernelSceneParameterFlags, optional
         Scene parameter flags used for filtering during a scene parameter loop.
 
-    node_type : type
-        Type of the node that is expected to hold the parameter updated by the
-        wrapped callable.
-
-    node_id : str
-        ID of the node that is expected to hold the parameter updated by the
-        wrapped callable.
-
-    parameter_relpath : str
-        Relative path (from the looked up node) of the parameter updated by the
-        wrapped callable.
+    tracks : str or .SearchSceneParameter or dict
+        Scene parameter scene protocol. Dictionaries are converted to
+        :class:`.SearchSceneParameter` instances.
 
     Returns
     -------
     callable
     """
 
-    def wrap(f):
-        from eradiate.kernel import TypeIdLookupStrategy
-
-        return SceneParameter(
-            f,
-            flags=flags,
-            lookup_strategy=TypeIdLookupStrategy(
-                node_type=node_type,
-                node_id=node_id,
-                parameter_relpath=parameter_relpath,
-            ),
+    if node_type is not None or node_id is not None or parameter_relpath is not None:
+        warnings.warn(
+            "The 'node_type', 'node_id' and 'parameter_relpath' arguments "
+            "are deprecated; use 'tracks' instead.",
+            DeprecationWarning,
         )
+        tracks = SearchSceneParameter(
+            node_type=node_type, node_id=node_id, parameter_relpath=parameter_relpath
+        )
+
+    tracks = SearchSceneParameter.convert(tracks)
+
+    def wrap(f):
+        return SceneParameter(func=f, flags=flags, tracks=tracks)
 
     return wrap if maybe_fn is None else wrap(maybe_fn)
 
@@ -246,7 +284,13 @@ class KernelSceneParameterMap(UserDict):
     implements an update protocol for a Mitsuba scene parameter.
     """
 
-    data: dict[str, SceneParameter] = attrs.field(factory=dict)
+    data: dict[str, SceneParameter] = attrs.field(
+        factory=dict,
+        validator=attrs.validators.deep_mapping(
+            key_validator=attrs.validators.instance_of(str),
+            value_validator=attrs.validators.instance_of(SceneParameter),
+        ),
+    )
 
     def render(
         self,
@@ -295,7 +339,7 @@ class KernelSceneParameterMap(UserDict):
             v = self[k]
 
             if isinstance(v, SceneParameter):
-                key = k if v.parameter_id is None else v.parameter_id
+                key = v.tracks if isinstance(v.tracks, str) else k
 
                 if v.flags & flags:
                     result[key] = v(ctx)
