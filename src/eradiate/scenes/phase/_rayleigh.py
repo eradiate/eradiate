@@ -12,7 +12,7 @@ from ._core import PhaseFunction
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...kernel import DictParameter, SceneParameter
+from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...spectral.index import SpectralIndex
 
 
@@ -146,7 +146,7 @@ class RayleighPhaseFunction(PhaseFunction):
                         self.eval_depolarization_factor(ctx.si),
                         (-1, 1, 1, 1),
                     ).astype(np.float32),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                     # lookup_strategy=TypeIdLookupStrategy(
                     #     node_type=mi.PhaseFunction,
                     #     node_id=self.phase.id,
@@ -160,7 +160,7 @@ class RayleighPhaseFunction(PhaseFunction):
                         self.eval_depolarization_factor(ctx.si),
                         (1, 1, -1, 1),
                     ).astype(np.float32),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                     # lookup_strategy=TypeIdLookupStrategy(
                     #     node_type=mi.PhaseFunction,
                     #     node_id=self.phase.id,

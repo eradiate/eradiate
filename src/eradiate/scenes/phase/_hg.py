@@ -6,7 +6,7 @@ from ._core import PhaseFunction
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
-from ...kernel import DictParameter, SceneParameter
+from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 
 
 @define(eq=False, slots=False)
@@ -49,6 +49,6 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
         return {
             "g": SceneParameter(
                 lambda ctx: float(self.g.eval(ctx.si)),
-                SceneParameter.Flags.SPECTRAL,
+                KernelSceneParameterFlags.SPECTRAL,
             )
         }

@@ -22,6 +22,7 @@ from ...attrs import define, documented, get_doc
 from ...contexts import KernelContext
 from ...kernel import (
     DictParameter,
+    KernelSceneParameterFlags,
     SceneParameter,
     TypeIdLookupStrategy,
 )
@@ -751,7 +752,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
                         (-1, 1, 1, 1),
                     ).astype(np.float32),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                     lookup_strategy=TypeIdLookupStrategy(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
@@ -765,7 +766,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         ),
                         (-1, 1, 1, 1),
                     ).astype(np.float32),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                     lookup_strategy=TypeIdLookupStrategy(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
@@ -781,7 +782,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
                         (1, 1, -1, 1),
                     ).astype(np.float32),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                     lookup_strategy=TypeIdLookupStrategy(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
@@ -795,7 +796,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         ),
                         (1, 1, -1, 1),
                     ).astype(np.float32),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                     lookup_strategy=TypeIdLookupStrategy(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
