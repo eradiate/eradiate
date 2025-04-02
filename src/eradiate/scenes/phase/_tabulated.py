@@ -12,7 +12,7 @@ import eradiate
 
 from ._core import PhaseFunction
 from ...attrs import define, documented
-from ...kernel import DictParameter, SceneParameter
+from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...spectral.index import (
     CKDSpectralIndex,
     MonoSpectralIndex,
@@ -290,7 +290,7 @@ class TabulatedPhaseFunction(PhaseFunction):
         result = {
             values_name: SceneParameter(
                 lambda ctx: self.eval(ctx.si, 0, 0),
-                SceneParameter.Flags.SPECTRAL,
+                KernelSceneParameterFlags.SPECTRAL,
             )
         }
 
@@ -298,35 +298,35 @@ class TabulatedPhaseFunction(PhaseFunction):
             if self.has_polarized_data:
                 result["m12"] = SceneParameter(
                     lambda ctx: self.eval(ctx.si, 0, 1),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                 )
                 result["m33"] = SceneParameter(
                     lambda ctx: self.eval(ctx.si, 2, 2),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                 )
                 result["m34"] = SceneParameter(
                     lambda ctx: self.eval(ctx.si, 2, 3),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                 )
 
                 if self.particle_shape == "spheroidal":
                     result["m22"] = SceneParameter(
                         lambda ctx: self.eval(ctx.si, 1, 1),
-                        SceneParameter.Flags.SPECTRAL,
+                        KernelSceneParameterFlags.SPECTRAL,
                     )
                     result["m44"] = SceneParameter(
                         lambda ctx: self.eval(ctx.si, 3, 3),
-                        SceneParameter.Flags.SPECTRAL,
+                        KernelSceneParameterFlags.SPECTRAL,
                     )
 
                 elif self.particle_shape == "spherical":
                     result["m22"] = SceneParameter(
                         lambda ctx: self.eval(ctx.si, 0, 0),
-                        SceneParameter.Flags.SPECTRAL,
+                        KernelSceneParameterFlags.SPECTRAL,
                     )
                     result["m44"] = SceneParameter(
                         lambda ctx: self.eval(ctx.si, 2, 2),
-                        SceneParameter.Flags.SPECTRAL,
+                        KernelSceneParameterFlags.SPECTRAL,
                     )
 
                 else:
@@ -338,17 +338,17 @@ class TabulatedPhaseFunction(PhaseFunction):
                 # polarized mode.
                 result["m22"] = SceneParameter(
                     lambda ctx: self.eval(ctx.si, 0, 0),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                 )
 
                 result["m33"] = SceneParameter(
                     lambda ctx: self.eval(ctx.si, 0, 0),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                 )
 
                 result["m44"] = SceneParameter(
                     lambda ctx: self.eval(ctx.si, 0, 0),
-                    SceneParameter.Flags.SPECTRAL,
+                    KernelSceneParameterFlags.SPECTRAL,
                 )
 
         return result
