@@ -5,7 +5,7 @@ import pint
 
 from ._core import Spectrum
 from ...attrs import define
-from ...kernel import DictParameter, SceneParameter
+from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...radprops.rayleigh import compute_sigma_s_air
 from ...units import PhysicalQuantity
 from ...units import unit_context_kernel as uck
@@ -60,6 +60,6 @@ class AirScatteringCoefficientSpectrum(Spectrum):
                 func=lambda ctx: float(
                     self.eval(ctx.si).m_as(uck.get("collision_coefficient"))
                 ),
-                flags=SceneParameter.Flags.SPECTRAL,
+                flags=KernelSceneParameterFlags.SPECTRAL,
             )
         }

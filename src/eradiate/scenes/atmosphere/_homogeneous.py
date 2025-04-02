@@ -10,7 +10,12 @@ from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...kernel import DictParameter, SceneParameter, TypeIdLookupStrategy
+from ...kernel import (
+    DictParameter,
+    KernelSceneParameterFlags,
+    SceneParameter,
+    TypeIdLookupStrategy,
+)
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_kernel as uck
 from ...validators import has_quantity
@@ -214,7 +219,7 @@ class HomogeneousAtmosphere(Atmosphere):
                 lambda ctx: self.eval_sigma_t(ctx.si).m_as(
                     uck.get("collision_coefficient")
                 ),
-                SceneParameter.Flags.SPECTRAL,
+                KernelSceneParameterFlags.SPECTRAL,
                 lookup_strategy=TypeIdLookupStrategy(
                     node_type=mi.Medium,
                     node_id=self.medium_id,
@@ -223,7 +228,7 @@ class HomogeneousAtmosphere(Atmosphere):
             ),
             "albedo.value.value": SceneParameter(
                 lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo")),
-                SceneParameter.Flags.SPECTRAL,
+                KernelSceneParameterFlags.SPECTRAL,
                 lookup_strategy=TypeIdLookupStrategy(
                     node_type=mi.Medium,
                     node_id=self.medium_id,

@@ -5,6 +5,7 @@ import pytest
 from eradiate.kernel import (
     DictParameter,
     KernelDict,
+    KernelSceneParameterFlags,
     KernelSceneParameterMap,
     SceneParameter,
 )
@@ -45,20 +46,20 @@ def test_scene_parameter_map_render():
     kpmap = KernelSceneParameterMap(
         {
             "foo": 0,
-            "bar": SceneParameter(lambda ctx: ctx, SceneParameter.Flags.GEOMETRIC),
-            "baz": SceneParameter(lambda ctx: ctx, SceneParameter.Flags.SPECTRAL),
+            "bar": SceneParameter(lambda ctx: ctx, KernelSceneParameterFlags.GEOMETRIC),
+            "baz": SceneParameter(lambda ctx: ctx, KernelSceneParameterFlags.SPECTRAL),
         }
     )
 
     # If no flags are passed, all params are rendered
-    result = kpmap.render(ctx=1, flags=SceneParameter.Flags.ALL)
+    result = kpmap.render(ctx=1, flags=KernelSceneParameterFlags.ALL)
     assert result["bar"] == 1 and result["baz"] == 1
 
     # If a flag is passed, only the corresponding params are rendered
     with pytest.raises(ValueError, match=re.escape("Unevaluated parameters: ['bar']")):
-        kpmap.render(ctx=1, flags=SceneParameter.Flags.SPECTRAL, drop=False)
+        kpmap.render(ctx=1, flags=KernelSceneParameterFlags.SPECTRAL, drop=False)
 
     # If drop is set to True, unused parameters are dropped
-    result = kpmap.render(ctx=1, flags=SceneParameter.Flags.SPECTRAL, drop=True)
+    result = kpmap.render(ctx=1, flags=KernelSceneParameterFlags.SPECTRAL, drop=True)
     assert result["baz"] == 1
     assert "bar" not in result
