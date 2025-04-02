@@ -60,11 +60,11 @@ def check_scene_element(
     if isinstance(instance, NodeSceneElement):
         if mi_cls is None:
             raise ValueError("Expected Mitsuba class must be set")
-        kdict_template, umap_template = traverse(instance)
+        kdict_template, kpmap = traverse(instance)
 
     elif isinstance(instance, CompositeSceneElement):
         mi_cls = mi.Scene
-        kdict_template, umap_template = traverse(Scene(objects={"composite": instance}))
+        kdict_template, kpmap = traverse(Scene(objects={"composite": instance}))
 
     else:
         raise RuntimeError(f"Cannot test type '{instance.__class__}'")
@@ -83,13 +83,13 @@ def check_scene_element(
 
     assert isinstance(mi_obj, mi_cls)
 
-    # Collect Mitsuba parameters, resolve update map parameter paths
-    mi_wrapper = mi_traverse(mi_obj, umap_template)
+    # Collect Mitsuba scene parameters, resolve paths
+    mi_wrapper = mi_traverse(mi_obj, kpmap)
     mi_params = mi_wrapper.parameters
 
     # Check that parameters can all be set
-    umap = umap_template.render(ctx)
-    for key, value in umap.items():
+    kpmap_rendered = kpmap.render(ctx)
+    for key, value in kpmap_rendered.items():
         try:
             mi_params[key] = value
         except KeyError as e:

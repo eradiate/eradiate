@@ -76,11 +76,16 @@ class SphereShape(ShapeNode):
 
     @property
     def template(self) -> dict:
+        # Inherit docstring
+        length_units = uck.get("length")
         result = {
             "type": "sphere",
-            "center": self.center.m_as(uck.get("length")),
-            "radius": self.radius.m_as(uck.get("length")),
+            "center": self.center.m_as(length_units),
+            "radius": self.radius.m_as(length_units),
         }
+
+        if self.id is not None:
+            result["id"] = self.id
         if self.to_world is not None:
             result["to_world"] = self.to_world
         return result

@@ -15,7 +15,12 @@ from pinttr.util import ensure_units
 from .._factory import Factory
 from ..attrs import define, documented, frozen
 from ..exceptions import TraversalError
-from ..kernel import KernelDict, KernelSceneParameterMap, SceneParameter
+from ..kernel import (
+    KernelDict,
+    KernelSceneParameterMap,
+    SceneParameter,
+    SearchSceneParameter,
+)
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
@@ -272,12 +277,33 @@ class Scene(NodeSceneElement):
     @property
     def template(self) -> dict:
         # Inherit docstring
-        return {"type": "scene"}
+        result = {"type": "scene"}
+        for k, obj in self._objects.items():
+            result[k] = (
+                obj.instance
+                if isinstance(obj, InstanceSceneElement)
+                else traverse(obj)[0]
+            )
+        return result
 
     @property
-    def objects(self) -> dict[str, SceneElement]:
-        # Inherit docstring
-        return self._objects
+    def params(self) -> dict[str, SceneParameter]:
+        result = {}
+
+        for key_obj, obj in self._objects.items():
+            params_obj = (
+                obj.params
+                if isinstance(obj, InstanceSceneElement)
+                else traverse(obj)[1]
+            )
+
+            for key_param, param in params_obj.items():
+                result[f"{key_obj}.{key_param}"] = (
+                    param
+                    if isinstance(param.tracks, SearchSceneParameter)
+                    else attrs.evolve(param, tracks=f"{key_obj}.{key_param}")
+                )
+        return result
 
 
 # ------------------------------------------------------------------------------
@@ -394,9 +420,6 @@ def traverse(node: NodeSceneElement) -> tuple[KernelDict, KernelSceneParameterMa
     node.traverse(cb)
 
     # Use collected data to generate the kernel dictionary
-    from rich.pretty import pprint
-
-    pprint(cb.params)
     return KernelDict(cb.template), KernelSceneParameterMap(cb.params)
 
 

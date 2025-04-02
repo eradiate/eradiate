@@ -6,10 +6,11 @@ import attrs
 import mitsuba as mi
 
 from ..bsdfs import BSDF, bsdf_factory
-from ..core import BoundingBox, InstanceSceneElement, NodeSceneElement, Ref
+from ..core import BoundingBox, InstanceSceneElement, NodeSceneElement, Ref, traverse
 from ... import converters
 from ..._factory import Factory
 from ...attrs import define, documented, get_doc
+from ...kernel import SceneParameter, SearchSceneParameter
 
 shape_factory = Factory()
 shape_factory.register_lazy_batch(
@@ -107,12 +108,31 @@ class Shape:
         return f"{self.id}_bsdf"
 
     @property
-    def objects(self) -> dict[str, NodeSceneElement] | None:
-        # Inherit docstring
+    def params(self) -> dict[str, SceneParameter]:
+        result = {}
         if self.bsdf is None:
-            return None
-        else:
-            return {"bsdf": self.bsdf}
+            return result
+
+        _, params_bsdf = traverse(self.bsdf)
+
+        for key, param in params_bsdf.items():
+            if isinstance(param.tracks, SearchSceneParameter):
+                result[f"bsdf.{key}"] = param
+            else:
+                result[f"bsdf.{key}"] = (
+                    f"bsdf.{key}"
+                    if self.id is None
+                    else attrs.evolve(
+                        param,
+                        tracks=SearchSceneParameter(
+                            node_type=mi.Shape,
+                            node_id=self.id,
+                            parameter_relpath=f"bsdf.{key}",
+                        ),
+                    )
+                )
+
+        return result
 
 
 @attrs.define(eq=False, slots=False)

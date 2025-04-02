@@ -12,7 +12,6 @@ from ._core import ShapeInstance
 from ..core import BoundingBox, traverse
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...kernel import SceneParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
@@ -110,7 +109,8 @@ class BufferMeshShape(ShapeInstance):
             bsdf = None
 
         props = mi.Properties()
-        props["mesh_bsdf"] = bsdf
+        props.set_id(self.id)
+        props["bsdf"] = bsdf
 
         mesh = mi.Mesh(
             name=self.id,
@@ -151,11 +151,3 @@ class BufferMeshShape(ShapeInstance):
         :ref:`sec-user_guide-unit_guide_user`.
         """
         self.instance.write_ply(filename)
-
-    @property
-    def params(self) -> dict[str, SceneParameter] | None:
-        if self.bsdf is None:
-            return None
-
-        _, params = traverse(attrs.evolve(self.bsdf, id=self._bsdf_id))
-        return {f"bsdf.{k}": v for k, v in params.items()}

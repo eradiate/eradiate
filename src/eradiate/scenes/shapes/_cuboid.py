@@ -221,19 +221,22 @@ class CuboidShape(ShapeNode):
 
     @property
     def template(self) -> dict:
-        length_units = uck.get("length")
+        # Inherit docstring
+
+        result = {"type": "cube"}
+
+        if self.id is not None:
+            result["id"] = self.id
 
         if self.to_world is not None:
-            trafo = self.to_world
+            result["to_world"] = self.to_world
         else:
-            trafo = mi.ScalarTransform4f.translate(
+            length_units = uck.get("length")
+            result["to_world"] = mi.ScalarTransform4f.translate(
                 self.center.m_as(length_units)
             ) @ mi.ScalarTransform4f.scale(0.5 * self.edges.m_as(length_units))
 
-        return {
-            "type": "cube",
-            "to_world": trafo,
-        }
+        return result
 
     @classmethod
     def atmosphere(
