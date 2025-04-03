@@ -17,7 +17,6 @@ from ...kernel import (
     KernelSceneParameterFlags,
     SceneParameter,
     SearchSceneParameter,
-    scene_parameter,
 )
 from ...spectral.index import SpectralIndex
 
@@ -147,34 +146,30 @@ class RayleighPhaseFunction(PhaseFunction):
             if self.geometry is None or isinstance(
                 self.geometry, PlaneParallelGeometry
             ):
-                result["depolarization.data"] = scene_parameter(
+                result["depolarization.data"] = SceneParameter(
+                    func=lambda ctx: np.reshape(
+                        self.eval_depolarization_factor(ctx.si),
+                        (-1, 1, 1, 1),
+                    ).astype(np.float32),
                     flags=KernelSceneParameterFlags.SPECTRAL,
                     tracks=SearchSceneParameter(
                         node_type=mi.PhaseFunction,
                         node_id=self.id,
                         parameter_relpath="depolarization.data",
                     ),
-                )(
-                    lambda ctx: np.reshape(
-                        self.eval_depolarization_factor(ctx.si),
-                        (-1, 1, 1, 1),
-                    ).astype(np.float32),
                 )
 
             elif isinstance(self.geometry, SphericalShellGeometry):
-                result["depolarization.volume.data"] = (
-                    scene_parameter(
-                        flags=KernelSceneParameterFlags.SPECTRAL,
-                        tracks=SearchSceneParameter(
-                            node_type=mi.PhaseFunction,
-                            node_id=self.id,
-                            parameter_relpath="depolarization.volume.data",
-                        ),
-                    )(
-                        lambda ctx: np.reshape(
-                            self.eval_depolarization_factor(ctx.si),
-                            (1, 1, -1, 1),
-                        ).astype(np.float32)
+                result["depolarization.volume.data"] = SceneParameter(
+                    func=lambda ctx: np.reshape(
+                        self.eval_depolarization_factor(ctx.si),
+                        (1, 1, -1, 1),
+                    ).astype(np.float32),
+                    flags=KernelSceneParameterFlags.SPECTRAL,
+                    tracks=SearchSceneParameter(
+                        node_type=mi.PhaseFunction,
+                        node_id=self.id,
+                        parameter_relpath="depolarization.volume.data",
                     ),
                 )
         return result

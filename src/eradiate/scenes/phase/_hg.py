@@ -20,6 +20,10 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
     parameter (the mean cosine of the scattering angle): a positive (resp.
     negative) value corresponds to predominant forward (resp. backward)
     scattering.
+
+    Notes
+    -----
+    This phase function allows a spectral dependence for the asymmetry parameter.
     """
 
     g: Spectrum = documented(
@@ -39,16 +43,21 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
 
     @property
     def template(self) -> dict:
-        return {
+        # Inherit docstring
+        result = {
             "type": "hg",
             "g": DictParameter(lambda ctx: float(self.g.eval(ctx.si))),
         }
+        return result
 
     @property
     def params(self) -> dict[str, SceneParameter]:
-        return {
+        result = {
             "g": SceneParameter(
-                lambda ctx: float(self.g.eval(ctx.si)),
-                KernelSceneParameterFlags.SPECTRAL,
+                func=lambda ctx: float(self.g.eval(ctx.si)),
+                flags=KernelSceneParameterFlags.SPECTRAL,
+                tracks="g",
             )
         }
+
+        return result

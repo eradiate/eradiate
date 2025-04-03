@@ -285,66 +285,40 @@ class TabulatedPhaseFunction(PhaseFunction):
 
         result = {
             values_name: SceneParameter(
-                lambda ctx: self.eval(ctx.si, 0, 0),
-                KernelSceneParameterFlags.SPECTRAL,
+                func=lambda ctx: self.eval(ctx.si, 0, 0),
+                flags=KernelSceneParameterFlags.SPECTRAL,
+                tracks=values_name,
             )
         }
 
         if self.is_polarized:
             if self.has_polarized_data:
-                result["m12"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 0, 1),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
-                result["m33"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 2, 2),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
-                result["m34"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 2, 3),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
+                args = [("m12", 0, 1), ("m33", 2, 2), ("m34", 2, 3)]
 
                 if self.particle_shape == "spheroidal":
-                    result["m22"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, 1, 1),
-                        KernelSceneParameterFlags.SPECTRAL,
-                    )
-                    result["m44"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, 3, 3),
-                        KernelSceneParameterFlags.SPECTRAL,
-                    )
-
+                    args.extend([("m22", 1, 1), ("m44", 3, 3)])
                 elif self.particle_shape == "spherical":
-                    result["m22"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, 0, 0),
-                        KernelSceneParameterFlags.SPECTRAL,
-                    )
-                    result["m44"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, 2, 2),
-                        KernelSceneParameterFlags.SPECTRAL,
-                    )
-
+                    args.extend([("m22", 0, 0), ("m44", 2, 2)])
                 else:
                     raise NotImplementedError
+
+                for coeff, i, j in args:
+                    result[coeff] = SceneParameter(
+                        func=lambda ctx: self.eval(ctx.si, i, j),
+                        flags=KernelSceneParameterFlags.SPECTRAL,
+                        tracks=coeff,
+                    )
 
             else:
                 # case: no polarized data but forced polarized. Initialize the
                 # diagonal to have the same behaviour as with tabphase in
                 # polarized mode.
-                result["m22"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 0, 0),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
-
-                result["m33"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 0, 0),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
-
-                result["m44"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 0, 0),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
+                args = [("m22", 0, 0), ("m33", 0, 0), ("m44", 0, 0)]
+                for coeff, i, j in args:
+                    result[coeff] = SceneParameter(
+                        func=lambda ctx: self.eval(ctx.si, i, j),
+                        flags=KernelSceneParameterFlags.SPECTRAL,
+                        tracks=coeff,
+                    )
 
         return result

@@ -264,11 +264,11 @@ class BlendPhaseFunction(PhaseFunction):
 
             # Add components
             _, params = traverse(self.components[i])
-            result.update(
-                {
-                    **{f"{prefix}phase_0.{k}": v for k, v in params.items()},
-                }
-            )
+
+            for k, v in params.items():
+                result[f"{prefix}phase_0.{k}"] = attrs.evolve(
+                    v, tracks=f"{prefix}phase_0.{k}" if isinstance(v.tracks, str) else v
+                )
 
             if self.geometry is None or isinstance(
                 self.geometry, PlaneParallelGeometry
@@ -284,8 +284,9 @@ class BlendPhaseFunction(PhaseFunction):
 
                 # Assign conditional weight to second component
                 result[f"{prefix}weight.data"] = SceneParameter(
-                    eval_conditional_weights,
-                    KernelSceneParameterFlags.SPECTRAL,
+                    func=eval_conditional_weights,
+                    flags=KernelSceneParameterFlags.SPECTRAL,
+                    tracks=f"{prefix}weight.data",
                 )
 
             elif isinstance(self.geometry, SphericalShellGeometry):
@@ -298,8 +299,9 @@ class BlendPhaseFunction(PhaseFunction):
 
                 # Assign conditional weight to second component
                 result[f"{prefix}weight.volume.data"] = SceneParameter(
-                    eval_conditional_weights,
-                    KernelSceneParameterFlags.SPECTRAL,
+                    func=eval_conditional_weights,
+                    flags=KernelSceneParameterFlags.SPECTRAL,
+                    tracks=f"{prefix}weight.volume.data",
                 )
 
             else:
@@ -307,6 +309,10 @@ class BlendPhaseFunction(PhaseFunction):
 
         else:
             _, params = traverse(self.components[-1])
-            result.update({**{f"{prefix}phase_1.{k}": v for k, v in params.items()}})
+
+            for k, v in params.items():
+                result[f"{prefix}phase_1.{k}"] = attrs.evolve(
+                    v, tracks=f"{prefix}phase_1.{k}" if isinstance(v.tracks, str) else v
+                )
 
         return result
