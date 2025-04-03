@@ -40,17 +40,9 @@ class LambertianBSDF(BSDF):
     @property
     def template(self) -> dict:
         # Inherit docstring
-        result = {
-            "type": "diffuse",
-            **{
-                f"reflectance.{key}": value
-                for key, value in traverse(self.reflectance)[0].items()
-            },
-        }
-
+        result = {"type": "diffuse", "reflectance": traverse(self.reflectance)[0].data}
         if self.id is not None:
             result["id"] = self.id
-
         return result
 
     @property
@@ -63,7 +55,7 @@ class LambertianBSDF(BSDF):
             result[f"reflectance.{key}"] = attrs.evolve(
                 param,
                 tracks=f"reflectance.{key}"
-                if self.id is not None
+                if isinstance(param.tracks, str)
                 else SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id=self.id,

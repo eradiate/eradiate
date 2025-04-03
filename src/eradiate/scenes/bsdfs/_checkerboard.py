@@ -77,8 +77,8 @@ class CheckerboardBSDF(BSDF):
             result["reflectance.to_uv"] = mi.ScalarTransform4f.scale(self.scale_pattern)
 
         for obj_key, obj_values in {
-            "color0": traverse(self.reflectance_a)[0],
-            "color1": traverse(self.reflectance_b)[0],
+            "color0": traverse(self.reflectance_a)[0].data,
+            "color1": traverse(self.reflectance_b)[0].data,
         }.items():
             for key, value in obj_values.items():
                 result[f"reflectance.{obj_key}.{key}"] = value
@@ -95,15 +95,15 @@ class CheckerboardBSDF(BSDF):
             "color0": traverse(self.reflectance_a)[1].data,
             "color1": traverse(self.reflectance_b)[1].data,
         }.items():
-            for key, param in obj_params.items():
-                result[f"reflectance.{obj_key}.{key}"] = attrs.evolve(
+            for param_key, param in obj_params.items():
+                result[f"reflectance.{obj_key}.{param_key}"] = attrs.evolve(
                     param,
-                    tracks=f"reflectance.{obj_key}.{key}"
-                    if self.id is not None
+                    tracks=f"reflectance.{obj_key}.{param_key}"
+                    if isinstance(param.tracks, str)
                     else SearchSceneParameter(
                         node_type=mi.BSDF,
                         node_id=self.id,
-                        parameter_relpath=f"reflectance.{obj_key}.{key}",
+                        parameter_relpath=f"reflectance.{obj_key}.{param_key}",
                     ),
                 )
 
