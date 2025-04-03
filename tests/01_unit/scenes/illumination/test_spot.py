@@ -17,8 +17,8 @@ def test_construct_basic(mode_mono):
         target=[0, 0, 0],
         origin=[1, 1, 1],
         up=[1, 0, 1],
-        beam_width=10 * ureg.deg,
-        intensity=10,
+        beam_width=10.0 * ureg.deg,
+        intensity=10.0,
     )
     check_scene_element(illumination, mi_cls=mi.Emitter)
 
@@ -37,8 +37,8 @@ def test_construct_texture(mode_mono, tmp_path):
         target=[0, 0, 0],
         origin=[1, 1, 1],
         up=[1, 0, 1],
-        beam_width=10 * ureg.deg,
-        intensity=10,
+        beam_width=10.0 * ureg.deg,
+        intensity=10.0,
         beam_profile=str(filename),
     )
     check_scene_element(illumination, mi_cls=mi.Emitter)
@@ -48,16 +48,16 @@ def test_construct_texture(mode_mono, tmp_path):
         target=[0, 0, 0],
         origin=[1, 1, 1],
         up=[1, 0, 1],
-        beam_width=10 * ureg.deg,
-        intensity=10,
+        beam_width=10.0 * ureg.deg,
+        intensity=10.0,
         beam_profile=eradiate.data.data_store.fetch("textures/gaussian_3sigma.bmp"),
     )
     check_scene_element(illumination, mi_cls=mi.Emitter)
 
 
 def test_construct_from_size(mode_mono):
-    spot_radius = 1 * ureg.m
-    beam_angle = 3 * ureg.deg
+    spot_radius = 1.0 * ureg.m
+    beam_angle = 3.0 * ureg.deg
 
     # spot_radius / tan(beam_angle/2.)
     expected_distance = 38.18846

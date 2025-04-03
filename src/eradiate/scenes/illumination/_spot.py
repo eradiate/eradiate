@@ -10,10 +10,11 @@ import pint
 import pinttr
 
 from ._core import Illumination
-from ..core import NodeSceneElement
+from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
+from ...kernel import SearchSceneParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -210,20 +211,40 @@ class SpotIllumination(Illumination):
 
     @property
     def template(self) -> dict:
-        retdict = {
+        angle_units = uck.get("angle")
+        result = {
             "type": "spot",
-            "beam_width": self.beam_width.m_as(uck.get("angle")),
-            "cutoff_angle": self.beam_width.m_as(uck.get("angle")),
+            "beam_width": self.beam_width.m_as(angle_units),
+            "cutoff_angle": self.beam_width.m_as(angle_units),
             "to_world": self._to_world,
+            "id": self.id,
         }
 
         if self.beam_profile is not None:
-            retdict["texture"] = {
-                "type": "bitmap",
-                "filename": str(self.beam_profile),
-            }
-        return retdict
+            result["texture.type"] = "bitmap"
+            result["texture.filename"] = str(self.beam_profile)
+
+        kdict, _ = traverse(self.intensity)
+        for k, v in kdict.items():
+            result[f"intensity.{k}"] = v
+
+        return result
 
     @property
-    def objects(self) -> dict[str, NodeSceneElement]:
-        return {"intensity": self.intensity}
+    def params(self):
+        _, kpmap_intensity = traverse(self.intensity)
+
+        result = {}
+        for key, param in kpmap_intensity.items():
+            result[f"intensity.{key}"] = attrs.evolve(
+                param,
+                tracks=SearchSceneParameter(
+                    node_type=mi.Emitter,
+                    node_id=self.id,
+                    parameter_relpath=f"intensity.{param.tracks.strip()}",
+                )
+                if isinstance(param.tracks, str)
+                else param,
+            )
+
+        return result

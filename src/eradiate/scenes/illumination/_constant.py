@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import attrs
+import mitsuba as mi
 
 from ._core import Illumination
-from ..core import NodeSceneElement
+from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ...attrs import define, documented
+from ...kernel import SceneParameter, SearchSceneParameter
 from ...validators import has_quantity
 
 
@@ -33,8 +35,27 @@ class ConstantIllumination(Illumination):
 
     @property
     def template(self) -> dict:
-        return {"type": "constant"}
+        result = {"type": "constant", "id": self.id}
+        kdict, _ = traverse(self.radiance)
+        for k, v in kdict.items():
+            result[f"radiance.{k}"] = v
+        return result
 
     @property
-    def objects(self) -> dict[str, NodeSceneElement]:
-        return {"radiance": self.radiance}
+    def params(self) -> dict[str, SceneParameter]:
+        _, kpmap_radiance = traverse(self.radiance)
+
+        result = {}
+        for key, param in kpmap_radiance.items():
+            result[f"radiance.{key}"] = attrs.evolve(
+                param,
+                tracks=SearchSceneParameter(
+                    node_type=mi.Emitter,
+                    node_id=self.id,
+                    parameter_relpath=f"radiance.{param.tracks.strip()}",
+                )
+                if isinstance(param.tracks, str)
+                else param,
+            )
+
+        return result

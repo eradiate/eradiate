@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import attrs
+import mitsuba as mi
+
 from ._core import AbstractDirectionalIllumination
 from ... import traverse
 from ...attrs import define
-from ...kernel import SearchSceneParameter, scene_parameter
+from ...kernel import SearchSceneParameter
 
 
 @define(eq=False, slots=False)
@@ -17,29 +20,27 @@ class DirectionalIllumination(AbstractDirectionalIllumination):
 
     @property
     def template(self) -> dict:
-        return {"type": "directional", "to_world": self._to_world}
+        result = {"type": "directional", "to_world": self._to_world, "id": self.id}
+        kdict, _ = traverse(self.irradiance)
+        for k, v in kdict.items():
+            result[f"irradiance.{k}"] = v
+        return result
 
     @property
     def params(self):
-        import mitsuba as mi
-
         _, kpmap_irradiance = traverse(self.irradiance)
 
         result = {}
         for key, param in kpmap_irradiance.items():
-            if isinstance(param.tracks, str):
-                tracks = SearchSceneParameter(
+            result[f"irradiance.{key}"] = attrs.evolve(
+                param,
+                tracks=SearchSceneParameter(
                     node_type=mi.Emitter,
                     node_id=self.id,
                     parameter_relpath=f"irradiance.{param.tracks.strip()}",
                 )
-            else:
-                # Safety guard, should not happen as all Spectrum implementations
-                # currently assume anonymous nodes
-                raise NotImplementedError()
-
-            result[f"irradiance.{key}"] = scene_parameter(
-                flags=param.flags, tracks=tracks
-            )(param.func)
+                if isinstance(param.tracks, str)
+                else param,
+            )
 
         return result
