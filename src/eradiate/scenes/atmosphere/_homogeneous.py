@@ -15,7 +15,6 @@ from ...kernel import (
     KernelSceneParameterFlags,
     SceneParameter,
     SearchSceneParameter,
-    scene_parameter,
 )
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_kernel as uck
@@ -216,26 +215,26 @@ class HomogeneousAtmosphere(Atmosphere):
         return {
             # Note: "value" appears twice because the mi.Spectrum is
             # encapsulated in a mi.ConstVolume
-            "sigma_t.value.value": scene_parameter(
+            "sigma_t.value.value": SceneParameter(
+                func=lambda ctx: self.eval_sigma_t(ctx.si).m_as(
+                    uck.get("collision_coefficient")
+                ),
                 flags=KernelSceneParameterFlags.SPECTRAL,
                 tracks=SearchSceneParameter(
                     node_type=mi.Medium,
                     node_id=self.medium_id,
                     parameter_relpath="sigma_t.value.value",
                 ),
-            )(
-                lambda ctx: self.eval_sigma_t(ctx.si).m_as(
-                    uck.get("collision_coefficient")
-                )
             ),
-            "albedo.value.value": scene_parameter(
+            "albedo.value.value": SceneParameter(
+                func=lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo")),
                 flags=KernelSceneParameterFlags.SPECTRAL,
                 tracks=SearchSceneParameter(
                     node_type=mi.Medium,
                     node_id=self.medium_id,
                     parameter_relpath="albedo.value.value",
                 ),
-            )(lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo"))),
+            ),
         }
 
     @property

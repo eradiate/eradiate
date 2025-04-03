@@ -25,7 +25,6 @@ from ...kernel import (
     SceneParameter,
     SearchSceneParameter,
     dict_parameter,
-    scene_parameter,
 )
 from ...radprops import AbsorptionDatabase, ZGrid
 from ...spectral.index import SpectralIndex
@@ -748,65 +747,61 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         # Inherit docstring
         if isinstance(self.geometry, PlaneParallelGeometry):
             return {
-                "albedo.data": scene_parameter(
+                "albedo.data": SceneParameter(
+                    func=lambda ctx: np.reshape(
+                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
+                        (-1, 1, 1, 1),
+                    ).astype(np.float32),
                     flags=KernelSceneParameterFlags.SPECTRAL,
                     tracks=SearchSceneParameter(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
                         parameter_relpath="albedo.data",
                     ),
-                )(
-                    lambda ctx: np.reshape(
-                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
-                        (-1, 1, 1, 1),
-                    ).astype(np.float32)
                 ),
-                "sigma_t.data": scene_parameter(
+                "sigma_t.data": SceneParameter(
+                    func=lambda ctx: np.reshape(
+                        self.eval_sigma_t(ctx.si).m_as(
+                            uck.get("collision_coefficient")
+                        ),
+                        (-1, 1, 1, 1),
+                    ).astype(np.float32),
                     flags=KernelSceneParameterFlags.SPECTRAL,
                     tracks=SearchSceneParameter(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
                         parameter_relpath="sigma_t.data",
                     ),
-                )(
-                    lambda ctx: np.reshape(
-                        self.eval_sigma_t(ctx.si).m_as(
-                            uck.get("collision_coefficient")
-                        ),
-                        (-1, 1, 1, 1),
-                    ).astype(np.float32),
                 ),
             }
 
         elif isinstance(self.geometry, SphericalShellGeometry):
             return {
-                "albedo.volume.data": scene_parameter(
+                "albedo.volume.data": SceneParameter(
+                    func=lambda ctx: np.reshape(
+                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
+                        (1, 1, -1, 1),
+                    ).astype(np.float32),
                     flags=KernelSceneParameterFlags.SPECTRAL,
                     tracks=SearchSceneParameter(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
                         parameter_relpath="albedo.volume.data",
                     ),
-                )(
-                    lambda ctx: np.reshape(
-                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
-                        (1, 1, -1, 1),
-                    ).astype(np.float32)
                 ),
-                "sigma_t.volume.data": scene_parameter(
+                "sigma_t.volume.data": SceneParameter(
+                    func=lambda ctx: np.reshape(
+                        self.eval_sigma_t(ctx.si).m_as(
+                            uck.get("collision_coefficient")
+                        ),
+                        (1, 1, -1, 1),
+                    ).astype(np.float32),
                     flags=KernelSceneParameterFlags.SPECTRAL,
                     tracks=SearchSceneParameter(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
                         parameter_relpath="sigma_t.volume.data",
                     ),
-                )(
-                    lambda ctx: np.reshape(
-                        self.eval_sigma_t(ctx.si).m_as(
-                            uck.get("collision_coefficient")
-                        ),
-                        (1, 1, -1, 1),
-                    ).astype(np.float32)
                 ),
             }
 
