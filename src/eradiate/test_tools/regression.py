@@ -46,10 +46,10 @@ def regression_test_plots(
     metric : tuple
         A tuple of the form (metric name, value) to be added to the plots.
 
-    ref_var: array-like (optional)
+    ref_var: array-like, optional
         Variable variance for the reference data
 
-    result_var : array-like (optional)
+    result_var : array-like, optional
         Variable variance for the simulation result
 
     """
