@@ -274,6 +274,25 @@ class Scene(NodeSceneElement):
         default="{}",
     )
 
+    @_objects.validator
+    def _objects_validator(self, attribute, value):
+        for k, v in value.items():
+            if not isinstance(k, str):
+                raise TypeError(
+                    f"while validating '{attribute.name}': keys must be {str}, got a {type(k)}"
+                )
+
+            if not isinstance(v, SceneElement):
+                raise TypeError(
+                    f"while validating '{attribute.name}': keys must be {SceneElement}, got a {type(v)}"
+                )
+
+            if isinstance(v, (NodeSceneElement, InstanceSceneElement)) and v.id != k:
+                raise ValueError(
+                    f"while validating '{attribute.name}': top-level objects must have "
+                    f"matching key and ID (got key {repr(k)}, ID {repr(v.id)})"
+                )
+
     @property
     def template(self) -> dict:
         # Inherit docstring
