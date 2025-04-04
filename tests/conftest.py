@@ -76,12 +76,15 @@ def pytest_configure(config):
     eradiate.config.settings.progress = 0
 
     # Mitsuba's logger is configured to be silent, unless Pytest's configuration
-    # explicitely requires an increased verbosity (e.g, passing -v option to its
-    # CLI)
+    # explicitly requires an increased verbosity (e.g, passing the -v option to
+    # its CLI)
     eradiate.kernel.install_logging()
     pytest_verbosity = config.get_verbosity()
-    if pytest_verbosity <= 1:
-        logging.getLogger("mitsuba").setLevel(logging.WARNING)
+    logging.getLogger("mitsuba").setLevel(logging.WARNING)
+    logging.getLogger("eradiate").setLevel(logging.INFO)
+    if pytest_verbosity >= 2:
+        logging.getLogger("mitsuba").setLevel(logging.INFO)
+        logging.getLogger("eradiate").setLevel(logging.DEBUG)
 
     # Silent Joseki
     logging.getLogger("joseki").setLevel(logging.WARNING)
