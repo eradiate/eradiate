@@ -16,8 +16,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install .[doc,recommended,test,dev]
-          pip install eradiate-mitsuba
+          pip install .[kernel,doc,recommended,test,dev]
       - name: Run fast tests
         run: |
           pytest tests --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow -m "not slow"
