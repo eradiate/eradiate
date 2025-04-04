@@ -54,6 +54,7 @@ docs = [
   "nbsphinx>=0.9.0",
   "ipython", # Required for syntax highlighting in notebooks
   "pytest", # Required for pytest-related function docs
+  "robotframework", # Required for robot-related function docs
   "seaborn",
   "sphinx-book-theme>=1.0",
   "sphinx",
@@ -62,7 +63,13 @@ docs = [
   "sphinx-copybutton",
   "sphinx-design",
 ]
-test = ["pytest", "pytest-json-report", "asv==0.6.*"]
+test = [
+  "pytest",
+  "pytest-json-report",
+  "asv==0.6.*",
+  "robotframework",
+  "pytest-robotframework",
+]
 dev = ["bump-my-version>=0.28.0,<0.29.0"]
 
 [project.scripts]
@@ -113,9 +120,14 @@ scripts = ["setpath.bat"]
 python = "3.9.*" # Used to constrain dev environment
 
 [tool.pixi.feature.test.tasks]
-test = { cmd = "pytest" }
-test-quick = { cmd = "pytest -m \"not slow and not regression\"" }
+test = { cmd = "pytest -p no:robotframework" }
+test-quick = { cmd = "pytest -m \"not slow and not regression\"  -p no:robotframework" }
 doctest = { cmd = "make -C docs doctest" }
+test-report = { cmd = "pytest --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow" }
+unit-report = { cmd = "pytest --robot-tagstatinclude unit --robot-tagstatinclude slow -m unit" }
+system-report = { cmd = "pytest --robot-tagstatinclude system --robot-tagstatinclude slow -m system" }
+regression-report = { cmd = "pytest --robot-tagstatinclude regression --robot-tagstatinclude slow -m regression" }
+slow-report = { cmd = "pytest --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow -m slow" }
 
 [tool.pixi.feature.docs.tasks]
 docs = { cmd = "make -C docs html && echo \"Documentation index at docs/_build/html/index.html\"" }
@@ -160,7 +172,10 @@ filterwarnings = [
   "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning",
   # Remove the following when transition to NumPy 2 is complete
   "ignore:numpy.core is deprecated and has been renamed to numpy._core.",
+  # Remove the warnings coming from deprecated usage of utcnow in Joseki
+  "ignore:.*utcnow.*:DeprecationWarning:joseki:19",
 ]
+markers = ["unit", "system", "regression"]
 testpaths = "tests"
 
 [tool.ruff]

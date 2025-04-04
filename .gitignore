@@ -25,6 +25,9 @@ docs/examples/generated/
 docs/rst/reference_api/generated/
 docs/rst/reference_plugins/generated/
 
+# Test artefacts
+test_artefacts/
+
 # Coverage
 .coverage
 htmlcov/
