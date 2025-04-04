@@ -12,7 +12,7 @@ import xarray as xr
 
 from ._core import Surface
 from ..bsdfs import BSDF, LambertianBSDF, OpacityMaskBSDF
-from ..core import SceneElement
+from ..core import InstanceSceneElement, traverse
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ..shapes import (
     BufferMeshShape,
@@ -532,35 +532,49 @@ class DEMSurface(Surface):
         return f"{self.id}_shape"
 
     @property
-    def _bsdf_id(self) -> str:
-        """
-        Mitsuba BSDF object identifier.
-        """
-        return f"{self.id}_bsdf"
-
-    @property
     def _template_shapes(self) -> dict:
-        return {}
+        result = {}
+        for prefix, obj in [
+            (self._shape_id, self.shape),
+            (f"{self._shape_id}_background", self.shape_background),
+        ]:
+            if isinstance(obj, InstanceSceneElement):
+                result[prefix] = obj.instance
+            else:
+                kdict_template = traverse(obj)[0].data
+                for key, param in kdict_template.items():
+                    result[f"{prefix}.{key}"] = param
+
+        return result
 
     @property
     def _params_shapes(self) -> dict:
-        return {}
+        result = {}
+        for prefix, obj in [
+            (self._shape_id, self.shape),
+            (f"{self._shape_id}_background", self.shape_background),
+        ]:
+            if isinstance(obj, InstanceSceneElement):
+                params = obj.params
+            else:
+                params = traverse(obj)[1].data
+
+            for key, param in params.items():
+                if isinstance(param.tracks, str):
+                    param = f"{prefix}.{param.tracks}"
+                result[f"{prefix}.{key}"] = param
+
+        return result
 
     @property
     def _template_bsdfs(self) -> dict:
+        # BSDF definitions are included in the shape's kdict
         return {}
 
     @property
     def _params_bsdfs(self) -> dict:
+        # BSDF definitions are included in the shape's kpmap
         return {}
-
-    @property
-    def objects(self) -> dict[str, SceneElement]:
-        # Inherit docstring
-        return {
-            self._shape_id: self.shape,
-            f"{self._shape_id}_background": self.shape_background,
-        }
 
     @classmethod
     def from_mesh(

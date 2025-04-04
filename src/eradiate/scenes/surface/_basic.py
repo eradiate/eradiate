@@ -113,11 +113,11 @@ class BasicSurface(Surface):
 
     @property
     def _params_bsdfs(self) -> dict:
-        umap_template = traverse(self.bsdf)[1].data
+        params = traverse(self.bsdf)[1].data
 
         result = {}
 
-        for key, param in umap_template.items():
+        for key, param in params.items():
             param = attrs.evolve(
                 param,
                 tracks=SearchSceneParameter(

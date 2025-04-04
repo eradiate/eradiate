@@ -19,10 +19,7 @@ from eradiate.test_tools.types import check_scene_element
             {"surface_bsdf.reflectance.value"},
         ),
     ],
-    ids=[
-        "noargs",
-        "shape",
-    ],
+    ids=["noargs", "shape"],
 )
 def test_basic_surface_construct(
     modes_all_double, kwargs, expected_shape, expected_traversal_param_keys
@@ -37,17 +34,17 @@ def test_basic_surface_construct(
         raise NotImplementedError
 
     if isinstance(expected_traversal_param_keys, set):
-        template, params = traverse(surface)
+        kdict, kpmap = traverse(surface)
 
         # Scene element is composite: template has not "type" key
-        assert "type" not in template
+        assert "type" not in kdict
         # Parameter map keys are fetched recursively
-        assert set(params.keys()) == expected_traversal_param_keys
+        assert set(kpmap.keys()) == expected_traversal_param_keys
 
         # When enclosed in a Scene, the surface can be traversed
         scene = Scene(objects={"surface": surface})
-        template, params = traverse(scene)
-        kernel_dict = template.render(KernelContext())
+        kdict, kpmap = traverse(scene)
+        kernel_dict = kdict.render(KernelContext())
         assert isinstance(mi.load_dict(kernel_dict), mi.Scene)
 
     elif isinstance(expected_traversal_param_keys, type) and issubclass(
