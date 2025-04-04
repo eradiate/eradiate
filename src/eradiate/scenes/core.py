@@ -297,12 +297,18 @@ class Scene(NodeSceneElement):
     def template(self) -> dict:
         # Inherit docstring
         result = {"type": "scene"}
+
         for k, obj in self._objects.items():
-            result[k] = (
-                obj.instance
-                if isinstance(obj, InstanceSceneElement)
-                else traverse(obj)[0]
-            )
+            if isinstance(obj, CompositeSceneElement):
+                result.update(traverse(obj)[0].data)
+
+            else:
+                result[k] = (
+                    obj.instance
+                    if isinstance(obj, InstanceSceneElement)
+                    else traverse(obj)[0].data
+                )
+
         return result
 
     @property
@@ -310,18 +316,22 @@ class Scene(NodeSceneElement):
         result = {}
 
         for key_obj, obj in self._objects.items():
-            params_obj = (
-                obj.params
-                if isinstance(obj, InstanceSceneElement)
-                else traverse(obj)[1]
-            )
+            if isinstance(obj, InstanceSceneElement):
+                params_obj = obj.params
+            else:
+                params_obj = traverse(obj)[1].data
 
-            for key_param, param in params_obj.items():
-                result[f"{key_obj}.{key_param}"] = (
-                    param
-                    if isinstance(param.tracks, SearchSceneParameter)
-                    else attrs.evolve(param, tracks=f"{key_obj}.{key_param}")
-                )
+            if isinstance(obj, CompositeSceneElement):
+                for key_param, param in params_obj.items():
+                    result[key_param] = param
+
+            else:
+                for key_param, param in params_obj.items():
+                    result[f"{key_obj}.{key_param}"] = (
+                        param
+                        if isinstance(param.tracks, SearchSceneParameter)
+                        else attrs.evolve(param, tracks=f"{key_obj}.{key_param}")
+                    )
         return result
 
 
