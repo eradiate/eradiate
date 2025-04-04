@@ -88,12 +88,10 @@ def regression_test_plots(
             0.5, 0.5, f"{metric[0]}: {metric[1]:.4}", horizontalalignment="center"
         )
 
-    plt.tight_layout()
-
 
 def render_svg_chart():
     str_i = StringIO()
-    plt.savefig(str_i, format="svg", transparent=True)
+    plt.savefig(str_i, format="svg", transparent=True, bbox_inches="tight")
     svg = str_i.getvalue()
 
     # Include some CSS in the SVG to render nicely in Robot report's dark and
@@ -380,7 +378,6 @@ class RegressionTest(ABC):
             plt.xlabel("VZA [deg]")
             plt.ylabel(f"{self.variable.upper()} in principal plane [-]")
             plt.title("Simulation result, can be used as new reference")
-            plt.tight_layout()
 
         else:
             if self.variable == "brf_srf":  # Handle spectral results
