@@ -101,12 +101,12 @@ def test_mi_traverse_lookup(mode_mono):
         }
     )
 
-    umap_template = KernelSceneParameterMap(
+    kpmap = KernelSceneParameterMap(
         {
             "my_bsdf.reflectance.value": SceneParameter(
                 func=lambda x: x,
                 flags=KernelSceneParameterFlags.ALL,
-                lookup_strategy=SearchSceneParameter(
+                tracks=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
                     parameter_relpath="reflectance.value",
@@ -115,7 +115,7 @@ def test_mi_traverse_lookup(mode_mono):
         }
     )
 
-    mi_wrapper = mi_traverse(mi_scene, umap_template)
+    mi_wrapper = mi_traverse(mi_scene, kpmap)
 
     # Traversal succeeds
     assert isinstance(mi_wrapper, MitsubaObjectWrapper)
@@ -136,7 +136,7 @@ def test_mi_traverse_lookup(mode_mono):
 
     # Parameter ID should be resolved in accordance with the declared lookup strategy
     assert (
-        mi_wrapper.umap_template["my_bsdf.reflectance.value"].parameter_id
+        mi_wrapper.kpmap["my_bsdf.reflectance.value"].tracks
         == "my_bsdf.reflectance.value"
     )
 
@@ -212,12 +212,12 @@ def test_mi_render(mode_mono):
         }
     )
 
-    umap_template = KernelSceneParameterMap(
+    kpmap = KernelSceneParameterMap(
         {
             "my_bsdf.reflectance.value": SceneParameter(
                 func=lambda ctx: ctx.kwargs["r"],
                 flags=KernelSceneParameterFlags.ALL,
-                lookup_strategy=SearchSceneParameter(
+                tracks=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
                     parameter_relpath="reflectance.value",
@@ -226,7 +226,7 @@ def test_mi_render(mode_mono):
         }
     )
 
-    mi_wrapper = mi_traverse(mi_scene, umap_template)
+    mi_wrapper = mi_traverse(mi_scene, kpmap)
 
     reflectances = [0.0, 0.5, 1.0]
     wavelengths = [400.0, 500.0, 600.0] * ureg.nm
@@ -281,12 +281,12 @@ def test_mi_render_multisensor(mode_mono):
         }
     )
 
-    umap_template = KernelSceneParameterMap(
+    kpmap = KernelSceneParameterMap(
         {
             "my_bsdf.reflectance.value": SceneParameter(
                 func=lambda ctx: ctx.kwargs["r"],
                 flags=KernelSceneParameterFlags.ALL,
-                lookup_strategy=SearchSceneParameter(
+                tracks=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
                     parameter_relpath="reflectance.value",
@@ -295,7 +295,7 @@ def test_mi_render_multisensor(mode_mono):
         }
     )
 
-    mi_wrapper = mi_traverse(mi_scene, umap_template)
+    mi_wrapper = mi_traverse(mi_scene, kpmap)
 
     reflectances = [0.0, 0.5, 1.0]
     wavelengths = [400.0, 500.0, 600.0] * ureg.nm

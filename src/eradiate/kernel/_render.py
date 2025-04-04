@@ -357,7 +357,7 @@ def mi_render(
             )
 
             logger.debug("Updating Mitsuba scene parameters")
-            mi_scene.parameters.update(mi_scene.umap_template.render(ctx))
+            mi_scene.parameters.update(mi_scene.kpmap.render(ctx))
 
             if sensors is None:
                 mi_sensors = [

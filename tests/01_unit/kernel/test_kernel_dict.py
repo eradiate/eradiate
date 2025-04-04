@@ -12,20 +12,20 @@ from eradiate.kernel import (
 
 
 def test_kernel_dict_init():
-    template = KernelDict({"foo": {"bar": 0}, "bar": {"baz": {"qux": 0}}})
-    assert template.data == {"foo.bar": 0, "bar.baz.qux": 0}
+    kdict = KernelDict({"foo": {"bar": 0}, "bar": {"baz": {"qux": 0}}})
+    assert kdict.data == {"foo.bar": 0, "bar.baz.qux": 0}
 
 
 def test_kernel_dict_setitem():
-    template = KernelDict()
-    template["foo"] = {"bar": 0}
-    template["bar"] = {"baz": {"qux": 0}}
-    template["baz"] = 0
-    assert template.data == {"foo.bar": 0, "bar.baz.qux": 0, "baz": 0}
+    kdict = KernelDict()
+    kdict["foo"] = {"bar": 0}
+    kdict["bar"] = {"baz": {"qux": 0}}
+    kdict["baz"] = 0
+    assert kdict.data == {"foo.bar": 0, "bar.baz.qux": 0, "baz": 0}
 
 
 def test_kernel_dict_render():
-    template = KernelDict(
+    kdict = KernelDict(
         {
             "foo.bar": 0,
             "bar": DictParameter(lambda ctx: ctx),
@@ -33,21 +33,29 @@ def test_kernel_dict_render():
         }
     )
 
-    assert template.render(ctx=1, nested=True) == {
+    assert kdict.render(ctx=1, nested=True) == {
         "foo": {"bar": 0},
         "bar": 1,
         "baz": 1,
     }
 
-    assert template.render(ctx=1, nested=False) == {"foo.bar": 0, "bar": 1, "baz": 1}
+    assert kdict.render(ctx=1, nested=False) == {"foo.bar": 0, "bar": 1, "baz": 1}
 
 
 def test_scene_parameter_map_render():
     kpmap = KernelSceneParameterMap(
         {
-            "foo": 0,
-            "bar": SceneParameter(lambda ctx: ctx, KernelSceneParameterFlags.GEOMETRIC),
-            "baz": SceneParameter(lambda ctx: ctx, KernelSceneParameterFlags.SPECTRAL),
+            "foo": SceneParameter(func=lambda ctx: ctx, tracks="foo"),
+            "bar": SceneParameter(
+                func=lambda ctx: ctx,
+                flags=KernelSceneParameterFlags.GEOMETRIC,
+                tracks="bar",
+            ),
+            "baz": SceneParameter(
+                func=lambda ctx: ctx,
+                flags=KernelSceneParameterFlags.SPECTRAL,
+                tracks="baz",
+            ),
         }
     )
 
