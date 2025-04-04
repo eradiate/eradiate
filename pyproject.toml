@@ -54,6 +54,7 @@ docs = [
   "nbsphinx>=0.9.0",
   "ipython", # Required for syntax highlighting in notebooks
   "pytest", # Required for pytest-related function docs
+  "robotframework", # Required for robot-related function docs
   "seaborn",
   "sphinx-book-theme>=1.0",
   "sphinx",
@@ -62,7 +63,13 @@ docs = [
   "sphinx-copybutton",
   "sphinx-design",
 ]
-test = ["pytest", "pytest-json-report", "asv==0.6.*", "robotframework", "pytest-robotframework"]
+test = [
+  "pytest",
+  "pytest-json-report",
+  "asv==0.6.*",
+  "robotframework",
+  "pytest-robotframework",
+]
 dev = ["bump-my-version>=0.28.0,<0.29.0"]
 
 [project.scripts]
