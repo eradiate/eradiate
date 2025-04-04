@@ -88,10 +88,30 @@ def regression_test_plots(
             0.5, 0.5, f"{metric[0]}: {metric[1]:.4}", horizontalalignment="center"
         )
 
+    return fig, axes
 
-def render_svg_chart():
+
+def figure_to_html(fig: plt.Figure):
+    """
+    Render a figure in HTML format
+
+    Returns a string containing the rendered HTML. The root tag is a <svg> one.
+
+    Parameters
+    ----------
+    fig : plt.Figure
+        Matplotlib figure to render in HTML.
+
+    Returns
+    -------
+    str
+        Rendered HTML <svg> tag with styling.
+
+    """
+
     str_i = StringIO()
-    plt.savefig(str_i, format="svg", transparent=True, bbox_inches="tight")
+    fig.savefig(str_i, format="svg", transparent=True, bbox_inches="tight")
+    fig.canvas.draw_idle()
     svg = str_i.getvalue()
 
     # Include some CSS in the SVG to render nicely in Robot report's dark and
@@ -226,11 +246,11 @@ class RegressionTest(ABC):
     )
 
     variable: str = documented(
-        attrs.field(kw_only=True, default="brf"),
+        attrs.field(kw_only=True, default="brf_srf"),
         doc="Tested variable",
         type="str",
         init_type="str",
-        default="brf",
+        default="brf_srf",
     )
 
     threshold: float = documented(
@@ -373,7 +393,7 @@ class RegressionTest(ABC):
         os.makedirs(os.path.dirname(fname_plot), exist_ok=True)
 
         if reference_only:
-            plt.figure(figsize=(8, 6))
+            figure = plt.figure(figsize=(8, 6))
             plt.plot(vza, val)
             plt.xlabel("VZA [deg]")
             plt.ylabel(f"{self.variable.upper()} in principal plane [-]")
@@ -385,9 +405,11 @@ class RegressionTest(ABC):
             else:  # Handle monochromatic results
                 ref = np.squeeze(self.reference[self.variable].values)
 
-            regression_test_plots(ref, val, vza, (self.METRIC_NAME, metric_value))
+            figure, _ = regression_test_plots(
+                ref, val, vza, (self.METRIC_NAME, metric_value)
+            )
 
-        html_svg = render_svg_chart()
+        html_svg = figure_to_html(figure)
         logger.info(html_svg, html=True, also_console=False)
         logger.info(f"Saving PNG report chart to {fname_plot}", also_console=True)
 
