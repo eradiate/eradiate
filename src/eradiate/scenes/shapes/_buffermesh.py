@@ -9,6 +9,7 @@ import pint
 import pinttr
 
 from ._core import ShapeInstance
+from ..bsdfs import BSDF, LambertianBSDF, bsdf_factory
 from ..core import BoundingBox, traverse
 from ...attrs import define, documented
 from ...contexts import KernelContext
@@ -32,6 +33,21 @@ class BufferMeshShape(ShapeInstance):
     * The optional ``texcoords`` field can hold a list of (u, v) texture
       coordinates in the same order as vertex coordinates.
     """
+
+    bsdf: BSDF = documented(
+        attrs.field(
+            factory=LambertianBSDF,
+            converter=bsdf_factory.convert,
+            validator=attrs.validators.instance_of(BSDF),
+        ),
+        doc="BSDF attached to the shape. If a dictionary is passed, it is "
+        "interpreted by :class:`bsdf_factory.convert() <.Factory>`. "
+        "The default is a :class:`LambertianBSDF`. If a :class:`.BSDF` "
+        "instance (or a corresponding dictionary specification) is passed, "
+        "its `id` member is automatically overridden.",
+        type=".BSDF",
+        init_type=".BSDF or dict, optional",
+    )
 
     vertices: pint.Quantity = documented(
         pinttr.field(
