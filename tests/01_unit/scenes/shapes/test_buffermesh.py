@@ -58,6 +58,7 @@ def test_buffer_mesh_params(mode_mono):
 
 def test_buffer_mesh_traverse(mode_mono):
     mesh = BufferMeshShape(
+        id="mesh",
         vertices=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
         faces=[[1, 2, 3]],
         bsdf={"type": "lambertian"},
