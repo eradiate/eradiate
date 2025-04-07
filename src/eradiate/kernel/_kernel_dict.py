@@ -53,12 +53,11 @@ class KernelSceneParameterFlags(enum.Flag):
 class SceneParameter:
     """
     This class declares an Eradiate parameter in a Mitsuba scene parameter
-    update map. It holds an evaluation protocol depending on context
-    information.
+    map. It holds an evaluation protocol depending on context information.
 
     See Also
     --------
-    :class:`.KernelContext`, :class:`.TypeIdLookupStrategy`
+    :class:`.KernelContext`, :class:`.SearchSceneParameter`
     """
 
     #: Sentinel value indicating that a parameter is not used
@@ -79,11 +78,12 @@ class SceneParameter:
         default=".KernelSceneParameterFlags.ALL",
     )
 
-    lookup_strategy: None | (t.Callable[[mi.Object, str], str | None]) = documented(
+    search: None | (t.Callable[[mi.Object, str], str | None]) = documented(
         attrs.field(default=None),
         doc="A callable that searches a Mitsuba scene tree node for a desired "
-        "parameter ID: with signature "
-        "``f(node: mi.Object, node_relpath: str) -> Optional[str]``.",
+        "parameter ID, with signature "
+        "``f(node: mi.Object, node_relpath: str) -> Optional[str]``. This is "
+        "typically done with a :class:`.SearchSceneParameter` instance.",
         type="callable or None",
         init_type="callable, optional",
         default="None",
@@ -154,12 +154,12 @@ def scene_parameter(
     """
 
     def wrap(f):
-        from eradiate.kernel import TypeIdLookupStrategy
+        from eradiate.kernel import SearchSceneParameter
 
         return SceneParameter(
             f,
             flags=flags,
-            lookup_strategy=TypeIdLookupStrategy(
+            search=SearchSceneParameter(
                 node_type=node_type,
                 node_id=node_id,
                 parameter_relpath=parameter_relpath,
