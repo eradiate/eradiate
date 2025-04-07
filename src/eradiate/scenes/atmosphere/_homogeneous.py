@@ -14,7 +14,7 @@ from ...kernel import (
     DictParameter,
     KernelSceneParameterFlags,
     SceneParameter,
-    TypeIdLookupStrategy,
+    SearchSceneParameter,
 )
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_kernel as uck
@@ -220,7 +220,7 @@ class HomogeneousAtmosphere(Atmosphere):
                     uck.get("collision_coefficient")
                 ),
                 KernelSceneParameterFlags.SPECTRAL,
-                lookup_strategy=TypeIdLookupStrategy(
+                search=SearchSceneParameter(
                     node_type=mi.Medium,
                     node_id=self.medium_id,
                     parameter_relpath="sigma_t.value.value",
@@ -229,7 +229,7 @@ class HomogeneousAtmosphere(Atmosphere):
             "albedo.value.value": SceneParameter(
                 lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo")),
                 KernelSceneParameterFlags.SPECTRAL,
-                lookup_strategy=TypeIdLookupStrategy(
+                search=SearchSceneParameter(
                     node_type=mi.Medium,
                     node_id=self.medium_id,
                     parameter_relpath="albedo.value.value",

@@ -147,7 +147,7 @@ class RayleighPhaseFunction(PhaseFunction):
                         (-1, 1, 1, 1),
                     ).astype(np.float32),
                     KernelSceneParameterFlags.SPECTRAL,
-                    # lookup_strategy=TypeIdLookupStrategy(
+                    # search=SearchSceneParameter(
                     #     node_type=mi.PhaseFunction,
                     #     node_id=self.phase.id,
                     #     parameter_relpath=,
@@ -161,7 +161,7 @@ class RayleighPhaseFunction(PhaseFunction):
                         (1, 1, -1, 1),
                     ).astype(np.float32),
                     KernelSceneParameterFlags.SPECTRAL,
-                    # lookup_strategy=TypeIdLookupStrategy(
+                    # search=SearchSceneParameter(
                     #     node_type=mi.PhaseFunction,
                     #     node_id=self.phase.id,
                     #     parameter_relpath=,
