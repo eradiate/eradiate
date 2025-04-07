@@ -25,14 +25,18 @@ logger = logging.getLogger(__name__)
 
 
 @frozen
-class TypeIdLookupStrategy:
+class SearchSceneParameter:
     """
-    This parameter ID lookup strategy searches for a Mitsuba type and object ID
-    match.
+    This class defines a scene parameter search protocol applied during the
+    Mitsuba scene tree traversal.
 
     Instances are callables which take, as argument, the current node during
     a Mitsuba scene tree traversal and, optionally, its path in the Mitsuba
     scene tree. If the lookup succeeds, the full parameter path is returned.
+
+    See Also
+    --------
+    :func:`.mi_traverse`
     """
 
     node_type: type = documented(
@@ -125,7 +129,7 @@ class MitsubaObjectWrapper:
         if self.umap_template is not None:
             keys = []
             for name, param in self.umap_template.items():
-                if param.lookup_strategy is not None:
+                if param.search is not None:
                     if param.parameter_id is not None:
                         keys.append(param.parameter_id)
                     else:
@@ -224,7 +228,7 @@ def mi_traverse(
     lookups = {
         k: v
         for k, v in umap_template.items()
-        if v.parameter_id is None and v.lookup_strategy is not None
+        if v.parameter_id is None and v.search is not None
     }
 
     if name_id_override is None or name_id_override is False:
@@ -283,7 +287,7 @@ def mi_traverse(
 
             # Try and recover a parameter ID from this node
             for name, uparam in list(lookups.items()):
-                lookup_result = uparam.lookup_strategy(self.node, self.name)
+                lookup_result = uparam.search(self.node, self.name)
                 if lookup_result is not None:
                     uparam.parameter_id = lookup_result
                     del lookups[
