@@ -16,7 +16,7 @@ from ..core import SceneElement, traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented, get_doc
-from ...kernel import SceneParameter, TypeIdLookupStrategy
+from ...kernel import SceneParameter, SearchSceneParameter
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -190,10 +190,10 @@ class AbstractTree(Tree):
         for obj_key, obj_params in objects.items():
             for key, param in obj_params.items():
                 # If no lookup strategy is set, we must add one
-                if isinstance(param, SceneParameter) and param.lookup_strategy is None:
+                if isinstance(param, SceneParameter) and param.search is None:
                     param = attrs.evolve(
                         param,
-                        lookup_strategy=TypeIdLookupStrategy(
+                        search=SearchSceneParameter(
                             mi.BSDF,
                             self.bsdf_id,
                             parameter_relpath=f"{obj_key}.{key}",
@@ -489,10 +489,10 @@ class MeshTreeElement:
         for obj_key, obj_params in objects.items():
             for key, param in obj_params.items():
                 # If no lookup strategy is set, we must add one
-                if isinstance(param, SceneParameter) and param.lookup_strategy is None:
+                if isinstance(param, SceneParameter) and param.search is None:
                     param = attrs.evolve(
                         param,
-                        lookup_strategy=TypeIdLookupStrategy(
+                        search=SearchSceneParameter(
                             mi.BSDF,
                             self.bsdf_id,
                             parameter_relpath=f"{obj_key}.{key}",

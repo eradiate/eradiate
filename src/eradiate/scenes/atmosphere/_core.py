@@ -24,7 +24,7 @@ from ...kernel import (
     DictParameter,
     KernelSceneParameterFlags,
     SceneParameter,
-    TypeIdLookupStrategy,
+    SearchSceneParameter,
 )
 from ...radprops import AbsorptionDatabase, ZGrid
 from ...spectral.index import SpectralIndex
@@ -753,7 +753,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         (-1, 1, 1, 1),
                     ).astype(np.float32),
                     KernelSceneParameterFlags.SPECTRAL,
-                    lookup_strategy=TypeIdLookupStrategy(
+                    search=SearchSceneParameter(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
                         parameter_relpath="albedo.data",
@@ -767,7 +767,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         (-1, 1, 1, 1),
                     ).astype(np.float32),
                     KernelSceneParameterFlags.SPECTRAL,
-                    lookup_strategy=TypeIdLookupStrategy(
+                    search=SearchSceneParameter(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
                         parameter_relpath="sigma_t.data",
@@ -783,7 +783,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         (1, 1, -1, 1),
                     ).astype(np.float32),
                     KernelSceneParameterFlags.SPECTRAL,
-                    lookup_strategy=TypeIdLookupStrategy(
+                    search=SearchSceneParameter(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
                         parameter_relpath="albedo.volume.data",
@@ -797,7 +797,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         (1, 1, -1, 1),
                     ).astype(np.float32),
                     KernelSceneParameterFlags.SPECTRAL,
-                    lookup_strategy=TypeIdLookupStrategy(
+                    search=SearchSceneParameter(
                         node_type=mi.Medium,
                         node_id=self.medium_id,
                         parameter_relpath="sigma_t.volume.data",
