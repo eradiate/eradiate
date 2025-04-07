@@ -9,7 +9,7 @@ from ._lambertian import LambertianBSDF
 from ..core import traverse
 from ... import converters
 from ...attrs import define, documented
-from ...kernel import TypeIdLookupStrategy, UpdateParameter
+from ...kernel import SceneParameter, SearchSceneParameter
 
 
 def _to_bitmap(value):
@@ -104,7 +104,7 @@ class OpacityMaskBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit Docstring
 
         result = {}
@@ -113,7 +113,7 @@ class OpacityMaskBSDF(BSDF):
         for key, param in traverse(self.nested_bsdf)[1].items():
             result[f"nested_bsdf.{key}"] = attrs.evolve(
                 param,
-                lookup_strategy=TypeIdLookupStrategy(
+                search=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id=self.id,
                     parameter_relpath=f"nested_bsdf.{key}",

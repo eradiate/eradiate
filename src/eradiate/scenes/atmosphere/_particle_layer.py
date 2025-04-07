@@ -20,7 +20,7 @@ from ..phase import TabulatedPhaseFunction
 from ... import converters, data
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...kernel import UpdateParameter
+from ...kernel import SceneParameter
 from ...radprops import ZGrid
 from ...spectral.index import (
     CKDSpectralIndex,
@@ -476,6 +476,6 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         return result.data
 
     @property
-    def _params_phase(self) -> dict[str, UpdateParameter]:
+    def _params_phase(self) -> dict[str, SceneParameter]:
         _, result = traverse(self.phase)
         return result.data

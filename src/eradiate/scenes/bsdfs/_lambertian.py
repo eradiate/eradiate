@@ -8,7 +8,7 @@ from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
-from ...kernel import TypeIdLookupStrategy, UpdateParameter
+from ...kernel import SceneParameter, SearchSceneParameter
 
 
 @define(eq=False, slots=False)
@@ -54,7 +54,7 @@ class LambertianBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
         params = traverse(self.reflectance)[1].data
 
@@ -62,7 +62,7 @@ class LambertianBSDF(BSDF):
         for key, param in params.items():
             result[f"reflectance.{key}"] = attrs.evolve(
                 param,
-                lookup_strategy=TypeIdLookupStrategy(
+                search=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id=self.id,
                     parameter_relpath=f"reflectance.{key}",

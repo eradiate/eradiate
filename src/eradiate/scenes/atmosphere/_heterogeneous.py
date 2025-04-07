@@ -19,7 +19,7 @@ from ..core import traverse
 from ..phase import BlendPhaseFunction, PhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...kernel import TypeIdLookupStrategy
+from ...kernel import SearchSceneParameter
 from ...radprops import AbsorptionDatabase, ZGrid
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_config as ucc
@@ -310,7 +310,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         for uparam_key, uparam in umap.items():
             result[uparam_key] = attrs.evolve(
                 uparam,
-                lookup_strategy=TypeIdLookupStrategy(
+                search=SearchSceneParameter(
                     node_type=mi.Medium,
                     node_id=self.medium_id,
                     parameter_relpath=f"phase_function.{uparam_key}",

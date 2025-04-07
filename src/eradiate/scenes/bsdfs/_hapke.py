@@ -8,7 +8,7 @@ from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
-from ...kernel import TypeIdLookupStrategy, UpdateParameter
+from ...kernel import SceneParameter, SearchSceneParameter
 
 
 @define(eq=False, slots=False)
@@ -136,7 +136,7 @@ class HapkeBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
         objects = {
             "w": traverse(self.w)[1],
@@ -152,7 +152,7 @@ class HapkeBSDF(BSDF):
             for key, param in obj_params.items():
                 result[f"{obj_key}.{key}"] = attrs.evolve(
                     param,
-                    lookup_strategy=TypeIdLookupStrategy(
+                    search=SearchSceneParameter(
                         node_type=mi.BSDF,
                         node_id=self.id,
                         parameter_relpath=f"{obj_key}.{key}",

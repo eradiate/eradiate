@@ -8,7 +8,7 @@ import xarray as xr
 from ._core import BSDF
 from ... import converters
 from ...attrs import define, documented
-from ...kernel import InitParameter, UpdateParameter
+from ...kernel import DictParameter, SceneParameter
 from ...units import to_quantity
 from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
@@ -125,7 +125,7 @@ class MQDiffuseBSDF(BSDF):
 
         result = {
             "type": "mqdiffuse",
-            "grid": InitParameter(lambda ctx: self._eval_grid_impl(ctx)),
+            "grid": DictParameter(lambda ctx: self._eval_grid_impl(ctx)),
         }
 
         if self.id is not None:
@@ -134,6 +134,6 @@ class MQDiffuseBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
         return {}

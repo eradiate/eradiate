@@ -8,7 +8,7 @@ from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
-from ...kernel import TypeIdLookupStrategy, UpdateParameter
+from ...kernel import SceneParameter, SearchSceneParameter
 
 
 @define(eq=False, slots=False)
@@ -86,7 +86,7 @@ class CheckerboardBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
 
         result = {}
@@ -98,7 +98,7 @@ class CheckerboardBSDF(BSDF):
             for key, param in obj_params.items():
                 result[f"reflectance.{obj_key}.{key}"] = attrs.evolve(
                     param,
-                    lookup_strategy=TypeIdLookupStrategy(
+                    search=SearchSceneParameter(
                         node_type=mi.BSDF,
                         node_id=self.id,
                         parameter_relpath=f"reflectance.{obj_key}.{key}",

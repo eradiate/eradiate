@@ -6,10 +6,11 @@ import pytest
 
 from eradiate import KernelContext
 from eradiate.kernel import (
+    KernelSceneParameterFlags,
+    KernelSceneParameterMap,
     MitsubaObjectWrapper,
-    TypeIdLookupStrategy,
-    UpdateMapTemplate,
-    UpdateParameter,
+    SceneParameter,
+    SearchSceneParameter,
     mi_render,
     mi_traverse,
 )
@@ -41,7 +42,7 @@ SCENE_DICTS = {
 }
 
 
-def test_type_id_lookup_strategy(mode_mono):
+def test_search_scene_parameter(mode_mono):
     mi_scene = mi.load_dict(
         {
             "type": "scene",
@@ -65,13 +66,13 @@ def test_type_id_lookup_strategy(mode_mono):
         }
     )
 
-    lookup_strategy = TypeIdLookupStrategy(
+    search = SearchSceneParameter(
         node_type=mi.BSDF, node_id="my_bsdf", parameter_relpath="reflectance.value"
     )
 
     for shape in mi_scene.shapes():
         path = shape.id()
-        assert lookup_strategy(shape.bsdf(), path) == (
+        assert search(shape.bsdf(), path) == (
             f"{path}.reflectance.value" if path != "disk_2" else None
         )
 
@@ -100,12 +101,12 @@ def test_mi_traverse_lookup(mode_mono):
         }
     )
 
-    umap_template = UpdateMapTemplate(
+    umap_template = KernelSceneParameterMap(
         {
-            "my_bsdf.reflectance.value": UpdateParameter(
-                evaluator=lambda x: x,
-                flags=UpdateParameter.Flags.ALL,
-                lookup_strategy=TypeIdLookupStrategy(
+            "my_bsdf.reflectance.value": SceneParameter(
+                func=lambda x: x,
+                flags=KernelSceneParameterFlags.ALL,
+                search=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
                     parameter_relpath="reflectance.value",
@@ -211,12 +212,12 @@ def test_mi_render(mode_mono):
         }
     )
 
-    umap_template = UpdateMapTemplate(
+    umap_template = KernelSceneParameterMap(
         {
-            "my_bsdf.reflectance.value": UpdateParameter(
-                evaluator=lambda ctx: ctx.kwargs["r"],
-                flags=UpdateParameter.Flags.ALL,
-                lookup_strategy=TypeIdLookupStrategy(
+            "my_bsdf.reflectance.value": SceneParameter(
+                func=lambda ctx: ctx.kwargs["r"],
+                flags=KernelSceneParameterFlags.ALL,
+                search=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
                     parameter_relpath="reflectance.value",
@@ -280,12 +281,12 @@ def test_mi_render_multisensor(mode_mono):
         }
     )
 
-    umap_template = UpdateMapTemplate(
+    umap_template = KernelSceneParameterMap(
         {
-            "my_bsdf.reflectance.value": UpdateParameter(
-                evaluator=lambda ctx: ctx.kwargs["r"],
-                flags=UpdateParameter.Flags.ALL,
-                lookup_strategy=TypeIdLookupStrategy(
+            "my_bsdf.reflectance.value": SceneParameter(
+                func=lambda ctx: ctx.kwargs["r"],
+                flags=KernelSceneParameterFlags.ALL,
+                search=SearchSceneParameter(
                     node_type=mi.BSDF,
                     node_id="my_bsdf",
                     parameter_relpath="reflectance.value",

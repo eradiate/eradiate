@@ -8,7 +8,7 @@ from ..core import traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
-from ...kernel import TypeIdLookupStrategy, UpdateParameter
+from ...kernel import SceneParameter, SearchSceneParameter
 
 
 @define(eq=False, slots=False)
@@ -43,8 +43,7 @@ class RPVBSDF(BSDF):
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Amplitude parameter. Must be dimensionless. "
-        "Should be in :math:`[0, 1]`.",
+        doc="Amplitude parameter. Must be dimensionless. Should be in :math:`[0, 1]`.",
         type=".Spectrum",
         init_type=".Spectrum or dict or float, optional",
         default="0.183",
@@ -80,8 +79,7 @@ class RPVBSDF(BSDF):
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Bowl-shape parameter. Must be dimensionless. "
-        "Should be in :math:`[0, 2]`.",
+        doc="Bowl-shape parameter. Must be dimensionless. Should be in :math:`[0, 2]`.",
         type=".Spectrum",
         init_type=".Spectrum or dict or float, optional",
         default="0.780",
@@ -96,8 +94,7 @@ class RPVBSDF(BSDF):
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Asymmetry parameter. Must be dimensionless. "
-        "Should be in :math:`[-1, 1]`.",
+        doc="Asymmetry parameter. Must be dimensionless. Should be in :math:`[-1, 1]`.",
         type=".Spectrum",
         init_type=".Spectrum or dict or float, optional",
         default="-0.1",
@@ -127,7 +124,7 @@ class RPVBSDF(BSDF):
         return result
 
     @property
-    def params(self) -> dict[str, UpdateParameter]:
+    def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
         objects = {
             "rho_0": traverse(self.rho_0)[1],
@@ -143,7 +140,7 @@ class RPVBSDF(BSDF):
             for key, param in obj_params.items():
                 result[f"{obj_key}.{key}"] = attrs.evolve(
                     param,
-                    lookup_strategy=TypeIdLookupStrategy(
+                    search=SearchSceneParameter(
                         node_type=mi.BSDF,
                         node_id=self.id,
                         parameter_relpath=f"{obj_key}.{key}",

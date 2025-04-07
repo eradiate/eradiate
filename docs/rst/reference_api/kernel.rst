@@ -15,11 +15,11 @@ Mitsuba scene templating
 .. autosummary::
    :toctree: generated/autosummary/
 
-   InitParameter
-   KernelDictTemplate
-   UpdateParameter
-   TypeIdLookupStrategy
-   UpdateMapTemplate
+   DictParameter
+   KernelDict
+   SceneParameter
+   SearchSceneParameter
+   KernelSceneParameterMap
    dict_parameter
    scene_parameter
 
