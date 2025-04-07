@@ -130,5 +130,5 @@ Glossary
 
 .. seealso::
 
-   The :ref:`sec-developer_guides-radiometric_kernel_interface` section contains
+   The :ref:`sec-user_guide-radiometric_kernel_interface` section contains
    an additional specific glossary.

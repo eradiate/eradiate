@@ -63,3 +63,4 @@ Guides
    ../../src/user_guide/spectral_discretization.ipynb
    conventions
    unit_guide_user
+   radiometric_kernel_interface
