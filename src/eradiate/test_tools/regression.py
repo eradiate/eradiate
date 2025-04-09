@@ -27,7 +27,7 @@ def regression_test_plots(
     metric: tuple[str, float],
     ref_var: t.Optional[np.typing.ArrayLike] = None,
     result_var: t.Optional[np.typing.ArrayLike] = None,
-) -> None:
+) -> t.Tuple[plt.Figure, t.List[t.List[plt.Axes]]]:
     """
     Create regression test report plots. Plot errorbars if both ref_var and
     result_var are set.
@@ -52,6 +52,13 @@ def regression_test_plots(
     result_var : array-like, optional
         Variable variance for the simulation result
 
+    Returns
+    -------
+    figure: Figure
+        Pyplot Figure containing the report charts
+
+    axes: list
+        2x2 array of Axes included in the report Figure
     """
     fig, axes = plt.subplots(2, 2, figsize=(8, 6))
 
@@ -91,7 +98,7 @@ def regression_test_plots(
     return fig, axes
 
 
-def figure_to_html(fig: plt.Figure):
+def figure_to_html(fig: plt.Figure) -> str:
     """
     Render a figure in HTML format
 
@@ -106,7 +113,6 @@ def figure_to_html(fig: plt.Figure):
     -------
     str
         Rendered HTML <svg> tag with styling.
-
     """
 
     str_i = StringIO()
@@ -136,7 +142,7 @@ def figure_to_html(fig: plt.Figure):
 
 
 def reference_converter(
-    value: os.PathLike | xr.Dataset | str | bytes | None,
+    value: PathLike | xr.Dataset | None,
 ) -> xr.Dataset | None:
     """
     A converter for handling the reference data attribute.
