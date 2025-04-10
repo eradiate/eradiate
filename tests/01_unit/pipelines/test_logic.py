@@ -408,3 +408,14 @@ def test_degree_of_linear_polarization(mode, aggregate_ckd_quad):
     expected_size = {**spectral_sizes, **film_sizes, **solar_angle_sizes}
     assert isinstance(result, xr.DataArray)
     assert result.sizes == expected_size
+
+
+def test_no_nan_validator():
+    v = logic.NoNaNValidator(importance="warn")
+    da = xr.tutorial.load_dataset("tiny")["tiny"]
+
+    result = v.validate(da)
+    assert result.passes
+
+    result = v.validate(da.where(da <= 2))
+    assert not result.passes

@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import itertools
 from collections import OrderedDict
+from typing import Any, Type
 
 import numpy as np
 import pint
 import pinttrs
 import xarray as xr
+from hamilton.data_quality.base import DataValidator, ValidationResult
 from pinttr.util import always_iterable
 
 from .._mode import Mode
@@ -25,6 +27,32 @@ from ..units import symbol, to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_context_kernel as uck
 from ..units import unit_registry as ureg
+
+
+class NoNaNValidator(DataValidator):
+    """
+    Validate a data array and check if contains NaN values.
+    """
+
+    def applies_to(self, datatype: Type[Type]) -> bool:
+        return issubclass(datatype, xr.DataArray)
+
+    def description(self) -> str:
+        return "Validates iff data array contains no NaN values."
+
+    @classmethod
+    def name(cls) -> str:
+        return "no_nan_validator"
+
+    def validate(self, dataset: Any) -> ValidationResult:
+        passes = not dataset.isnull().any()
+        return ValidationResult(
+            passes=passes,
+            message=f"Data array contains {'no' if passes else 'at least one'} "
+            f"NaN value. This {'passes' if passes else 'does not pass'}. "
+            "It should not contain any NaN values.",
+            diagnostics={"has_nan": not passes},
+        )
 
 
 def _spectral_dims(mode: Mode | str) -> tuple[tuple[str, dict], ...]:
