@@ -1,0 +1,61 @@
+name: Eradiate test
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  robot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[kernel,doc,recommended,test,dev]
+      - name: Run fast tests
+        run: |
+          pytest tests --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow -m "not slow"
+      - name: Setup chrome
+        if: always()
+        uses: browser-actions/setup-chrome@v1
+      - name: Robot report
+        if: always()
+        run: |
+          rebot --expandkeywords name:* ./output.xml
+          chrome --no-sandbox --virtual-time-budget=10000 --headless --print-to-pdf=./log.pdf    ./log.html    --no-pdf-header-footer
+          chrome --no-sandbox --virtual-time-budget=10000 --headless --print-to-pdf=./report.pdf ./report.html --no-pdf-header-footer
+      - name: Save HTML log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: log_html
+          path: ./log.html
+      - name: Save HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report_html
+          path: ./report.html
+      - name: Save PDF log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: log_pdf
+          path: ./log.pdf
+      - name: Save PDF report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report_pdf
+          path: ./report.pdf
+      - name: Save test outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: output_xml
+          path: ./output.xml

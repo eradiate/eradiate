@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import os
-import typing as t
+import typing
 from abc import ABC, abstractmethod
+from io import StringIO
 from pathlib import Path
 
 import attrs
@@ -10,6 +11,8 @@ import matplotlib.pyplot as plt
 import mitsuba as mi
 import numpy as np
 import xarray as xr
+from robot.api import logger
+from scipy.stats import norm, t
 
 from .. import data
 from ..attrs import define, documented
@@ -22,33 +25,51 @@ def regression_test_plots(
     ref: np.typing.ArrayLike,
     result: np.typing.ArrayLike,
     vza: np.typing.ArrayLike,
-    filename: PathLike,
     metric: tuple[str, float],
-) -> None:
+    ref_var: t.Optional[np.typing.ArrayLike] = None,
+    result_var: t.Optional[np.typing.ArrayLike] = None,
+) -> t.Tuple[plt.Figure, t.List[t.List[plt.Axes]]]:
     """
-    Create regression test report plots.
+    Create regression test report plots. Plot errorbars if both ref_var and
+    result_var are set.
 
     Parameters
     ----------
     ref : array-like
-        BRF values for the reference data
+        Variable values for the reference data
 
     result : array-like
-        BRF values for the simulation result
+        Variable values for the simulation result
 
     vza : array-like
         VZA values for plotting
 
-    filename : path-like
-        Path to the output file for the plot
-
     metric : tuple
         A tuple of the form (metric name, value) to be added to the plots.
+
+    ref_var: array-like, optional
+        Variable variance for the reference data
+
+    result_var : array-like, optional
+        Variable variance for the simulation result
+
+    Returns
+    -------
+    figure: Figure
+        Pyplot Figure containing the report charts
+
+    axes: list
+        2x2 array of Axes included in the report Figure
     """
     fig, axes = plt.subplots(2, 2, figsize=(8, 6))
 
-    axes[0][0].plot(vza, ref, label="reference")
-    axes[0][0].plot(vza, result, label="result")
+    if ref_var is None or result_var is None:
+        axes[0][0].plot(vza, ref, label="reference")
+        axes[0][0].plot(vza, result, label="result")
+    else:
+        axes[0][0].errorbar(vza, ref, yerr=np.sqrt(ref_var), label="reference")
+        axes[0][0].errorbar(vza, result, yerr=np.sqrt(result_var), label="result")
+
     axes[0][0].set_title("Reference and test result")
     handles, labels = axes[0][0].get_legend_handles_labels()
 
@@ -62,17 +83,67 @@ def regression_test_plots(
 
     axes[0][1].set_axis_off()
     axes[0][1].legend(handles=handles, labels=labels, loc="upper center")
-    axes[0][1].text(
-        0.5, 0.5, f"{metric[0]}: {metric[1]:.4}", horizontalalignment="center"
-    )
 
-    plt.tight_layout()
-    plt.savefig(filename)
-    plt.close()
+    if metric[1] is None:
+        axes[0][1].text(
+            0.5,
+            0.5,
+            f'Metric "{metric[0]}" is not available',
+            horizontalalignment="center",
+        )
+    else:
+        axes[0][1].text(
+            0.5, 0.5, f"{metric[0]}: {metric[1]:.4}", horizontalalignment="center"
+        )
+
+    return fig, axes
+
+
+def figure_to_html(fig: plt.Figure) -> str:
+    """
+    Render a figure in HTML format
+
+    Returns a string containing the rendered HTML. The root tag is a <svg> one.
+
+    Parameters
+    ----------
+    fig : plt.Figure
+        Matplotlib figure to render in HTML.
+
+    Returns
+    -------
+    str
+        Rendered HTML <svg> tag with styling.
+    """
+
+    str_i = StringIO()
+    fig.savefig(str_i, format="svg", transparent=True, bbox_inches="tight")
+    fig.canvas.draw_idle()
+    svg = str_i.getvalue()
+
+    # Include some CSS in the SVG to render nicely in Robot report's dark and
+    # light modes
+    return "\n".join(
+        [
+            "<svg",
+            'version="1.1"',
+            'baseProfile="full"',
+            'width="810" height="540" viewBox="0 0 810 540"'
+            'xmlns="http://www.w3.org/2000/svg">',
+            "<style>",
+            "    path {",
+            "        fill: var(--text-color);",
+            "        stroke: var(--text-color);",
+            "    }",
+            "</style>",
+            svg,
+            "</svg>",
+        ]
+    )
 
 
 def reference_converter(
-    value: os.PathLike | xr.Dataset | None,
+    value: PathLike | xr.Dataset | None,
 ) -> xr.Dataset | None:
     """
     A converter for handling the reference data attribute.
@@ -109,7 +180,19 @@ def reference_converter(
         if isinstance(value, (str, os.PathLike, bytes)):
             # Try to open a file if it is directly referenced
             if os.path.isfile(value):
+                logger.info(
+                    f'Loading reference dataset "{str(value)}" from disk',
+                    also_console=True,
+                )
                 return xr.load_dataset(value)
+
+            logger.info(
+                f'Attempting to serve reference dataset "{str(value)}" from the data store',
+                also_console=True,
+            )
+            logger.info(
+                f"Fetched path: {data.data_store.fetch(value)}", also_console=True
+            )
 
             # Try to serve the file from the data store
             return data.load_dataset(value)
@@ -135,7 +218,7 @@ class RegressionTest(ABC):
     """
 
     # Name used for the reference metric. Must be set be subclasses.
-    METRIC_NAME: t.ClassVar[str | None] = None
+    METRIC_NAME: typing.ClassVar[str | None] = None
 
     name: str = documented(
         attrs.field(validator=attrs.validators.instance_of(str)),
@@ -167,6 +250,14 @@ class RegressionTest(ABC):
         type=":class:`xarray.Dataset` or None",
         init_type=":class:`xarray.Dataset` or path-like, optional",
         default="None",
+    )
+
+    variable: str = documented(
+        attrs.field(kw_only=True, default="brf_srf"),
+        doc="Tested variable",
+        type="str",
+        init_type="str",
+        default="brf_srf",
     )
 
     threshold: float = documented(
@@ -201,6 +292,9 @@ class RegressionTest(ABC):
         bool
             Result of the test criterion comparison.
         """
+
+        logger.info(f"Regression test {self.name} results:", also_console=True)
+
         fname = self.name
         ext = ".nc"
         archive_dir = os.path.abspath(self.archive_dir)
@@ -213,7 +307,10 @@ class RegressionTest(ABC):
         # if no valid reference is found, store the results as new ref and fail
         # the test
         if not self.reference:
-            print("No reference data was found! Storing test results as reference.")
+            logger.info(
+                f"No reference data was found! Storing test results as reference to {fname_reference}",
+                also_console=True,
+            )
             self._archive(self.value, fname_reference)
             self._plot(reference_only=True, metric_value=None)
             return False
@@ -221,20 +318,36 @@ class RegressionTest(ABC):
         # else (we have a reference value), evaluate the test metric
         try:
             passed, metric_value = self._evaluate()
+            logger.info(
+                "Test passed" if passed else "Test did not pass", also_console=True
+            )
+            logger.info(
+                f"Metric value: {self.METRIC_NAME} = {metric_value}", also_console=True
+            )
+            logger.info(f"Metric threshold: {self.threshold}", also_console=True)
+            logger.info(f"Variable: {self.variable}", also_console=True)
         except Exception as e:
-            print("An exception occurred during test execution!")
+            logger.info(
+                "An exception occurred during test evaluation!", also_console=True
+            )
             self._plot(reference_only=False, metric_value=None)
             raise e
 
         # we got a metric: report the results in the archive directory
+        logger.info(
+            f"Saving current output dataset to {fname_result}", also_console=True
+        )
         self._archive(self.value, fname_result)
+        logger.info(
+            f"Saving reference dataset locally to {fname_reference}", also_console=True
+        )
         self._archive(self.reference, fname_reference)
         self._plot(reference_only=False, metric_value=metric_value)
 
         return passed
 
     @abstractmethod
-    def _evaluate(self) -> tuple[bool, float]:
+    def _evaluate(self, diagnostic_chart: bool = False) -> tuple[bool, float]:
         """
         Evaluate the test results and perform a comparison to the reference
         based on the criterion defined in the specialized class.
@@ -254,7 +367,6 @@ class RegressionTest(ABC):
         Create an archive file for test result and reference storage
         """
         os.makedirs(os.path.dirname(fname_output), exist_ok=True)
-        print(f"Saving dataset to {fname_output}")
         dataset.to_netcdf(fname_output)
 
     def _plot(self, metric_value: float | None, reference_only: bool) -> None:
@@ -275,37 +387,41 @@ class RegressionTest(ABC):
         """
         vza = np.squeeze(self.value.vza.values)
 
-        if "brf_srf" in self.value.data_vars:  # Handle spectral results
-            brf = np.squeeze(self.value.brf_srf.values)
+        if self.variable == "brf_srf":  # Handle spectral results
+            val = np.squeeze(self.value.brf_srf.values)
         else:  # Handle monochromatic results
-            brf = np.squeeze(self.value.brf.values)
+            val = np.squeeze(self.value[self.variable].values)
 
         fname = self.name
         ext = ".png"
+
         archive_dir = os.path.abspath(self.archive_dir)
         fname_plot = os.path.join(archive_dir, fname + ext)
         os.makedirs(os.path.dirname(fname_plot), exist_ok=True)
-        print(f"Saving plot to {fname_plot}")
 
         if reference_only:
-            plt.figure(figsize=(8, 6))
-            plt.plot(vza, brf)
+            figure = plt.figure(figsize=(8, 6))
+            plt.plot(vza, val)
             plt.xlabel("VZA [deg]")
-            plt.ylabel("BRF in principal plane [-]")
+            plt.ylabel(f"{self.variable.upper()} in principal plane [-]")
             plt.title("Simulation result, can be used as new reference")
-            plt.tight_layout()
-            plt.savefig(fname_plot)
-            plt.close()
 
         else:
-            if "brf_srf" in self.value.data_vars:  # Handle spectral results
-                brf_ref = np.squeeze(self.reference.brf_srf.values)
+            if self.variable == "brf_srf":  # Handle spectral results
+                ref = np.squeeze(self.reference.brf_srf.values)
             else:  # Handle monochromatic results
-                brf_ref = np.squeeze(self.reference.brf.values)
+                ref = np.squeeze(self.reference[self.variable].values)
 
-            regression_test_plots(
-                brf_ref, brf, vza, fname_plot, (self.METRIC_NAME, metric_value)
+            figure, _ = regression_test_plots(
+                ref, val, vza, (self.METRIC_NAME, metric_value)
             )
+
+        html_svg = figure_to_html(figure)
+        logger.info(html_svg, html=True, also_console=False)
+        logger.info(f"Saving PNG report chart to {fname_plot}", also_console=True)
+
+        plt.savefig(fname_plot)
+        plt.close()
 
 
 @define
@@ -352,9 +468,9 @@ class Chi2Test(RegressionTest):
 
     # The algorithm is adapted from Mitsuba's testing framework.
 
-    METRIC_NAME = "p-value"
+    METRIC_NAME = "X² p-value"
 
-    def _evaluate(self) -> tuple[bool, float]:
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
         ref_np = self.reference.brf.values
 
         result_np = self.value.brf.values
@@ -377,3 +493,335 @@ class Chi2Test(RegressionTest):
         p_value = 1.0 - rlgamma(dof / 2.0, chi2val / 2.0)
 
         return p_value > self.threshold, p_value
+
+
+@define
+class IndependantStudentTTest(RegressionTest):
+    """
+    Independant Student's T-test
+    ============================
+
+    This implementation of a Student's T-test is following the assumption of
+    independance of the two groups that are tested. The bias of the mean values
+    of the two groups is assumed to be the result of chance under the null
+    hypothesis. It is a two-tailed test.
+
+    It is less sensitive to outliers than the paired Student's T-test.
+    """
+
+    METRIC_NAME = "T-test p-value"
+
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
+        if self.variable + "_var" not in self.reference:
+            raise ValueError(
+                f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+        if self.variable + "_var" not in self.value:
+            raise ValueError(
+                f"The target value for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+
+        ref_np = self.reference[self.variable].values.ravel()
+        result_np = self.value[self.variable].values.ravel()
+
+        var_ref_np = self.reference[self.variable + "_var"].values.ravel()
+        var_res_np = self.value[self.variable + "_var"].values.ravel()
+
+        # Calculate mean values over observations and associated variances
+        R_res = np.mean(result_np)
+        R_ref = np.mean(ref_np)
+        var_R_res = np.sum(var_res_np) / var_res_np.size**2
+        var_R_ref = np.sum(var_ref_np) / var_ref_np.size**2
+        bias_mean = R_res - R_ref
+
+        # Calculate T-statistic and associated degree of freedom of its
+        # T-distribution using a pooled standard deviation
+
+        s_p = np.sqrt(
+            ((var_res_np.size - 1.0) * var_R_res + (var_ref_np.size - 1.0) * var_R_ref)
+            / (var_res_np.size + var_ref_np.size - 2)
+        )
+        t_prim = bias_mean / (
+            s_p * np.sqrt(1.0 / var_res_np.size + 1.0 / var_ref_np.size)
+        )
+
+        dof = (var_res_np.size + var_ref_np.size) - 2
+
+        assert dof > 0
+
+        # Calculate p-value of the two-tailed t-test using the T distribution
+        # survival function for the null hypothesis.
+        p_value = t.sf(np.abs(t_prim), dof) * 2
+
+        passed = p_value > self.threshold
+
+        if diagnostic_chart:
+            plt.grid()
+            start, end = t.ppf(0.0001, dof), t.ppf(0.9999, dof)
+            if t_prim > start and t_prim < end:
+                fx = np.linspace(-np.abs(t_prim), np.abs(t_prim), 100)
+                fy = t(dof).pdf(fx)
+                plt.fill_between(np.zeros((100,)), fy)
+                plt.axvline(t.ppf(-self.threshold / 2.0, dof, color="red"))
+                plt.axvline(t.ppf(self.threshold / 2.0, dof, color="red"))
+            else:
+                plt.axvline(t_prim, label="T value")
+            x = np.linspace(start, end, 100)
+            y = t(dof).pdf(x)
+            plt.axvline(0.0, color="red", linestyle="--")
+            plt.title("T-statistic")
+            plt.legend(loc="upper left")
+            ax2 = plt.twinx()
+            ax2.plot(x, y, label="target T distribution form", color="black")
+            ax2.legend(loc="upper right")
+            ax2.set_ylim([0.0, max(y) * 1.1])
+            chart = render_svg_chart()
+            plt.close()
+            logger.info(chart, html=True)
+
+        logger.info(f"bias    = {bias_mean}", also_console=True)
+        logger.info(f"s_p     = {s_p}", also_console=True)
+        logger.info(f"t'      = {t_prim}", also_console=True)
+        logger.info(f"dof     = {dof}", also_console=True)
+        logger.info(f"p-value = {p_value}", also_console=True)
+        logger.info(f"alpha   = {self.threshold}", also_console=True)
+
+        return passed, p_value
+
+
+@define
+class PairedStudentTTest(RegressionTest):
+    """
+    Paired Student's T-test
+    =======================
+
+    This implementation of a Student's T-test is following the assumption of
+    paired samples within two groups that are tested. The mean of the bias
+    between the paired values is assumed to be the result of chance under the
+    null hypothesis. It is a two-tailed test.
+
+    The paired test allow to introduce a covariance factor between the pairs.
+    By default, this covariance is equal to zero, thus assuming independance of
+    the two variables.
+
+    Contrary to the independant Student's T-test, this paired version of the
+    test requires an equal degree of freedom of the two groups.
+    """
+
+    METRIC_NAME = "paired T-test p-value"
+
+    cov: np.typing.ArrayLike | float = documented(
+        attrs.field(kw_only=True, default=0.0),
+        doc="Covariance between observation, defaults to zero",
+        type=np.typing.ArrayLike | float,
+        init_type="float",
+    )
+
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
+        if self.variable + "_var" not in self.reference:
+            raise ValueError(
+                f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+        if self.variable + "_var" not in self.value:
+            raise ValueError(
+                f"The target value for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+
+        ref_np = self.reference[self.variable].values.ravel()
+        result_np = self.value[self.variable].values.ravel()
+
+        var_ref_np = self.reference[self.variable + "_var"].values.ravel()
+        var_res_np = self.value[self.variable + "_var"].values.ravel()
+
+        assert ref_np.shape == result_np.shape
+        assert ref_np.shape == var_ref_np.shape
+        assert ref_np.shape == var_res_np.shape
+
+        # Calculate paired mean value and associated variance
+        D_mean = np.mean(result_np - ref_np)
+        var_D = (var_res_np + var_ref_np) - 2 * self.cov
+        var_D_mean = np.sum(var_D) / var_D.size**2
+
+        # Calculate T-statistic and associated degree of freedom of its
+        # T-distribution
+        t_prim = D_mean / (var_D_mean / np.sqrt(var_D.size))
+        dof = var_D.size - 1
+
+        assert dof > 0
+
+        # Calculate p-value of the two-tailed t-test using the T distribution
+        # survival function for the null hypothesis.
+        p_value = t.sf(np.abs(t_prim), dof) * 2
+
+        passed = p_value > self.threshold
+
+        if diagnostic_chart:
+            plt.grid()
+            start, end = t.ppf(0.0001, dof), t.ppf(0.9999, dof)
+            if t_prim > start and t_prim < end:
+                fx = np.linspace(-np.abs(t_prim), np.abs(t_prim), 100)
+                fy = t(dof).pdf(fx)
+                plt.fill_between(np.zeros((100,)), fy)
+                plt.axvline(t.ppf(-self.threshold / 2.0, dof, color="red"))
+                plt.axvline(t.ppf(self.threshold / 2.0, dof, color="red"))
+            else:
+                plt.axvline(t_prim, label="T value")
+            x = np.linspace(start, end, 100)
+            y = t(dof).pdf(x)
+            plt.axvline(0.0, color="red", linestyle="--")
+            plt.title("T-statistic")
+            plt.legend(loc="upper left")
+            ax2 = plt.twinx()
+            ax2.plot(x, y, label="target T distribution form", color="black")
+            ax2.legend(loc="upper right")
+            ax2.set_ylim([0.0, max(y) * 1.1])
+            chart = render_svg_chart()
+            plt.close()
+            logger.info(chart, html=True)
+
+        logger.info(f"bias     = {D_mean}", also_console=True)
+        logger.info(f"var mean = {var_D_mean}", also_console=True)
+        logger.info(f"t'       = {t_prim}", also_console=True)
+        logger.info(f"dof      = {dof}", also_console=True)
+        logger.info(f"p-value  = {p_value}", also_console=True)
+        logger.info(f"alpha    = {self.threshold}", also_console=True)
+
+        return passed, p_value
+
+
+@define
+class ZTest(RegressionTest):
+    """
+    Z-Test with Šidák correction factor
+    ===================================
+
+    Implement a Z-test, testing the significance of paired differences between
+    a set of observations and a set of references. It considers the observations
+    variance.
+
+    Paired tests are aggregated into one p-value using a Šidák correction. The
+    test passes if the null hypothesis is accepted for at least 99.75% of the
+    paired Z-tests
+
+    This paired Z-test requires an equal degree of freedom of the two groups.
+    """
+
+    METRIC_NAME = "Z-test p-value"
+
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
+        if self.variable + "_var" not in self.value:
+            raise ValueError(
+                f"The target value for this Z-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+
+        ref_np = self.reference[self.variable].values.ravel()
+        result_np = self.value[self.variable].values.ravel()
+
+        var_res_np = self.value[self.variable + "_var"].values.ravel()
+
+        assert ref_np.shape == result_np.shape
+        assert ref_np.shape == var_res_np.shape
+
+        # Calculate Z-statistic
+        z = (result_np - ref_np) / np.sqrt(var_res_np)
+
+        # Calculate p-value of the two-tailed z-test null hypothesis
+        p_values = norm.sf(np.abs(z)) * 2
+
+        alpha_0 = 1.0 - (1.0 - self.threshold) ** (1.0 / result_np.size)
+        accept_null = p_values > alpha_0
+
+        passed = np.count_nonzero(accept_null) >= 0.9975 * result_np.size
+
+        if diagnostic_chart:
+            plt.grid()
+            plt.hist(z, bins=50, label="Z values")
+            x = np.linspace(-4.0, 4.0, 100)
+            y = norm.pdf(x, 0.0, 1.0)
+            plt.axvline(0.0, color="red", linestyle="--")
+            plt.title("Z-statistic")
+            plt.legend(loc="upper left")
+            ax2 = plt.twinx()
+            ax2.plot(x, y, label="target Z distribution form", color="black")
+            ax2.legend(loc="upper right")
+            ax2.set_ylim([0.0, max(y) * 1.1])
+            chart = render_svg_chart()
+            plt.close()
+            logger.info(chart, html=True)
+
+            logger.info(f"alpha_0 = {alpha_0}", also_console=True)
+
+        logger.info(f"min p-value = {min(p_values)}", also_console=True)
+        logger.info(f"max p-value = {max(p_values)}", also_console=True)
+        logger.info(
+            f"n passed    = {np.count_nonzero(accept_null)}/{0.99 * result_np.size}",
+            also_console=True,
+        )
+        logger.info(f"alpha_1     = {self.threshold}", also_console=True)
+        logger.info(f"alpha_0     = {alpha_0}", also_console=True)
+
+        return passed, min(p_values)
+
+
+@define
+class SidakTTest(RegressionTest):
+    METRIC_NAME = "Sidak T-test p-value"
+
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
+        if self.variable + "_var" not in self.reference:
+            raise ValueError(
+                f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+            )
+
+        ref_np = self.reference[self.variable].values.ravel()
+        result_np = self.value[self.variable].values.ravel()
+
+        assert ref_np.shape == result_np.shape
+
+        var_ref_np = self.reference[self.variable + "_var"].values.ravel()
+        var_res_np = self.value[self.variable + "_var"].values.ravel()
+
+        assert var_ref_np.shape == var_res_np.shape
+
+        # Calculate T-statistic
+        t_prim = (result_np - ref_np) / np.sqrt(var_res_np + var_ref_np)
+
+        # Calculate p-value of the two-tailed t-test using the T distribution
+        # survival function for the null hypothesis that there is no difference
+        # between the two mean distributions. It is assumed that the sample size
+        # is large enough for the T distribution to converge to a normal one.
+        p_values = norm.sf(np.abs(t_prim)) * 2
+
+        # Calculate the Šidák correction
+        alpha_0 = 1.0 - (1.0 - self.threshold) ** (1.0 / result_np.size)
+        accept_null = p_values > alpha_0
+
+        passed = np.count_nonzero(accept_null) >= 0.9975 * result_np.size
+
+        if diagnostic_chart:
+            plt.grid()
+            start, end = norm.ppf(0.0001), norm.ppf(0.9999)
+            plt.hist(t_prim, bins=50, label="T values")
+            x = np.linspace(start, end, 100)
+            y = norm.pdf(x)
+            plt.axvline(0.0, color="red", linestyle="--")
+            plt.title("T-statistic")
+            plt.legend(loc="upper left")
+            ax2 = plt.twinx()
+            ax2.plot(x, y, label="target T distribution form", color="black")
+            ax2.legend(loc="upper right")
+            ax2.set_ylim([0.0, max(y) * 1.1])
+            chart = render_svg_chart()
+            plt.close()
+            logger.info(chart, html=True)
+
+        logger.info(f"min p-value = {min(p_values)}", also_console=True)
+        logger.info(f"max p-value = {max(p_values)}", also_console=True)
+        logger.info(
+            f"n passed    = {np.count_nonzero(accept_null)}/{0.99 * result_np.size}",
+            also_console=True,
+        )
+        logger.info(f"alpha_1     = {self.threshold}", also_console=True)
+        logger.info(f"alpha_0     = {alpha_0}", also_console=True)
+
+        return passed, min(p_values)
