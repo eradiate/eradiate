@@ -418,6 +418,22 @@ class RegressionTest(ABC):
         plt.savefig(fname_plot)
         plt.close()
 
+    def _diagnostic_chart(self, **diagnostic_info) -> None:
+        """
+        Create an additional plot to display more technical information about
+        the test metrics and decision process. The diagnostic plot can help the
+        user debug a failing test, or to assess the test power and significance.
+
+        Parameters:
+        -----------
+        **diagnostic_info: dict
+            Variadic keyword arguments for the subclasses implementation
+        """
+
+        raise NotImplementedError(
+            f"{type(self)} does not implement a diagnostic plot method"
+        )
+
 
 @define
 class RMSETest(RegressionTest):
@@ -491,7 +507,51 @@ class Chi2Test(RegressionTest):
 
 
 @define
-class IndependantStudentTTest(RegressionTest):
+class AbstractStudentTTest(RegressionTest):
+    """
+    Abstract Student's T-Test
+    =========================
+
+    Implement diagnostic chart common to subclassing T-test implementations.
+    """
+
+    def _diagnostic_chart(self, dof=None, t_prim=None) -> None:
+        """
+        Diagnostic chart for an Independant Student's T-test
+
+        Parameters:
+        -----------
+        dof: int
+            Degrees of Freedom
+        t_prim: float
+            t' statistic issued from the test
+        """
+
+        plt.grid()
+        start, end = t.ppf(0.0001, dof), t.ppf(0.9999, dof)
+        if t_prim > start and t_prim < end:
+            fx = np.linspace(-np.abs(t_prim), np.abs(t_prim), 100)
+            fy = t(dof).pdf(fx)
+            plt.fill_between(np.zeros((100,)), fy)
+            plt.axvline(t.ppf(-self.threshold / 2.0, dof), color="red")
+            plt.axvline(t.ppf(self.threshold / 2.0, dof), color="red")
+        else:
+            plt.axvline(t_prim, label="T value")
+        x = np.linspace(start, end, 100)
+        y = t(dof).pdf(x)
+        plt.axvline(0.0, color="red", linestyle="--")
+        plt.title("T-statistic")
+        ax2 = plt.twinx()
+        ax2.plot(x, y, label="target T distribution form", color="black")
+        ax2.legend(loc="upper right")
+        ax2.set_ylim([0.0, max(y) * 1.1])
+        chart = figure_to_html(plt.gcf())
+        plt.close()
+        logger.info(chart, html=True)
+
+
+@define
+class IndependantStudentTTest(AbstractStudentTTest):
     """
     Independant Student's T-test
     ============================
@@ -551,28 +611,7 @@ class IndependantStudentTTest(RegressionTest):
         passed = p_value > self.threshold
 
         if diagnostic_chart:
-            plt.grid()
-            start, end = t.ppf(0.0001, dof), t.ppf(0.9999, dof)
-            if t_prim > start and t_prim < end:
-                fx = np.linspace(-np.abs(t_prim), np.abs(t_prim), 100)
-                fy = t(dof).pdf(fx)
-                plt.fill_between(np.zeros((100,)), fy)
-                plt.axvline(t.ppf(-self.threshold / 2.0, dof, color="red"))
-                plt.axvline(t.ppf(self.threshold / 2.0, dof, color="red"))
-            else:
-                plt.axvline(t_prim, label="T value")
-            x = np.linspace(start, end, 100)
-            y = t(dof).pdf(x)
-            plt.axvline(0.0, color="red", linestyle="--")
-            plt.title("T-statistic")
-            plt.legend(loc="upper left")
-            ax2 = plt.twinx()
-            ax2.plot(x, y, label="target T distribution form", color="black")
-            ax2.legend(loc="upper right")
-            ax2.set_ylim([0.0, max(y) * 1.1])
-            chart = render_svg_chart()
-            plt.close()
-            logger.info(chart, html=True)
+            self._diagnostic_chart(dof=dof, t_prim=t_prim)
 
         logger.info(f"bias    = {bias_mean}", also_console=True)
         logger.info(f"s_p     = {s_p}", also_console=True)
@@ -585,7 +624,7 @@ class IndependantStudentTTest(RegressionTest):
 
 
 @define
-class PairedStudentTTest(RegressionTest):
+class PairedStudentTTest(AbstractStudentTTest):
     """
     Paired Student's T-test
     =======================
@@ -651,28 +690,7 @@ class PairedStudentTTest(RegressionTest):
         passed = p_value > self.threshold
 
         if diagnostic_chart:
-            plt.grid()
-            start, end = t.ppf(0.0001, dof), t.ppf(0.9999, dof)
-            if t_prim > start and t_prim < end:
-                fx = np.linspace(-np.abs(t_prim), np.abs(t_prim), 100)
-                fy = t(dof).pdf(fx)
-                plt.fill_between(np.zeros((100,)), fy)
-                plt.axvline(t.ppf(-self.threshold / 2.0, dof, color="red"))
-                plt.axvline(t.ppf(self.threshold / 2.0, dof, color="red"))
-            else:
-                plt.axvline(t_prim, label="T value")
-            x = np.linspace(start, end, 100)
-            y = t(dof).pdf(x)
-            plt.axvline(0.0, color="red", linestyle="--")
-            plt.title("T-statistic")
-            plt.legend(loc="upper left")
-            ax2 = plt.twinx()
-            ax2.plot(x, y, label="target T distribution form", color="black")
-            ax2.legend(loc="upper right")
-            ax2.set_ylim([0.0, max(y) * 1.1])
-            chart = render_svg_chart()
-            plt.close()
-            logger.info(chart, html=True)
+            self._diagnostic_chart(dof=dof, t_prim=t_prim)
 
         logger.info(f"bias     = {D_mean}", also_console=True)
         logger.info(f"var mean = {var_D_mean}", also_console=True)
@@ -703,6 +721,31 @@ class ZTest(RegressionTest):
 
     METRIC_NAME = "Z-test p-value"
 
+    def _diagnostic_chart(self, z=None) -> None:
+        """
+        Diagnostic chart for a Z-test
+
+        Parameters:
+        -----------
+        z: array-like
+            Z-statistic for each pair of measurements
+        """
+
+        plt.grid()
+        plt.hist(z, bins=50, label="Z values")
+        x = np.linspace(-4.0, 4.0, 100)
+        y = norm.pdf(x, 0.0, 1.0)
+        plt.axvline(0.0, color="red", linestyle="--")
+        plt.title("Z-statistic")
+        plt.legend(loc="upper left")
+        ax2 = plt.twinx()
+        ax2.plot(x, y, label="target Z distribution form", color="black")
+        ax2.legend(loc="upper right")
+        ax2.set_ylim([0.0, max(y) * 1.1])
+        chart = figure_to_html(plt.gcf())
+        plt.close()
+        logger.info(chart, html=True)
+
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
         if self.variable + "_var" not in self.value:
             raise ValueError(
@@ -729,22 +772,7 @@ class ZTest(RegressionTest):
         passed = np.count_nonzero(accept_null) >= 0.9975 * result_np.size
 
         if diagnostic_chart:
-            plt.grid()
-            plt.hist(z, bins=50, label="Z values")
-            x = np.linspace(-4.0, 4.0, 100)
-            y = norm.pdf(x, 0.0, 1.0)
-            plt.axvline(0.0, color="red", linestyle="--")
-            plt.title("Z-statistic")
-            plt.legend(loc="upper left")
-            ax2 = plt.twinx()
-            ax2.plot(x, y, label="target Z distribution form", color="black")
-            ax2.legend(loc="upper right")
-            ax2.set_ylim([0.0, max(y) * 1.1])
-            chart = render_svg_chart()
-            plt.close()
-            logger.info(chart, html=True)
-
-            logger.info(f"alpha_0 = {alpha_0}", also_console=True)
+            self._diagnostic_chart(z=z)
 
         logger.info(f"min p-value = {min(p_values)}", also_console=True)
         logger.info(f"max p-value = {max(p_values)}", also_console=True)
@@ -760,12 +788,51 @@ class ZTest(RegressionTest):
 
 @define
 class SidakTTest(RegressionTest):
+    """
+    T-Test with Šidák correction factor
+    ===================================
+
+    Implement a T-test, testing the significance of paired differences between
+    a set of observations and a set of references. It considers both the
+    observations and reference variance.
+
+    Paired tests are aggregated into one p-value using a Šidák correction. The
+    test passes if the null hypothesis is accepted for at least 99.75% of the
+    paired T-tests
+    """
+
     METRIC_NAME = "Sidak T-test p-value"
+
+    def _diagnostic_chart(self, t_prim=None) -> None:
+        """
+        Diagnostic chart for the T-test
+
+        Parameters:
+        -----------
+        t_prim: array-like
+            T-statistic for each pair of measurements
+        """
+
+        plt.grid()
+        start, end = norm.ppf(0.0001), norm.ppf(0.9999)
+        plt.hist(t_prim, bins=50, label="T values")
+        x = np.linspace(start, end, 100)
+        y = norm.pdf(x)
+        plt.axvline(0.0, color="red", linestyle="--")
+        plt.title("T-statistic")
+        plt.legend(loc="upper left")
+        ax2 = plt.twinx()
+        ax2.plot(x, y, label="target T distribution form", color="black")
+        ax2.legend(loc="upper right")
+        ax2.set_ylim([0.0, max(y) * 1.1])
+        chart = figure_to_html(plt.gcf())
+        plt.close()
+        logger.info(chart, html=True)
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
         if self.variable + "_var" not in self.reference:
             raise ValueError(
-                f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+                f"The target reference for this T-test does not record the appropriate variance values, could not find the data variable {self.variable + '_var'}"
             )
 
         ref_np = self.reference[self.variable].values.ravel()
@@ -794,21 +861,7 @@ class SidakTTest(RegressionTest):
         passed = np.count_nonzero(accept_null) >= 0.9975 * result_np.size
 
         if diagnostic_chart:
-            plt.grid()
-            start, end = norm.ppf(0.0001), norm.ppf(0.9999)
-            plt.hist(t_prim, bins=50, label="T values")
-            x = np.linspace(start, end, 100)
-            y = norm.pdf(x)
-            plt.axvline(0.0, color="red", linestyle="--")
-            plt.title("T-statistic")
-            plt.legend(loc="upper left")
-            ax2 = plt.twinx()
-            ax2.plot(x, y, label="target T distribution form", color="black")
-            ax2.legend(loc="upper right")
-            ax2.set_ylim([0.0, max(y) * 1.1])
-            chart = render_svg_chart()
-            plt.close()
-            logger.info(chart, html=True)
+            self._diagnostic_chart(t_prim=t_prim)
 
         logger.info(f"min p-value = {min(p_values)}", also_console=True)
         logger.info(f"max p-value = {max(p_values)}", also_console=True)

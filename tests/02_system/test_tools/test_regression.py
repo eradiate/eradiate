@@ -222,7 +222,7 @@ def test_z_test_static_var(
 
         plt.legend()
 
-        chart = tt.render_svg_chart()
+        chart = tt.figure_to_html(plt.gcf())
         plt.close()
         logger.info(chart, html=True)
 
@@ -278,7 +278,7 @@ def test_stats_same_simulation(mode_ckd_double, test_type, spp):
     plt.xlabel("vza [degree]")
     plt.ylabel(f"radiance [{result.radiance_srf.attrs['units']}]")
     plt.legend()
-    chart = tt.render_svg_chart()
+    chart = tt.figure_to_html(plt.gcf())
     plt.close()
     logger.info(chart, html=True)
 
@@ -364,7 +364,7 @@ def test_stats_same_setup(mode_ckd_double, test_type, spp1, spp2):
     plt.xlabel("vza [degree]")
     plt.ylabel(f"radiance [{result1.radiance_srf.attrs['units']}]")
     plt.legend()
-    chart = tt.render_svg_chart()
+    chart = tt.figure_to_html(plt.gcf())
     plt.close()
     logger.info(chart, html=True)
 
