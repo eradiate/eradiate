@@ -1,10 +1,38 @@
+from functools import partial
+
 import joseki
 import numpy as np
 import pytest
 
 from .data import make_particle_dataset
+from .util import check_plugin
 from .. import data
 from .. import unit_registry as ureg
+
+
+@pytest.fixture
+def plugin_checker(request):
+    """
+    Fixture to check if a pytest plugin is loaded and enabled.
+
+    Examples
+    --------
+    In a pytest case:
+
+    >>> def test_something(plugin_checker):
+    ...     if plugin_checker("robotframework"):
+    ...         print("robotframework plugin is loaded and enabled.")
+    """
+    return partial(check_plugin, request.config)
+
+
+@pytest.fixture
+def has_robot(plugin_checker):
+    """
+    Fixture that returns ``True`` iff the robotframework plugin is loaded and
+    enabled in the current session.
+    """
+    return plugin_checker("robotframework")
 
 
 @pytest.fixture
