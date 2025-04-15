@@ -120,14 +120,37 @@ scripts = ["setpath.bat"]
 python = "3.9.*" # Used to constrain dev environment
 
 [tool.pixi.feature.test.tasks]
-test = { cmd = "pytest -p no:robotframework" }
-test-quick = { cmd = "pytest -m \"not slow and not regression\"  -p no:robotframework" }
 doctest = { cmd = "make -C docs doctest" }
-test-report = { cmd = "pytest --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow" }
-unit-report = { cmd = "pytest --robot-tagstatinclude unit --robot-tagstatinclude slow -m unit" }
-system-report = { cmd = "pytest --robot-tagstatinclude system --robot-tagstatinclude slow -m system" }
-regression-report = { cmd = "pytest --robot-tagstatinclude regression --robot-tagstatinclude slow -m regression" }
-slow-report = { cmd = "pytest --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow -m slow" }
+test = { cmd = "pytest" }
+test-quick = { cmd = "pytest -m \"not slow and not regression\"" }
+test-report = { cmd = """
+  pytest -p robotframework
+    --robot-tagstatinclude unit
+    --robot-tagstatinclude system
+    --robot-tagstatinclude regression
+    --robot-tagstatinclude slow
+""" }
+test-unit-report = { cmd = """
+  pytest -p robotframework
+    --robot-tagstatinclude unit
+    --robot-tagstatinclude slow -m unit""" }
+test-system-report = { cmd = """
+  pytest -p robotframework
+    --robot-tagstatinclude system
+    --robot-tagstatinclude slow -m system
+""" }
+test-regression-report = { cmd = """
+  pytest -p robotframework
+    --robot-tagstatinclude regression
+    --robot-tagstatinclude slow -m regression
+""" }
+test-slow-report = { cmd = """
+  pytest -p robotframework
+    --robot-tagstatinclude unit
+    --robot-tagstatinclude system
+    --robot-tagstatinclude regression
+    --robot-tagstatinclude slow -m slow
+""" }
 
 [tool.pixi.feature.docs.tasks]
 docs = { cmd = "make -C docs html && echo \"Documentation index at docs/_build/html/index.html\"" }
@@ -166,6 +189,7 @@ dev = { features = [
 ], solve-group = "default" }
 
 [tool.pytest.ini_options]
+addopts = "-p no:robotframework"
 filterwarnings = [
   "error",
   # Remove the following when environment issues are solved
