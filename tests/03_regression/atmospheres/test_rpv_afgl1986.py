@@ -33,6 +33,7 @@ def test_rpv_afgl1986_brfpp(
     test = Chi2Test(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986.nc",
         value=result,
+        variable="brf",
         reference="tests/regression_test_references/rpv_afgl1986_brfpp_ref.nc",
         threshold=0.05,
         archive_dir=artefact_dir,

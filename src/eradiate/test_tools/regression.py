@@ -385,11 +385,7 @@ class RegressionTest(ABC):
             data.
         """
         vza = np.squeeze(self.value.vza.values)
-
-        if self.variable == "brf_srf":  # Handle spectral results
-            val = np.squeeze(self.value.brf_srf.values)
-        else:  # Handle monochromatic results
-            val = np.squeeze(self.value[self.variable].values)
+        val = np.squeeze(self.value[self.variable].values)
 
         fname = self.name
         ext = ".png"
@@ -406,10 +402,7 @@ class RegressionTest(ABC):
             plt.title("Simulation result, can be used as new reference")
 
         else:
-            if self.variable == "brf_srf":  # Handle spectral results
-                ref = np.squeeze(self.reference.brf_srf.values)
-            else:  # Handle monochromatic results
-                ref = np.squeeze(self.reference[self.variable].values)
+            ref = np.squeeze(self.reference[self.variable].values)
 
             figure, _ = regression_test_plots(
                 ref, val, vza, (self.METRIC_NAME, metric_value)
