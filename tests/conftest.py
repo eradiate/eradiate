@@ -7,17 +7,7 @@ import eradiate
 
 mpl.use("Agg")
 eradiate.plot.set_style()
-# Required for HTML rendering in Robot
-mpl.rcParams["legend.framealpha"] = 0.15
-
-
-# ------------------------------------------------------------------------------
-#                      Robot Configuration and fixtures
-# ------------------------------------------------------------------------------
-
-
-# Load necessary robot plugin for pytest interoperability
-pytest_plugins = ("robotframework",)
+mpl.rcParams["legend.framealpha"] = 0.15  # Required for HTML rendering in Robot
 
 
 # ------------------------------------------------------------------------------
