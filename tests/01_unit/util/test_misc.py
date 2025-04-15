@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from robot.api import logger
 
 import eradiate
 from eradiate import unit_registry as ureg
@@ -108,7 +107,7 @@ def test_cache_by_id(capsys):
     # Function
     @cache_by_id
     def f(x, y):
-        logger.info("Calling f", also_console=True)
+        print("Calling f")
         return x, y
 
     assert f(1, 1) == (1, 1)
@@ -129,7 +128,7 @@ def test_cache_by_id(capsys):
     class MyClass:
         @cache_by_id
         def f(self, x, y):
-            logger.info("Calling f", also_console=True)
+            print("Calling f")
             return x, y
 
     obj = MyClass()
