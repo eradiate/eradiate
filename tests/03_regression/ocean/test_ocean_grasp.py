@@ -43,6 +43,7 @@ def test_ocean_grasp_coastal_no_atm(mode_mono_double, artefact_dir, session_time
             reference=ref.sel(w=w),
             threshold=0.05,
             archive_dir=artefact_dir,
+            variable="brf",
         )
 
         assert test.run()
@@ -80,6 +81,7 @@ def test_ocean_grasp_open_no_atm(mode_mono_double, artefact_dir, session_timesta
             reference=ref.sel(w=w),
             threshold=0.05,
             archive_dir=artefact_dir,
+            variable="brf",
         )
 
         assert test.run()
@@ -117,6 +119,7 @@ def test_ocean_grasp_open_atm(mode_mono_double, artefact_dir, session_timestamp)
             reference=ref.sel(w=w),
             threshold=0.05,
             archive_dir=artefact_dir,
+            variable="brf",
         )
 
         assert test.run()
