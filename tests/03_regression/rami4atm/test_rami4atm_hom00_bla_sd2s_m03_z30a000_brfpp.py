@@ -45,6 +45,7 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
         ),
         threshold=0.05,
         archive_dir=artefact_dir,
+        variable="brf_srf",
     )
 
     assert test.run()

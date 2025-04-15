@@ -35,6 +35,7 @@ def test_het06_brfpp(mode_mono_double, artefact_dir, session_timestamp):
         reference="tests/regression_test_references/het06_brfpp_ref.nc",
         threshold=0.05,
         archive_dir=artefact_dir,
+        variable="brf",
     )
 
     assert test.run()
