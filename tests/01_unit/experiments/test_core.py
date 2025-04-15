@@ -1,6 +1,7 @@
 import pytest
 import xarray as xr
 
+import eradiate
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.experiments._core import MeasureRegistry
 from eradiate.units import unit_registry as ureg
