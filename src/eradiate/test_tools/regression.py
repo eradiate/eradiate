@@ -317,14 +317,16 @@ class RegressionTest(ABC):
         # else (we have a reference value), evaluate the test metric
         try:
             passed, metric_value = self._evaluate()
-            logger.info(
-                "Test passed" if passed else "Test did not pass", also_console=True
+            msg = "\n".join(
+                [
+                    "Test passed" if passed else "Test did not pass",
+                    f"Metric value: {self.METRIC_NAME} = {metric_value}",
+                    f"Metric threshold: {self.threshold}",
+                    f"Variable: {self.variable}",
+                ]
             )
-            logger.info(
-                f"Metric value: {self.METRIC_NAME} = {metric_value}", also_console=True
-            )
-            logger.info(f"Metric threshold: {self.threshold}", also_console=True)
-            logger.info(f"Variable: {self.variable}", also_console=True)
+            logger.info(msg, also_console=True)
+
         except Exception as e:
             logger.info(
                 "An exception occurred during test evaluation!", also_console=True
