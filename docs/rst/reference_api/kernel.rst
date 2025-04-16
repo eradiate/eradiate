@@ -20,6 +20,7 @@ Mitsuba scene templating
    SceneParameter
    SearchSceneParameter
    KernelSceneParameterMap
+   KernelSceneParameterFlags
    dict_parameter
    scene_parameter
 
