@@ -98,7 +98,8 @@ method, which performs the following steps:
 3. Load the :term:`kernel scene`.
 4. Perform a parametric loop. For each :term:`kernel context` of the experiment:
 
-   1. Render the :class:`.KernelSceneParameterMap` into a :term:`scene parameter map`.
+   1. Render the :class:`.KernelSceneParameterMap` template into a
+      :term:`kernel scene parameter map`.
    2. Update the kernel scene with the computed scene parameter map.
    3. Launch a :term:`radiometric computation` with the updated scene.
    4. Collect the raw results and store them in a simple data structure.
@@ -110,9 +111,9 @@ Step 4 of the :meth:`.Experiment.process` is implemented by the
 :func:`.mi_render` function. It manipulates an instance of the
 :class:`.MitsubaObjectWrapper` which encapsulates a Mitsuba scene alongside
 its :term:`scene parameters <Mitsuba scene parameters>`
-and an :term:`update map template <parameter update map template>` and makes a
-Mitsuba scene update and render for each :term:`kernel context` it gets as
-argument.
+and an :term:`scene parameter map template <kernel scene parameter map template>`
+and makes a Mitsuba scene update and render for each :term:`kernel context` it
+gets as argument.
 
 The :class:`.MitsubaObjectWrapper` instance should be obtained by traversing a
 Mitsuba object (typically a :class:`mitsuba.Scene` with the :func:`.mi_traverse`

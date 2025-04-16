@@ -41,6 +41,9 @@ class DictParameter:
 
 
 class KernelSceneParameterFlags(enum.Flag):
+    """A set of flags characterizing the various parameters present in an
+    Eradiate scene."""
+
     NONE = 0
     SPECTRAL = enum.auto()  #: Has a spectral dependence
     GEOMETRIC = (
