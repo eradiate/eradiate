@@ -4,25 +4,54 @@ on:
   workflow_dispatch:
   pull_request:
 
+env:
+  CC: clang-17
+  CXX: clang++-17
+  ERADIATE_SOURCE_DIR: ${{ github.workspace }}
+  PYTHONPATH: ${{ github.workspace }}/ext/mitsuba/build/python
+
 jobs:
   robot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
       - name: Install Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install chrome
+        uses: browser-actions/setup-chrome@v1
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install .[kernel,doc,recommended,test,dev]
+          pip install .[doc,recommended,test,dev]
+      - name: Get kernel hash
+        run: |
+          cd ext/mitsuba
+          echo "MITSUBA_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: Cache kernel build
+        uses: actions/cache@v4
+        with:
+          path: ext/mitsuba/build
+          key:
+            mitsuba-${{ env.MITSUBA_HASH }}-${{ env.CACHE_NUMBER}}
+        env:
+          CACHE_NUMBER: 0
+        id: cache
+      - name: Build kernel
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          cmake -S ext/mitsuba -B ext/mitsuba/build -DCMAKE_BUILD_TYPE=Release -GNinja --preset eradiate
+          cmake --build ext/mitsuba/build
+      - name: Download datasets
+        run: |
+          eradiate data fetch minimal
+          eradiate data fetch komodo
       - name: Run fast tests
         run: |
-          pytest tests --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow -m "not slow"
-      - name: Setup chrome
-        if: always()
-        uses: browser-actions/setup-chrome@v1
+          pytest -p robotframework --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow -m "not slow" ./tests
       - name: Robot report
         if: always()
         run: |
