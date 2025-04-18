@@ -12,7 +12,7 @@ env:
 
 jobs:
   robot:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ars, ubuntu_x86_64]
     steps:
       - uses: actions/checkout@v4
         with:
