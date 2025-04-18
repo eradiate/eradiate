@@ -197,7 +197,7 @@ filterwarnings = [
   # Remove the following when transition to NumPy 2 is complete
   "ignore:numpy.core is deprecated and has been renamed to numpy._core.",
   # Remove the warnings coming from deprecated usage of utcnow in Joseki
-  "ignore:.*utcnow.*:DeprecationWarning:joseki:19",
+  "ignore:.*utcnow.*:DeprecationWarning",
 ]
 markers = ["unit", "system", "regression"]
 testpaths = "tests"
