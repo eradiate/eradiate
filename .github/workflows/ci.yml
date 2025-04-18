@@ -48,7 +48,9 @@ jobs:
       - name: Download datasets
         run: |
           eradiate data fetch minimal
+          eradiate data fetch monotropa
           eradiate data fetch komodo
+          eradiate data fetch gecko
       - name: Run fast tests
         run: |
           pytest -p robotframework --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow -m "not slow" ./tests
