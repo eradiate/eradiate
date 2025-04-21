@@ -6,30 +6,20 @@ from eradiate.experiments import AtmosphereExperiment
 
 def create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp():
     r"""
-    RAMI4ATM HOM00_BLA_SD2S_M03
-    ===========================
+    *RAMI4ATM HOM00_BLA_SD2S_M03*
 
-    Rationale
-    ---------
-    This test case uses a basic atmospheric scene:
+    This scenario is based on the ``HOM00_BLA_SD2S_M03_z30a000-brfpp`` scenario
+    of the RAMI4ATM benchmark.
 
-    * black surface
-    * Molecular atmosphere following the AFGL 1986 model
-    * Aerosol layer at 1km elevation
+    *Scene setup*
 
-    Parameters
-
-    * Atmosphere: molecular atmosphere using the AFGL 1986 profile
-      (U.S. standard)
-    * Aerosol layer: uniform, covers [0, 2] km extent, :math:`\tau_{500} = 0.2`;
-      radiative properties from the ``govaerts_2021-desert`` dataset
-    * Surface: black
-    * Illumination: directional illumination with a zenith angle
-      :math:`\theta = 30°`
-    * Measure: distant measure, covering the principal plane for
-      :math:`\theta \in [-75, 75]°`
+    - Geometry: 1D plane-parallel
+    - Atmosphere: Molecular atmosphere using the AFGL 1986 (U.S. Standard) profile
+    - Aerosol layer: Uniform layer ranging from 0 km to 2 km, with AOT at 550 nm = 0.5; aerosol dataset ``govaerts_2021-desert``
+    - Surface: Black
+    - Illumination: Directional illumination with a zenith angle of 30°
+    - Sensor: Multi-distant measure covering the principal plane, from -75° to 75° with 2° increments, delta SRF positioned at λ = 550 nm
     """
-
     config = {
         "surface": {
             "reflectance": {"value": 0.0, "type": "uniform"},

@@ -6,7 +6,7 @@ from eradiate.units import unit_registry as ureg
 
 
 def fetch_het01_brfpp():
-    r"""
+    """
     Fetches data necessary for test case het01_brfpp.
     Note that this function can be used to prefetch data
     before running a test case.
@@ -29,28 +29,20 @@ def fetch_het01_brfpp():
 
 
 def create_het01_brfpp(prefetched_data=None):
-    r"""
-    Floating spheres (HET01)
-    ========================
+    """
+    *ROMC HET01 (floating spheres)*
 
-    Rationale
-    ---------
+    *Scene setup*
 
-    This test case implements a basic canopy scene:
-
-    * Surface with lambertian reflectance
-    * No atmosphere
-    * Three dimensional canopy
-
-    Parameters
-
-    * Surface: Square surface with labmertian BSDF with :math:`r = 0.159`
-    * Canopy: Floating spheres made up of disks with bilambertian bsdf model
-      Leaf reflectance is 0.4957, transmittance is 0.4409.
-      Disk and sphere positioning follow the HET01 scenario of the RAMI-3 benchmark
-    * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
-    * Sensor: Distant reflectance measure, covering a plane, (76 angular points)
-
+    - Surface: Lambertian BSDF with r = 0.159.
+    - Canopy:
+      (a) Floating spheres made up of disks with bilambertian BSDF model;
+      leaf reflectance 0.4957, transmittance 0.4409.
+      (b) Disk and sphere positions follow the HET01 scenario of the RAMI-3
+      benchmark.
+    - Illumination: Directional illumination with a zenith angle of 20°.
+    - Sensor: Multi-distant measure covering the principal plane,
+      from -75° to 75° with 2° increments, delta SRF positioned at λ = 550 nm.
     """
     if prefetched_data is None:
         prefetched_data = fetch_het01_brfpp()
@@ -107,7 +99,7 @@ def create_het01_brfpp(prefetched_data=None):
 
 
 def fetch_het04a1_brfpp():
-    r"""
+    """
     Fetches data necessary for test case het04_brfpp.
     Note that this function can be used to prefetch data
     before running a test case.
@@ -137,40 +129,27 @@ def fetch_het04a1_brfpp():
 
 
 def create_het04a1_brfpp(prefetched_data=None):
-    r"""
-    Real zoom in (HET04a1)
-    ======================
-
-    This is a regression test, which compares the simulation results of the
-    current branch to an older reference version.
-
-    Rationale
-    ---------
-
-    This test case implements a basic canopy scene:
-
-    * Surface with lambertian reflectance
-    * No atmosphere
-    * Three dimensional canopy
-
-    Parameters
-
-    * Surface: Square surface with labmertian BSDF with :math:`r = 0.15`
-    * Canopy:
-
-      * Floating spheres made up of disks with bilambertian bsdf model.
-        Leaf reflectance is 0.49, transmittance is 0.41.
-      * Floating cylinders made up of disks with bilambertian bsdf model.
-        Leaf reflectance is 0.45, transmittance is 0.43.
-
-      Disk, sphere and cylinder positioning follow the HET04 scenario of the
-      RAMI-3 benchmark.
-    * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
-    * Sensor: Distant reflectance measure, covering a plane, (76 angular points).
-      This test implements the variant a1 of the HET04
-      scenario, in which the entire scene is targeted by the sensor.
-
     """
+    *ROMC HET04a1 (Real zoom in)*
+
+    This test implements variant a1 of the HET04 scenario, in which the entire
+    scene is targeted by the sensor.
+
+    *Scene setup*
+
+    - Surface: Lambertian BSDF with r = 0.15
+    - Canopy:
+      (a) Floating spheres made up of disks with bilambertian bsdf model;
+      leaf reflectance 0.49, transmittance 0.41.
+      (b) Floating cylinders made up of disks with bilambertian bsdf model;
+      leaf reflectance 0.45, transmittance 0.43.
+      (c) Disk, sphere and cylinder positioning follow the HET04 scenario of the
+      RAMI-3 benchmark.
+    - Illumination: Directional illumination with a zenith angle of 20°.
+    - Sensor: Multi-distant measure covering the principal plane, from -75° to
+      75° with 2° increments, delta SRF positioned at λ = 550 nm.
+    """
+    assert False
 
     if prefetched_data is None:
         prefetched_data = fetch_het04a1_brfpp()
@@ -241,7 +220,7 @@ def create_het04a1_brfpp(prefetched_data=None):
 
 
 def fetch_het06_brfpp():
-    r"""
+    """
     Fetches data necessary for test case het04_brfpp.
     Note that this function can be used to prefetch data
     before running a test case.
@@ -262,36 +241,19 @@ def fetch_het06_brfpp():
 
 
 def create_het06_brfpp(prefetched_data=None):
-    r"""
-    Coniferous forest (HET06)
-    =========================
+    """
+    *ROMC HET06 (Coniferous forest)*
 
-    This is a regression test, which compares the simulation results of the
-    current branch to an older reference version.
+    *Scene setup*
 
-    Rationale
-    ---------
-
-    This test case implements a basic canopy scene:
-
-    * Surface with lambertian reflectance
-    * No atmosphere
-    * Three dimensional canopy
-
-    Parameters
-
-    * Surface: Square surface with labmertian BSDF with :math:`r = 0.86`
-    * Canopy: Coniferous trees made up of a conical leaf cloud and a cylindrical
-      trunk.
-
-      * Leaf reflectance: 0.08
-      * Leaf transmittance: 0.03
-      * Trunk reflectance: 0.14
-
-      Disk and tree positioning follow the HET06 scenario of the RAMI-3 benchmark
-    * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
-    * Sensor: Distant reflectance measure, covering a plane, (76 angular points).
-
+    - Surface: Lambertian BSDF with r = 0.86.
+    - Canopy: Coniferous trees made up of a conical leaf cloud and a cylindrical
+      trunk (leaf reflectance: 0.08; leaf transmittance: 0.03; trunk
+      reflectance: 0.14). Disk and tree positioning follow the HET06 scenario of
+      the RAMI-3 benchmark.
+    - Illumination: Directional illumination with a zenith angle of 20°.
+    - Sensor: Multi-distant measure covering the principal plane, from -75° to
+      75° with 2° increments, delta SRF positioned at λ = 550 nm.
     """
 
     if prefetched_data is None:

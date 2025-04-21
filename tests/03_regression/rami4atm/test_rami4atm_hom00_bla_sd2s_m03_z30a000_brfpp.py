@@ -9,28 +9,22 @@ from eradiate.test_tools.test_cases.rami4atm import (
 from eradiate.test_tools.util import append_doc
 
 
-@append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp)
+@append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp, prepend=True)
 @pytest.mark.regression
 def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
     mode_ckd_double, artefact_dir, session_timestamp
 ):
     r"""
-    RAMI4ATM HOM00_BLA_SD2S_M03 regression test
-    ===========================================
+    *Expected behaviour*
 
-    This regression test uses the ``HOM00_BLA_SD2S_M03_z30a000-brfpp`` scenario
-    of the RAMI4ATM benchmark. The reference solution is trusted and compared
-    against the libRadtran and RTMOM radiative transfer models.
-
-    Expected behaviour
-    ------------------
-    This test uses the Chi-squared criterion with a threshold of 0.05.
-
+    Simulation results are compared to a reference obtained with a prior
+    version. The reference was compared against the libRadtran and RTMOM
+    radiative transfer models. Comparison is done with a chi-squared test with
+    a threshold of 0.05.
     """
 
     exp = create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp()
     result = eradiate.run(exp)
-
     logger.info(result._repr_html_(), html=True)
 
     test = Chi2Test(

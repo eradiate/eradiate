@@ -38,9 +38,9 @@ def test_converter(mode_mono, tested, expected):
 
     if isinstance(expected, UniformSpectrum):
         s = spectrum_factory.converter("radiance")(tested)
-        assert (s.quantity == expected.quantity) and (
-            s.value == expected.value
-        ), f"Failed: converted value is {s}"
+        assert (s.quantity == expected.quantity) and (s.value == expected.value), (
+            f"Failed: converted value is {s}"
+        )
 
     elif issubclass(expected, Exception):
         with pytest.raises(expected):

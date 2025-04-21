@@ -7,23 +7,16 @@ from eradiate.test_tools.test_cases.romc import create_het01_brfpp
 from eradiate.test_tools.util import append_doc
 
 
-@append_doc(create_het01_brfpp)
+@append_doc(create_het01_brfpp, prepend=True)
 @pytest.mark.regression
 def test_het01_brfpp(mode_mono_double, artefact_dir, session_timestamp):
-    r"""
-    Floating spheres (HET01) regression test
-    ========================================
-
-    This is a regression test, which compares the simulation results of the
-    current branch to an older reference version.
-
-    Expected behaviour
-    ------------------
-
-    This test uses the Chi-squared criterion with a threshold of 0.05.
-
     """
+    *Expected behaviour*
 
+    Simulation results are compared to a reference obtained with a prior
+    version and validated with ROMC. Comparison is done with a chi-squared test
+    with a threshold of 0.05.
+    """
     exp = create_het01_brfpp()
     result = eradiate.run(exp)
 

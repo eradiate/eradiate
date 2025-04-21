@@ -9,7 +9,7 @@ from eradiate.test_tools.test_cases.atmospheres import (
 from eradiate.test_tools.util import append_doc
 
 
-@append_doc(create_rpv_afgl1986_continental_brfpp)
+@append_doc(create_rpv_afgl1986_continental_brfpp, prepend=True)
 @pytest.mark.regression
 def test_rpv_afgl1986_continental_brfpp(
     mode_ckd_double,
@@ -17,25 +17,17 @@ def test_rpv_afgl1986_continental_brfpp(
     session_timestamp,
     absorption_database_error_handler_config,
 ):
-    r"""
-    RPV AFGL1986 Aerosol regression test
-    ====================================
-
-    This is a regression test, which compares the simulation results of the
-    current branch to an older reference version.
-
-    Expected behaviour
-    ------------------
-
-    This test uses the Chi-squared criterion with a threshold of 0.05.
-
     """
+    *Expected behaviour*
 
+    Simulation results are compared to a reference obtained with a prior
+    version. Comparison is done with a chi-squared test with a threshold of
+    0.05.
+    """
     exp = create_rpv_afgl1986_continental_brfpp(
         absorption_database_error_handler_config
     )
     result = eradiate.run(exp, spp=10000)
-
     logger.info(result._repr_html_(), html=True)
 
     test = Chi2Test(
