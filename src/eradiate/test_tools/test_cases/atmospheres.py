@@ -30,27 +30,16 @@ def absorption_database_error_handler_config():
 
 def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_config):
     r"""
-    RPV AFGL1986 Aerosol
-    ====================
+    *RPV AFGL1986 Aerosol*
 
-    Rationale
-    ---------
+    *Scene setup*
 
-    This test case uses a basic atmospheric scene:
-
-    * RPV surface emulating a canopy
-    * Molecular atmosphere following the AFGL 1986 model
-    * Aerosol layer at 1km elevation
-
-    Parameters
-
-    * Atmosphere: Molecular atmosphere using the agfl1986 profile
-    * Aerosol layer: 16 layers from 1km to 2km height, :math:`\tau_{500} = 0.5`
-      Radiative properties from the Govaerts 2021 Continental dataset
-    * Surface: Square surface with RPV BSDF with :math:`k = 0.95`, :math:`g = -0.1`
-      and :math:`\rho_0 = 0.027685`
-    * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
-    * Sensor: Distant reflectance measure, covering a plane, (76 angular points)
+    - Geometry: 1D plane-parallel
+    - Atmosphere: Molecular atmosphere using the AFGL 1986 (U.S. Standard) profile
+    - Aerosol layer: Uniform layer ranging from 1 km to 2 km, with AOT at 550 nm = 0.5; aerosol dataset ``govaerts_2021-continental``
+    - Surface: RPV BSDF with k = 0.95, g = -0.1, and ρ₀ = 0.027685 (vegetated canopy)
+    - Illumination: Directional illumination with a zenith angle of 20°
+    - Sensor: Multi-distant measure covering the principal plane, from -75° to 75° with 2° increments, delta SRF positioned at λ = 550 nm
     """
 
     return AtmosphereExperiment(
@@ -65,7 +54,7 @@ def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_conf
             "construct": "hplane",
             "azimuth": 0.0,
             "zeniths": np.arange(-75.0, 75.01, 2.0),
-            "srf": {"type": "multi_delta", "wavelengths": 550 * ureg.nm},
+            "srf": {"type": "delta", "wavelengths": 550 * ureg.nm},
         },
         atmosphere={
             "type": "heterogeneous",
@@ -92,24 +81,15 @@ def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_conf
 
 def create_rpv_afgl1986_brfpp(absorption_database_error_handler_config):
     r"""
-    RPV AFGL1986
-    ============
+    *RPV AFGL1986*
 
-    Rationale
-    ---------
+    *Scene setup*
 
-    This test case uses a basic atmospheric scene:
-
-    * RPV surface emulating a canopy
-    * Molecular atmosphere following the AFGL 1986 model
-
-    Parameters
-
-    * Atmosphere: Molecular atmosphere using the agfl1986 profile
-    * Surface: Square surface with RPV BSDF with :math:`k = 0.95`, :math:`g = -0.1`
-      and :math:`\rho_0 = 0.027685`
-    * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
-    * Sensor: Distant reflectance measure, covering a plane, (76 angular points)
+    - Geometry: 1D plane-parallel
+    - Atmosphere: Molecular atmosphere using the AFGL 1986 (U.S. Standard) profile
+    - Surface: RPV BSDF with k = 0.95, g = -0.1, and ρ₀ = 0.027685 (vegetated canopy)
+    - Illumination: Directional illumination with a zenith angle of 20°
+    - Sensor: Multi-distant measure covering the principal plane, from -75° to 75° with 2° increments, delta SRF positioned at λ = 550 nm
     """
     return AtmosphereExperiment(
         surface={"type": "rpv", "k": 0.95, "g": -0.1, "rho_0": 0.027685},
@@ -124,7 +104,7 @@ def create_rpv_afgl1986_brfpp(absorption_database_error_handler_config):
                 "construct": "hplane",
                 "azimuth": 0.0,
                 "zeniths": np.arange(-75.0, 75.01, 2.0),
-                "srf": {"type": "multi_delta", "wavelengths": 550 * ureg.nm},
+                "srf": {"type": "delta", "wavelengths": 550 * ureg.nm},
             }
         ],
         atmosphere={

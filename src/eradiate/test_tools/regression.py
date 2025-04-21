@@ -60,7 +60,7 @@ def regression_test_plots(
     axes: list
         2x2 array of Axes included in the report Figure
     """
-    fig, axes = plt.subplots(2, 2, figsize=(8, 6))
+    fig, axes = plt.subplots(2, 2, figsize=(8, 6), layout="constrained")
 
     if ref_var is None or result_var is None:
         axes[0][0].plot(vza, ref, label="reference")

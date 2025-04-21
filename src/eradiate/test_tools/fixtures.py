@@ -1,3 +1,8 @@
+"""
+Eradiate-specific pytest fixtures, imported automatically upon starting a pytest
+session (see ``conftest.py``).
+"""
+
 from functools import partial
 
 import joseki
