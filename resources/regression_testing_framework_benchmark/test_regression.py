@@ -70,7 +70,6 @@ def _generate_antithetic_normal(mean=0, std=1, n=11):
         (1024, 1024),
     ],
 )
-@pytest.mark.slow
 def test_t_test_static_var(
     mean_ref,
     mean_obs,
@@ -157,7 +156,6 @@ def test_t_test_static_var(
         (4096, 4096),
     ],
 )
-@pytest.mark.slow
 def test_z_test_static_var(
     mean_ref,
     mean_obs,
@@ -230,7 +228,6 @@ def test_z_test_static_var(
 
 
 @append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp)
-@pytest.mark.slow
 @pytest.mark.parametrize(
     "spp",
     [64],
@@ -301,7 +298,6 @@ def test_stats_same_simulation(mode_ckd_double, test_type, spp):
 
 
 @append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp)
-@pytest.mark.slow
 @pytest.mark.parametrize(
     "spp1, spp2",
     [(1024, 10000), (4096, 10000)],
@@ -386,7 +382,6 @@ def test_stats_same_setup(mode_ckd_double, test_type, spp1, spp2):
 
 
 @append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp)
-@pytest.mark.slow
 @pytest.mark.parametrize("bias", [0.005, 0.01, 0.02, 0.03])
 @pytest.mark.parametrize(
     "test_type",  # Only these two test types implement a set of statistical
