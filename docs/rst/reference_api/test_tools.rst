@@ -29,7 +29,11 @@
    RegressionTest
    RMSETest
    Chi2Test
-
+   AbstractStudentTTest
+   IndependantStudentTTest
+   PairedStudentTTest
+   ZTest
+   SidakTTest
 
 ``eradiate.test_tools.types``
 ----------------------------------
