@@ -43,8 +43,7 @@ class RPVBSDF(BSDF):
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Amplitude parameter. Must be dimensionless. "
-        "Should be in :math:`[0, 1]`.",
+        doc="Amplitude parameter. Must be dimensionless. Should be in :math:`[0, 1]`.",
         type=".Spectrum",
         init_type=".Spectrum or dict or float, optional",
         default="0.183",
@@ -80,8 +79,7 @@ class RPVBSDF(BSDF):
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Bowl-shape parameter. Must be dimensionless. "
-        "Should be in :math:`[0, 2]`.",
+        doc="Bowl-shape parameter. Must be dimensionless. Should be in :math:`[0, 2]`.",
         type=".Spectrum",
         init_type=".Spectrum or dict or float, optional",
         default="0.780",
@@ -96,8 +94,7 @@ class RPVBSDF(BSDF):
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Asymmetry parameter. Must be dimensionless. "
-        "Should be in :math:`[-1, 1]`.",
+        doc="Asymmetry parameter. Must be dimensionless. Should be in :math:`[-1, 1]`.",
         type=".Spectrum",
         init_type=".Spectrum or dict or float, optional",
         default="-0.1",

@@ -31,8 +31,7 @@ class HenyeyGreensteinPhaseFunction(PhaseFunction):
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Asymmetry parameter. Must be dimensionless. "
-        "Must be in :math:`]-1, 1[`.",
+        doc="Asymmetry parameter. Must be dimensionless. Must be in :math:`]-1, 1[`.",
         type=":class:`.Spectrum`",
         init_type=":class:`.Spectrum` or dict or float, optional",
         default="0.0",

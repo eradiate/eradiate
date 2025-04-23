@@ -189,8 +189,7 @@ def _numpy_formatter(cls_doc: str, field_docs: dict[str, _FieldDoc]) -> str:
                 if not field_doc_brief.endswith("."):
                     field_doc_brief += "."
                 attr_docstrings.append(
-                    f"{field_name} : {type_doc}\n"
-                    f"{indent(field_doc_brief, '    ')}\n"
+                    f"{field_name} : {type_doc}\n{indent(field_doc_brief, '    ')}\n"
                 )
 
     # Assemble entries
@@ -371,9 +370,7 @@ def get_doc(
     try:
         return attrs.fields_dict(cls)[attrib].metadata[key]
     except KeyError:
-        raise ValueError(
-            f"{cls.__name__}.{attrib} has no documented field " f"'{field}'"
-        )
+        raise ValueError(f"{cls.__name__}.{attrib} has no documented field '{field}'")
 
     # This is very unlikely to happen, but just in case, we raise
     raise RuntimeError
