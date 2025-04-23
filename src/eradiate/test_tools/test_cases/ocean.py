@@ -136,6 +136,9 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmoshphere=False
             "toa_altitude": 40 * ureg.km,
         },
         "atmosphere": atmosphere,
+        "integrator": {"type": "piecewise_volpath", "moment": True}
+        if has_atmoshphere
+        else {"type": "volpath", "moment": True},
     }
 
     return AtmosphereExperiment(**config)

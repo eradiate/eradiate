@@ -73,6 +73,7 @@ def create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp():
             "type": "gauss_legendre",
             "ng_max": 16,
         },
+        "integrator": {"type": "piecewise_volpath", "moment": True},
     }
 
     return AtmosphereExperiment(**config)
