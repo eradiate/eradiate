@@ -6,14 +6,24 @@ import pytest
 import eradiate
 
 
+@pytest.fixture(scope="function")
+def mi_loglevel_notset():
+    """
+    Temporarily set the 'mitsuba' Python logger level to NOTSET.
+    """
+    eradiate.kernel.install_logging()
+    old_loglevel = logging.getLogger("mitsuba").level
+    logging.getLogger("mitsuba").setLevel(logging.NOTSET)
+    yield
+    logging.getLogger("mitsuba").setLevel(old_loglevel)
+
+
 def test_logging_setup(mode_mono):
     eradiate.kernel.install_logging()
     assert eradiate.kernel.logging.mi_logger is eradiate.kernel.logging._get_logger()
 
 
-def test_logging_mitsuba(mode_mono, caplog):
-    eradiate.kernel.install_logging()
-
+def test_logging_mitsuba(mode_mono, mi_loglevel_notset, caplog):
     # TRACE log level is defined and set to the expected value
     assert logging.TRACE == logging.DEBUG - 5
 
@@ -26,7 +36,7 @@ def test_logging_mitsuba(mode_mono, caplog):
     mi.Log(mi.LogLevel.Debug, "debug message")
     assert not caplog.records
 
-    # We can raise log level
+    # We can raise the log level
     eradiate.kernel.logging.mi_logger.set_log_level(mi.LogLevel.Trace)
     mi.Log(mi.LogLevel.Trace, "trace message")
     record = caplog.records.pop()
