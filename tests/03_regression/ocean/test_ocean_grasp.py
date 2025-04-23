@@ -2,7 +2,7 @@ import pytest
 
 import eradiate
 import eradiate.data
-from eradiate.test_tools.regression import Chi2Test
+from eradiate.test_tools.regression import RMSETest, ZTest
 from eradiate.test_tools.test_cases.ocean import (
     create_ocean_grasp_coastal_no_atm,
     create_ocean_grasp_open_atm,
@@ -22,7 +22,7 @@ def test_ocean_grasp_coastal_no_atm(mode_mono_double, artefact_dir, session_time
 
     *Expected behaviour*
 
-    This test uses the Chi-squared criterion with a threshold of 0.05.
+    This test uses the RMSE criterion with a threshold of 10⁻⁶.
     """
     ref = eradiate.data.load_dataset(
         "tests/regression_test_references/ocean_grasp_REF_OC_NN00_I_S20_PPL.nc"
@@ -32,18 +32,18 @@ def test_ocean_grasp_coastal_no_atm(mode_mono_double, artefact_dir, session_time
 
     wavelength = ocean_grasp_wavelength()
     for w in wavelength:
-        test = Chi2Test(
+        test = RMSETest(
             name=(
                 f"{session_timestamp:%Y%m%d-%H%M%S}-ocean_grasp_REF_OC_NN00_I_S20_PPL"
             ),
             value=result.sel(w=w),
             reference=ref.sel(w=w),
-            threshold=0.05,
+            threshold=1e-6,
             archive_dir=artefact_dir,
             variable="brf",
         )
 
-        assert test.run()
+        assert test.run(), f"{w = }"
 
 
 @pytest.mark.regression
@@ -57,7 +57,7 @@ def test_ocean_grasp_open_no_atm(mode_mono_double, artefact_dir, session_timesta
 
     *Expected behaviour*
 
-    This test uses the Chi-squared criterion with a threshold of 0.05.
+    This test uses the RMSE criterion with a threshold of 10⁻⁶.
     """
     ref = eradiate.data.load_dataset(
         "tests/regression_test_references/ocean_grasp_REF_OO_NN00_I_S20_PPL.nc"
@@ -67,16 +67,16 @@ def test_ocean_grasp_open_no_atm(mode_mono_double, artefact_dir, session_timesta
 
     wavelength = ocean_grasp_wavelength()
     for w in wavelength:
-        test = Chi2Test(
+        test = RMSETest(
             name=f"{session_timestamp:%Y%m%d-%H%M%S}-ocean_grasp_REF_OO_NN00_I_S20_PPL",
             value=result.sel(w=w),
             reference=ref.sel(w=w),
-            threshold=0.05,
+            threshold=1e-6,
             archive_dir=artefact_dir,
             variable="brf",
         )
 
-        assert test.run()
+        assert test.run(), f"{w = }"
 
 
 @pytest.mark.regression
@@ -86,27 +86,27 @@ def test_ocean_grasp_open_atm(mode_mono_double, artefact_dir, session_timestamp)
 
     Compares the simulation results of the current branch to results directly
     validated against the GRASP model. This test targets a coastal ocean
-    scenario and does not include an atmosphere.
+    scenario and includes an atmosphere.
 
     *Expected behaviour*
 
-    This test uses the Chi-squared criterion with a threshold of 0.05.
+    This test uses the z-test criterion with a threshold of 0.01.
     """
     ref = eradiate.data.load_dataset(
         "tests/regression_test_references/ocean_grasp_REF_OO_UB01_I_S20_PPL.nc"
     )
     exp = create_ocean_grasp_open_atm()
-    result = eradiate.run(exp)
+    result = eradiate.run(exp, spp=int(1e5))
 
     wavelength = ocean_grasp_wavelength()
     for w in wavelength:
-        test = Chi2Test(
+        test = ZTest(
             name=f"{session_timestamp:%Y%m%d-%H%M%S}-ocean_grasp_REF_OO_UB01_I_S20_PPL",
             value=result.sel(w=w),
             reference=ref.sel(w=w),
-            threshold=0.05,
+            threshold=0.01,
             archive_dir=artefact_dir,
-            variable="brf",
+            variable="radiance",
         )
 
-        assert test.run()
+        assert test.run(), f"{w = }"
