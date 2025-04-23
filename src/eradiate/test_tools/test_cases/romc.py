@@ -94,7 +94,7 @@ def create_het01_brfpp(prefetched_data=None):
             "azimuth": 0.0 * ureg.deg,
             "irradiance": 20.0,
         },
-        integrator={"type": "path", "max_depth": -1},
+        integrator={"type": "path", "max_depth": -1, "moment": True},
     )
 
 
@@ -149,8 +149,6 @@ def create_het04a1_brfpp(prefetched_data=None):
     - Sensor: Multi-distant measure covering the principal plane, from -75° to
       75° with 2° increments, delta SRF positioned at λ = 550 nm.
     """
-    assert False
-
     if prefetched_data is None:
         prefetched_data = fetch_het04a1_brfpp()
 
@@ -215,7 +213,7 @@ def create_het04a1_brfpp(prefetched_data=None):
             "azimuth": 0.0 * ureg.deg,
             "irradiance": 20.0,
         },
-        integrator={"type": "path", "max_depth": -1},
+        integrator={"type": "path", "max_depth": -1, "moment": True},
     )
 
 
@@ -315,5 +313,5 @@ def create_het06_brfpp(prefetched_data=None):
             "azimuth": 0.0 * ureg.deg,
             "irradiance": 20.0,
         },
-        integrator={"type": "path", "max_depth": -1},
+        integrator={"type": "path", "max_depth": -1, "moment": True},
     )
