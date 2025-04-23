@@ -37,7 +37,7 @@ def write_binary_grid3d(filename: PathLike, values: np.ndarray | xr.DataArray) -
 
     if values.ndim not in {3, 4}:
         raise ValueError(
-            f"'values' must have 3 or 4 dimensions " f"(got shape {values.shape})"
+            f"'values' must have 3 or 4 dimensions (got shape {values.shape})"
         )
 
     mi.VolumeGrid(values.astype(np.float32)).write(str(filename))

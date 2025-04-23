@@ -210,8 +210,7 @@ class TargetRectangle(Target):
     def _x_validator(self, attribute, value):
         if not self.xmin < self.xmax:
             raise ValueError(
-                f"while validating {attribute.name}: 'xmin' must "
-                f"be lower than 'xmax"
+                f"while validating {attribute.name}: 'xmin' must be lower than 'xmax"
             )
 
     @ymin.validator
@@ -219,8 +218,7 @@ class TargetRectangle(Target):
     def _y_validator(self, attribute, value):
         if not self.ymin < self.ymax:
             raise ValueError(
-                f"while validating {attribute.name}: 'ymin' must "
-                f"be lower than 'ymax"
+                f"while validating {attribute.name}: 'ymin' must be lower than 'ymax"
             )
 
     def kernel_item(self) -> dict:

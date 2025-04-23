@@ -528,7 +528,7 @@ def summary_repr_vector(a: np.ndarray, edgeitems: int = 4):
         return (
             f"[{np.array2string(a[:edgeitems]).strip('[]')}"
             " ... "
-            f"{np.array2string(a[size - edgeitems:]).strip('[]')}]"
+            f"{np.array2string(a[size - edgeitems :]).strip('[]')}]"
         )
     else:
         return np.array2string(a)

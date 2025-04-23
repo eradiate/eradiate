@@ -143,8 +143,7 @@ def registry_from_file(filename: PathLike, warn: bool = True) -> dict:
                     continue
                 else:
                     raise ValueError(
-                        f"While parsing registry file {filename}: "
-                        f"ill-formed line {i}"
+                        f"While parsing registry file {filename}: ill-formed line {i}"
                     )
 
     return result

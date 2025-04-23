@@ -117,6 +117,6 @@ def test_mdistant_insitu(artefact_dir, mode_mono, exp_cls):
     result = np.squeeze([computed[offset].isel(spp=-1) for offset in offsets])
     expected = np.squeeze([expected[offset] for offset in offsets])
 
-    assert np.allclose(
-        result, expected, rtol=1e-2
-    ), f"{result = }, {expected = }\nPlot file: '{filename}'"
+    assert np.allclose(result, expected, rtol=1e-2), (
+        f"{result = }, {expected = }\nPlot file: '{filename}'"
+    )

@@ -92,9 +92,7 @@ class AbstractDirectionalIllumination(Illumination, ABC):
             ],
             units=ucc.deferred("angle"),
         ),
-        doc="Azimuth angle value.\n"
-        "\n"
-        "Unit-enabled field (default units: ucc['angle']).",
+        doc="Azimuth angle value.\n\nUnit-enabled field (default units: ucc['angle']).",
         type="quantity",
         init_type="quantity or float",
         default="0.0 deg",
