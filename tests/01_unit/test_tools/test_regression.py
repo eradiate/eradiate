@@ -38,7 +38,7 @@ def test_instantiate():
         reference=xr.Dataset(),
         threshold=0.05,
     )
-    
+
     assert tt.ZTest(
         name="z-test",
         archive_dir="tests/",

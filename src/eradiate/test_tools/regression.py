@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 import os
-import typing
 from abc import ABC, abstractmethod
 from io import StringIO
 from pathlib import Path
+from typing import ClassVar
 
 import attrs
 import matplotlib.pyplot as plt
 import mitsuba as mi
 import numpy as np
+import scipy.stats as spstats
 import xarray as xr
+from numpy.typing import ArrayLike
 from robot.api import logger
-from scipy.stats import norm, t
 
 from .. import data
 from ..attrs import define, documented
@@ -22,13 +23,13 @@ from ..util.misc import summary_repr
 
 
 def regression_test_plots(
-    ref: np.typing.ArrayLike,
-    result: np.typing.ArrayLike,
-    vza: np.typing.ArrayLike,
+    ref: ArrayLike,
+    result: ArrayLike,
+    vza: ArrayLike,
     metric: tuple[str, float],
-    ref_var: t.Optional[np.typing.ArrayLike] = None,
-    result_var: t.Optional[np.typing.ArrayLike] = None,
-) -> t.Tuple[plt.Figure, t.List[t.List[plt.Axes]]]:
+    ref_var: ArrayLike | None = None,
+    result_var: ArrayLike | None = None,
+) -> tuple[plt.Figure, list[list[plt.Axes]]]:
     """
     Create regression test report plots. Plot errorbars if both ref_var and
     result_var are set.
@@ -218,7 +219,7 @@ class RegressionTest(ABC):
     """
 
     # Name used for the reference metric. Must be set be subclasses.
-    METRIC_NAME: typing.ClassVar[str | None] = None
+    METRIC_NAME: ClassVar[str | None] = None
 
     name: str = documented(
         attrs.field(validator=attrs.validators.instance_of(str)),
@@ -526,27 +527,34 @@ class AbstractStudentTTest(RegressionTest):
         t_prim: float
             t' statistic issued from the test
         """
+        fig, ax = plt.subplots()
+        ax.grid()
+        ax2 = ax.twinx()
 
-        plt.grid()
-        start, end = t.ppf(0.0001, dof), t.ppf(0.9999, dof)
-        if t_prim > start and t_prim < end:
+        start, end = spstats.t.ppf(0.0001, dof), spstats.t.ppf(0.9999, dof)
+
+        if (t_prim > start) and (t_prim < end):
             fx = np.linspace(-np.abs(t_prim), np.abs(t_prim), 100)
-            fy = t(dof).pdf(fx)
-            plt.fill_between(np.zeros((100,)), fy)
-            plt.axvline(t.ppf(-self.threshold / 2.0, dof), color="red")
-            plt.axvline(t.ppf(self.threshold / 2.0, dof), color="red")
+            fy = spstats.t(dof).pdf(fx)
+            ax.fill_between(np.zeros((100,)), fy)
+            ax.axvline(spstats.t.ppf(-self.threshold / 2.0, dof), color="red")
+            ax.axvline(spstats.t.ppf(self.threshold / 2.0, dof), color="red")
         else:
-            plt.axvline(t_prim, label="T value")
+            ax.axvline(t_prim, label="T value")
+
+        ax.axvline(0.0, color="red", linestyle="--")
+        ax.set_title("T-statistic")
+
         x = np.linspace(start, end, 100)
-        y = t(dof).pdf(x)
-        plt.axvline(0.0, color="red", linestyle="--")
-        plt.title("T-statistic")
-        ax2 = plt.twinx()
+        y = spstats.t(dof).pdf(x)
+
         ax2.plot(x, y, label="target T distribution form", color="black")
         ax2.legend(loc="upper right")
         ax2.set_ylim([0.0, max(y) * 1.1])
-        chart = figure_to_html(plt.gcf())
-        plt.close()
+
+        chart = figure_to_html(fig)
+        plt.close(fig)
+
         logger.info(chart, html=True)
 
 
@@ -606,7 +614,7 @@ class IndependantStudentTTest(AbstractStudentTTest):
 
         # Calculate p-value of the two-tailed t-test using the T distribution
         # survival function for the null hypothesis.
-        p_value = t.sf(np.abs(t_prim), dof) * 2
+        p_value = spstats.t.sf(np.abs(t_prim), dof) * 2
 
         passed = p_value > self.threshold
 
@@ -644,11 +652,11 @@ class PairedStudentTTest(AbstractStudentTTest):
 
     METRIC_NAME = "paired T-test p-value"
 
-    cov: np.typing.ArrayLike | float = documented(
+    cov: np.ndarray | float = documented(
         attrs.field(kw_only=True, default=0.0),
         doc="Covariance between observation, defaults to zero",
-        type=np.typing.ArrayLike | float,
-        init_type="float",
+        type="ndarray or float",
+        init_type="array-like or float",
     )
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
@@ -685,7 +693,7 @@ class PairedStudentTTest(AbstractStudentTTest):
 
         # Calculate p-value of the two-tailed t-test using the T distribution
         # survival function for the null hypothesis.
-        p_value = t.sf(np.abs(t_prim), dof) * 2
+        p_value = spstats.t.sf(np.abs(t_prim), dof) * 2
 
         passed = p_value > self.threshold
 
@@ -731,19 +739,24 @@ class ZTest(RegressionTest):
             Z-statistic for each pair of measurements
         """
 
-        plt.grid()
-        plt.hist(z, bins=50, label="Z values")
+        fig, ax = plt.subplots()
+        ax.grid()
+        ax2 = ax.twinx()
+
+        ax.hist(z, bins=50, label="Z values")
+        ax.axvline(0.0, color="red", linestyle="--")
+        ax.set_title("Z-statistic")
+        ax.legend(loc="upper left")
+
         x = np.linspace(-4.0, 4.0, 100)
-        y = norm.pdf(x, 0.0, 1.0)
-        plt.axvline(0.0, color="red", linestyle="--")
-        plt.title("Z-statistic")
-        plt.legend(loc="upper left")
-        ax2 = plt.twinx()
+        y = spstats.norm.pdf(x, 0.0, 1.0)
         ax2.plot(x, y, label="target Z distribution form", color="black")
         ax2.legend(loc="upper right")
         ax2.set_ylim([0.0, max(y) * 1.1])
-        chart = figure_to_html(plt.gcf())
-        plt.close()
+
+        chart = figure_to_html(fig)
+        plt.close(fig)
+
         logger.info(chart, html=True)
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
@@ -764,7 +777,7 @@ class ZTest(RegressionTest):
         z = (result_np - ref_np) / np.sqrt(var_res_np)
 
         # Calculate p-value of the two-tailed z-test null hypothesis
-        p_values = norm.sf(np.abs(z)) * 2
+        p_values = spstats.norm.sf(np.abs(z)) * 2
 
         alpha_0 = 1.0 - (1.0 - self.threshold) ** (1.0 / result_np.size)
         accept_null = p_values > alpha_0
@@ -813,20 +826,26 @@ class SidakTTest(RegressionTest):
             T-statistic for each pair of measurements
         """
 
-        plt.grid()
-        start, end = norm.ppf(0.0001), norm.ppf(0.9999)
-        plt.hist(t_prim, bins=50, label="T values")
+        fig, ax = plt.subplots()
+        ax.grid()
+        ax2 = ax.twinx()
+
+        start, end = spstats.norm.ppf(0.0001), spstats.norm.ppf(0.9999)
+
+        ax.hist(t_prim, bins=50, label="T values")
+        ax.axvline(0.0, color="red", linestyle="--")
+        ax.set_title("T-statistic")
+        ax.legend(loc="upper left")
+
         x = np.linspace(start, end, 100)
-        y = norm.pdf(x)
-        plt.axvline(0.0, color="red", linestyle="--")
-        plt.title("T-statistic")
-        plt.legend(loc="upper left")
-        ax2 = plt.twinx()
+        y = spstats.norm.pdf(x)
         ax2.plot(x, y, label="target T distribution form", color="black")
         ax2.legend(loc="upper right")
         ax2.set_ylim([0.0, max(y) * 1.1])
-        chart = figure_to_html(plt.gcf())
-        plt.close()
+
+        chart = figure_to_html(fig)
+        plt.close(fig)
+
         logger.info(chart, html=True)
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
@@ -852,7 +871,7 @@ class SidakTTest(RegressionTest):
         # survival function for the null hypothesis that there is no difference
         # between the two mean distributions. It is assumed that the sample size
         # is large enough for the T distribution to converge to a normal one.
-        p_values = norm.sf(np.abs(t_prim)) * 2
+        p_values = spstats.norm.sf(np.abs(t_prim)) * 2
 
         # Calculate the Šidák correction
         alpha_0 = 1.0 - (1.0 - self.threshold) ** (1.0 / result_np.size)
