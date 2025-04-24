@@ -1,4 +1,3 @@
-import pytest
 from robot.api import logger
 
 import eradiate
@@ -10,7 +9,6 @@ from eradiate.test_tools.util import append_doc
 
 
 @append_doc(create_rpv_afgl1986_continental_brfpp, prepend=True)
-@pytest.mark.regression
 def test_rpv_afgl1986_continental_brfpp(
     mode_ckd_double,
     artefact_dir,
