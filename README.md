@@ -263,7 +263,9 @@ Got a question? Please visit our
 ## Authors and acknowledgements
 
 Eradiate is developed by a core team consisting of Vincent Leroy,
-Sebastian Schunke, Nicolas Misk and Yves Govaerts.
+Claudia Emde, Nicolae Marton, Nicolas Misk and Yves Govaerts. For more
+information about the Eradiate team,
+[visit our website](https://www.eradiate.eu/site/people).
 
 Eradiate uses the
 [Mitsuba 3 renderer](https://github.com/mitsuba-renderer/mitsuba3), developed by
