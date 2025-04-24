@@ -141,7 +141,7 @@ class AbstractDirectionalIllumination(Illumination, ABC):
     def _to_world(self) -> mi.ScalarTransorm4f:
         direction = dr.normalize(mi.ScalarVector3f(self.direction))
         up, _ = mi.coordinate_system(direction)
-        return mi.ScalarTransform4f.look_at(origin=0.0, target=direction, up=up)
+        return mi.ScalarTransform4f().look_at(origin=0.0, target=direction, up=up)
 
     @property
     def direction(self) -> np.ndarray:

@@ -69,5 +69,6 @@ def test_construct_file_illegal(modes_all_double):
 )
 def test_construct_filemesh_trafo(mode_mono, file_type, tempfile, request):
     assert FileMeshShape(
-        filename=request.getfixturevalue(tempfile), to_world=mi.Transform4f.scale(3)
+        filename=request.getfixturevalue(tempfile),
+        to_world=mi.ScalarTransform4f().scale(3),
     )

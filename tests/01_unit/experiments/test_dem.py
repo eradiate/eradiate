@@ -81,7 +81,7 @@ def test_dem_experiment_kernel_dict(modes_all_double):
     )  # Do not drop untracked parameters: we want to check the surface transform
     np.testing.assert_allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
-        mi.ScalarTransform4f.scale([5e8, 5e8, 1]).matrix,
+        mi.ScalarTransform4f().scale([5e8, 5e8, 1]).matrix,
     )
     # -- Atmosphere is not in kernel dictionary
     assert {shape.id() for shape in mi_wrapper.obj.shapes()} == {"surface_shape"}

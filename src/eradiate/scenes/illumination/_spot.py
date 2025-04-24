@@ -207,7 +207,7 @@ class SpotIllumination(Illumination):
     def _to_world(self) -> mi.ScalarTransform4f:
         target = self.target.m_as(uck.get("length"))
         origin = self.origin.m_as(uck.get("length"))
-        return mi.ScalarTransform4f.look_at(origin=origin, target=target, up=self.up)
+        return mi.ScalarTransform4f().look_at(origin=origin, target=target, up=self.up)
 
     @property
     def template(self) -> dict:
