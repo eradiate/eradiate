@@ -56,18 +56,18 @@ class SphereShape(ShapeNode):
     def bbox(self) -> BoundingBox:
         length_units = ucc.get("length")
         if self.to_world is not None:
-            trafo = (
+            to_world = (
                 self.to_world
-                @ mi.Transform4f.translate(self.center.m_as(length_units))
-                @ mi.Transform4f.scale(self.radius.m_as(length_units))
+                @ mi.ScalarTransform4f().translate(self.center.m_as(length_units))
+                @ mi.ScalarTransform4f().scale(self.radius.m_as(length_units))
             )
         else:
-            trafo = mi.Transform4f.translate(
+            to_world = mi.ScalarTransform4f().translate(
                 self.center.m_as(length_units)
-            ) @ mi.Transform4f.scale(self.radius.m_as(length_units))
+            ) @ mi.ScalarTransform4f().scale(self.radius.m_as(length_units))
 
-        c = trafo @ (0, 0, 0)
-        r = np.linalg.norm(trafo @ (1, 0, 0) - c)
+        c = to_world @ (0, 0, 0)
+        r = np.linalg.norm(to_world @ (1, 0, 0) - c)
 
         p1 = pint.Quantity(np.array(c + np.array((-1, -1, -1)) * r), length_units)
         p2 = pint.Quantity(np.array(c + np.array((1, 1, 1)) * r), length_units)
@@ -106,19 +106,19 @@ class SphereShape(ShapeNode):
         """
         length_units = ucc.get("length")
         if self.to_world is not None:
-            trafo = (
+            to_world = (
                 self.to_world
-                @ mi.Transform4f.translate(self.center.m_as(length_units))
-                @ mi.Transform4f.scale(self.radius.m_as(length_units))
+                @ mi.ScalarTransform4f().translate(self.center.m_as(length_units))
+                @ mi.ScalarTransform4f().scale(self.radius.m_as(length_units))
             )
         else:
-            trafo = mi.Transform4f.translate(
+            to_world = mi.ScalarTransform4f().translate(
                 self.center.m_as(length_units)
-            ) @ mi.Transform4f.scale(self.radius.m_as(length_units))
+            ) @ mi.ScalarTransform4f().scale(self.radius.m_as(length_units))
         p = np.atleast_2d(ensure_units(p, ucc.get("length")).m_as(length_units))
-        c = trafo @ (0, 0, 0)
+        c = to_world @ (0, 0, 0)
         d = np.linalg.norm(p - c, axis=1)
-        r = np.linalg.norm(trafo @ (1, 0, 0) - c)
+        r = np.linalg.norm(to_world @ (1, 0, 0) - c)
         return d < r if strict else d <= r
 
     @classmethod

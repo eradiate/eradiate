@@ -17,7 +17,7 @@ def mi_to_numpy(d):
     for k, v in d.items():
         if isinstance(v, mi.VolumeGrid):
             result[k] = np.array(v)
-        elif isinstance(v, mi.Transform4f):
+        elif isinstance(v, (mi.Transform4f, mi.ScalarTransform4f)):
             result[k] = np.array(v.matrix)
         else:
             result[k] = v

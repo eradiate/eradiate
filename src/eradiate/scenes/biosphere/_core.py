@@ -289,7 +289,7 @@ class InstancedCanopyElement(CompositeSceneElement):
                 self.canopy_element.id
             )
             result[f"{self.canopy_element.id}_instance_{i}.to_world"] = (
-                mi.ScalarTransform4f.translate(position)
+                mi.ScalarTransform4f().translate(position)
             )
 
         return result

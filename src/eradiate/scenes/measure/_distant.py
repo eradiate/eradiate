@@ -234,9 +234,9 @@ class TargetRectangle(Target):
         dx = xmax - xmin
         dy = ymax - ymin
 
-        to_world = mi.ScalarTransform4f.translate(
+        to_world = mi.ScalarTransform4f().translate(
             [0.5 * dx + xmin, 0.5 * dy + ymin, z]
-        ) @ mi.ScalarTransform4f.scale([0.5 * dx, 0.5 * dy, 1.0])
+        ) @ mi.ScalarTransform4f().scale([0.5 * dx, 0.5 * dy, 1.0])
 
         return {"type": "rectangle", "to_world": to_world}
 

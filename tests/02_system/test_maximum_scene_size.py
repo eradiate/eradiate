@@ -59,7 +59,7 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
                     },
                     "surface": {
                         "type": "rectangle",
-                        "to_world": mi.ScalarTransform4f.scale(
+                        "to_world": mi.ScalarTransform4f().scale(
                             mi.ScalarVector3f(scene_size, scene_size, 1)
                         ),
                         "bsdf": {"type": "ref", "id": "bsdf_surface"},

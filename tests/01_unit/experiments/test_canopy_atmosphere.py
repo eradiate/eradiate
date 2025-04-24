@@ -132,7 +132,7 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
     )  # Do not drop untracked parameters: we want to check the surface transform
     assert np.allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
-        mi.ScalarTransform4f.scale([21000, 21000, 1]).matrix,
+        mi.ScalarTransform4f().scale([21000, 21000, 1]).matrix,
     )
 
 
