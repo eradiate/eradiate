@@ -12,7 +12,7 @@ env:
 
 jobs:
   robot:
-    runs-on: [self-hosted, ars, ubuntu_x86_64]
+    runs-on: [self-hosted, ars, ubuntu_x86_64_eradiatecompile_spot]
     steps:
       - uses: actions/checkout@v4
         with:
