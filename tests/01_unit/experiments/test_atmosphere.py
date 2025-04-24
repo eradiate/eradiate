@@ -108,7 +108,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
     # -- Surface width is inherited from geometry
     assert np.allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
-        mi.ScalarTransform4f.scale([21000, 21000, 1]).matrix,
+        mi.ScalarTransform4f().scale([21000, 21000, 1]).matrix,
     )
     # -- Atmosphere is part of the scene
     assert "shape_atmosphere" in set(shape.id() for shape in mi_wrapper.obj.shapes())
@@ -129,7 +129,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
     mi_wrapper = check_scene_element(exp.scene, mi.Scene, drop_parameters=False)
     assert np.allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
-        mi.ScalarTransform4f.scale([5e8, 5e8, 1]).matrix,
+        mi.ScalarTransform4f().scale([5e8, 5e8, 1]).matrix,
     )
     # -- Atmosphere is not part of the scene
     assert "shape_atmosphere" not in set(

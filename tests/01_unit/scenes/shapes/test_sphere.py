@@ -24,7 +24,7 @@ def test_sphere_construct_kernel_dict(modes_all, kwargs, expected_reflectance):
 
 
 def test_sphere_construct_trafo(modes_all):
-    assert SphereShape(to_world=mi.Transform4f.scale(2))
+    assert SphereShape(to_world=mi.ScalarTransform4f().scale(2))
 
 
 def test_sphere_template(modes_all):
@@ -40,14 +40,14 @@ def test_sphere_template(modes_all):
     assert "to_world" not in kernel_dict
 
     sphere = SphereShape(
-        center=(1, 1, 1), radius=2, to_world=mi.ScalarTransform4f.translate((1, 0, 0))
+        center=(1, 1, 1), radius=2, to_world=mi.ScalarTransform4f().translate((1, 0, 0))
     )
     template, _ = traverse(sphere)
     kernel_dict = template.render(ctx=KernelContext())
 
     assert np.allclose(kernel_dict["center"], (1, 1, 1))
     assert kernel_dict["radius"] == 2
-    assert kernel_dict["to_world"] == mi.ScalarTransform4f.translate((1, 0, 0))
+    assert kernel_dict["to_world"] == mi.ScalarTransform4f().translate((1, 0, 0))
 
 
 def test_sphere_surface():
@@ -84,7 +84,9 @@ def test_sphere_bbox():
     np.testing.assert_array_equal(bbox.min.m_as(ureg.m), [-1, -1, -1])
     np.testing.assert_array_equal(bbox.max.m_as(ureg.m), [3, 3, 3])
 
-    sphere = SphereShape(center=[1, 1, 1], radius=2.0, to_world=mi.Transform4f.scale(2))
+    sphere = SphereShape(
+        center=[1, 1, 1], radius=2.0, to_world=mi.ScalarTransform4f().scale(2)
+    )
     bbox = sphere.bbox
     np.testing.assert_array_equal(bbox.min.m_as(ureg.m), [-2, -2, -2])
     np.testing.assert_array_equal(bbox.max.m_as(ureg.m), [6, 6, 6])

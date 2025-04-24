@@ -174,8 +174,8 @@ class AbstractTree(Tree):
             f"trunk_cap_{self.id}": {
                 "type": "disk",
                 "bsdf": bsdf,
-                "to_world": mi.ScalarTransform4f.scale(kernel_radius)
-                @ mi.ScalarTransform4f.translate([0, 0, kernel_height]),
+                "to_world": mi.ScalarTransform4f().scale(kernel_radius)
+                @ mi.ScalarTransform4f().translate([0, 0, kernel_height]),
             },
         }
 
@@ -472,7 +472,7 @@ class MeshTreeElement:
             f"{self.id}.bsdf.type": "ref",
             f"{self.id}.bsdf.id": self.bsdf_id,
             f"{self.id}.filename": str(self.mesh_filename),
-            f"{self.id}.to_world": mi.ScalarTransform4f.scale(scaling_factor),
+            f"{self.id}.to_world": mi.ScalarTransform4f().scale(scaling_factor),
         }
 
         return result

@@ -162,7 +162,7 @@ class HemisphericalDistantMeasure(AbstractDistantMeasure):
                 ),
             )
         )
-        result["to_world"] = mi.ScalarTransform4f.look_at(
+        result["to_world"] = mi.ScalarTransform4f().look_at(
             origin=[0.0, 0.0, 0.0], target=self.direction, up=up
         )
 

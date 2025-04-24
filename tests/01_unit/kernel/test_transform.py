@@ -78,9 +78,9 @@ def test_map_cube(mode_mono):
 
 
 def test_transform_affine(mode_mono):
-    trafo_scale = mi.Transform4f.scale((2, 3, 4))
-    trafo_translate = mi.Transform4f.translate((0.1, 0.2, 0.3))
-    trafo_rotate = mi.Transform4f.rotate((0, 0, 1), 90)
+    trafo_scale = mi.ScalarTransform4f().scale((2, 3, 4))
+    trafo_translate = mi.ScalarTransform4f().translate((0.1, 0.2, 0.3))
+    trafo_rotate = mi.ScalarTransform4f().rotate((0, 0, 1), 90)
 
     points = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
