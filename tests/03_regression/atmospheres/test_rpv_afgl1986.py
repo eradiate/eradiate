@@ -1,5 +1,3 @@
-import pytest
-
 import eradiate
 from eradiate.test_tools.regression import ZTest
 from eradiate.test_tools.test_cases.atmospheres import create_rpv_afgl1986_brfpp
@@ -7,7 +5,6 @@ from eradiate.test_tools.util import append_doc
 
 
 @append_doc(create_rpv_afgl1986_brfpp, prepend=True)
-@pytest.mark.regression
 def test_rpv_afgl1986_brfpp(
     mode_ckd_double,
     artefact_dir,
