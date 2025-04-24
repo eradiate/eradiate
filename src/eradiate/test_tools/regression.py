@@ -29,6 +29,8 @@ def regression_test_plots(
     metric: tuple[str, float],
     ref_var: ArrayLike | None = None,
     result_var: ArrayLike | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
 ) -> tuple[plt.Figure, list[list[plt.Axes]]]:
     """
     Create regression test report plots. Plot errorbars if both ref_var and
@@ -48,11 +50,14 @@ def regression_test_plots(
     metric : tuple
         A tuple of the form (metric name, value) to be added to the plots.
 
-    ref_var: array-like, optional
-        Variable variance for the reference data
+    ref_var : array-like, optional
+        Variable variance for the reference data.
 
     result_var : array-like, optional
-        Variable variance for the simulation result
+        Variable variance for the simulation result.
+
+    xlabel, ylabel : str or None
+        Labels applied to the x and y axes of the plot.
 
     Returns
     -------
@@ -64,38 +69,48 @@ def regression_test_plots(
     """
     fig, axes = plt.subplots(2, 2, figsize=(8, 6), layout="constrained")
 
-    if ref_var is None or result_var is None:
-        axes[0][0].plot(vza, ref, label="reference")
-        axes[0][0].plot(vza, result, label="result")
+    ax = axes[0][0]
+    if ref_var is None:
+        ax.plot(vza, ref, label="reference")
     else:
-        axes[0][0].errorbar(vza, ref, yerr=np.sqrt(ref_var), label="reference")
-        axes[0][0].errorbar(vza, result, yerr=np.sqrt(result_var), label="result")
+        ax.errorbar(vza, ref, yerr=np.sqrt(ref_var), label="reference")
 
-    axes[0][0].set_title("Reference and test result")
-    handles, labels = axes[0][0].get_legend_handles_labels()
+    if result_var is None:
+        ax.plot(vza, result, label="result")
+    else:
+        ax.errorbar(vza, result, yerr=np.sqrt(result_var), label="result")
 
-    axes[1][0].plot(vza, result - ref)
-    axes[1][0].set_xlabel("VZA [deg]")
-    axes[1][0].set_ylabel("BRF in principal plane [-]")
-    axes[1][0].set_title("Absolute difference")
+    ax.set_title("Reference and test result")
+    handles, labels = ax.get_legend_handles_labels()
 
-    axes[1][1].plot(vza, (result - ref) / ref)
-    axes[1][1].set_title("Relative difference")
+    ax = axes[1][0]
+    ax.plot(vza, result - ref)
+    ax.set_title("Absolute difference")
 
-    axes[0][1].set_axis_off()
-    axes[0][1].legend(handles=handles, labels=labels, loc="upper center")
+    ax = axes[1][1]
+    ax.plot(vza, (result - ref) / ref)
+    ax.set_title("Relative difference")
+
+    ax = axes[0][1]
+    ax.set_axis_off()
+    ax.legend(handles=handles, labels=labels, loc="upper center")
 
     if metric[1] is None:
-        axes[0][1].text(
+        ax.text(
             0.5,
             0.5,
             f'Metric "{metric[0]}" is not available',
             horizontalalignment="center",
         )
     else:
-        axes[0][1].text(
-            0.5, 0.5, f"{metric[0]}: {metric[1]:.4}", horizontalalignment="center"
-        )
+        ax.text(0.5, 0.5, f"{metric[0]}: {metric[1]:.4}", horizontalalignment="center")
+
+    for i, j in [[0, 0], [1, 0], [1, 1]]:
+        ax = axes[i][j]
+        if xlabel is not None:
+            ax.set_xlabel(xlabel)
+        if ylabel is not None:
+            ax.set_ylabel(ylabel)
 
     return fig, axes
 
@@ -263,20 +278,20 @@ class RegressionTest(ABC):
 
     threshold: float = documented(
         attrs.field(kw_only=True),
-        doc="Threshold for test evaluation",
+        doc="Test metric threshold",
         type="float",
         init_type="float",
     )
 
     archive_dir: Path = documented(
-        attrs.field(kw_only=True, converter=Path),
+        attrs.field(kw_only=True, converter=lambda x: Path(x).resolve()),
         doc="Path to output artefact storage directory. Relative paths are "
         "interpreted with respect to the current working directory.",
         type=":class:`pathlib.Path`",
         init_type="path-like",
     )
 
-    def __attrs_pre_init(self):
+    def __attrs_pre_init__(self):
         if self.METRIC_NAME is None:
             raise TypeError(f"Unsupported test type {type(self).__name__}")
 
@@ -298,22 +313,21 @@ class RegressionTest(ABC):
 
         fname = self.name
         ext = ".nc"
-        archive_dir = os.path.abspath(self.archive_dir)
+        archive_dir = self.archive_dir
 
-        # Absolute path where the reference will be stored
-        fname_reference = os.path.join(archive_dir, fname + "-ref" + ext)
-        # Absolute path where test output will be stored
-        fname_result = os.path.join(archive_dir, fname + "-result" + ext)
+        fname_reference = archive_dir / f"{fname}-ref{ext}"
+        fname_result = archive_dir / f"{fname}-result{ext}"
 
         # if no valid reference is found, store the results as new ref and fail
         # the test
         if not self.reference:
             logger.info(
-                f"No reference data was found! Storing test results as reference to {fname_reference}",
+                "No reference data found. Storing test results as reference to "
+                f"{fname_reference}",
                 also_console=True,
             )
             self._archive(self.value, fname_reference)
-            self._plot(reference_only=True, metric_value=None)
+            self._plot(metric_value=None, noref=True)
             return False
 
         # else (we have a reference value), evaluate the test metric
@@ -333,7 +347,7 @@ class RegressionTest(ABC):
             logger.info(
                 "An exception occurred during test evaluation!", also_console=True
             )
-            self._plot(reference_only=False, metric_value=None)
+            self._plot(noref=False, metric_value=None)
             raise e
 
         # we got a metric: report the results in the archive directory
@@ -345,7 +359,7 @@ class RegressionTest(ABC):
             f"Saving reference dataset locally to {fname_reference}", also_console=True
         )
         self._archive(self.reference, fname_reference)
-        self._plot(reference_only=False, metric_value=metric_value)
+        self._plot(noref=False, metric_value=metric_value)
 
         return passed
 
@@ -354,6 +368,11 @@ class RegressionTest(ABC):
         """
         Evaluate the test results and perform a comparison to the reference
         based on the criterion defined in the specialized class.
+
+        Parameters
+        ----------
+        diagnostic_chart : bool, optional
+            If ``True``, append a diagnostic chart to the test report.
 
         Returns
         -------
@@ -372,45 +391,34 @@ class RegressionTest(ABC):
         os.makedirs(os.path.dirname(fname_output), exist_ok=True)
         dataset.to_netcdf(fname_output)
 
-    def _plot(self, metric_value: float | None, reference_only: bool) -> None:
+    def _plot(self, metric_value: float | None, noref: bool) -> None:
         """
         Create a plot to visualize the results of the test.
         If the ``reference only`` parameter is set, create only a simple plot
         visualizing the new reference data. Otherwise, create the more complex
-        comparsion plots for the regression test.
+        comparison plots for the regression test.
 
         Parameters
         ----------
         metric_value : float or None
             The numerical value of the test metric.
 
-        reference_only : bool
+        noref : bool
             If ``True``, create only a simple visualization of the computed
             data.
         """
-        vza = np.squeeze(self.value.vza.values)
-        val = np.squeeze(self.value[self.variable].values)
 
         fname = self.name
         ext = ".png"
 
-        archive_dir = os.path.abspath(self.archive_dir)
-        fname_plot = os.path.join(archive_dir, fname + ext)
-        os.makedirs(os.path.dirname(fname_plot), exist_ok=True)
+        archive_dir = self.archive_dir
+        fname_plot = archive_dir / f"{fname}{ext}"
+        fname_plot.parent.mkdir(parents=True, exist_ok=True)
 
-        if reference_only:
-            figure = plt.figure(figsize=(8, 6))
-            plt.plot(vza, val)
-            plt.xlabel("VZA [deg]")
-            plt.ylabel(f"{self.variable.upper()} in principal plane [-]")
-            plt.title("Simulation result, can be used as new reference")
-
+        if noref:
+            figure, _ = self._plot_noref()
         else:
-            ref = np.squeeze(self.reference[self.variable].values)
-
-            figure, _ = regression_test_plots(
-                ref, val, vza, (self.METRIC_NAME, metric_value)
-            )
+            figure, _ = self._plot_ref(metric_value)
 
         html_svg = figure_to_html(figure)
         logger.info(html_svg, html=True, also_console=False)
@@ -419,11 +427,44 @@ class RegressionTest(ABC):
         plt.savefig(fname_plot)
         plt.close()
 
-    def _diagnostic_chart(self, **diagnostic_info) -> None:
+    def _plot_noref(self):
+        """
+        Draw a simple plot when no reference data is available.
+        """
+        vza = np.squeeze(self.value.vza.values)
+        val = np.squeeze(self.value[self.variable].values)
+
+        fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+        ax.plot(vza, val)
+        ax.set_xlabel("VZA [deg]")
+        ax.set_ylabel(self.variable)
+        ax.set_title("Simulation result, can be used as new reference")
+
+        return fig, ax
+
+    def _plot_ref(self, metric_value: float | None = None):
+        """
+        Draw a comparison plot with reference and test data displayed together.
+        """
+        vza = np.squeeze(self.value.vza.values)
+        val = np.squeeze(self.value[self.variable].values)
+        ref = np.squeeze(self.reference[self.variable].values)
+
+        return regression_test_plots(
+            ref,
+            val,
+            vza,
+            (self.METRIC_NAME, metric_value),
+            xlabel="VZA [deg]",
+            ylabel=self.variable,
+        )
+
+    def _plot_diagnostic(self, **diagnostic_info) -> None:
         """
         Create an additional plot to display more technical information about
         the test metrics and decision process. The diagnostic plot can help the
         user debug a failing test, or to assess the test power and significance.
+        This plot is output directly to the robotframework report.
 
         Parameters:
         -----------
@@ -516,7 +557,7 @@ class AbstractStudentTTest(RegressionTest):
     Implement diagnostic chart common to subclassing T-test implementations.
     """
 
-    def _diagnostic_chart(self, dof=None, t_prim=None) -> None:
+    def _plot_diagnostic(self, dof=None, t_prim=None) -> None:
         """
         Diagnostic chart for an Independant Student's T-test
 
@@ -575,20 +616,27 @@ class IndependantStudentTTest(AbstractStudentTTest):
     METRIC_NAME = "T-test p-value"
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
-        if self.variable + "_var" not in self.reference:
+        variable_var = self.variable + "_var"
+
+        if variable_var not in self.reference:
             raise ValueError(
-                f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+                "The reference data for this T-test does not contain expected "
+                "appropriate variance values, could not find data variable "
+                f"'{variable_var}'"
             )
-        if self.variable + "_var" not in self.value:
+
+        if variable_var not in self.value:
             raise ValueError(
-                f"The target value for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+                "The tested data for this T-test does not contain expected "
+                "appropriate variance values, could not find data variable "
+                f"'{variable_var}'"
             )
 
         ref_np = self.reference[self.variable].values.ravel()
         result_np = self.value[self.variable].values.ravel()
 
-        var_ref_np = self.reference[self.variable + "_var"].values.ravel()
-        var_res_np = self.value[self.variable + "_var"].values.ravel()
+        var_ref_np = self.reference[variable_var].values.ravel()
+        var_res_np = self.value[variable_var].values.ravel()
 
         # Calculate mean values over observations and associated variances
         R_res = np.mean(result_np)
@@ -619,7 +667,7 @@ class IndependantStudentTTest(AbstractStudentTTest):
         passed = p_value > self.threshold
 
         if diagnostic_chart:
-            self._diagnostic_chart(dof=dof, t_prim=t_prim)
+            self._plot_diagnostic(dof=dof, t_prim=t_prim)
 
         logger.info(f"bias    = {bias_mean}", also_console=True)
         logger.info(f"s_p     = {s_p}", also_console=True)
@@ -660,20 +708,27 @@ class PairedStudentTTest(AbstractStudentTTest):
     )
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
-        if self.variable + "_var" not in self.reference:
+        variable_var = self.variable + "_var"
+
+        if variable_var not in self.reference:
             raise ValueError(
-                f"The target reference for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+                "The reference data for this T-test does not contain expected "
+                "appropriate variance values, could not find data variable "
+                f"'{variable_var}'"
             )
-        if self.variable + "_var" not in self.value:
+
+        if variable_var not in self.value:
             raise ValueError(
-                f"The target value for this T-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+                "The tested data for this T-test does not contain expected "
+                "appropriate variance values, could not find data variable "
+                f"'{variable_var}'"
             )
 
         ref_np = self.reference[self.variable].values.ravel()
         result_np = self.value[self.variable].values.ravel()
 
-        var_ref_np = self.reference[self.variable + "_var"].values.ravel()
-        var_res_np = self.value[self.variable + "_var"].values.ravel()
+        var_ref_np = self.reference[variable_var].values.ravel()
+        var_res_np = self.value[variable_var].values.ravel()
 
         assert ref_np.shape == result_np.shape
         assert ref_np.shape == var_ref_np.shape
@@ -698,7 +753,7 @@ class PairedStudentTTest(AbstractStudentTTest):
         passed = p_value > self.threshold
 
         if diagnostic_chart:
-            self._diagnostic_chart(dof=dof, t_prim=t_prim)
+            self._plot_diagnostic(dof=dof, t_prim=t_prim)
 
         logger.info(f"bias     = {D_mean}", also_console=True)
         logger.info(f"var mean = {var_D_mean}", also_console=True)
@@ -729,7 +784,7 @@ class ZTest(RegressionTest):
 
     METRIC_NAME = "Z-test p-value"
 
-    def _diagnostic_chart(self, z=None) -> None:
+    def _plot_diagnostic(self, z=None) -> None:
         """
         Diagnostic chart for a Z-test
 
@@ -760,15 +815,19 @@ class ZTest(RegressionTest):
         logger.info(chart, html=True)
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
-        if self.variable + "_var" not in self.value:
+        variable_var = self.variable + "_var"
+
+        if variable_var not in self.value:
             raise ValueError(
-                f"The target value for this Z-test does not record the appropriate variance values, could not find the data array {self.variable + '_var'}"
+                "The reference data for this Z-test does not contain expected "
+                "appropriate variance values, could not find data variable "
+                f"'{variable_var}'"
             )
 
         ref_np = self.reference[self.variable].values.ravel()
         result_np = self.value[self.variable].values.ravel()
 
-        var_res_np = self.value[self.variable + "_var"].values.ravel()
+        var_res_np = self.value[variable_var].values.ravel()
 
         assert ref_np.shape == result_np.shape
         assert ref_np.shape == var_res_np.shape
@@ -785,7 +844,7 @@ class ZTest(RegressionTest):
         passed = np.count_nonzero(accept_null) >= 0.9975 * result_np.size
 
         if diagnostic_chart:
-            self._diagnostic_chart(z=z)
+            self._plot_diagnostic(z=z)
 
         logger.info(f"min p-value = {min(p_values)}", also_console=True)
         logger.info(f"max p-value = {max(p_values)}", also_console=True)
@@ -797,6 +856,25 @@ class ZTest(RegressionTest):
         logger.info(f"alpha_0     = {alpha_0}", also_console=True)
 
         return passed, min(p_values)
+
+    def _plot_ref(self, metric_value: float | None = None):
+        """
+        Draw a comparison plot with reference and test data displayed together.
+        """
+        vza = np.squeeze(self.value.vza.values)
+        result = np.squeeze(self.value[self.variable].values)
+        result_var = np.squeeze(self.value[f"{self.variable}_var"].values)
+        ref = np.squeeze(self.reference[self.variable].values)
+
+        return regression_test_plots(
+            ref,
+            result,
+            vza,
+            (self.METRIC_NAME, metric_value),
+            result_var=result_var,
+            xlabel="VZA [deg]",
+            ylabel=self.variable,
+        )
 
 
 @define
@@ -816,7 +894,7 @@ class SidakTTest(RegressionTest):
 
     METRIC_NAME = "Sidak T-test p-value"
 
-    def _diagnostic_chart(self, t_prim=None) -> None:
+    def _plot_diagnostic(self, t_prim=None) -> None:
         """
         Diagnostic chart for the T-test
 
@@ -849,9 +927,13 @@ class SidakTTest(RegressionTest):
         logger.info(chart, html=True)
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
-        if self.variable + "_var" not in self.reference:
+        variable_var = self.variable + "_var"
+
+        if variable_var not in self.reference:
             raise ValueError(
-                f"The target reference for this T-test does not record the appropriate variance values, could not find the data variable {self.variable + '_var'}"
+                "The reference data for this T-test does not contain expected "
+                "appropriate variance values, could not find data variable "
+                f"'{variable_var}'"
             )
 
         ref_np = self.reference[self.variable].values.ravel()
@@ -859,8 +941,8 @@ class SidakTTest(RegressionTest):
 
         assert ref_np.shape == result_np.shape
 
-        var_ref_np = self.reference[self.variable + "_var"].values.ravel()
-        var_res_np = self.value[self.variable + "_var"].values.ravel()
+        var_ref_np = self.reference[variable_var].values.ravel()
+        var_res_np = self.value[variable_var].values.ravel()
 
         assert var_ref_np.shape == var_res_np.shape
 
@@ -880,7 +962,7 @@ class SidakTTest(RegressionTest):
         passed = np.count_nonzero(accept_null) >= 0.9975 * result_np.size
 
         if diagnostic_chart:
-            self._diagnostic_chart(t_prim=t_prim)
+            self._plot_diagnostic(t_prim=t_prim)
 
         logger.info(f"min p-value = {min(p_values)}", also_console=True)
         logger.info(f"max p-value = {max(p_values)}", also_console=True)
