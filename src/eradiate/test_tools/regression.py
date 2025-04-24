@@ -182,48 +182,50 @@ def reference_converter(
 
     Notes
     -----
-    If value is ``None``, the converter returns ``None``.
-    If value is a path to a local file, load it as a dataset.
-    If value is a path to a remote file, load it from the Eradiate data store.
-    If value is a dataset, return it as is.
-    If value is a path to a remote file but the data store raised a DataError,
-    returns ``None``.
+    * ``None`` and datasets are passed through.
+    * If ``value`` is a path to a local file, load it as a dataset.
+    * If ``value`` is a path to a remote file, load it from the data store.
+    * If ``value`` is a path that cannot be resolved to a local or remote file,
+      return ``None``.
     """
     if value is None:
         return value
 
-    try:
-        if isinstance(value, (str, os.PathLike, bytes)):
-            # Try to open a file if it is directly referenced
-            if os.path.isfile(value):
-                logger.info(
-                    f'Loading reference dataset "{str(value)}" from disk',
-                    also_console=True,
-                )
-                return xr.load_dataset(value)
+    if isinstance(value, xr.Dataset):
+        return value
 
+    if isinstance(value, (str, os.PathLike, bytes)):
+        # Try to open a file if it is directly referenced
+        if os.path.isfile(value):
             logger.info(
-                f'Attempting to serve reference dataset "{str(value)}" from the data store',
+                f'Loading reference dataset "{str(value)}" from disk',
                 also_console=True,
             )
+            return xr.load_dataset(value)
+
+        # Try to serve the file from the data store
+        try:
             logger.info(
-                f"Fetched path: {data.data_store.fetch(value)}", also_console=True
+                f'Attempting to serve reference dataset "{str(value)}" from data store',
+                also_console=True,
             )
+            fname = data.data_store.fetch(value)
+            logger.info(f"Fetched path: {fname}", also_console=True)
+            return xr.load_dataset(fname)
 
-            # Try to serve the file from the data store
-            return data.load_dataset(value)
+        except (DataError, FileNotFoundError):
+            # If we get there, it means either that the data store could not
+            # resolve the path, or the file is missing and cannot be retrieved.
+            # We just give up.
+            pass
 
-        elif isinstance(value, xr.Dataset):
-            return value
-
-        else:
-            raise ValueError(
-                "Reference must be provided as a Dataset or a file path. "
-                f"Got {type(value).__name__}"
-            )
-
-    except DataError:
+        # File not found: most likely means reference data does not exist
         return None
+
+    raise ValueError(
+        "Reference must be provided as a Dataset, a file path or None. "
+        f"Got {type(value).__name__}"
+    )
 
 
 @define
@@ -322,8 +324,8 @@ class RegressionTest(ABC):
         # the test
         if not self.reference:
             logger.info(
-                "No reference data found. Storing test results as reference to "
-                f"{fname_reference}",
+                "No reference data found. Storing test results to "
+                f"{fname_reference}. This can be the new reference.",
                 also_console=True,
             )
             self._archive(self.value, fname_reference)
