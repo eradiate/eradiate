@@ -63,12 +63,8 @@ def kernel_version():
     """
     # Retrieve the kernel and kernel patch versions
     _mi = __import__("mitsuba")
-    mitsuba_version = _mi.scalar_rgb.MI_VERSION
-    patch_version = (
-        _mi.scalar_rgb.ERD_MI_VERSION
-        if hasattr(_mi.scalar_rgb, "ERD_MI_VERSION")
-        else None
-    )
+    mitsuba_version = _mi.MI_VERSION
+    patch_version = _mi.ERD_MI_VERSION if hasattr(_mi, "ERD_MI_VERSION") else None
     return mitsuba_version, patch_version
 
 

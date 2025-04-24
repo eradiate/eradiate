@@ -5,7 +5,7 @@ Logging facilities.
 import logging
 import re
 
-import mitsuba.scalar_rgb as mi
+import mitsuba as mi
 from tqdm.auto import tqdm
 
 from .. import config

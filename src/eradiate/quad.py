@@ -75,9 +75,9 @@ class Quad:
         :class:`.Quad`
             Gauss-Legendre quadrature definition.
         """
-        from mitsuba.scalar_rgb.quad import gauss_legendre
+        from mitsuba import quad
 
-        nodes, weights = gauss_legendre(n)
+        nodes, weights = quad.gauss_legendre(n)
         return cls(
             type=QuadType.GAUSS_LEGENDRE,
             nodes=np.array(nodes, dtype=float),
@@ -100,9 +100,9 @@ class Quad:
         :class:`.Quad`
             Gauss-Lobatto quadrature definition.
         """
-        from mitsuba.scalar_rgb.quad import gauss_lobatto
+        from mitsuba import quad
 
-        nodes, weights = gauss_lobatto(n)
+        nodes, weights = quad.gauss_lobatto(n)
         return cls(
             type=QuadType.GAUSS_LOBATTO,
             nodes=np.array(nodes, dtype=float),
