@@ -5,6 +5,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "atm_flags",
     [

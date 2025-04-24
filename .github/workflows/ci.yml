@@ -21,14 +21,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install chrome
-        uses: browser-actions/setup-chrome@v1
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install .[doc,recommended,test,dev]
       - name: Get kernel hash
         run: |
+          echo "ext/mitsuba/build" >> $GITHUB_PATH
           cd ext/mitsuba
           echo "MITSUBA_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Cache kernel build
@@ -38,7 +37,7 @@ jobs:
           key:
             mitsuba-${{ env.MITSUBA_HASH }}-${{ env.CACHE_NUMBER}}
         env:
-          CACHE_NUMBER: 0
+          CACHE_NUMBER: 1
         id: cache
       - name: Build kernel
         if: steps.cache.outputs.cache-hit != 'true'

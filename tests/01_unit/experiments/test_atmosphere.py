@@ -166,6 +166,7 @@ def test_atmosphere_experiment_real_life(
     assert mi_sensors["radiancemeter"].medium().id() == "medium_atmosphere"
 
 
+@pytest.mark.slow
 def test_atmosphere_experiment_run_basic(
     modes_all_double, atmosphere_us_standard_mono, atmosphere_us_standard_ckd
 ):
@@ -190,6 +191,7 @@ def test_atmosphere_experiment_run_basic(
     assert isinstance(eradiate.run(exp, spp=100), xr.Dataset)
 
 
+@pytest.mark.slow
 def test_atmosphere_experiment_run_detailed(
     modes_all_double, atmosphere_us_standard_mono, atmosphere_us_standard_ckd
 ):
@@ -252,6 +254,7 @@ def test_atmosphere_experiment_run_detailed(
     assert np.all(results["radiance"].data > 0.0)
 
 
+@pytest.mark.slow
 def test_atmosphere_experiment_custom_atmosphere(mode_ckd, atmosphere_cams_lybia4_ckd):
     """
     Test that the AtmosphereExperiment can deal with a custom atmosphere (CAMS).
