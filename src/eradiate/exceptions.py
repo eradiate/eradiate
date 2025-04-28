@@ -2,8 +2,6 @@
 
 from pinttr.util import always_iterable
 
-import eradiate
-
 # ------------------------------------------------------------------------------
 #                                   Exceptions
 # ------------------------------------------------------------------------------
@@ -32,6 +30,9 @@ class UnsupportedModeError(ModeError):
 
     def __init__(self, supported=None, unsupported=None, msg=None):
         super(UnsupportedModeError, self).__init__(msg)
+
+        import eradiate
+
         self.mode = eradiate.mode().id if eradiate.mode() is not None else None
         self.supported = list(always_iterable(supported))
         self.unsupported = list(always_iterable(unsupported))
