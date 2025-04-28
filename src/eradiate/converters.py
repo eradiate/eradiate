@@ -5,6 +5,7 @@ __all__ = [
     "convert_thermoprops",
     "on_quantity",
     "to_dataset",
+    "to_mi_scalar_transform",
 ]
 
 import os
@@ -188,11 +189,3 @@ def convert_thermoprops(value) -> xr.Dataset:
             f"invalid type for 'thermoprops': {type(value)} "
             f"(expected Dataset or PathLike)"
         )
-
-
-def _is_quantity(x):
-    return isinstance(x, pint.Quantity)
-
-
-def _isinstance_of_2tuple_quantity(x):
-    return isinstance(x, tuple) and list(map(_is_quantity, x)) == [True, True]
