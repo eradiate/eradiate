@@ -39,6 +39,12 @@ small_files_registry_revision = "master"
 ## Offline mode switch: if true, data download attempts will be suppressed
 offline = false
 
+## List of paths to always add to the file resolver
+# path = []
+
+## Path to downloaded data folder. The default is ~/.cache/eradiate/
+# data_path = ~/Downloads/eradiate/
+
 [absorption_database.error_handling]
 # This default configuration ignores bound errors on pressure and temperature
 # variables because this usually occurs at high altitude, where the absorption

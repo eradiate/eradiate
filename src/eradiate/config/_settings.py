@@ -81,12 +81,14 @@ settings = Dynaconf(
     validators=[
         Validator("AZIMUTH_CONVENTION", cast=AzimuthConvention.convert),
         Validator("DATA_STORE_URL", cast=str),
+        Validator("DATA_PATH", default="~/.cache/eradiate", cast=str),
         Validator(
             "DOWNLOAD_DIR",
             default=_default_download_dir(),
             cast=lambda x: Path(x).resolve(),
         ),
         Validator("OFFLINE", cast=bool),
+        Validator("PATH", default=(), cast=list),
         Validator("PROGRESS", cast=ProgressLevel.convert),
         Validator("SMALL_FILES_REGISTRY_URL", cast=str),
         Validator("SMALL_FILES_REGISTRY_REVISION", cast=str),
