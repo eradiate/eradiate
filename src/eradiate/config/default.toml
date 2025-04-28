@@ -37,13 +37,22 @@ small_files_registry_url = "https://raw.githubusercontent.com/eradiate/eradiate-
 small_files_registry_revision = "master"
 
 ## Offline mode switch: if true, data download attempts will be suppressed
-offline = false
+# offline = true
+
+## List of paths to always add to the file resolver
+# path = []
+
+## Absolute path to downloaded data folder. The default is ~/.cache/eradiate/
+# data_path = "~/Downloads/eradiate/"
+
+## Path to data registry URL
+data_url = "https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v0/"
 
 [absorption_database.error_handling]
 # This default configuration ignores bound errors on pressure and temperature
 # variables because this usually occurs at high altitude, where the absorption
 # coefficient is very low and can be safely forced to 0.
-p = {missing = "raise", scalar = "raise", bounds = "ignore"}
-t = {missing = "raise", scalar = "raise", bounds = "ignore"}
+p = { missing = "raise", scalar = "raise", bounds = "ignore" }
+t = { missing = "raise", scalar = "raise", bounds = "ignore" }
 # Ignore missing molecule coordinates, raise on bound error.
-x = {missing = "ignore", scalar = "ignore", bounds = "raise"}
+x = { missing = "ignore", scalar = "ignore", bounds = "raise" }
