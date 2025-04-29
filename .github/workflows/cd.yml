@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       upload:
-        description: 'Upload wheels to PyPI? (0: no, 1: yes, 2: publish to TestPyPI)'
+        description: 'Upload wheels? (0: no (build only), 1: yes (to PyPI), 2: yes (to TestPyPI)'
         required: true
         default: '0'
 
@@ -40,6 +40,7 @@ jobs:
 
   publish:
     name: Publish to PyPI
+    if: ${{ github.event.inputs.upload == '1'}}
     needs:
       - build
     runs-on: ubuntu-latest
@@ -56,11 +57,11 @@ jobs:
           name: python-package-distributions
           path: dist/
       - name: Publish to PyPI
-        if: ${{ github.event.inputs.upload == '1'}}
         uses: pypa/gh-action-pypi-publish@release/v1
 
   publish-test:
     name: Publish to TestPyPI
+    if: ${{ github.event.inputs.upload == '2'}}
     needs:
       - build
     runs-on: ubuntu-latest
@@ -77,7 +78,6 @@ jobs:
           name: python-package-distributions
           path: dist/
       - name: Publish to TestPyPI
-        if: ${{ github.event.inputs.upload == '2'}}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
