@@ -18,8 +18,8 @@ Eradiate splits scene definition into
 :ref:`scene elements <sec-user_guide-basic_concepts-scene_elements>`.
 Scene elements inherit the :class:`.SceneElement` interface and are assembled
 into a tree which is traversed to assemble a :term:`kernel dictionary template`
-and a :term:`parameter update map template` during the initialization phase of
-the processing pipeline. We will elaborate on the traversal step later.
+and a :term:`kernel scene parameter map template` during the initialization
+phase of the processing pipeline. We will elaborate on the traversal step later.
 
 The :class:`.SceneElement` interface associates each tree node with a parameter
 update map template contribution through its :attr:`.SceneElement.params`
@@ -55,7 +55,8 @@ which all provide a different implementation of the
 
 All scene elements can be recursively traversed using the :func:`.traverse`
 function. This function outputs a pair consisting of a
-:term:`kernel dictionary template` and a :term:`parameter update map template`,
+:term:`kernel dictionary template` and a
+:term:`kernel scene parameter map template`,
 which are then used by the :class:`.Experiment` to assemble a Mitsuba scene and
 update it as part of the parametric loop.
 
