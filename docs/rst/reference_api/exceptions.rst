@@ -14,6 +14,8 @@ Exceptions
 
 .. autoclass:: TraversalError
 
+.. autoclass:: UnsetModeError
+
 .. autoclass:: UnsupportedModeError
 
 
