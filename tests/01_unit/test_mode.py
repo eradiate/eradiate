@@ -8,28 +8,28 @@ from eradiate.exceptions import UnsetModeError, UnsupportedModeError
 
 
 def test_modes_single(modes_all_single):
-    mode = eradiate.mode()
+    mode = eradiate.get_mode()
     assert mode.mi_double_precision is ModeFlag.MI_DOUBLE_PRECISION_NO
     assert mode.is_single_precision is True
     assert "_double" not in mode.mi_variant
 
 
 def test_modes_double(modes_all_double):
-    mode = eradiate.mode()
+    mode = eradiate.get_mode()
     assert mode.mi_double_precision is ModeFlag.MI_DOUBLE_PRECISION_YES
     assert mode.is_double_precision is True
     assert "_double" in mode.mi_variant
 
 
 def test_modes_mono(modes_all_mono):
-    mode = eradiate.mode()
+    mode = eradiate.get_mode()
     assert mode.spectral_mode is ModeFlag.SPECTRAL_MODE_MONO
     assert mode.is_mono is True
     assert "_mono" in mode.mi_variant
 
 
 def test_modes_ckd(modes_all_ckd):
-    mode = eradiate.mode()
+    mode = eradiate.get_mode()
     assert mode.spectral_mode is ModeFlag.SPECTRAL_MODE_CKD
     assert mode.is_ckd is True
     assert mode.is_mono is False
@@ -37,7 +37,7 @@ def test_modes_ckd(modes_all_ckd):
 
 
 def test_modes_polarized(modes_all_polarized):
-    mode = eradiate.mode()
+    mode = eradiate.get_mode()
     assert mode.mi_polarized is ModeFlag.MI_POLARIZED_YES
     assert mode.is_polarized is True
     assert "_polarized" in mode.mi_variant
@@ -47,9 +47,9 @@ def test_mode_none():
     eradiate.set_mode("none")
 
     with pytest.raises(UnsetModeError):
-        eradiate.mode(raise_exc=True)
+        eradiate.get_mode(raise_exc=True)
 
-    assert eradiate.mode(raise_exc=False) is None
+    assert eradiate.get_mode(raise_exc=False) is None
 
 
 def test_modes():
@@ -69,11 +69,11 @@ def test_modes():
 def test_mode_check():
     # Check flags for mono single mode
     eradiate.set_mode("mono_single")
-    assert eradiate.mode().check(spectral_mode="mono", mi_double_precision=False)
+    assert eradiate.get_mode().check(spectral_mode="mono", mi_double_precision=False)
 
     # Check flags for mono_double mode
     eradiate.set_mode("mono_double")
-    assert eradiate.mode().check(spectral_mode="mono", mi_double_precision=True)
+    assert eradiate.get_mode().check(spectral_mode="mono", mi_double_precision=True)
 
 
 def test_supported_mode():
