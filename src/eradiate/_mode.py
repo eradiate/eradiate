@@ -465,7 +465,7 @@ class SubtypeDispatcher:
 # ------------------------------------------------------------------------------
 
 
-def mode(raise_exc: bool = True) -> Mode | None:
+def get_mode(raise_exc: bool = True) -> Mode | None:
     """
     Get current operational mode.
 
@@ -482,12 +482,21 @@ def mode(raise_exc: bool = True) -> Mode | None:
 
     Raises
     ------
-    .UnsetModeError
-        If
+    UnsetModeError
+        If no active mode has been selected.
+
+    See Also
+    --------
+    :func:`set_mode`
     """
     if _active_mode is None and raise_exc is True:
         raise UnsetModeError
     return _active_mode
+
+
+def mode(raise_exc: bool = True) -> Mode | None:
+    """This is a thin compatibility wrapper around :func:`.get_mode()`."""
+    return get_mode(raise_exc=raise_exc)
 
 
 def modes(
