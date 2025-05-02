@@ -4,7 +4,7 @@ import pytest
 
 import eradiate
 from eradiate import ModeFlag, supported_mode, unsupported_mode
-from eradiate.exceptions import UnsupportedModeError
+from eradiate.exceptions import UnsetModeError, UnsupportedModeError
 
 
 def test_modes_single(modes_all_single):
@@ -41,6 +41,15 @@ def test_modes_polarized(modes_all_polarized):
     assert mode.mi_polarized is ModeFlag.MI_POLARIZED_YES
     assert mode.is_polarized is True
     assert "_polarized" in mode.mi_variant
+
+
+def test_mode_none():
+    eradiate.set_mode("none")
+
+    with pytest.raises(UnsetModeError):
+        eradiate.mode(raise_exc=True)
+
+    assert eradiate.mode(raise_exc=False) is None
 
 
 def test_modes():
