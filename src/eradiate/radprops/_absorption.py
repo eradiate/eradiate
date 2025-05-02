@@ -27,7 +27,12 @@ from .. import config
 from .._mode import ModeFlag, SubtypeDispatcher
 from ..attrs import define, documented
 from ..data import data_store
-from ..exceptions import DataError, InterpolationError, UnsupportedModeError
+from ..exceptions import (
+    DataError,
+    InterpolationError,
+    UnsetModeError,
+    UnsupportedModeError,
+)
 from ..typing import PathLike
 from ..units import to_quantity
 from ..units import unit_registry as ureg
@@ -442,7 +447,7 @@ class AbsorptionDatabase:
 
         # If an operational mode is selected, we check if the user is instantiating
         # a DB type that is relevant to that mode
-        if eradiate.mode() is not None:
+        try:
             cls_mode = AbsorptionDatabase.subtypes.resolve()
 
             if cls is not cls_mode:
@@ -451,6 +456,8 @@ class AbsorptionDatabase:
                     f"active mode requires to use a {cls_mode.__name__}. You might want "
                     "to consider loading a different database."
                 )
+        except UnsetModeError:
+            pass
 
         return cls.from_directory(path, **kwargs)
 

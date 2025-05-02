@@ -8,7 +8,7 @@ import attrs
 import mitsuba
 
 from .attrs import documented, frozen
-from .exceptions import UnsupportedModeError
+from .exceptions import UnsetModeError, UnsupportedModeError
 
 # ------------------------------------------------------------------------------
 #                                 Mode flags
@@ -445,8 +445,10 @@ class SubtypeDispatcher:
         --------
         :attr:`.Mode.flags`, :class:`.ModeFlag`
         """
+        active_mode = get_mode()
+
         if mode_flags is None:
-            mode_flags = _active_mode.flags
+            mode_flags = active_mode.flags
 
         for key, value in self._registry.items():
             if mode_flags & key:
@@ -463,15 +465,28 @@ class SubtypeDispatcher:
 # ------------------------------------------------------------------------------
 
 
-def mode() -> Mode | None:
+def mode(raise_exc: bool = True) -> Mode | None:
     """
     Get current operational mode.
+
+    Parameters
+    ----------
+    raise_exc : bool, default: True
+        If ``True``, raise an exception if mode has not been set prior
+        (otherwise, this function will return ``None`` in such cases).
 
     Returns
     -------
     .Mode or None
         Current operational mode.
+
+    Raises
+    ------
+    .UnsetModeError
+        If
     """
+    if _active_mode is None and raise_exc is True:
+        raise UnsetModeError
     return _active_mode
 
 

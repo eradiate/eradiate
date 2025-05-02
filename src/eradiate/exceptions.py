@@ -15,6 +15,18 @@ class ModeError(Exception):
     pass
 
 
+class UnsetModeError(ModeError):
+    """
+    Raised when an operational mode is request but no active mode is selected.
+    """
+
+    def __str__(self):
+        return (
+            "No active mode selected. "
+            "Select one by calling the `eradiate.set_mode()` function."
+        )
+
+
 class UnsupportedModeError(ModeError):
     """Raised when a feature is not supported for the currently selected mode."""
 
