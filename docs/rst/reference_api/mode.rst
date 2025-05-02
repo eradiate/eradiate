@@ -8,6 +8,8 @@
 Functions
 ---------
 
+.. autofunction:: get_mode
+
 .. autofunction:: mode
 
 .. autofunction:: modes

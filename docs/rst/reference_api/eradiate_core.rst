@@ -8,6 +8,9 @@
 Mode management
 ---------------
 
+.. autodata:: get_mode
+   :annotation:
+
 .. autodata:: mode
    :annotation:
 

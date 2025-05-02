@@ -18,6 +18,7 @@ from . import validators as validators
 from . import xarray as xarray
 from ._mode import Mode as Mode
 from ._mode import ModeFlag as ModeFlag
+from ._mode import get_mode as get_mode
 from ._mode import mode as mode
 from ._mode import modes as modes
 from ._mode import set_mode as set_mode
