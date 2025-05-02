@@ -16,7 +16,7 @@ env:
 
 jobs:
   compile:
-    name: Compile Eradiate
+    name: Build kernel
     runs-on: [self-hosted, ars, ubuntu_x86_64_eradiatecompile_spot]
 
     steps:
@@ -32,7 +32,7 @@ jobs:
           cmake --build ext/mitsuba/build
 
   test:
-    name: Execute routine tests
+    name: Run tests (routine only)
     needs: compile
     runs-on: [self-hosted, ars, ubuntu_x86_64_eradiateci_spot]
     if: github.event.pull_request.draft == true
@@ -61,7 +61,7 @@ jobs:
       - uses: ./.github/actions/save-ci-logs
 
   report:
-    name: Execute all tests
+    name: Run tests (all)
     needs: compile
     runs-on: [self-hosted, ars, ubuntu_x86_64_eradiateci_spot]
     if: github.event.pull_request.draft == false
