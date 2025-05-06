@@ -98,7 +98,7 @@ class OceanLegacyBSDF(BSDF):
         # Inherit docstring
         result = {
             "type": "ocean_legacy",
-            "wavelength": DictParameter(lambda ctx: ctx.si.w.m_as("nm")),
+            "wavelength": DictParameter(lambda ctx: float(ctx.si.w.m_as("nm"))),
             "wind_speed": self.wind_speed.m_as("m/s"),
             "wind_direction": self.wind_direction.m_as("deg"),
             "chlorinity": self.chlorinity.m_as("g/kg"),
@@ -113,6 +113,6 @@ class OceanLegacyBSDF(BSDF):
 
     @property
     def params(self) -> dict[str, SceneParameter]:
-        result = {"wavelength": SceneParameter(lambda ctx: ctx.si.w.m_as("nm"))}
+        result = {"wavelength": SceneParameter(lambda ctx: float(ctx.si.w.m_as("nm")))}
 
         return result
