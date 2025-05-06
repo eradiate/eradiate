@@ -109,7 +109,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
     # -- Atmosphere is part of the scene
     assert "shape_atmosphere" in set(shape.id() for shape in mi_wrapper.obj.shapes())
     # -- Measure gets no external medium assigned
-    assert all(sensor.medium() is None for sensor in mi_wrapper.obj.sensors())
+    assert all(sensor.get_medium() is None for sensor in mi_wrapper.obj.sensors())
 
     # Without an atmosphere
     exp = AtmosphereExperiment(
@@ -132,7 +132,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
         shape.id() for shape in mi_wrapper.obj.shapes()
     )
     # -- Measures get no external medium assigned
-    assert all(sensor.medium() is None for sensor in mi_wrapper.obj.sensors())
+    assert all(sensor.get_medium() is None for sensor in mi_wrapper.obj.sensors())
 
 
 def test_atmosphere_experiment_real_life(
@@ -156,10 +156,10 @@ def test_atmosphere_experiment_real_life(
 
     # -- Distant measures get no external medium
     mi_sensors = {sensor.id(): sensor for sensor in mi_wrapper.obj.sensors()}
-    assert mi_sensors["mdistant_measure"].medium() is None
+    assert mi_sensors["mdistant_measure"].get_medium() is None
 
     # -- Radiancemeter inside the atmosphere must have a medium assigned
-    assert mi_sensors["radiancemeter"].medium().id() == "medium_atmosphere"
+    assert mi_sensors["radiancemeter"].get_medium().id() == "medium_atmosphere"
 
 
 def test_atmosphere_experiment_run_basic(

@@ -112,7 +112,7 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
     )
 
     # -- Measures get no external medium assigned
-    assert all(sensor.medium() is None for sensor in mi_wrapper.obj.sensors())
+    assert all(sensor.get_medium() is None for sensor in mi_wrapper.obj.sensors())
 
     # Surface width is appropriately inherited from atmosphere
     exp = CanopyAtmosphereExperiment(
@@ -159,8 +159,8 @@ def test_canopy_atmosphere_experiment_surface_adjustment(mode_mono):
     )
 
     expected = (
-        mi.ScalarTransform3f.scale([1400, 1400])
-        @ mi.ScalarTransform3f.translate([-0.499642857, -0.499642857])
+        mi.ScalarTransform3f().scale([1400, 1400])
+        @ mi.ScalarTransform3f().translate([-0.499642857, -0.499642857])
     ).matrix
 
     mi_wrapper = check_scene_element(
@@ -206,10 +206,10 @@ def test_canopy_atmosphere_experiment_real_life(
     mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init())
 
     # -- Distant measures get no external medium
-    assert mi_wrapper.obj.sensors()[0].medium() is None
+    assert mi_wrapper.obj.sensors()[0].get_medium() is None
 
     # -- Radiancemeter inside the atmosphere must have a medium assigned
-    assert mi_wrapper.obj.sensors()[1].medium().id() == "medium_atmosphere"
+    assert mi_wrapper.obj.sensors()[1].get_medium().id() == "medium_atmosphere"
 
 
 @pytest.mark.slow
