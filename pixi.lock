@@ -3885,7 +3885,7 @@ packages:
 - pypi: .
   name: eradiate
   version: 0.30.0
-  sha256: 531befa001cedcd3a3a207fa5d2b64e1cb08d3a62d706e5c881d3a6c25898fa1
+  sha256: 05c7404e31a511081b5527bbcd91eb7d9ca6529c39e0ecfd3135c4e8ca0a3b63
   requires_dist:
   - aenum
   - attrs>=22.2
@@ -3909,7 +3909,7 @@ packages:
   - typer>=0.9.0
   - tqdm
   - shellingham!=1.5.1
-  - xarray>=0.19,!=0.20.*
+  - xarray>=0.19,!=0.20.*,<2025
   - eradiate-mitsuba==0.3.2 ; extra == 'kernel'
   - aabbtree ; extra == 'recommended'
   - astropy ; extra == 'recommended'
