@@ -119,7 +119,7 @@ class OceanGraspBSDF(BSDF):
 
         result = {
             "type": "ocean_grasp",
-            "wavelength": DictParameter(lambda ctx: ctx.si.w.m_as("nm")),
+            "wavelength": DictParameter(lambda ctx: float(ctx.si.w.m_as("nm"))),
             "wind_speed": self.wind_speed.m_as("m/s"),
         }
 
@@ -156,5 +156,5 @@ class OceanGraspBSDF(BSDF):
                     else None,
                 )
 
-        result["wavelength"] = SceneParameter(lambda ctx: ctx.si.w.m_as("nm"))
+        result["wavelength"] = SceneParameter(lambda ctx: float(ctx.si.w.m_as("nm")))
         return result
