@@ -101,16 +101,14 @@ class BufferMeshShape(ShapeInstance):
 
     @property
     def instance(self) -> mi.Object:
+        props = mi.Properties()
+
         if self.bsdf is not None:
             template, _ = traverse(self.bsdf)
             kdict = template.render(ctx=KernelContext())
             kdict["id"] = self._bsdf_id  # TODO: Enforce ID control at BSDF level
             bsdf = mi.load_dict(kdict)
-        else:
-            bsdf = None
-
-        props = mi.Properties()
-        props["mesh_bsdf"] = bsdf
+            props["mesh_bsdf"] = bsdf
 
         mesh = mi.Mesh(
             name=self.id,
