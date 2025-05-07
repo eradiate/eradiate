@@ -22,6 +22,7 @@ Emoji marks have the following meaning:
 ```{toctree}
 :maxdepth: 2
 
+v0.31.x.md
 v0.30.x.md
 v0.29.x.md
 v0.28.x.md
@@ -33,7 +34,8 @@ v0.23.x_and_older.md
 ```
 
 This is the list of changes to Eradiate between each release.
-For the full change log, see the [commit logs](https://github.com/eradiate/eradiate/commits/).
+For the full change log, see the
+[commit logs](https://github.com/eradiate/eradiate/commits/).
 
 % HEREAFTER IS A TEMPLATE FOR THE NEXT RELEASE
 %
