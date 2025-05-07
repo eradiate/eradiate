@@ -91,7 +91,7 @@ docutils==0.21.2
     #   pydata-sphinx-theme
     #   sphinx
     #   sphinxcontrib-bibtex
-dynaconf==3.2.10
+dynaconf==3.2.11
     # via eradiate (pyproject.toml)
 exceptiongroup==1.2.2
     # via
