@@ -25,7 +25,7 @@ def test_rectangle_construct_kernel_dict(modes_all, kwargs, expected_reflectance
 
 
 def test_rectangle_construct_trafo(modes_all):
-    assert RectangleShape(to_world=mi.Transform4f.scale(2))
+    assert RectangleShape(to_world=mi.ScalarTransform4f().scale(2))
 
 
 @pytest.mark.parametrize(
@@ -77,7 +77,7 @@ def test_rectangle_params(mode_mono_double, kwargs, expected_transform):
     if "to_world" in kwargs:
         trafo = kwargs.pop("to_world")
         if trafo:
-            to_world = mi.ScalarTransform4f.translate((1, 1, 1))
+            to_world = mi.ScalarTransform4f().translate((1, 1, 1))
             rectangle = RectangleShape(**kwargs, to_world=to_world)
     else:
         rectangle = RectangleShape(**kwargs)

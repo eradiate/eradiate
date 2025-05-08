@@ -34,7 +34,7 @@ def test_buffermesh_construct_trafo_warning(mode_mono):
         BufferMeshShape(
             vertices=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
             faces=[[1, 2, 3]],
-            to_world=mi.Transform4f.scale(2),
+            to_world=mi.ScalarTransform4f().scale(2),
         )
 
 

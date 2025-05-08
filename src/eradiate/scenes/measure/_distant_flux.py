@@ -135,7 +135,7 @@ class DistantFluxMeasure(AbstractDistantMeasure):
         result = super().template
 
         _, up = mi.coordinate_system(self.direction)
-        result["to_world"] = mi.ScalarTransform4f.look_at(
+        result["to_world"] = mi.ScalarTransform4f().look_at(
             origin=[0, 0, 0],
             target=mi.ScalarVector3f(self.direction),
             up=up,

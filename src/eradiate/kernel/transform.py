@@ -44,9 +44,9 @@ def map_unit_cube(
     --------
     You must select a Mitsuba variant before calling this function.
     """
-    return mi.ScalarTransform4f.translate(
+    return mi.ScalarTransform4f().translate(
         [xmin, ymin, zmin]
-    ) @ mi.ScalarTransform4f.scale([xmax - xmin, ymax - ymin, zmax - zmin])
+    ) @ mi.ScalarTransform4f().scale([xmax - xmin, ymax - ymin, zmax - zmin])
 
 
 def map_cube(
@@ -89,9 +89,9 @@ def map_cube(
     half_edge_y = 0.5 * (ymax - ymin)
     half_edge_z = 0.5 * (zmax - zmin)
 
-    return mi.ScalarTransform4f.translate(
+    return mi.ScalarTransform4f().translate(
         [half_edge_x + xmin, half_edge_y + ymin, half_edge_z + zmin]
-    ) @ mi.ScalarTransform4f.scale([half_edge_x, half_edge_y, half_edge_z])
+    ) @ mi.ScalarTransform4f().scale([half_edge_x, half_edge_y, half_edge_z])
 
 
 def transform_affine(t, x):

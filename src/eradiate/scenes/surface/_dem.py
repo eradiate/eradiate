@@ -119,9 +119,9 @@ def _transform_lonlat_range_to_local(
     angle_2 = 90.0 - np.rad2deg(lat_center)
     angle_3 = 90.0
     return (
-        mi.ScalarTransform4f.rotate(axis=[0, 0, 1], angle=-angle_3)
-        @ mi.ScalarTransform4f.rotate(axis=[0, 1, 0], angle=-angle_2)
-        @ mi.ScalarTransform4f.rotate(axis=[0, 0, 1], angle=-angle_1)
+        mi.ScalarTransform4f().rotate(axis=[0, 0, 1], angle=-angle_3)
+        @ mi.ScalarTransform4f().rotate(axis=[0, 1, 0], angle=-angle_2)
+        @ mi.ScalarTransform4f().rotate(axis=[0, 0, 1], angle=-angle_1)
     )
 
 
@@ -653,9 +653,9 @@ class DEMSurface(Surface):
                     [1.0, 1.0, 1.0],
                 ],
             )
-            opacity_mask_trafo = mi.ScalarTransform4f.scale(
+            opacity_mask_trafo = mi.ScalarTransform4f().scale(
                 [x_scale, y_scale, 1.0]
-            ) @ mi.ScalarTransform4f.translate(
+            ) @ mi.ScalarTransform4f().translate(
                 [-0.5 + (0.5 / x_scale), -0.5 + (0.5 / y_scale), 0.0]
             )
             opacity_bsdf = OpacityMaskBSDF(
@@ -696,9 +696,9 @@ class DEMSurface(Surface):
                 lat_mean = (lat_lim[1] + lat_lim[0]) / 2.0
                 lat_uv = 0.5 - (lat_mean / 180)
 
-                return mi.ScalarTransform4f.scale(
+                return mi.ScalarTransform4f().scale(
                     (lon_scale, lat_scale, 1.0)
-                ) @ mi.ScalarTransform4f.translate(
+                ) @ mi.ScalarTransform4f().translate(
                     [-lon_uv + (0.5 / lon_scale), -lat_uv + (0.5 / lat_scale), 0.0]
                 )
 
@@ -720,12 +720,12 @@ class DEMSurface(Surface):
 
             # The 'hole' in the background surface is created at the equator:
             # rotate the shape to align it with the mesh
-            trafo = (
-                mi.ScalarTransform4f.rotate(axis=[0, 0, 1], angle=90)
-                @ mi.ScalarTransform4f.rotate(
+            to_world = (
+                mi.ScalarTransform4f().rotate(axis=[0, 0, 1], angle=90)
+                @ mi.ScalarTransform4f().rotate(
                     axis=[0, 1, 0], angle=(90 - _middle(ylat_lim.m_as(ureg.deg)))
                 )
-                @ mi.ScalarTransform4f.rotate(
+                @ mi.ScalarTransform4f().rotate(
                     axis=[0, 0, 1], angle=-_middle(xlon_lim.m_as(ureg.deg))
                 )
             )
@@ -735,7 +735,7 @@ class DEMSurface(Surface):
                 center=[0.0, 0.0, 0.0] * geometry.planet_radius.units,
                 radius=geometry.planet_radius + geometry.ground_altitude,
                 bsdf=opacity_bsdf,
-                to_world=trafo,
+                to_world=to_world,
             )
 
         else:
