@@ -330,7 +330,10 @@ def check(
         print("Known keywords:")
         for key in KNOWN_MOLECULAR_ABSORPTION_DATABASES.keys():
             print(f"  {key}")
-        exit(0)
+        return
+
+    if keywords is None:
+        keywords = KNOWN_MOLECULAR_ABSORPTION_DATABASES.keys()
 
     for key in keywords:
         logger.info(f"Opening '{key}'")
