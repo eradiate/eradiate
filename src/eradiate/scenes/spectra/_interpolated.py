@@ -31,13 +31,12 @@ class InterpolatedSpectrum(Spectrum):
 
     Notes
     -----
-    Interpolation uses :func:`numpy.interp`. Evaluation is as follows:
-
-    * in ``mono_*`` modes, the spectrum is evaluated at the spectral context
-      wavelength;
-    * in ``ckd_*`` modes, the spectrum is evaluated as the average value over
-      the spectral context bin (the integral is computed using a trapezoid
-      rule).
+    * Interpolation uses :func:`numpy.interp`. In both ``mono_*`` and ``ckd_*``
+      modes, the spectrum is evaluated at the spectral context wavelength.
+    * In all modes, queries outside of the spectral domain covered by the input
+      data return 0.
+    * Integration performed with the :meth:`.integral` method uses a trapezoid
+      rule.
     """
 
     wavelengths: pint.Quantity = documented(
