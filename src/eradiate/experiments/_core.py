@@ -638,6 +638,7 @@ class EarthObservationExperiment(Experiment, ABC):
         kdict_template, umap_template = traverse(self.scene)
         kdict_template.update(self.kdict)
         umap_template.update(self.kpmap)
+
         try:
             ctx = self.context_init()
             self.mi_scene = mi_traverse(
@@ -646,6 +647,8 @@ class EarthObservationExperiment(Experiment, ABC):
             )
         except RuntimeError as e:
             raise RuntimeError(f"(while loading kernel scene dictionary){e}") from e
+
+        self.mi_scene = mi_traverse(mi_scene, umap_template=umap_template)
 
         # Remove unused elements from Mitsuba scene parameter table
         if drop_parameters:
@@ -684,6 +687,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
         # Run Mitsuba for each context
         logger.info("Launching simulation")
+        print("Running simulation")
 
         mi_results = mi_render(
             self.mi_scene,
@@ -692,6 +696,8 @@ class EarthObservationExperiment(Experiment, ABC):
             seed_state=seed_state,
             spp=spp,
         )
+
+        print("- done")
 
         # Assign collected results to the appropriate measure
         sensor_to_measure: dict[str, Measure] = {

@@ -9,10 +9,15 @@ from eradiate.test_tools.test_cases.rami4atm import (
 from eradiate.test_tools.util import append_doc
 
 
+@pytest.fixture
+def exp():
+    yield create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp()
+
+
 @append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp, prepend=True)
 @pytest.mark.regression
 def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
-    mode_ckd_double, artefact_dir, session_timestamp
+    mode_ckd_double, artefact_dir, session_timestamp, exp
 ):
     r"""
     *Expected behaviour*
@@ -23,7 +28,6 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
     a threshold of 0.005.
     """
 
-    exp = create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp()
     result = eradiate.run(exp)
     logger.info(result._repr_html_(), html=True)
 

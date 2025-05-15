@@ -1,3 +1,4 @@
+import pytest
 from robot.api import logger
 
 import eradiate
@@ -8,12 +9,16 @@ from eradiate.test_tools.test_cases.atmospheres import (
 from eradiate.test_tools.util import append_doc
 
 
+@pytest.fixture
+def exp(absorption_database_error_handler_config):
+    yield create_rpv_afgl1986_continental_brfpp(
+        absorption_database_error_handler_config
+    )
+
+
 @append_doc(create_rpv_afgl1986_continental_brfpp, prepend=True)
 def test_rpv_afgl1986_continental_brfpp(
-    mode_ckd_double,
-    artefact_dir,
-    session_timestamp,
-    absorption_database_error_handler_config,
+    mode_ckd_double, artefact_dir, session_timestamp, exp
 ):
     """
     *Expected behaviour*
@@ -22,9 +27,6 @@ def test_rpv_afgl1986_continental_brfpp(
     version. Comparison is done with a chi-squared test with a threshold of
     0.05.
     """
-    exp = create_rpv_afgl1986_continental_brfpp(
-        absorption_database_error_handler_config
-    )
     result = eradiate.run(exp, spp=10000)
     logger.info(result._repr_html_(), html=True)
 
