@@ -78,7 +78,7 @@ def pytest_configure(config):
     # Mitsuba's logger is configured to be silent, unless Pytest's configuration
     # explicitly requires an increased verbosity (e.g, passing the -v option to
     # its CLI)
-    eradiate.kernel.install_logging()
+    # eradiate.kernel.install_logging()
     pytest_verbosity = config.get_verbosity()
     logging.getLogger("mitsuba").setLevel(logging.WARNING)
     logging.getLogger("eradiate").setLevel(logging.INFO)
@@ -150,4 +150,4 @@ del generate_fixture_group
 #                                 Other fixtures
 # ------------------------------------------------------------------------------
 
-from eradiate.test_tools.fixtures import *  # noqa: E402, F401, F403
+# from eradiate.test_tools.fixtures import *  # noqa: E402, F401, F403
