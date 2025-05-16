@@ -19,6 +19,7 @@ bsdf_factory.register_lazy_batch(
         ("_opacity_mask.OpacityMaskBSDF", "opacity_mask", {}),
         ("_rpv.RPVBSDF", "rpv", {}),
         ("_rtls.RTLSBSDF", "rtls", {}),
+        ("_hapke.HapkeBSDF", "hapke", {}),
     ],
     cls_prefix="eradiate.scenes.bsdfs",
 )
