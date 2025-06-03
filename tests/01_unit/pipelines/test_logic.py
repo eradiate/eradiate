@@ -29,65 +29,72 @@ from eradiate.units import unit_registry as ureg
 
 @pytest.fixture(params=["mono", "ckd", "mono_polarized", "ckd_polarized"])
 def mode_id(request):
-    # This fixture parametrizes the `experiment` fixture against the selected
-    # mode
-    return request.param
-
-
-@pytest.fixture(params=["hemispherical_distant", "distant_flux"])
-def measure(request):
-    # This fixture is used to further parametrize the `experiment` fixture
-    if request.param in {"hemispherical_distant", "distant_flux"}:
-        return request.param
-
-    raise NotImplementedError(request.param)
-
-
-@pytest.fixture(params=["multi_delta", "sentinel_2a-msi-3"])
-def srf(request):
-    # This fixture is used to further parametrize the `experiment` fixture
-    if request.param in {"multi_delta", "sentinel_2a-msi-3"}:
-        return request.param
-
-    raise NotImplementedError(request.param)
+    yield request.param
 
 
 @pytest.fixture
 def mode(mode_id):
-    # In addition to setting the mode, this fixture returns it for convenience
     eradiate.set_mode(mode_id)
-    return eradiate.mode()
+    yield eradiate.get_mode()
+
+
+@pytest.fixture(params=["hdistant", "distantflux"])
+def measure(request):
+    if request.param in {"hdistant", "distantflux"}:
+        yield request.param
+    else:
+        raise NotImplementedError(request.param)
+
+
+@pytest.fixture(params=["delta", "sentinel_2a-msi-3"])
+def srf(request):
+    if request.param in {"delta", "sentinel_2a-msi-3"}:
+        yield request.param
+    else:
+        raise NotImplementedError(request.param)
+
+
+def get_experiment(mode_id, srf, measure):
+    experiment_setup = (mode_id, srf, measure)
+    eradiate.set_mode(mode_id)
+    mode = eradiate.get_mode()
+
+    if experiment_setup not in EXPERIMENTS:
+        if srf == "delta":
+            srf_dict = {"type": "delta", "wavelengths": 550.0 * ureg.nm}
+            spp = 256
+        elif srf == "sentinel_2a-msi-3":
+            srf_dict = "sentinel_2a-msi-3"
+            spp = 32
+        else:
+            raise NotImplementedError(srf)
+
+        exp = AtmosphereExperiment(
+            atmosphere=None,
+            surface={"type": "lambertian", "reflectance": 1.0},
+            illumination={"type": "directional", "irradiance": 2.0},
+            measures={
+                "type": measure,
+                "film_resolution": (32, 32),
+                "spp": spp,
+                "srf": srf_dict,
+            },
+        )
+
+        var_name, _ = exp.measures[0].var
+        exp.integrator.stokes = mode.is_polarized and var_name == "radiance"
+        exp.integrator.moment = True
+
+        exp.process()
+        EXPERIMENTS[experiment_setup] = exp
+
+    return EXPERIMENTS[experiment_setup]
 
 
 @pytest.fixture
-def experiment(mode, srf, measure):
+def experiment(mode_id, srf, measure):
     # Create an experiment and run it (parametrized by above fixtures)
-
-    if srf == "multi_delta":
-        srf_dict = {"type": "multi_delta", "wavelengths": 550.0 * ureg.nm}
-    elif srf == "sentinel_2a-msi-3":
-        srf_dict = "sentinel_2a-msi-3"
-    else:
-        raise NotImplementedError(srf)
-
-    exp = AtmosphereExperiment(
-        atmosphere=None,
-        surface={"type": "lambertian", "reflectance": 1.0},
-        illumination={"type": "directional", "irradiance": 2.0},
-        measures={
-            "type": measure,
-            "film_resolution": (32, 32),
-            "spp": 256,
-            "srf": srf_dict,
-        },
-    )
-
-    var_name, _ = exp.measures[0].var
-    exp.integrator.stokes = mode.is_polarized and var_name == "radiance"
-    exp.integrator.moment = True
-
-    exp.process()
-    return exp
+    yield get_experiment(mode_id, srf, measure)
 
 
 @pytest.fixture
@@ -183,154 +190,23 @@ def apply_spectral_response(mode, measure, experiment, aggregate_ckd_quad):
 #                                     Tests
 # ------------------------------------------------------------------------------
 
-
-@pytest.mark.parametrize("mode_id", ["ckd", "ckd_polarized"])
-@pytest.mark.parametrize("measure", ["hemispherical_distant"])
-def test_aggregate_ckd_quad(mode, experiment, gather_bitmaps, aggregate_ckd_quad):
-    var_name = experiment.measures[0].var[0]
-    raw = gather_bitmaps[f"{var_name}_raw"]
-    result = aggregate_ckd_quad
-
-    # Dimension checks
-    expected_dims = set(raw.dims) - {"g"}
-    assert set(result.dims) == expected_dims
-
-    # Coordinate checks
-    expected_coords = (set(raw.coords) - {"g"}) | {"bin_wmin", "bin_wmax"}
-    assert set(result.coords) == expected_coords
-    assert result.bin_wmin.dims == ("w",)
-    assert result.bin_wmax.dims == ("w",)
-
-    # Variable checks
-    # -- In the present case, the quadrature evaluates to 2/π
-    if not mode.is_polarized:
-        assert np.allclose(result.values, 2.0 / np.pi)
-    else:
-        assert np.allclose(result.sel(stokes="I").values, 2.0 / np.pi)
-
-    # -- Metadata of the variable for which aggregation is performed are copied
-    assert result.attrs == raw.attrs
+EXPERIMENTS = {}
 
 
-@pytest.mark.parametrize("mode_id", ["ckd", "ckd_polarized"])
-@pytest.mark.parametrize("measure", ["hemispherical_distant"])
-def test_aggregate_ckd_quad_var(experiment, gather_bitmaps, aggregate_ckd_quad_var):
-    var_name = experiment.measures[0].var[0]
-    raw = gather_bitmaps[f"{var_name}_m2_raw"]
-    result = aggregate_ckd_quad_var
-
-    # Dimension checks
-    expected_dims = set(raw.dims) - {"g"}
-    assert set(result.dims) == expected_dims
-
-    # Coordinate checks
-    expected_coords = (set(raw.coords) - {"g"}) | {"bin_wmin", "bin_wmax"}
-    assert set(result.coords) == expected_coords
-    assert result.bin_wmin.dims == ("w",)
-    assert result.bin_wmax.dims == ("w",)
-
-    # Variable checks
-    # -- Metadata of the variable for which aggregation is performed are copied
-    assert result.attrs == raw.attrs
+# def test_00_run_experiment(mode_id, srf, measure):
+#     """
+#     This test exists for debugging purposes. In case the setup of a test takes
+#     too long, this one can be used to further investigate issued related to
+#     experiment execution.
+#     """
+#     assert get_experiment(mode_id, srf, measure)
 
 
-@pytest.mark.parametrize("mode_id", ["ckd"])
-@pytest.mark.parametrize("srf", ["sentinel_2a-msi-3"])
-def test_apply_spectral_response_main(
-    experiment, aggregate_ckd_quad, apply_spectral_response
-):
-    """
-    Unit test for :func:`.apply_spectral_response` when used on the main
-    variable.
-    """
-    var_name = experiment.measures[0].var[0]
-    raw = aggregate_ckd_quad
-    result = apply_spectral_response
-
-    # Dimension checks
-    expected_dims = set(raw.dims) - {"w"}
-    assert set(result.dims) == expected_dims
-
-    # Coordinate checks
-    expected_coords = set(raw.coords) - ({"w"} | {"bin_wmax", "bin_wmin"})
-    assert set(result.coords) == expected_coords
-
-    # The step adds an SRF-weighted variable
-    assert apply_spectral_response.name == f"{var_name}_srf"
-    assert np.all(apply_spectral_response.values > 0.0)
-
-
-@pytest.mark.parametrize("mode_id", ["ckd"])
-@pytest.mark.parametrize("srf", ["sentinel_2a-msi-3"])
-def test_apply_spectral_response_irradiance(irradiance, experiment):
-    """
-    Unit test for :func:`.apply_spectral_response` when used on the irradiance
-    variable.
-    """
-    result = logic.apply_spectral_response(irradiance, experiment.measures[0].srf)
-
-    # The step adds an SRF-weighted variable
-    assert result.name == "irradiance_srf"
-    assert np.all(result.values > 0.0)
-
-
-@pytest.mark.parametrize(
-    "illumination_type, expected_dims, expect_solar_angles",
-    [
-        ("directional", ["sza", "saa"], True),
-        ("constant", [], False),
-    ],
-)
-def test_extract_irradiance(
-    mode, illumination_type, expected_dims, expect_solar_angles
-):
-    if illumination_type == "directional":
-        illumination = DirectionalIllumination(zenith=30.0, azimuth=45.0)
-    elif illumination_type == "constant":
-        illumination = ConstantIllumination()
-    else:
-        raise ValueError
-
-    # Computation succeeds
-    if mode.is_mono:
-        spectral_grid = MonoSpectralGrid(np.linspace(400.0, 500.0) * ureg.nm)
-    elif mode.is_ckd:
-        spectral_grid = CKDSpectralGrid.arange(
-            400.0 * ureg.nm, 500.0 * ureg.nm, 10.0 * ureg.nm
-        )
-    else:
-        raise NotImplementedError
-
-    # Return value is a dictionary holding a data array and an optional dataset
-    result = logic.extract_irradiance(mode.id, illumination, spectral_grid)
-    assert set(result.keys()) == {"irradiance", "solar_angles"}
-    assert isinstance(result["irradiance"], xr.DataArray)
-
-    if expect_solar_angles:
-        assert isinstance(result["solar_angles"], xr.Dataset)
-    else:
-        assert result["solar_angles"] is None
-
-    # Irradiance is indexed by solar angle and spectral coordinates
-    assert set(result["irradiance"].dims) == {"w"}.union(set(expected_dims))
-
-    # Irradiance data array also contains bin bounds as coordinates when relevant
-    expected_coords = {"w"}.union(set(expected_dims))
-    if eradiate.mode().is_ckd:
-        expected_coords |= {"bin_wmin", "bin_wmax"}
-    assert set(result["irradiance"].coords) == expected_coords
-
-
-@pytest.mark.parametrize("srf", ["multi_delta"])
-@pytest.mark.parametrize("measure", ["hemispherical_distant"])
-def test_gather_bitmaps(mode, gather_bitmaps):
+@pytest.mark.parametrize("srf", ["delta"])
+@pytest.mark.parametrize("measure", ["hdistant"])
+def test_01_gather_bitmaps(mode, experiment, gather_bitmaps):
     # Routine creates the variables we expect
-    expected_variables = {
-        "spp",
-        "radiance_raw",
-        "radiance_m2_raw",
-        "weights_raw",
-    }
+    expected_variables = {"spp", "radiance_raw", "radiance_m2_raw", "weights_raw"}
     assert set(gather_bitmaps.keys()) == expected_variables
 
     # Each variable has the dimensions we expect
@@ -372,8 +248,145 @@ def test_gather_bitmaps(mode, gather_bitmaps):
         assert np.allclose(gather_bitmaps["radiance_raw"].values, 2.0 / np.pi)
 
 
-@pytest.mark.parametrize("measure", ["distant_flux"])
-def test_radiosity(mode, gather_bitmaps):
+@pytest.mark.parametrize("mode_id", ["ckd", "ckd_polarized"])
+@pytest.mark.parametrize("measure", ["hdistant"])
+def test_02_aggregate_ckd_quad(mode, experiment, gather_bitmaps, aggregate_ckd_quad):
+    var_name = experiment.measures[0].var[0]
+    raw = gather_bitmaps[f"{var_name}_raw"]
+    result = aggregate_ckd_quad
+
+    # Dimension checks
+    expected_dims = set(raw.dims) - {"g"}
+    assert set(result.dims) == expected_dims
+
+    # Coordinate checks
+    expected_coords = (set(raw.coords) - {"g"}) | {"bin_wmin", "bin_wmax"}
+    assert set(result.coords) == expected_coords
+    assert result.bin_wmin.dims == ("w",)
+    assert result.bin_wmax.dims == ("w",)
+
+    # Variable checks
+    # -- In the present case, the quadrature evaluates to 2/π
+    if not mode.is_polarized:
+        assert np.allclose(result.values, 2.0 / np.pi)
+    else:
+        assert np.allclose(result.sel(stokes="I").values, 2.0 / np.pi)
+
+    # -- Metadata of the variable for which aggregation is performed are copied
+    assert result.attrs == raw.attrs
+
+
+@pytest.mark.parametrize("mode_id", ["ckd", "ckd_polarized"])
+@pytest.mark.parametrize("measure", ["hdistant"])
+def test_03_aggregate_ckd_quad_var(experiment, gather_bitmaps, aggregate_ckd_quad_var):
+    var_name = experiment.measures[0].var[0]
+    raw = gather_bitmaps[f"{var_name}_m2_raw"]
+    result = aggregate_ckd_quad_var
+
+    # Dimension checks
+    expected_dims = set(raw.dims) - {"g"}
+    assert set(result.dims) == expected_dims
+
+    # Coordinate checks
+    expected_coords = (set(raw.coords) - {"g"}) | {"bin_wmin", "bin_wmax"}
+    assert set(result.coords) == expected_coords
+    assert result.bin_wmin.dims == ("w",)
+    assert result.bin_wmax.dims == ("w",)
+
+    # Variable checks
+    # -- Metadata of the variable for which aggregation is performed are copied
+    assert result.attrs == raw.attrs
+
+
+@pytest.mark.parametrize("mode_id", ["ckd"])
+@pytest.mark.parametrize("srf", ["sentinel_2a-msi-3"])
+def test_04_apply_spectral_response_main(
+    experiment, aggregate_ckd_quad, apply_spectral_response
+):
+    """
+    Unit test for :func:`.apply_spectral_response` when used on the main
+    variable.
+    """
+    var_name = experiment.measures[0].var[0]
+    raw = aggregate_ckd_quad
+    result = apply_spectral_response
+
+    # Dimension checks
+    expected_dims = set(raw.dims) - {"w"}
+    assert set(result.dims) == expected_dims
+
+    # Coordinate checks
+    expected_coords = set(raw.coords) - ({"w"} | {"bin_wmax", "bin_wmin"})
+    assert set(result.coords) == expected_coords
+
+    # The step adds an SRF-weighted variable
+    assert apply_spectral_response.name == f"{var_name}_srf"
+    assert np.all(apply_spectral_response.values > 0.0)
+
+
+@pytest.mark.parametrize("mode_id", ["ckd"])
+@pytest.mark.parametrize("srf", ["sentinel_2a-msi-3"])
+def test_05_apply_spectral_response_irradiance(irradiance, experiment):
+    """
+    Unit test for :func:`.apply_spectral_response` when used on the irradiance
+    variable.
+    """
+    result = logic.apply_spectral_response(irradiance, experiment.measures[0].srf)
+
+    # The step adds an SRF-weighted variable
+    assert result.name == "irradiance_srf"
+    assert np.all(result.values > 0.0)
+
+
+@pytest.mark.parametrize(
+    "illumination_type, expected_dims, expect_solar_angles",
+    [
+        ("directional", ["sza", "saa"], True),
+        ("constant", [], False),
+    ],
+)
+def test_06_extract_irradiance(
+    mode, illumination_type, expected_dims, expect_solar_angles
+):
+    if illumination_type == "directional":
+        illumination = DirectionalIllumination(zenith=30.0, azimuth=45.0)
+    elif illumination_type == "constant":
+        illumination = ConstantIllumination()
+    else:
+        raise ValueError
+
+    # Computation succeeds
+    if mode.is_mono:
+        spectral_grid = MonoSpectralGrid(np.linspace(400.0, 500.0) * ureg.nm)
+    elif mode.is_ckd:
+        spectral_grid = CKDSpectralGrid.arange(
+            400.0 * ureg.nm, 500.0 * ureg.nm, 10.0 * ureg.nm
+        )
+    else:
+        raise NotImplementedError
+
+    # Return value is a dictionary holding a data array and an optional dataset
+    result = logic.extract_irradiance(mode.id, illumination, spectral_grid)
+    assert set(result.keys()) == {"irradiance", "solar_angles"}
+    assert isinstance(result["irradiance"], xr.DataArray)
+
+    if expect_solar_angles:
+        assert isinstance(result["solar_angles"], xr.Dataset)
+    else:
+        assert result["solar_angles"] is None
+
+    # Irradiance is indexed by solar angle and spectral coordinates
+    assert set(result["irradiance"].dims) == {"w"}.union(set(expected_dims))
+
+    # Irradiance data array also contains bin bounds as coordinates when relevant
+    expected_coords = {"w"}.union(set(expected_dims))
+    if eradiate.mode().is_ckd:
+        expected_coords |= {"bin_wmin", "bin_wmax"}
+    assert set(result["irradiance"].coords) == expected_coords
+
+
+@pytest.mark.parametrize("measure", ["distantflux"])
+def test_07_radiosity(mode, gather_bitmaps):
     # Initialize test data
     irradiance = 2.0
     sector_radiosity = gather_bitmaps["sector_radiosity_raw"]
@@ -387,8 +400,8 @@ def test_radiosity(mode, gather_bitmaps):
 
 
 @pytest.mark.parametrize("mode_id", ["mono"])
-@pytest.mark.parametrize("srf", ["multi_delta"])
-def test_viewing_angles(experiment):
+@pytest.mark.parametrize("srf", ["delta"])
+def test_08_viewing_angles(experiment):
     # This test is minimal and simply checks for returned type and variable names
     result = logic.viewing_angles(experiment.measures[0].viewing_angles)
     assert isinstance(result, xr.Dataset)
@@ -396,9 +409,9 @@ def test_viewing_angles(experiment):
 
 
 @pytest.mark.parametrize("mode_id", ["mono_polarized", "ckd_polarized"])
-@pytest.mark.parametrize("measure", ["hemispherical_distant"])
-@pytest.mark.parametrize("srf", ["multi_delta"])
-def test_degree_of_linear_polarization(mode, aggregate_ckd_quad):
+@pytest.mark.parametrize("measure", ["hdistant"])
+@pytest.mark.parametrize("srf", ["delta"])
+def test_09_degree_of_linear_polarization(mode, aggregate_ckd_quad):
     result = logic.degree_of_linear_polarization(aggregate_ckd_quad)
 
     # Each variable has the dimensions we expect
