@@ -1,5 +1,4 @@
 from . import gridvolume as gridvolume
-from . import logging as logging
 from . import transform as transform
 from ._bitmap import bitmap_to_dataarray as bitmap_to_dataarray
 from ._bitmap import bitmap_to_dataset as bitmap_to_dataset
@@ -18,6 +17,5 @@ from ._render import mi_traverse as mi_traverse
 from ._versions import check_kernel as check_kernel
 from .gridvolume import read_binary_grid3d as read_binary_grid3d
 from .gridvolume import write_binary_grid3d as write_binary_grid3d
-from .logging import install_logging as install_logging
 from .transform import map_cube as map_cube
 from .transform import map_unit_cube as map_unit_cube
