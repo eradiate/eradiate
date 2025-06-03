@@ -149,4 +149,4 @@ del generate_fixture_group
 #                                 Other fixtures
 # ------------------------------------------------------------------------------
 
-# from eradiate.test_tools.fixtures import *  # noqa: E402, F401, F403
+from eradiate.test_tools.fixtures import *  # noqa: E402, F401, F403
