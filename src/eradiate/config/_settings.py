@@ -133,20 +133,10 @@ settings = Dynaconf(
             default=_defaults.data_url,
         ),
         Validator(
-            "DATA_STORE_URL",
-            cast=str,
-            default=_defaults.data_store_url,
-        ),
-        Validator(
             "DATA_PATH",
             cast=Path,
             default=_defaults.data_path,
         ),
-        Validator(
-            "DOWNLOAD_DIR",
-            cast=lambda x: Path(x).resolve(),
-            default=_defaults.download_dir,
-        ),  # TODO: Delete
         Validator(
             "OFFLINE",
             cast=bool,
@@ -162,16 +152,6 @@ settings = Dynaconf(
             cast=ProgressLevel.convert,
             default=_defaults.progress,
         ),
-        Validator(
-            "SMALL_FILES_REGISTRY_URL",
-            cast=str,
-            default=_defaults.small_files_registry_url,
-        ),  # TODO: DELETE
-        Validator(
-            "SMALL_FILES_REGISTRY_REVISION",
-            cast=str,
-            default=_defaults.small_files_registry_revision,
-        ),  # TODO: DELETE
     ],
 )
 
