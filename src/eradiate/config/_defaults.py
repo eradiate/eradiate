@@ -31,20 +31,6 @@ def data_path(settings=None, validator=None) -> Path:
     return Path(platformdirs.user_cache_dir(appname="eradiate"))
 
 
-def download_dir(settings, validator=None) -> Path:
-    source_dir = settings.get("SOURCE_DIR")
-
-    return (
-        Path("./eradiate_downloads").absolute().resolve()
-        if source_dir is None
-        else source_dir / ".eradiate_downloads"
-    )
-
-
-def data_store_url(settings=None, validator=None) -> str:
-    return "https://eradiate.eu/data/store/"
-
-
 def data_url(settings=None, validator=None) -> str:
     return "https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v1/"
 
@@ -59,14 +45,6 @@ def path(settings=None, validator=None) -> list:
 
 def progress(settings=None, validator=None) -> str:
     return "spectral_loop"
-
-
-def small_files_registry_url(settings=None, validator=None) -> str:
-    return "https://raw.githubusercontent.com/eradiate/eradiate-data"
-
-
-def small_files_registry_revision(settings=None, validator=None) -> str:
-    return "master"
 
 
 def source_dir(settings=None, validator=None) -> str | None:
