@@ -25,7 +25,7 @@ from ._mode import set_mode as set_mode
 from ._mode import supported_mode as supported_mode
 from ._mode import unsupported_mode as unsupported_mode
 from .contexts import KernelContext as KernelContext
-from .data._store_new import asset_manager as asset_manager
+from .data._asset_manager import asset_manager as asset_manager
 from .data._util import fresolver as fresolver
 from .experiments import run as run
 from .notebook import load_ipython_extension as load_ipython_extension
