@@ -5,6 +5,7 @@ import pint
 import pinttr
 
 from ._core import AbstractDirectionalIllumination
+from ..core import NodeSceneElement
 from ...attrs import define, documented
 from ...frame import angles_to_direction
 from ...units import unit_context_config as ucc
@@ -72,3 +73,7 @@ class AstroObjectIllumination(AbstractDirectionalIllumination):
             "to_world": self._to_world,
             "angular_diameter": self.angular_diameter.m_as("degree"),
         }
+
+    @property
+    def objects(self) -> dict[str, NodeSceneElement]:
+        return {"irradiance": self.irradiance}
