@@ -7,31 +7,26 @@ metadata:
 resources: # List of resource aliases
   # Each entry of this mapping takes as key an alias name, and as values
   # one or several resource paths or aliases.
-  aerosols: aerosols/core-v1
-  bsdfs: bsdfs/rpv-v1  # merge with reflectance
-  chemistry: chemistry/core-v1  # merge with optics under "constants"
+  aerosol: aerosol/core-v1
+  bsdf: bsdf/core-v1
+  constant: constant/core-v1
   gecko: absorption_mono/gecko-v1
-  irradiance: irradiance/solar-v1  # rename solar_irradiance
+  solar_irradiance: solar_irradiance/core-v1
   komodo: absorption_mono/komodo-v1
   monotropa: absorption_ckd/monotropa-v1
   mycena: absorption_ckd/mycena-v2
-  optics: optics/core-v1
   panellus: absorption_ckd/panellus-v1
-  reflectance: reflectance/core-v1
   srf: srf/core-v1
-  textures: textures/core-v1
-  thermoprops: thermoprops/core-v1  # alias to atmosperic_profiles
-  tutorials: tutorials/core-v1
+  texture: texture/core-v1
   # Multi-resource aliases hereafter
   core:
-    # - constants
-    # - irradiance
-    - srf
-    - bsdfs
+    - bsdf
+    - constant
     - gecko
     - monotropa
-    - textures
-    - thermoprops
+    - solar_irradiance
+    - srf
+    - texture
   absorption:
     - gecko
     - komodo
