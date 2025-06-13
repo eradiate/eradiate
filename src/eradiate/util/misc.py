@@ -6,15 +6,19 @@ from __future__ import annotations
 
 import functools
 import inspect
+import os
 import re
 import typing as t
 from collections import OrderedDict
 from numbers import Number
+from pathlib import Path
 
 import numpy as np
 import numpy.typing as npt
 import pint
 import xarray as xr
+
+from eradiate.typing import PathLike
 
 
 class cache_by_id:
@@ -612,3 +616,61 @@ class MultiGenerator:
                 self._i_generator += 1
                 self._current_iterator = iter(self.generators[self._i_generator])
                 return self.__next__()
+
+
+def dirsize(path: PathLike) -> int:
+    """
+    Compute the recursive size of a directory in bytes, not following symlinks.
+
+    Parameters
+    ----------
+    path : path-like
+        Path to the directory to compute size for.
+
+    Returns
+    -------
+    int
+        Total size of the directory in bytes.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the directory does not exist.
+    NotADirectoryError
+        If the path is not a directory.
+    """
+    path = Path(path)
+
+    if not path.exists():
+        raise FileNotFoundError(f"Directory does not exist: {path}")
+
+    if not path.is_dir():
+        raise NotADirectoryError(f"Path is not a directory: {path}")
+
+    total_size = 0
+
+    for root, dirs, files in os.walk(path, followlinks=False):
+        root_path = Path(root)
+
+        # Add size of all files in current directory
+        for file in files:
+            file_path = root_path / file
+            try:
+                # Use lstat to not follow symlinks
+                total_size += file_path.lstat().st_size
+            except (OSError, FileNotFoundError):
+                # Skip files that we can't access or have been deleted
+                continue
+
+        # Add size of directories themselves (directory entries)
+        for dir_name in dirs:
+            dir_path = root_path / dir_name
+            try:
+                # Only count directory entry size, not content (handled by recursion)
+                if not dir_path.is_symlink():
+                    total_size += dir_path.lstat().st_size
+            except (OSError, FileNotFoundError):
+                # Skip directories that we can't access
+                continue
+
+    return total_size
