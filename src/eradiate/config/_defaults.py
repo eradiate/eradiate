@@ -46,7 +46,7 @@ def data_store_url(settings=None, validator=None) -> str:
 
 
 def data_url(settings=None, validator=None) -> str:
-    return "https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v0/"
+    return "https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v1/"
 
 
 def offline(settings=None, validator=None) -> bool:
