@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 import pytest
 from typing_extensions import ParamSpec, TypeAlias
 
-from ..data import data_store
 from ..exceptions import DataError
 from ..typing import PathLike
 
