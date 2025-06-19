@@ -22,7 +22,7 @@ resources: # List of resource aliases
   core:
     - bsdf
     - constant
-    - gecko
+    - komodo
     - monotropa
     - solar_irradiance
     - srf
