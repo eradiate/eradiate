@@ -23,10 +23,9 @@ from pinttrs.util import ensure_units
 
 import eradiate
 
-from .. import config
+from .. import config, fresolver
 from .._mode import ModeFlag, SubtypeDispatcher
 from ..attrs import define, documented
-from ..data import data_store
 from ..exceptions import (
     DataError,
     InterpolationError,
@@ -441,7 +440,18 @@ class AbsorptionDatabase:
             raise ValueError(f"Unknown absorption coefficient database '{name}'") from e
 
         # Not great, but a.t.m it's the nicest we can do
-        path = data_store.fetch(f"{db['path']}/metadata.json").parent
+        try:
+            path_metadata = fresolver.resolve(
+                f"{db['path']}/metadata.json", strict=True
+            )
+        except FileNotFoundError as e:
+            raise DataError(
+                f"While opening absorption database '{name}': could not resolve the "
+                "expected metadata file. That means either that the "
+                "data is located at a location that cannot be discovered by the "
+                "file resolver, or that the data has not been downloaded."
+            ) from e
+        path = path_metadata.parent
         cls = db["cls"]
         kwargs = {**db.get("kwargs", {}), **kwargs}
 
@@ -1037,32 +1047,32 @@ class CKDAbsorptionDatabase(AbsorptionDatabase):
 KNOWN_DATABASES = {
     "gecko": {
         "cls": MonoAbsorptionDatabase,
-        "path": "spectra/absorption/mono/gecko",
+        "path": "absorption_mono/gecko",
         "kwargs": {"lazy": True},
     },
     "komodo": {
         "cls": MonoAbsorptionDatabase,
-        "path": "spectra/absorption/mono/komodo",
+        "path": "absorption_mono/komodo",
         "kwargs": {"lazy": True},
     },
     "monotropa": {
         "cls": CKDAbsorptionDatabase,
-        "path": "spectra/absorption/ckd/monotropa",
+        "path": "absorption_ckd/monotropa",
     },
     "mycena": {
         "cls": CKDAbsorptionDatabase,
-        "path": "spectra/absorption/ckd/mycena_v2",
+        "path": "absorption_ckd/mycena_v2",
     },
     "mycena_v2": {
         "cls": CKDAbsorptionDatabase,
-        "path": "spectra/absorption/ckd/mycena_v2",
+        "path": "absorption_ckd/mycena_v2",
     },
     "mycena_v1": {  # Deprecated
         "cls": CKDAbsorptionDatabase,
-        "path": "spectra/absorption/ckd/mycena",
+        "path": "absorption_ckd/mycena",
     },
     "panellus": {
         "cls": CKDAbsorptionDatabase,
-        "path": "spectra/absorption/ckd/panellus",
+        "path": "absorption_ckd/panellus",
     },
 }
