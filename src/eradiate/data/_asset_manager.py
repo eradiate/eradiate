@@ -517,7 +517,7 @@ class AssetManager:
         to_download = [
             k
             for k, v in self.state(resource_ids).items()
-            if not (v | ResourceState.UNPACKED)
+            if not (v & ResourceState.UNPACKED)
         ]
         self.download(to_download, unpack=True, progressbar=progressbar)
         if isinstance(resource_ids, str):
