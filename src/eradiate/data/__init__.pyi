@@ -1,2 +1,2 @@
 from ._asset_manager import AssetManager as AssetManager
-from ._util import FileResolver as FileResolver
+from ._file_resolver import FileResolver as FileResolver
