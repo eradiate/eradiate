@@ -4,6 +4,7 @@ from pathlib import Path
 
 import attrs
 
+from ._asset_manager import asset_manager
 from ..attrs import define
 from ..config import settings
 from ..typing import PathLike
@@ -121,4 +122,4 @@ class FileResolver:
 
 
 #: Unique file resolver instance
-fresolver = FileResolver(settings["path"])
+fresolver = FileResolver(settings["path"] + [asset_manager.install_dir])
