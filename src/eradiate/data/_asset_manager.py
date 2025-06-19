@@ -51,7 +51,7 @@ class Resource:
     size: int
 
     #: Maps archive types to corresponding file extensions
-    _EXTENSIONS: ClassVar[dict] = {"zip": "zip"}
+    _EXTENSIONS: ClassVar[dict] = {"zip": "zip", "tar.gz": "tar.gz"}
 
     def filename(self) -> str:
         return f"{PosixPath(self.keyword)}.{Resource._EXTENSIONS[self.type]}"
@@ -477,6 +477,10 @@ class AssetManager:
             if unpack:
                 if resource.type == "zip":
                     processor = pooch.processors.Unzip(
+                        extract_dir=self._get_path_unpack(resource).parent
+                    )
+                elif resource.type == "tar.gz":
+                    processor = pooch.processors.Untar(
                         extract_dir=self._get_path_unpack(resource).parent
                     )
                 else:
