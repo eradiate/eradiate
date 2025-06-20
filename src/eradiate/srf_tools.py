@@ -7,6 +7,7 @@ import warnings
 from pathlib import Path
 from typing import Literal
 
+import attrs
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
@@ -17,9 +18,8 @@ import xarray as xr
 from rich.prompt import Confirm
 from rich.table import Table
 
-from . import converters, data
+from . import converters
 from ._version import _version as __version__
-from .exceptions import DataError
 from .typing import PathLike
 from .units import to_quantity
 from .units import unit_registry as ureg
@@ -27,28 +27,13 @@ from .util.deprecation import deprecated
 
 _trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz
 
-
-def load_from_id(value: str) -> xr.Dataset:
-    """Load an SRF dataset from its identifier."""
-
-    # look for the prepared version of the SRF
-    try:
-        return data.load_dataset(f"spectra/srf/{value}.nc")
-
-    # if it doesn't exist, load the raw SRF
-    except DataError as e:
-        if value.endswith("-raw"):
-            raise e
-        else:
-            warnings.warn(
-                f"Could not serve SRF '{value}' from the data store."
-                f"Trying to serve '{value}-raw' instead."
-            )
-            return data.load_dataset(f"spectra/srf/{value}-raw.nc")
-
-
-convert = converters.to_dataset(load_from_id=load_from_id)
-convert_no_id = converters.to_dataset(load_from_id=None)
+convert_no_id = converters.passthrough_type(xr.Dataset)(converters.resolve_path)
+convert = converters.passthrough_type(xr.Dataset)(
+    attrs.converters.pipe(
+        converters.resolve_keyword(lambda x: f"srf/{x}.nc"),
+        converters.resolve_path,
+    )
+)
 
 
 def update_attrs(srf: xr.Dataset, filter_name: str, filter_attr: str) -> None:
