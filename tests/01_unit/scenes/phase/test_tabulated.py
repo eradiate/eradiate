@@ -4,6 +4,7 @@ import pytest
 import xarray as xr
 
 import eradiate
+from eradiate import converters
 from eradiate.contexts import KernelContext
 from eradiate.scenes.phase import TabulatedPhaseFunction
 from eradiate.spectral import SpectralIndex
@@ -13,23 +14,21 @@ from eradiate.test_tools.types import check_scene_element
 @pytest.fixture
 def regular() -> xr.DataArray:
     """Phase function data with a regular mu grid."""
-    result = eradiate.data.load_dataset("tests/spectra/particles/random-regular_mu.nc")
+    result = converters.load_dataset("tests/spectra/particles/random-regular_mu.nc")
     return result.phase
 
 
 @pytest.fixture
 def irregular() -> xr.DataArray:
     """Phase function data with an irregular mu grid."""
-    result = eradiate.data.load_dataset(
-        "tests/spectra/particles/random-irregular_mu.nc"
-    )
+    result = converters.load_dataset("tests/spectra/particles/random-irregular_mu.nc")
     return result.phase
 
 
 @pytest.fixture
 def polarized() -> xr.DataArray:
     """Polarized phase function data with an irregular mu grid."""
-    result = eradiate.data.load_dataset(
+    result = converters.load_dataset(
         "tests/spectra/particles/random-polarized-irregular_mu.nc"
     )
     return result.phase

@@ -5,7 +5,7 @@ import numpy.typing as npt
 import pint
 from scipy.constants import physical_constants
 
-from .. import data
+from .. import converters
 from ..units import unit_registry as ureg
 from ..util.misc import Singleton
 
@@ -58,7 +58,7 @@ class _BATES_1984_DATA(metaclass=Singleton):
         return np.interp(w, self.wavelength, self.king_factor, left=left, right=right)
 
     def _load_dataset(self):
-        bates_data = data.load_dataset("spectra/optics/bates_1984.nc")
+        bates_data = converters.load_dataset("constant/optics/bates_1984.nc")
         self._king_factor = bates_data.f.values
         self._wavelength = bates_data.w.values
 
