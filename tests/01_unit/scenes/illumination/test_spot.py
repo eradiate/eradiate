@@ -1,7 +1,6 @@
 import mitsuba as mi
 import numpy as np
 
-import eradiate.data
 from eradiate import unit_registry as ureg
 from eradiate.scenes.illumination import SpotIllumination
 from eradiate.test_tools.types import check_scene_element
@@ -50,7 +49,7 @@ def test_construct_texture(mode_mono, tmp_path):
         up=[1, 0, 1],
         beam_width=10 * ureg.deg,
         intensity=10,
-        beam_profile=eradiate.data.data_store.fetch("textures/gaussian_3sigma.bmp"),
+        beam_profile="texture/gaussian_3sigma.bmp",
     )
     check_scene_element(illumination, mi_cls=mi.Emitter)
 
