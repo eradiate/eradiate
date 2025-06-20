@@ -52,7 +52,7 @@ class MQDiffuseBSDF(BSDF):
 
     data: xr.Dataset = documented(
         attrs.field(
-            converter=converters.to_dataset(),
+            converter=converters.passthrough_type(xr.Dataset)(converters.load_dataset),
             kw_only=True,
             repr=summary_repr,
         ),

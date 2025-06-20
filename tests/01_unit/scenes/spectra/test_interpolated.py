@@ -5,6 +5,7 @@ import pytest
 from pinttr.exceptions import UnitsError
 
 import eradiate
+from eradiate import converters
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
@@ -251,9 +252,9 @@ def test_interpolated_kernel_dict(modes_all_mono):
 
 
 def test_interpolated_from_dataarray(mode_mono):
-    da = eradiate.data.load_dataset(
-        "spectra/reflectance/lambertian_soil.nc"
-    ).reflectance.sel(brightness="darkest")
+    da = converters.load_dataset("bsdf/lambertian_soil.nc").reflectance.sel(
+        brightness="darkest"
+    )
     spectrum = InterpolatedSpectrum.from_dataarray(quantity="reflectance", dataarray=da)
     assert np.all(spectrum.wavelengths.m_as(da.w.attrs["units"]) == da.w.values)
     assert np.all(spectrum.values.m_as(da.attrs["units"]) == da.values)
