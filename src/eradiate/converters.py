@@ -20,7 +20,6 @@ import xarray as xr
 
 from . import data
 from .attrs import AUTO
-from .data import data_store
 from .typing import PathLike
 
 

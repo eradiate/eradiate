@@ -8,12 +8,14 @@ import mitsuba as mi
 import numpy as np
 import pint
 import pinttr
+from numpy.typing import ArrayLike
 
 from ._core import Illumination
 from ..core import NodeSceneElement
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
+from ...converters import resolve_path
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -25,15 +27,17 @@ class SpotIllumination(Illumination):
     """
     Spot illumination scene element [``spot``].
 
-    Eradiate ships a beam texture that implements a gaussian beam profile with
-    three standard deviations included in the total beam width. This texture is
-    named ``gaussian_3sigma.bmp`` and can be used by retrieving the path to the
-    file using `eradiate.data.data_store.fetch()`.
+    Notes
+    -----
+    This illuminant can be applied a beam profile using a texture. Eradiate
+    ships a Gaussian beam profile texture (3σ decay) as part of the
+    ``texture/core`` resource. Once installed, this file can be accessed through
+    the file resolver as ``texture/gaussian_3sigma.bmp``.
     """
 
     origin: pint.Quantity = documented(
         pinttr.field(
-            factory=lambda: [1, 1, 1] * ureg.m,
+            factory=lambda: [1.0, 1.0, 1.0] * ureg.m,
             validator=[validators.has_len(3), pinttr.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
@@ -129,12 +133,9 @@ class SpotIllumination(Illumination):
     )
 
     beam_profile: Path | None = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(Path),
-        ),
-        type="Path",
-        init_type="path-like",
+        attrs.field(default=None, converter=attrs.converters.optional(resolve_path)),
+        type="Path or None",
+        init_type="path-like, optional*",
         default=None,
         doc="Path to the file describing the beam profile. Must be a valid bitmap "
         "image file.",
@@ -143,8 +144,8 @@ class SpotIllumination(Illumination):
     @classmethod
     def from_size_at_target(
         cls,
-        target: np.typing.ArrayLike,
-        direction: np.typing.ArrayLike,
+        target: ArrayLike,
+        direction: ArrayLike,
         spot_radius: pint.Quantity,
         beam_width: pint.Quantity,
         **kwargs,
