@@ -11,7 +11,7 @@ import pint
 import xarray as xr
 
 from ._core import Spectrum
-from ... import converters, data, validators
+from ... import converters, validators
 from ...attrs import define, documented
 from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...units import PhysicalQuantity, to_quantity
@@ -101,23 +101,23 @@ class SolarIrradianceSpectrum(Spectrum):
     dataset: xr.Dataset = documented(
         attrs.field(
             default="coddington_2021-1_nm",
-            converter=converters.to_dataset(
-                load_from_id=lambda x: data.load_dataset(
-                    f"spectra/solar_irradiance/{x}.nc",
+            converter=converters.passthrough_type(xr.Dataset)(
+                attrs.converters.pipe(
+                    converters.resolve_keyword(lambda x: f"solar_irradiance/{x}.nc"),
+                    converters.load_dataset,
                 )
             ),
             validator=attrs.validators.instance_of(xr.Dataset),
             repr=summary_repr,
         ),
         doc="Solar irradiance spectrum dataset. "
-        "If a xarray.Dataset is passed, the dataset is used as is "
-        "(refer to the data guide for the format requirements of this dataset)."
-        "If a path is passed, the converter tries to open the corresponding "
-        "file on the hard drive; should that fail, it queries the Eradiate data"
-        "store with that path."
-        "If a string is passed, it is interpreted as a Solar irradiance "
+        "If an xarray dataset is passed, it is used without changes "
+        "(refer to the data guide for format requirements). "
+        "If a string is passed, it is interpreted as a solar irradiance "
         "spectrum identifier "
-        "(see :ref:`sec-data-solar_irradiance` for the list); ",
+        "(see :ref:`sec-data-solar_irradiance` for the list). "
+        "If a path is passed, the converter tries to open the corresponding "
+        "file on the hard drive (relative paths are resolved by the file resolver). ",
         type="Dataset",
         init_type="Dataset or str or path-like, optional",
         default='"coddington_2021-1_nm"',
