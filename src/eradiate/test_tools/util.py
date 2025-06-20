@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import pytest
 from typing_extensions import ParamSpec, TypeAlias
 
-from ..exceptions import DataError
+from .. import fresolver
 from ..typing import PathLike
 
 
@@ -32,12 +32,12 @@ def skipif_data_not_found(path: PathLike, action: t.Callable | None = None) -> N
         skipping the test (*e.g.* output an artefact placeholder).
     """
     try:
-        data_store.fetch(path)
-    except DataError:
+        fresolver.resolve(path, strict=True, cwd=False)
+    except FileNotFoundError:
         if action is not None:
             action()
 
-        pytest.skip(f"Could not find dataset '{path}' in the data store.")
+        pytest.skip(f"File resolver could not resolve file '{path}'.")
 
 
 def missing_artefact(filename: PathLike) -> None:
