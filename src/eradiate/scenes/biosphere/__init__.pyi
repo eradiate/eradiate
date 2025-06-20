@@ -1,4 +1,3 @@
-from ._canopies import wellington_citrus_orchard as wellington_citrus_orchard
 from ._canopy_loader import load_scenario as load_scenario
 from ._core import Canopy as Canopy
 from ._core import CanopyElement as CanopyElement
