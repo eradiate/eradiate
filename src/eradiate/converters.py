@@ -4,12 +4,14 @@ __all__ = [
     "auto_or",
     "convert_thermoprops",
     "on_quantity",
+    "resolve_path",
     "to_dataset",
     "to_mi_scalar_transform",
 ]
 
 import os
 import typing as t
+from pathlib import Path
 
 import mitsuba as mi
 import numpy as np
@@ -189,3 +191,9 @@ def convert_thermoprops(value) -> xr.Dataset:
             f"invalid type for 'thermoprops': {type(value)} "
             f"(expected Dataset or PathLike)"
         )
+
+
+def resolve_path(path: PathLike) -> Path:
+    from . import fresolver
+
+    return fresolver.resolve(path)
