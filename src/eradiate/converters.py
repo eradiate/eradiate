@@ -4,28 +4,32 @@ __all__ = [
     "auto_or",
     "convert_thermoprops",
     "on_quantity",
+    "passthrough",
+    "passthrough_type",
+    "resolve_keyword",
     "resolve_path",
-    "to_dataset",
     "to_mi_scalar_transform",
 ]
 
 import os
-import typing as t
 from pathlib import Path
+from typing import Any, Callable
 
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
 import xarray as xr
 
-from . import data
+from . import fresolver
 from .attrs import AUTO
+from .exceptions import DataError
 from .typing import PathLike
 
 
 def on_quantity(
-    wrapped_converter: t.Callable[[t.Any], t.Any],
-) -> t.Callable[[t.Any], t.Any]:
+    wrapped_converter: Callable[[Any], Any],
+) -> Callable[[Any], Any]:
     """
     Apply a converter to the magnitude of a :class:`pint.Quantity`.
 
@@ -40,7 +44,7 @@ def on_quantity(
     callable
     """
 
-    def f(value: t.Any) -> t.Any:
+    def f(value: Any) -> Any:
         if isinstance(value, pint.Quantity):
             return wrapped_converter(value.magnitude) * value.units
         else:
@@ -50,8 +54,8 @@ def on_quantity(
 
 
 def auto_or(
-    wrapped_converter: t.Callable[[t.Any], t.Any],
-) -> t.Callable[[t.Any], t.Any]:
+    wrapped_converter: Callable[[Any], Any],
+) -> Callable[[Any], Any]:
     """
     A converter that allows an attribute to be set to :data:`.AUTO`.
 
@@ -74,74 +78,103 @@ def auto_or(
     return f
 
 
-def to_dataset(
-    load_from_id: t.Callable[[str], xr.Dataset] | None = None,
-) -> t.Callable[[xr.Dataset | PathLike], xr.Dataset]:
+def passthrough(predicate: Callable[[Any], bool]) -> Callable[[Any], Any]:
     """
-    Generates a converter that converts a value to a :class:`xarray.Dataset`.
+    Pass through values for which ``predicate`` returns ``True``; otherwise,
+    apply wrapped converter.
+
+    See Also
+    --------
+    :func:`.passthrough_type`
+    """
+
+    def wrapped_converter(converter: Callable | attrs.Converter) -> Any:
+        if isinstance(
+            converter, attrs.Converter
+        ):  # See https://github.com/python-attrs/attrs/pull/1372
+
+            def passthrough_converter(val, inst, field):
+                return val if predicate(val) else converter(val, inst, field)
+
+            return attrs.Converter(
+                passthrough_converter, takes_self=True, takes_field=True
+            )
+
+        else:
+
+            def passthrough_converter(val):
+                return val if predicate(val) else converter(val)
+
+            return passthrough_converter
+
+    return wrapped_converter
+
+
+def passthrough_type(types: type | tuple[type, ...]) -> Callable:
+    """
+    Pass through values of a specified type; otherwise, apply wrapped converter.
+
+    See Also
+    --------
+    :func:`.passthrough`
+    """
+    return passthrough(lambda x: isinstance(x, types))
+
+
+def resolve_keyword(path_forming_func: Callable[[Any], PathLike]) -> Callable:
+    """
+    Attempt resolving a keyword into a path constructed from a keyword by the
+    ``path_forming_func`` parameter.
+
+    If the generated path points to a file, the path is returned; otherwise,
+    ``value`` is returned without modification.
 
     Parameters
     ----------
-    load_from_id : callable, optional
-        A callable with the signature ``f(x: str) -> Dataset`` used to
-        interpret dataset identifiers.
-        Set this parameter to handle dataset identifiers.
-        If unset, dataset identifiers are not supported.
-
-    Returns
-    -------
-    A dataset converter.
-
-    Notes
-    -----
-    The conversion logic is as follows:
-
-    1. If the value is an xarray dataset, it is returned directly.
-    2. If the value is a path-like object ending with the ``.nc`` extension, the
-       converter tries to load a dataset from that location, first locally, then
-       (should that fail) from the Eradiate data store.
-    3. If the value is a string and ``load_from_id`` is not ``None``, it is
-        interpreted as a dataset identifier and ``load_from_id(value)`` is
-        returned.
-    4. Otherwise, a :class:`ValueError` is raised.
-
-    Examples
-    --------
-    A converter with basic dataset identifier interpretation (the passed
-    callable may implement more complex logic, *e.g.* with identifier
-    fallback substitution):
-
-    >>> aerosol_converter = to_dataset(
-    ...     lambda x: data.load_dataset(f"spectra/particles/{x}.nc")
-    ... )
-
-    A converter without dataset identifier interpretation:
-
-    >>> aerosol_converter = to_dataset()
+    path_forming_func : callable
+        A callable with signature ``f(x: str) -> Path`` that constructs relative
+        or absolute paths from keywords. Relative paths are then resolved by the
+        file resolver.
     """
 
-    def converter(value: xr.Dataset | PathLike) -> xr.Dataset:
-        if isinstance(value, xr.Dataset):
+    def resolve_keyword_converter(value):
+        path = fresolver.resolve(path_forming_func(value))
+        if path.is_file():
+            return path
+        else:
             return value
 
-        # Path (local or remote)
-        if str(value).endswith(".nc"):
-            # Try and open a file if it is directly referenced
-            if os.path.isfile(value):
-                return xr.load_dataset(value)
+    return resolve_keyword_converter
 
-            # Try and serve the file from the data store
-            return data.load_dataset(value)
 
-        # Identifier for a dataset in the data store
-        if isinstance(value, str) and load_from_id is not None:
-            return load_from_id(value)
+def resolve_path(value: PathLike) -> Path:
+    """
+    Resolve a file path with the file resolver. The current working directory is
+    included in the path lookup.
+    """
+    return fresolver.resolve(value, cwd=True)
 
-        # Abnormal state
-        # Reference must be provided as a Dataset, a path-like or a str
-        raise ValueError(f"Cannot convert value '{value}'")
 
-    return converter
+def load_dataset(value: PathLike) -> xr.Dataset:
+    """
+    Attempt loading a dataset given a path. If the path is relative, it is
+    resolved by the file resolver first.
+
+    Parameters
+    ----------
+    value
+        Path to the targeted dataset.
+
+    Raises
+    ------
+    DataError
+        If the file could not be loaded.
+    """
+    path = resolve_path(value)
+    try:
+        return xr.load_dataset(path)
+    except Exception as e:
+        raise DataError(f"could not load dataset '{value}'") from e
 
 
 def to_mi_scalar_transform(value):
@@ -190,9 +223,3 @@ def convert_thermoprops(value) -> xr.Dataset:
             f"invalid type for 'thermoprops': {type(value)} "
             f"(expected Dataset or PathLike)"
         )
-
-
-def resolve_path(path: PathLike) -> Path:
-    from . import fresolver
-
-    return fresolver.resolve(path)
