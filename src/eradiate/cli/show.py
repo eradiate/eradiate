@@ -58,14 +58,18 @@ def main():
         pass
 
     section("Configuration")
-    for var in ["SOURCE_DIR", "ENV"]:
+    for var in ["SOURCE_DIR"]:
         value = getattr(eradiate.config, var)
         var_repr = str(value)
         message(f"• ERADIATE_{var.upper()}: {var_repr}")
 
-    message("• Loaded setting files:")
-    for fname in eradiate.config.settings._loaded_files:
-        message(f"  • {fname}")
+    loaded_settings_files = list(eradiate.config.settings._loaded_files)
+    if loaded_settings_files:
+        message("• Loaded setting files:")
+        for fname in loaded_settings_files:
+            message(f"  • {fname}")
+    else:
+        message("• Loaded setting files: None")
 
 
 __doc__ = main.__doc__
