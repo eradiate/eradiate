@@ -4,6 +4,7 @@ import pytest
 
 import eradiate
 from eradiate import unit_registry as ureg
+from eradiate.converters import load_dataset
 from eradiate.exceptions import DataError
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 from eradiate.spectral.index import SpectralIndex
@@ -14,16 +15,25 @@ from eradiate.units import PhysicalQuantity
 @pytest.mark.parametrize(
     "tested, expected",
     [
-        ({}, SolarIrradianceSpectrum()),
+        ({}, "SolarIrradianceSpectrum"),
         ({"dataset": "doesnt_exist"}, DataError),
+        ({"dataset": "thuillier_2003"}, "SolarIrradianceSpectrum"),
+        ({"dataset": "solar_irradiance/thuillier_2003.nc"}, "SolarIrradianceSpectrum"),
+        (
+            {"dataset": load_dataset("solar_irradiance/thuillier_2003.nc")},
+            "SolarIrradianceSpectrum",
+        ),
     ],
     ids=[
         "no_args",
         "dataset_doesnt_exist",
+        "dataset_keyword",
+        "dataset_path",
+        "dataset_xarray",
     ],
 )
 def test_solar_irradiance_construct(mode_mono, tested, expected):
-    if isinstance(expected, SolarIrradianceSpectrum):
+    if expected == "SolarIrradianceSpectrum":
         s = SolarIrradianceSpectrum(**tested)
         assert s.quantity is PhysicalQuantity.IRRADIANCE
 
@@ -40,12 +50,12 @@ def test_solar_irradiance_construct(mode_mono, tested, expected):
     [
         {},
         {"scale": 2.0},
-        {"dataset": "solid_2017-mean"},
+        {"dataset": "thuillier_2003"},
     ],
     ids=[
         "no_args",
         "scale",
-        "solid_spectrum",
+        "thuillier_spectrum",
     ],
 )
 def test_solar_irradiance_kernel_dict(mode_mono, tested):
