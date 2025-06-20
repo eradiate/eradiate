@@ -1,4 +1,4 @@
 import os
-from typing import TypeVar
+from typing import Union
 
-PathLike = TypeVar("PathLike", str, bytes, os.PathLike)
+PathLike = Union[str, bytes, os.PathLike]
