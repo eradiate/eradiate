@@ -17,7 +17,7 @@ from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import traverse
 from ..phase import TabulatedPhaseFunction
-from ... import converters, data
+from ... import converters
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel import SceneParameter
@@ -154,8 +154,12 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     dataset: xr.Dataset = documented(
         attrs.field(
             default="govaerts_2021-continental",
-            converter=converters.to_dataset(
-                load_from_id=lambda x: data.load_dataset(f"spectra/particles/{x}.nc")
+            converter=converters.passthrough_type(xr.Dataset)(
+                attrs.converters.pipe(
+                    converters.resolve_keyword(lambda x: f"aerosol/{x}.nc"),
+                    converters.resolve_path,
+                    converters.load_dataset,
+                )
             ),
             validator=attrs.validators.instance_of(xr.Dataset),
             repr=summary_repr,
