@@ -256,14 +256,6 @@ Quick access
    RAMIHomogeneousAbstractCanopies
    RAMIScenarioVersion
 
-
-**Full canopies**
-
-.. autosummary::
-   :toctree: generated/autosummary/
-
-   wellington_citrus_orchard
-
 .. _module-eradiate.scenes.surface:
 
 ``eradiate.scenes.surface``

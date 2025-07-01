@@ -28,6 +28,29 @@ class FileResolver:
     ----------
     paths : list of path-likes, optional
         A list of search directories. Each entry must exist.
+
+    Notes
+    -----
+    * By default, the unique file resolver instance
+      :data:`eradiate.fresolver <.fresolver>` is initialized with the
+      installation path of the asset manager (see :class:`.AssetManager`) and,
+      when in dev mode (see :data:`SOURCE_DIR <eradiate.config.SOURCE_DIR>`),
+      the path to the location of test files.
+    * The current working directory is not appended to the file resolver by
+      default. It can however optionally be added temporarily when calling
+      :meth:`resolve` (and wrappers such as :meth:`load_dataset`). This is
+      useful when using the ``strict`` mode, which raises if the requested path
+      cannot be resolved to an existing file.
+
+
+    Examples
+    --------
+    A single instance of the file resolver is available as
+    :data:`eradiate.fresolver <.fresolver>`:
+
+    >>> from eradiate import fresolver
+    >>> fresolver.resolve("srf/sentinel_2a-msi-3.nc")
+    >>> fresolver.load_dataset("srf/sentinel_2a-msi-3.nc")
     """
 
     paths: list[Path] = attrs.field(

@@ -10,13 +10,6 @@ Core members
 
 .. py:currentmodule:: eradiate.config
 
-.. data:: ENV
-   :annotation: = str
-
-   Identifier of the environment in which Eradiate is used. Takes the value of
-   the ``ERADIATE_ENV`` environment variable if it is set; otherwise defaults to
-   ``"default"``.
-
 .. data:: SOURCE_DIR
    :annotation: = pathlib.Path or None
 

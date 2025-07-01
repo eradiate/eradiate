@@ -60,13 +60,31 @@ class Resource:
 @define
 class AssetManager:
     """
-    A lightweight asset manager for Eradiate data.
+    Lightweight package manager for Eradiate's data files.
+
+    This class implements a basic package management system which can list,
+    download, decompress and install *resources* that take the form of
+    compressed archive files.
+
+    Notes
+    -----
+    By default, the unique asset manager instance
+    :data:`eradiate.asset_manager <.asset_manager>` is initialized based on
+    user-specified configuration:
+
+    * ``cache_dir`` ⇒ ``<settings["data_path"]>/cached``
+    * ``unpack_dir`` ⇒ ``<settings["data_path"]>/unpacked``
+    * ``install_dir`` ⇒ ``<settings["data_path"]>/installed/eradiate-v<__version__>``
+    * ``base_uri`` ⇒ ``settings["data_url"]``
 
     Examples
     --------
-    >>> from eradiate.data import asset_manager
+    A single instance of the asset manager is available as
+    :data:`eradiate.asset_manager <.asset_manager>`:
+
+    >>> from eradiate import asset_manager
     >>> asset_manager.update()
-    >>> asset_manager.install(["core", "komodo", "monotropa"])
+    >>> asset_manager.install(["core", "panellus"])
     """
 
     cache_dir: Path = documented(
