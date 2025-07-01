@@ -5,7 +5,6 @@ Atmosphere's radiative profile.
 from __future__ import annotations
 
 import attrs
-import joseki
 import numpy as np
 import pint
 import xarray as xr
@@ -19,6 +18,12 @@ from ..converters import convert_thermoprops
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 from ..util.misc import cache_by_id, summary_repr
+
+_THERMOPROPS_DEFAULT = {
+    "identifier": "afgl_1986-us_standard",
+    "z": np.linspace(0.0, 120.0, 121) * ureg.km,
+    "additional_molecules": False,
+}
 
 
 @define(eq=False)
@@ -51,18 +56,14 @@ class AtmosphereRadProfile(RadProfile):
 
     thermoprops: xr.Dataset = documented(
         attrs.field(
-            factory=lambda: joseki.make(
-                identifier="afgl_1986-us_standard",
-                z=np.linspace(0.0, 120.0, 121) * ureg.km,
-                additional_molecules=False,
-            ),
+            default=_THERMOPROPS_DEFAULT,
             converter=convert_thermoprops,
             repr=summary_repr,
         ),
         doc="Thermophysical property dataset. If a path is passed, Eradiate will "
         "look it up and load it. If a dictionary is passed, it will be passed "
         "as keyword argument to ``joseki.make()``. The default is "
-        '``joseki.make(identifier="afgl_1986-us_standard",  z=np.linspace(0.0, 120.0, 121) * ureg.km)``. '
+        '``{"identifier": "afgl_1986-us_standard",  "z": np.linspace(0, 120, 121) * ureg.km), "additional_molecules": False}``. '
         "See `the Joseki docs <https://rayference.github.io/joseki/latest/reference/#src.joseki.core.make>`_ "
         "for details.",
         type="Dataset",
