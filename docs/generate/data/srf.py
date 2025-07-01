@@ -7,7 +7,7 @@ import seaborn as sns
 import xarray as xr
 
 import eradiate
-import eradiate.data as data
+from eradiate import fresolver
 
 from ..util import DOCS_ROOT_DIR, jinja_environment, savefig, write_if_modified
 
@@ -125,7 +125,7 @@ def srf_paths(instrument_name, bands):
 def load_srfs(instrument_name, bands):
     fnames = srf_paths(instrument_name, bands)
     ds = xr.concat(
-        [data.load_dataset(fname) for fname in fnames],
+        [xr.load_dataset(fresolver.resolve(fname)) for fname in fnames],
         pd.Index(bands, name="band"),
     )
     return ds
