@@ -37,7 +37,7 @@ def test_mono_spectral_grid_default():
 
 
 def test_mono_spectral_grid_from_absorption_database():
-    abs_db = MonoAbsorptionDatabase.from_name("gecko")
+    abs_db = MonoAbsorptionDatabase.from_name("komodo")
     grid = MonoSpectralGrid.from_absorption_database(abs_db)
     np.testing.assert_allclose(
         grid.wavelengths.m, abs_db.spectral_coverage.index.get_level_values(1).values

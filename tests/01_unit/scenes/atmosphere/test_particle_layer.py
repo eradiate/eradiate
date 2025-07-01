@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate import KernelContext, data
+from eradiate import KernelContext, fresolver
 from eradiate import unit_registry as ureg
 from eradiate.radprops import ZGrid
 from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
@@ -349,7 +349,7 @@ def test_particle_layer_eval_sigma_t_impl(
     )  # Integrate sigma_t * dz vs space coordinate using rectangle method
 
     # data set extinction @ running and reference wavelength
-    ds = data.load_dataset(test_dataset_path)
+    ds = fresolver.load_dataset(test_dataset_path)
     w_units = ureg(ds.w.attrs["units"])
     sigma_t = to_quantity(ds.sigma_t.interp(w=wavelengths.m_as(w_units)))
     sigma_t_ref = to_quantity(ds.sigma_t.interp(w=w_ref.m_as(w_units)))

@@ -1,6 +1,6 @@
 import numpy as np
 
-from eradiate.data import data_store
+from eradiate import fresolver
 from eradiate.experiments import CanopyExperiment
 from eradiate.units import unit_registry as ureg
 
@@ -18,10 +18,10 @@ def fetch_het01_brfpp():
     """
 
     data = {}
-    data["leaf_spec_path"] = data_store.fetch(
+    data["leaf_spec_path"] = fresolver.resolve(
         "tests/regression_test_specifications/het01/het01_UNI_sphere.def"
     )
-    data["leaf_pos_path"] = data_store.fetch(
+    data["leaf_pos_path"] = fresolver.resolve(
         "tests/regression_test_specifications/het01/het01_UNI_instances.def"
     )
 
@@ -112,16 +112,16 @@ def fetch_het04a1_brfpp():
 
     data = {}
 
-    data["leaf_spec_path_sph"] = data_store.fetch(
+    data["leaf_spec_path_sph"] = fresolver.resolve(
         "tests/regression_test_specifications/het04/het04_sph.def"
     )
-    data["leaf_pos_path_sph"] = data_store.fetch(
+    data["leaf_pos_path_sph"] = fresolver.resolve(
         "tests/regression_test_specifications/het04/het04_sph_positions.def"
     )
-    data["leaf_spec_path_cyl"] = data_store.fetch(
+    data["leaf_spec_path_cyl"] = fresolver.resolve(
         "tests/regression_test_specifications/het04/het04_cyl.def"
     )
-    data["leaf_pos_path_cyl"] = data_store.fetch(
+    data["leaf_pos_path_cyl"] = fresolver.resolve(
         "tests/regression_test_specifications/het04/het04_cyl_positions.def"
     )
 
@@ -231,7 +231,7 @@ def fetch_het06_brfpp():
 
     data = {}
 
-    data["tree_pos_path"] = data_store.fetch(
+    data["tree_pos_path"] = fresolver.resolve(
         "tests/regression_test_specifications/het06/het06_scene.def"
     )
 

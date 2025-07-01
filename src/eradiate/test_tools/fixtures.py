@@ -11,7 +11,7 @@ import pytest
 
 from .data import make_particle_dataset
 from .util import check_plugin
-from .. import data
+from .. import fresolver
 from .. import unit_registry as ureg
 
 
@@ -110,7 +110,7 @@ def atmosphere_cams_lybia4_ckd(absorption_database_error_handler_config):
     [549.45, 552.48] nm.
     Altitude grid is regular with a 1 km step, from 0 to 120 km.
     """
-    thermoprops = data.load_dataset("tests/thermoprops/cams_lybia4_2005-04-01.nc")
+    thermoprops = fresolver.load_dataset("tests/thermoprops/cams_lybia4_2005-04-01.nc")
 
     return {
         "type": "molecular",

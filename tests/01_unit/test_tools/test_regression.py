@@ -93,15 +93,14 @@ def test_reference_converter(tmp_path):
     # test proper handling of missing and unreadable reference
 
     # file does not exist
-    test = tt.Chi2Test(
-        name="chi2",
-        archive_dir="tests/",
-        value=xr.Dataset(),
-        threshold=0.05,
-        reference="./this/file/doesnot.exist",
-    )
-
-    assert test.reference is None
+    with pytest.raises(ValueError):
+        tt.Chi2Test(
+            name="chi2",
+            archive_dir="tests/",
+            value=xr.Dataset(),
+            threshold=0.05,
+            reference="./this/file/doesnot.exist",
+        )
 
     # wrong file type
     tempfile = tmp_path / "hello.txt"
