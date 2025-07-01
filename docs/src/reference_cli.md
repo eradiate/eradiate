@@ -43,113 +43,130 @@ $ eradiate data [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `check`: Check data for availability and integrity,...
-* `fetch`: Fetch files from the Eradiate data store.
-* `info`: Display information about data store...
-* `make-registry`: Recursively construct a file registry from...
-* `purge-cache`: Purge the cache of online data stores.
-* `update-registries`: Update local registries for online sources.
+* `clear`: Clear data.
+* `download`: Download a resource from remote storage to...
+* `info`: Display the asset manager configuration.
+* `install`: Install a resource.
+* `list`: List all packages referenced by the...
+* `remove`: Remove a resource.
+* `update`: Download the data registry manifest from...
 
-#### `eradiate data check`
+#### `eradiate data clear`
 
-Check data for availability and integrity, optionally fix them.
+Clear data.
 
 **Usage**:
 
 ```console
-$ eradiate data check [OPTIONS] [KEYWORDS]...
+$ eradiate data clear [OPTIONS] [RESOURCE_IDS]...
 ```
 
 **Arguments**:
 
-* `[KEYWORDS]...`: A keyword defining the datasets that are to be checked. See the `--list` option for available keywords,
+* `[RESOURCE_IDS]...`: Resource(s) for which to clear data. If unset, all data will be wiped.
 
 **Options**:
 
-* `-l, --list`: List known keywords and exit.
-* `-f, --fix`: Fix issues that can be.
+* `--what [cached|unpacked|installed|all]`: A keyword that specifies what to clear.  [default: cached]
 * `--help`: Show this message and exit.
 
-#### `eradiate data fetch`
+#### `eradiate data download`
 
-Fetch files from the Eradiate data store.
+Download a resource from remote storage to the cache directory.
 
 **Usage**:
 
 ```console
-$ eradiate data fetch [OPTIONS] [FILE_LIST]...
+$ eradiate data download [OPTIONS] RESOURCE_IDS...
 ```
 
 **Arguments**:
 
-* `[FILE_LIST]...`: An arbitrary number of relative paths to files to be retrieved from the data store or file list specifications. A file list keyword can also be specified to download a pre-defined list of files (use the `--list` option to display) available keywords. If unset, the list of files is read from a YAML file which can be specified by using the `--from-file` option, if it is used. Otherwise, it defaults to `all` in a production environment and `minimal` in a development environment.
+* `RESOURCE_IDS...`: One or multiple resource IDs or aliases.  [required]
 
 **Options**:
 
-* `-f, --from-file TEXT`: Optional path to a file list (YAML format). If this option is set, the FILES argument(s) will be ignored.
-* `-l, --list`: List built-in file lists and exit.
+* `--unpack / --no-unpack`: Unpack downloaded archives.  [default: unpack]
 * `--help`: Show this message and exit.
 
 #### `eradiate data info`
 
-Display information about data store configuration.
+Display the asset manager configuration.
 
 **Usage**:
 
 ```console
-$ eradiate data info [OPTIONS] [DATA_STORES]...
+$ eradiate data info [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+#### `eradiate data install`
+
+Install a resource. If the data is not already cached locally, it is
+downloaded from remove storage.
+
+**Usage**:
+
+```console
+$ eradiate data install [OPTIONS] RESOURCE_IDS...
 ```
 
 **Arguments**:
 
-* `[DATA_STORES]...`: List of data stores for which information is requested. If no data store ID is passed, information is displayed for all data stores.
+* `RESOURCE_IDS...`: One or multiple resource IDs or aliases.  [required]
 
 **Options**:
 
-* `-l, --list-registry`: Show registry content if relevant.
 * `--help`: Show this message and exit.
 
-#### `eradiate data make-registry`
+#### `eradiate data list`
 
-Recursively construct a file registry from the current working directory.
+List all packages referenced by the manifest and their current state
+(cached, unpacked, installed).
 
 **Usage**:
 
 ```console
-$ eradiate data make-registry [OPTIONS]
+$ eradiate data list [OPTIONS] [WHAT]:[resources|aliases|all]
 ```
 
+**Arguments**:
+
+* `[WHAT]:[resources|aliases|all]`: A keyword that specifies what to show.  [default: resources]
+
 **Options**:
 
-* `-i, --input-directory TEXT`: Path to input directory.  [default: .]
-* `-o, --output-file TEXT`: Path to output file (default: '<input_directory>/registry.txt').
-* `-r, --rules TEXT`: Path to the registry rule file (default: '<input_directory>/registry_rules.yml').
-* `-a, --hash-algorithm TEXT`: Hashing algorithm (default: 'sha256').  [default: sha256]
 * `--help`: Show this message and exit.
 
-#### `eradiate data purge-cache`
+#### `eradiate data remove`
 
-Purge the cache of online data stores.
+Remove a resource.
 
 **Usage**:
 
 ```console
-$ eradiate data purge-cache [OPTIONS]
+$ eradiate data remove [OPTIONS] RESOURCE_IDS...
 ```
 
+**Arguments**:
+
+* `RESOURCE_IDS...`: One or multiple resource IDs or aliases.  [required]
+
 **Options**:
 
-* `-k, --keep`: Keep registered files.
 * `--help`: Show this message and exit.
 
-#### `eradiate data update-registries`
+#### `eradiate data update`
 
-Update local registries for online sources.
+Download the data registry manifest from the remote data location.
 
 **Usage**:
 
 ```console
-$ eradiate data update-registries [OPTIONS]
+$ eradiate data update [OPTIONS]
 ```
 
 **Options**:

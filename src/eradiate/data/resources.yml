@@ -1,9 +1,9 @@
 version: 1.0.0  # Resource list format version
 metadata:
   description: >
-    This is the Eradiate resource list. It maps alias names to asset identifiers
-    that can be used to query assets generically (either for installation or for
-    path lookup).
+    This is the Eradiate resource list. It maps alias names to resource
+    identifiers that can be used to query resources generically (e.g. for
+    installation).
 resources: # List of resource aliases
   # Each entry of this mapping takes as key an alias name, and as values
   # one or several resource paths or aliases.
