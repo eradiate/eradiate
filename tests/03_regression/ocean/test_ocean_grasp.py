@@ -1,7 +1,7 @@
 import pytest
 
 import eradiate
-import eradiate.data
+from eradiate import fresolver
 from eradiate.test_tools.regression import RMSETest, ZTest
 from eradiate.test_tools.test_cases.ocean import (
     create_ocean_grasp_coastal_no_atm,
@@ -24,7 +24,7 @@ def test_ocean_grasp_coastal_no_atm(mode_mono_double, artefact_dir, session_time
 
     This test uses the RMSE criterion with a threshold of 10⁻⁶.
     """
-    ref = eradiate.data.load_dataset(
+    ref = fresolver.load_dataset(
         "tests/regression_test_references/ocean_grasp_REF_OC_NN00_I_S20_PPL.nc"
     )
     exp = create_ocean_grasp_coastal_no_atm()
@@ -59,7 +59,7 @@ def test_ocean_grasp_open_no_atm(mode_mono_double, artefact_dir, session_timesta
 
     This test uses the RMSE criterion with a threshold of 10⁻⁶.
     """
-    ref = eradiate.data.load_dataset(
+    ref = fresolver.load_dataset(
         "tests/regression_test_references/ocean_grasp_REF_OO_NN00_I_S20_PPL.nc"
     )
     exp = create_ocean_grasp_open_no_atm()
@@ -92,7 +92,7 @@ def test_ocean_grasp_open_atm(mode_mono_double, artefact_dir, session_timestamp)
 
     This test uses the z-test criterion with a threshold of 0.01.
     """
-    ref = eradiate.data.load_dataset(
+    ref = fresolver.load_dataset(
         "tests/regression_test_references/ocean_grasp_REF_OO_UB01_I_S20_PPL.nc"
     )
     exp = create_ocean_grasp_open_atm()

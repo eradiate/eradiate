@@ -15,7 +15,7 @@ import xarray as xr
 from numpy.typing import ArrayLike
 from robot.api import logger
 
-from .. import data
+from .. import fresolver
 from ..attrs import define, documented
 from ..exceptions import DataError
 from ..typing import PathLike
@@ -209,7 +209,7 @@ def reference_converter(
                 f'Attempting to serve reference dataset "{str(value)}" from data store',
                 also_console=True,
             )
-            fname = data.data_store.fetch(value)
+            fname = fresolver.resolve(value)
             logger.info(f"Fetched path: {fname}", also_console=True)
             return xr.load_dataset(fname)
 
