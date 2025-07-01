@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import attrs
+import xarray as xr
 
 from ._asset_manager import asset_manager
 from ..attrs import define
@@ -119,6 +120,15 @@ class FileResolver:
             raise FileNotFoundError(path)
 
         return path
+
+    def load_dataset(
+        self, path: PathLike, strict: bool = False, cwd: bool = False
+    ) -> xr.Dataset:
+        """
+        Chain :meth:`resolve` and :func:`xarray.load_dataset`.
+        """
+        fname = self.resolve(path, strict=strict, cwd=cwd)
+        return xr.load_dataset(fname)
 
 
 #: Unique file resolver instance
