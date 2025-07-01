@@ -13,7 +13,7 @@ import scipy.integrate as spi
 import xarray as xr
 from pinttrs.util import ensure_units
 
-from .. import converters, data, validators
+from .. import converters, fresolver, validators
 from ..attrs import define, documented
 from ..exceptions import DataError
 from ..units import to_quantity
@@ -355,8 +355,13 @@ class BandSRF(SpectralResponseFunction):
 
     @classmethod
     def from_id(cls, id: str):
-        ds = data.load_dataset(f"spectra/srf/{id}.nc")
-        return cls.from_dataarray(ds.srf)
+        fname = fresolver.resolve(f"srf/{id}.nc")
+        try:
+            ds = xr.load_dataset(fname)
+        except FileNotFoundError as e:
+            raise DataError(f"could not load SRF with identifier '{id}'") from e
+
+        return cls.from_dataarray(ds["srf"])
 
     def plot(self, ax, alpha=0.5, lw=1):
         w_u = ucc.get("wavelength")
