@@ -20,6 +20,7 @@ resources: # List of resource aliases
   texture: texture/core-v1
   # Multi-resource aliases hereafter
   core:
+    - aerosol
     - bsdf
     - constant
     - komodo
