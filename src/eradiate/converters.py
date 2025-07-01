@@ -177,7 +177,7 @@ def load_dataset(value: PathLike) -> xr.Dataset:
         raise DataError(f"could not load dataset '{value}'") from e
 
 
-def to_mi_scalar_transform(value):
+def to_mi_scalar_transform(value: Any):
     """
     Convert an array-like value to a :class:`mitsuba.ScalarTransform4f`.
     If `value` is a Numpy array, it is used to initialize a
@@ -195,7 +195,7 @@ def to_mi_scalar_transform(value):
         return value
 
 
-def convert_thermoprops(value) -> xr.Dataset:
+def convert_thermoprops(value: Any) -> xr.Dataset:
     """Converter for atmosphere thermophysical properties specifications."""
     import joseki
 
@@ -204,8 +204,8 @@ def convert_thermoprops(value) -> xr.Dataset:
         return value
 
     # PathLike: try to load dataset
-    elif isinstance(value, (os.PathLike, str)):
-        path = data_store.fetch(value)
+    if isinstance(value, (os.PathLike, str)):
+        path = fresolver.resolve(value)
         if path.is_file():
             return joseki.load_dataset(path)
         else:
@@ -214,12 +214,10 @@ def convert_thermoprops(value) -> xr.Dataset:
             )
 
     # Dictionary: forward to joseki.make()
-    elif isinstance(value, dict):
+    if isinstance(value, dict):
         return joseki.make(**value)
 
     # Anything else: raise error
-    else:
-        raise TypeError(
-            f"invalid type for 'thermoprops': {type(value)} "
-            f"(expected Dataset or PathLike)"
-        )
+    raise TypeError(
+        f"invalid type for 'thermoprops': {type(value)} (expected Dataset or path-like)"
+    )
