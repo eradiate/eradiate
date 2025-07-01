@@ -1,5 +1,5 @@
 """
-Manage Eradiate's data files.
+This module defines components used to manage Eradiate's data files.
 """
 
 import lazy_loader

@@ -5,6 +5,19 @@
 
 .. py:currentmodule:: eradiate
 
+Data handling
+-------------
+
+.. data:: eradiate.asset_manager
+   :annotation: = eradiate.data.AssetManager(...)
+
+   Unique instance of the Eradiate asset manager. See :class:`.AssetManager`.
+
+.. data:: eradiate.fresolver
+   :annotation: = eradiate.data.FileResolver(...)
+
+   Unique instance of the Eradiate file resolver. See :class:`.FileResolver`.
+
 Mode management
 ---------------
 
