@@ -1,9 +1,9 @@
 import joseki
 import numpy as np
 
-import eradiate.data as data
-from eradiate.experiments import AtmosphereExperiment
-from eradiate.units import unit_registry as ureg
+from ... import fresolver
+from ... import unit_registry as ureg
+from ...experiments import AtmosphereExperiment
 
 WAVELENGTH = [412, 443, 550, 670, 865, 1020, 1600, 2200]
 ETA = [1.349303, 1.346833, 1.341266, 1.337636, 1.336949, 1.336949, 1.336949, 1.336949]
@@ -57,7 +57,7 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmoshphere=False
     """
 
     if has_atmoshphere:
-        UB = data.load_dataset(
+        UB = fresolver.load_dataset(
             "tests/regression_test_specifications/ocean_grasp/REF_UB.nc"
         )
 
