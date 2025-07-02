@@ -12,7 +12,7 @@ build:
     python: "3.9"
 
 python:
-  # Install Eradiate package in Conda env
+  # Install Eradiate package in environment
   install:
     - requirements: docs/requirements.txt
     - method: pip

@@ -195,9 +195,8 @@ class AssetManager:
         """
         Read resource alias mapping from disk.
         """
-        return _yaml.load(
-            Path(importlib.resources.files("eradiate.data") / "resources.yml")
-        )["resources"]
+        fname = Path(importlib.resources.files("eradiate.data") / "resources.yml")
+        return _yaml.load(fname)["resources"]
 
     def _resolve_alias(self, resource_ids: str | list[str]) -> list[str]:
         """
