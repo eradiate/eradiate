@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import itertools
-import typing
-import zipfile
 from enum import Enum
 from pathlib import Path
+from typing import Optional
+from urllib.parse import urljoin
+
+import pooch
 
 from ._canopy_loader import load_scenario
 
-DEFAULT_SCENARIO_FOLDER_NAME = ".scenarios"
+_DATA_URL_ROOT = "https://eradiate.eu/data/store/unstable/scenarios/rami5/"
 
 
 class RAMIActualCanopies(Enum):
@@ -144,43 +146,55 @@ def load_rami_scenario(
     ),
     version: RAMIScenarioVersion = RAMIScenarioVersion.ORIGINAL,
     padding: int = 0,
-    unpack_folder: typing.Optional[Path] = None,
-    spectral_data: typing.Optional[dict] = None,
+    unpack_folder: Optional[Path] = None,
+    spectral_data: Optional[dict] = None,
 ) -> dict:
     """
     Load a scenario based on its name and version.
 
+    This function will check if scenario data can be found at the target
+    location; if not, it will download them automatically.
+
     Parameters
     ----------
     scenario_name : str or RAMIActualCanopies or RAMIHeterogeneousAbstractCanopies or RAMIHomogeneousAbstractCanopies
-        The name of the RAMI-V scenario. If a string is provided, it will automatically be converted to the appropriate enum.
+        The name of the RAMI-V scenario. If a string is provided, it will
+        automatically be converted to the appropriate enum.
     version : RAMIScenarioVersion
         The version of the scenario.
     padding : int, optional
         The padding to apply to the scenario, defaults to 0.
-    unpack_folder : Path, optional
-        The folder to unpack the scenario to, defaults to None (current working directory).
-    spectral_data : dict[str, t.Any or dict[str, t.Any]] or None
+    unpack_folder : path-like, optional
+        Directory where scenario data is expected to be stored — and where
+        downloaded data will be unpacked. Defaults to ``$PWD``.
+    spectral_data : dict[str, Any or dict[str, Any]] or None
         Spectral data to apply to the scenario, defaults to None (keep original).
 
     Returns
     -------
     dict
         The scenario.
+
+    See Also
+    --------
+    load_scenario
     """
-    from eradiate.data import data_store
+    unpack_folder = Path.cwd() if unpack_folder is None else Path(unpack_folder)
+    name = generate_name(_convert_to_enum(scenario_name), version)
+    fname = f"{name}.zip"
 
-    name = f"scenarios/rami5/{generate_name(_convert_to_enum(scenario_name), version)}"
-
-    if unpack_folder is None:
-        unpack_folder = Path.cwd() / DEFAULT_SCENARIO_FOLDER_NAME
-
+    # Check for data availability
     scenario_folder = unpack_folder / name
-    if not scenario_folder.exists():
-        local_path = data_store.fetch(f"{name}.zip")
-        # Unzip the scenario
-        with zipfile.ZipFile(local_path, "r") as zip_ref:
-            zip_ref.extractall(scenario_folder)
+    if not (scenario_folder / "scenario.json").exists():
+        pooch.retrieve(
+            urljoin(_DATA_URL_ROOT, fname),
+            fname=fname,
+            path=unpack_folder,
+            processor=pooch.processors.Unzip(extract_dir=name),
+            known_hash=None,
+            progressbar=True,
+        )
+        (unpack_folder / fname).unlink(missing_ok=True)
 
     # Load the scenario
     return load_scenario(scenario_folder, padding, spectral_data=spectral_data)

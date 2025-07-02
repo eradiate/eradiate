@@ -240,18 +240,17 @@ RAMI benchmark scenarios
 We provide a specific loader for scenes derived from the
 `RAMI-V scene list <https://rami-benchmark.jrc.ec.europa.eu/_www/phase_descr.php?strPhase=RAMI5>`_.
 The list of pre-configured scenes is available in the
-:doc:`data guide </rst/data/rami_scenes>`. Shipped data are downloaded
-automatically when a specific scenario is requested via the datastore. Due to
-their size and the number of files they contain, the scenarios are downloaded in
-a compressed format and, by default, extracted to the current working directory.
-The extracted files are then used to load the scenario. To change the default
-location for the extracted files, set the appropriate parameter in the
-:func:`.load_rami_scenario` function.
+:doc:`data guide </rst/data/rami_scenes>`. To use the archives provided on the
+Eradiate website, unpack them to a location of your choice (which will be
+referred to as ``scenario_root`` in the following) and call the
+:func:`.load_rami_scenario` function:
 
 .. code-block:: python
 
     from pathlib import Path
 
+    import numpy as np
+    import matplotlib.pyplot as plt
     import eradiate
     from eradiate.experiments import CanopyExperiment
     from eradiate.scenes.biosphere import load_rami_scenario
@@ -260,25 +259,32 @@ location for the extracted files, set the appropriate parameter in the
     eradiate.set_mode("mono")
 
     # Use the RAMI ID to reference the scenario
-    scenario_data = load_rami_scenario("HOM30_DIS_ED0")
+    unpack_folder = "./rami_scenarios/"
+    scenario_data = load_rami_scenario(
+        "HET14_WCO_UND", unpack_folder=unpack_folder
+    )
 
     scenario = CanopyExperiment(
         **scenario_data,
         measures={
             "type": "perspective",
-            "film_resolution": (50, 50),
+            "film_resolution": (320, 240),
             "origin": [10.0, 10.0, 10.0],
             "target": [0.0, 0.0, 0.0],
             "up": [0.0, 0.0, 1.0],
-            "sampler": "ldsampler",
-            "fov": 50.0,
-            "spp": 4**2,
+            "spp": 16,
             "srf": {
-                "type": "multi_delta",
+                "type": "delta",
                 "wavelengths": np.array([660.0, 550.0, 440.0]) * ureg.nm,
             },
         },
         illumination={"type": "directional", "zenith": 45.0, "azimuth": 350.0},
     )
 
-    res_eradiate = eradiate.run(scenario)
+    result = eradiate.run(scenario)
+    plt.imshow(
+        eradiate.xarray.interp.dataarray_to_rgb(
+            result["radiance"].squeeze(),
+            channels=[("w", 660), ("w", 550), ("w", 440)],
+        )
+    )
