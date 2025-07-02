@@ -26,6 +26,7 @@ import eradiate
 from .. import config
 from .._mode import ModeFlag, SubtypeDispatcher
 from ..attrs import define, documented
+from ..data import fresolver
 from ..exceptions import (
     DataError,
     InterpolationError,
