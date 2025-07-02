@@ -12,8 +12,8 @@ from ._core import Surface
 from ..bsdfs import BSDF, BlackBSDF, LambertianBSDF, bsdf_factory
 from ..core import Ref, SceneTraversal, traverse
 from ..shapes import RectangleShape, shape_factory
-from ... import fresolver
 from ...attrs import define, documented
+from ...data import fresolver
 from ...exceptions import OverriddenValueWarning, TraversalError
 from ...units import unit_context_config as ucc
 
