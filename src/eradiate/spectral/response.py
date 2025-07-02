@@ -13,8 +13,9 @@ import scipy.integrate as spi
 import xarray as xr
 from pinttrs.util import ensure_units
 
-from .. import converters, fresolver, validators
+from .. import converters, validators
 from ..attrs import define, documented
+from ..data import fresolver
 from ..exceptions import DataError
 from ..units import to_quantity
 from ..units import unit_context_config as ucc

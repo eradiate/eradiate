@@ -23,7 +23,7 @@ from pinttrs.util import ensure_units
 
 import eradiate
 
-from .. import config, fresolver
+from .. import config
 from .._mode import ModeFlag, SubtypeDispatcher
 from ..attrs import define, documented
 from ..exceptions import (

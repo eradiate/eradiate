@@ -21,8 +21,8 @@ import numpy as np
 import pint
 import xarray as xr
 
-from . import fresolver
 from .attrs import AUTO
+from .data import fresolver
 from .exceptions import DataError
 from .typing import PathLike
 
