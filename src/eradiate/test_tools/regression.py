@@ -183,10 +183,8 @@ def reference_converter(
     Notes
     -----
     * ``None`` and datasets are passed through.
-    * If ``value`` is a path to a local file, load it as a dataset.
-    * If ``value`` is a path to a remote file, load it from the data store.
-    * If ``value`` is a path that cannot be resolved to a local or remote file,
-      return ``None``.
+    * If ``value`` is a path, resolve it with the path resolver and try to load it.
+    * If ``value`` is a path to a file that does not exist, return ``None``.
     """
     if value is None:
         return value
@@ -195,28 +193,13 @@ def reference_converter(
         return value
 
     if isinstance(value, (str, os.PathLike, bytes)):
-        # Try to open a file if it is directly referenced
-        if os.path.isfile(value):
-            logger.info(
-                f'Loading reference dataset "{str(value)}" from disk',
-                also_console=True,
-            )
-            return xr.load_dataset(value)
-
-        # Try to serve the file from the data store
         try:
-            logger.info(
-                f'Attempting to serve reference dataset "{str(value)}" from data store',
-                also_console=True,
-            )
+            logger.info(f'Looking up "{str(value)}" on disk', also_console=True)
             fname = fresolver.resolve(value)
-            logger.info(f"Fetched path: {fname}", also_console=True)
+            logger.info(f"Resolved path: {fname}", also_console=True)
             return xr.load_dataset(fname)
 
         except (DataError, FileNotFoundError):
-            # If we get there, it means either that the data store could not
-            # resolve the path, or the file is missing and cannot be retrieved.
-            # We just give up.
             pass
 
         # File not found: most likely means reference data does not exist
