@@ -131,9 +131,9 @@ class Measure(NodeSceneElement, ABC):
             validator=attrs.validators.instance_of(SpectralResponseFunction),
         ),
         doc="Spectral response function (SRF). If a path is passed, it attempts "
-        "to load a dataset from that location. If a keyword is passed, e.g., "
-        "``'sentinel_2a-msi-4'`` it tries to serve the corresponding dataset "
-        "from the Eradiate data store.",
+        "to load a dataset from that location. If a keyword is passed, *e.g.* "
+        "``'sentinel_2a-msi-4'``, the corresponding dataset is looked up "
+        "through the file resolver.",
         type=".SpectralResponseFunction",
         init_type="path-like or str or .SpectralResponseFunction or dict",
         default=":class:`DeltaSRF(wavelengths=550.0 * ureg.nm) <.DeltaSRF>`",
