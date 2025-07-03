@@ -20,12 +20,12 @@ from ..typing import PathLike
 def skipif_data_not_found(path: PathLike, action: t.Callable | None = None) -> None:
     """
     During a Pytest session, skip the current test if the referenced dataset
-    cannot be fetched from the data store.
+    cannot be resolved by the file resolver.
 
     Parameters
     ----------
     path : path-like
-        Path to the required data file (in the data store).
+        Path to the required data file.
 
     action : callable, optional
         An optional callable with no arguments which performs an action prior to
