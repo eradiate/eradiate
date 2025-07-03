@@ -42,7 +42,7 @@ def test_construct_texture(mode_mono, tmp_path):
     )
     check_scene_element(illumination, mi_cls=mi.Emitter)
 
-    # Construct with beam profile from data store
+    # Construct with beam profile from file (resolved by file resolver)
     illumination = SpotIllumination(
         target=[0, 0, 0],
         origin=[1, 1, 1],
