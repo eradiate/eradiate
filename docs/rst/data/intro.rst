@@ -27,121 +27,128 @@ handling and procurement in Eradiate follows the following principles:
   users. Downloading a dataset is usually not more complicated than issuing a
   single command line in a terminal.
 
-Data store configuration
-------------------------
+Basic concepts
+--------------
 
-Eradiate ships data managed by its global data store. This data store aggregates
-multiple data sources that can point to different locations (local or online)
-and implement different shipment behaviours (download with or without integrity
-checks). The following configuration items drive the behaviour of Eradiate's
-data store:
+Data handling is split into two parts:
 
-Development mode
-    This behaviour is controlled by the
-    :data:`ERADIATE_SOURCE_DIR <eradiate.config.SOURCE_DIR>` environment
-    variable.
-    In development mode, parts of the data is shipped in a Git submodule.
-    Otherwise, these data are downloaded upon access request.
+* Data consumption: this is the process of delivering data that are available
+  locally to the components of Eradiate.
 
-Offline mode
-    This behaviour is controlled by the
-    :ref:`offline setting<sec-user_guide-config-default>`.
-    In offline mode, all download requests made to the data store are denied.
-    This mode is safer if you want to deliver the data yourself or operate with
-    a bandwidth-limited or unstable connection.
+* Data shipping: this is the process of delivering to the user data delivered
+  together with Eradiate.
 
-Download directory
-    Upon download, Eradiate stores data in a directory defined by the
-    :ref:`download\_dir setting<sec-user_guide-config-default>`. The default
-    location, if this setting is not overridden by the user, depends on whether
-    Eradiate is operating in development mode or not.
+Each phase of data handling is supported by a specific component, each available
+as a unique global instance:
+
+* The :class:`.FileResolver` resolves relative paths by searching an ordered
+  list of registered local directories. It allows to maintain shipped data as a
+  relocatable file tree.
+
+* The :class:`.AssetManager` manages shipped data. It connects to an online data
+  registry that publishes a list of available resources. It can download,
+  decompress and install available resources to a configurable local directory
+  that is appended to the file resolver automatically.
+  It is accessed through the unique instance :data:`eradiate.asset_manager`, but
+  the main interaction point from a user point of view is the ``eradiate data``
+  command-line utility.
 
 .. _sec-data-intro-download:
 
 Downloading data
 ----------------
 
-Data download is done using the ``eradiate data fetch`` command
-(see :ref:`sec-reference_cli`). The most common way to download data is to
-reference a file list when calling ``eradiate data fetch``. Known file lists
-are displayed using the ``--list`` option, *e.g.*:
+Data is managed with the ``eradiate data`` command-line utility
+(see :ref:`sec-reference_cli`). Known resources are displayed using the
+``eradiate data list`` command, *e.g.*:
 
 .. code-block:: console
 
-   $ eradiate data fetch --list
-   Known file lists:
-     all
-     minimal
-     komodo
-     gecko
-     monotropa
-     mycena
-     panellus
+    $ eradiate data list
 
-A specific file list can then be downloaded by simply requesting it, *e.g.*:
+      Resource ID                   Type     Size      State
+     ────────────────────────────────────────────────────────
+      absorption_ckd/monotropa-v1   tar.gz   57.1 MB   ---
+      absorption_ckd/mycena-v1      tar.gz   126 MB    ---
+      absorption_ckd/mycena-v2      tar.gz   87.2 MB   ---
+      absorption_ckd/panellus-v1    tar.gz   790 MB    ---
+      absorption_mono/gecko-v1      tar.gz   311 MB    ---
+      absorption_mono/komodo-v1     tar.gz   235 MB    ---
+      aerosol/core-v1               tar.gz   2.02 MB   ---
+      bsdf/core-v1                  tar.gz   35.8 kB   ---
+      constant/core-v1              tar.gz   2.74 kB   ---
+      solar_irradiance/core-v1      tar.gz   2.97 MB   ---
+      solar_irradiance/solid-v1     tar.gz   39.2 MB   ---
+      srf/core-v1                   tar.gz   2.75 MB   ---
+      texture/core-v1               tar.gz   5.55 kB   ---
+
+To install a given resources, use the ``eradiate data install`` command,
+referencing the target resources by their IDs, *e.g.*:
 
 .. code-block:: console
 
-   $ eradiate data fetch komodo
-   Fetching 'spectra/absorption/mono/komodo/komodo.nc'
-   ✓ found
-   [/home/username/src/eradiate/.eradiate_downloads/stable/spectra/absorpti
-   on/mono/komodo/komodo.nc]
-   Fetching 'spectra/absorption/mono/komodo/metadata.json'
-   ✓ found
-   [/home/username/src/eradiate/.eradiate_downloads/stable/spectra/absorpti
-   on/mono/komodo/metadata.json]
+    $ eradiate data install aerosol/core-v1 bsdf/core-v1
+    Downloading data from 'https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v1/aerosol/core-v1.tar.gz' to file '/home/leroyv/.cache/eradiate/cached/aerosol/core-v1.tar.gz'.
+    100%|█████████████████████████████████████| 2.02M/2.02M [00:00<00:00, 12.5GB/s]
+    Untarring contents of '/home/leroyv/.cache/eradiate/cached/aerosol/core-v1.tar.gz' to '/home/leroyv/.cache/eradiate/unpacked/aerosol'
+    Downloading data from 'https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v1/bsdf/core-v1.tar.gz' to file '/home/leroyv/.cache/eradiate/cached/bsdf/core-v1.tar.gz'.
+    100%|██████████████████████████████████████| 35.8k/35.8k [00:00<00:00, 265MB/s]
+    Untarring contents of '/home/leroyv/.cache/eradiate/cached/bsdf/core-v1.tar.gz' to '/home/leroyv/.cache/eradiate/unpacked/bsdf'
+    Installing resource 'aerosol/core-v1'
+    Installing resource 'bsdf/core-v1'
 
-.. note::
+Resource archives that are not already available locally will be downloaded from
+the remote data registry. They will be unpacked and linked to the version-
+dependent installation directory.
 
-   Some data might require ancillary files that are not part of the download
-   lists. For example, the current format of molecular absorption databases uses
-   index and spectral coverage tables, which can be missing from the download
-   list, but can be built by Eradiate automatically. While this is done
-   automatically when creating an :class:`.AbsorptionDatabase`, it can also be
-   done manually prior to running computations with Eradiate, using the
-   ``eradiate data check`` command with the ``--fix`` option, *e.g.*:
+For convenience, some resources are aliased. The list of aliases can be
+displayed as follows:
 
-   .. code-block:: console
+.. code-block::
 
-      $ eradiate data check monotropa --fix
-      [10:44:35] INFO     Opening 'monotropa'
-                 WARNING  Could not find spectral coverage table, building it
-      [10:44:37] INFO     Success!
+    $ eradiate data list --what aliases
 
+      Alias              Target
+     ────────────────────────────────────────────────
+      aerosol            aerosol/core-v1
+      bsdf               bsdf/core-v1
+      constant           constant/core-v1
+      gecko              absorption_mono/gecko-v1
+      solar_irradiance   solar_irradiance/core-v1
+      komodo             absorption_mono/komodo-v1
+      monotropa          absorption_ckd/monotropa-v1
+      mycena             absorption_ckd/mycena-v2
+      panellus           absorption_ckd/panellus-v1
+      srf                srf/core-v1
+      texture            texture/core-v1
+      core               aerosol
+                         bsdf
+                         constant
+                         komodo
+                         monotropa
+                         solar_irradiance
+                         srf
+                         texture
+      absorption         gecko
+                         komodo
+                         monotropa
+                         panellus
+                         mycena
 
-Accessing data (advanced users and developers)
-----------------------------------------------
+Some aliases reference a single resource, while others reference multiple
+resources or aliases. It is usually recommended to download the ``core``
+resources after installation.
 
-Every file managed by the global data store can be accessed using the
-:func:`eradiate.data.open_dataset` function:
+Accessing data
+--------------
 
-.. code-block:: python
+The file resolver is used in many components to resolve relative paths. This
+notably means that:
 
-   >>> import eradiate
-   >>> ds = eradiate.data.open_dataset("spectra/solar_irradiance/thuillier_2003.nc")
+* users can relocate their data provided that they do not modify the file tree
+  and that they make sure that the relocation target directory is added to the
+  file resolver;
 
-This function behaves similarly to :func:`xarray.open_dataset`. The
-:func:`eradiate.data.load_dataset` also allows eager data loading. File access
-will, if necessary, trigger data download and caching.
-
-.. warning::
-
-   The data module does not support concurrent download requests from multiple
-   processes running Eradiate. This means that in such cases, two processes
-   requesting the same resource using *e.g.* :func:`eradiate.data.load_dataset`
-   might trigger two downloads that will overwrite each other, resulting in
-   unpredictable (but surely incorrect) behaviour.
-
-   If your use case requires running Eradiate from multiple processes, we
-   strongly recommend **downloading all required data in advance** using the
-   ``eradiate data fetch`` command (see `Downloading data`_).
-
-.. seealso::
-
-   :mod:`eradiate.data`: complete data module reference.
-
-.. toctree::
-   :hidden:
-
-   data_format_details
+* developers can rely on the file resolver to look up shipped data using
+  relative paths, because the resource installation location is always added to
+  the file resolver.
