@@ -5,7 +5,7 @@ from typing import Annotated, List, Optional
 import typer
 from rich.console import Console
 
-from eradiate import asset_manager
+from eradiate import asset_manager, fresolver
 
 app = typer.Typer()
 console = Console(color_system=None)
@@ -26,20 +26,15 @@ class ClearWhat(str, enum.Enum):
     all = "all"
 
 
-@app.callback()
-def main():
+@app.callback(invoke_without_command=True)
+def main(ctx: typer.Context):
     """
-    Manage data.
+    Display the asset manager and file resolver configurations.
+    Use subcommands for other data management tasks.
     """
-    pass
-
-
-@app.command()
-def info():
-    """
-    Display the asset manager configuration.
-    """
-    asset_manager.info()
+    if ctx.invoked_subcommand is None:
+        asset_manager.info()
+        fresolver.info()
 
 
 @app.command()
@@ -98,7 +93,7 @@ def remove(
     ],
 ):
     """
-    Remove a resource.
+    Uninstall a resource.
     """
     asset_manager.remove(resource_ids)
 
@@ -117,6 +112,6 @@ def clear(
     ] = ClearWhat.cached,
 ):
     """
-    Clear data.
+    Delete data.
     """
     asset_manager.clear(resource_ids, what=what)
