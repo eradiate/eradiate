@@ -3885,7 +3885,7 @@ packages:
 - pypi: ./
   name: eradiate
   version: 0.31.0.dev0
-  sha256: bcf3120ad131b0b9a32f3a51c645487c8fac00ca3189080acae223b732f8ed35
+  sha256: 54aa1c528f69e9e4f72df2bf6ac5b63a1f3da1f58ada723f73359650204980e9
   requires_dist:
   - aenum
   - attrs>=22.2
@@ -3919,24 +3919,6 @@ packages:
   - python-dateutil ; extra == 'recommended'
   - graphviz ; extra == 'recommended'
   - seaborn ; extra == 'recommended'
-  - myst-parser ; extra == 'docs'
-  - nbsphinx>=0.9.0 ; extra == 'docs'
-  - ipython ; extra == 'docs'
-  - pytest ; extra == 'docs'
-  - robotframework ; extra == 'docs'
-  - seaborn ; extra == 'docs'
-  - sphinx-book-theme>=1.0 ; extra == 'docs'
-  - sphinx ; extra == 'docs'
-  - sphinxcontrib-bibtex>=2.0 ; extra == 'docs'
-  - sphinx-autobuild<=2021 ; extra == 'docs'
-  - sphinx-copybutton ; extra == 'docs'
-  - sphinx-design ; extra == 'docs'
-  - pytest ; extra == 'test'
-  - pytest-json-report ; extra == 'test'
-  - asv==0.6.* ; extra == 'test'
-  - robotframework ; extra == 'test'
-  - pytest-robotframework ; extra == 'test'
-  - bump-my-version>=0.28.0,<0.29.0 ; extra == 'dev'
   requires_python: '>=3.9,<3.13'
   editable: true
 - pypi: https://files.pythonhosted.org/packages/1a/84/44f6d833e3001ab9262d57f0592362d6d7852a61b4e027c6a3d3c0105fe3/eradiate_mitsuba-0.3.2-cp39-cp39-win_amd64.whl
