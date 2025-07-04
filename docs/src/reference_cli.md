@@ -23,13 +23,14 @@ $ eradiate [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `data`: Manage data.
+* `data`: Display the asset manager and file...
 * `show`: Display information useful for debugging.
 * `srf`: Spectral response function filtering utility.
 
 ### `eradiate data`
 
-Manage data.
+Display the asset manager and file resolver configurations.
+Use subcommands for other data management tasks.
 
 **Usage**:
 
@@ -43,17 +44,16 @@ $ eradiate data [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `clear`: Clear data.
+* `clear`: Delete data.
 * `download`: Download a resource from remote storage to...
-* `info`: Display the asset manager configuration.
 * `install`: Install a resource.
 * `list`: List all packages referenced by the...
-* `remove`: Remove a resource.
+* `remove`: Uninstall a resource.
 * `update`: Download the data registry manifest from...
 
 #### `eradiate data clear`
 
-Clear data.
+Delete data.
 
 **Usage**:
 
@@ -87,20 +87,6 @@ $ eradiate data download [OPTIONS] RESOURCE_IDS...
 **Options**:
 
 * `--unpack / --no-unpack`: Unpack downloaded archives.  [default: unpack]
-* `--help`: Show this message and exit.
-
-#### `eradiate data info`
-
-Display the asset manager configuration.
-
-**Usage**:
-
-```console
-$ eradiate data info [OPTIONS]
-```
-
-**Options**:
-
 * `--help`: Show this message and exit.
 
 #### `eradiate data install`
@@ -140,7 +126,7 @@ $ eradiate data list [OPTIONS]
 
 #### `eradiate data remove`
 
-Remove a resource.
+Uninstall a resource.
 
 **Usage**:
 

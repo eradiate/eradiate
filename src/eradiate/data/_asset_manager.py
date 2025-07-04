@@ -345,14 +345,27 @@ class AssetManager:
         """
         Print information about the asset manager to the terminal.
         """
+        from rich.console import Console
+
         cache_size = (self._cache_size() * ureg("B")).to_compact()
         unpack_size = (self._unpack_size() * ureg("B")).to_compact()
 
-        print("Eradiate asset manager")
-        print(f"* Remote storage URL: {self.base_uri}")
-        print(f"* Asset cache location [{cache_size:.3g~P}]: {self.cache_dir}")
-        print(f"* Unpacked asset location [{unpack_size:.3g~P}]: {self.unpack_dir}")
-        print(f"* Installation location: {self.install_dir}")
+        console = Console(color_system=None)
+
+        def section(title, newline=True):
+            if newline:
+                console.print()
+            console.rule("── " + title, align="left")
+            console.print()
+
+        def message(text):
+            console.print(text)
+
+        section("Asset manager")
+        message(f"• Remote storage URL: {self.base_uri}")
+        message(f"• Asset cache location [{cache_size:.3g~P}]: {self.cache_dir}")
+        message(f"• Unpacked asset location [{unpack_size:.3g~P}]: {self.unpack_dir}")
+        message(f"• Installation location: {self.install_dir}")
 
     def state(self, resource_ids: str | list[str]) -> dict[str, ResourceState]:
         """
