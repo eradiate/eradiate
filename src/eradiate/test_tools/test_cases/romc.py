@@ -14,7 +14,7 @@ def fetch_het01_brfpp():
     Returns
     -------
     dict
-        dictionary containing the various data stores.
+        dictionary containing the various data paths.
     """
 
     data = {}
@@ -107,7 +107,7 @@ def fetch_het04a1_brfpp():
     Returns
     -------
     dict
-        dictionary containing the various data stores.
+        dictionary containing the various data paths.
     """
 
     data = {}
@@ -226,7 +226,7 @@ def fetch_het06_brfpp():
     Returns
     -------
     dict
-        dictionary containing the various data stores.
+        dictionary containing the various data paths.
     """
 
     data = {}
