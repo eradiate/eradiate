@@ -61,6 +61,7 @@ def list(
     List all packages referenced by the manifest and their current state
     (cached, unpacked, installed).
     """
+    asset_manager.update()
     asset_manager.list(what=what)
 
 
