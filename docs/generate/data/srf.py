@@ -210,7 +210,7 @@ def generate_summary():
         for name in INSTRUMENTS.keys()
     ]
 
-    result = template.render(instruments=instruments)
+    result = template.render(instruments=instruments).rstrip() + "\n"
     write_if_modified(outfile_rst, result)
 
 
