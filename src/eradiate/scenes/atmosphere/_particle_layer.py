@@ -167,11 +167,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         doc="Particle radiative property data set."
         "If an xarray dataset is passed, the dataset is used as is "
         "(refer to the data guide for the format requirements of this dataset)."
-        "If a path is passed, the converter tries to open the corresponding "
-        "file on the hard drive; should that fail, it queries the Eradiate data"
-        "store with that path."
-        "If a string is passed, it is interpreted as an identifier for a "
-        "particle radiative property dataset in the Eradiate data store.",
+        "If a path is passed, the converter looks it up on the hard drive, using "
+        "the file resolver. "
+        "If a string is passed, it is interpreted as a particle radiative "
+        "property dataset identifier.",
         type="Dataset",
         init_type="Dataset or path-like or str",
         default='"govaerts_2021-continental"',

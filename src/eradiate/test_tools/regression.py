@@ -247,7 +247,7 @@ class RegressionTest(ABC):
             ),
         ),
         doc="Reference data. Can be specified as an xarray dataset, a path to a "
-        "NetCDF file or a path to a resource served by the data store.",
+        "NetCDF file or a path to a resource.",
         type=":class:`xarray.Dataset` or None",
         init_type=":class:`xarray.Dataset` or path-like, optional",
         default="None",
