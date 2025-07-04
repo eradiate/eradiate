@@ -65,11 +65,11 @@ def main():
 
     loaded_settings_files = list(eradiate.config.settings._loaded_files)
     if loaded_settings_files:
-        message("• Loaded setting files:")
+        message("• Loaded settings files:")
         for fname in loaded_settings_files:
             message(f"  • {fname}")
     else:
-        message("• Loaded setting files: None")
+        message("• Loaded setting files: <none>")
 
 
 __doc__ = main.__doc__

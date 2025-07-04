@@ -139,6 +139,25 @@ Some aliases reference a single resource, while others reference multiple
 resources or aliases. It is usually recommended to download the ``core``
 resources after installation.
 
+The ``eradiate data`` command shows configuration information for the assert
+manager and the file resolver:
+
+.. code-block:: console
+
+    $ eradiate data
+
+    ── Asset manager ─────────────────────────────────────────────────────────────────────────────
+
+    • Remote storage URL: https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v1/
+    • Asset cache location [300 MB]: /home/user/.cache/eradiate/cached
+    • Unpacked asset location [430 MB]: /home/user/.cache/eradiate/unpacked
+    • Installation location: /home/user/.cache/eradiate/installed/eradiate-v0.31.0
+
+    ── File resolver ─────────────────────────────────────────────────────────────────────────────
+
+    • /home/user/.cache/eradiate/installed/eradiate-v0.31.0
+    • /home/user/Documents/src/rayference/rtm/eradiate/resources/data
+
 Accessing data
 --------------
 
