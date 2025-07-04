@@ -153,6 +153,28 @@ class FileResolver:
         fname = self.resolve(path, strict=strict, cwd=cwd)
         return xr.load_dataset(fname)
 
+    def info(self):
+        """
+        Print information about the file resolver to the terminal.
+        """
+        from rich.console import Console
+
+        console = Console(color_system=None)
+
+        def section(title, newline=True):
+            if newline:
+                console.print()
+            console.rule("── " + title, align="left")
+            console.print()
+
+        def message(text):
+            console.print(text)
+
+        section("File resolver")
+
+        for path in self.paths:
+            message(f"• {path}")
+
 
 #: Unique file resolver instance
 fresolver = FileResolver(settings["path"])
