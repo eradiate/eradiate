@@ -37,11 +37,4 @@ start simulations:
 
 .. code:: bash
 
-   eradiate data fetch minimal
-
-.. warning::
-
-   Since v0.27.0, molecular absorption databases are no longer downloaded lazily
-   when used for the first time. Instead, they must be downloaded prior to
-   running Eradiate. See the :doc:`data guide </rst/data/intro>` for more
-   information.
+   eradiate data install core
