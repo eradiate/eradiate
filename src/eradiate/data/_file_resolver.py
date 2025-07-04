@@ -75,8 +75,10 @@ class FileResolver:
         if not path.is_dir():
             raise NotADirectoryError(f"{path}")
 
-        if avoid_duplicates and path not in self.paths:
-            self.paths.append(path)
+        if avoid_duplicates and path in self.paths:
+            return
+
+        self.paths.append(path)
 
     def clear(self) -> None:
         """
@@ -101,8 +103,10 @@ class FileResolver:
         if not path.is_dir():
             raise NotADirectoryError(f"{path}")
 
-        if avoid_duplicates and path not in self.paths:
-            self.paths.insert(0, path)
+        if avoid_duplicates and path in self.paths:
+            return
+
+        self.paths.insert(0, path)
 
     def resolve(self, path: PathLike, strict: bool = False, cwd: bool = False) -> Path:
         """
