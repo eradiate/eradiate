@@ -130,15 +130,12 @@ List all packages referenced by the manifest and their current state
 **Usage**:
 
 ```console
-$ eradiate data list [OPTIONS] [WHAT]:[resources|aliases|all]
+$ eradiate data list [OPTIONS]
 ```
-
-**Arguments**:
-
-* `[WHAT]:[resources|aliases|all]`: A keyword that specifies what to show.  [default: resources]
 
 **Options**:
 
+* `--what [resources|aliases|all]`: A keyword that specifies what to clear.  [default: resources]
 * `--help`: Show this message and exit.
 
 #### `eradiate data remove`
