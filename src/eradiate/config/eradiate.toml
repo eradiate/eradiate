@@ -1,4 +1,4 @@
-## This is the default configuration file for Eradiate.
+## This is an example of configuration file for Eradiate.
 ## All settings below can be set using environment variables with the
 ## `ERADIATE_` prefix (e.g. the `progress` setting can be set with the
 ## `ERADIATE_PROGRESS` variable).
@@ -29,12 +29,12 @@ path = []
 data_path = "~/Downloads/eradiate/"
 
 ## Path to data registry URL
-data_url = "https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v0/"
+data_url = "https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v1/"
 
 [absorption_database.error_handling]
-# This default configuration ignores bound errors on pressure and temperature
-# variables because this usually occurs at high altitude, where the absorption
-# coefficient is very low and can be safely forced to 0.
+# This configuration ignores bound errors on pressure and temperature variables
+# because this usually occurs at high altitude, where the absorption coefficient
+# is very low and can be safely forced to 0.
 p = { missing = "raise", scalar = "raise", bounds = "ignore" }
 t = { missing = "raise", scalar = "raise", bounds = "ignore" }
 # Ignore missing molecule coordinates, raise on bound error.

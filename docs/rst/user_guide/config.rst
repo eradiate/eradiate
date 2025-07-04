@@ -9,9 +9,8 @@ interpolation error handling. All settings have default values that can be
 customized by users in several ways, with descending priority:
 
 1. Environment variables.
-2. An ``eradiate.toml`` file placed in the current working directory or higher.
-
-Default values are :ref:`documented below <sec-user_guide-config-default>`.
+2. An ``eradiate.toml`` or ``eradiate.yml`` file placed in the current working
+   directory or higher.
 
 .. warning::
 
@@ -34,8 +33,10 @@ that can only be set using environment variables:
 
 .. _sec-user_guide-config-default:
 
-Default configuration file
+Example configuration file
 --------------------------
 
-.. literalinclude:: /resources/config/default.toml
+The following example file lists all of Eradiate's configuration variables.
+Note that the values used here do not necessarily correspond to the defaults.
 
+.. literalinclude:: /resources/config/eradiate.toml
