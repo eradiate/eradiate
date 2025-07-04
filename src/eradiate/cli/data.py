@@ -54,7 +54,7 @@ def update():
 def list(
     what: Annotated[
         ListWhat,
-        typer.Argument(help="A keyword that specifies what to show."),
+        typer.Option(help="A keyword that specifies what to clear."),
     ] = ListWhat.resources,
 ):
     """
