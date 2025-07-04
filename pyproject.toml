@@ -49,6 +49,8 @@ recommended = [
   "graphviz", # Used to visualize post-processing pipeline DAGs
   "seaborn", # Used to define the Eradiate plotting style
 ]
+
+[dependency-groups]
 docs = [
   "myst-parser",
   "nbsphinx>=0.9.0",
@@ -171,8 +173,8 @@ docs-render-tutorials = { cmd = "python tutorials/run.py run" }
 # -- Important: If the Python version changes, do not forget to sync it with the
 #    'build.tools.python' entry in .readthedocs.yml
 docs-lock = { cmd = """
-  uv pip compile --no-progress --quiet --upgrade --build-isolation
-    --python-version 3.9 --no-strip-extras --extra docs --extra recommended
+  uv pip compile --upgrade --quiet --no-progress
+    --python-version 3.9 --group docs --extra recommended
     --output-file docs/requirements.txt pyproject.toml
 """ }
 
