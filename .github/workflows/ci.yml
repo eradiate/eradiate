@@ -45,10 +45,7 @@ jobs:
         uses: ./.github/actions/prepare-ci
       - name: Download datasets
         run: |
-          eradiate data fetch minimal
-          eradiate data fetch monotropa
-          eradiate data fetch komodo
-          eradiate data fetch gecko
+          eradiate data install core
       - name: Eradiate show
         run: |
           eradiate show
@@ -76,10 +73,7 @@ jobs:
       - uses: ./.github/actions/prepare-ci
       - name: Download datasets
         run: |
-          eradiate data fetch minimal
-          eradiate data fetch monotropa
-          eradiate data fetch komodo
-          eradiate data fetch gecko
+          eradiate install core
       - name: Eradiate show
         run: |
           eradiate show
