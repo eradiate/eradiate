@@ -7,7 +7,6 @@ import matplotlib.pyplot as _plt
 import numpy as np
 import seaborn as sns
 import xarray as xr
-import xarray.plot
 from cycler import cycler
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
@@ -84,9 +83,7 @@ def detect_axes(from_=None):
     raise TypeError("unsupported type")
 
 
-def get_axes_from_facet_grid(
-    facet_grid: xarray.plot.FacetGrid, exclude: str = None
-) -> list[Axes]:
+def get_axes_from_facet_grid(facet_grid: FacetGrid, exclude: str = None) -> list[Axes]:
     """
     Extract a flat list of :class:`~matplotlib.axes.Axes` from a
     :class:`~xarray.plot.FacetGrid`.
