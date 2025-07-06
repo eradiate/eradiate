@@ -8,8 +8,8 @@ import cerberus
 import xarray as xr
 from ruamel.yaml import YAML
 
-from eradiate.units import unit_registry as ureg
-from eradiate.units import units_compatible
+from ..units import unit_registry as ureg
+from ..units import units_compatible
 
 
 def _load_rules():
