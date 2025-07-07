@@ -1,6 +1,5 @@
 import joseki  # noqa: F401  # Put import at top to mitigate undesired log output
 import typer
-from rich.console import Console
 
 app = typer.Typer()
 
@@ -12,20 +11,7 @@ def main():
     """
     import eradiate.util.sys_info
 
-    console = Console(color_system=None)
-    error_console = Console(stderr=True, color_system=None)
-
-    def section(title, newline=True):
-        if newline:
-            console.print()
-        console.rule("── " + title, align="left")
-        console.print()
-
-    def message(text):
-        console.print(text)
-
-    def warning(text):
-        error_console.print(text)
+    from ._console import message, section, warning
 
     warnings = eradiate.kernel.check_kernel()
 

@@ -3,12 +3,12 @@ import logging
 from typing import Annotated, List, Optional
 
 import typer
-from rich.console import Console
 
 from eradiate import asset_manager, fresolver
 
+from ._console import message, section
+
 app = typer.Typer()
-console = Console(color_system=None)
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,23 @@ def main(ctx: typer.Context):
     Use subcommands for other data management tasks.
     """
     if ctx.invoked_subcommand is None:
-        asset_manager.info()
-        fresolver.info()
+        asset_manager_info = asset_manager.info()
+        section("Asset manager")
+        message(f"• Remote storage URL: {asset_manager_info['remote_url']}")
+        message(
+            f"• Asset cache location [{asset_manager_info['cache_size']:.3g~P}]: "
+            f"{asset_manager_info['cache_dir']}"
+        )
+        message(
+            f"• Unpacked asset location [{asset_manager_info['unpack_size']:.3g~P}]: "
+            f"{asset_manager_info['unpack_dir']}"
+        )
+        message(f"• Installation location: {asset_manager_info['install_dir']}")
+
+        fresolver_info = fresolver.info()
+        section("File resolver")
+        for path in fresolver_info["paths"]:
+            message(f"• {path}")
 
 
 @app.command()
