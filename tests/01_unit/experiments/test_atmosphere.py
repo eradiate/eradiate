@@ -12,7 +12,6 @@ from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.shapes import RectangleShape
 from eradiate.spectral.response import DeltaSRF
 from eradiate.test_tools.types import check_scene_element
-from eradiate.test_tools.util import skipif_data_not_found
 from eradiate.units import to_quantity
 
 
@@ -92,9 +91,6 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
     """
     Test non-trivial kernel dict generation behaviour.
     """
-    skipif_data_not_found(
-        "spectra/absorption/us76_u86_4/us76_u86_4-spectra-18000_19000.nc"
-    )
 
     # With an atmosphere
     exp = AtmosphereExperiment(
