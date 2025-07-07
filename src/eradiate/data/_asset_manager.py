@@ -341,31 +341,41 @@ class AssetManager:
 
         self._manifest = self._load_manifest()
 
-    def info(self):
+    def info(self, show: bool = False):
         """
-        Print information about the asset manager to the terminal.
+        Collect information about the asset manager.
+
+        Parameters
+        ----------
+        show : bool
+            If ``True``, display information to the terminal. Otherwise, return
+            it as a dictionary.
         """
-        from rich.console import Console
 
         cache_size = (self._cache_size() * ureg("B")).to_compact()
         unpack_size = (self._unpack_size() * ureg("B")).to_compact()
 
-        console = Console(color_system=None)
+        result = {
+            "remote_url": self.base_uri,
+            "cache_dir": self.cache_dir,
+            "cache_size": cache_size,
+            "unpack_dir": self.unpack_dir,
+            "unpack_size": unpack_size,
+            "install_dir": self.install_dir,
+        }
 
-        def section(title, newline=True):
-            if newline:
-                console.print()
-            console.rule("── " + title, align="left")
-            console.print()
+        if show:
+            title = "Asset manager"
+            print(title)
+            print("-" * len(title))
+            print(f"• Remote storage URL: {self.base_uri}")
+            print(f"• Asset cache location [{cache_size:.3g~P}]: {self.cache_dir}")
+            print(f"• Unpacked asset location [{unpack_size:.3g~P}]: {self.unpack_dir}")
+            print(f"• Installation location: {self.install_dir}")
+            return None
 
-        def message(text):
-            console.print(text)
-
-        section("Asset manager")
-        message(f"• Remote storage URL: {self.base_uri}")
-        message(f"• Asset cache location [{cache_size:.3g~P}]: {self.cache_dir}")
-        message(f"• Unpacked asset location [{unpack_size:.3g~P}]: {self.unpack_dir}")
-        message(f"• Installation location: {self.install_dir}")
+        else:
+            return result
 
     def state(self, resource_ids: str | list[str]) -> dict[str, ResourceState]:
         """
