@@ -80,6 +80,11 @@ def generate_summary():
                 path="absorption_ckd/panellus",
                 spectral_sampling="1 nm",
             ),
+            AbsorptionDatabaseInfo(
+                keyword="tuber",
+                path="absorption_ckd/tuber",
+                spectral_sampling="0.1 nm",
+            ),
         ]
     )
 
