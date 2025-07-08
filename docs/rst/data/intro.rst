@@ -108,7 +108,7 @@ in the version-specific installation directory will be created again.
 For convenience, some resources are aliased. The list of aliases can be
 displayed as follows:
 
-.. code-block::
+.. code-block:: console
 
     $ eradiate data list --what aliases
 
