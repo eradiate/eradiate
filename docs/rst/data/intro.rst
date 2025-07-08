@@ -99,7 +99,11 @@ referencing the target resources by their IDs, *e.g.*:
 
 Resource archives that are not already available locally will be downloaded from
 the remote data registry. They will be unpacked and linked to the version-
-dependent installation directory.
+dependent installation directory. The cache and unpacking locations are, by
+default, common to all Eradiate versions. That means that if you use default
+settings, data that was downloaded with a given version of Eradiate will not be
+downloaded or unpacked again after an upgrade — only the symbolic links created
+in the version-specific installation directory will be created again.
 
 For convenience, some resources are aliased. The list of aliases can be
 displayed as follows:
