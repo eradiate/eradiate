@@ -73,7 +73,7 @@ jobs:
       - uses: ./.github/actions/prepare-ci
       - name: Download datasets
         run: |
-          eradiate install core
+          eradiate data install core
       - name: Eradiate show
         run: |
           eradiate show
