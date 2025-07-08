@@ -6,7 +6,7 @@ User guide
 The user guide introduces a range of topics explaining parts of Eradiate from a
 user's perspective. Reading this material is not necessary to learn how to run
 simulations with Eradiate—for this, it is advised to refer to the
-:ref:`sec-tutorials`.
+:doc:`/tutorials/index`.
 
 What is Eradiate?
 -----------------
