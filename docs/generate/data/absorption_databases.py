@@ -92,7 +92,7 @@ def generate_summary():
         outfile_visual = outdir_visuals / f"{info.keyword}.png"
         generate_absorption_database_visual(info, outfile_visual)
 
-    result = template.render(absorption_databases=absorption_databases)
+    result = template.render(absorption_databases=absorption_databases).rstrip() + "\n"
     write_if_modified(outfile_rst, result)
 
 
