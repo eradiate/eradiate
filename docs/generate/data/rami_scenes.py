@@ -4,8 +4,7 @@ from ..util import DOCS_ROOT_DIR, jinja_environment, write_if_modified
 
 RAMI_SCENE_COMMENTS = {
     "HET51_WWO_TLS": (
-        "This version of the Wytham Wood scene uses data from the updated v2 "
-        "dataset."
+        "This version of the Wytham Wood scene uses data from the updated v2 dataset."
     )
 }
 
@@ -34,7 +33,7 @@ def generate_summary():
         )
     ]
 
-    result = template.render(scenes=scenes)
+    result = template.render(scenes=scenes).rstrip() + "\n"
     write_if_modified(outfile_rst, result)
 
 

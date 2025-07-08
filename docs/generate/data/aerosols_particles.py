@@ -55,7 +55,7 @@ def generate_summary():
         outfile_visual = outdir_visuals / f"{info.keyword}.png"
         generate_particle_radprops_visual(info, outfile_visual)
 
-    result = template.render(particle_radprops=particle_radprops)
+    result = template.render(particle_radprops=particle_radprops).rstrip() + "\n"
     write_if_modified(outfile_rst, result)
 
 

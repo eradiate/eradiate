@@ -114,4 +114,3 @@ Dataset index
     ``aerosol/sixsv-urban.nc``
 
 .. image:: /fig/particle_radprops/sixsv-urban.png
-
