@@ -46,72 +46,72 @@ Dataset index
 ``govaerts_2021-continental-extrapolated``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store path
+.. dropdown:: Data path
 
-    ``spectra/particles/govaerts_2021-continental-extrapolated.nc``
+    ``aerosol/govaerts_2021-continental-extrapolated.nc``
 
 .. image:: /fig/particle_radprops/govaerts_2021-continental-extrapolated.png
 
 ``govaerts_2021-desert-extrapolated``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store path
+.. dropdown:: Data path
 
-    ``spectra/particles/govaerts_2021-desert-extrapolated.nc``
+    ``aerosol/govaerts_2021-desert-extrapolated.nc``
 
 .. image:: /fig/particle_radprops/govaerts_2021-desert-extrapolated.png
 
 ``sixsv-biomass_burning``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store path
+.. dropdown:: Data path
 
-    ``spectra/particles/sixsv-biomass_burning.nc``
+    ``aerosol/sixsv-biomass_burning.nc``
 
 .. image:: /fig/particle_radprops/sixsv-biomass_burning.png
 
 ``sixsv-continental``
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store path
+.. dropdown:: Data path
 
-    ``spectra/particles/sixsv-continental.nc``
+    ``aerosol/sixsv-continental.nc``
 
 .. image:: /fig/particle_radprops/sixsv-continental.png
 
 ``sixsv-desert``
 ^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store path
+.. dropdown:: Data path
 
-    ``spectra/particles/sixsv-desert.nc``
+    ``aerosol/sixsv-desert.nc``
 
 .. image:: /fig/particle_radprops/sixsv-desert.png
 
 ``sixsv-maritime``
 ^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store path
+.. dropdown:: Data path
 
-    ``spectra/particles/sixsv-maritime.nc``
+    ``aerosol/sixsv-maritime.nc``
 
 .. image:: /fig/particle_radprops/sixsv-maritime.png
 
 ``sixsv-stratospheric``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store path
+.. dropdown:: Data path
 
-    ``spectra/particles/sixsv-stratospheric.nc``
+    ``aerosol/sixsv-stratospheric.nc``
 
 .. image:: /fig/particle_radprops/sixsv-stratospheric.png
 
 ``sixsv-urban``
 ^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store path
+.. dropdown:: Data path
 
-    ``spectra/particles/sixsv-urban.nc``
+    ``aerosol/sixsv-urban.nc``
 
 .. image:: /fig/particle_radprops/sixsv-urban.png
 

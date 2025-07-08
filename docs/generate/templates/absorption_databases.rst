@@ -72,7 +72,7 @@ Database index
 ``{{entry.keyword}}`` (mono)
 {{'^' * ((entry.keyword|length) + 11)}}
 
-.. dropdown:: Data store path
+.. dropdown:: Data path
 
     ``{{entry.path}}``
 
@@ -86,7 +86,7 @@ Spectral sampling: {{entry.spectral_sampling}}
 ``{{entry.keyword}}`` (CKD)
 {{'^' * ((entry.keyword|length) + 10)}}
 
-.. dropdown:: Data store path
+.. dropdown:: Data path
 
     ``{{entry.path}}``
 

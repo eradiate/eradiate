@@ -119,7 +119,7 @@ def srf_ids(instrument_name, bands):
 
 
 def srf_paths(instrument_name, bands):
-    return [f"spectra/srf/{instrument_name}-{band}.nc" for band in bands]
+    return [f"srf/{instrument_name}-{band}.nc" for band in bands]
 
 
 def load_srfs(instrument_name, bands):

@@ -70,439 +70,439 @@ Dataset index
 ``sentinel_2a-msi``
 ^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/sentinel_2a-msi-1.nc``
-    * ``spectra/srf/sentinel_2a-msi-2.nc``
-    * ``spectra/srf/sentinel_2a-msi-3.nc``
-    * ``spectra/srf/sentinel_2a-msi-4.nc``
-    * ``spectra/srf/sentinel_2a-msi-5.nc``
-    * ``spectra/srf/sentinel_2a-msi-6.nc``
-    * ``spectra/srf/sentinel_2a-msi-7.nc``
-    * ``spectra/srf/sentinel_2a-msi-8.nc``
-    * ``spectra/srf/sentinel_2a-msi-9.nc``
-    * ``spectra/srf/sentinel_2a-msi-10.nc``
-    * ``spectra/srf/sentinel_2a-msi-11.nc``
-    * ``spectra/srf/sentinel_2a-msi-12.nc``
-    * ``spectra/srf/sentinel_2a-msi-8a.nc``
+    * ``srf/sentinel_2a-msi-1.nc``
+    * ``srf/sentinel_2a-msi-2.nc``
+    * ``srf/sentinel_2a-msi-3.nc``
+    * ``srf/sentinel_2a-msi-4.nc``
+    * ``srf/sentinel_2a-msi-5.nc``
+    * ``srf/sentinel_2a-msi-6.nc``
+    * ``srf/sentinel_2a-msi-7.nc``
+    * ``srf/sentinel_2a-msi-8.nc``
+    * ``srf/sentinel_2a-msi-9.nc``
+    * ``srf/sentinel_2a-msi-10.nc``
+    * ``srf/sentinel_2a-msi-11.nc``
+    * ``srf/sentinel_2a-msi-12.nc``
+    * ``srf/sentinel_2a-msi-8a.nc``
 
 .. image:: /fig/srf/sentinel_2a-msi.png
 
 ``sentinel_2b-msi``
 ^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/sentinel_2b-msi-1.nc``
-    * ``spectra/srf/sentinel_2b-msi-2.nc``
-    * ``spectra/srf/sentinel_2b-msi-3.nc``
-    * ``spectra/srf/sentinel_2b-msi-4.nc``
-    * ``spectra/srf/sentinel_2b-msi-5.nc``
-    * ``spectra/srf/sentinel_2b-msi-6.nc``
-    * ``spectra/srf/sentinel_2b-msi-7.nc``
-    * ``spectra/srf/sentinel_2b-msi-8.nc``
-    * ``spectra/srf/sentinel_2b-msi-9.nc``
-    * ``spectra/srf/sentinel_2b-msi-10.nc``
-    * ``spectra/srf/sentinel_2b-msi-11.nc``
-    * ``spectra/srf/sentinel_2b-msi-12.nc``
-    * ``spectra/srf/sentinel_2b-msi-8a.nc``
+    * ``srf/sentinel_2b-msi-1.nc``
+    * ``srf/sentinel_2b-msi-2.nc``
+    * ``srf/sentinel_2b-msi-3.nc``
+    * ``srf/sentinel_2b-msi-4.nc``
+    * ``srf/sentinel_2b-msi-5.nc``
+    * ``srf/sentinel_2b-msi-6.nc``
+    * ``srf/sentinel_2b-msi-7.nc``
+    * ``srf/sentinel_2b-msi-8.nc``
+    * ``srf/sentinel_2b-msi-9.nc``
+    * ``srf/sentinel_2b-msi-10.nc``
+    * ``srf/sentinel_2b-msi-11.nc``
+    * ``srf/sentinel_2b-msi-12.nc``
+    * ``srf/sentinel_2b-msi-8a.nc``
 
 .. image:: /fig/srf/sentinel_2b-msi.png
 
 ``sentinel_3a-olci``
 ^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/sentinel_3a-olci-1.nc``
-    * ``spectra/srf/sentinel_3a-olci-2.nc``
-    * ``spectra/srf/sentinel_3a-olci-3.nc``
-    * ``spectra/srf/sentinel_3a-olci-4.nc``
-    * ``spectra/srf/sentinel_3a-olci-5.nc``
-    * ``spectra/srf/sentinel_3a-olci-6.nc``
-    * ``spectra/srf/sentinel_3a-olci-7.nc``
-    * ``spectra/srf/sentinel_3a-olci-8.nc``
-    * ``spectra/srf/sentinel_3a-olci-9.nc``
-    * ``spectra/srf/sentinel_3a-olci-10.nc``
-    * ``spectra/srf/sentinel_3a-olci-11.nc``
-    * ``spectra/srf/sentinel_3a-olci-12.nc``
-    * ``spectra/srf/sentinel_3a-olci-13.nc``
-    * ``spectra/srf/sentinel_3a-olci-14.nc``
-    * ``spectra/srf/sentinel_3a-olci-15.nc``
-    * ``spectra/srf/sentinel_3a-olci-16.nc``
-    * ``spectra/srf/sentinel_3a-olci-17.nc``
-    * ``spectra/srf/sentinel_3a-olci-18.nc``
-    * ``spectra/srf/sentinel_3a-olci-19.nc``
-    * ``spectra/srf/sentinel_3a-olci-20.nc``
-    * ``spectra/srf/sentinel_3a-olci-21.nc``
+    * ``srf/sentinel_3a-olci-1.nc``
+    * ``srf/sentinel_3a-olci-2.nc``
+    * ``srf/sentinel_3a-olci-3.nc``
+    * ``srf/sentinel_3a-olci-4.nc``
+    * ``srf/sentinel_3a-olci-5.nc``
+    * ``srf/sentinel_3a-olci-6.nc``
+    * ``srf/sentinel_3a-olci-7.nc``
+    * ``srf/sentinel_3a-olci-8.nc``
+    * ``srf/sentinel_3a-olci-9.nc``
+    * ``srf/sentinel_3a-olci-10.nc``
+    * ``srf/sentinel_3a-olci-11.nc``
+    * ``srf/sentinel_3a-olci-12.nc``
+    * ``srf/sentinel_3a-olci-13.nc``
+    * ``srf/sentinel_3a-olci-14.nc``
+    * ``srf/sentinel_3a-olci-15.nc``
+    * ``srf/sentinel_3a-olci-16.nc``
+    * ``srf/sentinel_3a-olci-17.nc``
+    * ``srf/sentinel_3a-olci-18.nc``
+    * ``srf/sentinel_3a-olci-19.nc``
+    * ``srf/sentinel_3a-olci-20.nc``
+    * ``srf/sentinel_3a-olci-21.nc``
 
 .. image:: /fig/srf/sentinel_3a-olci.png
 
 ``sentinel_3a-slstr``
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/sentinel_3a-slstr-1.nc``
-    * ``spectra/srf/sentinel_3a-slstr-2.nc``
-    * ``spectra/srf/sentinel_3a-slstr-3.nc``
-    * ``spectra/srf/sentinel_3a-slstr-4.nc``
-    * ``spectra/srf/sentinel_3a-slstr-5.nc``
-    * ``spectra/srf/sentinel_3a-slstr-6.nc``
-    * ``spectra/srf/sentinel_3a-slstr-7.nc``
-    * ``spectra/srf/sentinel_3a-slstr-8.nc``
-    * ``spectra/srf/sentinel_3a-slstr-9.nc``
+    * ``srf/sentinel_3a-slstr-1.nc``
+    * ``srf/sentinel_3a-slstr-2.nc``
+    * ``srf/sentinel_3a-slstr-3.nc``
+    * ``srf/sentinel_3a-slstr-4.nc``
+    * ``srf/sentinel_3a-slstr-5.nc``
+    * ``srf/sentinel_3a-slstr-6.nc``
+    * ``srf/sentinel_3a-slstr-7.nc``
+    * ``srf/sentinel_3a-slstr-8.nc``
+    * ``srf/sentinel_3a-slstr-9.nc``
 
 .. image:: /fig/srf/sentinel_3a-slstr.png
 
 ``sentinel_3b-olci``
 ^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/sentinel_3b-olci-1.nc``
-    * ``spectra/srf/sentinel_3b-olci-2.nc``
-    * ``spectra/srf/sentinel_3b-olci-3.nc``
-    * ``spectra/srf/sentinel_3b-olci-4.nc``
-    * ``spectra/srf/sentinel_3b-olci-5.nc``
-    * ``spectra/srf/sentinel_3b-olci-6.nc``
-    * ``spectra/srf/sentinel_3b-olci-7.nc``
-    * ``spectra/srf/sentinel_3b-olci-8.nc``
-    * ``spectra/srf/sentinel_3b-olci-9.nc``
-    * ``spectra/srf/sentinel_3b-olci-10.nc``
-    * ``spectra/srf/sentinel_3b-olci-11.nc``
-    * ``spectra/srf/sentinel_3b-olci-12.nc``
-    * ``spectra/srf/sentinel_3b-olci-13.nc``
-    * ``spectra/srf/sentinel_3b-olci-14.nc``
-    * ``spectra/srf/sentinel_3b-olci-15.nc``
-    * ``spectra/srf/sentinel_3b-olci-16.nc``
-    * ``spectra/srf/sentinel_3b-olci-17.nc``
-    * ``spectra/srf/sentinel_3b-olci-18.nc``
-    * ``spectra/srf/sentinel_3b-olci-19.nc``
-    * ``spectra/srf/sentinel_3b-olci-20.nc``
-    * ``spectra/srf/sentinel_3b-olci-21.nc``
+    * ``srf/sentinel_3b-olci-1.nc``
+    * ``srf/sentinel_3b-olci-2.nc``
+    * ``srf/sentinel_3b-olci-3.nc``
+    * ``srf/sentinel_3b-olci-4.nc``
+    * ``srf/sentinel_3b-olci-5.nc``
+    * ``srf/sentinel_3b-olci-6.nc``
+    * ``srf/sentinel_3b-olci-7.nc``
+    * ``srf/sentinel_3b-olci-8.nc``
+    * ``srf/sentinel_3b-olci-9.nc``
+    * ``srf/sentinel_3b-olci-10.nc``
+    * ``srf/sentinel_3b-olci-11.nc``
+    * ``srf/sentinel_3b-olci-12.nc``
+    * ``srf/sentinel_3b-olci-13.nc``
+    * ``srf/sentinel_3b-olci-14.nc``
+    * ``srf/sentinel_3b-olci-15.nc``
+    * ``srf/sentinel_3b-olci-16.nc``
+    * ``srf/sentinel_3b-olci-17.nc``
+    * ``srf/sentinel_3b-olci-18.nc``
+    * ``srf/sentinel_3b-olci-19.nc``
+    * ``srf/sentinel_3b-olci-20.nc``
+    * ``srf/sentinel_3b-olci-21.nc``
 
 .. image:: /fig/srf/sentinel_3b-olci.png
 
 ``sentinel_3b-slstr``
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/sentinel_3b-slstr-1.nc``
-    * ``spectra/srf/sentinel_3b-slstr-2.nc``
-    * ``spectra/srf/sentinel_3b-slstr-3.nc``
-    * ``spectra/srf/sentinel_3b-slstr-4.nc``
-    * ``spectra/srf/sentinel_3b-slstr-5.nc``
-    * ``spectra/srf/sentinel_3b-slstr-6.nc``
-    * ``spectra/srf/sentinel_3b-slstr-7.nc``
-    * ``spectra/srf/sentinel_3b-slstr-8.nc``
-    * ``spectra/srf/sentinel_3b-slstr-9.nc``
+    * ``srf/sentinel_3b-slstr-1.nc``
+    * ``srf/sentinel_3b-slstr-2.nc``
+    * ``srf/sentinel_3b-slstr-3.nc``
+    * ``srf/sentinel_3b-slstr-4.nc``
+    * ``srf/sentinel_3b-slstr-5.nc``
+    * ``srf/sentinel_3b-slstr-6.nc``
+    * ``srf/sentinel_3b-slstr-7.nc``
+    * ``srf/sentinel_3b-slstr-8.nc``
+    * ``srf/sentinel_3b-slstr-9.nc``
 
 .. image:: /fig/srf/sentinel_3b-slstr.png
 
 ``aqua-modis``
 ^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/aqua-modis-1.nc``
-    * ``spectra/srf/aqua-modis-2.nc``
-    * ``spectra/srf/aqua-modis-3.nc``
-    * ``spectra/srf/aqua-modis-4.nc``
-    * ``spectra/srf/aqua-modis-5.nc``
-    * ``spectra/srf/aqua-modis-6.nc``
-    * ``spectra/srf/aqua-modis-7.nc``
-    * ``spectra/srf/aqua-modis-8.nc``
-    * ``spectra/srf/aqua-modis-9.nc``
-    * ``spectra/srf/aqua-modis-10.nc``
-    * ``spectra/srf/aqua-modis-11.nc``
-    * ``spectra/srf/aqua-modis-12.nc``
-    * ``spectra/srf/aqua-modis-13.nc``
-    * ``spectra/srf/aqua-modis-14.nc``
-    * ``spectra/srf/aqua-modis-15.nc``
-    * ``spectra/srf/aqua-modis-16.nc``
+    * ``srf/aqua-modis-1.nc``
+    * ``srf/aqua-modis-2.nc``
+    * ``srf/aqua-modis-3.nc``
+    * ``srf/aqua-modis-4.nc``
+    * ``srf/aqua-modis-5.nc``
+    * ``srf/aqua-modis-6.nc``
+    * ``srf/aqua-modis-7.nc``
+    * ``srf/aqua-modis-8.nc``
+    * ``srf/aqua-modis-9.nc``
+    * ``srf/aqua-modis-10.nc``
+    * ``srf/aqua-modis-11.nc``
+    * ``srf/aqua-modis-12.nc``
+    * ``srf/aqua-modis-13.nc``
+    * ``srf/aqua-modis-14.nc``
+    * ``srf/aqua-modis-15.nc``
+    * ``srf/aqua-modis-16.nc``
 
 .. image:: /fig/srf/aqua-modis.png
 
 ``terra-modis``
 ^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/terra-modis-1.nc``
-    * ``spectra/srf/terra-modis-2.nc``
-    * ``spectra/srf/terra-modis-3.nc``
-    * ``spectra/srf/terra-modis-4.nc``
-    * ``spectra/srf/terra-modis-5.nc``
-    * ``spectra/srf/terra-modis-6.nc``
-    * ``spectra/srf/terra-modis-7.nc``
-    * ``spectra/srf/terra-modis-8.nc``
-    * ``spectra/srf/terra-modis-9.nc``
-    * ``spectra/srf/terra-modis-10.nc``
-    * ``spectra/srf/terra-modis-11.nc``
-    * ``spectra/srf/terra-modis-12.nc``
-    * ``spectra/srf/terra-modis-13.nc``
-    * ``spectra/srf/terra-modis-14.nc``
-    * ``spectra/srf/terra-modis-15.nc``
-    * ``spectra/srf/terra-modis-16.nc``
+    * ``srf/terra-modis-1.nc``
+    * ``srf/terra-modis-2.nc``
+    * ``srf/terra-modis-3.nc``
+    * ``srf/terra-modis-4.nc``
+    * ``srf/terra-modis-5.nc``
+    * ``srf/terra-modis-6.nc``
+    * ``srf/terra-modis-7.nc``
+    * ``srf/terra-modis-8.nc``
+    * ``srf/terra-modis-9.nc``
+    * ``srf/terra-modis-10.nc``
+    * ``srf/terra-modis-11.nc``
+    * ``srf/terra-modis-12.nc``
+    * ``srf/terra-modis-13.nc``
+    * ``srf/terra-modis-14.nc``
+    * ``srf/terra-modis-15.nc``
+    * ``srf/terra-modis-16.nc``
 
 .. image:: /fig/srf/terra-modis.png
 
 ``jpss1-viirs``
 ^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/jpss1-viirs-i1.nc``
-    * ``spectra/srf/jpss1-viirs-i2.nc``
-    * ``spectra/srf/jpss1-viirs-i3.nc``
-    * ``spectra/srf/jpss1-viirs-i4.nc``
-    * ``spectra/srf/jpss1-viirs-i5.nc``
-    * ``spectra/srf/jpss1-viirs-m1.nc``
-    * ``spectra/srf/jpss1-viirs-m2.nc``
-    * ``spectra/srf/jpss1-viirs-m3.nc``
-    * ``spectra/srf/jpss1-viirs-m4.nc``
-    * ``spectra/srf/jpss1-viirs-m5.nc``
-    * ``spectra/srf/jpss1-viirs-m6.nc``
-    * ``spectra/srf/jpss1-viirs-m7.nc``
-    * ``spectra/srf/jpss1-viirs-m8.nc``
-    * ``spectra/srf/jpss1-viirs-m9.nc``
-    * ``spectra/srf/jpss1-viirs-m10.nc``
-    * ``spectra/srf/jpss1-viirs-m11.nc``
-    * ``spectra/srf/jpss1-viirs-m12.nc``
-    * ``spectra/srf/jpss1-viirs-m13.nc``
-    * ``spectra/srf/jpss1-viirs-m14.nc``
-    * ``spectra/srf/jpss1-viirs-m15.nc``
-    * ``spectra/srf/jpss1-viirs-m16.nc``
-    * ``spectra/srf/jpss1-viirs-m16a.nc``
-    * ``spectra/srf/jpss1-viirs-m16b.nc``
+    * ``srf/jpss1-viirs-i1.nc``
+    * ``srf/jpss1-viirs-i2.nc``
+    * ``srf/jpss1-viirs-i3.nc``
+    * ``srf/jpss1-viirs-i4.nc``
+    * ``srf/jpss1-viirs-i5.nc``
+    * ``srf/jpss1-viirs-m1.nc``
+    * ``srf/jpss1-viirs-m2.nc``
+    * ``srf/jpss1-viirs-m3.nc``
+    * ``srf/jpss1-viirs-m4.nc``
+    * ``srf/jpss1-viirs-m5.nc``
+    * ``srf/jpss1-viirs-m6.nc``
+    * ``srf/jpss1-viirs-m7.nc``
+    * ``srf/jpss1-viirs-m8.nc``
+    * ``srf/jpss1-viirs-m9.nc``
+    * ``srf/jpss1-viirs-m10.nc``
+    * ``srf/jpss1-viirs-m11.nc``
+    * ``srf/jpss1-viirs-m12.nc``
+    * ``srf/jpss1-viirs-m13.nc``
+    * ``srf/jpss1-viirs-m14.nc``
+    * ``srf/jpss1-viirs-m15.nc``
+    * ``srf/jpss1-viirs-m16.nc``
+    * ``srf/jpss1-viirs-m16a.nc``
+    * ``srf/jpss1-viirs-m16b.nc``
 
 .. image:: /fig/srf/jpss1-viirs.png
 
 ``npp-viirs``
 ^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/npp-viirs-i1.nc``
-    * ``spectra/srf/npp-viirs-i2.nc``
-    * ``spectra/srf/npp-viirs-i3.nc``
-    * ``spectra/srf/npp-viirs-i4.nc``
-    * ``spectra/srf/npp-viirs-i5.nc``
-    * ``spectra/srf/npp-viirs-m1.nc``
-    * ``spectra/srf/npp-viirs-m2.nc``
-    * ``spectra/srf/npp-viirs-m3.nc``
-    * ``spectra/srf/npp-viirs-m4.nc``
-    * ``spectra/srf/npp-viirs-m5.nc``
-    * ``spectra/srf/npp-viirs-m6.nc``
-    * ``spectra/srf/npp-viirs-m7.nc``
-    * ``spectra/srf/npp-viirs-m8.nc``
-    * ``spectra/srf/npp-viirs-m9.nc``
-    * ``spectra/srf/npp-viirs-m10.nc``
-    * ``spectra/srf/npp-viirs-m11.nc``
-    * ``spectra/srf/npp-viirs-m12.nc``
-    * ``spectra/srf/npp-viirs-m13.nc``
-    * ``spectra/srf/npp-viirs-m14.nc``
-    * ``spectra/srf/npp-viirs-m15.nc``
-    * ``spectra/srf/npp-viirs-m16a.nc``
-    * ``spectra/srf/npp-viirs-m16b.nc``
+    * ``srf/npp-viirs-i1.nc``
+    * ``srf/npp-viirs-i2.nc``
+    * ``srf/npp-viirs-i3.nc``
+    * ``srf/npp-viirs-i4.nc``
+    * ``srf/npp-viirs-i5.nc``
+    * ``srf/npp-viirs-m1.nc``
+    * ``srf/npp-viirs-m2.nc``
+    * ``srf/npp-viirs-m3.nc``
+    * ``srf/npp-viirs-m4.nc``
+    * ``srf/npp-viirs-m5.nc``
+    * ``srf/npp-viirs-m6.nc``
+    * ``srf/npp-viirs-m7.nc``
+    * ``srf/npp-viirs-m8.nc``
+    * ``srf/npp-viirs-m9.nc``
+    * ``srf/npp-viirs-m10.nc``
+    * ``srf/npp-viirs-m11.nc``
+    * ``srf/npp-viirs-m12.nc``
+    * ``srf/npp-viirs-m13.nc``
+    * ``srf/npp-viirs-m14.nc``
+    * ``srf/npp-viirs-m15.nc``
+    * ``srf/npp-viirs-m16a.nc``
+    * ``srf/npp-viirs-m16b.nc``
 
 .. image:: /fig/srf/npp-viirs.png
 
 ``metop_a-avhrr``
 ^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/metop_a-avhrr-1.nc``
-    * ``spectra/srf/metop_a-avhrr-2.nc``
-    * ``spectra/srf/metop_a-avhrr-3a.nc``
-    * ``spectra/srf/metop_a-avhrr-3b.nc``
-    * ``spectra/srf/metop_a-avhrr-4.nc``
-    * ``spectra/srf/metop_a-avhrr-5.nc``
+    * ``srf/metop_a-avhrr-1.nc``
+    * ``srf/metop_a-avhrr-2.nc``
+    * ``srf/metop_a-avhrr-3a.nc``
+    * ``srf/metop_a-avhrr-3b.nc``
+    * ``srf/metop_a-avhrr-4.nc``
+    * ``srf/metop_a-avhrr-5.nc``
 
 .. image:: /fig/srf/metop_a-avhrr.png
 
 ``metop_b-avhrr``
 ^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/metop_b-avhrr-1.nc``
-    * ``spectra/srf/metop_b-avhrr-2.nc``
-    * ``spectra/srf/metop_b-avhrr-3a.nc``
-    * ``spectra/srf/metop_b-avhrr-3b.nc``
-    * ``spectra/srf/metop_b-avhrr-4.nc``
-    * ``spectra/srf/metop_b-avhrr-5.nc``
+    * ``srf/metop_b-avhrr-1.nc``
+    * ``srf/metop_b-avhrr-2.nc``
+    * ``srf/metop_b-avhrr-3a.nc``
+    * ``srf/metop_b-avhrr-3b.nc``
+    * ``srf/metop_b-avhrr-4.nc``
+    * ``srf/metop_b-avhrr-5.nc``
 
 .. image:: /fig/srf/metop_b-avhrr.png
 
 ``metop_c-avhrr``
 ^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/metop_c-avhrr-1.nc``
-    * ``spectra/srf/metop_c-avhrr-2.nc``
-    * ``spectra/srf/metop_c-avhrr-3a.nc``
-    * ``spectra/srf/metop_c-avhrr-3b.nc``
-    * ``spectra/srf/metop_c-avhrr-4.nc``
-    * ``spectra/srf/metop_c-avhrr-5.nc``
+    * ``srf/metop_c-avhrr-1.nc``
+    * ``srf/metop_c-avhrr-2.nc``
+    * ``srf/metop_c-avhrr-3a.nc``
+    * ``srf/metop_c-avhrr-3b.nc``
+    * ``srf/metop_c-avhrr-4.nc``
+    * ``srf/metop_c-avhrr-5.nc``
 
 .. image:: /fig/srf/metop_c-avhrr.png
 
 ``metop_sg-metimage``
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/metop_sg-metimage-vii4.nc``
-    * ``spectra/srf/metop_sg-metimage-vii8.nc``
-    * ``spectra/srf/metop_sg-metimage-vii12.nc``
-    * ``spectra/srf/metop_sg-metimage-vii15.nc``
-    * ``spectra/srf/metop_sg-metimage-vii16.nc``
-    * ``spectra/srf/metop_sg-metimage-vii17.nc``
-    * ``spectra/srf/metop_sg-metimage-vii20.nc``
-    * ``spectra/srf/metop_sg-metimage-vii22.nc``
-    * ``spectra/srf/metop_sg-metimage-vii23.nc``
-    * ``spectra/srf/metop_sg-metimage-vii24.nc``
-    * ``spectra/srf/metop_sg-metimage-vii25.nc``
-    * ``spectra/srf/metop_sg-metimage-vii26.nc``
-    * ``spectra/srf/metop_sg-metimage-vii28.nc``
-    * ``spectra/srf/metop_sg-metimage-vii30.nc``
-    * ``spectra/srf/metop_sg-metimage-vii33.nc``
-    * ``spectra/srf/metop_sg-metimage-vii34.nc``
-    * ``spectra/srf/metop_sg-metimage-vii35.nc``
-    * ``spectra/srf/metop_sg-metimage-vii37.nc``
-    * ``spectra/srf/metop_sg-metimage-vii39.nc``
-    * ``spectra/srf/metop_sg-metimage-vii40.nc``
+    * ``srf/metop_sg-metimage-vii4.nc``
+    * ``srf/metop_sg-metimage-vii8.nc``
+    * ``srf/metop_sg-metimage-vii12.nc``
+    * ``srf/metop_sg-metimage-vii15.nc``
+    * ``srf/metop_sg-metimage-vii16.nc``
+    * ``srf/metop_sg-metimage-vii17.nc``
+    * ``srf/metop_sg-metimage-vii20.nc``
+    * ``srf/metop_sg-metimage-vii22.nc``
+    * ``srf/metop_sg-metimage-vii23.nc``
+    * ``srf/metop_sg-metimage-vii24.nc``
+    * ``srf/metop_sg-metimage-vii25.nc``
+    * ``srf/metop_sg-metimage-vii26.nc``
+    * ``srf/metop_sg-metimage-vii28.nc``
+    * ``srf/metop_sg-metimage-vii30.nc``
+    * ``srf/metop_sg-metimage-vii33.nc``
+    * ``srf/metop_sg-metimage-vii34.nc``
+    * ``srf/metop_sg-metimage-vii35.nc``
+    * ``srf/metop_sg-metimage-vii37.nc``
+    * ``srf/metop_sg-metimage-vii39.nc``
+    * ``srf/metop_sg-metimage-vii40.nc``
 
 .. image:: /fig/srf/metop_sg-metimage.png
 
 ``msg1-seviri``
 ^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/msg1-seviri-vis06.nc``
-    * ``spectra/srf/msg1-seviri-vis08.nc``
-    * ``spectra/srf/msg1-seviri-nir16.nc``
-    * ``spectra/srf/msg1-seviri-hrv.nc``
+    * ``srf/msg1-seviri-vis06.nc``
+    * ``srf/msg1-seviri-vis08.nc``
+    * ``srf/msg1-seviri-nir16.nc``
+    * ``srf/msg1-seviri-hrv.nc``
 
 .. image:: /fig/srf/msg1-seviri.png
 
 ``msg2-seviri``
 ^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/msg2-seviri-vis06.nc``
-    * ``spectra/srf/msg2-seviri-vis08.nc``
-    * ``spectra/srf/msg2-seviri-nir16.nc``
-    * ``spectra/srf/msg2-seviri-hrv.nc``
+    * ``srf/msg2-seviri-vis06.nc``
+    * ``srf/msg2-seviri-vis08.nc``
+    * ``srf/msg2-seviri-nir16.nc``
+    * ``srf/msg2-seviri-hrv.nc``
 
 .. image:: /fig/srf/msg2-seviri.png
 
 ``msg3-seviri``
 ^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/msg3-seviri-vis06.nc``
-    * ``spectra/srf/msg3-seviri-vis08.nc``
-    * ``spectra/srf/msg3-seviri-nir16.nc``
-    * ``spectra/srf/msg3-seviri-hrv.nc``
+    * ``srf/msg3-seviri-vis06.nc``
+    * ``srf/msg3-seviri-vis08.nc``
+    * ``srf/msg3-seviri-nir16.nc``
+    * ``srf/msg3-seviri-hrv.nc``
 
 .. image:: /fig/srf/msg3-seviri.png
 
 ``msg4-seviri``
 ^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/msg4-seviri-vis06.nc``
-    * ``spectra/srf/msg4-seviri-vis08.nc``
-    * ``spectra/srf/msg4-seviri-nir16.nc``
-    * ``spectra/srf/msg4-seviri-hrv.nc``
+    * ``srf/msg4-seviri-vis06.nc``
+    * ``srf/msg4-seviri-vis08.nc``
+    * ``srf/msg4-seviri-nir16.nc``
+    * ``srf/msg4-seviri-hrv.nc``
 
 .. image:: /fig/srf/msg4-seviri.png
 
 ``mtg_i-fci``
 ^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/mtg_i-fci-nir13.nc``
-    * ``spectra/srf/mtg_i-fci-nir16.nc``
-    * ``spectra/srf/mtg_i-fci-nir22.nc``
-    * ``spectra/srf/mtg_i-fci-vis04.nc``
-    * ``spectra/srf/mtg_i-fci-vis05.nc``
-    * ``spectra/srf/mtg_i-fci-vis06.nc``
-    * ``spectra/srf/mtg_i-fci-vis08.nc``
-    * ``spectra/srf/mtg_i-fci-vis09.nc``
+    * ``srf/mtg_i-fci-nir13.nc``
+    * ``srf/mtg_i-fci-nir16.nc``
+    * ``srf/mtg_i-fci-nir22.nc``
+    * ``srf/mtg_i-fci-vis04.nc``
+    * ``srf/mtg_i-fci-vis05.nc``
+    * ``srf/mtg_i-fci-vis06.nc``
+    * ``srf/mtg_i-fci-vis08.nc``
+    * ``srf/mtg_i-fci-vis09.nc``
 
 .. image:: /fig/srf/mtg_i-fci.png
 
 ``mtg_i-li``
 ^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/mtg_i-li-1.nc``
-    * ``spectra/srf/mtg_i-li-2.nc``
+    * ``srf/mtg_i-li-1.nc``
+    * ``srf/mtg_i-li-2.nc``
 
 .. image:: /fig/srf/mtg_i-li.png
 
 ``parasol-polder``
 ^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/parasol-polder-443.nc``
-    * ``spectra/srf/parasol-polder-490.nc``
-    * ``spectra/srf/parasol-polder-565.nc``
-    * ``spectra/srf/parasol-polder-670.nc``
-    * ``spectra/srf/parasol-polder-763.nc``
-    * ``spectra/srf/parasol-polder-765.nc``
-    * ``spectra/srf/parasol-polder-865.nc``
-    * ``spectra/srf/parasol-polder-910.nc``
-    * ``spectra/srf/parasol-polder-1020.nc``
+    * ``srf/parasol-polder-443.nc``
+    * ``srf/parasol-polder-490.nc``
+    * ``srf/parasol-polder-565.nc``
+    * ``srf/parasol-polder-670.nc``
+    * ``srf/parasol-polder-763.nc``
+    * ``srf/parasol-polder-765.nc``
+    * ``srf/parasol-polder-865.nc``
+    * ``srf/parasol-polder-910.nc``
+    * ``srf/parasol-polder-1020.nc``
 
 .. image:: /fig/srf/parasol-polder.png
 
 ``proba_v-vegetation_left``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/proba_v-vegetation_left-blue.nc``
-    * ``spectra/srf/proba_v-vegetation_left-red.nc``
-    * ``spectra/srf/proba_v-vegetation_left-nir.nc``
-    * ``spectra/srf/proba_v-vegetation_left-swir.nc``
+    * ``srf/proba_v-vegetation_left-blue.nc``
+    * ``srf/proba_v-vegetation_left-red.nc``
+    * ``srf/proba_v-vegetation_left-nir.nc``
+    * ``srf/proba_v-vegetation_left-swir.nc``
 
 .. image:: /fig/srf/proba_v-vegetation_left.png
 
 ``proba_v-vegetation_center``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/proba_v-vegetation_center-blue.nc``
-    * ``spectra/srf/proba_v-vegetation_center-red.nc``
-    * ``spectra/srf/proba_v-vegetation_center-nir.nc``
-    * ``spectra/srf/proba_v-vegetation_center-swir.nc``
+    * ``srf/proba_v-vegetation_center-blue.nc``
+    * ``srf/proba_v-vegetation_center-red.nc``
+    * ``srf/proba_v-vegetation_center-nir.nc``
+    * ``srf/proba_v-vegetation_center-swir.nc``
 
 .. image:: /fig/srf/proba_v-vegetation_center.png
 
 ``proba_v-vegetation_right``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
-    * ``spectra/srf/proba_v-vegetation_right-blue.nc``
-    * ``spectra/srf/proba_v-vegetation_right-red.nc``
-    * ``spectra/srf/proba_v-vegetation_right-nir.nc``
-    * ``spectra/srf/proba_v-vegetation_right-swir.nc``
+    * ``srf/proba_v-vegetation_right-blue.nc``
+    * ``srf/proba_v-vegetation_right-red.nc``
+    * ``srf/proba_v-vegetation_right-nir.nc``
+    * ``srf/proba_v-vegetation_right-swir.nc``
 
 .. image:: /fig/srf/proba_v-vegetation_right.png
