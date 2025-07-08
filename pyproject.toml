@@ -35,6 +35,9 @@ dependencies = [
   "tqdm",
   "shellingham!=1.5.1", # Typer dependency; exclude this version which raises while previous don't
   "xarray>=0.19,!=0.20.*,<2025",
+  # TODO: The <2025 cap was introduced to protect ourselves from a critical
+  #       performance regression, solved in 2025.7. This can should be release
+  #       when dropping support for Python 3.9; we will still exclude 2025.{1-6}
 ]
 
 [project.optional-dependencies]
