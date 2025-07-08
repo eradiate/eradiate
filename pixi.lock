@@ -3885,7 +3885,7 @@ packages:
 - pypi: ./
   name: eradiate
   version: 0.31.0.dev0
-  sha256: 54aa1c528f69e9e4f72df2bf6ac5b63a1f3da1f58ada723f73359650204980e9
+  sha256: fe0da85bc28569d35eb4f7a36ed5a196900bae34f143e8a30a21864b6df57191
   requires_dist:
   - aenum
   - attrs>=22.2
