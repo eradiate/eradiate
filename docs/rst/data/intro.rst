@@ -82,6 +82,14 @@ Data is managed with the ``eradiate data`` command-line utility
       srf/core-v1                   tar.gz   2.75 MB   ---
       texture/core-v1               tar.gz   5.55 kB   ---
 
+.. tip::
+
+    Upon a call to ``eradiate data list``, the registry's *manifest file* is
+    updated. This manifest contains the list of resources that are available
+    from the remote data registry. By default, registry updates happen only if
+    the registry is more than one day old. A forced update is however
+    possible, using ``eradiate data update``.
+
 To install a given resources, use the ``eradiate data install`` command,
 referencing the target resources by their IDs, *e.g.*:
 
