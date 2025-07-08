@@ -7,9 +7,14 @@ from eradiate.test_tools.test_cases.romc import create_het01_brfpp
 from eradiate.test_tools.util import append_doc
 
 
+@pytest.fixture
+def exp():
+    yield create_het01_brfpp()
+
+
 @append_doc(create_het01_brfpp, prepend=True)
 @pytest.mark.regression
-def test_het01_brfpp(mode_mono_double, artefact_dir, session_timestamp):
+def test_het01_brfpp(mode_mono_double, artefact_dir, session_timestamp, exp):
     """
     *Expected behaviour*
 
@@ -17,7 +22,6 @@ def test_het01_brfpp(mode_mono_double, artefact_dir, session_timestamp):
     version and validated with ROMC. Comparison is done with a z-test
     with a threshold of 0.05.
     """
-    exp = create_het01_brfpp()
     result = eradiate.run(exp)
 
     logger.info(result._repr_html_(), html=True)

@@ -215,24 +215,24 @@ class CuboidShape(ShapeNode):
                 else self.center
             )
 
-            return mi.ScalarTransform4f.translate(
+            return mi.ScalarTransform4f().translate(
                 center.m_as(length_units)
-            ) @ mi.ScalarTransform4f.scale(0.5 * edges.m_as(length_units))
+            ) @ mi.ScalarTransform4f().scale(0.5 * edges.m_as(length_units))
 
     @property
     def template(self) -> dict:
         length_units = uck.get("length")
 
         if self.to_world is not None:
-            trafo = self.to_world
+            to_world = self.to_world
         else:
-            trafo = mi.ScalarTransform4f.translate(
+            to_world = mi.ScalarTransform4f().translate(
                 self.center.m_as(length_units)
-            ) @ mi.ScalarTransform4f.scale(0.5 * self.edges.m_as(length_units))
+            ) @ mi.ScalarTransform4f().scale(0.5 * self.edges.m_as(length_units))
 
         return {
             "type": "cube",
-            "to_world": trafo,
+            "to_world": to_world,
         }
 
     @classmethod

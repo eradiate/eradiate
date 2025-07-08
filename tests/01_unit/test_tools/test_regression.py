@@ -184,7 +184,7 @@ def test_chi2_evaluate(mode_mono):
         *sorted(zip(histo_ref, histo_res), key=lambda x: x[0])
     )
 
-    from mitsuba.python.math import rlgamma
+    from mitsuba.math_py import rlgamma
 
     chi2val, dof, pooled_in, pooled_out = mi.math.chi2(
         histo_res_sorted, histo_ref_sorted, 5

@@ -216,8 +216,8 @@ class HomogeneousAtmosphere(Atmosphere):
             # Note: "value" appears twice because the mi.Spectrum is
             # encapsulated in a mi.ConstVolume
             "sigma_t.value.value": SceneParameter(
-                lambda ctx: self.eval_sigma_t(ctx.si).m_as(
-                    uck.get("collision_coefficient")
+                lambda ctx: float(
+                    self.eval_sigma_t(ctx.si).m_as(uck.get("collision_coefficient"))
                 ),
                 KernelSceneParameterFlags.SPECTRAL,
                 search=SearchSceneParameter(
@@ -227,7 +227,7 @@ class HomogeneousAtmosphere(Atmosphere):
                 ),
             ),
             "albedo.value.value": SceneParameter(
-                lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo")),
+                lambda ctx: float(self.eval_albedo(ctx.si).m_as(uck.get("albedo"))),
                 KernelSceneParameterFlags.SPECTRAL,
                 search=SearchSceneParameter(
                     node_type=mi.Medium,

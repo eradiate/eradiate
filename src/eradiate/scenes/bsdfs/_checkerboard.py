@@ -74,7 +74,9 @@ class CheckerboardBSDF(BSDF):
             result["id"] = self.id
 
         if self.scale_pattern is not None:
-            result["reflectance.to_uv"] = mi.ScalarTransform4f.scale(self.scale_pattern)
+            result["reflectance.to_uv"] = mi.ScalarTransform4f().scale(
+                self.scale_pattern
+            )
 
         for obj_key, obj_values in {
             "color0": traverse(self.reflectance_a)[0],

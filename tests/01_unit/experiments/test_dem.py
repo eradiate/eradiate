@@ -81,13 +81,13 @@ def test_dem_experiment_kernel_dict(modes_all_double):
     )  # Do not drop untracked parameters: we want to check the surface transform
     np.testing.assert_allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
-        mi.ScalarTransform4f.scale([5e8, 5e8, 1]).matrix,
+        mi.ScalarTransform4f().scale([5e8, 5e8, 1]).matrix,
     )
     # -- Atmosphere is not in kernel dictionary
     assert {shape.id() for shape in mi_wrapper.obj.shapes()} == {"surface_shape"}
 
     # -- Measures get no external medium assigned
-    assert all(sensor.medium() is None for sensor in mi_wrapper.obj.sensors())
+    assert all(sensor.get_medium() is None for sensor in mi_wrapper.obj.sensors())
 
 
 @pytest.mark.slow
@@ -109,10 +109,10 @@ def test_dem_experiment_real_life(mode_mono, atmosphere_us_standard_mono):
     mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
 
     # -- Distant measures get no external medium
-    assert mi_wrapper.obj.sensors()[0].medium() is None
+    assert mi_wrapper.obj.sensors()[0].get_medium() is None
 
     # -- Radiancemeter inside the atmosphere must have a medium assigned
-    assert mi_wrapper.obj.sensors()[1].medium().id() == "medium_atmosphere"
+    assert mi_wrapper.obj.sensors()[1].get_medium().id() == "medium_atmosphere"
 
 
 def test_dem_experiment_inconsistent_multiradiancemeter(

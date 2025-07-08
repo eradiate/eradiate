@@ -156,7 +156,7 @@ class PerspectiveCameraMeasure(Measure):
 
         target = self.target.m_as(uck.get("length"))
         origin = self.origin.m_as(uck.get("length"))
-        result["to_world"] = mi.ScalarTransform4f.look_at(
+        result["to_world"] = mi.ScalarTransform4f().look_at(
             origin=origin, target=target, up=self.up
         )
 
