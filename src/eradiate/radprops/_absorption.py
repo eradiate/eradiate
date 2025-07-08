@@ -1076,4 +1076,8 @@ KNOWN_DATABASES = {
         "cls": CKDAbsorptionDatabase,
         "path": "absorption_ckd/panellus",
     },
+    "tuber": {
+        "cls": CKDAbsorptionDatabase,
+        "path": "absorption_ckd/tuber",
+    },
 }
