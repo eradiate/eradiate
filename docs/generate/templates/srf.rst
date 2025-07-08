@@ -71,7 +71,7 @@ Dataset index
 ``{{entry.name}}``
 {{'^' * ((entry.name|length) + 4)}}
 
-.. dropdown:: Data store paths
+.. dropdown:: Data paths
 
 {% for path in entry.paths %}
     * ``{{path}}``

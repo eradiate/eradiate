@@ -39,7 +39,7 @@ def generate_summary():
     template = jinja_environment.get_template("aerosols_particles.rst")
 
     particle_radprops = [
-        ParticleRadpropsInfo(id, f"spectra/particles/{id}.nc")
+        ParticleRadpropsInfo(id, f"aerosol/{id}.nc")
         for id in [
             "govaerts_2021-continental-extrapolated",
             "govaerts_2021-desert-extrapolated",

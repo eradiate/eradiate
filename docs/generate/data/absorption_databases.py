@@ -53,12 +53,12 @@ def generate_summary():
         [
             AbsorptionDatabaseInfo(
                 keyword="gecko",
-                path="spectra/absorption/mono/gecko",
+                path="absorption_mono/gecko",
                 spectral_sampling="0.01 cm⁻¹ in [250, 300] + [600, 3125] nm, 0.1 cm⁻¹ in [300, 600] nm",
             ),
             AbsorptionDatabaseInfo(
                 keyword="komodo",
-                path="spectra/absorption/mono/komodo",
+                path="absorption_mono/komodo",
                 spectral_sampling="1 cm⁻¹",
             ),
         ]
@@ -67,17 +67,17 @@ def generate_summary():
         [
             AbsorptionDatabaseInfo(
                 keyword="monotropa",
-                path="spectra/absorption/ckd/monotropa",
+                path="absorption_ckd/monotropa",
                 spectral_sampling="100 cm⁻¹",
             ),
             AbsorptionDatabaseInfo(
                 keyword="mycena",
-                path="spectra/absorption/ckd/mycena",
+                path="absorption_ckd/mycena",
                 spectral_sampling="10 nm",
             ),
             AbsorptionDatabaseInfo(
                 keyword="panellus",
-                path="spectra/absorption/ckd/panellus",
+                path="absorption_ckd/panellus",
                 spectral_sampling="1 nm",
             ),
         ]
