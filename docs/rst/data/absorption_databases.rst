@@ -124,3 +124,13 @@ Spectral bin size: 1 nm
 
 .. image:: /fig/absorption_databases/panellus.png
 
+``tuber`` (CKD)
+^^^^^^^^^^^^^^^
+
+.. dropdown:: Data path
+
+    ``absorption_ckd/tuber``
+
+Spectral bin size: 0.1 nm
+
+.. image:: /fig/absorption_databases/tuber.png

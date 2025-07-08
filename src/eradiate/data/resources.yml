@@ -16,10 +16,11 @@ resources: # List of resource aliases
   monotropa: absorption_ckd/monotropa-v1
   mycena: absorption_ckd/mycena-v2
   panellus: absorption_ckd/panellus-v1
+  tuber: absorption_ckd/tuber-v1
   srf: srf/core-v1
   texture: texture/core-v1
   # Multi-resource aliases hereafter
-  core:
+  core:  # Basic data to get started
     - aerosol
     - bsdf
     - constant
@@ -28,7 +29,7 @@ resources: # List of resource aliases
     - solar_irradiance
     - srf
     - texture
-  absorption:
+  absorption:  # All reasonably-sized absorption databases
     - gecko
     - komodo
     - monotropa
