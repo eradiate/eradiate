@@ -75,7 +75,10 @@ test = [
   "robotframework",
   "pytest-robotframework",
 ]
-dev = ["bump-my-version>=0.28.0,<0.29.0"]
+dev = [
+  "bump-my-version>=0.28.0,<0.29.0",
+  "uv==0.6.*", # Used to lock docs dependencies
+]
 
 [project.scripts]
 eradiate = "eradiate.cli:main"
@@ -98,9 +101,6 @@ eradiate = { path = ".", editable = true }
 
 [tool.pixi.feature.docs.dependencies]
 pandoc = "*"
-
-[tool.pixi.feature.dev.dependencies]
-uv = "0.6.*" # Used to lock docs dependencies
 
 [tool.pixi.activation]
 scripts = ["setpath.sh"]
