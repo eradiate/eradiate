@@ -89,21 +89,13 @@ def extract_plugin_docs(filename: Path) -> t.List[str]:
     return ("\n".join(result)).lstrip()
 
 
-def make_toc(section, title) -> str:
-    return dedent(
-        rf"""
+def make_section_title(section, title) -> str:
+    return dedent(rf"""
         .. _sec-reference_plugins-{section}:
 
         {title}
-        {underline(title)}
-
-        .. toctree::
-           :maxdepth: 1
-           :glob:
-
-           ../plugins/{section}/*
-        """
-    )
+        {underline(title, "=")}
+    """).strip()
 
 
 def generate():
@@ -129,10 +121,6 @@ def generate():
             print(f"No plugin in section '{section}'")
             continue
 
-        # Create TOC page
-        section_rst = out_dir / f"toctrees/{section}.rst"
-        write_if_modified(section_rst, make_toc(section, section_title))
-
         # Sort plugin list according to the ordering dict
         def index(x):
             try:
@@ -143,13 +131,15 @@ def generate():
         plugin_list.sort(key=index)
 
         # Extract plugin docs
-        print(f"Extracting plugin docs from '{plugin_dir}' to '{out_dir}'")
-        for plugin_name in plugin_list:
-            plugin_cpp = plugin_dir / section / f"{plugin_name}.cpp"
-            plugin_rst = out_dir / "plugins" / section / f"{plugin_name}.rst"
+        section_rst = out_dir / f"{section}.rst"
+        section_content = [make_section_title(section, section_title)]
 
-            print(f"Processing '{Path(plugin_cpp).relative_to(root_dir)}'")
-            write_if_modified(plugin_rst, extract_plugin_docs(plugin_cpp))
+        for plugin_name in plugin_list:
+            print(f"Extracting plugin docs from '{plugin_dir}' to '{out_dir}'")
+            plugin_cpp = plugin_dir / section / f"{plugin_name}.cpp"
+            section_content.append(extract_plugin_docs(plugin_cpp))
+
+        write_if_modified(section_rst, "\n\n".join(section_content))
 
 
 if __name__ == "__main__":
