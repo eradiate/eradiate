@@ -70,6 +70,7 @@ docs = [
 ]
 test = [
   "pytest",
+  "pytest-cov",
   "pytest-json-report",
   "asv==0.6.*",
   "robotframework",
@@ -127,7 +128,9 @@ python = "3.9.*" # Used to constrain dev environment
 [tool.pixi.feature.test.tasks]
 doctest = { cmd = "make -C docs doctest" }
 test = { cmd = "pytest" }
+test-cov = { cmd = "pytest --cov=src/eradiate --cov-report=html --cov-report=json --cov-report=term-missing" }
 test-quick = { cmd = "pytest -m \"not slow and not regression\"" }
+test-cov-quick = { cmd = "pytest --cov=src/eradiate --cov-report=html --cov-report=json --cov-report=term-missing -m \"not slow and not regression\"" }
 test-report = { cmd = """
   pytest -p robotframework
     --robot-tagstatinclude unit
@@ -206,6 +209,23 @@ filterwarnings = [
 ]
 markers = ["unit", "system", "regression"]
 testpaths = "tests"
+
+[tool.coverage.html]
+directory = "./reports/coverage/html"
+
+[tool.coverage.json]
+output = "./reports/coverage/coverage.json"
+
+[tool.coverage.report]
+omit = ["src/*/__init__.py", "src/*/_version.py"]
+precision = 2
+show_missing = true
+skip_covered = true
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = ["src/"]
 
 [tool.ruff]
 exclude = ["docs/_ext/autodocsumm.py", "src/eradiate/test_tools/benchmark/asvdb.py"]
