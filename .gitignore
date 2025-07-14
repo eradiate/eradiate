@@ -30,7 +30,8 @@ test_artefacts/
 
 # Coverage
 .coverage
-htmlcov/
+.coverage.*
+reports/
 
 # Default data storage
 .eradiate_downloads/
