@@ -66,6 +66,7 @@ docs = [
   "sphinx-autobuild<=2021", # Capped because v2024+ raises
   "sphinx-copybutton",
   "sphinx-design",
+  "sphinx-iconify",
   "shibuya",
 ]
 test = [

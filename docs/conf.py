@@ -55,8 +55,9 @@ extensions = [
     "myst_parser",  # Markdown support
     "nbsphinx",  # Display notebooks
     "sphinx_copybutton",
-    "sphinx_design",  # Tabs, buttons, icons...
+    "sphinx_design",  # Tabs, buttons, grids...
     "sphinxcontrib.bibtex",  # BibTeX bibliography
+    "sphinx_iconify",  # More icons (integration in Shibuya theme is automatic)
     # Custom extensions
     "pluginparameters",  # Directives and roles to document Mitsuba plugins
     "autodocsumm",  # Possibly add autosummary table to autodoc (external, vendored)
@@ -92,7 +93,7 @@ nbsphinx_prolog = """
    :color: primary
    :expand:
 
-   :material-regular:`link;1.5em` Go to notebook file
+   :iconify:`material-symbols:link height=1.5em` Go to notebook file
 
 ----
 {% endif %}
