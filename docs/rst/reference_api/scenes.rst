@@ -9,74 +9,74 @@ Quick access
 .. grid:: 1 2 auto auto
     :gutter: 3
 
-    .. grid-item-card:: :material-regular:`settings;1.5em` Core
+    .. grid-item-card:: :iconify:`material-symbols:settings height=1.5em` Core
         :link: module-eradiate.scenes.core
         :link-type: ref
 
         ``eradiate.scenes.core``
 
-    .. grid-item-card:: :material-regular:`language;1.5em` Geometry
+    .. grid-item-card:: :iconify:`material-symbols:language height=1.5em` Geometry
         :link: module-eradiate.scenes.geometry
         :link-type: ref
 
         ``eradiate.scenes.geometry``
 
-    .. grid-item-card:: :material-regular:`cloud;1.5em` Atmosphere
+    .. grid-item-card:: :iconify:`material-symbols:cloud height=1.5em` Atmosphere
         :link: module-eradiate.scenes.atmosphere
         :link-type: ref
 
         ``eradiate.scenes.atmosphere``
 
-    .. grid-item-card:: :material-regular:`forest;1.5em` Biosphere
+    .. grid-item-card:: :iconify:`material-symbols:forest height=1.5em` Biosphere
         :link: module-eradiate.scenes.biosphere
         :link-type: ref
 
         ``eradiate.scenes.biosphere``
 
-    .. grid-item-card:: :material-regular:`landscape;1.5em` Surface
+    .. grid-item-card:: :iconify:`material-symbols:landscape height=1.5em` Surface
         :link: module-eradiate.scenes.surface
         :link-type: ref
 
         ``eradiate.scenes.surface``
 
-    .. grid-item-card:: :material-regular:`trending_up;1.5em` BSDFs
+    .. grid-item-card:: :iconify:`material-symbols:trending-up height=1.5em` BSDFs
         :link: module-eradiate.scenes.bsdfs
         :link-type: ref
 
         ``eradiate.scenes.bsdfs``
 
 
-    .. grid-item-card:: :material-regular:`dashboard;1.5em` Shapes
+    .. grid-item-card:: :iconify:`material-symbols:dashboard height=1.5em` Shapes
         :link: module-eradiate.scenes.shapes
         :link-type: ref
 
         ``eradiate.scenes.shapes``
 
-    .. grid-item-card:: :material-regular:`sunny;1.5em` Illumination
+    .. grid-item-card:: :iconify:`material-symbols:sunny height=1.5em` Illumination
         :link: module-eradiate.scenes.illumination
         :link-type: ref
 
         ``eradiate.scenes.illumination``
 
-    .. grid-item-card:: :material-regular:`videocam;1.5em` Measure
+    .. grid-item-card:: :iconify:`material-symbols:videocam height=1.5em` Measure
         :link: module-eradiate.scenes.measure
         :link-type: ref
 
         ``eradiate.scenes.measure``
 
-    .. grid-item-card:: :material-regular:`trending_down;1.5em` Phase functions
+    .. grid-item-card:: :iconify:`material-symbols:trending-down height=1.5em` Phase functions
         :link: module-eradiate.scenes.phase
         :link-type: ref
 
         ``eradiate.scenes.phase``
 
-    .. grid-item-card:: :material-regular:`dns;1.5em` Integrators
+    .. grid-item-card:: :iconify:`material-symbols:dns height=1.5em` Integrators
         :link: module-eradiate.scenes.integrators
         :link-type: ref
 
         ``eradiate.scenes.integrators``
 
-    .. grid-item-card:: :material-regular:`looks;1.5em` Spectra
+    .. grid-item-card:: :iconify:`material-symbols:looks height=1.5em` Spectra
         :link: module-eradiate.scenes.spectra
         :link-type: ref
 
