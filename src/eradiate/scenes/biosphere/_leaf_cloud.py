@@ -318,11 +318,11 @@ class CuboidLeafCloudParams(LeafCloudParams):
 
     .. only:: latex
 
-       .. figure:: ../../../../fig/cuboid_leaf_cloud_params.png
+       .. figure:: /_images/cuboid_leaf_cloud_params.png
 
     .. only:: not latex
 
-       .. figure:: ../../../../fig/cuboid_leaf_cloud_params.svg
+       .. figure:: /_images/cuboid_leaf_cloud_params.svg
 
     Warnings
     --------

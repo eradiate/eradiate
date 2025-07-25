@@ -23,9 +23,9 @@ equation.
   These are true monochromatic simulations (as opposed to narrow band
   simulations).
   Eradiate provides
-  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/absorption_databases.html">monochromatic absorption databases</a> covering the [250, 3125] nm interval.
+  <a href="https://eradiate.readthedocs.io/en/stable/data/absorption_databases.html">monochromatic absorption databases</a> covering the [250, 3125] nm interval.
   User-defined absorption databases are also supported (see the
-  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/absorption_databases.html#format-monochromatic">database format</a>).
+  <a href="https://eradiate.readthedocs.io/en/stable/data/absorption_databases.html#format-monochromatic">database format</a>).
   </details>
 
   <details>
@@ -37,11 +37,11 @@ equation.
   quadrature rule is used. This method achieves a trade-off between performance
   and accuracy for the simulation of absorption by gases.
   Eradiate provides
-  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/absorption_databases.html">CKD-ready absorption databases</a>
+  <a href="https://eradiate.readthedocs.io/en/stable/data/absorption_databases.html">CKD-ready absorption databases</a>
   for the [250, 3125] nm
   interval, with various spectral bin sizes (100 cm⁻¹, 1 nm, 10 nm).
   User-defined absorption databases are also supported (see the
-  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/absorption_databases.html#format-ckd">database format</a>).
+  <a href="https://eradiate.readthedocs.io/en/stable/data/absorption_databases.html#format-ckd">database format</a>).
   </details>
 
   <details>
@@ -113,9 +113,9 @@ equation.
   <summary>
   Many irradiance datasets
   </summary>
-  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/solar_irradiance.html#available-datasets">Pick your favourite</a>
+  <a href="https://eradiate.readthedocs.io/en/stable/data/solar_irradiance.html#available-datasets">Pick your favourite</a>
   or
-  <a href="https://eradiate.readthedocs.io/en/stable/rst/data/solar_irradiance.html">bring your own</a>.
+  <a href="https://eradiate.readthedocs.io/en/stable/data/solar_irradiance.html">bring your own</a>.
   </details>
   </li>
 
@@ -139,7 +139,7 @@ equation.
   <summary>
   Many instrument spectral response functions
   </summary>
-  Our <a href="https://eradiate.readthedocs.io/en/stable/rst/data/srf.html">SRF data</a>
+  Our <a href="https://eradiate.readthedocs.io/en/stable/data/srf.html">SRF data</a>
   is very close to the original data, and we provide advice to
   further clean up the data and find the right balance between accuracy and
   performance.

@@ -38,7 +38,7 @@ html_theme = "shibuya"
 html_title = ""
 
 templates_path = ["_templates"]  # Path to templates, relative to this directory.
-exclude_patterns = ["_build", "tutorials/README.md", "generate"]
+exclude_patterns = ["_build", "tutorials/README.md", "_generate"]
 html_static_path = ["_static"]
 
 extensions = [
@@ -241,29 +241,29 @@ rst_prolog = r"""
 # -- HTML output customisation -------------------------------------------------
 
 html_theme_options = {
-    "light_logo": "_static/eradiate-logo-typo-black.svg",
-    "dark_logo": "_static/eradiate-logo-typo-white.svg",
+    "light_logo": "_static/eradiate-logo-typo_simple-black.svg",
+    "dark_logo": "_static/eradiate-logo-typo_simple-white.svg",
     "accent_color": "indigo",
     "github_url": "https://github.com/eradiate/eradiate",
     "nav_links_align": "center",
     "nav_links": [
-        {"title": "User guide", "url": "rst/user_guide/index"},
+        {"title": "User guide", "url": "user_guide/index"},
         {"title": "Tutorials", "url": "tutorials/index"},
-        {"title": "Data guide", "url": "rst/data/intro"},
+        {"title": "Data guide", "url": "data/intro"},
         {
             "title": "Reference",
             "children": [
-                {"title": "API", "url": "rst/reference_api/index"},
-                {"title": "Plugin reference", "url": "rst/reference_plugins/index"},
-                {"title": "Command-line interface", "url": "src/reference_cli"},
+                {"title": "API", "url": "reference_api/index"},
+                {"title": "Plugin reference", "url": "reference_plugins/index"},
+                {"title": "Command-line interface", "url": "reference_cli"},
             ],
         },
-        {"title": "Release notes", "url": "src/release_notes/index"},
+        {"title": "Release notes", "url": "release_notes/index"},
     ],
 }
 
 html_short_title = "Eradiate"
-html_favicon = "fig/icon_eradiate.png"
+html_favicon = "_images/icon_eradiate.png"
 html_show_sourcelink = False
 htmlhelp_basename = "eradiate_doc"
 
@@ -288,7 +288,7 @@ latex_elements = {
 }
 
 latex_engine = "xelatex"
-latex_logo = "fig/eradiate-logo-typo-black.png"
+latex_logo = "_images/eradiate-logo-typo-black.png"
 
 latex_documents = [
     (
@@ -306,7 +306,7 @@ latex_documents = [
 
 def custom_step(app):
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    from generate import data, factories, md_cli, rst_plugins
+    from _generate import data, factories, md_cli, rst_plugins
 
     md_cli.generate()  # CLI reference
     rst_plugins.generate()  # Plugins

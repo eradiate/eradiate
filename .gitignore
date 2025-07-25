@@ -22,8 +22,8 @@ __pycache__
 build/
 docs/_build/
 docs/examples/generated/
-docs/rst/reference_api/generated/
-docs/rst/reference_plugins/generated/
+docs/reference_api/generated/
+docs/reference_plugins/generated/
 
 # Test artefacts
 test_artefacts/
