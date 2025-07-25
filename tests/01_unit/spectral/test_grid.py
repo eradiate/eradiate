@@ -33,7 +33,7 @@ def test_mono_spectral_grid_construct(wavelengths, expected):
 
 def test_mono_spectral_grid_default():
     grid = MonoSpectralGrid.default()
-    np.testing.assert_allclose(grid.wavelengths.m, np.arange(280.0, 2401.0, 1.0))
+    np.testing.assert_allclose(grid.wavelengths.m, np.arange(250.0, 3126.0, 1.0))
 
 
 def test_mono_spectral_grid_from_absorption_database():
@@ -167,7 +167,7 @@ def test_ckd_spectral_grid_construct_fix_mismatch(policy, expected):
 
 def test_ckd_spectral_grid_default():
     grid = CKDSpectralGrid.default()
-    expected_wcenters = np.arange(280.0, 2401.0, 10.0)
+    expected_wcenters = np.arange(250.0, 3126.0, 10.0)
     np.testing.assert_allclose(grid.wcenters.m, expected_wcenters)
     np.testing.assert_allclose(grid.wmins.m, expected_wcenters - 5.0)
     np.testing.assert_allclose(grid.wmaxs.m, expected_wcenters + 5.0)
