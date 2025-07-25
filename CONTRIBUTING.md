@@ -40,7 +40,7 @@ To propose a change to the codebase, please:
 5. Issue the pull request.
 
 **Please be sure to read our
-[contribution guidelines](https://eradiate.readthedocs.io/en/latest/rst/contributing.html).**
+[contribution guidelines](https://eradiate.readthedocs.io/en/latest/contributing.html).**
 
 ## Any contributions you make will be under the LGPLv3 Software License
 
