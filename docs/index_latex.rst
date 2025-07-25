@@ -6,24 +6,24 @@ Eradiate Documentation
 .. toctree::
    :maxdepth: 1
 
-   rst/user_guide/index
+   user_guide/index
    tutorials/index_latex
 
-   rst/data/intro
-   rst/data/aerosols_particles
-   rst/data/absorption_databases
-   rst/data/atmosphere_thermoprops
-   rst/data/solar_irradiance
-   rst/data/srf
-   rst/data/rami_scenes
+   data/intro
+   data/aerosols_particles
+   data/absorption_databases
+   data/atmosphere_thermoprops
+   data/solar_irradiance
+   data/srf
+   data/rami_scenes
 
-   rst/contributing
-   rst/dependencies
-   rst/maintainer_guide
-   rst/developer_guide/index
+   contributing
+   dependencies
+   maintainer_guide
+   developer_guide/index
 
-   rst/reference_api/index
-   rst/reference_plugins/index
-   src/reference_cli.md
-   src/release_notes/index.md
-   rst/bibliography
+   reference_api/index
+   reference_plugins/index
+   reference_cli.md
+   release_notes/index.md
+   bibliography

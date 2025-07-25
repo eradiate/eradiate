@@ -5,7 +5,7 @@ Convert SVG figures to PNG. Requires Inkscape 1.0 (with new CLI).
 import subprocess
 from pathlib import Path
 
-FIG_PATH = Path(__file__).parent / "fig"
+FIG_PATH = Path(__file__).parent / "_images"
 
 
 def svg_to_png():

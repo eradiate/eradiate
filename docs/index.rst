@@ -5,7 +5,7 @@ Eradiate Documentation
 
 **Date**: |today| |
 **Version**: |version| |
-:doc:`src/release_notes/index`
+:doc:`/release_notes/index`
 
 **Useful links**:
 `Home <https://www.eradiate.eu>`_ |
@@ -55,7 +55,7 @@ Python and C++17. It relies on a radiometric kernel based on the
    :titlesonly:
    :caption: Users
 
-   rst/user_guide/index
+   user_guide/index
    tutorials/index
 
 .. toctree::
@@ -64,11 +64,11 @@ Python and C++17. It relies on a radiometric kernel based on the
    :titlesonly:
    :caption: Reference
 
-   rst/reference_api/index
-   rst/reference_plugins/index
-   src/reference_cli.md
-   src/release_notes/index.md
-   rst/bibliography
+   reference_api/index
+   reference_plugins/index
+   reference_cli.md
+   release_notes/index.md
+   bibliography
 
 .. toctree::
    :maxdepth: 3
@@ -76,13 +76,13 @@ Python and C++17. It relies on a radiometric kernel based on the
    :titlesonly:
    :caption: Data
 
-   Introduction <rst/data/intro>
-   Atmosphere: Aerosols / particles <rst/data/aerosols_particles>
-   Atmosphere: Molecular absorption <rst/data/absorption_databases>
-   Atmosphere: Thermophysical properties <rst/data/atmosphere_thermoprops>
-   Solar irradiance <rst/data/solar_irradiance>
-   Spectral response functions <rst/data/srf>
-   RAMI benchmark scenes <rst/data/rami_scenes>
+   Introduction <data/intro>
+   Atmosphere: Aerosols / particles <data/aerosols_particles>
+   Atmosphere: Molecular absorption <data/absorption_databases>
+   Atmosphere: Thermophysical properties <data/atmosphere_thermoprops>
+   Solar irradiance <data/solar_irradiance>
+   Spectral response functions <data/srf>
+   RAMI benchmark scenes <data/rami_scenes>
 
 .. toctree::
    :maxdepth: 3
@@ -90,7 +90,7 @@ Python and C++17. It relies on a radiometric kernel based on the
    :titlesonly:
    :caption: Developers/contributors
 
-   rst/contributing
-   rst/dependencies
-   rst/maintainer_guide
-   rst/developer_guide/index
+   contributing
+   dependencies
+   maintainer_guide
+   developer_guide/index
