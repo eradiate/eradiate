@@ -90,7 +90,7 @@ Data is managed with the ``eradiate data`` command-line utility
     the registry is more than one day old. A forced update is however
     possible, using ``eradiate data update``.
 
-To install a given resources, use the ``eradiate data install`` command,
+To install a specific resource, use the ``eradiate data install`` command,
 referencing the target resources by their IDs, *e.g.*:
 
 .. code-block:: console
@@ -106,9 +106,9 @@ referencing the target resources by their IDs, *e.g.*:
     Installing resource 'bsdf/core-v1'
 
 Resource archives that are not already available locally will be downloaded from
-the remote data registry. They will be unpacked and linked to the version-
-dependent installation directory. The cache and unpacking locations are, by
-default, common to all Eradiate versions. That means that if you use default
+the remote data registry. They will be unpacked and linked to the
+version-dependent installation directory. The cache and unpacking locations are,
+by default, common to all Eradiate versions. This means that if you use default
 settings, data that was downloaded with a given version of Eradiate will not be
 downloaded or unpacked again after an upgrade — only the symbolic links created
 in the version-specific installation directory will be created again.

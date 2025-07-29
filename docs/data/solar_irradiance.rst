@@ -8,7 +8,7 @@ Sun-Earth distance of 1 astronomical unit. Solar spectral irradiance data may
 come from observations—*e.g.* using a spectrometer onboard a satellite—or
 theoretical models such as the blackbody model, or from a combination of
 observation data and theoretical models. Solar irradiance data is managed by the
-data store (see :ref:`sec-data-intro` for details).
+asset manager (see :ref:`sec-data-intro` for details).
 
 Identifier format
 ^^^^^^^^^^^^^^^^^
