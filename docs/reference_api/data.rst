@@ -5,6 +5,17 @@
 
 .. py:currentmodule:: eradiate.data
 
+Modules
+-------
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   io
+
+Classes
+-------
+
 .. autosummary::
    :toctree: generated/autosummary/
 
