@@ -238,13 +238,14 @@ rst_prolog = r"""
 .. |discontinuous| replace:: :abbr:`D (This parameter might introduce discontinuities. Therefore it requires special handling during differentiation to prevent bias (e.g. prb-reparam)))`
 """
 
-# -- HTML output customisation -------------------------------------------------
+# -- HTML output customization -------------------------------------------------
 
 html_theme_options = {
     "light_logo": "_static/eradiate-logo-typo_simple-black.svg",
     "dark_logo": "_static/eradiate-logo-typo_simple-white.svg",
     "accent_color": "indigo",
     "github_url": "https://github.com/eradiate/eradiate",
+    "navigate_with_keys": True,
     "nav_links_align": "center",
     "nav_links": [
         {"title": "User guide", "url": "user_guide/index"},
