@@ -14,7 +14,16 @@ from eradiate.test_tools.types import check_scene_element
     [
         {},
         {"target": [0, 0, 0]},
-        {"target": {"type": "rectangle", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1}},
+        {
+            "target": {
+                "type": "rectangle",
+                "xmin": 0,
+                "xmax": 1,
+                "ymin": 0,
+                "ymax": 1,
+                "z": 0,
+            }
+        },
     ],
     ids=[
         "no_args",

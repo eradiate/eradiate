@@ -439,10 +439,10 @@ class BoundingBox:
                 f"while validating {attribute.name}: 'min' and 'max' must "
                 f"have the same shape (got {self.min.shape} and {self.max.shape})"
             )
-        if not np.all(np.less(self.min, self.max)):
+        if not np.all(np.less_equal(self.min, self.max)):
             raise ValueError(
-                f"while validating {attribute.name}: 'min' must be strictly "
-                "less than 'max'"
+                f"while validating {attribute.name}: 'min' must be less or "
+                "equal to 'max'"
             )
 
     @classmethod
