@@ -66,11 +66,9 @@ def film_to_angular(
     else:
         azimuth_convention = frame.AzimuthConvention.convert(azimuth_convention)
 
-    # Interpolate values on angular grid
-    data = np.empty((len(phi), len(theta)))
-
-    # Map angular grid points to (x, y) space
-    for i, ph in enumerate(phi):
+    # Map angular grid points to (x, y) space and interpolate film data accordingly
+    das = []
+    for ph in phi:
         xs = np.empty_like(theta)
         ys = np.empty_like(theta)
 
@@ -80,21 +78,33 @@ def film_to_angular(
         xs.ravel()[:] = film_coords[:, 0]
         ys.ravel()[:] = film_coords[:, 1]
 
+        # Interpolate at target angular coordinates
         x = xr.DataArray(xs, dims=theta_label)
         y = xr.DataArray(ys, dims=theta_label)
-        data[i, :] = da.interp(**{x_label: x, y_label: y}).values
+        interpolated = da.interp(**{x_label: x, y_label: y})
 
-    return xr.DataArray(
-        data,
-        coords=(
-            (
-                phi_label,
-                frame.transform_azimuth(phi, to_convention=azimuth_convention),
-            ),
-            (theta_label, theta),
-        ),
-        dims=(phi_label, theta_label),
-    )
+        # Introduce theta as dimension coordinate
+        interpolated = interpolated.assign_coords({theta_label: theta})
+
+        # Drop non-dimension coordinates
+        interpolated = interpolated.drop_vars(
+            [name for name in da.coords if name not in interpolated.dims]
+        )
+
+        # Add phi as dimension coordinate (used later when concatenating)
+        interpolated = interpolated.expand_dims(
+            {
+                phi_label: [
+                    frame.transform_azimuth(ph, to_convention=azimuth_convention)
+                ]
+            },
+            axis=-1,
+        )
+        das.append(interpolated)
+
+    # Concatenate all azimuth slices
+    result = xr.concat(das, dim=phi_label)
+    return result
 
 
 def dataarray_to_rgb(
