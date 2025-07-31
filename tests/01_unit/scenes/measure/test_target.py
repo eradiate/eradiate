@@ -1,5 +1,4 @@
 import drjit as dr
-import mitsuba as mi
 import numpy as np
 import pytest
 
@@ -9,7 +8,7 @@ from eradiate import unit_registry as ureg
 from eradiate.scenes.measure import Target, TargetPoint, TargetRectangle
 
 
-def test_target_origin(modes_all):
+def test_target_point(mode_mono):
     # TargetPoint: basic constructor
     with ucc.override({"length": "km"}):
         t = TargetPoint([0, 0, 0])
@@ -23,60 +22,118 @@ def test_target_origin(modes_all):
         t = TargetPoint([1, 2, 0])
         assert dr.allclose(t.kernel_item(), [1000, 2000, 0])
 
-    # TargetRectangle: basic constructor
-    with ucc.override({"length": "km"}):
-        t = TargetRectangle(0, 1, 0, 1)
-        assert t.xmin == 0.0 * ureg.km
-        assert t.xmax == 1.0 * ureg.km
-        assert t.ymin == 0.0 * ureg.km
-        assert t.ymax == 1.0 * ureg.km
 
-    with ucc.override({"length": "m"}):
-        t = TargetRectangle(0, 1, 0, 1)
-        assert t.xmin == 0.0 * ureg.m
-        assert t.xmax == 1.0 * ureg.m
-        assert t.ymin == 0.0 * ureg.m
-        assert t.ymax == 1.0 * ureg.m
+@pytest.mark.parametrize(
+    "kwargs, config_units, kernel_units, expected",
+    [
+        (
+            {"xmin": -1, "xmax": 1, "ymin": -1, "ymax": 1, "z": 0},
+            "m",
+            "m",
+            [
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+            ],
+        ),
+        (
+            {"xmin": -1, "xmax": 1, "ymin": -1, "ymax": 1},
+            "m",
+            "m",
+            [
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+            ],
+        ),
+        (
+            {
+                "size_x": 2,
+                "size_y": 4,
+                "xyz": [0, 0, 1],
+                "n": [0, 0, 1],
+                "up": [0, 1, 0],
+            },
+            "m",
+            "m",
+            [
+                [1, 0, 0, 0],
+                [0, 2, 0, 0],
+                [0, 0, 1, 1],
+                [0, 0, 0, 1],
+            ],
+        ),
+        (
+            {
+                "size_x": 1,
+                "size_y": 1,
+                "xyz": [0, 0, 1],
+                "n": [0, 0, 1],
+                "up": [0, 1, 0],
+            },
+            "km",
+            "mm",
+            [
+                [5e5, 0, 0, 0],
+                [0, 5e5, 0, 0],
+                [0, 0, 1, 1e6],
+                [0, 0, 0, 1],
+            ],
+        ),
+        (
+            {
+                "to_world": [
+                    [1, 0, 0, 0],
+                    [0, 2, 0, 0],
+                    [1, 0, 0, 0],
+                    [0, 0, 0, 1],
+                ]
+            },
+            "m",
+            "km",
+            [
+                [1, 0, 0, 0],
+                [0, 2, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1],
+            ],
+        ),
+    ],
+    ids=["bounds", "bounds_no_z", "normal", "normal_scaled", "to_world"],
+)
+def test_target_rectangle(mode_mono, kwargs, config_units, kernel_units, expected):
+    with ucc.override(length=config_units), uck.override(length=kernel_units):
+        if isinstance(expected, type) and issubclass(expected, Exception):
+            with pytest.raises(expected):
+                TargetRectangle(**kwargs)
+                return
 
-    with pytest.raises(ValueError):
-        TargetRectangle(0, 1, "a", 1)
+        else:
+            t = TargetRectangle(**kwargs)
+            np.testing.assert_allclose(t.to_world.matrix.numpy(), expected)
 
-    with pytest.raises(ValueError):
-        TargetRectangle(0, 1, 1, -1)
 
-    # TargetRectangle: check kernel item
-    t = TargetRectangle(-1, 1, -1, 1)
-
-    with uck.override({"length": "mm"}):  # Tricky: we can't compare transforms directly
-        kernel_item = t.kernel_item()["to_world"]
-        assert dr.allclose(
-            kernel_item.transform_affine(mi.Point3f(-1, -1, 0)), [-1000, -1000, 0]
-        )
-        assert dr.allclose(
-            kernel_item.transform_affine(mi.Point3f(1, 1, 0)), [1000, 1000, 0]
-        )
-        assert dr.allclose(
-            kernel_item.transform_affine(mi.Point3f(1, 1, 42)), [1000, 1000, 42]
-        )
-
+def test_target_factory(mode_mono):
     # Factory: basic test
     with ucc.override({"length": "m"}):
         t = Target.new("point", xyz=[1, 1, 0])
         assert isinstance(t, TargetPoint)
         assert np.allclose(t.xyz, ureg.Quantity([1, 1, 0], ureg.m))
 
-        t = Target.new("rectangle", 0, 1, 0, 1)
+        t = Target.new("rectangle", xmin=0, xmax=1, ymin=0, ymax=1, z=0)
         assert isinstance(t, TargetRectangle)
 
     # Converter: basic test
-    with ucc.override({"length": "m"}):
+    with ucc.override({"length": "km"}):
         t = Target.convert({"type": "point", "xyz": [1, 1, 0]})
         assert isinstance(t, TargetPoint)
-        assert np.allclose(t.xyz, ureg.Quantity([1, 1, 0], ureg.m))
+        assert np.allclose(t.xyz, [1000, 1000, 0] * ureg.m)
 
         t = Target.convert([1, 1, 0])
         assert isinstance(t, TargetPoint)
-        assert np.allclose(t.xyz, ureg.Quantity([1, 1, 0], ureg.m))
+        assert np.allclose(t.xyz, [1000, 1000, 0] * ureg.m)
 
         with pytest.raises(ValueError):
             Target.convert({"xyz": [1, 1, 0]})
