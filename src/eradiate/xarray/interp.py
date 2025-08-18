@@ -165,7 +165,7 @@ def dataarray_to_rgb(
 
     # Normalize to [0, 1] interval
     if normalize:
-        result /= np.max(result)
+        result /= np.nanmax(result)
 
     # Apply gamma correction
     if gamma_correction:
