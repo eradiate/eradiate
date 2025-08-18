@@ -118,7 +118,7 @@ displayed as follows:
 
 .. code-block:: console
 
-    $ eradiate data list --what aliases
+    $ eradiate data list --aliases
 
       Alias              Target
      ────────────────────────────────────────────────

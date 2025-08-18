@@ -68,6 +68,9 @@ $ eradiate data clear [OPTIONS] [RESOURCE_IDS]...
 **Options**:
 
 * `--what [cached|unpacked|installed|all]`: A keyword that specifies what to clear.  [default: cached]
+* `--all / --no-all`: Alias to --what all.  [default: no-all]
+* `--unpacked / --no-unpacked`: Alias to --what unpacked.  [default: no-unpacked]
+* `--installed / --no-installed`: Alias to --what installed.  [default: no-installed]
 * `--help`: Show this message and exit.
 
 #### `eradiate data download`
@@ -122,6 +125,8 @@ $ eradiate data list [OPTIONS]
 **Options**:
 
 * `--what [resources|aliases|all]`: A keyword that specifies what to clear.  [default: resources]
+* `--aliases / --no-aliases`: Alias to --what aliases.  [default: no-aliases]
+* `--all / --no-all`: Alias to --what all.  [default: no-all]
 * `--help`: Show this message and exit.
 
 #### `eradiate data remove`
