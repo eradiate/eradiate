@@ -38,19 +38,21 @@ class LambertianBSDF(BSDF):
     )
 
     @property
+    def kernel_type(self) -> str:
+        return "diffuse"
+
+    @property
     def template(self) -> dict:
         # Inherit docstring
-        result = {
-            "type": "diffuse",
-            **{
-                f"reflectance.{key}": value
-                for key, value in traverse(self.reflectance)[0].items()
-            },
-        }
-
-        if self.id is not None:
-            result["id"] = self.id
-
+        result = super().template
+        result.update(
+            {
+                **{
+                    f"reflectance.{key}": value
+                    for key, value in traverse(self.reflectance)[0].items()
+                },
+            }
+        )
         return result
 
     @property
