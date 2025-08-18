@@ -10,6 +10,7 @@ import pint
 import pinttr
 
 from ..core import CompositeSceneElement
+from ..filters import FilterType
 from ... import validators
 from ..._factory import Factory
 from ...attrs import define, documented, get_doc
@@ -95,6 +96,19 @@ class CanopyElement(CompositeSceneElement, ABC):
     Abstract base class representing a component of a :class:`.Canopy` object.
     Concrete canopy classes can manage their components as they prefer.
     """
+
+    bsdf_filter: FilterType = documented(
+        attrs.field(
+            default=FilterType.INCLUDE,
+            # converter=FilterType,
+            validator=attrs.validators.instance_of(FilterType),
+        ),
+        doc="Filter type for this canopy element's BSDFs. Controls whether "
+        "interactions with this element should be included in sensor measurements.",
+        type=".FilterType",
+        init_type=".FilterType or int",
+        default="FilterType.INCLUDE",
+    )
 
     @property
     @abstractmethod

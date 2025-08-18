@@ -13,6 +13,7 @@ import pinttr
 from ._core import CanopyElement, biosphere_factory
 from ._leaf_cloud import LeafCloud
 from ..core import SceneElement, traverse
+from ..filters import FilterType
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented, get_doc
@@ -140,7 +141,10 @@ class AbstractTree(Tree):
     def _template_bsdfs(self) -> dict:
         objects = {"reflectance": traverse(self.trunk_reflectance)[0].data}
 
-        result = {f"{self.bsdf_id}.type": "diffuse"}
+        result = {
+            f"{self.bsdf_id}.type": "diffuse",
+            f"{self.bsdf_id}.filter": int(self.bsdf_filter),
+        }
 
         for obj_key, obj_params in objects.items():
             for key, param in obj_params.items():
@@ -376,6 +380,19 @@ class MeshTreeElement:
         default="0.0",
     )
 
+    bsdf_filter: FilterType = documented(
+        attrs.field(
+            default=FilterType.INCLUDE,
+            converter=FilterType,
+            validator=attrs.validators.instance_of(FilterType),
+        ),
+        doc="Filter type for this mesh tree element's BSDF. Controls whether "
+        "interactions with this element should be included in sensor measurements.",
+        type=".FilterType",
+        init_type=".FilterType or int",
+        default="FilterType.INCLUDE",
+    )
+
     # --------------------------------------------------------------------------
     #                              Constructors
     # --------------------------------------------------------------------------
@@ -442,7 +459,10 @@ class MeshTreeElement:
             "transmittance": traverse(self.transmittance)[0].data,
         }
 
-        result = {f"{self.bsdf_id}.type": "bilambertian"}
+        result = {
+            f"{self.bsdf_id}.type": "bilambertian",
+            f"{self.bsdf_id}.filter": int(self.bsdf_filter),
+        }
 
         for obj_key, obj_params in objects.items():
             for key, param in obj_params.items():

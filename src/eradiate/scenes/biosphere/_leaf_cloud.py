@@ -1140,7 +1140,10 @@ class LeafCloud(CanopyElement):
             "transmittance": traverse(self.leaf_transmittance)[0].data,
         }
 
-        result = {f"{self.bsdf_id}.type": "bilambertian"}
+        result = {
+            f"{self.bsdf_id}.type": "bilambertian",
+            f"{self.bsdf_id}.filter": int(self.bsdf_filter),
+        }
 
         for obj_key, obj_template in objects.items():
             for key, param in obj_template.items():
