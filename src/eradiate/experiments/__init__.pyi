@@ -6,3 +6,4 @@ from ._core import Experiment as Experiment
 from ._core import MeasureRegistry as MeasureRegistry
 from ._core import run as run
 from ._dem import DEMExperiment as DEMExperiment
+from ._fapar import FAPARExperiment as FAPARExperiment

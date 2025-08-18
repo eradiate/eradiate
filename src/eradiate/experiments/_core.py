@@ -693,14 +693,17 @@ class EarthObservationExperiment(Experiment, ABC):
                 measure = sensor_to_measure[sensor_id]
                 result_imgs = {"spp": spp if spp > 0 else measure.spp}
 
-                splits = mi_bitmap.split()
-                for split in splits:
-                    if split[0] in mapping:
-                        img = split[1]
-                        # convert any result that has more than one channel
-                        if img.pixel_format() != mi.Bitmap.PixelFormat.Y:
-                            img = convert_to_y_format(img)
-                        result_imgs[mapping[split[0]]] = img
+                if isinstance(mi_bitmap, mi.Bitmap):
+                    splits = mi_bitmap.split()
+                    for split in splits:
+                        if split[0] in mapping:
+                            img = split[1]
+                            # convert any result that has more than one channel
+                            if img.pixel_format() != mi.Bitmap.PixelFormat.Y:
+                                img = convert_to_y_format(img)
+                            result_imgs[mapping[split[0]]] = img
+                elif isinstance(mi_bitmap, mi.TensorXf):
+                    result_imgs = mi_bitmap
 
                 measure.mi_results[ctx_index] = result_imgs
 

@@ -348,7 +348,7 @@ def mi_render(
     sensors: None | int | list[int] = None,
     spp: int = 0,
     seed_state: SeedState | None = None,
-) -> dict[t.Any, mi.Bitmap]:
+) -> dict[t.Any, mi.Bitmap | t.Any]:
     """
     Render a Mitsuba scene multiple times given specified contexts and sensor
     indices.
@@ -378,7 +378,7 @@ def mi_render(
     -------
     dict
         A nested dictionary mapping context and sensor indices to rendered
-        bitmaps.
+        results (mi.Bitmap for 2D sensors, TensorXf for volume sensors).
 
     Notes
     -----
@@ -431,12 +431,20 @@ def mi_render(
                 )
                 mi.render(mi_scene.obj, sensor=i_sensor, seed=seed, spp=spp)
 
-                # Store result in a new Bitmap object
+                # Store result - handle both bitmap and tensor films
                 siah = ctx.si.as_hashable
                 if siah not in results:
                     results[siah] = {}
 
-                results[siah][mi_sensor.id()] = mi.Bitmap(mi_sensor.film().bitmap())
+                film = mi_sensor.film()
+
+                # Check if this is a volume film (tensor-based)
+                if film.is_volume_film():
+                    # Volume sensors use tensors
+                    results[siah][mi_sensor.id()] = film.develop()
+                else:
+                    # Standard 2D sensors use bitmaps
+                    results[siah][mi_sensor.id()] = mi.Bitmap(film.bitmap())
 
             pbar.update()
 
