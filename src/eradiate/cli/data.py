@@ -66,11 +66,18 @@ def list(
         ListWhat,
         typer.Option(help="A keyword that specifies what to clear."),
     ] = ListWhat.resources,
+    aliases: Annotated[bool, typer.Option(help="Alias to --what aliases.")] = False,
+    all: Annotated[bool, typer.Option(help="Alias to --what all.")] = False,
 ):
     """
     List all packages referenced by the manifest and their current state
     (cached, unpacked, installed).
     """
+    if aliases:
+        what = ListWhat.aliases
+    if all:
+        what = ListWhat.all
+
     asset_manager.update()
     asset_manager.list(what=what)
 
@@ -125,8 +132,18 @@ def clear(
         ClearWhat,
         typer.Option(help="A keyword that specifies what to clear."),
     ] = ClearWhat.cached,
+    all: Annotated[bool, typer.Option(help="Alias to --what all.")] = False,
+    unpacked: Annotated[bool, typer.Option(help="Alias to --what unpacked.")] = False,
+    installed: Annotated[bool, typer.Option(help="Alias to --what installed.")] = False,
 ):
     """
     Delete data.
     """
+    if unpacked:
+        what = ClearWhat.unpacked
+    if installed:
+        what = ClearWhat.installed
+    if all:
+        what = ClearWhat.all
+
     asset_manager.clear(resource_ids, what=what)
