@@ -1,5 +1,7 @@
+from ._absorbedflux import AbsorbedFluxMeasure as AbsorbedFluxMeasure
 from ._core import Measure as Measure
 from ._core import measure_factory as measure_factory
+from ._count import CountMeasure as CountMeasure
 from ._distant import AbstractDistantMeasure as AbstractDistantMeasure
 from ._distant import DistantMeasure as DistantMeasure
 from ._distant import MultiPixelDistantMeasure as MultiPixelDistantMeasure
@@ -20,3 +22,4 @@ from ._multi_distant import MultiDistantMeasure as MultiDistantMeasure
 from ._multi_radiancemeter import MultiRadiancemeterMeasure as MultiRadiancemeterMeasure
 from ._perspective import PerspectiveCameraMeasure as PerspectiveCameraMeasure
 from ._radiancemeter import RadiancemeterMeasure as RadiancemeterMeasure
+from ._voxelflux import VoxelFluxMeasure as VoxelFluxMeasure

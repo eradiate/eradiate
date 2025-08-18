@@ -19,6 +19,16 @@ measure_factory = Factory()
 measure_factory.register_lazy_batch(
     [
         (
+            "_absorbedflux.AbsorbedFluxMeasure",
+            "absorbedflux",
+            {},
+        ),
+        (
+            "_count.CountMeasure",
+            "count",
+            {},
+        ),
+        (
             "_distant.DistantMeasure",
             "distant",
             {},
@@ -56,6 +66,11 @@ measure_factory.register_lazy_batch(
         (
             "_radiancemeter.RadiancemeterMeasure",
             "radiancemeter",
+            {},
+        ),
+        (
+            "_voxelflux.VoxelFluxMeasure",
+            "voxelflux",
             {},
         ),
     ],

@@ -4,4 +4,7 @@ from ._core import AbstractDirectionalIllumination as AbstractDirectionalIllumin
 from ._core import Illumination as Illumination
 from ._core import illumination_factory as illumination_factory
 from ._directional import DirectionalIllumination as DirectionalIllumination
+from ._directional_periodic import (
+    DirectionalPeriodicIllumination as DirectionalPeriodicIllumination,
+)
 from ._spot import SpotIllumination as SpotIllumination

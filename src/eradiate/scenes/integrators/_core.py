@@ -15,6 +15,7 @@ integrator_factory.register_lazy_batch(
         ("_path_tracers.VolPathIntegrator", "volpath", {}),
         ("_path_tracers.VolPathMISIntegrator", "volpathmis", {}),
         ("_path_tracers.PiecewiseVolPathIntegrator", "piecewise_volpath", {}),
+        ("_paccumulator.PAccumulatorIntegrator", "paccumulator", {}),
     ],
     cls_prefix="eradiate.scenes.integrators",
 )
