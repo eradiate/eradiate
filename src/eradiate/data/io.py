@@ -156,7 +156,8 @@ def load_aerosol_libradtran(
 
     if kwargs:
         warnings.warn(
-            f"load_aerosol_libradtran() got unexpected keyword arguments {list(kwargs.keys())}, which were not used"
+            "load_aerosol_libradtran() got unexpected keyword arguments "
+            f"{list(kwargs.keys())}, which were not used"
         )
 
     # Filter wavelengths if requested
