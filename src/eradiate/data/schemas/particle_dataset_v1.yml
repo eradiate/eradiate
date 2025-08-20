@@ -1,3 +1,6 @@
+attrs:
+  type: dict
+  required: false
 dims:
   type: dict
   allow_unknown: false
@@ -17,7 +20,7 @@ coords:
         dims:
           equal_list: [ w ]
         dtype:
-          allowed: [ float64 ]
+          allowed: [ float32, float64 ]
         attrs:
           type: dict
           schema:
@@ -32,7 +35,7 @@ coords:
         dims:
           equal_list: [ i ]
         dtype:
-          allowed: [ int64 ]
+          allowed: [ int32, int64 ]
         attrs:
           type: dict
           schema:
@@ -47,7 +50,7 @@ coords:
         dims:
           equal_list: [ j ]
         dtype:
-          allowed: [ int64 ]
+          allowed: [ int32, int64 ]
         attrs:
           type: dict
           schema:
@@ -62,7 +65,7 @@ coords:
         dims:
           equal_list: [ mu ]
         dtype:
-          allowed: [ float64 ]
+          allowed: [ float32, float64 ]
         attrs:
           type: dict
           schema:
@@ -81,14 +84,16 @@ data_vars:
         dims:
           equal_list: [ w ]
         dtype:
-          allowed: [ float64 ]
+          allowed: [ float32, float64 ]
         attrs:
           type: dict
           schema:
             standard_name: string
             long_name: string
             units:
-              units_compatible: dimensionless  # TODO: check (documentation mismatch)
+              anyof:
+              - units_compatible: dimensionless
+              - units_compatible: 1 / m
     albedo:
       required: true
       type: dict
@@ -96,7 +101,7 @@ data_vars:
         dims:
           equal_list: [ w ]
         dtype:
-          allowed: [ float64 ]
+          allowed: [ float32, float64 ]
         attrs:
           type: dict
           schema:
@@ -111,7 +116,7 @@ data_vars:
         dims:
           equal_list: [ w, mu, i, j ]
         dtype:
-          allowed: [ float64 ]
+          allowed: [ float32, float64 ]
         attrs:
           type: dict
           schema:
