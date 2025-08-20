@@ -65,6 +65,11 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     specified value (``tau_ref``).
     The particles radiative properties are specified by a data set
     (``dataset``).
+
+    Notes
+    -----
+    If the optical property dataset contains only one spectral data point, the
+    data is considered uniform throughout the entire spectrum.
     """
 
     bottom: pint.Quantity = documented(
@@ -164,9 +169,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             validator=attrs.validators.instance_of(xr.Dataset),
             repr=summary_repr,
         ),
-        doc="Particle radiative property data set."
+        doc="Particle radiative property data set. "
         "If an xarray dataset is passed, the dataset is used as is "
-        "(refer to the data guide for the format requirements of this dataset)."
+        "(refer to the data guide for the format requirements of this dataset). "
         "If a path is passed, the converter looks it up on the hard drive, using "
         "the file resolver. "
         "If a string is passed, it is interpreted as a particle radiative "
@@ -264,7 +269,11 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         # (n_wavelengths, n_layers)
         ds = self.dataset
         wavelengths = w.m_as(ds.w.attrs["units"])
-        interpolated = to_quantity(ds.albedo.interp(w=wavelengths))
+
+        if len(ds["w"]) == 1:
+            interpolated = to_quantity(ds.albedo.sel(w=wavelengths, method="nearest"))
+        else:
+            interpolated = to_quantity(ds.albedo.interp(w=wavelengths))
         where_present = np.reshape(self.eval_fractions(zgrid) > 0, (1, -1))
         return interpolated * where_present
 
@@ -278,8 +287,17 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         ds = self.dataset
         ds_w_units = ureg(ds.w.attrs["units"])
         wavelengths = np.atleast_1d(w.m_as(ds_w_units))
-        sigma_t_star = to_quantity(ds.sigma_t.interp(w=wavelengths))
-        sigma_t_star_ref = to_quantity(ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units)))
+
+        if len(ds["w"]) == 1:
+            sigma_t_star = to_quantity(ds.sigma_t.sel(w=wavelengths, method="nearest"))
+            sigma_t_star_ref = to_quantity(
+                ds.sigma_t.sel(w=self.w_ref.m_as(ds_w_units), method="nearest")
+            )
+        else:
+            sigma_t_star = to_quantity(ds.sigma_t.interp(w=wavelengths))
+            sigma_t_star_ref = to_quantity(
+                ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units))
+            )
 
         # Compute target optical thickness value
         tau = self.tau_ref * sigma_t_star / sigma_t_star_ref
