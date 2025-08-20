@@ -295,28 +295,28 @@ def test_particle_layer_eval_radprops(mode_mono, test_dataset_path, tau_ref):
 
 @pytest.mark.parametrize("distribution", ["uniform", "gaussian", "exponential"])
 @pytest.mark.parametrize(
-    "tau_ref",
-    np.array([0.1, 0.5, 1.0, 2.0, 5.0]) * ureg.dimensionless,
+    "tau_ref", np.array([0.1, 0.5, 1.0, 2.0, 5.0]) * ureg.dimensionless
+)
+@pytest.mark.parametrize(
+    "singlewavelength", [True, False], ids=["singlewavelength", "multiwavelength"]
 )
 def test_particle_layer_eval_sigma_t_impl(
-    mode_mono, tau_ref, distribution, test_dataset_path
+    mode_mono, tau_ref, distribution, test_dataset_path, singlewavelength
 ):
     r"""
-    Spectral dependency of extinction is accounted for.
+    Check correct handling of spectral dependency of extinction.
 
-    If :math:`\sigma_t(\lambda)` denotes the extinction coefficient at the
-    wavelength :math:`\lambda`, then the optical thickness of a uniform
-    particle layer is :math:`\tau(\lambda) = \sigma_t(\lambda) \, \Delta z`
-    where :math:`\Delta z` is the layer's thickness.
-    It follows that:
+    If σ_t(λ) denotes the extinction coefficient at the wavelength λ, then the
+    optical thickness of a uniform particle layer is τ(λ) = σ_t(λ) Δz, where Δz
+    is the layer's thickness. From that follows:
+    τ(λ) / τ(λ_ref) = σ_t(λ) / σ_t(λ_ref).
 
-    .. math::
-
-       \frac{\tau(\lambda)}{\tau(\lambda_{\mathrm{ref}})} =
-       \frac{\sigma(\lambda)}{\sigma(\lambda_{\mathrm{ref}})}
-
-    which is what we assert in this test.
+    This is what this test asserts.
     """
+    ds = fresolver.load_dataset(test_dataset_path)
+    if singlewavelength:
+        ds = ds.sel(w=[550], method="nearest")
+
     w_ref = 550 * ureg.nm
     bottom = 1.0 * ureg.km  # arbitrary
     top = 4.0 * ureg.km  # arbitrary
@@ -331,7 +331,7 @@ def test_particle_layer_eval_sigma_t_impl(
             "toa_altitude": zgrid.levels[-1],
             "zgrid": zgrid,
         },
-        dataset=test_dataset_path,
+        dataset=ds,
         bottom=bottom,
         top=top,
         distribution=distribution,
@@ -339,20 +339,26 @@ def test_particle_layer_eval_sigma_t_impl(
         tau_ref=tau_ref,
     )
 
-    # layer optical thickness @ current wavelength
+    # Compute layer optical thickness at current wavelengths based on sigma_t
+    # evaluation routine
     sigma_t = layer._eval_sigma_t_impl(wavelengths, layer.geometry.zgrid)
     assert sigma_t.units.is_compatible_with(ureg("m**-1"))
     assert sigma_t.shape == (n_wavelengths, n_layers)
-    tau = np.sum(
-        sigma_t * layer.geometry.zgrid.layer_height,
-        axis=1,
-    )  # Integrate sigma_t * dz vs space coordinate using rectangle method
+    # -- Integrate sigma_t * dz vs space coordinate using rectangle method
+    tau = np.sum(sigma_t * layer.geometry.zgrid.layer_height, axis=1)
 
-    # data set extinction @ running and reference wavelength
-    ds = fresolver.load_dataset(test_dataset_path)
-    w_units = ureg(ds.w.attrs["units"])
-    sigma_t = to_quantity(ds.sigma_t.interp(w=wavelengths.m_as(w_units)))
-    sigma_t_ref = to_quantity(ds.sigma_t.interp(w=w_ref.m_as(w_units)))
+    # Manually compute extinction at running and reference wavelengths
+    w_units = ureg(ds["w"].attrs["units"])
+    if singlewavelength:
+        sigma_t = to_quantity(
+            ds["sigma_t"].sel(w=wavelengths.m_as(w_units), method="nearest")
+        )
+        sigma_t_ref = to_quantity(
+            ds["sigma_t"].sel(w=w_ref.m_as(w_units), method="nearest")
+        )
+    else:
+        sigma_t = to_quantity(ds["sigma_t"].interp(w=wavelengths.m_as(w_units)))
+        sigma_t_ref = to_quantity(ds["sigma_t"].interp(w=w_ref.m_as(w_units)))
 
     # the spectral dependence of the optical thickness and extinction
     # coefficient match, so the below ratios must match
