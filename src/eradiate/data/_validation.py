@@ -28,7 +28,8 @@ def _load_schemas() -> None:
     yaml = YAML(typ="safe")
     for path in schema_paths:
         name = path.stem
-        schema = yaml.load(open(path))
+        with open(path, "r") as f:
+            schema = yaml.load(f)
         cerberus.schema_registry.add(name, schema)
 
 
@@ -63,7 +64,12 @@ class DatasetValidator(cerberus.Validator):
         The rule's arguments are validated against this schema:
         {"type": "string"}
         """
-        u_value = ureg.Unit(value)
+        try:
+            u_value = ureg.Unit(value)
+        except Exception:
+            self._error(field, f"Cannot convert {repr(value)} to valid units")
+            return
+
         u_constraint = ureg.Unit(constraint)
         if not units_compatible(u_constraint, u_value):
             self._error(field, f"Must be units compatible with {constraint}")
