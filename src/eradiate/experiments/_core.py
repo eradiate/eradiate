@@ -59,7 +59,7 @@ class MeasureRegistry(Sequence):
     metadata.
 
     The constructor converts dictionaries automatically and checks for duplicate
-    IDs (raises a {class}`ValueError` if it finds any).
+    IDs (raises a :class:`ValueError` if it finds any).
     """
 
     _measures: list[Measure] = attrs.field(
