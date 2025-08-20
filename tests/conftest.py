@@ -86,7 +86,7 @@ def pytest_configure(config):
         logging.getLogger("mitsuba").setLevel(logging.INFO)
         logging.getLogger("eradiate").setLevel(logging.DEBUG)
 
-    # Silent Joseki
+    # Silence Joseki
     logging.getLogger("joseki").setLevel(logging.WARNING)
 
 
