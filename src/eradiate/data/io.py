@@ -24,11 +24,25 @@ def _convert_units(value: str):
     return value
 
 
+def _get_units(ds, var, fallback_units=None):
+    if "units" in ds[var].attrs:
+        return ureg.Unit(_convert_units(ds[var].attrs["units"]))
+    elif fallback_units is not None and var in fallback_units:
+        return ureg.Unit(_convert_units(fallback_units[var]))
+    else:
+        raise ValueError(
+            "load_aerosol_libradtran(): The input dataset specifies no units "
+            f"for variable '{var}'; this can be addressed by passing them through "
+            "the 'fallback_units' parameter."
+        )
+
+
 def load_aerosol_libradtran(
     data: PathLike | xr.Dataset,
     particle_shape: Literal["spherical", "spheroidal"] | None = None,
     tolerance: dict[str, pint.Quantity | float] | None = None,
     wbounds: tuple = (None, None),
+    fallback_units: dict[str, str] | None = None,
     **kwargs,
 ) -> xr.Dataset:
     """
@@ -65,6 +79,9 @@ def load_aerosol_libradtran(
         A mapping that allows to specify a tolerance for nearest neighbour
         lookup for relevant parameters. Units are applied with the same rules as
         for the ``reff`` and ``hum`` parameters.
+
+    fallback_units : dict, optional
+        A mapping that specifies units to apply to variables that are missing them.
 
     Returns
     -------
@@ -124,8 +141,8 @@ def load_aerosol_libradtran(
         if var not in data:
             continue
 
+        units = _get_units(data, var, fallback_units)
         da = data[var]
-        units = ureg.Unit(_convert_units(data[var].units))
         default_units = KWARG_TO_DEFAULT_UNITS[kwarg]
 
         if len(da) > 1:
@@ -162,7 +179,8 @@ def load_aerosol_libradtran(
 
     # Filter wavelengths if requested
     wmin, wmax = wbounds
-    units = ureg.Unit(_convert_units(data["wavelen"].units))
+
+    units = _get_units(data, "wavelen", fallback_units)
     default_units = KWARG_TO_DEFAULT_UNITS["w"]
 
     if wmin is not None:
@@ -176,7 +194,7 @@ def load_aerosol_libradtran(
         )
         data = data.where(data["wavelen"] <= wmax).dropna("nlam", how="all")
 
-    wavelength = data["wavelen"].values * ureg(data["wavelen"].units)
+    wavelength = data["wavelen"].values * units
 
     # Phase function
     if particle_shape is None:
@@ -229,7 +247,6 @@ def load_aerosol_libradtran(
                 "nthetamax"
             )
             x = mus
-            xp = data_selected["theta"].values
             xp = np.cos(np.deg2rad(data_selected["theta"].values)).ravel()
             fp = data_selected["phase"].values
             p = np.interp(x, xp, fp)
