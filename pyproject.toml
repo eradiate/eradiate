@@ -78,7 +78,7 @@ test = [
   "pytest-robotframework",
 ]
 dev = [
-  "bump-my-version>=0.28.0,<0.29.0",
+  "bump-my-version>=1.2.0,<1.3.0",
   "uv==0.6.*", # Used to lock docs dependencies
 ]
 
