@@ -89,11 +89,18 @@ if not os.path.exists("tutorials"):
 nbsphinx_execute = "never"
 nbsphinx_prolog = """
 {% if env.doc2path(env.docname, base=None).startswith("tutorials/") %}
+
 .. button-link:: https://github.com/eradiate/eradiate-tutorials/blob/main/{{ env.doc2path(env.docname, base=False)|replace("tutorials/", "") }}
    :color: primary
    :expand:
 
    :iconify:`material-symbols:link height=1.5em` Go to notebook file
+
+{% set last_updated = env.git_last_modified_cache.get(env.docname) %}
+
+{% if last_updated %}
+*Last updated: {{ last_updated.strftime("%Y-%m-%d %H:%M") }}*
+{% endif %}
 
 ----
 {% endif %}
@@ -305,7 +312,48 @@ latex_documents = [
 # -------------------------- Custom generation steps ---------------------------
 
 
-def custom_step(app):
+def _get_git_last_modified(docname, env):
+    """Get git last modified date for a document."""
+    import subprocess
+
+    try:
+        filepath = env.doc2path(docname)
+
+        result = subprocess.run(
+            ["git", "log", "-1", "--format=%aI", filepath],
+            cwd=os.path.dirname(filepath),
+            capture_output=True,
+            text=True,
+        )
+        print(f"{result = }")
+        if result.returncode == 0 and result.stdout.strip():
+            from datetime import datetime
+
+            return datetime.fromisoformat(result.stdout.strip().replace("Z", "+00:00"))
+
+    except Exception:
+        pass
+
+    return None
+
+
+def get_git_last_modified(app, env, docnames):
+    """Get git last modified dates for all tutorials."""
+    if not hasattr(env, "git_last_modified_cache"):
+        env.git_last_modified_cache = {}
+
+    for docname in docnames:
+        docpath = env.doc2path(docname)
+        if (
+            docname.startswith("tutorials/")
+            and docpath.endswith(".ipynb")
+            and "_tutorial_template" not in docname
+        ):
+            env.git_last_modified_cache[docname] = _get_git_last_modified(docname, env)
+
+
+def generate_static_pages(app):
+    """Generate static documentation pages."""
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     from _generate import data, factories, md_cli, rst_plugins
 
@@ -319,4 +367,5 @@ def custom_step(app):
 
 
 def setup(app):
-    app.connect("builder-inited", custom_step)
+    app.connect("builder-inited", generate_static_pages)
+    app.connect("env-before-read-docs", get_git_last_modified)
