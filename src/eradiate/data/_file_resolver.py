@@ -49,7 +49,19 @@ class FileResolver:
     :data:`eradiate.fresolver <.fresolver>`:
 
     >>> from eradiate import fresolver
+
+    To add a path to the file resolver, use the :meth:`~.FileResolver.append`
+    or :meth:`~.FileResolver.prepend` methods, *e.g.*:
+
+    >>> fresolver.append("some/path/on/the/drive")
+
+    To resolve a relative path, use the :meth:`~.FileResolver.resolve` method:
+
     >>> fresolver.resolve("srf/sentinel_2a-msi-3.nc")
+
+    If the path is expected to point to an existing dataset file, the
+    :meth:`~.FileResolver.load_dataset` method can be used to load it immediately:
+
     >>> fresolver.load_dataset("srf/sentinel_2a-msi-3.nc")
     """
 
@@ -70,6 +82,10 @@ class FileResolver:
 
         avoid_duplicates : bool, optional
             If ``True``, do not append again a path that is already registered.
+
+        See Also
+        --------
+        :meth:`.prepend`
         """
         path = Path(path).resolve()
         if not path.is_dir():
@@ -98,6 +114,9 @@ class FileResolver:
         avoid_duplicates : bool, optional
             If ``True``, do not prepend again a path that is already registered.
 
+        See Also
+        --------
+        :meth:`.append`
         """
         path = Path(path).resolve()
         if not path.is_dir():
@@ -127,7 +146,8 @@ class FileResolver:
 
         Returns
         -------
-        Resolved path
+        Path
+            Resolved path
 
         Raises
         ------
@@ -153,6 +173,22 @@ class FileResolver:
     ) -> xr.Dataset:
         """
         Chain :meth:`resolve` and :func:`xarray.load_dataset`.
+
+        Parameters
+        ----------
+        path : path-like
+            Path to be resolved.
+
+        strict : bool, default: False
+            If ``True``, resolution failure will raise.
+
+        cwd : bool, default: False
+            If ``True``, check first if a file relative to the current working
+            directory exists.
+
+        Returns
+        -------
+        Dataset
         """
         fname = self.resolve(path, strict=strict, cwd=cwd)
         return xr.load_dataset(fname)
@@ -166,6 +202,10 @@ class FileResolver:
         show : bool
             If ``True``, display information to the terminal. Otherwise, return
             it as a dictionary.
+
+        Returns
+        -------
+        dict or None
         """
         if show:
             title = "File resolver"
@@ -181,7 +221,7 @@ class FileResolver:
             return {"paths": self.paths}
 
 
-#: Unique file resolver instance
+#: Unique file resolver instance (exposed as :data:`eradiate.fresolver`)
 fresolver = FileResolver(settings["path"])
 fresolver.append(asset_manager.install_dir)
 if SOURCE_DIR:
