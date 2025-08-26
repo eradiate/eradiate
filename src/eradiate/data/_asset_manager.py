@@ -648,7 +648,7 @@ class AssetManager:
                         shutil.rmtree(fname, ignore_errors=True)
 
 
-#: Unique asset manager instance
+#: Unique asset manager instance (exposed as :data:`eradiate.asset_manager`).
 asset_manager = AssetManager(
     cache_dir=Path(settings["data_path"]) / "cached",
     unpack_dir=Path(settings["data_path"]) / "unpacked",

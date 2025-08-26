@@ -43,7 +43,8 @@ as a unique global instance:
 
 * The :class:`.FileResolver` resolves relative paths by searching an ordered
   list of registered local directories. It allows to maintain shipped data as a
-  relocatable file tree.
+  relocatable file tree. It is accessed through the unique instance
+  :data:`eradiate.fresolver`.
 
 * The :class:`.AssetManager` manages shipped data. It connects to an online data
   registry that publishes a list of available resources. It can download,
@@ -163,11 +164,11 @@ manager and the file resolver:
     • Remote storage URL: https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v1/
     • Asset cache location [300 MB]: /home/user/.cache/eradiate/cached
     • Unpacked asset location [430 MB]: /home/user/.cache/eradiate/unpacked
-    • Installation location: /home/user/.cache/eradiate/installed/eradiate-v0.31.0
+    • Installation location: /home/user/.cache/eradiate/installed/eradiate-v1.0.0
 
     ── File resolver ─────────────────────────────────────────────────────────────────────────────
 
-    • /home/user/.cache/eradiate/installed/eradiate-v0.31.0
+    • /home/user/.cache/eradiate/installed/eradiate-v1.0.0
     • /home/user/Documents/src/rayference/rtm/eradiate/resources/data
 
 Accessing data
@@ -183,3 +184,6 @@ notably means that:
 * developers can rely on the file resolver to look up shipped data using
   relative paths, because the resource installation location is always added to
   the file resolver.
+
+The documentation of the :class:`.FileResolver` class contains details on how to
+use it to look up registered locations.
