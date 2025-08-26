@@ -1062,14 +1062,6 @@ KNOWN_DATABASES = {
     },
     "mycena": {
         "cls": CKDAbsorptionDatabase,
-        "path": "absorption_ckd/mycena_v2",
-    },
-    "mycena_v2": {
-        "cls": CKDAbsorptionDatabase,
-        "path": "absorption_ckd/mycena_v2",
-    },
-    "mycena_v1": {  # Deprecated
-        "cls": CKDAbsorptionDatabase,
         "path": "absorption_ckd/mycena",
     },
     "panellus": {
