@@ -11,7 +11,7 @@ from eradiate.scenes.biosphere._rami_scenarios import (
     RAMIActualCanopies,
     RAMIHeterogeneousAbstractCanopies,
     RAMIHomogeneousAbstractCanopies,
-    RAMIScenarioVersion,
+    RAMIScenarioVariant,
     generate_name,
 )
 from eradiate.units import unit_registry as ureg
@@ -898,7 +898,7 @@ class TestGenerateName:
     def test_generate_name_actual_canopies_simplified():
         assert (
             generate_name(
-                RAMIActualCanopies.JARVSELJA_PINE_STAND, RAMIScenarioVersion.SIMPLIFIED
+                RAMIActualCanopies.JARVSELJA_PINE_STAND, RAMIScenarioVariant.SIMPLIFIED
             )
             == "HET07_JPS_SUM-simplified"
         )
@@ -917,7 +917,7 @@ class TestGenerateName:
         assert (
             generate_name(
                 RAMIHeterogeneousAbstractCanopies.ANISOTROPIC_BACKGROUND_OVERSTOREY_SPARSE_BRF_MODEL_A,
-                RAMIScenarioVersion.SIMPLIFIED,
+                RAMIScenarioVariant.SIMPLIFIED,
             )
             == "HET10_DIS_S1A-simplified"
         )
@@ -936,7 +936,7 @@ class TestGenerateName:
         assert (
             generate_name(
                 RAMIHomogeneousAbstractCanopies.ANISOTROPIC_BACKGROUND_PLANOPHILE_A,
-                RAMIScenarioVersion.SIMPLIFIED,
+                RAMIScenarioVariant.SIMPLIFIED,
             )
             == "HOM23_DIS_P1A-simplified"
         )

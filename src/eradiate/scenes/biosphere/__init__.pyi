@@ -12,7 +12,7 @@ from ._rami_scenarios import (
 from ._rami_scenarios import (
     RAMIHomogeneousAbstractCanopies as RAMIHomogeneousAbstractCanopies,
 )
-from ._rami_scenarios import RAMIScenarioVersion as RAMIScenarioVersion
+from ._rami_scenarios import RAMIScenarioVariant as RAMIScenarioVariant
 from ._rami_scenarios import load_rami_scenario as load_rami_scenario
 from ._tree import AbstractTree as AbstractTree
 from ._tree import MeshTree as MeshTree
