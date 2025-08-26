@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 from urllib.parse import urljoin
 
 import pooch
@@ -14,6 +14,8 @@ _DATA_URL_ROOT = "https://eradiate.eu/data/store/unstable/scenarios/rami5/"
 
 
 class RAMIActualCanopies(Enum):
+    """Enumeration of RAMI actual canopies."""
+
     JARVSELJA_PINE_STAND = "HET07_JPS_SUM"  # Summer
     OFENPASS_PINE_STAND = "HET08_OPS_WIN"  # Winter
     JARVSELJA_BIRCH_STAND_SUMMER = "HET09_JBS_SUM"  # Summer
@@ -25,6 +27,8 @@ class RAMIActualCanopies(Enum):
 
 
 class RAMIHeterogeneousAbstractCanopies(Enum):
+    """Enumeration of RAMI heterogeneous abstract canopies."""
+
     ANISOTROPIC_BACKGROUND_OVERSTOREY_SPARSE_BRF_MODEL_A = "HET10_DIS_S1A"
     ANISOTROPIC_BACKGROUND_OVERSTOREY_SPARSE_BRF_MODEL_B = "HET11_DIS_S1B"
     ANISOTROPIC_BACKGROUND_OVERSTOREY_SPARSE_BRF_MODEL_C = "HET12_DIS_S1C"
@@ -44,6 +48,8 @@ class RAMIHeterogeneousAbstractCanopies(Enum):
 
 
 class RAMIHomogeneousAbstractCanopies(Enum):
+    """Enumeration of RAMI homogeneous abstract canopies."""
+
     ANISOTROPIC_BACKGROUND_PLANOPHILE_A = "HOM23_DIS_P1A"
     ANISOTROPIC_BACKGROUND_PLANOPHILE_B = "HOM24_DIS_P1B"
     ANISOTROPIC_BACKGROUND_PLANOPHILE_C = "HOM25_DIS_P1C"
@@ -60,25 +66,30 @@ class RAMIHomogeneousAbstractCanopies(Enum):
     ADJACENT_CANOPIES_MEDIUM_ERECTOPHILE_SPARSE_PLANOPHILE = "HOM30_DIS_ED0"
 
 
-class RAMIScenarioVersion(Enum):
+RAMICanopies = Union[
+    RAMIActualCanopies,
+    RAMIHomogeneousAbstractCanopies,
+    RAMIHeterogeneousAbstractCanopies,
+]  #: Type alias to a union of all RAMI canopy enumerations.
+
+
+class RAMIScenarioVariant(Enum):
+    """Enumeration of RAMI scenario variants (original or simplified)."""
+
     ORIGINAL = "original"
     SIMPLIFIED = "simplified"
 
 
 def generate_name(
-    scenario_name: (
-        RAMIActualCanopies
-        | RAMIHeterogeneousAbstractCanopies
-        | RAMIHomogeneousAbstractCanopies
-    ),
-    version: RAMIScenarioVersion = RAMIScenarioVersion.ORIGINAL,
+    scenario_name: RAMICanopies,
+    version: RAMIScenarioVariant = RAMIScenarioVariant.ORIGINAL,
 ) -> str:
     """
     Generate a name for a scenario based on its name and version.
 
     Parameters
     ----------
-    scenario_name : RAMIActualCanopies or RAMIHeterogeneousAbstractCanopies or RAMIHomogeneousAbstractCanopies
+    scenario_name : RAMICanopies
         The name of the scenario.
     version : ScenarioVersion
         The version of the scenario.
@@ -90,29 +101,18 @@ def generate_name(
     """
     return (
         f"{scenario_name.value}-{version.value}"
-        if version == RAMIScenarioVersion.SIMPLIFIED
+        if version == RAMIScenarioVariant.SIMPLIFIED
         else scenario_name.value
     )
 
 
-def _convert_to_enum(
-    scenario_name: (
-        str
-        | RAMIActualCanopies
-        | RAMIHeterogeneousAbstractCanopies
-        | RAMIHomogeneousAbstractCanopies
-    ),
-) -> (
-    RAMIActualCanopies
-    | RAMIHeterogeneousAbstractCanopies
-    | RAMIHomogeneousAbstractCanopies
-):
+def _convert_to_enum(scenario_name: str | RAMICanopies) -> RAMICanopies:
     """
     Convert a scenario name to an enum if it is a string.
 
     Parameters
     ----------
-    scenario_name : str or RAMIActualCanopies or RAMIHeterogeneousAbstractCanopies or RAMIHomogeneousAbstractCanopies
+    scenario_name : str or RAMICanopies
         The name of the scenario.
 
     Returns
@@ -138,13 +138,8 @@ def _convert_to_enum(
 
 
 def load_rami_scenario(
-    scenario_name: (
-        str
-        | RAMIActualCanopies
-        | RAMIHeterogeneousAbstractCanopies
-        | RAMIHomogeneousAbstractCanopies
-    ),
-    version: RAMIScenarioVersion = RAMIScenarioVersion.ORIGINAL,
+    scenario_name: str | RAMICanopies,
+    version: RAMIScenarioVariant = RAMIScenarioVariant.ORIGINAL,
     padding: int = 0,
     unpack_folder: Optional[Path] = None,
     spectral_data: Optional[dict] = None,
@@ -160,7 +155,7 @@ def load_rami_scenario(
     scenario_name : str or RAMIActualCanopies or RAMIHeterogeneousAbstractCanopies or RAMIHomogeneousAbstractCanopies
         The name of the RAMI-V scenario. If a string is provided, it will
         automatically be converted to the appropriate enum.
-    version : RAMIScenarioVersion
+    version : RAMIScenarioVariant
         The version of the scenario.
     padding : int, optional
         The padding to apply to the scenario, defaults to 0.

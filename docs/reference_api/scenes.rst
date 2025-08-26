@@ -254,7 +254,7 @@ Quick access
    RAMIActualCanopies
    RAMIHeterogeneousAbstractCanopies
    RAMIHomogeneousAbstractCanopies
-   RAMIScenarioVersion
+   RAMIScenarioVariant
 
 .. _module-eradiate.scenes.surface:
 
