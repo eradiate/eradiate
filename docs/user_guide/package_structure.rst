@@ -74,8 +74,8 @@ Numerical constants [:mod:`eradiate.constants`]
 
 Class writing facilities [``eradiate.{`` :mod:`~eradiate.attrs`, :mod:`~eradiate.converters`, :mod:`~eradiate.validators`, :mod:`~eradiate._factory` ``}``]
     These components are part of Eradiate's core class writing system. It relies
-    on the `attrs <https://www.attrs.org>`_ library, extended for `Pint <https://pint.readthedocs.io>`_
-    compatibility by the `Pinttrs <https://pinttrs.readthedocs.io>`_ library.
+    on the `attrs <https://www.attrs.org>`__ library, extended for `Pint <https://pint.readthedocs.io>`__
+    compatibility by the `Pinttrs <https://pinttrs.readthedocs.io>`__ library.
 
 Exceptions [:mod:`eradiate.exceptions`]
     Exception and warning definitions.

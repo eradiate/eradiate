@@ -4,8 +4,8 @@ Radiometric kernel interface
 ============================
 
 Eradiate's radiometric computations are performed by its radiometric kernel
-Mitsuba 3, with small, but important, modifications. Mitsuba is accessed through
-a set of convenience functions and classes presented in this document.
+Mitsuba 3, with a few additions and changes. Mitsuba is accessed through a set
+of convenience functions and classes presented in this document.
 
 Basic concepts
 --------------
@@ -45,7 +45,7 @@ Basic concepts
         .. seealso::
 
             `Editing a scene tutorial \
-            <https://mitsuba.readthedocs.io/en/latest/src/rendering/editing_a_scene.html>`_
+            <https://mitsuba.readthedocs.io/en/latest/src/rendering/editing_a_scene.html>`__
             in the Mitsuba docs.
 
     Parametric loop
@@ -127,7 +127,7 @@ Mitsuba scene parameter search
 Mitsuba's scene definition and internal representation can differ, which can
 make the task of predicting scene parameter names very challenging. This problem
 is documented in `this discussion on the Mitsuba repository \
-<https://github.com/mitsuba-renderer/mitsuba3/discussions/508>`_. Our solution
+<https://github.com/mitsuba-renderer/mitsuba3/discussions/508>`__. Our solution
 is the addition of a name search protocol to the Mitsuba object tree
 traversal function :func:`.mi_traverse`. In addition to the traversed Mitsuba
 object, :func:`.mi_traverse` can be passed a scene parameter map template.

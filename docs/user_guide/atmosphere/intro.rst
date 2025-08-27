@@ -7,7 +7,7 @@ Assumptions
 -----------
 
 The air is assumed to behave as an
-`ideal gas <https://en.wikipedia.org/wiki/Ideal_gas>`_,
+`ideal gas <https://en.wikipedia.org/wiki/Ideal_gas>`__,
 *i.e.* a collection of point particles without interactions between one another.
 It is in thermodynamic equilibrium, it is not chemically reacting and it obeys
 the ideal gas state equation:
@@ -22,7 +22,7 @@ where:
 * :math:`p` stands for the air pressure :math:`[ML^{-1}T^{-2}]`,
 * :math:`n` stands for the air number density :math:`[L^{-3}]`,
 * :math:`k` is the
-  `Bolzmann constant <https://en.wikipedia.org/wiki/Boltzmann_constant>`_
+  `Bolzmann constant <https://en.wikipedia.org/wiki/Boltzmann_constant>`__
   :math:`[ML^{2}T^{-2}\Theta^{-1}]` and
 * :math:`T` stands for the air temperature :math:`[\Theta]`.
 

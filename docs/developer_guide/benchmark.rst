@@ -5,7 +5,7 @@ Run Benchmarks
 --------------
 
 Eradiate's benchmarking suite is based on the
-`Airspeed Velocity (ASV) <https://github.com/airspeed-velocity/asv>`_
+`Airspeed Velocity (ASV) <https://github.com/airspeed-velocity/asv>`__
 package which enables tracking a project's performance over time. To run the benchmark suite:
 
 .. code:: bash
@@ -45,12 +45,12 @@ publish to an html page and viewed by running:
     asv preview
 
 ASV commands are also available, for custom use of ASV, please refer
-to `the package documentation <https://asv.readthedocs.io/en/v0.6.1/>`_.
+to `the package documentation <https://asv.readthedocs.io/en/v0.6.1/>`__.
 
 Write Benchmarks
 ----------------
 
 Benchmarks are in the ``benchmarks`` folder. They follow the
-`ASV syntax <https://asv.readthedocs.io/en/v0.6.1/writing_benchmarks.html>`_.
+`ASV syntax <https://asv.readthedocs.io/en/v0.6.1/writing_benchmarks.html>`__.
 The test cases that are benchmarks are often also used for regression test.
 For this reason, they are stored in ``src/eradiate/test_tools/test_cases/``.

@@ -238,7 +238,7 @@ RAMI benchmark scenarios
 ------------------------
 
 We provide a specific loader for scenes derived from the
-`RAMI-V scene list <https://rami-benchmark.jrc.ec.europa.eu/_www/phase_descr.php?strPhase=RAMI5>`_.
+`RAMI-V scene list <https://rami-benchmark.jrc.ec.europa.eu/_www/phase_descr.php?strPhase=RAMI5>`__.
 The list of pre-configured scenes is available in the
 :doc:`data guide </data/rami_scenes>`. To use the archives provided on the
 Eradiate website, unpack them to a location of your choice (which will be

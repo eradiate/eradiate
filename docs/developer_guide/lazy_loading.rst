@@ -10,22 +10,22 @@ of writing (AMD Ryzen 9 5900X) to take more than a second.
 
 Code optimization may not even completely solve the issue: unavoidable
 dependencies may have significant overhead. This used to apply, for instance,
-`to xarray <https://github.com/pydata/xarray/issues/6726>`_, ubiquitous in our
+`to xarray <https://github.com/pydata/xarray/issues/6726>`__, ubiquitous in our
 codebase.
 
 The solution the community seems to settle with is the lazy import of modules:
 module import-time code is executed upon module access, rather than upon import.
-The `Scientific Python <https://scientific-python.org/>`_ community came up with
-an `Ecosystem Coordination proposal <https://scientific-python.org/specs/spec-0001/>`_
+The `Scientific Python <https://scientific-python.org/>`__ community came up with
+an `Ecosystem Coordination proposal <https://scientific-python.org/specs/spec-0001/>`__
 aiming to address this very issue. We use a
-`publicly available implementation <https://github.com/scientific-python/lazy_loader>`_
+`publicly available implementation <https://github.com/scientific-python/lazy_loader>`__
 to both implement component lazy loading and populate our public API.
 
 Using ``lazy_loader``
 ---------------------
 
 Usage is documented on the
-`GitHub repository <https://github.com/scientific-python/lazy_loader/>`_.
+`GitHub repository <https://github.com/scientific-python/lazy_loader/>`__.
 Be sure to read the **Type checkers** section carefully as it describes how we
 use stub files.
 

@@ -4,13 +4,13 @@ RAMI benchmark scenes
 Eradiate ships a collection of canopy scenes built from the
 `RAMI-V scene list <https://rami-benchmark.jrc.ec.europa.eu/_www/phase_descr.php?strPhase=RAMI5>`_
 These pre-configured scenes are available for download on the
-`Eradiate website <https://eradiate.eu/data/store/unstable/scenarios/rami5/>`_.\ [#sn2]_
+`Eradiate website <https://eradiate.eu/data/store/unstable/scenarios/rami5/>`__.\ [#sn2]_
 Usage is documented in the
 :ref:`scene loader guide <sec-user_guide-canopy_scene_loader-rami_scenes>`. Note
 that the :func:`.load_rami_scenario` function can download scenario data
 automatically.
 
-.. [#sn2] We thank the `DART <https://dart.omp.eu/>`_ team for letting us use
+.. [#sn2] We thank the `DART <https://dart.omp.eu/>`__ team for letting us use
    their 3D model files to derive our scene models.
 
 .. note::

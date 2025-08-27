@@ -12,12 +12,12 @@ variants.
 .. warning::
 
    Windows support is currently experimental. Please report issues on our
-   `issue tracker <https://github.com/eradiate/eradiate/issues>`_.
+   `issue tracker <https://github.com/eradiate/eradiate/issues>`__.
 
 Prerequisites
 -------------
 
-The development installation requires that the `Pixi <https://pixi.sh/>`_ package
+The development installation requires that the `Pixi <https://pixi.sh/>`__ package
 manager is installed on the host machine. This tool replaces Conda and a lot of
 in-house tools that were previously maintained by the development team.
 
@@ -108,12 +108,12 @@ Next, make sure that your machine meets the requirements listed below:
       package manager's repositories for the respective packages.
 
       If your CMake copy is not recent enough, there are
-      `many ways <https://cliutils.gitlab.io/modern-cmake/chapters/intro/installing.html>`_
+      `many ways <https://cliutils.gitlab.io/modern-cmake/chapters/intro/installing.html>`__
       to install an updated version, notably through pipx and Conda. Pick your
       favourite!
 
       .. note:: We currently recommend compiling the C++ code with Clang based on
-         `upstream advice from the Mitsuba development team <https://mitsuba.readthedocs.io/en/latest/src/developer_guide/compiling.html#linux>`_.
+         `upstream advice from the Mitsuba development team <https://mitsuba.readthedocs.io/en/latest/src/developer_guide/compiling.html#linux>`__.
          We also recommend using Clang 11 — not another version — because we also
          encountered issues building with other versions. We hope to improve
          compiler support in the future.
@@ -122,9 +122,9 @@ Next, make sure that your machine meets the requirements listed below:
       :sync: macos
 
       On macOS, you will need to install XCode, CMake, and
-      `Ninja <https://ninja-build.org/>`_. XCode can be installed from the App
+      `Ninja <https://ninja-build.org/>`__. XCode can be installed from the App
       Store. Make sure that your copy of the XCode is up-to-date. CMake and
-      Ninja can be installed with the `Homebrew package manager <https://brew.sh/>`_:
+      Ninja can be installed with the `Homebrew package manager <https://brew.sh/>`__:
 
       .. code:: shell
 
@@ -141,8 +141,8 @@ Next, make sure that your machine meets the requirements listed below:
       :sync: windows
 
       On Windows, you will need to install the MSVC compiler, *e.g* through
-      `Visual Studio Community <https://visualstudio.microsoft.com/>`_. In
-      addition, you will need to install `CMake <https://cmake.org/>`_.
+      `Visual Studio Community <https://visualstudio.microsoft.com/>`__. In
+      addition, you will need to install `CMake <https://cmake.org/>`__.
       The build procedure is tested in a Powershell developer session.
 
 .. _sec-developer_guide-dev_install-cloning:
@@ -152,12 +152,12 @@ Cloning the repository
 
 .. note::
 
-   Eradiate relies on the `Git source code management tool <https://git-scm.com/>`_.
+   Eradiate relies on the `Git source code management tool <https://git-scm.com/>`__.
    It also depends on multiple external dependencies, some of which (*e.g.* its
    radiometric kernel based on
-   `Mitsuba 3 <https://github.com/mitsuba-renderer/mitsuba3>`_) are directly
+   `Mitsuba 3 <https://github.com/mitsuba-renderer/mitsuba3>`__) are directly
    referred to using
-   `Git submodules <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`_.
+   `Git submodules <https://git-scm.com/book/en/v2/Git-Tools-Submodules>`__.
 
 To get the code, clone the repository including its submodules with the
 following command:
@@ -186,9 +186,9 @@ your Internet connection.
 .. note::
 
    If GitHub requests credentials to access submodules through HTTPS, we highly
-   recommend to `generate a personal access token <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token>`_
+   recommend to `generate a personal access token <https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token>`__
    with **repo** permissions and to use it instead of your password. You might
-   also have to make sure that `Git will remember your token <https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage>`_.
+   also have to make sure that `Git will remember your token <https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage>`__.
 
 .. _sec-developer_guide-dev_install-setup_conda:
 
@@ -217,7 +217,7 @@ useful in specific cases)
 
    eval "$(pixi shell-hook -e dev)"
 
-The `Pixi documentation <https://pixi.sh/latest/features/environment/#activation>`_
+The `Pixi documentation <https://pixi.sh/latest/features/environment/#activation>`__
 provides more detail about activation modes and their respective trade-offs. The
 reason why we recommend this is that compiling the kernel often requires setting
 environment variables, which is not always convenient outside of a shell. Note
@@ -238,7 +238,7 @@ setup.
 
       pixi shell --manifest-path /some/directory/pyproject.toml -e dev
 
-   See the `Pixi CLI documentation <https://pixi.sh/latest/reference/cli/#shell>`_
+   See the `Pixi CLI documentation <https://pixi.sh/latest/reference/cli/#shell>`__
    for details.
 
 .. _sec-developer_guide-dev_install-compiling:
@@ -263,7 +263,7 @@ We recommend using the using the dedicated Pixi task to build the kernel:
 
    This most probably means that your CMake version is too old (see
    `Prerequisites`_). Up-to-date versions of CMake can be installed from many
-   different sources: `pick you favourite <https://cliutils.gitlab.io/modern-cmake/chapters/intro/installing.html>`_.
+   different sources: `pick you favourite <https://cliutils.gitlab.io/modern-cmake/chapters/intro/installing.html>`__.
 
 **Linux and macOS**: Inspect CMake's output to check if Clang is used as the C++
 compiler. Search for lines starting with

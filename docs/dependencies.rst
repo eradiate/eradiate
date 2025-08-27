@@ -10,9 +10,9 @@ Required dependencies
 
 Core libraries
 
-* `Mitsuba 3 <https://mitsuba.readthedocs.io/>`_ (radiometric engine; custom build,
+* `Mitsuba 3 <https://mitsuba.readthedocs.io/>`__ (radiometric engine; custom build,
   packaged as ``eradiate-mitsuba`` on PyPI)
-* `Joseki <https://github.com/rayference/joseki>`_ (atmospheric profile
+* `Joseki <https://github.com/rayference/joseki>`__ (atmospheric profile
   management)
 
 Numerical computing infrastructure
@@ -54,13 +54,13 @@ Optional dependencies
 Recommended
 ^^^^^^^^^^^
 
-* `JupyterLab <https://jupyter.org/>`_,
-  `ipython <https://ipython.org/>`_,
-  `ipywidgets <https://ipywidgets.readthedocs.io/>`_: Highly recommended for
+* `JupyterLab <https://jupyter.org/>`__,
+  `ipython <https://ipython.org/>`__,
+  `ipywidgets <https://ipywidgets.readthedocs.io/>`__: Highly recommended for
   interactive usage.
-* `Matplotlib <https://matplotlib.org/>`_: Highly recommended, default plotting
+* `Matplotlib <https://matplotlib.org/>`__: Highly recommended, default plotting
   library for xarray.
-* `Seaborn <https://seaborn.pydata.org/>`_: Used to define the Eradiate plotting
+* `Seaborn <https://seaborn.pydata.org/>`__: Used to define the Eradiate plotting
   style.
 
 Testing
@@ -79,7 +79,7 @@ Documentation
 ^^^^^^^^^^^^^
 
 * `Sphinx <https://www.sphinx-doc.org/>`_
-* `autodocsumm <https://autodocsumm.readthedocs.io/>`_ (vendored, see :ghpr:`410` for details)
+* `autodocsumm <https://autodocsumm.readthedocs.io/>`__ (vendored, see :ghpr:`410` for details)
 * `myst-parser <https://myst-parser.readthedocs.io/>`_
 * `nbsphinx <https://nbsphinx.readthedocs.io/>`_
 * `sphinx-book-theme <https://sphinx-book-theme.readthedocs.io/>`_
@@ -91,9 +91,9 @@ Documentation
 Others
 ^^^^^^
 
-* `AABBTree <https://aabbtree.readthedocs.io/>`_: Used for collision detection
+* `AABBTree <https://aabbtree.readthedocs.io/>`__: Used for collision detection
   in the lead cloud generator.
-* `astropy <https://docs.astropy.org/>`_,
-  `python-dateutil <https://dateutil.readthedocs.io/>`_:
+* `astropy <https://docs.astropy.org/>`__,
+  `python-dateutil <https://dateutil.readthedocs.io/>`__:
   Used for Earth-Sun distance calculation and date parsing in the Solar
   irradiance spectrum init code.

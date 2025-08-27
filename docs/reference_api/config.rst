@@ -36,7 +36,7 @@ Core members
    :ref:`default configuration file <sec-user_guide-config-default>`
    and can be overridden by the user from an ``eradiate.toml`` file, placed in
    the current working directory or higher. Each setting can also be overridden
-   using `environment variables <https://www.dynaconf.com/envvars/>`_ with the
+   using `environment variables <https://www.dynaconf.com/envvars/>`__ with the
    ``ERADIATE_`` prefix.
 
    .. admonition:: Example

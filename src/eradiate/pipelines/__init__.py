@@ -28,7 +28,7 @@ See Also
 
 * :class:`hamilton.driver.Driver`
 * `Hamilton's documentation on tags \
-  <https://hamilton.dagworks.io/en/latest/reference/decorators/tag/#tag>`_
+  <https://hamilton.dagworks.io/en/latest/reference/decorators/tag/#tag>`__
 """
 
 import lazy_loader

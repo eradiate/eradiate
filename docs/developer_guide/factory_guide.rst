@@ -12,7 +12,7 @@ the :class:`.Factory` class. They serve two purposes:
   method based on (possibly nested) dictionaries.
 
 .. warning:: It is strongly advised to read the documentation of the
-   `Dessine-moi library <https://dessinemoi.readthedocs.io/>`_ for an overview
+   `Dessine-moi library <https://dessinemoi.readthedocs.io/>`__ for an overview
    of Eradiate's factories.
 
 Overview and usage

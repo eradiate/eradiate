@@ -7,8 +7,7 @@ Contributing to Eradiate
 
 .. important::
    Eradiate is written and documented in English using
-   `Oxford spelling <https://en.wikipedia.org/wiki/Oxford_spelling>`_.
-
+   `Oxford spelling <https://en.wikipedia.org/wiki/Oxford_spelling>`__.
 
 .. _sec-contributing-documentation:
 
@@ -38,7 +37,7 @@ Editing the data documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Data documentation is, for a large part, automatically generated using a
-`Jinja <https://jinja.palletsprojects.com>`_ template-based system. The code to
+`Jinja <https://jinja.palletsprojects.com>`__ template-based system. The code to
 generate the data docs pages is located in the
 :code:`$ERADIATE_SOURCE_DIR/docs/generate` directory, and called upon
 ``sphinx-build`` invocation as defined in ``conf.py`` (see the :code:`custom_step()`
@@ -59,7 +58,7 @@ Editing the API documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Our API is documented using docstrings. We follow the
-`Numpy docstring style <https://numpydoc.readthedocs.io/en/latest/format.html>`_,
+`Numpy docstring style <https://numpydoc.readthedocs.io/en/latest/format.html>`__,
 with a few changes and updates documented hereafter.
 
 Conventions
@@ -212,7 +211,7 @@ Editing tutorials
 Eradiate comes with tutorials shipped as Jupyter notebooks, saved to the
 "`tutorials <https://github.com/eradiate/eradiate-tutorials>`_\ " submodule.
 They are integrated in this documentation using the
-`nbsphinx <https://nbsphinx.readthedocs.io/>`_ extension.
+`nbsphinx <https://nbsphinx.readthedocs.io/>`__ extension.
 
 The recommended way to edit tutorials is as follows:
 
@@ -259,12 +258,12 @@ Thumbnail galleries are not trivial difficult to fine-tune. The following pages
 are useful when working on them:
 
 * Galleries are created in Markdown/reST files following
-  `these instructions <https://nbsphinx.readthedocs.io/en/latest/a-normal-rst-file.html#thumbnail-galleries>`_.
+  `these instructions <https://nbsphinx.readthedocs.io/en/latest/a-normal-rst-file.html#thumbnail-galleries>`__.
 * Thumbnail selection is done following the
   recommendations of the nbsphinx documentation:
-  `cell tag based <https://nbsphinx.readthedocs.io/en/latest/gallery/cell-tag.html>`_,
-  `cell metadata based <https://nbsphinx.readthedocs.io/en/latest/gallery/cell-metadata.html>`_,
-  `Sphinx config based <https://nbsphinx.readthedocs.io/en/latest/gallery/thumbnail-from-conf-py.html>`_.
+  `cell tag based <https://nbsphinx.readthedocs.io/en/latest/gallery/cell-tag.html>`__,
+  `cell metadata based <https://nbsphinx.readthedocs.io/en/latest/gallery/cell-metadata.html>`__,
+  `Sphinx config based <https://nbsphinx.readthedocs.io/en/latest/gallery/thumbnail-from-conf-py.html>`__.
 
 
 .. _sec-contributing-codebase:
@@ -276,17 +275,17 @@ Style
 ^^^^^
 
 * The Eradiate codebase is written following Python's
-  `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_. Its code formatter and
-  linter of choice is `ruff <https://github.com/charliermarsh/ruff>`_, for which
+  `PEP8 <https://www.python.org/dev/peps/pep-0008/>`__. Its code formatter and
+  linter of choice is `ruff <https://github.com/charliermarsh/ruff>`__, for which
   a configuration is provided as part of the ``pyproject.toml`` file.
-  `Editor integration instructions <https://beta.ruff.rs/docs/editor-integrations/>`_
+  `Editor integration instructions <https://beta.ruff.rs/docs/editor-integrations/>`__
   are available.
   Both the linter and formatter are part of our
-  `pre-commit <https://pre-commit.com/>`_ hook set, which we strongly recommend
+  `pre-commit <https://pre-commit.com/>`__ hook set, which we strongly recommend
   to install.
 
 * We write our docstrings following the
-  `Numpydoc format <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
+  `Numpydoc format <https://numpydoc.readthedocs.io/en/latest/format.html>`__.
   We use the ``"""``-on-separate-lines style:
 
   .. code:: python
@@ -311,13 +310,13 @@ Code writing
      prior to writing additional classes. In particular, it is important to
      understand the ``attrs`` initialization sequence, as well as how callables
      can be used to set defaults and to create converters and validators.
-   * Eradiate's unit handling is based on `Pint <https://pint.readthedocs.io>`_,
+   * Eradiate's unit handling is based on `Pint <https://pint.readthedocs.io>`__,
      whose documentation is also a very helpful read.
    * Eradiate uses custom Pint-based extensions to ``attrs`` now developed as the
-     standalone project `Pinttrs <https://pinttrs.readthedocs.io>`_. Reading the
+     standalone project `Pinttrs <https://pinttrs.readthedocs.io>`__. Reading the
      Pinttrs docs is highly recommended.
    * Eradiate uses factories based on the
-     `Dessine-moi <https://dessinemoi.readthedocs.io>`_ library. Reading the
+     `Dessine-moi <https://dessinemoi.readthedocs.io>`__ library. Reading the
      Dessine-moi docs is recommended.
 
 When writing code for Eradiate, the following conventions and practices should
@@ -373,7 +372,7 @@ Testing
 ^^^^^^^
 
 Eradiate is shipped with a series of tests written with
-`pytest <https://docs.pytest.org/en/latest/>`_.
+`pytest <https://docs.pytest.org/en/latest/>`__.
 
 Tests for Eradiate are grouped by complexity. First unit tests are executed,
 followed by system tests and finally regression tests.
@@ -444,7 +443,7 @@ filled in as needed. Note that we strongly suggest using string literals
     """
 
 The test specification can hold any valid restructured text. A quick rundown on that can be found
-`here <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ .
+`here <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`__.
 
 Regression tests
 ^^^^^^^^^^^^^^^^
@@ -539,7 +538,7 @@ Test report
 
 Optionally, test results may be visualized using a report generated with a tool
 located on a
-`dedicated repository <https://github.com/eradiate/eradiate-test-report>`_.
+`dedicated repository <https://github.com/eradiate/eradiate-test-report>`__.
 
 The report summarises test outcomes and generates detailed entries for tests
 specified with the docstring format specified above.
@@ -579,9 +578,9 @@ Profiling
 ---------
 
 Tests are a very good opportunity to profile Eradiate. We recommend running
-tests with `pytest-profiling <https://pypi.org/project/pytest-profiling/>`_ (see
+tests with `pytest-profiling <https://pypi.org/project/pytest-profiling/>`__ (see
 documentation for usage instructions, it's basically about installing the
 package then running pytest with the ``--profile`` option).
 
 Profiling stats can then be visualized with
-`SnakeViz <https://jiffyclub.github.io/snakeviz/>`_.
+`SnakeViz <https://jiffyclub.github.io/snakeviz/>`__.

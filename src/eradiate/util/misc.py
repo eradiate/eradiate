@@ -116,7 +116,7 @@ class Singleton(type):
 
     References
     -------
-    .. [1] `Creating a singleton in Python on Stack Overflow <https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python>`_.
+    .. [1] `Creating a singleton in Python on Stack Overflow <https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python>`__.
 
     Examples
     --------
@@ -305,11 +305,11 @@ def natsort_alphanum_key(x):
 
     See Also
     --------
-    `Sorting HOWTO <https://docs.python.org/3/howto/sorting.html>`_
+    `Sorting HOWTO <https://docs.python.org/3/howto/sorting.html>`__
 
     References
     ----------
-    .. [2] `Natural sorting on Stack Overflow <https://stackoverflow.com/a/11150413/3645374>`_.
+    .. [2] `Natural sorting on Stack Overflow <https://stackoverflow.com/a/11150413/3645374>`__.
     """
     return tuple(
         map(

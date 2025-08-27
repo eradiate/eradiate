@@ -4,9 +4,9 @@ Unit handling for users
 =======================
 
 Eradiate tries hard to handle physical quantities correctly and uses the
-`Pint unit handling library <https://pint.readthedocs.io>`_ to do so.
+`Pint unit handling library <https://pint.readthedocs.io>`__ to do so.
 A general reason for that is that poor unit handling can lead to
-`actual fiascos <https://pint.readthedocs.io/en/stable/#one-last-thing>`_.
+`actual fiascos <https://pint.readthedocs.io/en/stable/#one-last-thing>`__.
 Another reason, more specific to Eradiate, is that this enables for dynamic
 quantity conversion, making it possible:
 
@@ -15,14 +15,14 @@ quantity conversion, making it possible:
   dimensions dynamically).
 
 .. important:: Under the hood, most unit handling facilities are implemented as
-   part of the standalone `Pinttrs <https://pinttrs.readthedocs.io/>`_ library.
+   part of the standalone `Pinttrs <https://pinttrs.readthedocs.io/>`__ library.
 
 This guide presents how unit handling is documented in the API reference and how
 to handle units in Eradiate as a user. For a technical view on unit handling,
 see the Pinttrs documentation and source code.
 
 .. note::  It is strongly advised to—at least—get familiar with
-   `Pint <https://pint.readthedocs.io/>`_ to fully take advantage of Eradiate's
+   `Pint <https://pint.readthedocs.io/>`__ to fully take advantage of Eradiate's
    unit support.
 
 
@@ -30,7 +30,7 @@ Units in Eradiate
 -----------------
 
 Eradiate usually works with the
-`International System of units <https://en.wikipedia.org/wiki/International_System_of_Units>`_.
+`International System of units <https://en.wikipedia.org/wiki/International_System_of_Units>`__.
 However, it also understands that users might use a different unit system.
 Finally, Eradiate knows that it can be better to specify kernel scenes using yet
 another unit system.
@@ -87,7 +87,7 @@ a user can override them if it seems more convenient in their context.
 
 Fields specified as "unit-enabled" are stored as Pint :class:`~pint.Quantity`
 objects and can be passed as such. Eradiate uses Pint's
-`application unit registry <https://pint.readthedocs.io/en/stable/getting/pint-in-your-projects.html>`_
+`application unit registry <https://pint.readthedocs.io/en/stable/getting/pint-in-your-projects.html>`__
 and provides an internal variable pointing to it (:data:`eradiate.unit_registry`,
 abbreviated as ``ureg``), which must be used to define units.
 

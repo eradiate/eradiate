@@ -32,7 +32,7 @@ class SceneElement(ABC):
     Warnings
     --------
     All subclasses *must* have a hash, thus ``eq`` must be ``False`` (see
-    `attrs docs on hashing <https://www.attrs.org/en/stable/hashing.html>`_
+    `attrs docs on hashing <https://www.attrs.org/en/stable/hashing.html>`__
     for a complete explanation). This is required in order to make it possible
     to use caching decorators on instance methods.
 

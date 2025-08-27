@@ -37,7 +37,7 @@ Solar spectral irradiance data is tabulated against both wavelength and time.
 
 Dataset metadata comply with the
 `NetCDF Climate and Forecast (CF) Metadata Conventions
-<https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html>`_
+<https://cfconventions.org/Data/cf-conventions/cf-conventions-1.10/cf-conventions.html>`__
 and helps with data traceability by providing the following attributes:
 
 * ``history``: the history of transformations that the original data has undergone
@@ -248,7 +248,7 @@ irradiance spectra from 1978-11-7 to 2014-12-31.
 
 See also
 `the Cal/Val Portal of the Committee on Earth Observation Satellites
-<http://calvalportal.ceos.org/solar-irradiance-spectrum>`_.
+<http://calvalportal.ceos.org/solar-irradiance-spectrum>`__.
 
 ``solid_2017-mean``
 ^^^^^^^^^^^^^^^^^^^

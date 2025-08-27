@@ -9,8 +9,8 @@ handling and procurement in Eradiate follows the following principles:
 
 * Eradiate reads standard data formats that are understood by the main data
   processing libraries of the scientific Python ecosystem. Most data are
-  supplied in the `NetCDF format <https://www.unidata.ucar.edu/software/netcdf/>`_
-  and loaded as `xarray <https://xarray.dev/>`_ datasets. Xarray provides a
+  supplied in the `NetCDF format <https://www.unidata.ucar.edu/software/netcdf/>`__
+  and loaded as `xarray <https://xarray.dev/>`__ datasets. Xarray provides a
   comprehensive, robust and convenient interface to read, write, manipulate and
   visualize NetCDF data.
 

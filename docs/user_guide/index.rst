@@ -45,7 +45,7 @@ Perform simulations on three-dimensional scenes.
 .. seealso::
 
    For a full list of features, head to
-   `our website <https://www.eradiate.eu/>`_.
+   `our website <https://www.eradiate.eu/>`__.
 
 Guides
 ------
