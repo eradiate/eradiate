@@ -64,3 +64,4 @@ Guides
    conventions
    unit_guide_user
    radiometric_kernel_interface
+   expert_interface.ipynb
