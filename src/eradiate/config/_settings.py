@@ -104,7 +104,7 @@ def _validate_source_dir(value: Path | None) -> bool:
     return True
 
 
-#: Main settings data structure. See the `Dynaconf documentation <https://www.dynaconf.com/>`_
+#: Main settings data structure. See the `Dynaconf documentation <https://www.dynaconf.com/>`__
 #: for details.
 settings = Dynaconf(
     settings_files=["eradiate.yml", "eradiate.yaml", "eradiate.toml"],

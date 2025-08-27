@@ -64,7 +64,7 @@ class AtmosphereRadProfile(RadProfile):
         "look it up and load it. If a dictionary is passed, it will be passed "
         "as keyword argument to ``joseki.make()``. The default is "
         '``{"identifier": "afgl_1986-us_standard",  "z": np.linspace(0, 120, 121) * ureg.km), "additional_molecules": False}``. '
-        "See `the Joseki docs <https://rayference.github.io/joseki/latest/reference/#src.joseki.core.make>`_ "
+        "See the `Joseki documentation <https://joseki.readthedocs.io/en/latest/reference/joseki/index.html#joseki.make>`__ "
         "for details.",
         type="Dataset",
         init_type="Dataset or path-like or dict",

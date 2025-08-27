@@ -1,7 +1,7 @@
 """
 Components related with pseudo-random number generation.
 
-Inspired by `SeedBank <https://github.com/lenskit/seedbank>`_.
+Inspired by `SeedBank <https://github.com/lenskit/seedbank>`__.
 """
 
 from __future__ import annotations

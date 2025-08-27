@@ -6,7 +6,7 @@ Installation
 .. warning::
 
    Windows support is currently experimental. Please report issues on our
-   `issue tracker <https://github.com/eradiate/eradiate/issues>`_.
+   `issue tracker <https://github.com/eradiate/eradiate/issues>`__.
 
 Eradiate is delivered through PyPI and can be installed using the ``pip``
 command:

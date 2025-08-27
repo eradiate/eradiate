@@ -109,7 +109,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         "look it up and load it. If a dictionary is passed, it will be passed "
         "as keyword argument to ``joseki.make()``. The default is "
         '``joseki.make(identifier="afgl_1986-us_standard",  z=np.linspace(0.0, 120.0, 121) * ureg.km)``. '
-        "See `the Joseki docs <https://rayference.github.io/joseki/latest/reference/#src.joseki.core.make>`_ "
+        "See the `Joseki documentation <https://joseki.readthedocs.io/en/latest/reference/joseki/index.html#joseki.make>`__ "
         "for details.",
         type="Dataset or None",
         init_type="Dataset or path-like or dict or None",

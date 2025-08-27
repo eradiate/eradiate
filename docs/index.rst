@@ -8,18 +8,18 @@ Eradiate Documentation
 :doc:`/release_notes/index`
 
 **Useful links**:
-`Home <https://www.eradiate.eu>`_ |
-`Source repository <https://github.com/eradiate/eradiate>`_ |
-`Issues & ideas <https://github.com/eradiate/eradiate/issues>`_ |
-`Q&A support <https://github.com/eradiate/eradiate/discussions>`_
+`Home <https://www.eradiate.eu>`__ |
+`Source repository <https://github.com/eradiate/eradiate>`__ |
+`Issues & ideas <https://github.com/eradiate/eradiate/issues>`__ |
+`Q&A support <https://github.com/eradiate/eradiate/discussions>`__
 
 **Docs versions**:
-`stable <https://eradiate.readthedocs.io/en/stable/>`_ |
-`latest <https://eradiate.readthedocs.io/en/latest/>`_
+`stable <https://eradiate.readthedocs.io/en/stable/>`__ |
+`latest <https://eradiate.readthedocs.io/en/latest/>`__
 
 Eradiate is a modern radiative transfer simulation software package written in
 Python and C++17. It relies on a radiometric kernel based on the
-`Mitsuba 3 <https://github.com/mitsuba-renderer/mitsuba3>`_ rendering system
+`Mitsuba 3 <https://github.com/mitsuba-renderer/mitsuba3>`__ rendering system
 :cite:`Jakob2022DrJit,Jakob2022Mitsuba3`.
 
 .. grid:: 1 2 auto auto

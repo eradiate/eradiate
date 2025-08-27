@@ -14,7 +14,7 @@ def install(*extensions):
         parameter is unset):
 
         * :monobold:`kernel_logging`: Route kernel logs through standard logging
-          facilities. Progress display uses `tqdm <https://tqdm.github.io/>`_.
+          facilities. Progress display uses `tqdm <https://tqdm.github.io/>`__.
         * :monobold:`rich_pretty`: Install :func:`rich.pretty <rich.pretty.install>`
           with default configuration to the current Python REPL.
         * :monobold:`rich_traceback`:
