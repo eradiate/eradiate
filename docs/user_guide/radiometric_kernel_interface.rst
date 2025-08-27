@@ -7,8 +7,8 @@ Eradiate's radiometric computations are performed by its radiometric kernel
 Mitsuba 3, with a few additions and changes. Mitsuba is accessed through a set
 of convenience functions and classes presented in this document.
 
-Basic concepts
---------------
+Core concepts
+-------------
 
 .. glossary::
 
@@ -62,7 +62,9 @@ Basic concepts
         :term:`experiment` being processed. The context can carry any kind of
         relevant information: the current spectral coordinate, the Mitsuba ID
         of a :class:`mitsuba.Medium` object attached to a sensor, etc. The
-        kernel context is defined by a :class:`.KernelContext` instance.
+        kernel context is defined by a :class:`.KernelContext` instance, and its
+        main purpose is to propagate coordinated scene parameter updates in the
+        Mitsuba scene.
 
     Kernel dictionary template
         :term:`Kernel dictionaries <kernel dictionary>` can be created from
@@ -83,26 +85,40 @@ Basic concepts
         :class:`.KernelSceneParameterMap`, a dict-like container whose entries
         are :class:`.SceneParameter` instances.
 
+    Scene parameter flags
+        Scene parameters can be attached flags defined by the
+        :class:`.KernelSceneParameterFlags` enumeration. These can be used to
+        indicate the type of changes to the scene triggered by an update of the
+        parameter they are attached to. For instance,
+        :class:`KernelSceneParameterFlags.GEOMETRIC <.KernelSceneParameterFlags>`
+        is meant to mention that updating the associated parameter will trigger
+        an intersection acceleration structure update, resulting in increased
+        computation. Flags can be used when rendering scene parameter map
+        templates to filter out some parameters.
+
 How Eradiate calls Mitsuba
 --------------------------
 
-Eradiate's core processing logic is defined in the :meth:`.Experiment.process`
-method, which performs the following steps:
+Eradiate's core processing logic is split between the :meth:`.Experiment.init`
+and :meth:`.Experiment.process` methods: [#init]_
 
-1. Translate the scene defined by the configuration of the current
-   :class:`.Experiment` into a :class:`.KernelDict` and an
-   :class:`.KernelSceneParameterMap`.
-2. Render the :term:`kernel dictionary template` into a
-   :term:`kernel dictionary` using an arbitrary initialization
-   :term:`kernel context`.
-3. Load the :term:`kernel scene`.
-4. Perform a parametric loop. For each :term:`kernel context` of the experiment:
+Initialization : Create a kernel scene object based on the experiment configuration.
+    1. Translate the scene defined by the configuration of the current
+       :class:`.Experiment` into a :class:`.KernelDict` and an
+       :class:`.KernelSceneParameterMap`.
+    2. Render the :term:`kernel dictionary template` into a
+       :term:`kernel dictionary` using an arbitrary initialization
+       :term:`kernel context`.
+    3. Load the :term:`kernel scene`.
 
-   1. Render the :class:`.KernelSceneParameterMap` template into a
-      :term:`kernel scene parameter map`.
-   2. Update the kernel scene with the computed scene parameter map.
-   3. Launch a :term:`radiometric computation` with the updated scene.
-   4. Collect the raw results and store them in a simple data structure.
+Processing : Perform a sequence of radiometric computations as part of a parametric loop.
+    For each :term:`kernel context` of the experiment:
+
+    1. Render the :class:`.KernelSceneParameterMap` template into a
+       :term:`kernel scene parameter map`.
+    2. Update the kernel scene with the computed scene parameter map.
+    3. Launch a :term:`radiometric computation` with the updated scene.
+    4. Collect the raw results and store them in a simple data structure.
 
 Low-level kernel interface
 --------------------------
@@ -142,3 +158,8 @@ objects usually require a name search because they can be referenced by an
 arbitrary number of other objects, with no certainty on which of the referencing
 objects will be visited first during traversal and therefore will define the
 parameter names.
+
+--------------------------------------------------------------------------------
+
+.. [#init] In practice, :meth:`.Experiment.process` will automatically figure
+   out if a call to :meth:`.Experiment.init` is necessary.
