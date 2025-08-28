@@ -77,6 +77,7 @@ Alphabetical list of modules
    spectral
    srf_tools
    test_tools
+   tutorials
    units
    util
    validators
