@@ -20,6 +20,7 @@ class VoxelFluxMeasure(Measure):
     - D: flux direction relative to axis (0 for negative, 1 for positive)
     - F: axis of the faces (0, 1, 2 for x, y, z)
     - X, Y, Z: indices of the face
+    - C: channels
     """
 
     # --------------------------------------------------------------------------
@@ -96,6 +97,7 @@ class VoxelFluxMeasure(Measure):
             self.voxel_resolution[0] + 1,  # X: x-face indices
             self.voxel_resolution[1] + 1,  # Y: y-face indices
             self.voxel_resolution[2] + 1,  # Z: z-face indices
+            1,  # C: channels
         )
 
     # --------------------------------------------------------------------------
@@ -112,8 +114,8 @@ class VoxelFluxMeasure(Measure):
             "type": self.kernel_type,
             "id": self.sensor_id,
             "film.type": "tensorfilm",
-            "film.ndims": 5,
-            "film.sizes": f"2, 3, {self.voxel_resolution[0] + 1}, {self.voxel_resolution[1] + 1}, {self.voxel_resolution[2] + 1}",
+            "film.ndims": 6,
+            "film.sizes": f"2, 3, {self.voxel_resolution[0] + 1}, {self.voxel_resolution[1] + 1}, {self.voxel_resolution[2] + 1}, 1",
             "res_x": self.voxel_resolution[0],
             "res_y": self.voxel_resolution[1],
             "res_z": self.voxel_resolution[2],
