@@ -19,7 +19,6 @@ shape_factory.register_lazy_batch(
         ("_sphere.SphereShape", "sphere", {}),
         ("_filemesh.FileMeshShape", "file_mesh", {}),
         ("_buffermesh.BufferMeshShape", "buffer_mesh", {}),
-        ("_periodic_box.PeriodicBoxShape", "periodic_box", {}),
     ],
     cls_prefix="eradiate.scenes.shapes",
 )
