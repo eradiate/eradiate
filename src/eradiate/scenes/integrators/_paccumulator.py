@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 import attrs
-import pint
-import pinttrs
 
 from ._core import Integrator
+from ..core import BoundingBox
 from ...attrs import define, documented
-from ...units import unit_context_kernel as ucc
 from ...units import unit_context_kernel as uck
-from ...validators import is_vector3, on_quantity
 
 
 @define(eq=False, slots=False)
@@ -50,36 +47,18 @@ class PAccumulatorIntegrator(Integrator):
         init_type="int, optional",
     )
 
-    pbox_min: pint.Quantity | None = documented(
-        pinttrs.field(
+    periodic_box: BoundingBox | None = documented(
+        attrs.field(
             default=None,
-            validator=attrs.validators.optional(
-                (pinttrs.validators.has_compatible_units, on_quantity(is_vector3))
-            ),
-            units=ucc.deferred("length"),
+            converter=attrs.converters.optional(BoundingBox.convert),
         ),
-        doc="Minimum point of the periodic bounding box. Must be used together with "
-        "`pbox_max`.\n\n"
-        "Unit-enabled field (default units: ucc['length']).",
-        type="quantity or None",
-        init_type="quantity or array-like, optional",
-        default="None",
-    )
-
-    pbox_max: pint.Quantity | None = documented(
-        pinttrs.field(
-            default=None,
-            validator=attrs.validators.optional(
-                (pinttrs.validators.has_compatible_units, on_quantity(is_vector3))
-            ),
-            units=ucc.deferred("length"),
-        ),
-        doc="Maximum point of the periodic bounding box. Must be used together with "
-        "`pbox_min`.\n\n"
-        "Unit-enabled field (default units: ucc['length']).",
-        type="quantity or None",
-        init_type="quantity or array-like, optional",
-        default="None",
+        doc="Bounding box of the periodic boundary. Rays exiting one face "
+        "of the boundary will enter back from the opposing face. Note that "
+        "rays must originate from inside the periodic box when specified. "
+        "See the family of periodic emitters e.g. :class:`.DirectionalPeriodicIllumination`",
+        type=":class:`.BoundingBox` or None",
+        init_type=":class:`.BoundingBox`, dict, tuple, or array-like, optional",
+        default=None,
     )
 
     @property
@@ -100,8 +79,8 @@ class PAccumulatorIntegrator(Integrator):
             result["rr_depth"] = self.rr_depth
 
         if self.pbox_min is not None and self.pbox_max is not None:
-            result["pbox_min"] = self.pbox_min.m_as(uck.get("length"))
-            result["pbox_max"] = self.pbox_max.m_as(uck.get("length"))
+            result["pbox_min"] = self.periodic_box.min.m_as(uck.get("length"))
+            result["pbox_max"] = self.periodic_box.max.m_as(uck.get("length"))
         else:
             raise ValueError(
                 "Either 'pbox_min'/'pbox_max' or 'periodic_box' must be specified."
