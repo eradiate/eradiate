@@ -11,11 +11,12 @@ from ...units import unit_context_kernel as uck
 @define(eq=False, slots=False)
 class PAccumulatorIntegrator(Integrator):
     """
-    Base class for integrator elements wrapping kernel classes
-    deriving from
-    :class:`mitsuba.MonteCarloIntegrator`.
+    A thin interface to the particle accumualtor kernel plugin [``paccumulator``].
 
-    .. warning:: This class should not be instantiated.
+    This integrator samples paths using random wolks starting from the emitter.
+    It supports multiple scattering and accounts for volume interactions.
+    The values it accumulate depend on the sensor.
+
     """
 
     min_depth: int | None = documented(
@@ -78,7 +79,7 @@ class PAccumulatorIntegrator(Integrator):
         if self.rr_depth is not None:
             result["rr_depth"] = self.rr_depth
 
-        if self.pbox_min is not None and self.pbox_max is not None:
+        if self.periodic_box is not None:
             result["pbox_min"] = self.periodic_box.min.m_as(uck.get("length"))
             result["pbox_max"] = self.periodic_box.max.m_as(uck.get("length"))
         else:
