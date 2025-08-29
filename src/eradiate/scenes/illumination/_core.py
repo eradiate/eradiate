@@ -31,6 +31,11 @@ illumination_factory.register_lazy_batch(
             "directionalperiodic",
             {},
         ),
+        (
+            "_isotropic_periodic.isotropicPeriodicIllumination",
+            "isotropicperiodic",
+            {},
+        ),
         ("_spot.SpotIllumination", "spot", {}),
     ],
     cls_prefix="eradiate.scenes.illumination",

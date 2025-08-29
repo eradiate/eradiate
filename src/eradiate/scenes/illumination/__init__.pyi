@@ -7,4 +7,7 @@ from ._directional import DirectionalIllumination as DirectionalIllumination
 from ._directional_periodic import (
     DirectionalPeriodicIllumination as DirectionalPeriodicIllumination,
 )
+from ._isotropic_periodic import (
+    IsotropicPeriodicIllumination as IsotropicPeriodicIllumination,
+)
 from ._spot import SpotIllumination as SpotIllumination
