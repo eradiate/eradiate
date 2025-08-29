@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import attrs
-
-import eradiate
+import pint
+import pinttrs
 
 from ._core import Integrator
-from ..core import NodeSceneElement, Ref
 from ...attrs import define, documented
+from ...units import unit_context_kernel as ucc
+from ...units import unit_context_kernel as uck
+from ...validators import is_vector3, on_quantity
 
 
 @define(eq=False, slots=False)
@@ -29,7 +31,6 @@ class PAccumulatorIntegrator(Integrator):
         init_type="int, optional",
     )
 
-
     max_depth: int | None = documented(
         attrs.field(default=None, converter=attrs.converters.optional(int)),
         doc="Longest path depth in the generated measure data (where -1 "
@@ -49,31 +50,41 @@ class PAccumulatorIntegrator(Integrator):
         init_type="int, optional",
     )
 
-    periodic_box: Ref | None = documented( 
-        attrs.field(
+    pbox_min: pint.Quantity | None = documented(
+        pinttrs.field(
             default=None,
             validator=attrs.validators.optional(
-                attrs.validators.instance_of(Ref)
+                (pinttrs.validators.has_compatible_units, on_quantity(is_vector3))
             ),
+            units=ucc.deferred("length"),
         ),
-        doc="Periodic box shape which defines the boundary that conserve energy. "
-        "If unset, the kernel defaults to no periodicity. "
-        "Important: this must be a reference to a shape in the scene. It also "
-        "must have a null bsdf.",
-        init_type="Ref, optional",
+        doc="Minimum point of the periodic bounding box. Must be used together with "
+        "`pbox_max`.\n\n"
+        "Unit-enabled field (default units: ucc['length']).",
+        type="quantity or None",
+        init_type="quantity or array-like, optional",
+        default="None",
+    )
+
+    pbox_max: pint.Quantity | None = documented(
+        pinttrs.field(
+            default=None,
+            validator=attrs.validators.optional(
+                (pinttrs.validators.has_compatible_units, on_quantity(is_vector3))
+            ),
+            units=ucc.deferred("length"),
+        ),
+        doc="Maximum point of the periodic bounding box. Must be used together with "
+        "`pbox_min`.\n\n"
+        "Unit-enabled field (default units: ucc['length']).",
+        type="quantity or None",
+        init_type="quantity or array-like, optional",
+        default="None",
     )
 
     @property
     def kernel_type(self) -> str:
         return "paccumulator"
-
-    @property
-    def objects(self) -> dict[str, NodeSceneElement] | None:
-        # Inherit docstring
-        if self.periodic_box is None:
-            return None
-        else:
-            return {"periodic_box": self.periodic_box}
 
     @property
     def template(self) -> dict:
@@ -87,9 +98,13 @@ class PAccumulatorIntegrator(Integrator):
             result["max_depth"] = self.max_depth
         if self.rr_depth is not None:
             result["rr_depth"] = self.rr_depth
-        # if self.periodic_box is not None:
-        #     result["periodic_box"] = {"type":"ref", "id": self.periodic_box.id()}
+
+        if self.pbox_min is not None and self.pbox_max is not None:
+            result["pbox_min"] = self.pbox_min.m_as(uck.get("length"))
+            result["pbox_max"] = self.pbox_max.m_as(uck.get("length"))
+        else:
+            raise ValueError(
+                "Either 'pbox_min'/'pbox_max' or 'periodic_box' must be specified."
+            )
 
         return result
-
-
