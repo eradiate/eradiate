@@ -446,6 +446,13 @@ class BoundingBox:
             )
 
     @classmethod
+    def from_center(cls, center: pint.Quantity, edges: pint.Quantity) -> BoundingBox:
+        unit = ucc.get("length")
+        center = pinttr.converters.ensure_units(center, unit)
+        edges = pinttr.converters.ensure_units(edges, unit)
+        return cls(center - 0.5 * edges, center + 0.5 * edges)
+
+    @classmethod
     def convert(
         cls, value: t.Sequence | t.Mapping | np.typing.ArrayLike | pint.Quantity
     ) -> t.Any:
@@ -470,7 +477,14 @@ class BoundingBox:
             return cls(*value)
 
         elif isinstance(value, Mapping):
-            return cls(**pinttr.interpret_units(value, ureg=ureg))
+            if ("min" in value) and ("max" in value):
+                return cls(**pinttr.interpret_units(value, ureg=ureg))
+            if ("center" in value) and ("edges" in value):
+                return BoundingBox.from_center(
+                    **pinttr.interpret_units(value, ureg=ureg)
+                )
+            else:
+                return value
 
         else:
             return value
