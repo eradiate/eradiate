@@ -164,7 +164,7 @@ class FAPARExperiment(EarthObservationExperiment):
         ),
         doc="Dictionary mapping BSDF IDs to filter types. Allows fine-grained "
         "control over which specific BSDFs to include/exclude from measurements. "
-        "BSDF IDs follow the pattern 'bsdf_{element_id}' (e.g., 'bsdf_tree_1', 'bsdf_leaf_cloud_1').",
+        "BSDF IDs follow the pattern 'bsdf_{{element_id}}' (e.g., 'bsdf_tree_1', 'bsdf_leaf_cloud_1').",
         type="dict[str, .FilterType] or None",
         init_type="dict[str, .FilterType or int] or None, optional",
         default="None",
