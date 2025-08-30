@@ -82,17 +82,17 @@ class RAMIScenarioVariant(Enum):
 
 def generate_name(
     scenario_name: RAMICanopies,
-    version: RAMIScenarioVariant = RAMIScenarioVariant.ORIGINAL,
+    variant: RAMIScenarioVariant = RAMIScenarioVariant.ORIGINAL,
 ) -> str:
     """
-    Generate a name for a scenario based on its name and version.
+    Generate a name for a scenario based on its name and variant.
 
     Parameters
     ----------
-    scenario_name : RAMICanopies
+    scenario_name : RAMIActualCanopies or RAMIHeterogeneousAbstractCanopies or RAMIHomogeneousAbstractCanopies
         The name of the scenario.
-    version : ScenarioVersion
-        The version of the scenario.
+    variant : ScenarioVersion
+        The variant of the scenario.
 
     Returns
     -------
@@ -100,8 +100,8 @@ def generate_name(
         The name of the scenario.
     """
     return (
-        f"{scenario_name.value}-{version.value}"
-        if version == RAMIScenarioVariant.SIMPLIFIED
+        f"{scenario_name.value}-{variant.value}"
+        if variant == RAMIScenarioVariant.SIMPLIFIED
         else scenario_name.value
     )
 
@@ -139,13 +139,13 @@ def _convert_to_enum(scenario_name: str | RAMICanopies) -> RAMICanopies:
 
 def load_rami_scenario(
     scenario_name: str | RAMICanopies,
-    version: RAMIScenarioVariant = RAMIScenarioVariant.ORIGINAL,
+    variant: RAMIScenarioVariant = RAMIScenarioVariant.ORIGINAL,
     padding: int = 0,
     unpack_folder: Optional[Path] = None,
     spectral_data: Optional[dict] = None,
 ) -> dict:
     """
-    Load a scenario based on its name and version.
+    Load a scenario based on its name and variant.
 
     This function will check if scenario data can be found at the target
     location; if not, it will download them automatically.
@@ -155,8 +155,8 @@ def load_rami_scenario(
     scenario_name : str or RAMIActualCanopies or RAMIHeterogeneousAbstractCanopies or RAMIHomogeneousAbstractCanopies
         The name of the RAMI-V scenario. If a string is provided, it will
         automatically be converted to the appropriate enum.
-    version : RAMIScenarioVariant
-        The version of the scenario.
+    variant : RAMIScenarioVariant
+        The variant of the scenario.
     padding : int, optional
         The padding to apply to the scenario, defaults to 0.
     unpack_folder : path-like, optional
@@ -175,7 +175,7 @@ def load_rami_scenario(
     load_scenario
     """
     unpack_folder = Path.cwd() if unpack_folder is None else Path(unpack_folder)
-    name = generate_name(_convert_to_enum(scenario_name), version)
+    name = generate_name(_convert_to_enum(scenario_name), variant)
     fname = f"{name}.zip"
 
     # Check for data availability
