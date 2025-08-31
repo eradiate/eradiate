@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 @define
-class FAPARExperiment(EarthObservationExperiment):
+class AccumulatorExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a scene with an explicit canopy and atmosphere.
     This experiment assumes that the surface is plane and accounts for ground
