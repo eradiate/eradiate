@@ -10,6 +10,9 @@ from eradiate.scenes.filters import FilterType
 from eradiate.scenes.illumination._directional_periodic import (
     DirectionalPeriodicIllumination,
 )
+from eradiate.scenes.illumination._isotropic_periodic import (
+    IsotropicPeriodicIllumination,
+)
 from eradiate.scenes.integrators._paccumulator import PAccumulatorIntegrator
 
 from ._core import EarthObservationExperiment
@@ -27,13 +30,13 @@ from ..scenes.atmosphere import (
 )
 from ..scenes.biosphere import Canopy, CanopyElement, biosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
-from ..scenes.core import Ref, SceneElement
+from ..scenes.core import BoundingBox, SceneElement
 from ..scenes.geometry import (
     PlaneParallelGeometry,
     SceneGeometry,
 )
 from ..scenes.measure import AbstractDistantMeasure, Measure
-from ..scenes.shapes import PeriodicBoxShape, RectangleShape, shape_factory
+from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -140,19 +143,18 @@ class FAPARExperiment(EarthObservationExperiment):
         default=":class:`BasicSurface(bsdf=LambertianBSDF()) <.BasicSurface>`",
     )
 
-    periodic_box: PeriodicBoxShape | None = documented(
+    periodic_box: BoundingBox | None = documented(
         attrs.field(
             default=None,
-            converter=attrs.converters.optional(shape_factory.convert),
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(PeriodicBoxShape)
-            ),
+            converter=attrs.converters.optional(BoundingBox.convert),
         ),
-        doc="Periodic box shape which defines the boundary that conserve energy. "
-        "If unset, the kernel defaults to no periodicity. "
-        "The BSDF is automatically set to null for proper periodic boundary behavior.",
-        init_type="PeriodicBoxShape, optional",
-        default="None",
+        doc="Bounding box of the periodic boundary. Rays exiting one face "
+        "of the boundary will enter back from the opposing face. Note that "
+        "rays must originate from inside the periodic box when specified. "
+        "See the family of periodic emitters e.g. :class:`.DirectionalPeriodicIllumination`",
+        type=":class:`.BoundingBox` or None",
+        init_type=":class:`.BoundingBox`, dict, tuple, or array-like, optional",
+        default=None,
     )
 
     bsdf_filters: dict[str, FilterType] | None = documented(
@@ -254,18 +256,22 @@ class FAPARExperiment(EarthObservationExperiment):
         if isinstance(self.integrator, PAccumulatorIntegrator):
             if self.periodic_box is not None:
                 self.integrator = attrs.evolve(
-                    self.integrator, periodic_box=Ref(id=self.periodic_box.id)
+                    self.integrator,
+                    periodic_box=self.periodic_box,
                 )
 
     def _normalize_illumination(self) -> None:
         """
         Ensures that the illumination source is compatible with the atmosphere and geometry.
         """
-        if isinstance(self.illumination, DirectionalPeriodicIllumination):
-            if self.periodic_box is not None:
-                self.illumination = attrs.evolve(
-                    self.illumination, periodic_box=Ref(id=self.periodic_box.id)
-                )
+        if isinstance(
+            self.illumination,
+            (DirectionalPeriodicIllumination, IsotropicPeriodicIllumination),
+        ):
+            self.illumination = attrs.evolve(
+                self.illumination,
+                periodic_box=self.periodic_box,
+            )
 
     def get_bsdf_ids(self) -> list[str]:
         """
@@ -497,18 +503,6 @@ class FAPARExperiment(EarthObservationExperiment):
             )
         else:
             surface = None
-
-        # Add all configured elements to the scene
-        if self.periodic_box is not None:
-            objects["periodic_box"] = self.periodic_box
-        #     objects["integrator"] = attrs.evolve(
-        #         self.integrator, periodic_box=Ref(id=self.periodic_box.id)
-        #     )
-        #     objects["illumination"] = attrs.evolve(
-        #         self.illumination, periodic_box=Ref(id=self.periodic_box.id)
-        #     )
-        # else:
-        #     objects["integrator"] = self.integrator
 
         # Add all configured elements to the scene
         if atmosphere is not None:
