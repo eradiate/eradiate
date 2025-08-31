@@ -17,7 +17,7 @@ class DirectionalPeriodicIllumination(AbstractDirectionalIllumination):
     periodic bounding box. The illumination direction is determined by zenith
     and azimuth angles following the Earth observation convention.
 
-    Note:
+    Notes
     -----
     Currently only compatible with the :class:`.PAccumulatorIntergator`.
     """

@@ -18,7 +18,7 @@ class IsotropicPeriodicIllumination(Illumination):
     This illumination source emits radiation from the top face of a periodic
     bounding box in the downwelling hemisphere isotropically.
 
-    Note:
+    Notes
     -----
     Currently only compatible with the :class:`.PAccumulatorIntergator`.
     """
