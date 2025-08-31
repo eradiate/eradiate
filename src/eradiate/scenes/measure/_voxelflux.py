@@ -13,14 +13,20 @@ from ...units import unit_context_kernel as uck
 @define(eq=False, slots=False)
 class VoxelFluxMeasure(Measure):
     """
-    Voxel flux measure scene element [``voxelflux``, ``voxelflux``].
+    Voxel flux measure scene element [``voxelflux``].
 
     This scene element creates a measure that records the flux traversing voxel
-    faces in a 5D tensor structure with dimensions [D, F, X, Y, Z] where:
+    faces in a 6D tensor structure with dimensions [D, F, X, Y, Z, C] where:
     - D: flux direction relative to axis (0 for negative, 1 for positive)
     - F: axis of the faces (0, 1, 2 for x, y, z)
     - X, Y, Z: indices of the face
     - C: channels
+    The grid boundary is defined by the `.bounding_box` and the number of voxel
+    along each axis by `.voxel_resolution`.
+
+    Notes
+    -----
+    To count interactions over the  entire scene, leave `.bounding_box` set to None.
     """
 
     # --------------------------------------------------------------------------
@@ -35,7 +41,7 @@ class VoxelFluxMeasure(Measure):
                 iterable_validator=validators.has_len(3),
             ),
         ),
-        doc="A 3-vector specifying the voxel resolution.\n"
+        doc="A 3-vector specifying the number of voxels along each axis. "
         "This vector must contain positive integers.",
         type="array",
         init_type="array-like",
@@ -51,15 +57,18 @@ class VoxelFluxMeasure(Measure):
                     f"Voxel resolution must be positive, got {value}"
                 )
 
-    boundary: BoundingBox | None = documented(
+    bounding_box: BoundingBox | None = documented(
         attrs.field(
             default=None,
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(BoundingBox)
-            ),
-            # converter=attrs.converters.optional(BoundingBox),
+            converter=attrs.converters.optional(BoundingBox.convert),
         ),
-        doc="Bounding box of the measure.",
+        doc="Outer boundary of the voxel flux grid. The `.voxel_resolution` "
+        "field divides this bounding box along each axis in a regular grid. "
+        "When set to None, the default behaviour is to use the scene's bounding "
+        "box.",
+        type=":class:`.BoundingBox` or None",
+        init_type=":class:`.BoundingBox`, dict, tuple, or array-like, optional",
+        default=None,
     )
 
     surface_flux: bool = documented(
@@ -123,7 +132,7 @@ class VoxelFluxMeasure(Measure):
             "apply_sample_scale": self.apply_sample_scale,
         }
 
-        if self.boundary:
-            result["bbox_min"] = self.boundary.min.m_as(uck.get("length"))
-            result["bbox_max"] = self.boundary.max.m_as(uck.get("length"))
+        if self.bounding_box:
+            result["bbox_min"] = self.bounding_box.min.m_as(uck.get("length"))
+            result["bbox_max"] = self.bounding_box.max.m_as(uck.get("length"))
         return result

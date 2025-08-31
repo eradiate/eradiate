@@ -16,7 +16,8 @@ class AbsorbedFluxMeasure(Measure):
     Absorbed flux measure scene element [``absorbedflux``, ``absorbedflux``].
 
     This scene element creates a measure that records the flux absorbed by
-    surface interactions in a voxel grid.
+    surface interactions in a 3D grid. The grid boundary is defined by the
+    `.bounding_box` and the number of voxel along each axis by `.voxel_resolution`.
     """
 
     # --------------------------------------------------------------------------
@@ -31,7 +32,7 @@ class AbsorbedFluxMeasure(Measure):
                 iterable_validator=validators.has_len(3),
             ),
         ),
-        doc="A 3-vector specifying the voxel resolution.\n"
+        doc="A 3-vector specifying the number of voxels along each axis. "
         "This vector must contain positive integers.",
         type="array",
         init_type="array-like",
@@ -47,15 +48,18 @@ class AbsorbedFluxMeasure(Measure):
                     f"Voxel resolution must be positive, got {value}"
                 )
 
-    boundary: BoundingBox | None = documented(
+    bounding_box: BoundingBox | None = documented(
         attrs.field(
             default=None,
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(BoundingBox)
-            ),
-            # converter=attrs.converters.optional(BoundingBox),
+            converter=attrs.converters.optional(BoundingBox.convert),
         ),
-        doc="Bounding box of the measure.",
+        doc="Outer boundary of the voxel grid. The `.voxel_resolution` "
+        "field divides this bounding box along each axis in a regular grid. "
+        "When set to None, the default behaviour is to use the scene's bounding "
+        "box.",
+        type=":class:`.BoundingBox` or None",
+        init_type=":class:`.BoundingBox`, dict, tuple, or array-like, optional",
+        default=None,
     )
 
     apply_sample_scale: bool = documented(
@@ -98,7 +102,7 @@ class AbsorbedFluxMeasure(Measure):
             "apply_sample_scale": self.apply_sample_scale,
         }
 
-        if self.boundary:
-            result["bbox_min"] = self.boundary.min.m_as(uck.get("length"))
-            result["bbox_max"] = self.boundary.max.m_as(uck.get("length"))
+        if self.bounding_box:
+            result["bbox_min"] = self.bounding_box.min.m_as(uck.get("length"))
+            result["bbox_max"] = self.bounding_box.max.m_as(uck.get("length"))
         return result

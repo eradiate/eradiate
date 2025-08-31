@@ -13,9 +13,16 @@ from ...units import unit_context_kernel as uck
 @define(eq=False, slots=False)
 class CountMeasure(Measure):
     """
-    Count measure scene element [``count``, ``count``].
+    Count measure scene element [``count``].
 
-    This scene element creates a measure that counts the number of interactions.
+    This scene element creates a measure that counts the number of interactions
+    within a 3D grid. It includes both surface and volume interactions. The
+    grid boundary is defined by the `.bounding_box` and the number of voxel
+    along each axis by `.voxel_resolution`.
+
+    Notes
+    -----
+    To count interactions over the  entire scene, leave `.bounding_box` set to None.
     """
 
     # --------------------------------------------------------------------------
@@ -30,9 +37,8 @@ class CountMeasure(Measure):
                 iterable_validator=validators.has_len(3),
             ),
         ),
-        doc="A 3-vector specifying the up direction of the spot.\n"
-        "This vector must be different from the spots's pointing direction,\n"
-        "which is given by ``target - origin``.",
+        doc="A 3-vector specifying the number of voxels along each axis. "
+        "This vector must contain positive integers.",
         type="array",
         init_type="array-like",
         default="[1, 1, 1]",
@@ -47,15 +53,18 @@ class CountMeasure(Measure):
                     f"Voxel resolution must be positive, got {value}"
                 )
 
-    boundary: BoundingBox | None = documented(
+    bounding_box: BoundingBox | None = documented(
         attrs.field(
             default=None,
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(BoundingBox)
-            ),
-            # converter=attrs.converters.optional(BoundingBox),
+            converter=attrs.converters.optional(BoundingBox.convert),
         ),
-        doc="Bounding box of the measure.",
+        doc="Outer boundary of the voxel grid. The `.voxel_resolution` "
+        "field divides this bounding box along each axis in a regular grid. "
+        "When set to None, the default behaviour is to use the scene's bounding "
+        "box.",
+        type=":class:`.BoundingBox` or None",
+        init_type=":class:`.BoundingBox`, dict, tuple, or array-like, optional",
+        default=None,
     )
 
     apply_sample_scale: bool = documented(
@@ -98,7 +107,7 @@ class CountMeasure(Measure):
             "apply_sample_scale": self.apply_sample_scale,
         }
 
-        if self.boundary:
-            result["bbox_min"] = self.boundary.min.m_as(uck.get("length"))
-            result["bbox_max"] = self.boundary.max.m_as(uck.get("length"))
+        if self.bounding_box:
+            result["bbox_min"] = self.bounding_box.min.m_as(uck.get("length"))
+            result["bbox_max"] = self.bounding_box.max.m_as(uck.get("length"))
         return result
