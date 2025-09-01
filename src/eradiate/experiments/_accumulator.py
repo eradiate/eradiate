@@ -4,23 +4,14 @@ import logging
 import typing as t
 
 import attrs
+import pinttr
 
-from eradiate.scenes.biosphere._tree import MeshTreeElement
-from eradiate.scenes.filters import FilterType
-from eradiate.scenes.illumination._directional_periodic import (
-    DirectionalPeriodicIllumination,
-)
-from eradiate.scenes.illumination._isotropic_periodic import (
-    IsotropicPeriodicIllumination,
-)
-from eradiate.scenes.integrators._paccumulator import PAccumulatorIntegrator
-
-from ._core import EarthObservationExperiment
+from . import EarthObservationExperiment, Experiment, MeasureRegistry
 from ._helpers import (
     check_geometry_atmosphere,
     surface_converter,
 )
-from ..attrs import define, documented
+from ..attrs import define, documented, get_doc
 from ..scenes.atmosphere import (
     Atmosphere,
     HeterogeneousAtmosphere,
@@ -28,14 +19,28 @@ from ..scenes.atmosphere import (
     MolecularAtmosphere,
     atmosphere_factory,
 )
-from ..scenes.biosphere import Canopy, CanopyElement, biosphere_factory
+from ..scenes.biosphere import Canopy, CanopyElement, MeshTreeElement, biosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import BoundingBox, SceneElement
+from ..scenes.filters import FilterType
 from ..scenes.geometry import (
     PlaneParallelGeometry,
     SceneGeometry,
 )
-from ..scenes.measure import AbstractDistantMeasure, Measure
+from ..scenes.illumination._directional_periodic import (
+    DirectionalPeriodicIllumination,
+)
+from ..scenes.illumination._isotropic_periodic import (
+    IsotropicPeriodicIllumination,
+)
+from ..scenes.integrators import PAccumulatorIntegrator, integrator_factory
+from ..scenes.measure import (
+    AbsorbedFluxMeasure,
+    CountMeasure,
+    Measure,
+    VoxelFluxMeasure,
+    measure_factory,
+)
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface
 from ..units import unit_context_config as ucc
@@ -77,6 +82,47 @@ class AccumulatorExperiment(EarthObservationExperiment):
 
     * Currently this experiment is limited to the plane-parallel geometry.
     """
+
+    measures: MeasureRegistry = documented(
+        attrs.field(
+            factory=lambda: MeasureRegistry([CountMeasure()]),
+            converter=lambda value: MeasureRegistry(
+                pinttr.util.always_iterable(value)
+                if not isinstance(value, dict)
+                else [measure_factory.convert(value)]
+            ),
+            validator=attrs.validators.deep_iterable(
+                member_validator=attrs.validators.instance_of(
+                    (CountMeasure, AbsorbedFluxMeasure, VoxelFluxMeasure)
+                ),
+            ),
+        ),
+        doc=get_doc(Experiment, "measures", "doc")
+        + "\n Warning: Currently the Accumulator experiment only accepts "
+        ":class:`.CountMeasure`, :class:`.AbsorbedFluxMeasure`, and "
+        ":class:`.VoxelFluxMeasure`",
+        type=".MeasureRegistry",
+        init_type="list of :class:`.Measure` or list of dict or "
+        ":class:`.Measure` or dict",
+        default=":class:`CountMeasure() <.CountMeasure>`",
+    )
+
+    integrator: PAccumulatorIntegrator = documented(
+        attrs.field(
+            factory=PAccumulatorIntegrator,
+            converter=integrator_factory.convert,
+            validator=attrs.validators.instance_of(PAccumulatorIntegrator),
+        ),
+        doc="Monte Carlo integration algorithm specification. "
+        "The :class:`.PAccumualtorIntegrator` is the only compatible integrator "
+        "with the accumulator experiment. It is a particle (forward) tracing "
+        "algorithm that delegates accumulation of various measures to the measure. "
+        "This parameter can be specified as a dictionary which will be "
+        "interpreted by :data:`.integrator_factory`.",
+        type=":class:`.PAccumulatorIntegrator`",
+        init_type=":class:`.PAccumulatorIntegrator` or dict",
+        default=":class:`.PAccumulatorIntegrator`",
+    )
 
     # Currently, only the plane parallel geometry is supported
     geometry: PlaneParallelGeometry = documented(
@@ -232,22 +278,7 @@ class AccumulatorExperiment(EarthObservationExperiment):
         Processed measures will have their ray target and origin parameters
         overridden if relevant.
         """
-        for measure in self.measures:
-            # Override ray target location if relevant
-            if isinstance(measure, AbstractDistantMeasure):
-                if measure.target is None:
-                    if self.canopy is None:  # No canopy: target origin point
-                        measure.target = {"type": "point", "xyz": [0, 0, 0]}
-
-                    else:  # Canopy: target top of canopy
-                        measure.target = {
-                            "type": "rectangle",
-                            "xmin": -0.5 * self.canopy.size[0],
-                            "xmax": 0.5 * self.canopy.size[0],
-                            "ymin": -0.5 * self.canopy.size[1],
-                            "ymax": 0.5 * self.canopy.size[1],
-                            "z": self.canopy.size[2],
-                        }
+        pass
 
     def _normalize_integrator(self) -> None:
         """
