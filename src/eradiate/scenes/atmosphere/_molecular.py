@@ -4,16 +4,21 @@ Molecular atmospheres.
 
 from __future__ import annotations
 
+import warnings
+from typing import Literal
+
 import attrs
 import joseki
 import numpy as np
 import pint
 import xarray as xr
+from numpy.typing import ArrayLike
 
 import eradiate
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ..core import traverse
+from ..geometry import SceneGeometry
 from ..phase import PhaseFunction, RayleighPhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
@@ -27,6 +32,7 @@ from ...radprops import (
     ZGrid,
 )
 from ...spectral.index import SpectralIndex
+from ...typing import PathLike
 from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
 
@@ -40,10 +46,22 @@ def _default_absorption_data():
         raise UnsupportedModeError(unsupported=["mono", "ckd"])
 
 
-@define(eq=False, slots=False)
+def _default_thermoprops(identifier: str = "afgl_1986-us_standard") -> dict:
+    return {
+        "identifier": identifier,
+        "z": np.linspace(0.0, 120.0, 121) * ureg.km,
+        "additional_molecules": False,
+    }
+
+
+@define(eq=False, slots=False, init=False)
 class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     """
     Molecular atmosphere scene element [``molecular``].
+
+    Parameters
+    ----------
+
 
     See Also
     --------
@@ -94,11 +112,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     _thermoprops: xr.Dataset | None = documented(
         attrs.field(
             kw_only=True,
-            factory=lambda: joseki.make(
-                identifier="afgl_1986-us_standard",
-                z=np.linspace(0.0, 120.0, 121) * ureg.km,
-                additional_molecules=False,
-            ),
+            factory=_default_thermoprops,
             converter=attrs.converters.optional(convert_thermoprops),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(xr.Dataset)
@@ -175,6 +189,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         default="None",
     )
 
+    _profile: RadProfile = attrs.field(kw_only=True)
+
     error_handler_config: ErrorHandlingConfiguration | None = documented(
         attrs.field(
             kw_only=True,
@@ -203,6 +219,86 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 absorption_data=self.absorption_data,
                 rayleigh_depolarization=self.rayleigh_depolarization,
             )
+
+    def __init__(
+        self,
+        id: str = "atmosphere",
+        geometry: SceneGeometry | dict | str = "plane_parallel",
+        scale: float | None = None,
+        force_majorant: bool = False,
+        profile: xr.Dataset | str | RadProfile | None = None,
+        has_absorption: bool = True,
+        has_scattering: bool = True,
+        error_handler_config: ErrorHandlingConfiguration | dict | None = None,
+        thermoprops: xr.Dataset | PathLike | str | None = None,
+        absorption_data: str | PathLike | dict | AbsorptionDatabase | None = None,
+        radprops_profile: RadProfile | None = None,
+        rayleigh_depolarization: ArrayLike | Literal["bates", "bodhaine"] = None,
+    ):
+        """
+        TODO: Rewrite this constructor and refactor data members. This is
+              necessary to make usage of custom profiles simpler.
+
+        * Remove members thermoprops, radprops_profile, absorption_data and rayleigh_depolarization.
+        * Replace them with profile of type RadProfile, use properties to forward attributes from profile (and implement setters).
+        * Use profile arg to do everything.
+        * Old interface still usable for input.
+        """
+
+        if profile is None:  # -- Old API --------------------------------------
+            if radprops_profile is not None:  # The profile is passed explicitly: use it
+                profile = radprops_profile
+
+            if isinstance(thermoprops, str):
+                thermoprops = _default_thermoprops(thermoprops)
+
+            if isinstance(thermoprops, dict):
+                thermoprops = joseki.make(**thermoprops)
+
+            if (
+                thermoprops is not None
+            ):  # WARNING: this will override radprops_profile if set
+                profile = AtmosphereRadProfile(
+                    thermoprops=thermoprops,
+                    has_scattering=has_scattering,
+                    has_absorption=has_absorption,
+                    absorption_data=absorption_data,
+                    rayleigh_depolarization=rayleigh_depolarization,
+                )
+
+        else:  # -- New API ----------------------------------------------------
+            warnings.warn(
+                "You are using the old MolecularAtmosphere API. Consider "
+                "transitioning to the new API, which uses the 'profile' "
+                "argument.",
+                DeprecationWarning,
+            )
+
+            if isinstance(profile, str):
+                profile = _default_thermoprops(thermoprops)
+
+            if isinstance(profile, dict):
+                profile = joseki.make(**thermoprops)
+
+            if isinstance(profile, xr.Dataset):
+                profile = AtmosphereRadProfile(
+                    thermoprops=profile,
+                    has_absorption=has_absorption,
+                    has_scattering=has_scattering,
+                    absorption_data=absorption_data,
+                    rayleigh_depolarization=rayleigh_depolarization,
+                )
+
+        self.__attrs_init__(
+            id=id,
+            geometry=geometry,
+            scale=scale,
+            force_majorant=force_majorant,
+            profile=profile,
+            has_absorption=has_absorption,
+            has_scattering=has_scattering,
+            error_handler_config=error_handler_config,
+        )
 
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties

@@ -4,8 +4,8 @@ Array radiative profile.
 
 from __future__ import annotations
 
-import typing as t
 import warnings
+from typing import Any, Literal
 
 import attrs
 import numpy as np
@@ -35,35 +35,37 @@ class ArrayRadProfile(RadProfile):
     sigma_a: xr.DataArray | None = documented(
         attrs.field(
             default=None,
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(xr.DataArray)
+            ),
         ),
         doc="``DataArray`` of absorption coefficients. "
         "The ``DataArray`` is composed of two dimensions ``{w, z}`` representing the "
         "wavelength and altitude respectively. Note that ``w`` must be of length "
         "2 minimum to be correctly interpolated.",
         type="DataArray or None",
-        init_type="DataArray or None",
+        init_type="DataArray, optional",
         default="None",
     )
 
     sigma_s: xr.DataArray | None = documented(
         attrs.field(
             default=None,
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(xr.DataArray)
+            ),
         ),
         doc="``DataArray`` of scattering coefficients. "
         "The ``DataArray`` is composed of two dimensions ``{w, z}`` representing the "
         "wavelength and altitude respectively. Note that ``w`` must be of length "
         "2 minimum to be correctly interpolated.",
         type="DataArray or None",
-        init_type="DataArray or None",
+        init_type="DataArray, optional",
         default="None",
     )
 
     has_absorption: bool = documented(
-        attrs.field(
-            default=True,
-            converter=bool,
-            validator=attrs.validators.instance_of(bool),
-        ),
+        attrs.field(default=True, converter=bool),
         doc="Absorption switch. If ``True``, the absorption coefficient is "
         "computed. Else, the absorption coefficient is not computed and "
         "instead set to zero.",
@@ -72,11 +74,7 @@ class ArrayRadProfile(RadProfile):
     )
 
     has_scattering: bool = documented(
-        attrs.field(
-            default=True,
-            converter=bool,
-            validator=attrs.validators.instance_of(bool),
-        ),
+        attrs.field(default=True, converter=bool),
         doc="Scattering switch. If ``True``, the scattering coefficient is "
         "computed. Else, the scattering coefficient is not computed and "
         "instead set to zero.",
@@ -86,9 +84,9 @@ class ArrayRadProfile(RadProfile):
 
     rayleigh_depolarization: np.ndarray = documented(
         attrs.field(
-            converter=lambda x: np.array(x, dtype=np.float64),
             kw_only=True,
             factory=lambda: np.array(0.0),
+            converter=lambda x: np.array(x, dtype=np.float64),
         ),
         type="ndarray",
         doc="Depolarization factor of the rayleigh phase function. "
@@ -99,10 +97,9 @@ class ArrayRadProfile(RadProfile):
         default="[0]",
     )
 
-    interpolation_method: t.Literal["nearest", "linear"] = documented(
+    interpolation_method: Literal["nearest", "linear"] = documented(
         attrs.field(
             default="nearest",
-            converter=str,
             validator=attrs.validators.in_(["nearest", "linear"]),
         ),
         doc="Method of interpolation of the absorption and scattering coefficients.",
@@ -111,12 +108,8 @@ class ArrayRadProfile(RadProfile):
         default="nearest",
     )
 
-    interpolation_kwargs: dict[str, t.Any] = documented(
-        attrs.field(
-            factory=dict,
-            converter=dict,
-            validator=attrs.validators.instance_of(dict),
-        ),
+    interpolation_kwargs: dict[str, Any] = documented(
+        attrs.field(factory=dict, converter=dict),
         doc="Keyword arguments passed to :meth:`xarray.DataArray.interp` when called.",
         type="dict",
         init_type="dict, optional",
