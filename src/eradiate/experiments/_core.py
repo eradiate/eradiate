@@ -703,7 +703,7 @@ class EarthObservationExperiment(Experiment, ABC):
                                 img = convert_to_y_format(img)
                             result_imgs[mapping[split[0]]] = img
                 elif isinstance(mi_bitmap, mi.TensorXf):
-                    result_imgs = mi_bitmap
+                    result_imgs["data"] = mi_bitmap
 
                 measure.mi_results[ctx_index] = result_imgs
 
