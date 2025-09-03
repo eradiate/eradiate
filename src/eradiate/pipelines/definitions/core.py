@@ -17,13 +17,13 @@ from hamilton.function_modifiers import (
     tag_outputs,
 )
 
-from . import logic
-from .._mode import modes
-from ..scenes.illumination import (
+from .. import logic
+from ..._mode import modes
+from ...scenes.illumination import (
     Illumination,
 )
-from ..spectral import SpectralResponseFunction
-from ..spectral.grid import SpectralGrid
+from ...spectral import SpectralResponseFunction
+from ...spectral.grid import SpectralGrid
 
 _MODE_IDS_CKD = set(modes(lambda x: x.is_ckd))
 
