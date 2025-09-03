@@ -731,7 +731,7 @@ class EarthObservationExperiment(Experiment, ABC):
         if isinstance(measure, (int, str)):
             measure = self.measures.resolve(measure)
         config = pl.config(measure, integrator=self.integrator)
-        return eradiate.pipelines.driver(config)
+        return eradiate.pipelines.driver(config, "eradiate.pipelines.definitions.core")
 
     def _pipeline_inputs(self, i_measure: int):
         # This convenience function collects pipeline inputs for a specific measure
