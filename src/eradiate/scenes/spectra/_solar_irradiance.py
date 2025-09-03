@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import datetime
 import importlib.util
-import typing as t
 import warnings
+from typing import Any
 
 import attrs
 import numpy as np
@@ -13,6 +13,7 @@ import xarray as xr
 from ._core import Spectrum
 from ... import converters, validators
 from ...attrs import define, documented
+from ...exceptions import DataError
 from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_kernel as uck
@@ -20,7 +21,7 @@ from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
 
 
-def _datetime_converter(x: t.Any):
+def _datetime_converter(x: Any):
     if x is not None:
         try:
             import dateutil
@@ -43,6 +44,23 @@ def _datetime_converter(x: t.Any):
             raise
 
         return dateutil.parser.parse(x)
+
+
+def _dataset_converter(value: Any):
+    if isinstance(value, xr.Dataset):
+        return value
+
+    try:
+        result = converters.resolve_keyword(lambda x: f"solar_irradiance/{x}.nc")(value)
+        result = converters.load_dataset(result)
+    except DataError as e:
+        raise DataError(
+            f"Could not load solar irradiance spectrum '{value}'. This is usually "
+            "caused by an incorrect path or identifier, or a missing data file. "
+            "Do not forget to install the shipped solar irradiance data."
+        ) from e
+
+    return result
 
 
 @define(eq=False, slots=False)
@@ -101,12 +119,7 @@ class SolarIrradianceSpectrum(Spectrum):
     dataset: xr.Dataset = documented(
         attrs.field(
             default="coddington_2021-1_nm",
-            converter=converters.passthrough_type(xr.Dataset)(
-                attrs.converters.pipe(
-                    converters.resolve_keyword(lambda x: f"solar_irradiance/{x}.nc"),
-                    converters.load_dataset,
-                )
-            ),
+            converter=_dataset_converter,
             validator=attrs.validators.instance_of(xr.Dataset),
             repr=summary_repr,
         ),
