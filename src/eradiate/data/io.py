@@ -8,6 +8,7 @@ import warnings
 from typing import Literal
 
 import numpy as np
+import pandas as pd
 import pint
 import pinttrs
 import xarray as xr
@@ -250,3 +251,103 @@ def load_aerosol_libradtran(
     )
 
     return phase_eradiate
+
+
+def voxelflux_to_raytran(
+    data: xr.Dataset, w: float, export_path: str | None = None
+) -> pd.DataFrame:
+    """
+    Converts the results of a VoxelFluxMeasure to the Raytran format, returned
+    in a  ``pandas.DataFrame``. Can optionally save the converted data to a csv
+    file by specifying the ``export_path``.
+
+    Parameters
+    ----------
+
+    data: xr.Dataset
+        Result dataset from a voxelflux measurement.
+
+    w: float
+        The wavelength selected for conversion.
+
+    Returns
+    -------
+
+    pd.DataFrame
+        Result data in the Raytran format.
+    """
+
+    # retrieve voxel indexes, and create a meshgrid to be used as multi-index
+    x = data.x_index.values[:-1]
+    y = data.y_index.values[:-1]
+    z = data.z_index.values[:-1]
+    X, Y, Z = np.meshgrid(x, y, z, indexing="ij")
+    X = X.flatten()
+    Y = Y.flatten()
+    Z = Z.flatten()
+
+    # Xinl = fluxes[0][
+    #     1    # positive direction
+    #     0,   # x faces
+    #     :-1, # x dimension up to last face
+    #     :-1, # y dimension on all faces
+    #     :-1, # z dimension on all faces
+    # ]
+    flux = data["flux"].sel(w=w).isel(sza=0, saa=0).values.copy()
+
+    Xinl = flux[1, 0, :-1, :-1, :-1].flatten()
+    Xinh = flux[0, 0, 1:, :-1, :-1].flatten()
+    Xoutl = flux[0, 0, :-1, :-1, :-1].flatten()
+    Xouth = flux[1, 0, 1:, :-1, :-1].flatten()
+
+    Yinl = flux[1, 1, :-1, :-1, :-1].flatten()
+    Yinh = flux[0, 1, :-1, 1:, :-1].flatten()
+    Youtl = flux[0, 1, :-1, :-1, :-1].flatten()
+    Youth = flux[1, 1, :-1, 1:, :-1].flatten()
+
+    Zinl = flux[1, 2, :-1, :-1, :-1].flatten()
+    Zinh = flux[0, 2, :-1, :-1, 1:].flatten()
+    Zoutl = flux[0, 2, :-1, :-1, :-1].flatten()
+    Zouth = flux[1, 2, :-1, :-1, 1:].flatten()
+
+    np_df = np.stack(
+        [
+            Xinl,
+            Xinh,
+            Yinl,
+            Yinh,
+            Zinl,
+            Zinh,
+            Xoutl,
+            Xouth,
+            Youtl,
+            Youth,
+            Zoutl,
+            Zouth,
+        ]
+    )
+
+    columns = [
+        "Xinl",
+        "Xinh",
+        "Yinl",
+        "Yinh",
+        "Zinl",
+        "Zinh",
+        "Xoutl",
+        "Xouth",
+        "Youtl",
+        "Youth",
+        "Zoutl",
+        "Zouth",
+    ]
+
+    # Transform to dataframe
+    multi_idx = pd.MultiIndex.from_arrays([X, Y, Z], names=["x", "y", "z"])
+    df = pd.DataFrame(np_df.T, index=multi_idx, columns=columns)
+
+    # save to csv using Raytran separator?
+    if export_path is not None:
+        df.to_csv(export_path, sep=" ")
+
+    return df
