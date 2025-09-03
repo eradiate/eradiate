@@ -7,6 +7,7 @@ from ._core import Measure
 from ..core import BoundingBox
 from ... import validators
 from ...attrs import define, documented
+from ...units import symbol
 from ...units import unit_context_kernel as uck
 
 
@@ -111,3 +112,21 @@ class CountMeasure(Measure):
             result["bbox_min"] = self.bounding_box.min.m_as(uck.get("length"))
             result["bbox_max"] = self.bounding_box.max.m_as(uck.get("length"))
         return result
+
+    @property
+    def var(self) -> tuple[str, dict]:
+        # Inherit docstring
+        return "count", {
+            "standard_name": "count",
+            "long_name": "count",
+            "units": symbol(uck.get("dimensionless")),
+        }
+
+    @property
+    def tensor_to_dataarray(self) -> dict:
+        return {
+            "x_index": ("x_index", range(self.voxel_resolution[0])),
+            "y_index": ("y_index", range(self.voxel_resolution[1])),
+            "z_index": ("z_index", range(self.voxel_resolution[2])),
+            "channel": ("channel", range(1)),
+        }

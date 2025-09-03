@@ -7,7 +7,9 @@ from ._core import Measure
 from ..core import BoundingBox
 from ... import validators
 from ...attrs import define, documented
+from ...units import symbol
 from ...units import unit_context_kernel as uck
+from ...units import unit_registry as ureg
 
 
 @define(eq=False, slots=False)
@@ -106,3 +108,21 @@ class AbsorbedFluxMeasure(Measure):
             result["bbox_min"] = self.bounding_box.min.m_as(uck.get("length"))
             result["bbox_max"] = self.bounding_box.max.m_as(uck.get("length"))
         return result
+
+    @property
+    def var(self) -> tuple[str, dict]:
+        # Inherit docstring
+        return "absorbed_flux", {
+            "standard_name": "absorbed_flux",
+            "long_name": "absorbed flux",
+            "units": symbol(ureg.watt),
+        }
+
+    @property
+    def tensor_to_dataarray(self) -> dict:
+        return {
+            "x_index": ("x_index", range(self.voxel_resolution[0])),
+            "y_index": ("y_index", range(self.voxel_resolution[1])),
+            "z_index": ("z_index", range(self.voxel_resolution[2])),
+            "channel": ("channel", range(1)),
+        }
