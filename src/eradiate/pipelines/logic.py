@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import itertools
 from collections import OrderedDict
+from typing import Callable
 
+import mitsuba as mi
 import numpy as np
 import pint
 import pinttrs
@@ -741,6 +743,150 @@ def gather_bitmaps(
     # Apply metadata to data variables
     result[f"{var_name}_raw"].attrs.update(var_metadata)
 
+    return result
+
+
+def gather_tensors(
+    mode_id: str,
+    var_name: str,
+    var_metadata: dict,
+    tensors: dict,
+    tensor_to_dataarray: dict | Callable[[mi.TensorXf], xr.DataArray] | None,
+    solar_angles: xr.Dataset,
+) -> dict:
+    """
+    Gather a collection of Mitsuba tensors into xarray data arrays.
+
+    Parameters
+    ----------
+    mode_id : str
+        Eradiate mode from which this pipeline step is configured.
+
+    var_name : str
+        Name of the processed physical variable.
+
+    var_metadata : dict
+        A metadata dictionary to be attached to the data array holding the
+        processed physical variable.
+
+    tensors : dict
+        A dictionary mapping spectral loop indexes to the corresponding tensor.
+        Dictionary structure is as follows:
+
+        .. code::
+
+           {
+               <loop_index_0>: {
+                   {"bitmap": <bitmap_0>},
+                   {"spp": <sample_count_0>},
+               },
+               <loop_index_1>: {
+                   {"bitmap": <bitmap_1>},
+                   {"spp": <sample_count_1>},
+               },
+               ...
+           }
+
+    solar_angles : Dataset, optional
+        A dataset holding the solar angles associated with the processed
+        observation data.
+
+    Returns
+    -------
+    data_vars : dict[str, DataArray]
+        A dictionary mapping data variable names to a corresponding data array.
+        These can easily be aggregated into an xarray dataset, or scattered
+        around other nodes of the post-processing pipeline.
+    """
+    mode = Mode.new(mode_id)
+
+    # Set up spectral dimensions
+    spectral_dims = []
+    spectral_dim_metadata = {}
+
+    for y in _spectral_dims(mode):
+        if isinstance(y, str):
+            spectral_dims.append(y)
+            spectral_dim_metadata[y] = {}
+        else:
+            spectral_dims.append(y[0])
+            spectral_dim_metadata[y[0]] = y[1]
+
+    # Loop on spectral indexes and collect all bitmap contents in data arrays
+    sensor_data = {
+        "spp": [],
+        f"{var_name}_raw": [],
+    }
+
+    for spectral_index_hashable, result_dict in tensors.items():
+        spectral_index = spectral_index_hashable
+
+        # Set spectral coordinates
+        all_coords = {
+            spectral_dim: [spectral_coord]
+            for spectral_dim, spectral_coord in zip(
+                spectral_dims, always_iterable(spectral_index)
+            )
+        }
+        spp = result_dict["spp"]
+
+        # Package spp in a data array
+        all_dims = list(all_coords.keys())
+        spp_shape = [1 for _ in all_dims]
+        sensor_data["spp"].append(
+            xr.DataArray(np.reshape(spp, spp_shape), coords=all_coords)
+        )
+
+        name = "data"
+        # still need to determine how to generate dataarrays
+        # ideas:
+        # - pass a callable from a sensor, if no callable, then generate from raw.
+        # - pass a dim + coordinate xarray dictionary that is provided by the sensor.
+        if isinstance(tensor_to_dataarray, dict) or tensor_to_dataarray is None:
+            sensor_data[f"{var_name}_raw"].append(
+                xr.DataArray(
+                    result_dict[name].numpy(), coords=tensor_to_dataarray
+                ).expand_dims(dim=all_coords)
+            )
+        elif isinstance(tensor_to_dataarray, Callable):
+            sensor_data[f"{var_name}_raw"].append(
+                tensor_to_dataarray(result_dict[name]).expand_dims(dim=all_coords)
+            )
+        else:
+            raise ValueError(
+                "`tensor_to_dataarray` should either be a `Dict`, `Callable` or `None`"
+            )
+
+    # Combine all the data
+    result = {k: xr.combine_by_coords(v) if v else None for k, v in sensor_data.items()}
+    keys = [f"{var_name}_raw"]
+
+    for key in keys:
+        # Add solar angle coordinate to main data array
+        if solar_angles is not None:
+            result[key] = result[key].expand_dims(
+                {k: solar_angles[k].values for k in ["sza", "saa"]}, axis=(-1, -2)
+            )
+
+    # Drop "channel" dimension when using a monochromatic Mitsuba variant
+    if mode.check(mi_color_mode="mono"):
+        for k, v in result.items():
+            if v is not None and "channel" in v.dims:
+                result[k] = v.squeeze("channel", drop=True)
+
+    # Apply spectral metadata
+    for da in result.values():
+        if da is not None:
+            for spectral_dim in spectral_dims:
+                da[spectral_dim].attrs = spectral_dim_metadata[spectral_dim]
+
+    # Update name of all variables
+    for name, da in result.items():
+        if da is not None:
+            da.name = name
+
+    # Apply metadata to data variables
+    result[f"{var_name}_raw"].attrs.update(var_metadata)
     return result
 
 

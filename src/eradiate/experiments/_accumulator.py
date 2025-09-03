@@ -5,12 +5,17 @@ import typing as t
 
 import attrs
 import pinttr
+import xarray as xr
+from hamilton.driver import Driver
+
+import eradiate
 
 from . import EarthObservationExperiment, Experiment, MeasureRegistry
 from ._helpers import (
     check_geometry_atmosphere,
     surface_converter,
 )
+from .. import pipelines as pl
 from ..attrs import define, documented, get_doc
 from ..scenes.atmosphere import (
     Atmosphere,
@@ -43,6 +48,7 @@ from ..scenes.measure import (
 )
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, CentralPatchSurface
+from ..spectral.response import BandSRF
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
@@ -462,6 +468,66 @@ class AccumulatorExperiment(EarthObservationExperiment):
 
         if measure.is_distant():
             result["title"] = "Top-of-atmosphere simulation results"
+
+        return result
+
+    def postprocess(self, measures: None | int | list[int] = None) -> None:
+        # Inherit docstring
+        logger.info("Post-processing results")
+
+        if measures is None:
+            measures = list(range(len(self.measures)))
+        else:
+            if isinstance(measures, (int, str)):
+                measures = [self.measures.get_index(measures)]
+
+        # Run pipelines
+        for i in measures:
+            measure = self.measures[i]
+            drv: Driver = self.pipeline(measure)
+            inputs = self._pipeline_inputs(i)
+            outputs = pl.outputs(drv)
+            result = drv.execute(final_vars=outputs, inputs=inputs)
+            self.results[measure.id] = xr.Dataset({var: result[var] for var in outputs})
+
+    def pipeline(self, measure: Measure | int | str) -> Driver:
+        # Inherit docstring
+        if isinstance(measure, (int, str)):
+            measure = self.measures.resolve(measure)
+        config = self._pipeline_config(measure)
+        return eradiate.pipelines.driver(
+            config, "eradiate.pipelines.definitions.accumulator"
+        )
+
+    def _pipeline_inputs(self, i_measure: int):
+        # This convenience function collects pipeline inputs for a specific measure
+        measure = self.measures[i_measure]
+        result = {
+            "tensors": measure.mi_results,
+            "spectral_grid": self.spectral_grids[i_measure],
+            "ckd_quads": self.ckd_quads[i_measure],
+            "illumination": self.illumination,
+            "srf": measure.srf,
+        }
+        return result
+
+    def _pipeline_config(self, measure):
+        result = {}
+
+        # Which mode is selected?
+        mode = eradiate.mode()
+        result["mode_id"] = mode.id
+
+        # Shall we apply spectral response function weighting (a.k.a convolution)?
+        result["apply_spectral_response"] = isinstance(measure.srf, BandSRF)
+
+        # Which physical variable are we processing?
+        result["var_name"], result["var_metadata"] = measure.var
+
+        # How to convert the raw tensor to a dataarray. Can either be a
+        # `dict` or a `Callable[[mi.TensorXf], xr.DataArray]`.
+        if hasattr(measure, "tensor_to_dataarray"):
+            result["tensor_to_dataarray"] = measure.tensor_to_dataarray
 
         return result
 
