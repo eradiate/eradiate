@@ -82,9 +82,5 @@ class PAccumulatorIntegrator(Integrator):
         if self.periodic_box is not None:
             result["pbox_min"] = self.periodic_box.min.m_as(uck.get("length"))
             result["pbox_max"] = self.periodic_box.max.m_as(uck.get("length"))
-        else:
-            raise ValueError(
-                "Either 'pbox_min'/'pbox_max' or 'periodic_box' must be specified."
-            )
 
         return result
