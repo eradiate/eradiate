@@ -88,7 +88,7 @@ def config(
     return result
 
 
-def driver(config: dict):
+def driver(config: dict, definition_module: str):
     """
     Create a Hamilton :class:`~hamilton.driver.Driver` instance using the
     specified configuration. The post-processing pipeline mutates defined on
@@ -99,6 +99,9 @@ def driver(config: dict):
     config : dict
         A configuration dictionary specifying various parameters
         (see :mod:`~eradiate.pipelines` for details).
+
+    definition_module : str
+        The module path to the Hamilton definitions.
 
     Returns
     -------
@@ -114,7 +117,7 @@ def driver(config: dict):
 
     # Instantiate the driver following the Generic result builder documentation
     # https://hamilton.dagworks.io/en/latest/reference/result-builders/Generic/
-    module = importlib.import_module("eradiate.pipelines.definitions")
+    module = importlib.import_module(definition_module)
     dict_builder = DictResult()
     adapter = SimplePythonGraphAdapter(dict_builder)
     drv = Driver(config, module, adapter=adapter)
