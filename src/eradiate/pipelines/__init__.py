@@ -1,17 +1,9 @@
 """
-This module contains definitions for all post-processing pipeline operations.
-The implementation complies with the `Hamilton <https://hamilton.dagworks.io/>`_
-dataflow framework's specifications: the post-processing pipeline is modelled as
-a directed acyclic graph (DAG), and all post-processing operations are a node in
-that DAG.
-
-Eradiate uses advanced Hamilton features to mutate the pipeline based on
-configuration input. For example:
-
-* Node names reflect the processed physical quantity.
-* Viewing angles are only computed if the measure is distant.
-* Post-processing operations vary depending on the active mode. For example,
-  SRF weighted averaging is only performed in CKD modes.
+This module contains the infrastructure, definitions, and logic for all
+post-processing pipeline operations. The implementation complies with the
+`Hamilton <https://hamilton.dagworks.io/>`__ dataflow framework's specifications:
+the post-processing pipeline is modelled as a directed acyclic graph (DAG), and
+all post-processing operations are a node in that DAG.
 
 For clarity, the implementation is split as follows:
 
