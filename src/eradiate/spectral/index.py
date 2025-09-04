@@ -213,7 +213,7 @@ class CKDSpectralIndex(SpectralIndex):
 
     @property
     def formatted_repr(self) -> str:
-        return f"{self.w:g~P}:{self.g:g}"
+        return f"{self.w:g~P}:{self.g:.3f}"
 
     @property
     def as_hashable(self) -> t.Tuple[float, float]:
