@@ -1,7 +1,7 @@
 """
 This module contains the infrastructure, definitions, and logic for all
 post-processing pipeline operations. The implementation complies with the
-`Hamilton <https://hamilton.dagworks.io/>`_dataflow framework's specifications:
+`Hamilton <https://hamilton.dagworks.io/>`__ dataflow framework's specifications:
 the post-processing pipeline is modelled as a directed acyclic graph (DAG), and
 all post-processing operations are a node in that DAG.
 
