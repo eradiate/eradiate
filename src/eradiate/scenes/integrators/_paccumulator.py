@@ -17,6 +17,9 @@ class PAccumulatorIntegrator(Integrator):
     It supports multiple scattering and accounts for volume interactions.
     The values it accumulate depend on the sensor.
 
+    Warnings
+    --------
+    Moment estimation is not yet implemented.
     """
 
     min_depth: int | None = documented(
@@ -61,6 +64,15 @@ class PAccumulatorIntegrator(Integrator):
         init_type=":class:`.BoundingBox`, dict, tuple, or array-like, optional",
         default=None,
     )
+
+    def __attrs_post_init__(self):
+        print("Hello World")
+        print(f"{self.moment = }")
+        if self.moment:
+            print("Hello World")
+            raise NotImplementedError(
+                "The paccumulator does not implement moment estimation yet."
+            )
 
     @property
     def kernel_type(self) -> str:
