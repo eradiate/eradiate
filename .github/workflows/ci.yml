@@ -20,7 +20,7 @@ jobs:
     runs-on: [self-hosted, ars, ubuntu_x86_64_eradiatecompile_spot]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: "recursive"
       - id: prepare
@@ -38,7 +38,7 @@ jobs:
     if: github.event.pull_request.draft == true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: "recursive"
       - id: prepare
@@ -67,7 +67,7 @@ jobs:
     if: github.event.pull_request.draft == false
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: "recursive"
       - uses: ./.github/actions/prepare-ci
