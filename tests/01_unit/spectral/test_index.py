@@ -26,7 +26,7 @@ def test_spectral_index_new_ckd():
     assert isinstance(ckd, CKDSpectralIndex)
     assert ckd.w == w
     assert ckd.g == g
-    assert ckd.formatted_repr == f"{w:g~P}:{g:g}"
+    assert ckd.formatted_repr == f"{w:g~P}:{g:.3f}"
 
 
 def test_spectral_index_new_invalid():
@@ -82,7 +82,7 @@ def test_spectral_index_from_dict_ckd():
     assert isinstance(ckd, CKDSpectralIndex)
     assert ckd.w == w
     assert ckd.g == g
-    assert ckd.formatted_repr == f"{w:g~P}:{g:g}"
+    assert ckd.formatted_repr == f"{w:g~P}:{g:.3f}"
 
 
 def test_spectral_index_convert_mono():
