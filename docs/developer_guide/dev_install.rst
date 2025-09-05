@@ -339,7 +339,7 @@ In a terminal, try and invoke the :program:`eradiate` command-line interface:
 
 .. code:: shell
 
-   eradiate show
+   eradiate sys-info
 
 The command should print some information to the terminal. You are now ready to
 use Eradiate |smile|

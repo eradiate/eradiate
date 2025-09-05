@@ -1,6 +1,6 @@
 """
 System information display. This script is useful to collect environment
-information. It is the fundamental building block of the `eradiate show`
+information. It is the fundamental building block of the `eradiate sys-info`
 command.
 
 This code is partly taken from `mitsuba.sys_info`.

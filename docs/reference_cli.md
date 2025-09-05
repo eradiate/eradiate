@@ -16,7 +16,8 @@ $ eradiate [OPTIONS] COMMAND [ARGS]...
 **Options**:
 
 * `--log-level [CRITICAL|ERROR|WARNING|INFO|DEBUG|NOTSET]`: Set log level.  [default: WARNING]
-* `--debug / --no-debug`: Enable debug mode. This will notably print exceptions with locals.  [default: no-debug]
+* `--debug`: Enable debug mode. This will notably print exceptions with locals.
+* `--version`: Display version information and exit.
 * `--install-completion`: Install completion for the current shell.
 * `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 * `--help`: Show this message and exit.
@@ -24,8 +25,9 @@ $ eradiate [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `data`: Display the asset manager and file...
-* `show`: Display information useful for debugging.
+* `show`: Alias to 'sys-info' (deprecated).
 * `srf`: Spectral response function filtering utility.
+* `sys-info`: Display information useful for debugging.
 
 ### `eradiate data`
 
@@ -163,7 +165,7 @@ $ eradiate data update [OPTIONS]
 
 ### `eradiate show`
 
-Display information useful for debugging.
+Alias to 'sys-info' (deprecated).
 
 **Usage**:
 
@@ -244,4 +246,18 @@ $ eradiate srf trim [OPTIONS] FILENAME OUTPUT
 * `-s, --show-plot`: Show plot of the filtered region.
 * `-d, --dry-run`: Do not write filtered data to disk.
 * `-i, --interactive`: Prompt user to proceed to saving the filtered dataset.
+* `--help`: Show this message and exit.
+
+### `eradiate sys-info`
+
+Display information useful for debugging.
+
+**Usage**:
+
+```console
+$ eradiate sys-info [OPTIONS]
+```
+
+**Options**:
+
 * `--help`: Show this message and exit.
