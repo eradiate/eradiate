@@ -49,8 +49,6 @@ Making a release of Eradiate
 
 .. _start a Pixi shell: https://pixi.sh/latest/features/environment/#activation
 .. _Bump My Version: https://github.com/callowayproject/bump-my-version
-.. [1] This applies only if the Pixi environment is not activated already, *e.g.*
-       by a ``direnv`` script.
 
 1. **Preparation**
 
@@ -146,3 +144,8 @@ Making a release of Eradiate
       .. code:: shell
 
          pixi run bump
+
+--------------------------------------------------------------------------------
+
+.. [1] This applies only if the Pixi environment is not activated already, *e.g.*
+       by a ``direnv`` script.

@@ -41,19 +41,19 @@ Next, make sure that your machine meets the requirements listed below:
       .. tab-item:: Linux
          :sync: linux
 
-         Operating system: Ubuntu Linux 22.04.1.
+         Operating system: Ubuntu Linux 24.04.3.
 
          .. csv-table::
             :header: Requirement, Tested version
             :widths: 10, 10
 
-            git,       2.34.1
-            cmake,     3.28.0
-            ninja,     1.10.1
-            clang,     11.1.0-6
-            libc++,    11
-            libc++abi, 11
-            python,    3.9.18
+            git,       2.43.0
+            cmake,     3.31.0
+            ninja,     1.11.1
+            clang,     15.0.7
+            libc++,    15
+            libc++abi, 15
+            python,    3.9.20
 
       .. tab-item:: macOS
          :sync: macos
@@ -69,7 +69,7 @@ Next, make sure that your machine meets the requirements listed below:
             cmake,  3.22.1
             ninja,  1.10.2
             clang,  Apple clang version 13.0.0 (clang-1300.0.29.30)
-            python, 3.9.18
+            python, 3.9.20
 
       .. tab-item:: Windows
          :sync: windows
@@ -99,7 +99,7 @@ Next, make sure that your machine meets the requirements listed below:
       .. code:: shell
 
          # Install build tools, compiler and libc++
-         sudo apt install -y git cmake ninja-build clang-11 libc++-11-dev libc++abi-11-dev
+         sudo apt install -y git cmake ninja-build clang-15 libc++-15-dev libc++abi-15-dev
 
          # Install libraries for image I/O
          sudo apt install -y libpng-dev zlib1g-dev libjpeg-dev
@@ -114,9 +114,8 @@ Next, make sure that your machine meets the requirements listed below:
 
       .. note:: We currently recommend compiling the C++ code with Clang based on
          `upstream advice from the Mitsuba development team <https://mitsuba.readthedocs.io/en/latest/src/developer_guide/compiling.html#linux>`__.
-         We also recommend using Clang 11 — not another version — because we also
-         encountered issues building with other versions. We hope to improve
-         compiler support in the future.
+         While these instructions use Clang 15, other versions should work as
+         well.
 
    .. tab-item:: macOS
       :sync: macos
@@ -293,8 +292,8 @@ Clang.
 
          .. code:: shell
 
-            export CC=clang-11
-            export CXX=clang++-11
+            export CC=clang-15
+            export CXX=clang++-15
 
       .. tab-item:: macOS
          :sync: macos

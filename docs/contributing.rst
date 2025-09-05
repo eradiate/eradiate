@@ -271,6 +271,11 @@ are useful when working on them:
 Contributing to the code base
 -----------------------------
 
+Installation
+^^^^^^^^^^^^
+
+For installation instructions, see the :doc:`dedicated page <developer_guide/dev_install>`.
+
 Style
 ^^^^^
 
@@ -551,10 +556,10 @@ guideline for relevant and helpful test specification.
 .. _sec-contributing-tips:
 
 Tips
-====
+----
 
 Shallow submodule caveats
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Eradiate uses Git submodules to ship some of its data. Over time, these can grow
 and become large enough so that using a *shallow submodule*. Shallow clones
@@ -575,7 +580,7 @@ contains probably what you need to do:
    git checkout the-branch-i-ve-been-looking-for
 
 Profiling
----------
+^^^^^^^^^
 
 Tests are a very good opportunity to profile Eradiate. We recommend running
 tests with `pytest-profiling <https://pypi.org/project/pytest-profiling/>`__ (see
