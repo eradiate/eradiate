@@ -3893,8 +3893,8 @@ packages:
   requires_python: '>=3.8'
 - pypi: ./
   name: eradiate
-  version: 0.31.0.dev1
-  sha256: b35e4f9a4bcfe47ac87f281ba62d65dc4e5f4323cfd6b5ea94bed4a0fcc05139
+  version: 0.31.0
+  sha256: e620dc9c19300f115fefb2556ea125de0a5c8a54ec8007ea44ca048ccac7e7ee
   requires_dist:
   - aenum
   - attrs>=22.2
