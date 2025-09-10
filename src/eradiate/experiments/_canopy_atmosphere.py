@@ -245,7 +245,6 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
 
         return result
 
-    @property
     def _context_kwargs(self) -> dict[str, t.Any]:
         kwargs = {}
 

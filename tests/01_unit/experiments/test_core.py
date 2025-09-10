@@ -1,10 +1,57 @@
+from typing import Any
+
+import numpy as np
 import pytest
 import xarray as xr
 
 import eradiate
-from eradiate.experiments import AtmosphereExperiment
+from eradiate.experiments import AtmosphereExperiment, EarthObservationExperiment
 from eradiate.experiments._core import MeasureRegistry
+from eradiate.scenes.core import SceneElement
 from eradiate.units import unit_registry as ureg
+
+
+class ConcreteEarthObservationExperiment(EarthObservationExperiment):
+    def _context_kwargs(self) -> dict[str, Any]:
+        return {}
+
+    @property
+    def scene_objects(self) -> dict[str, SceneElement]:
+        return {}
+
+
+def test_contexts(mode_mono):
+    """
+    Check if generated kernel contexts account for selected sensors appropriately.
+    """
+    exp = ConcreteEarthObservationExperiment(
+        measures=[
+            {
+                "type": "mdistant",
+                "id": mes_id,
+                "srf": {"type": "delta", "wavelengths": w},
+            }
+            for mes_id, w in [
+                ("mes1", [440.0]),
+                ("mes2", [550.0]),
+                ("mes3", [440.0, 550.0]),
+                ("mes4", [550.0, 660.0]),
+            ]
+        ]
+    )
+
+    assert np.allclose(exp.context_init().si.w.m, 440.0)
+
+    for measures, expected in [
+        (None, [440.0, 550.0, 660.0]),
+        (0, [440.0]),
+        ([0, 1], [440.0, 550.0]),
+        ([0, 1, 2], [440.0, 550.0]),
+        ([1, 3], [550.0, 660.0]),
+        ([2, 3], [440.0, 550.0, 660.0]),
+    ]:
+        result = [ctx.si.w.m for ctx in exp.contexts(measures)]
+        assert np.allclose(result, expected), f"{measures = }"
 
 
 @pytest.fixture()
