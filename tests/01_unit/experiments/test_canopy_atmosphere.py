@@ -203,7 +203,7 @@ def test_canopy_atmosphere_experiment_real_life(
             {"type": "radiancemeter", "origin": [1, 0, 0], "id": "radiancemeter"},
         ],
     )
-    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init())
 
     # -- Distant measures get no external medium
     assert mi_wrapper.obj.sensors()[0].medium() is None

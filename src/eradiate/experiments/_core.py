@@ -374,7 +374,6 @@ class Experiment(ABC):
         """
         pass
 
-    @property
     @abstractmethod
     def context_init(self) -> KernelContext:
         """
@@ -382,11 +381,20 @@ class Experiment(ABC):
         """
         pass
 
-    @property
     @abstractmethod
-    def contexts(self) -> list[KernelContext]:
+    def contexts(self, measures: None | int | list[int] = None) -> list[KernelContext]:
         """
         Return a list of contexts used for processing.
+
+        Parameters
+        ----------
+        measures : int or list of int, optional
+            A list of the indexes of the measures to account for when emitting
+            kernel contexts. If unset, all measures are accounted for.
+
+        Returns
+        -------
+        list of .KernelContext
         """
         pass
 
@@ -553,27 +561,30 @@ class EarthObservationExperiment(Experiment, ABC):
 
         yield from generator()
 
-    @property
     def context_init(self):
         # Inherit docstring
 
         return KernelContext(
-            si=self.spectral_indices(0).__next__(), kwargs=self._context_kwargs
+            si=self.spectral_indices(0).__next__(), kwargs=self._context_kwargs()
         )
 
-    @property
     @abstractmethod
     def _context_kwargs(self) -> dict[str, t.Any]:
         pass
 
-    @property
-    def contexts(self) -> list[KernelContext]:
+    def contexts(self, measures: None | int | list[int] = None) -> list[KernelContext]:
         # Inherit docstring
 
         # Collect contexts from all measures
         sis = []
 
-        for measure_index, _ in enumerate(self.measures):
+        if measures is None:
+            measures = list(range(len(self.measures)))
+
+        if isinstance(measures, int):
+            measures = [measures]
+
+        for measure_index in measures:
             _si = list(self.spectral_indices(measure_index))
             sis.extend(_si)
 
@@ -587,7 +598,8 @@ class EarthObservationExperiment(Experiment, ABC):
             sorted(sis, key=key), cmp=lambda x, y: key(x) == key(y)
         )
 
-        return [KernelContext(si, kwargs=self._context_kwargs) for si in sis]
+        kwargs = self._context_kwargs()
+        return [KernelContext(si, kwargs=kwargs) for si in sis]
 
     @property
     @abstractmethod
@@ -623,8 +635,9 @@ class EarthObservationExperiment(Experiment, ABC):
         kdict_template.update(self.kdict)
         umap_template.update(self.kpmap)
         try:
+            ctx = self.context_init()
             self.mi_scene = mi_traverse(
-                mi.load_dict(kdict_template.render(ctx=self.context_init)),
+                mi.load_dict(kdict_template.render(ctx=ctx)),
                 umap_template=umap_template,
             )
         except RuntimeError as e:
@@ -646,7 +659,7 @@ class EarthObservationExperiment(Experiment, ABC):
         if self.mi_scene is None:
             self.init()
 
-        # Collect active sensor IDs
+        # Normalize list of processed measures
         if measures is None:
             measures = self.measures
         else:
@@ -654,6 +667,11 @@ class EarthObservationExperiment(Experiment, ABC):
                 measures = [measures]
             measures = [self.measures.resolve(i) for i in measures]
 
+        # Generate kernel contexts
+        measure_idxs = [self.measures.get_index(measure.id) for measure in measures]
+        ctxs = self.contexts(measure_idxs)
+
+        # Collect active sensor IDs
         active_sensors = [measure.sensor_id for measure in measures]
         mi_sensors = self.mi_scene.obj.sensors()
         active_sensors = [
@@ -665,7 +683,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
         mi_results = mi_render(
             self.mi_scene,
-            self.contexts,
+            ctxs=ctxs,
             sensors=active_sensors,
             seed_state=seed_state,
             spp=spp,

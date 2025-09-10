@@ -58,7 +58,7 @@ def test_dem_experiment_ckd(mode_ckd, atmosphere_us_standard_ckd):
         surface={"type": "lambertian"},
         measures={"type": "mdistant", "id": "mdistant_measure"},
     )
-    check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
+    check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init())
 
 
 def test_dem_experiment_kernel_dict(modes_all_double):
@@ -77,7 +77,7 @@ def test_dem_experiment_kernel_dict(modes_all_double):
     )
     # -- Surface has default value
     mi_wrapper = check_scene_element(
-        exp.scene, mi.Scene, ctx=exp.context_init, drop_parameters=False
+        exp.scene, mi.Scene, ctx=exp.context_init(), drop_parameters=False
     )  # Do not drop untracked parameters: we want to check the surface transform
     np.testing.assert_allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
@@ -106,7 +106,7 @@ def test_dem_experiment_real_life(mode_mono, atmosphere_us_standard_mono):
         ],
     )
 
-    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init)
+    mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init())
 
     # -- Distant measures get no external medium
     assert mi_wrapper.obj.sensors()[0].medium() is None
