@@ -10,9 +10,6 @@ Usage is documented in the
 that the :func:`.load_rami_scenario` function can download scenario data
 automatically.
 
-.. [#sn2] We thank the `DART <https://dart.omp.eu/>`__ team for letting us use
-   their 3D model files to derive our scene models.
-
 .. note::
 
    The renders in the index table below use material spectra interpolated from
@@ -175,3 +172,8 @@ automatically.
       - wytham wood
       - This version of the Wytham Wood scene uses data from the updated v2 dataset.
       - .. image:: /_images/rami_scenes/WYTHAM_WOOD_30_90.png
+
+--------------------------------------------------------------------------------
+
+.. [#sn2] We thank the `DART <https://dart.omp.eu/>`__ team for letting us use
+   their 3D model files to derive our scene models.

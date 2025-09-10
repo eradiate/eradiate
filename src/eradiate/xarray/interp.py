@@ -129,10 +129,10 @@ def dataarray_to_rgb(
         550 (green) and 660 (red) nm, use
         ``channels=[("w", 660), ("w", 550), ("w", 440)]``.
 
-    normalize : bool, optional
+    normalize : bool, default: True
         If ``True``, the data will be normalized by its maximum value.
 
-    gamma_correction : bool, optional
+    gamma_correction : bool, default: True
         If ``True``, apply a gamma operator to the data.
 
     Returns
