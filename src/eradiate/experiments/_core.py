@@ -37,7 +37,7 @@ from ..scenes.illumination import (
     DirectionalIllumination,
     illumination_factory,
 )
-from ..scenes.integrators import Integrator, integrator_factory
+from ..scenes.integrators import Integrator, MonteCarloIntegrator, integrator_factory
 from ..scenes.measure import (
     Measure,
     MultiDistantMeasure,
@@ -670,7 +670,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
         # Map bitmap names to result names
         mapping = {}
-        if self.integrator.stokes:
+        if isinstance(self.integrator, MonteCarloIntegrator) and self.integrator.stokes:
             stokes = ["S0", "S1", "S2", "S3"]
             iquv = ["I", "Q", "U", "V"]
 
