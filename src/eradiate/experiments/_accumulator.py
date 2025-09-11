@@ -59,8 +59,12 @@ logger = logging.getLogger(__name__)
 class AccumulatorExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a scene with an explicit canopy and atmosphere.
+    Accumulates quantities defined by the measures used. See `.measures`
+    for the list of supported measures.
     This experiment assumes that the surface is plane and accounts for ground
     unit cell padding.
+    TODO : is padding still relevant? since we now have periodic bounds we
+    might not need padding anymore.
 
     Warnings
     --------
@@ -69,23 +73,6 @@ class AccumulatorExperiment(EarthObservationExperiment):
 
     Notes
     -----
-    * A post-initialization step will constrain the measure setup if a
-      distant measure is used and no target is defined:
-
-      * if a canopy is defined, the target will be set to the top of the canopy
-        unit cell (*i.e.* without its padding);
-      * if no canopy is defined, the target will be set according to the
-        atmosphere (*i.e.* to [0, 0, `toa`] where `toa` is the top-of-atmosphere
-        altitude);
-      * if neither atmosphere nor canopy are defined, the target is set to
-        [0, 0, 0].
-
-    * This experiment supports arbitrary measure positioning, except for
-      :class:`.MultiRadiancemeterMeasure`, for which subsensor origins are
-      required to be either all inside or all outside of the atmosphere. If an
-      unsuitable configuration is detected, a :class:`ValueError` will be raised
-      during initialization.
-
     * Currently this experiment is limited to the plane-parallel geometry.
     """
 
@@ -390,10 +377,6 @@ class AccumulatorExperiment(EarthObservationExperiment):
 
                 # Update the element with the determined filter value
                 element = attrs.evolve(element, bsdf_filter=filter_value)
-                print(
-                    f"Pippin filter: {filter_value}, id: {bsdf_id}, {element.bsdf_filter}"
-                )
-                # print(f"element: {element}")
 
             # Handle MeshTree's mesh_tree_elements
             if hasattr(element, "mesh_tree_elements"):
@@ -411,19 +394,15 @@ class AccumulatorExperiment(EarthObservationExperiment):
                         updated_canopy_element = apply_filters_to_element(
                             sub_element.canopy_element
                         )
-                        # print(f"{updated_canopy_element =}")
                         updated_sub_element = attrs.evolve(
                             sub_element, canopy_element=updated_canopy_element
                         )
-                        # print(f"updated filter: {updated_sub_element.canopy_element.bsdf_filter}")
                         updated_elements.append(updated_sub_element)
                     else:
                         updated_elements.append(sub_element)
-                        # print("recurse frodo")
                 element = attrs.evolve(
                     element, instanced_canopy_elements=updated_elements
                 )
-                # print(f"{element =}")
 
             # Handle discrete canopy elements list
             if hasattr(element, "elements"):
@@ -446,7 +425,6 @@ class AccumulatorExperiment(EarthObservationExperiment):
 
         if self.canopy is not None:
             self.canopy = apply_filters_to_element(self.canopy)
-        # print(f"{self.canopy.instanced_canopy_elements[0].canopy_element = }")
 
         if self.surface is not None:
             # If the surface has a BSDF, apply filters to it as well
@@ -459,9 +437,6 @@ class AccumulatorExperiment(EarthObservationExperiment):
 
                 # Update the surface BSDF filter
                 self.surface = attrs.evolve(self.surface.bsdf, filter_type=filter_value)
-                print(
-                    f"Surface BSDF filter: {filter_value}, id: {bsdf_id}, {self.surface.bsdf.filter_type}"
-                )
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         result = super()._dataset_metadata(measure)

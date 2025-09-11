@@ -66,10 +66,7 @@ class PAccumulatorIntegrator(Integrator):
     )
 
     def __attrs_post_init__(self):
-        print("Hello World")
-        print(f"{self.moment = }")
         if self.moment:
-            print("Hello World")
             raise NotImplementedError(
                 "The paccumulator does not implement moment estimation yet."
             )
