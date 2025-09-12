@@ -77,8 +77,23 @@ def test_measure_registry_fail(mode_mono, srf):
     # Detect duplicate measure IDs
     with pytest.raises(ValueError):
         MeasureRegistry(
-            [{"type": "mdistant", "id": "mdistant", "srf": srf} for i in range(3)]
+            [{"type": "mdistant", "id": "mdistant", "srf": srf} for _ in range(3)]
         )
+
+
+@pytest.fixture(scope="function")
+def atmosphere_experiment():
+    yield AtmosphereExperiment(
+        atmosphere=None,
+        measures=[
+            {
+                "type": "mdistant",
+                "id": f"mdistant_{i}",
+                "srf": {"type": "delta", "wavelengths": [550.0]},
+            }
+            for i in range(3)
+        ],
+    )
 
 
 @pytest.mark.parametrize(
@@ -89,28 +104,14 @@ def test_measure_registry_fail(mode_mono, srf):
         ([0, 1], dict),
     ],
 )
-def test_run_function(modes_all_double, srf, measures, expected_type):
-    exp = AtmosphereExperiment(
-        atmosphere=None,
-        measures=[
-            {"type": "mdistant", "id": f"mdistant_{i}", "srf": srf} for i in range(3)
-        ],
-    )
-
-    result = eradiate.run(exp, measures=measures, spp=4)
+def test_run_function(modes_all_double, atmosphere_experiment, measures, expected_type):
+    result = eradiate.run(atmosphere_experiment, measures=measures, spp=4)
     assert isinstance(result, expected_type)
 
 
-def test_run_function_multiple_times(mode_mono, srf):
-    exp = AtmosphereExperiment(
-        atmosphere=None,
-        measures=[
-            {"type": "mdistant", "id": f"mdistant_{i}", "srf": srf} for i in range(2)
-        ],
-    )
-
-    result = eradiate.run(exp, measures=0, spp=4)
+def test_run_function_multiple_times(mode_mono, atmosphere_experiment):
+    result = eradiate.run(atmosphere_experiment, measures=0, spp=4)
     assert isinstance(result, xr.Dataset)
-    result = eradiate.run(exp, measures=1, spp=4)
+    result = eradiate.run(atmosphere_experiment, measures=1, spp=4)
     assert isinstance(result, xr.Dataset)
-    assert len(exp.results) == 2
+    assert len(atmosphere_experiment.results) == 2
