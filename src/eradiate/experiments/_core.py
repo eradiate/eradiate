@@ -47,7 +47,7 @@ from ..spectral.ckd_quad import CKDQuadConfig
 from ..spectral.grid import CKDSpectralGrid, MonoSpectralGrid, SpectralGrid
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_registry as ureg
-from ..util.misc import deduplicate_sorted, onedict_value
+from ..util.misc import deduplicate_sorted
 
 logger = logging.getLogger(__name__)
 
@@ -819,10 +819,28 @@ def run(
     Returns
     -------
     Dataset or dict[str, Dataset]
-        If a single measure is defined, a single xarray dataset is returned.
-        If several measures are defined, a dictionary mapping measure IDs to
+        If a single measure is processed, a single xarray dataset is returned.
+        If several measures are processed, a dictionary mapping measure IDs to
         the corresponding result dataset is returned.
+
+    Notes
+    -----
+    * Successive calls to this function with different measures will not reset
+      the :attr:`Experiment.results` dictionary.
+    * Successive calls with already processed measures will overwrite prior
+      results.
     """
+    if measures is None:
+        measures = list(range(len(exp.measures)))
+    if isinstance(measures, (int, str)):
+        measures = [measures]
+
     exp.process(spp=spp, measures=measures, seed_state=seed_state)
     exp.postprocess(measures=measures)
-    return exp.results if len(exp.results) > 1 else onedict_value(exp.results)
+
+    measure_ids = [exp.measures.get_id(m) for m in measures]
+    return (
+        {x: exp.results[x] for x in measure_ids}
+        if len(measure_ids) > 1
+        else exp.results[measure_ids[0]]
+    )
