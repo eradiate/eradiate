@@ -101,15 +101,8 @@ class RPVBSDF(BSDF):
     )
 
     @property
-    def kernel_type(self) -> str:
-        return "rpv"
-
-    @property
     def template(self) -> dict:
         # Inherit docstring
-
-        result = super().template
-
         objects = {
             "rho_0": traverse(self.rho_0)[0],
             "k": traverse(self.k)[0],
@@ -118,6 +111,8 @@ class RPVBSDF(BSDF):
 
         if self.rho_c is not None:
             objects["rho_c"] = traverse(self.rho_c)[0]
+
+        result = {"type": "rpv"}
 
         for obj_key, obj_values in objects.items():
             for key, value in obj_values.items():
