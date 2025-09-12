@@ -200,15 +200,6 @@ class AccumulatorExperiment(EarthObservationExperiment):
         default=None,
     )
 
-    context_kwargs_ext: dict[str, t.Any] | None = documented(
-        attrs.field(
-            default=None,
-        ),
-        doc="Attempt at updating parameters without reloading... ",
-        type="dict[str, t.Any] or None",
-        init_type="None",
-    )
-
     def __attrs_post_init__(self):
         self._normalize_spectral()
         self._normalize_atmosphere()
@@ -463,7 +454,7 @@ class AccumulatorExperiment(EarthObservationExperiment):
 
     @property
     def _context_kwargs(self) -> dict[str, t.Any]:
-        kwargs = {} if self.context_kwargs_ext is None else {**self.context_kwargs_ext}
+        kwargs = {}
 
         return kwargs
 
