@@ -82,7 +82,12 @@ def test_measure_registry_fail(mode_mono, srf):
 
 
 @pytest.mark.parametrize(
-    "measures, expected_type", [(None, dict), (1, xr.Dataset), ([0, 1], dict)]
+    "measures, expected_type",
+    [
+        (None, dict),
+        (1, xr.Dataset),
+        ([0, 1], dict),
+    ],
 )
 def test_run_function(modes_all_double, srf, measures, expected_type):
     exp = AtmosphereExperiment(
@@ -91,5 +96,21 @@ def test_run_function(modes_all_double, srf, measures, expected_type):
             {"type": "mdistant", "id": f"mdistant_{i}", "srf": srf} for i in range(3)
         ],
     )
-    result = eradiate.run(exp, measures=measures)
+
+    result = eradiate.run(exp, measures=measures, spp=4)
     assert isinstance(result, expected_type)
+
+
+def test_run_function_multiple_times(mode_mono, srf):
+    exp = AtmosphereExperiment(
+        atmosphere=None,
+        measures=[
+            {"type": "mdistant", "id": f"mdistant_{i}", "srf": srf} for i in range(2)
+        ],
+    )
+
+    result = eradiate.run(exp, measures=0, spp=4)
+    assert isinstance(result, xr.Dataset)
+    result = eradiate.run(exp, measures=1, spp=4)
+    assert isinstance(result, xr.Dataset)
+    assert len(exp.results) == 2
