@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import logging
 import typing as t
+import warnings
 
 import attrs
+import mitsuba as mi
+import pint
 import pinttr
 import xarray as xr
 from hamilton.driver import Driver
@@ -17,6 +20,7 @@ from ._helpers import (
 )
 from .. import pipelines as pl
 from ..attrs import define, documented, get_doc
+from ..frame import AzimuthConvention
 from ..scenes.atmosphere import (
     Atmosphere,
     HeterogeneousAtmosphere,
@@ -24,10 +28,10 @@ from ..scenes.atmosphere import (
     MolecularAtmosphere,
     atmosphere_factory,
 )
-from ..scenes.biosphere import Canopy, CanopyElement, MeshTreeElement, biosphere_factory
+from ..scenes.biosphere import Canopy, biosphere_factory
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import BoundingBox, SceneElement
-from ..scenes.filters import FilterType
+from ..scenes.filters import FilterFlags, FilterType
 from ..scenes.geometry import (
     PlaneParallelGeometry,
     SceneGeometry,
@@ -196,34 +200,6 @@ class AccumulatorExperiment(EarthObservationExperiment):
         default=None,
     )
 
-    bsdf_filters: dict[str, FilterType] | None = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(
-                lambda x: {k: FilterType(v) for k, v in x.items()} if x else None
-            ),
-        ),
-        doc="Dictionary mapping BSDF IDs to filter types. Allows fine-grained "
-        "control over which specific BSDFs to include/exclude from measurements. "
-        "BSDF IDs follow the pattern 'bsdf_{{element_id}}' (e.g., 'bsdf_tree_1', 'bsdf_leaf_cloud_1').",
-        type="dict[str, .FilterType] or None",
-        init_type="dict[str, .FilterType or int] or None, optional",
-        default="None",
-    )
-
-    default_bsdf_filter: FilterType = documented(
-        attrs.field(
-            default=FilterType.INCLUDE,
-            converter=FilterType,
-            validator=attrs.validators.instance_of(FilterType),
-        ),
-        doc="Default filter type for BSDFs not explicitly listed in bsdf_filters. "
-        "Use FilterType.INCLUDE to measure interactions, FilterType.IGNORE to exclude them.",
-        type=".FilterType",
-        init_type=".FilterType or int",
-        default="FilterType.INCLUDE",
-    )
-
     context_kwargs_ext: dict[str, t.Any] | None = documented(
         attrs.field(
             default=None,
@@ -236,10 +212,8 @@ class AccumulatorExperiment(EarthObservationExperiment):
     def __attrs_post_init__(self):
         self._normalize_spectral()
         self._normalize_atmosphere()
-        self._normalize_measures()
         self._normalize_integrator()
         self._normalize_illumination()
-        self._apply_bsdf_filters()
 
     def _normalize_atmosphere(self) -> None:
         """
@@ -265,14 +239,6 @@ class AccumulatorExperiment(EarthObservationExperiment):
             # override to its components.
             self.atmosphere.update()
 
-    def _normalize_measures(self) -> None:
-        """
-        Ensure that distant measure targets are set to appropriate values.
-        Processed measures will have their ray target and origin parameters
-        overridden if relevant.
-        """
-        pass
-
     def _normalize_integrator(self) -> None:
         """
         Ensures that the integrator is compatible with the atmosphere and geometry.
@@ -297,154 +263,143 @@ class AccumulatorExperiment(EarthObservationExperiment):
                 periodic_box=self.periodic_box,
             )
 
-    def get_bsdf_ids(self) -> list[str]:
-        """
-        Return list of all BSDF IDs that will be generated in the scene.
+    def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
+        result = super()._dataset_metadata(measure)
+        return result
 
-        This method helps users discover which BSDF IDs are available for filtering.
-        The scene is temporarily built to extract BSDF IDs from templates.
+    def get_filter_parameter_paths(self, filter_flags: FilterFlags) -> list[str]:
+        """
+        Get the path to the filter parameters in the kernel dictionnary. Note
+        that this method will initialise the kernel dictionary if not already done.
+
+        Parameters
+        ----------
+        filter_flags: FilterFlags
+            Indicates which filter parameters should be retrieved.
 
         Returns
         -------
         list[str]
-            List of BSDF IDs that can be used in bsdf_filters.
+            List of filter of parameter paths.
         """
-        bsdf_ids = []
+        if self.mi_scene is None:
+            self.init()
 
-        def extract_bsdf_ids_from_element(element):
-            """Recursively extract BSDF IDs from scene elements."""
-            if hasattr(element, "_template_bsdfs"):
-                try:
-                    template = element._template_bsdfs
-                    if isinstance(template, property):
-                        template = template.fget(element)
-                    elif callable(template):
-                        template = template()
+        # Mapping from flags to Mitsuba types, to be used when traversing the scene.
+        filter_flag_to_mi = {
+            FilterFlags.BSDF: mi.BSDF,
+            FilterFlags.SHAPE: mi.Shape,
+            FilterFlags.PHASE: mi.PhaseFunction,
+        }
 
-                    # Extract BSDF IDs from template keys
-                    for key in template.keys():
-                        if key.endswith(".type"):
-                            bsdf_id = key.split(".")[0]
-                            if bsdf_id not in bsdf_ids:
-                                bsdf_ids.append(bsdf_id)
-                except Exception:
-                    # Skip if template generation fails
-                    pass
+        # Determine the parent types to look for based on the provided flags
+        parent_type = []
+        for flag in FilterFlags:
+            if flag in filter_flags:
+                parent_type.append(filter_flag_to_mi[flag])
+        parent_type = tuple(parent_type)
 
-            # Handle composite canopy elements recursively
-            if hasattr(element, "instanced_canopy_elements"):
-                for sub_element in element.instanced_canopy_elements:
-                    if hasattr(sub_element, "canopy_element"):
-                        extract_bsdf_ids_from_element(sub_element.canopy_element)
+        obj_wrapper = eradiate.kernel.mi_traverse(self.mi_scene.obj)
+        filter_paths = []
+        for k, v in obj_wrapper.parameters.properties.items():
+            value, value_type, node, flags = v
 
-            # Handle discrete canopy elements list
-            if hasattr(element, "elements"):
-                for sub_element in element.elements:
-                    if hasattr(sub_element, "canopy_element"):
-                        extract_bsdf_ids_from_element(sub_element.canopy_element)
-                    else:
-                        extract_bsdf_ids_from_element(sub_element)
+            keep_param = True
+            keep_param &= k.endswith(".filter")
+            keep_param &= isinstance(node, parent_type)
 
-        # Extract BSDF IDs from canopy
-        if self.canopy is not None:
-            extract_bsdf_ids_from_element(self.canopy)
+            if mi.BSDF == parent_type or mi.BSDF in parent_type:
+                keep_param &= node.class_().name() != "Null"
 
-        # Extract BSDF IDs from surface (surface BSDFs typically don't follow the same pattern,
-        # but we can try to get them if they have _template_bsdfs)
-        if self.surface is not None:
-            extract_bsdf_ids_from_element(self.surface)
+            if keep_param:
+                filter_paths.append(k)
 
-        return sorted(bsdf_ids)
+        return filter_paths
 
-    def _apply_bsdf_filters(self):
-        """Apply BSDF filters by updating canopy element filter fields."""
-        if self.bsdf_filters is None and self.default_bsdf_filter == FilterType.INCLUDE:
+    def update_filters(self, filter_dict: dict[str, FilterType]) -> None:
+        """
+        Update the filter parameter in the kernel dictionary. The parameter path
+        to the filter can be listed using `get_filter_parameter_paths`. Note
+        that this method will initialise the kernel dictionary if not already done.
+
+        Parameters
+        ----------
+        filter_dict : dict[str, FilterType]
+            Mapping from filter parameter path to filter type.
+        """
+        if self.mi_scene is None:
+            self.init()
+
+        obj_wrapper = eradiate.kernel.mi_traverse(self.mi_scene.obj)
+        for param_path, filter_value in filter_dict.items():
+            obj_wrapper.parameters[param_path] = filter_value
+        obj_wrapper.parameters.update()
+
+    def update_illumination(
+        self,
+        zenith: pint.Quantity | None = None,
+        azimuth: pint.Quantity | None = None,
+        azimuth_convention: AzimuthConvention | None = None,
+    ) -> None:
+        """
+        Update the illumination direction in the kernel dictionary. This is only
+        available for directional illuminations. Note that this method will
+        initialise the kernel dictionary if not already done.
+
+        Parameters
+        ----------
+        zenith : pint.Quantity | None
+            Illumination zenith angle.
+
+        azimuth : pint.Quantity | None
+            Illumination azimuth angle.
+
+        azimuth_convention: AzimuthConvention | None
+            Illumination azimuth convention.
+        """
+
+        if not isinstance(
+            self.illumination,
+            eradiate.scenes.illumination.AbstractDirectionalIllumination,
+        ):
+            warnings.warn(
+                "Illumination not a directional illumination. Cannot update its direction."
+            )
             return
 
-        def apply_filters_to_element(element):
-            """Recursively apply filter settings to canopy elements."""
+        if self.mi_scene is None:
+            self.init()
 
-            # If this is a canopy element, update its filter field
-            if isinstance(element, (CanopyElement, MeshTreeElement)):
-                # Get the BSDF ID that will be generated for this element
-                bsdf_id = f"bsdf_{element.id}"
+        if zenith is not None:
+            self.illumination.zenith = zenith
+        if azimuth is not None:
+            self.illumination.azimuth = azimuth
+        if azimuth_convention is not None:
+            self.illumination.azimuth_convention = azimuth_convention
 
-                # Determine filter value: use specific filter if defined, otherwise use default
-                if self.bsdf_filters and bsdf_id in self.bsdf_filters:
-                    filter_value = self.bsdf_filters[bsdf_id]
-                else:
-                    filter_value = self.default_bsdf_filter
+        self._normalize_illumination()
 
-                # Update the element with the determined filter value
-                element = attrs.evolve(element, bsdf_filter=filter_value)
+        param_path = None
+        obj_wrapper = eradiate.kernel.mi_traverse(self.mi_scene.obj)
+        for k, v in obj_wrapper.parameters.properties.items():
+            value, value_type, node, flags = v
+            keep_param = True
 
-            # Handle MeshTree's mesh_tree_elements
-            if hasattr(element, "mesh_tree_elements"):
-                updated_elements = []
-                for mesh_element in element.mesh_tree_elements:
-                    updated_mesh_element = apply_filters_to_element(mesh_element)
-                    updated_elements.append(updated_mesh_element)
-                element = attrs.evolve(element, mesh_tree_elements=updated_elements)
+            keep_param &= k.endswith(".to_world")
+            keep_param &= isinstance(node, mi.Emitter)
 
-            # Handle composite canopy elements recursively
-            if hasattr(element, "instanced_canopy_elements"):
-                updated_elements = []
-                for sub_element in element.instanced_canopy_elements:
-                    if hasattr(sub_element, "canopy_element"):
-                        updated_canopy_element = apply_filters_to_element(
-                            sub_element.canopy_element
-                        )
-                        updated_sub_element = attrs.evolve(
-                            sub_element, canopy_element=updated_canopy_element
-                        )
-                        updated_elements.append(updated_sub_element)
-                    else:
-                        updated_elements.append(sub_element)
-                element = attrs.evolve(
-                    element, instanced_canopy_elements=updated_elements
-                )
+            if keep_param:
+                param_path = k
+                break
 
-            # Handle discrete canopy elements list
-            if hasattr(element, "elements"):
-                updated_elements = []
-                for sub_element in element.elements:
-                    if hasattr(sub_element, "canopy_element"):
-                        updated_canopy_element = apply_filters_to_element(
-                            sub_element.canopy_element
-                        )
-                        updated_sub_element = attrs.evolve(
-                            sub_element, canopy_element=updated_canopy_element
-                        )
-                        updated_elements.append(updated_sub_element)
-                    else:
-                        updated_sub_element = apply_filters_to_element(sub_element)
-                        updated_elements.append(updated_sub_element)
-                element = attrs.evolve(element, elements=updated_elements)
+        if param_path is None:
+            warnings.warn(
+                "Could not find the to_world parameter of the emitter to update its direction."
+            )
+            return
 
-            return element
-
-        if self.canopy is not None:
-            self.canopy = apply_filters_to_element(self.canopy)
-
-        if self.surface is not None:
-            # If the surface has a BSDF, apply filters to it as well
-            if hasattr(self.surface, "bsdf") and self.surface.bsdf is not None:
-                bsdf_id = self.surface._bsdf_id
-                if self.bsdf_filters and bsdf_id in self.bsdf_filters:
-                    filter_value = self.bsdf_filters[bsdf_id]
-                else:
-                    filter_value = self.default_bsdf_filter
-
-                # Update the surface BSDF filter
-                self.surface = attrs.evolve(self.surface.bsdf, filter_type=filter_value)
-
-    def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
-        result = super()._dataset_metadata(measure)
-
-        if measure.is_distant():
-            result["title"] = "Top-of-atmosphere simulation results"
-
-        return result
+        obj_wrapper.parameters[param_path] = self.illumination._to_world
+        obj_wrapper.parameters.update()
 
     def postprocess(self, measures: None | int | list[int] = None) -> None:
         # Inherit docstring

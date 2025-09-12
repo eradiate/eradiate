@@ -1,6 +1,16 @@
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import Flag, IntEnum, auto
+
+
+class FilterFlags(Flag):
+    """
+    Flags for different types of scene elements that can be filtered.
+    """
+
+    BSDF = auto()
+    SHAPE = auto()
+    PHASE = auto()
 
 
 class FilterType(IntEnum):
