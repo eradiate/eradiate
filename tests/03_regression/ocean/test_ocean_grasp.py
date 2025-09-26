@@ -12,7 +12,9 @@ from eradiate.test_tools.test_cases.ocean import (
 
 
 @pytest.mark.regression
-def test_ocean_grasp_coastal_no_atm(mode_mono_double, artefact_dir, session_timestamp):
+def test_ocean_grasp_coastal_no_atm(
+    mode_mono_double, artefact_dir, session_timestamp, plot_figures
+):
     """
     *Ocean GRASP Coastal no atm regression test*
 
@@ -41,13 +43,16 @@ def test_ocean_grasp_coastal_no_atm(mode_mono_double, artefact_dir, session_time
             threshold=1e-6,
             archive_dir=artefact_dir,
             variable="brf",
+            plot=plot_figures,
         )
 
-        assert test.run(), f"{w = }"
+    assert test.run(), f"{w = }"
 
 
 @pytest.mark.regression
-def test_ocean_grasp_open_no_atm(mode_mono_double, artefact_dir, session_timestamp):
+def test_ocean_grasp_open_no_atm(
+    mode_mono_double, artefact_dir, session_timestamp, plot_figures
+):
     """
     *Ocean GRASP Open no atm regression test*
 
@@ -74,13 +79,16 @@ def test_ocean_grasp_open_no_atm(mode_mono_double, artefact_dir, session_timesta
             threshold=1e-6,
             archive_dir=artefact_dir,
             variable="brf",
+            plot=plot_figures,
         )
 
         assert test.run(), f"{w = }"
 
 
 @pytest.mark.regression
-def test_ocean_grasp_open_atm(mode_mono_double, artefact_dir, session_timestamp):
+def test_ocean_grasp_open_atm(
+    mode_mono_double, artefact_dir, session_timestamp, plot_figures
+):
     """
     *Ocean GRASP Open atm regression test*
 
@@ -98,15 +106,14 @@ def test_ocean_grasp_open_atm(mode_mono_double, artefact_dir, session_timestamp)
     exp = create_ocean_grasp_open_atm()
     result = eradiate.run(exp, spp=int(1e5))
 
-    wavelength = ocean_grasp_wavelength()
-    for w in wavelength:
-        test = ZTest(
-            name=f"{session_timestamp:%Y%m%d-%H%M%S}-ocean_grasp_REF_OO_UB01_I_S20_PPL",
-            value=result.sel(w=w),
-            reference=ref.sel(w=w),
-            threshold=0.01,
-            archive_dir=artefact_dir,
-            variable="radiance",
-        )
+    test = ZTest(
+        name=f"{session_timestamp:%Y%m%d-%H%M%S}-ocean_grasp_REF_OO_UB01_I_S20_PPL",
+        value=result,
+        reference=ref,
+        threshold=0.01,
+        archive_dir=artefact_dir,
+        variable="radiance",
+        plot=False,
+    )
 
-        assert test.run(), f"{w = }"
+    assert test.run()

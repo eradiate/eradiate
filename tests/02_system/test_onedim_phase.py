@@ -34,6 +34,7 @@ def test(
     artefact_dir,
     ert_seed_state,
     request,
+    plot_figures,
 ):
     r"""
     Equivalency of plugin and tabulated versions of Rayleigh phase function
@@ -161,11 +162,14 @@ def test(
     brf_2 = experiment_2.results["measure"]["brf"]
 
     # Make figure
-    for w in wavelengths.magnitude:
-        filename = f"{request.node.originalname}_{w}.png"
-        outdir = os.path.join(artefact_dir, "plots")
-        os.makedirs(outdir, exist_ok=True)
-        fname_plot = os.path.join(outdir, filename)
-        make_figure(fname_plot=fname_plot, brf_1=brf_1.sel(w=w), brf_2=brf_2.sel(w=w))
+    if plot_figures:
+        for w in wavelengths.magnitude:
+            filename = f"{request.node.originalname}_{w}.png"
+            outdir = os.path.join(artefact_dir, "plots")
+            os.makedirs(outdir, exist_ok=True)
+            fname_plot = os.path.join(outdir, filename)
+            make_figure(
+                fname_plot=fname_plot, brf_1=brf_1.sel(w=w), brf_2=brf_2.sel(w=w)
+            )
 
     np.testing.assert_allclose(brf_1.values, brf_2.values, rtol=5e-3)

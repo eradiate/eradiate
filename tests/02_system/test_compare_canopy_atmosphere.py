@@ -21,6 +21,7 @@ def test_compare_canopy_atmosphere_vs_atmosphere(
     artefact_dir,
     ert_seed_state,
     atmosphere_us_standard_ckd,
+    plot_figures,
 ):
     r"""
     Compare CanopyAtmosphereExperiment with AtmosphereExperiment
@@ -118,28 +119,31 @@ def test_compare_canopy_atmosphere_vs_atmosphere(
     fig = plt.figure(figsize=(6, 3))
     ax = plt.gca()
 
-    onedim_vza = np.squeeze(onedim.results["measure"].vza.values)
-    onedim_radiance = np.squeeze(onedim.results["measure"]["radiance"].values)
-    ax.plot(onedim_vza, onedim_radiance, label="onedim", marker=".", ls="--")
+    if plot_figures:
+        onedim_vza = np.squeeze(onedim.results["measure"].vza.values)
+        onedim_radiance = np.squeeze(onedim.results["measure"]["radiance"].values)
+        ax.plot(onedim_vza, onedim_radiance, label="onedim", marker=".", ls="--")
 
-    r4a_vza = np.squeeze(r4a.results["measure"].vza.values)
-    r4a_radiance = np.squeeze(r4a.results["measure"]["radiance"].values)
-    ax.plot(r4a_vza, r4a_radiance, label="r4a", marker=".", ls="--")
+        r4a_vza = np.squeeze(r4a.results["measure"].vza.values)
+        r4a_radiance = np.squeeze(r4a.results["measure"]["radiance"].values)
+        ax.plot(r4a_vza, r4a_radiance, label="r4a", marker=".", ls="--")
 
-    radiance_units = symbol(r4a.results["measure"]["radiance"].attrs["units"])
-    plt.xlabel("Signed viewing zenith angle [°]")
-    plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
-    plt.ylabel(f"Radiance [{radiance_units}]")
-    plt.title(rf"SZA = {sza} — $\rho$ = {reflectance}")
-    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+        radiance_units = symbol(r4a.results["measure"]["radiance"].attrs["units"])
+        plt.xlabel("Signed viewing zenith angle [°]")
+        plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
+        plt.ylabel(f"Radiance [{radiance_units}]")
+        plt.title(rf"SZA = {sza} — $\rho$ = {reflectance}")
+        plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
-    filename = f"test_compare_canopy_atmosphere_vs_atmosphere_{sza}_{reflectance}.png"
-    outdir = os.path.join(artefact_dir, "plots")
-    os.makedirs(outdir, exist_ok=True)
-    fname_plot = os.path.join(outdir, filename)
-    plt.tight_layout()
-    fig.savefig(fname_plot, dpi=200)
-    plt.close()
+        filename = (
+            f"test_compare_canopy_atmosphere_vs_atmosphere_{sza}_{reflectance}.png"
+        )
+        outdir = os.path.join(artefact_dir, "plots")
+        os.makedirs(outdir, exist_ok=True)
+        fname_plot = os.path.join(outdir, filename)
+        plt.tight_layout()
+        fig.savefig(fname_plot, dpi=200)
+        plt.close()
 
     assert np.all(
         onedim.results["measure"]["radiance"].values
@@ -151,7 +155,7 @@ def test_compare_canopy_atmosphere_vs_atmosphere(
 @pytest.mark.parametrize("sza", [0.0, 30.0, 60.0])
 @pytest.mark.parametrize("lai", [1.0, 2.0, 3.0])
 def test_compare_canopy_atmosphere_vs_canopy(
-    mode_mono_double, sza, lai, artefact_dir, ert_seed_state
+    mode_mono_double, sza, lai, artefact_dir, ert_seed_state, plot_figures
 ):
     r"""
     Compare CanopyAtmosphereExperiment with CanopyExperiment
@@ -247,31 +251,32 @@ def test_compare_canopy_atmosphere_vs_canopy(
     ert_seed_state.reset()
     eradiate.run(r4a, seed_state=ert_seed_state)
 
-    fig = plt.figure(figsize=(6, 3))
-    ax = plt.gca()
+    if plot_figures:
+        fig = plt.figure(figsize=(6, 3))
+        ax = plt.gca()
 
-    rami_vza = np.squeeze(rami.results["measure"].vza.values)
-    rami_radiance = np.squeeze(rami.results["measure"]["radiance"].values)
-    ax.plot(rami_vza, rami_radiance, label="rami", marker=".", ls="--")
+        rami_vza = np.squeeze(rami.results["measure"].vza.values)
+        rami_radiance = np.squeeze(rami.results["measure"]["radiance"].values)
+        ax.plot(rami_vza, rami_radiance, label="rami", marker=".", ls="--")
 
-    r4a_vza = np.squeeze(r4a.results["measure"].vza.values)
-    r4a_radiance = np.squeeze(r4a.results["measure"]["radiance"].values)
-    ax.plot(r4a_vza, r4a_radiance, label="r4a", marker=".", ls="--")
+        r4a_vza = np.squeeze(r4a.results["measure"].vza.values)
+        r4a_radiance = np.squeeze(r4a.results["measure"]["radiance"].values)
+        ax.plot(r4a_vza, r4a_radiance, label="r4a", marker=".", ls="--")
 
-    radiance_units = symbol(r4a.results["measure"]["radiance"].attrs["units"])
-    plt.xlabel("Signed viewing zenith angle [°]")
-    plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
-    plt.ylabel(f"Radiance [{radiance_units}]")
-    plt.title(f"SZA = {sza} — LAI = {lai}")
-    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+        radiance_units = symbol(r4a.results["measure"]["radiance"].attrs["units"])
+        plt.xlabel("Signed viewing zenith angle [°]")
+        plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
+        plt.ylabel(f"Radiance [{radiance_units}]")
+        plt.title(f"SZA = {sza} — LAI = {lai}")
+        plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
-    filename = f"test_compare_canopy_atmosphere_vs_canopy_{sza}_{lai}.png"
-    outdir = os.path.join(artefact_dir, "plots")
-    os.makedirs(outdir, exist_ok=True)
-    fname_plot = os.path.join(outdir, filename)
-    plt.tight_layout()
-    fig.savefig(fname_plot, dpi=200)
-    plt.close()
+        filename = f"test_compare_canopy_atmosphere_vs_canopy_{sza}_{lai}.png"
+        outdir = os.path.join(artefact_dir, "plots")
+        os.makedirs(outdir, exist_ok=True)
+        fname_plot = os.path.join(outdir, filename)
+        plt.tight_layout()
+        fig.savefig(fname_plot, dpi=200)
+        plt.close()
 
     assert np.all(
         rami.results["measure"]["radiance"].values

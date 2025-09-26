@@ -276,11 +276,39 @@ class RegressionTest(ABC):
         init_type="path-like",
     )
 
+    plot: bool = documented(
+        attrs.field(kw_only=True, converter=bool),
+        doc="Enable pyplot charts",
+        type="bool",
+        init_type="bool",
+    )
+
     def __attrs_pre_init__(self):
         if self.METRIC_NAME is None:
             raise TypeError(f"Unsupported test type {type(self).__name__}")
 
-    def run(self) -> bool:
+    def __attrs_post_init__(self):
+        if self.plot:
+            if (
+                "w" in self.reference[self.variable]
+                and self.reference[self.variable].w.size > 1
+            ):
+                raise ValueError(
+                    "Regression charts are implemented for single a wavelength, "
+                    "but the reference dataset has a spectral dimension. "
+                    "Please disable the 'plot' option."
+                )
+            if (
+                "w" in self.value[self.variable]
+                and self.value[self.variable].w.size > 1
+            ):
+                raise ValueError(
+                    "Regression charts are implemented for single a wavelength, "
+                    "but the tested dataset has a spectral dimension. "
+                    "Please disable the 'plot' option."
+                )
+
+    def run(self, diagnostic=False) -> bool:
         """
         This method controls the execution steps of the regression test:
 
@@ -317,7 +345,7 @@ class RegressionTest(ABC):
 
         # else (we have a reference value), evaluate the test metric
         try:
-            passed, metric_value = self._evaluate()
+            passed, metric_value = self._evaluate(diagnostic)
             msg = "\n".join(
                 [
                     "Test passed" if passed else "Test did not pass",
@@ -393,6 +421,9 @@ class RegressionTest(ABC):
             data.
         """
 
+        if not self.plot:
+            return
+
         fname = self.name
         ext = ".png"
 
@@ -416,6 +447,10 @@ class RegressionTest(ABC):
         """
         Draw a simple plot when no reference data is available.
         """
+
+        if not self.plot:
+            return
+
         vza = np.squeeze(self.value.vza.values)
         val = np.squeeze(self.value[self.variable].values)
 
@@ -431,6 +466,10 @@ class RegressionTest(ABC):
         """
         Draw a comparison plot with reference and test data displayed together.
         """
+
+        if not self.plot:
+            return
+
         vza = np.squeeze(self.value.vza.values)
         val = np.squeeze(self.value[self.variable].values)
         ref = np.squeeze(self.reference[self.variable].values)
@@ -474,7 +513,7 @@ class RMSETest(RegressionTest):
 
     METRIC_NAME = "rmse"
 
-    def _evaluate(self) -> tuple[bool, float]:
+    def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
         value_np = self.value.brf.values
         ref_np = self.reference.brf.values
         if np.shape(value_np) != np.shape(ref_np):
@@ -553,6 +592,10 @@ class AbstractStudentTTest(RegressionTest):
         t_prim: float
             t' statistic issued from the test
         """
+
+        if not self.plot:
+            return
+
         fig, ax = plt.subplots()
         ax.grid()
         ax2 = ax.twinx()
@@ -779,6 +822,9 @@ class ZTest(RegressionTest):
             Z-statistic for each pair of measurements
         """
 
+        if not self.plot:
+            return
+
         fig, ax = plt.subplots()
         ax.grid()
         ax2 = ax.twinx()
@@ -826,7 +872,7 @@ class ZTest(RegressionTest):
         alpha_0 = 1.0 - (1.0 - self.threshold) ** (1.0 / result_np.size)
         accept_null = p_values > alpha_0
 
-        passed = np.count_nonzero(accept_null) >= 0.9975 * result_np.size
+        passed = np.count_nonzero(accept_null) >= int(0.9975 * result_np.size)
 
         if diagnostic_chart:
             self._plot_diagnostic(z=z)
@@ -834,7 +880,7 @@ class ZTest(RegressionTest):
         logger.info(f"min p-value = {min(p_values)}", also_console=True)
         logger.info(f"max p-value = {max(p_values)}", also_console=True)
         logger.info(
-            f"n passed    = {np.count_nonzero(accept_null)}/{0.99 * result_np.size}",
+            f"n passed    = {np.count_nonzero(accept_null)}/{int(0.9975 * result_np.size)}",
             also_console=True,
         )
         logger.info(f"alpha_1     = {self.threshold}", also_console=True)
@@ -944,7 +990,7 @@ class SidakTTest(RegressionTest):
         alpha_0 = 1.0 - (1.0 - self.threshold) ** (1.0 / result_np.size)
         accept_null = p_values > alpha_0
 
-        passed = np.count_nonzero(accept_null) >= 0.9975 * result_np.size
+        passed = np.count_nonzero(accept_null) >= int(0.9975 * result_np.size)
 
         if diagnostic_chart:
             self._plot_diagnostic(t_prim=t_prim)
@@ -952,7 +998,7 @@ class SidakTTest(RegressionTest):
         logger.info(f"min p-value = {min(p_values)}", also_console=True)
         logger.info(f"max p-value = {max(p_values)}", also_console=True)
         logger.info(
-            f"n passed    = {np.count_nonzero(accept_null)}/{0.99 * result_np.size}",
+            f"n passed    = {np.count_nonzero(accept_null)}/{int(0.9975 * result_np.size)}",
             also_console=True,
         )
         logger.info(f"alpha_1     = {self.threshold}", also_console=True)

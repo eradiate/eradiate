@@ -17,7 +17,7 @@ def exp():
 @append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp, prepend=True)
 @pytest.mark.regression
 def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
-    mode_ckd_double, artefact_dir, session_timestamp, exp
+    mode_ckd_double, artefact_dir, session_timestamp, exp, plot_figures
 ):
     r"""
     *Expected behaviour*
@@ -42,6 +42,7 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
         threshold=0.005,
         archive_dir=artefact_dir,
         variable="radiance_srf",
+        plot=plot_figures,
     )
 
     assert test.run()

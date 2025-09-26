@@ -19,7 +19,9 @@ def ensure_dir(path):
 @pytest.mark.parametrize("atmosphere", ["none", "homogeneous"])
 @pytest.mark.parametrize("surface", ["lambertian", "rpv"])
 @pytest.mark.slow
-def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
+def test_symmetry_zenith(
+    mode_mono_double, surface, atmosphere, artefact_dir, plot_figures
+):
     r"""
     Result symmetry
     ===============
@@ -110,23 +112,24 @@ def test_symmetry_zenith(mode_mono_double, surface, atmosphere, artefact_dir):
     )
 
     # Plot results
-    fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(5, 2.5))
-    results["radiance"].plot(ax=ax1, x="vza", marker=".", ls="--")
-    results["radiance_reversed"].plot(ax=ax1, x="vza", marker=".", ls="--")
-    results["diff"].plot(ax=ax2, x="vza", marker=".", ls="--")
-    remove_xylabels(from_=[ax1, ax2])
-    ax2.yaxis.tick_right()
-    ax1.set_title("")
-    ax2.set_title("")
-    plt.suptitle(f"Surface: {surface}, Atmosphere: {str(atmosphere)}")
-    plt.tight_layout()
+    if plot_figures:
+        fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(5, 2.5))
+        results["radiance"].plot(ax=ax1, x="vza", marker=".", ls="--")
+        results["radiance_reversed"].plot(ax=ax1, x="vza", marker=".", ls="--")
+        results["diff"].plot(ax=ax2, x="vza", marker=".", ls="--")
+        remove_xylabels(from_=[ax1, ax2])
+        ax2.yaxis.tick_right()
+        ax1.set_title("")
+        ax2.set_title("")
+        plt.suptitle(f"Surface: {surface}, Atmosphere: {str(atmosphere)}")
+        plt.tight_layout()
 
-    filename = f"test_symmetry_zenith_{surface}_{str(atmosphere)}.png"
-    ensure_dir(os.path.join(artefact_dir, "plots"))
-    fname_plot = os.path.join(artefact_dir, "plots", filename)
+        filename = f"test_symmetry_zenith_{surface}_{str(atmosphere)}.png"
+        ensure_dir(os.path.join(artefact_dir, "plots"))
+        fname_plot = os.path.join(artefact_dir, "plots", filename)
 
-    fig.savefig(fname_plot, dpi=200)
-    plt.close()
+        fig.savefig(fname_plot, dpi=200)
+        plt.close()
 
     # Check symmetry
     assert np.allclose(

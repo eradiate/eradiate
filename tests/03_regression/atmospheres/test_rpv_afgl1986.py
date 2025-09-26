@@ -12,7 +12,9 @@ def exp(absorption_database_error_handler_config):
 
 
 @append_doc(create_rpv_afgl1986_brfpp, prepend=True)
-def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp, exp):
+def test_rpv_afgl1986_brfpp(
+    mode_ckd_double, artefact_dir, session_timestamp, exp, plot_figures
+):
     """
     *Expected behaviour*
 
@@ -29,6 +31,7 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, artefact_dir, session_timestamp, ex
         reference="tests/regression_test_references/rpv_afgl1986_brfpp_ref.nc",
         threshold=0.05,
         archive_dir=artefact_dir,
+        plot=plot_figures,
     )
 
     assert test.run()
