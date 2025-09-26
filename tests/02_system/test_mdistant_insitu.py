@@ -55,7 +55,7 @@ def compute(ray_offset="distant", sigma=1.0, rho=1.0, exp_cls="AtmosphereExperim
 @pytest.mark.parametrize(
     "exp_cls", ["AtmosphereExperiment", "CanopyAtmosphereExperiment"]
 )
-def test_mdistant_insitu(artefact_dir, mode_mono, exp_cls):
+def test_mdistant_insitu(artefact_dir, mode_mono, exp_cls, plot_figures):
     r"""
     In-situ multi-distant sensor
     ============================
@@ -97,21 +97,22 @@ def test_mdistant_insitu(artefact_dir, mode_mono, exp_cls):
         )
 
     # Plot results
-    plt.figure()
-    for offset in offsets:
-        computed[offset].plot(ls=":", marker=".", xscale="log", label=f"{offset}")
-        plt.axhline(expected[offset], zorder=0, c="whitesmoke", ls="--")
+    if plot_figures:
+        plt.figure()
+        for offset in offsets:
+            computed[offset].plot(ls=":", marker=".", xscale="log", label=f"{offset}")
+            plt.axhline(expected[offset], zorder=0, c="whitesmoke", ls="--")
 
-    plt.legend(ncol=2)
-    test_name = f"test_mdistant_insitu-{exp_cls}"
-    plt.title(test_name)
+        plt.legend(ncol=2)
+        test_name = f"test_mdistant_insitu-{exp_cls}"
+        plt.title(test_name)
 
-    outdir = os.path.join(artefact_dir, "plots")
-    os.makedirs(outdir, exist_ok=True)
-    filename = os.path.join(outdir, f"{test_name}.png")
-    plt.savefig(filename, dpi=200, bbox_inches="tight")
+        outdir = os.path.join(artefact_dir, "plots")
+        os.makedirs(outdir, exist_ok=True)
+        filename = os.path.join(outdir, f"{test_name}.png")
+        plt.savefig(filename, dpi=200, bbox_inches="tight")
 
-    plt.close()
+        plt.close()
 
     # Actual test
     result = np.squeeze([computed[offset].isel(spp=-1) for offset in offsets])

@@ -8,7 +8,7 @@ import numpy as np
 import eradiate
 
 
-def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
+def test_onedim_lambertian_brf(mode_mono_double, artefact_dir, plot_figures):
     r"""
     Measured lambertian BRF
     =======================
@@ -80,34 +80,35 @@ def test_onedim_lambertian_brf(mode_mono_double, artefact_dir):
 
             results[illumination_zenith][reflectance] = exp.results["toa_pplane"]
 
-    # Plot results
-    for illumination_zenith in illumination_zenith_values:
-        fig = plt.figure(figsize=(6, 3))
-        ax1 = plt.gca()
+    # Plot result
+    if plot_figures:
+        for illumination_zenith in illumination_zenith_values:
+            fig = plt.figure(figsize=(6, 3))
+            ax1 = plt.gca()
 
-        with plt.rc_context({"lines.linestyle": ":", "lines.marker": "."}):
-            for reflectance in reflectance_values:
-                results[illumination_zenith][reflectance].brf.plot(ax=ax1, x="vza")
+            with plt.rc_context({"lines.linestyle": ":", "lines.marker": "."}):
+                for reflectance in reflectance_values:
+                    results[illumination_zenith][reflectance].brf.plot(ax=ax1, x="vza")
 
-        plt.xlabel("Signed viewing zenith angle [°]")
-        plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
-        plt.ylabel("BRF [dimensionless]")
-        plt.title(rf"$\theta$ = {illumination_zenith}°")
-        plt.legend(
-            [f"{reflectance}" for reflectance in reflectance_values],
-            title=r"$\rho$",
-            loc="center left",
-            bbox_to_anchor=(1, 0.5),
-        )
-        plt.tight_layout()
+            plt.xlabel("Signed viewing zenith angle [°]")
+            plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
+            plt.ylabel("BRF [dimensionless]")
+            plt.title(rf"$\theta$ = {illumination_zenith}°")
+            plt.legend(
+                [f"{reflectance}" for reflectance in reflectance_values],
+                title=r"$\rho$",
+                loc="center left",
+                bbox_to_anchor=(1, 0.5),
+            )
+            plt.tight_layout()
 
-        outdir = os.path.join(artefact_dir, "plots")
-        os.makedirs(outdir, exist_ok=True)
-        filename = f"test_onedim_lambertian_brf_{illumination_zenith}.png"
-        fname_plot = os.path.join(outdir, filename)
-        fig.savefig(fname_plot, dpi=200)
+            outdir = os.path.join(artefact_dir, "plots")
+            os.makedirs(outdir, exist_ok=True)
+            filename = f"test_onedim_lambertian_brf_{illumination_zenith}.png"
+            fname_plot = os.path.join(outdir, filename)
+            fig.savefig(fname_plot, dpi=200)
 
-        plt.close()
+            plt.close()
 
     for illumination_zenith in illumination_zenith_values:
         for reflectance in reflectance_values:

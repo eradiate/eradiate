@@ -14,7 +14,7 @@ from eradiate import unit_registry as ureg
 
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])
 def test_film_to_angular_coord_conversion_multi_distant(
-    mode_mono, illumination_azimuth, artefact_dir
+    mode_mono, illumination_azimuth, artefact_dir, plot_figures
 ):
     r"""
     Film to angular coordinates conversion (``multi_distant``)
@@ -149,6 +149,9 @@ def test_film_to_angular_coord_conversion_multi_distant(
         return forward_brf.mean().values > backward_brf.mean().values
 
     def make_figure(brf, g, artefact_dir, orientation: str):
+        if not plot_figures:
+            return
+
         brf_forward = select_brf(brf, "forward")
         brf_backward = select_brf(brf, "backward")
 
@@ -335,7 +338,7 @@ def make_figure(
 
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])
 def test_film_to_angular_coord_conversion_distant_flux(
-    mode_mono, illumination_azimuth, artefact_dir
+    mode_mono, illumination_azimuth, artefact_dir, plot_figures
 ):
     r"""
     Film to angular coordinates conversion (``distant_flux``)
@@ -447,17 +450,18 @@ def test_film_to_angular_coord_conversion_distant_flux(
         orientation: eradiate.run(exp) for orientation, exp in experiments.items()
     }
 
-    for orientation, g in gs.items():
-        make_figure(
-            results=results[orientation],
-            name="sector_radiosity",
-            g=g,
-            forward=(orientation == "forward"),
-            illumination_azimuth=illumination_azimuth,
-            measure="distant_flux",
-            res=res,
-            artefact_dir=artefact_dir,
-        )
+    if plot_figures:
+        for orientation, g in gs.items():
+            make_figure(
+                results=results[orientation],
+                name="sector_radiosity",
+                g=g,
+                forward=(orientation == "forward"),
+                illumination_azimuth=illumination_azimuth,
+                measure="distant_flux",
+                res=res,
+                artefact_dir=artefact_dir,
+            )
 
     assert is_forward_scattering(
         da=results["forward"].sector_radiosity,
@@ -473,7 +477,7 @@ def test_film_to_angular_coord_conversion_distant_flux(
 
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])
 def test_film_to_angular_coord_conversion_hemispherical_distant(
-    mode_mono_double, illumination_azimuth, artefact_dir
+    mode_mono_double, illumination_azimuth, artefact_dir, plot_figures
 ):
     r"""
     Film to angular coordinates conversion (``hdistant``)
@@ -585,17 +589,18 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
         orientation: eradiate.run(exp) for orientation, exp in experiments.items()
     }
 
-    for orientation, g in gs.items():
-        make_figure(
-            results=results[orientation],
-            name="brf",
-            g=g,
-            forward=(orientation == "forward"),
-            illumination_azimuth=illumination_azimuth,
-            measure="hdistant",
-            res=res,
-            artefact_dir=artefact_dir,
-        )
+    if plot_figures:
+        for orientation, g in gs.items():
+            make_figure(
+                results=results[orientation],
+                name="brf",
+                g=g,
+                forward=(orientation == "forward"),
+                illumination_azimuth=illumination_azimuth,
+                measure="hdistant",
+                res=res,
+                artefact_dir=artefact_dir,
+            )
 
     assert is_forward_scattering(
         da=results["forward"].brf,
@@ -615,7 +620,13 @@ def test_film_to_angular_coord_conversion_hemispherical_distant(
 )
 @pytest.mark.parametrize("reflectance", [0.0, 0.5, 1.0])
 def test_rpv_vs_lambertian(
-    ert_seed_state, mode_mono, atmosphere, reflectance, artefact_dir, request
+    ert_seed_state,
+    mode_mono,
+    atmosphere,
+    reflectance,
+    artefact_dir,
+    request,
+    plot_figures,
 ):
     r"""
     RPV(:math:`\rho, g=0, k=1, rho_c=1`) equivalent to Lambertian(:math:`\rho`)
@@ -664,6 +675,9 @@ def test_rpv_vs_lambertian(
     """
 
     def make_figure_rpv_vs_lambertian(fname_plot, results: dict, title=""):
+        if not plot_figures:
+            return
+
         fig = plt.figure(figsize=(8, 3))
         results_lambertian = results["lambertian"]
         results_rpv = results["rpv"]

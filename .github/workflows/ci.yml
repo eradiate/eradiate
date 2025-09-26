@@ -79,7 +79,7 @@ jobs:
           eradiate sys-info
       - name: Run all tests
         run: |
-          pytest -p robotframework --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow ./tests
+          pytest -p robotframework --plot --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow ./tests
       - name: Robot report
         if: always()
         run: |

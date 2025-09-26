@@ -18,7 +18,7 @@ def exp(absorption_database_error_handler_config):
 
 @append_doc(create_rpv_afgl1986_continental_brfpp, prepend=True)
 def test_rpv_afgl1986_continental_brfpp(
-    mode_ckd_double, artefact_dir, session_timestamp, exp
+    mode_ckd_double, artefact_dir, session_timestamp, exp, plot_figures
 ):
     """
     *Expected behaviour*
@@ -37,6 +37,7 @@ def test_rpv_afgl1986_continental_brfpp(
         threshold=0.05,
         archive_dir=artefact_dir,
         variable="radiance",
+        plot=plot_figures,
     )
 
     assert test.run()

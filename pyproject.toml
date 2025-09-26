@@ -152,20 +152,24 @@ test-report = { cmd = """
     --robot-tagstatinclude system
     --robot-tagstatinclude regression
     --robot-tagstatinclude slow
+    --plot
 """ }
 test-unit-report = { cmd = """
   pytest -p robotframework
     --robot-tagstatinclude unit
-    --robot-tagstatinclude slow -m unit""" }
+    --robot-tagstatinclude slow -m unit
+    --plot""" }
 test-system-report = { cmd = """
   pytest -p robotframework
     --robot-tagstatinclude system
     --robot-tagstatinclude slow -m system
+    --plot
 """ }
 test-regression-report = { cmd = """
   pytest -p robotframework
     --robot-tagstatinclude regression
     --robot-tagstatinclude slow -m regression
+    --plot
 """ }
 test-slow-report = { cmd = """
   pytest -p robotframework
@@ -173,6 +177,7 @@ test-slow-report = { cmd = """
     --robot-tagstatinclude system
     --robot-tagstatinclude regression
     --robot-tagstatinclude slow -m slow
+    --plot
 """ }
 
 [tool.pixi.feature.docs.tasks]

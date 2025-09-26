@@ -5,48 +5,30 @@ import xarray as xr
 import eradiate.test_tools.regression as tt
 
 
-def test_instantiate():
+@pytest.mark.parametrize(
+    "cls, name",
+    [
+        (tt.RMSETest, "rmse"),
+        (tt.Chi2Test, "chi2"),
+        (tt.IndependentStudentTTest, "t-test"),
+        (tt.PairedStudentTTest, "t-test"),
+        (tt.ZTest, "z-test"),
+    ],
+    ids=["rmse", "chi2", "t-test", "t-test", "z-test"],
+)
+def test_instantiate(cls, name):
     # instantiate the test with reasonable defaults
-    assert tt.RMSETest(
-        name="rmse",
+    assert cls(
+        name=name,
         archive_dir="tests/",
         value=xr.Dataset(),
         reference=xr.Dataset(),
         threshold=0.05,
+        plot=False,
     )
 
-    assert tt.Chi2Test(
-        name="chi2",
-        archive_dir="tests/",
-        value=xr.Dataset(),
-        reference=xr.Dataset(),
-        threshold=0.05,
-    )
 
-    assert tt.IndependantStudentTTest(
-        name="t-test",
-        archive_dir="tests/",
-        value=xr.Dataset(),
-        reference=xr.Dataset(),
-        threshold=0.05,
-    )
-
-    assert tt.PairedStudentTTest(
-        name="t-test",
-        archive_dir="tests/",
-        value=xr.Dataset(),
-        reference=xr.Dataset(),
-        threshold=0.05,
-    )
-
-    assert tt.ZTest(
-        name="z-test",
-        archive_dir="tests/",
-        value=xr.Dataset(),
-        reference=xr.Dataset(),
-        threshold=0.05,
-    )
-
+def test_instantiate_fail():
     # assert all arguments except reference are needed
     # only one subclass of RegressionTest (Chi2Test) is tested
     with pytest.raises(TypeError):
@@ -55,6 +37,7 @@ def test_instantiate():
             value=xr.Dataset(),
             reference=xr.Dataset(),
             threshold=0.05,
+            plot=False,
         )
 
     with pytest.raises(TypeError):
@@ -63,6 +46,7 @@ def test_instantiate():
             value=xr.Dataset(),
             reference=xr.Dataset(),
             threshold=0.05,
+            plot=False,
         )
 
     with pytest.raises(TypeError):
@@ -71,6 +55,7 @@ def test_instantiate():
             archive_dir="tests/",
             reference=xr.Dataset(),
             threshold=0.05,
+            plot=False,
         )
 
     with pytest.raises(TypeError):
@@ -79,6 +64,7 @@ def test_instantiate():
             archive_dir="tests/",
             value=xr.Dataset(),
             reference=xr.Dataset(),
+            plot=False,
         )
 
     assert tt.Chi2Test(
@@ -86,6 +72,7 @@ def test_instantiate():
         archive_dir="tests/",
         value=xr.Dataset(),
         threshold=0.05,
+        plot=False,
     )
 
 
@@ -100,6 +87,7 @@ def test_reference_converter(tmp_path):
             value=xr.Dataset(),
             threshold=0.05,
             reference="./this/file/doesnot.exist",
+            plot=False,
         )
 
     # wrong file type
@@ -113,6 +101,7 @@ def test_reference_converter(tmp_path):
             value=xr.Dataset(),
             threshold=0.05,
             reference=tempfile,
+            plot=False,
         )
 
     # wrong data type
@@ -123,6 +112,7 @@ def test_reference_converter(tmp_path):
             value=xr.Dataset(),
             threshold=0.05,
             reference=np.zeros(25),
+            plot=False,
         )
 
 
@@ -156,6 +146,7 @@ def test_rmse_evaluate():
         reference=ref_ds,
         archive_dir="tests/",
         threshold=0.05,
+        plot=False,
     )
 
     _, rmse = test._evaluate()
@@ -211,6 +202,7 @@ def test_chi2_evaluate(mode_mono):
         reference=ref_ds,
         archive_dir="tests/",
         threshold=0.05,
+        plot=False,
     )
 
     _, p_value = test._evaluate()
