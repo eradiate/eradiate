@@ -102,6 +102,8 @@ def atmosphere_experiment():
         (None, dict),
         (1, xr.Dataset),
         ([0, 1], dict),
+        ("mdistant_0", xr.Dataset),
+        (["mdistant_0", "mdistant_1"], dict),
     ],
 )
 def test_run_function(modes_all_double, atmosphere_experiment, measures, expected_type):

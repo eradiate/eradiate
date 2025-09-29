@@ -346,15 +346,15 @@ class Experiment(ABC):
         pass
 
     @abstractmethod
-    def postprocess(self, measures: None | int | list[int] = None) -> None:
+    def postprocess(self, measures: None | int | str | list[int | str] = None) -> None:
         """
         Post-process raw results and store them in :attr:`results`.
 
         Parameters
         ----------
-        measures : int or list of int, optional
-            Indices of the measures that will be processed. By default, all
-            measures are processed.
+        measures : int or str or list of (int or str), optional
+            Indices or IDs of the measures that will be processed. By default,
+            all measures are processed.
         """
         pass
 
@@ -738,7 +738,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
                 measure.mi_results[ctx_index] = result_imgs
 
-    def postprocess(self, measures: None | int | list[int] = None) -> None:
+    def postprocess(self, measures: None | int | str | list[int | str] = None) -> None:
         # Inherit docstring
         logger.info("Post-processing results")
 
@@ -747,6 +747,7 @@ class EarthObservationExperiment(Experiment, ABC):
         else:
             if isinstance(measures, (int, str)):
                 measures = [self.measures.get_index(measures)]
+            measures = [self.measures.get_index(i) for i in measures]
 
         # Run pipelines
         for i in measures:
