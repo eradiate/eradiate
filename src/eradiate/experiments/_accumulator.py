@@ -19,6 +19,7 @@ from ._helpers import (
     surface_converter,
 )
 from .. import pipelines as pl
+from .. import validators
 from ..attrs import define, documented, get_doc
 from ..frame import AzimuthConvention
 from ..scenes.atmosphere import (
@@ -64,11 +65,8 @@ class AccumulatorExperiment(EarthObservationExperiment):
     """
     Simulate radiation in a scene with an explicit canopy and atmosphere.
     Accumulates quantities defined by the measures used. See `.measures`
-    for the list of supported measures.
-    This experiment assumes that the surface is plane and accounts for ground
-    unit cell padding.
-    TODO : is padding still relevant? since we now have periodic bounds we
-    might not need padding anymore.
+    for the list of supported measures. This experiment assumes that the surface
+    is plane and accounts for ground unit cell padding.
 
     Warnings
     --------
@@ -78,6 +76,9 @@ class AccumulatorExperiment(EarthObservationExperiment):
     Notes
     -----
     * Currently this experiment is limited to the plane-parallel geometry.
+    * This experiment integrator is a forward tracer. This can imply higher
+    variance and might require a larger number of samples. Periodic boundaries
+    can be used to conserve energy within an region of interest.
     """
 
     measures: MeasureRegistry = documented(
@@ -163,6 +164,19 @@ class AccumulatorExperiment(EarthObservationExperiment):
         type=".Canopy or None",
         init_type=".Canopy or dict or None, optional",
         default="None",
+    )
+
+    padding: int = documented(
+        attrs.field(default=0, converter=int, validator=validators.is_positive),
+        doc="Padding level. The scene will be padded with copies to account for "
+        "adjacency effects. This, in practice, has effects similar to "
+        "making the scene periodic."
+        "A value of 0 will yield only the defined scene. A value of 1 "
+        "will add one copy in every direction, yielding a 3×3 patch. A "
+        "value of 2 will yield a 5×5 patch, etc. The optimal padding level "
+        "depends on the scene.",
+        type="int",
+        default="0",
     )
 
     surface: BasicSurface | CentralPatchSurface | None = documented(
@@ -258,7 +272,7 @@ class AccumulatorExperiment(EarthObservationExperiment):
         result = super()._dataset_metadata(measure)
         return result
 
-    def get_filter_parameter_paths(self, filter_flags: FilterFlags) -> list[str]:
+    def get_filter_parameter_paths(self, filter_flags: str | FilterFlags) -> list[str]:
         """
         Get the path to the filter parameters in the kernel dictionnary. Note
         that this method will initialise the kernel dictionary if not already done.
@@ -275,6 +289,9 @@ class AccumulatorExperiment(EarthObservationExperiment):
         """
         if self.mi_scene is None:
             self.init()
+
+        if isinstance(filter_flags, str):
+            filter_flags = FilterFlags[filter_flags.upper()]
 
         # Mapping from flags to Mitsuba types, to be used when traversing the scene.
         filter_flag_to_mi = {
@@ -306,6 +323,48 @@ class AccumulatorExperiment(EarthObservationExperiment):
                 filter_paths.append(k)
 
         return filter_paths
+
+    def update_depth(
+        self, min_depth: int | None = None, max_depth: int | None = None
+    ) -> None:
+        """
+        Update the filter parameter in the kernel dictionary. The parameter path
+        to the filter can be listed using `get_filter_parameter_paths`. Note
+        that this method will initialise the kernel dictionary if not already done.
+
+        Parameters
+        ----------
+        filter_dict : dict[str, FilterType]
+            Mapping from filter parameter path to filter type.
+        """
+
+        if min_depth is not None:
+            self.integrator.min_depth = min_depth
+
+        if max_depth is not None:
+            self.integrator.max_depth = max_depth
+
+        if self.mi_scene is None:
+            self.init()
+
+        obj_wrapper = eradiate.kernel.mi_traverse(self.mi_scene.obj)
+        for k, v in obj_wrapper.parameters.properties.items():
+            value, value_type, node, flags = v
+            if (
+                ("min_depth" in k)
+                and isinstance(node, mi.Integrator)
+                and (min_depth is not None)
+            ):
+                obj_wrapper.parameters[k] = min_depth
+
+            if (
+                "max_depth" in k
+                and isinstance(node, mi.Integrator)
+                and (max_depth is not None)
+            ):
+                obj_wrapper.parameters[k] = max_depth
+
+        obj_wrapper.parameters.update()
 
     def update_filters(self, filter_dict: dict[str, FilterType]) -> None:
         """
@@ -384,10 +443,9 @@ class AccumulatorExperiment(EarthObservationExperiment):
                 break
 
         if param_path is None:
-            warnings.warn(
+            raise RuntimeError(
                 "Could not find the to_world parameter of the emitter to update its direction."
             )
-            return
 
         obj_wrapper.parameters[param_path] = self.illumination._to_world
         obj_wrapper.parameters.update()
@@ -492,11 +550,11 @@ class AccumulatorExperiment(EarthObservationExperiment):
         if self.canopy is not None:
             canopy_width = max(self.canopy.size[:2])
 
-            # if self.padding > 0:  # We must add extra instances if padding is requested
-            #     canopy_width *= 2.0 * self.padding + 1.0
-            #     canopy = self.canopy.padded_copy(self.padding)
-            # else:
-            canopy = self.canopy
+            if self.padding > 0:  # We must add extra instances if padding is requested
+                canopy_width *= 2.0 * self.padding + 1.0
+                canopy = self.canopy.padded_copy(self.padding)
+            else:
+                canopy = self.canopy
         else:
             canopy = None
             canopy_width = 0.0 * ureg.m
