@@ -257,7 +257,7 @@ def voxelflux_to_raytran(
     data: xr.Dataset, w: float, export_path: str | None = None
 ) -> pd.DataFrame:
     """
-    Converts the results of a VoxelFluxMeasure to the Raytran format, returned
+    Converts the results of a `VoxelFluxMeasure` to the Raytran format, returned
     in a  ``pandas.DataFrame``. Can optionally save the converted data to a csv
     file by specifying the ``export_path``.
 
@@ -351,3 +351,84 @@ def voxelflux_to_raytran(
         df.to_csv(export_path, sep=" ")
 
     return df
+
+
+def voxelflux_to_voxel_ds(ds: xr.Dataset) -> xr.Dataset:
+    """
+    Converts the results of a `VoxelFluxMeasure` to the `XArray.Dataset` equivalent
+    of the Raytran format. Whilst the `VoxelFluxMeasure` format is compact, it
+    can be hard to manipulate. The 'voxel' dataset version is more intuitive but
+    includes redundancy. Its dimensions are [w,x_index,y_index,z_index,faces] with:
+
+    - w: the wavelength
+    - x_index, y_index, z_index: the voxel indices,
+    - faces {xl, xh, yl, yh, zl, zh}: the faces that the flux is traversing, with
+      'l' denoting the lower face on the axis, and 'h' the high face on the axis.
+
+    The dataset contains two data variables defined on those axis, incoming and
+    outgoing, respresenting the incoming and outgoing flux respectively.
+
+    Parameters
+    ----------
+
+    ds: xr.Dataset
+        Result dataset from a voxelflux measurement.
+
+    Returns
+    -------
+
+    xr.Dataset
+        Result data in the voxel dataset format.
+    """
+
+    n_ws = len(ds.w)
+    flux = ds["flux"].isel(sza=0, saa=0).transpose("w", ...).values
+
+    n_ws = len(ds.w)
+    n_X = len(ds.x_index) - 1
+    n_Y = len(ds.y_index) - 1
+    n_Z = len(ds.z_index) - 1
+    ds_in = np.zeros((n_ws, n_X, n_Y, n_Z, 6))
+    ds_out = np.zeros((n_ws, n_X, n_Y, n_Z, 6))
+
+    for i, w in enumerate(ds.w.values):
+        flux = ds["flux"].isel(sza=0, saa=0, w=i).values
+
+        Xinl = flux[1, 0, :-1, :-1, :-1].reshape(n_X, n_Y, n_Z, 1)
+        Xinh = flux[0, 0, 1:, :-1, :-1].reshape(n_X, n_Y, n_Z, 1)
+        Yinl = flux[1, 1, :-1, :-1, :-1].reshape(n_X, n_Y, n_Z, 1)
+        Yinh = flux[0, 1, :-1, 1:, :-1].reshape(n_X, n_Y, n_Z, 1)
+        Zinl = flux[1, 2, :-1, :-1, :-1].reshape(n_X, n_Y, n_Z, 1)
+        Zinh = flux[0, 2, :-1, :-1, 1:].reshape(n_X, n_Y, n_Z, 1)
+
+        Xoutl = flux[0, 0, :-1, :-1, :-1].reshape(n_X, n_Y, n_Z, 1)
+        Xouth = flux[1, 0, 1:, :-1, :-1].reshape(n_X, n_Y, n_Z, 1)
+        Youtl = flux[0, 1, :-1, :-1, :-1].reshape(n_X, n_Y, n_Z, 1)
+        Youth = flux[1, 1, :-1, 1:, :-1].reshape(n_X, n_Y, n_Z, 1)
+        Zoutl = flux[0, 2, :-1, :-1, :-1].reshape(n_X, n_Y, n_Z, 1)
+        Zouth = flux[1, 2, :-1, :-1, 1:].reshape(n_X, n_Y, n_Z, 1)
+
+        # Xinl.reshape(n_X,n_Y,n_Z,1)
+        ds_in[i, :] = np.concatenate([Xinl, Xinh, Yinl, Yinh, Zinl, Zinh], axis=-1)
+        ds_out[i, :] = np.concatenate(
+            [Xoutl, Xouth, Youtl, Youth, Zoutl, Zouth], axis=-1
+        )
+
+    new_ds = xr.Dataset(
+        coords={
+            "w": ds.w,
+            "x_index": ("x_index", range(n_X)),
+            "y_index": ("y_index", range(n_Y)),
+            "z_index": ("z_index", range(n_Z)),
+            "faces": ("faces", ["xl", "xh", "yl", "yh", "zl", "zh"]),
+            "sza": ds.sza,
+            "saa": ds.saa,
+        },
+        data_vars={
+            "incoming": (["w", "x_index", "y_index", "z_index", "faces"], ds_in),
+            "outgoing": (["w", "x_index", "y_index", "z_index", "faces"], ds_out),
+            "irradiance": ds.irradiance,
+        },
+    )
+
+    return new_ds
