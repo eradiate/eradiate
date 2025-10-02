@@ -1,6 +1,3 @@
-import os
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
@@ -10,7 +7,7 @@ from eradiate.units import unit_registry as ureg
 
 
 @pytest.mark.slow
-def test_albedo(mode_mono, artefact_dir):
+def test_albedo(mode_mono, artefact_dir, plt):
     """
     Albedo
     ======
@@ -64,7 +61,7 @@ def test_albedo(mode_mono, artefact_dir):
                 {
                     "type": "distant_flux",
                     "srf": {
-                        "type": "multi_delta",
+                        "type": "delta",
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0] * ureg.nm,
                     },
                     "film_resolution": (64, 64),
@@ -85,9 +82,9 @@ def test_albedo(mode_mono, artefact_dir):
         "atmosphere_constant": AtmosphereExperiment(
             measures=[
                 {
-                    "type": "distant_flux",
+                    "type": "distantflux",
                     "srf": {
-                        "type": "multi_delta",
+                        "type": "delta",
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0] * ureg.nm,
                     },
                     "film_resolution": (64, 64),
@@ -108,9 +105,9 @@ def test_albedo(mode_mono, artefact_dir):
         "canopy_directional": eradiate.experiments.CanopyExperiment(
             measures=[
                 {
-                    "type": "distant_flux",
+                    "type": "distantflux",
                     "srf": {
-                        "type": "multi_delta",
+                        "type": "delta",
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0] * ureg.nm,
                     },
                     "film_resolution": (64, 64),
@@ -131,9 +128,9 @@ def test_albedo(mode_mono, artefact_dir):
         "canopy_constant": eradiate.experiments.CanopyExperiment(
             measures=[
                 {
-                    "type": "distant_flux",
+                    "type": "distantflux",
                     "srf": {
-                        "type": "multi_delta",
+                        "type": "delta",
                         "wavelengths": [500.0, 550.0, 600.0, 650.0, 700.0] * ureg.nm,
                     },
                     "film_resolution": (64, 64),
@@ -158,11 +155,12 @@ def test_albedo(mode_mono, artefact_dir):
         results = eradiate.run(exp)
 
         # Plot results
-        fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 5))
+        fig, axs = plt.subplots(1, 2, figsize=(6, 3), layout="constrained")
         wavelengths = results["albedo"].w.values
         albedos = results["albedo"].values.squeeze()
         expected = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
 
+        ax1, ax2 = axs[0], axs[1]
         ax1.plot(wavelengths, albedos, linestyle="--", marker="o")
         ax1.set_title("Albedo")
         ax1.set_xlabel("Wavelength [nm]")
@@ -189,15 +187,6 @@ def test_albedo(mode_mono, artefact_dir):
             ax2.yaxis.set_label_text(f"×$10^{{{int(exp)}}}$")
 
         plt.suptitle(f"Case: {exp_name}")
-        plt.tight_layout()
-
-        filename = f"test_albedo_{exp_name}.png"
-        outdir = os.path.join(artefact_dir, "plots")
-        os.makedirs(outdir, exist_ok=True)
-        fname_plot = os.path.join(outdir, filename)
-
-        fig.savefig(fname_plot, dpi=200)
-        plt.close()
 
         # Check results
         assert np.allclose(np.squeeze(results["albedo"].values), expected, atol=1e-3)
