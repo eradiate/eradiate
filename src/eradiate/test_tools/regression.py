@@ -583,7 +583,7 @@ class AbstractStudentTTest(RegressionTest):
 
     def _plot_diagnostic(self, dof=None, t_prim=None) -> None:
         """
-        Diagnostic chart for an Independant Student's T-test
+        Diagnostic chart for an Independent Student's T-test
 
         Parameters:
         -----------
@@ -628,9 +628,9 @@ class AbstractStudentTTest(RegressionTest):
 
 
 @define
-class IndependantStudentTTest(AbstractStudentTTest):
+class IndependentStudentTTest(AbstractStudentTTest):
     """
-    Independant Student's T-test
+    Independent Student's T-test
     ============================
 
     This implementation of a Student's T-test is following the assumption of

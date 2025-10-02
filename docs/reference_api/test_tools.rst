@@ -30,13 +30,26 @@
    RMSETest
    Chi2Test
    AbstractStudentTTest
-   IndependantStudentTTest
+   IndependentStudentTTest
    PairedStudentTTest
    ZTest
    SidakTTest
 
-``eradiate.test_tools.types``
+``eradiate.test_tools.test_cases``
 ----------------------------------
+
+.. automodule:: eradiate.test_tools.test_cases
+
+.. currentmodule:: eradiate.test_tools.test_cases
+
+.. autosummary::
+    :toctree: generated/autosummary/
+
+    rami4atm.create_rami4atm
+    rami4atm.registry
+
+``eradiate.test_tools.types``
+-----------------------------
 
 .. automodule:: eradiate.test_tools.types
 
