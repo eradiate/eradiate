@@ -9,6 +9,7 @@ import joseki
 import numpy as np
 import pytest
 
+from ._plt import plt as plt
 from ..data import make_particle_dataset
 from ..util import check_plugin
 from ... import fresolver

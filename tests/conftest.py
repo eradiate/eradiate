@@ -14,7 +14,7 @@ mpl.rcParams["legend.framealpha"] = 0.15  # Required for HTML rendering in Robot
 
 
 # ------------------------------------------------------------------------------
-#               Customizable output dir for test artifacts
+#                                Pytest hooks
 # ------------------------------------------------------------------------------
 
 
@@ -23,8 +23,44 @@ def pytest_addoption(parser):
     parser.addoption(
         "--artefact-dir",
         action="store",
-        default=os.path.join(eradiate_source_dir, "test_artefacts/"),
+        default=os.path.join(eradiate_source_dir, "test_artefacts"),
+        help="Customize artefact directory (default: %(default)s).",
     )
+    parser.addoption(
+        "--plots",
+        nargs="?",
+        default=False,
+        const=True,
+        help="Save plots (can optionally specify a directory for plots).",
+    )
+
+    parser.addini(
+        "plt_filename_drop",
+        default="",
+        help="List of regular expressions to remove from plot filenames.",
+    )
+    parser.addini(
+        "plt_dirname", default="plots", help="Default directory in which to save plots."
+    )
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_report_teststatus(report):
+    outcome = yield
+    category, shortletter, word = outcome.get_result()
+    word = "PASSED" if word == "" else word
+    if report.when == "teardown":
+        for key, val in report.user_properties:
+            if key == "plt_saved":
+                outcome.force_result(
+                    (category, shortletter, f"{word}\n└─ Saved '{val}'")
+                )
+            break
+
+
+# ------------------------------------------------------------------------------
+#               Customizable output dir for test artifacts
+# ------------------------------------------------------------------------------
 
 
 # See: https://stackoverflow.com/a/55301318/3645374
@@ -147,8 +183,10 @@ for name, variants in variant_groups.items():
     generate_fixture_group(name, variants)
 del generate_fixture_group
 
+
 # ------------------------------------------------------------------------------
 #                                 Other fixtures
 # ------------------------------------------------------------------------------
+
 
 from eradiate.test_tools.fixtures import *  # noqa: E402, F401, F403
