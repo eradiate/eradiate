@@ -37,11 +37,11 @@ def test_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(
             "rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp"
         ),
         value=result,
-        reference="tests/regression_test_references/"
-        "rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp_ref.nc",
+        reference="tests/regression_test_references/rami4atm/"
+        "hom00_bla_sd2s_m03_z30a000_brfpp-ref.nc",
         threshold=0.005,
         archive_dir=artefact_dir,
-        variable="radiance_srf",
+        variable="brf_srf",
         plot=plot_figures,
     )
 

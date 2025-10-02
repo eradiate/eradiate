@@ -12,7 +12,7 @@ from eradiate.test_tools.test_cases.rami4atm import (
 from eradiate.test_tools.util import append_doc
 
 test_types = {
-    "t_test": tt.IndependantStudentTTest,
+    "t_test": tt.IndependentStudentTTest,
     "paired_t_test": tt.PairedStudentTTest,
     "z_test": tt.ZTest,
     "chi2": tt.Chi2Test,
