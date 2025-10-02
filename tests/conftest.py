@@ -2,12 +2,14 @@ import logging
 import os
 
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import pytest
 
 import eradiate
 
 mpl.use("Agg")
 eradiate.plot.set_style()
+plt.style.use("eradiate.plot")
 mpl.rcParams["legend.framealpha"] = 0.15  # Required for HTML rendering in Robot
 
 

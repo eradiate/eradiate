@@ -1,0 +1,7 @@
+# Additional matplotlib styles
+axes.grid:          True
+grid.linestyle:     --
+grid.alpha:         0.5
+legend.framealpha:  1.0
+legend.edgecolor:   white
+lines.linewidth:    1.0
