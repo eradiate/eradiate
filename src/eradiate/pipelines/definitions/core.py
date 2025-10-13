@@ -4,6 +4,7 @@ Post-processing pipeline definitions.
 
 from __future__ import annotations
 
+import hamilton
 import numpy as np
 import xarray as xr
 from hamilton.function_modifiers import (
@@ -192,6 +193,7 @@ def _tag_outputs_gather_bitmaps(var_name, calculate_variance, calculate_stokes):
 
 
 def _extract_fields_gather_bitmaps(var_name, calculate_variance, calculate_stokes):
+    # Build the fields dictionary dynamically
     fields = {
         # Requested sample count for the corresponding Mitsuba render pass
         "spp": xr.DataArray,
@@ -207,7 +209,21 @@ def _extract_fields_gather_bitmaps(var_name, calculate_variance, calculate_stoke
         # 2nd moment of the main film
         fields[f"{var_name}_m2_raw"] = xr.DataArray
 
-    return extract_fields(fields)
+    # Create the decorator
+    decorator = extract_fields(fields)
+
+    # WORKAROUND for Hamilton v1.89:
+    # The extract_fields decorator needs its resolved_fields and output_type
+    # attributes set before it can be used with @resolve(decorate_with=...).
+    # Normally these are set in validate(), but that hasn't been called yet.
+    # We set them manually here by mimicking what validate() does.
+    if hamilton.__version__ >= (1, 89, 0):
+        from hamilton.function_modifiers.expanders import _determine_fields_to_extract
+
+        decorator.output_type = dict
+        decorator.resolved_fields = _determine_fields_to_extract(fields, dict)
+
+    return decorator
 
 
 @resolve(
