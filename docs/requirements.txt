@@ -10,8 +10,6 @@ anyio==4.11.0
     # via
     #   httpx
     #   jupyter-server
-appnope==0.1.4
-    # via ipykernel
 argon2-cffi==25.1.0
     # via jupyter-server
 argon2-cffi-bindings==25.1.0
@@ -20,13 +18,13 @@ arrow==1.3.0
     # via isoduration
 astropy==6.0.1
     # via eradiate (pyproject.toml)
-astropy-iers-data==0.2025.9.29.0.35.48
+astropy-iers-data==0.2025.10.13.0.37.17
     # via astropy
 asttokens==3.0.0
     # via stack-data
 async-lru==2.0.5
     # via jupyterlab
-attrs==25.3.0
+attrs==25.4.0
     # via
     #   eradiate (pyproject.toml)
     #   dessinemoi
@@ -42,11 +40,11 @@ beautifulsoup4==4.14.2
     # via nbconvert
 bleach==6.2.0
     # via nbconvert
-cachetools==6.2.0
+cachetools==6.2.1
     # via eradiate (pyproject.toml)
 cerberus==1.3.7
     # via eradiate (pyproject.toml)
-certifi==2025.8.3
+certifi==2025.10.5
     # via
     #   httpcore
     #   httpx
@@ -56,7 +54,7 @@ cffi==2.0.0
     # via argon2-cffi-bindings
 cftime==1.6.4.post1
     # via netcdf4
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
 click==8.1.8
     # via
@@ -87,7 +85,7 @@ docutils==0.21.2
     #   pybtex-docutils
     #   sphinx
     #   sphinxcontrib-bibtex
-dynaconf==3.2.11
+dynaconf==3.2.12
     # via eradiate (pyproject.toml)
 exceptiongroup==1.3.0
     # via
@@ -102,7 +100,7 @@ flexcache==0.3
     # via pint
 flexparser==0.4
     # via pint
-fonttools==4.60.0
+fonttools==4.60.1
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
@@ -114,7 +112,7 @@ httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via jupyterlab
-idna==3.10
+idna==3.11
     # via
     #   anyio
     #   httpx
@@ -301,7 +299,7 @@ packaging==25.0
     #   pytest
     #   sphinx
     #   xarray
-pandas==2.3.2
+pandas==2.3.3
     # via
     #   joseki
     #   seaborn
@@ -374,7 +372,7 @@ python-dateutil==2.9.0.post0
     #   jupyter-client
     #   matplotlib
     #   pandas
-python-json-logger==3.3.0
+python-json-logger==4.0.0
     # via jupyter-events
 pytz==2025.2
     # via pandas
@@ -409,7 +407,7 @@ rfc3986-validator==0.1.1
     #   jupyter-events
 rfc3987-syntax==1.1.0
     # via jsonschema
-rich==14.1.0
+rich==14.2.0
     # via
     #   eradiate (pyproject.toml)
     #   typer
@@ -436,7 +434,7 @@ send2trash==1.8.3
     # via jupyter-server
 setuptools==80.9.0
     # via jupyterlab
-sf-hamilton==1.88.0
+sf-hamilton==1.89.0
     # via eradiate (pyproject.toml)
 shellingham==1.5.4
     # via
@@ -495,7 +493,7 @@ terminado==0.18.1
     #   jupyter-server-terminals
 tinycss2==1.4.0
     # via bleach
-tomli==2.2.1
+tomli==2.3.0
     # via
     #   jupyterlab
     #   pytest
@@ -527,7 +525,7 @@ traitlets==5.14.3
     #   nbsphinx
 typer==0.19.2
     # via eradiate (pyproject.toml)
-types-python-dateutil==2.9.0.20250822
+types-python-dateutil==2.9.0.20251008
     # via arrow
 typing-extensions==4.15.0
     # via
@@ -563,7 +561,7 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-websocket-client==1.8.0
+websocket-client==1.9.0
     # via jupyter-server
 widgetsnbextension==4.0.14
     # via ipywidgets

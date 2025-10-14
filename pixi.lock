@@ -81,7 +81,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/d1/e5/f2a0621f1781b76a38194acae72f01e37b1941470407345b6e8653ad7640/ruamel.yaml-0.18.15-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/7c/b2/389b345a60131593028b0263fddaa580edb4081697a3f3aa1f168f67519f/ruamel.yaml.clib-0.2.8-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/35/f5/d0ad1a96f80962ba65e2ce1de6a1e59edecd1f0a7b55990ed208848012e0/scipy-1.13.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl
@@ -159,7 +159,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/d1/e5/f2a0621f1781b76a38194acae72f01e37b1941470407345b6e8653ad7640/ruamel.yaml-0.18.15-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/56/a9/e3be88fcebe04016c57207260f2b07c5ecacab86e9f585d10daaa2a4074f/ruamel.yaml.clib-0.2.8-cp39-cp39-macosx_10_9_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/7f/29/c2ea58c9731b9ecb30b6738113a95d147e83922986b34c685b8f6eefde21/scipy-1.13.1-cp39-cp39-macosx_10_9_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl
@@ -237,7 +237,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/d1/e5/f2a0621f1781b76a38194acae72f01e37b1941470407345b6e8653ad7640/ruamel.yaml-0.18.15-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b2/ed/f221e60a4cdc7996aae23643da44b12ef33f457c2a52d590236a6950ac8e/ruamel.yaml.clib-0.2.8-cp39-cp39-macosx_12_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/5c/c0/e71b94b20ccf9effb38d7147c0064c08c622309fd487b1b677771a97d18c/scipy-1.13.1-cp39-cp39-macosx_12_0_arm64.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl
@@ -322,7 +322,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/d1/e5/f2a0621f1781b76a38194acae72f01e37b1941470407345b6e8653ad7640/ruamel.yaml-0.18.15-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/74/82/e9bb3a3a2268987b7bc472c5c26b420757e04db0d0408e6626d07e388e4c/ruamel.yaml.clib-0.2.8-cp39-cp39-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/3e/77/dab54fe647a08ee4253963bcd8f9cf17509c8ca64d6335141422fe2e2114/scipy-1.13.1-cp39-cp39-win_amd64.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl
@@ -529,7 +529,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/9b/2f/8a563851c86d8c8b25c6915a89f41f2d965de2c35e7407b633409deba901/shibuya-2025.7.14-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
@@ -756,7 +756,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/9b/2f/8a563851c86d8c8b25c6915a89f41f2d965de2c35e7407b633409deba901/shibuya-2025.7.14-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
@@ -983,7 +983,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/9b/2f/8a563851c86d8c8b25c6915a89f41f2d965de2c35e7407b633409deba901/shibuya-2025.7.14-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
@@ -1216,7 +1216,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/9b/2f/8a563851c86d8c8b25c6915a89f41f2d965de2c35e7407b633409deba901/shibuya-2025.7.14-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
@@ -1421,7 +1421,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
@@ -1591,7 +1591,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
@@ -1761,7 +1761,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
@@ -1937,7 +1937,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
@@ -2138,7 +2138,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
@@ -2326,7 +2326,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
@@ -2514,7 +2514,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
@@ -2708,7 +2708,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/b0/4562db6223154aa4e22f939003cb92514c79f3d4dccca3444253fd17f902/Send2Trash-1.8.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
@@ -3863,7 +3863,7 @@ packages:
 - pypi: ./
   name: eradiate
   version: 1.0.0
-  sha256: c061b5cef406b918cc1cf9ddbe14b916d3f7826d07965f220cca72d2bc46b704
+  sha256: a9a51dba702a8fd4b85a73a0657caa7db258a67702abf3f5e9529fddbef3c1c6
   requires_dist:
   - aenum
   - attrs>=22.2
@@ -7559,10 +7559,10 @@ packages:
   - importlib-metadata>=7.0.2 ; python_full_version < '3.10' and extra == 'type'
   - jaraco-develop>=7.21 ; sys_platform != 'cygwin' and extra == 'type'
   requires_python: '>=3.8'
-- pypi: https://files.pythonhosted.org/packages/0b/ab/39089368c4bacab984e9d9bc3df1d225d49e6064aed0ddb51e2ed31e1c80/sf_hamilton-1.88.0-py3-none-any.whl
+- pypi: https://files.pythonhosted.org/packages/66/ce/3591411d90bf0f6829fec4403f77a63280c8eee942f55715ae1ed7ff8492/sf_hamilton-1.89.0-py3-none-any.whl
   name: sf-hamilton
-  version: 1.88.0
-  sha256: f725d6f9cdcf39023dfab117d6b07d613580ab1dfcdd324fa86fa8d6301aa4f4
+  version: 1.89.0
+  sha256: 25c0efeb498cd1847aec5fbde2e69b4756c4e0c2a5238bbedbe2178d559fd677
   requires_dist:
   - numpy
   - pandas
@@ -7571,59 +7571,16 @@ packages:
   - typer ; extra == 'cli'
   - dask[complete] ; extra == 'dask'
   - dask[array] ; extra == 'dask-array'
-  - dask-core ; extra == 'dask-core'
   - dask[dataframe] ; extra == 'dask-dataframe'
   - dask[diagnostics] ; extra == 'dask-diagnostics'
   - dask[distributed] ; extra == 'dask-distributed'
   - ddtrace<3.0 ; extra == 'datadog'
-  - pre-commit ; extra == 'dev'
-  - ruff==0.5.7 ; extra == 'dev'
   - diskcache ; extra == 'diskcache'
-  - sf-hamilton[dev] ; extra == 'docs'
-  - alabaster>=0.7,!=0.7.5,<0.8 ; extra == 'docs'
-  - commonmark==0.9.1 ; extra == 'docs'
-  - dask-expr ; python_full_version == '3.9.*' and extra == 'docs'
-  - dask[distributed] ; extra == 'docs'
-  - ddtrace<3.0 ; extra == 'docs'
-  - diskcache ; extra == 'docs'
-  - dlt ; extra == 'docs'
-  - furo ; extra == 'docs'
-  - gitpython ; extra == 'docs'
-  - grpcio-status ; extra == 'docs'
-  - lightgbm ; extra == 'docs'
-  - lxml ; extra == 'docs'
-  - lz4 ; extra == 'docs'
-  - mlflow ; extra == 'docs'
-  - mock==1.0.1 ; extra == 'docs'
-  - myst-nb ; extra == 'docs'
-  - narwhals ; extra == 'docs'
-  - numpy<2.0.0 ; extra == 'docs'
-  - pandera ; extra == 'docs'
-  - pillow ; extra == 'docs'
-  - polars ; extra == 'docs'
-  - pyarrow>=1.0.0 ; extra == 'docs'
-  - pydantic>=2.0 ; extra == 'docs'
-  - pyspark ; extra == 'docs'
-  - openlineage-python ; extra == 'docs'
-  - pyyaml ; extra == 'docs'
-  - ray ; extra == 'docs'
-  - readthedocs-sphinx-ext<2.3 ; extra == 'docs'
-  - recommonmark==0.5.0 ; extra == 'docs'
-  - scikit-learn ; extra == 'docs'
-  - slack-sdk ; extra == 'docs'
-  - sphinx ; extra == 'docs'
-  - sphinx-autobuild ; extra == 'docs'
-  - sphinx-rtd-theme ; extra == 'docs'
-  - sphinx-simplepdf ; extra == 'docs'
-  - sphinx-sitemap ; extra == 'docs'
-  - tqdm ; extra == 'docs'
-  - xgboost ; extra == 'docs'
   - fastapi ; extra == 'experiments'
   - fastui ; extra == 'experiments'
   - uvicorn ; extra == 'experiments'
   - sf-hamilton-lsp ; extra == 'lsp'
   - openlineage-python ; extra == 'openlineage'
-  - build ; extra == 'packaging'
   - pandera ; extra == 'pandera'
   - pydantic>=2.0 ; extra == 'pydantic'
   - pyspark[pandas-on-spark,sql] ; extra == 'pyspark'
@@ -7632,47 +7589,12 @@ packages:
   - rich ; extra == 'rich'
   - sf-hamilton-sdk ; extra == 'sdk'
   - slack-sdk ; extra == 'slack'
-  - connectorx ; extra == 'test'
-  - dask[complete] ; extra == 'test'
-  - dask-expr ; python_full_version == '3.9.*' and extra == 'test'
-  - datasets ; extra == 'test'
-  - diskcache ; extra == 'test'
-  - dlt ; extra == 'test'
-  - fsspec ; extra == 'test'
-  - graphviz ; extra == 'test'
-  - kaleido ; extra == 'test'
-  - kedro ; extra == 'test'
-  - lancedb ; extra == 'test'
-  - lightgbm ; extra == 'test'
-  - lxml ; extra == 'test'
-  - lz4 ; extra == 'test'
-  - matplotlib ; extra == 'test'
-  - mlflow ; extra == 'test'
-  - networkx ; extra == 'test'
-  - openpyxl ; extra == 'test'
-  - pandera[dask] ; extra == 'test'
-  - plotly ; extra == 'test'
-  - polars ; extra == 'test'
-  - pyarrow ; extra == 'test'
-  - pydantic>=2.0 ; extra == 'test'
-  - pyreadstat ; extra == 'test'
-  - pytest ; extra == 'test'
-  - pytest-asyncio ; extra == 'test'
-  - pytest-cov ; extra == 'test'
-  - pyyaml ; extra == 'test'
-  - scikit-learn ; extra == 'test'
-  - sqlalchemy==1.4.49 ; python_full_version == '3.7.*' and extra == 'test'
-  - sqlalchemy ; python_full_version >= '3.8' and extra == 'test'
-  - typer ; extra == 'test'
-  - xgboost ; extra == 'test'
-  - xlsx2csv ; extra == 'test'
-  - xlsxwriter ; extra == 'test'
   - tqdm ; extra == 'tqdm'
   - sf-hamilton-ui ; extra == 'ui'
-  - vaex ; extra == 'vaex'
+  - vaex ; python_full_version < '3.11' and extra == 'vaex'
   - graphviz ; extra == 'visualization'
   - networkx ; extra == 'visualization'
-  requires_python: '>=3.8,<4'
+  requires_python: '>=3.8.1,<4'
 - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
   name: shellingham
   version: 1.5.4
