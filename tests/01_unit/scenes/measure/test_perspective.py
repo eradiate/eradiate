@@ -50,6 +50,14 @@ def test_perspective_construct(mode_mono, tested, expected):
         RuntimeError("unhandled expected value")
 
 
+@pytest.mark.parametrize(
+    "rfilter", ["box", "gaussian", "tent", "mitchell", "catmullrom", "lanczos"]
+)
+def test_perspective_rfilters(mode_mono, rfilter):
+    measure = PerspectiveCameraMeasure(rfilter=rfilter)
+    check_scene_element(measure, mi.Sensor)
+
+
 def test_perspective_medium(mode_mono):
     measure = PerspectiveCameraMeasure()
     template, _ = traverse(measure)

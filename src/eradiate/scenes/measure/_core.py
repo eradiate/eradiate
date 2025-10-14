@@ -156,12 +156,14 @@ class Measure(NodeSceneElement, ABC):
     rfilter: str = documented(
         attrs.field(
             default="box",
-            validator=attrs.validators.in_({"box", "gaussian"}),
+            validator=attrs.validators.in_(
+                {"box", "gaussian", "tent", "mitchell", "catmullrom", "lanczos"}
+            ),
         ),
         doc="Reconstruction filter used to scatter samples on sensor pixels. "
         "By default, using a box filter is recommended.",
         type="str",
-        init_type='{"box", "gaussian"}',
+        init_type='{"box", "gaussian", "tent", "mitchell", "catmullrom", "lanczos"}',
         default='"box"',
     )
 
