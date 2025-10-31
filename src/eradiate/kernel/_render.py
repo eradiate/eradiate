@@ -294,7 +294,15 @@ def mi_traverse(
                         name
                     ]  # Remove successful lookups to accelerate future searches
 
-        def put_parameter(self, name, ptr, flags, cpptype=None):
+        def put(self, name, value, flags, cpptype=None):
+            """Unified method to register both objects and values with the traversal callback."""
+            # Import Object locally to avoid circular import
+            if isinstance(value, mi.Object):
+                self.put_object(name, value, flags)
+            else:
+                self.put_value(name, value, flags, cpptype)
+
+        def put_value(self, name, ptr, flags, cpptype):
             name = name if self.name is None else self.name + "." + name
 
             flags = self.flags | flags
@@ -304,11 +312,11 @@ def mi_traverse(
 
             self.properties[name] = (ptr, cpptype, self.node, self.flags | flags)
 
-        def put_object(self, name, node, flags):
-            if node is None or node in self.hierarchy:
+        def put_object(self, name, obj, flags):
+            if obj is None or obj in self.hierarchy:
                 return
             cb = SceneTraversal(
-                node=node,
+                node=obj,
                 parent=self.node,
                 properties=self.properties,
                 hierarchy=self.hierarchy,
@@ -318,7 +326,7 @@ def mi_traverse(
                 flags=self.flags | flags,
                 aliases=self.aliases,
             )
-            node.traverse(cb)
+            obj.traverse(cb)
 
     cb = SceneTraversal(obj)
     obj.traverse(cb)
