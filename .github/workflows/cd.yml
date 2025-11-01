@@ -52,7 +52,7 @@ jobs:
 
     steps:
       - name: Download all dists
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: python-package-distributions
           path: dist/
@@ -73,7 +73,7 @@ jobs:
 
     steps:
       - name: Download all dists
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: python-package-distributions
           path: dist/
