@@ -23,7 +23,11 @@ from ...validators import has_quantity, is_positive
 illumination_factory = Factory()
 illumination_factory.register_lazy_batch(
     [
-        ("_astro_object.AstroObjectIllumination", "astro_object", {}),
+        (
+            "_astro_object.AstroObjectIllumination",
+            "astro_object",
+            {"aliases": ["astroobject"]},
+        ),
         ("_constant.ConstantIllumination", "constant", {}),
         ("_directional.DirectionalIllumination", "directional", {}),
         ("_spot.SpotIllumination", "spot", {}),
