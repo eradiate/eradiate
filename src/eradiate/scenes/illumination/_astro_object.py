@@ -16,7 +16,8 @@ from ...validators import is_positive
 @define(eq=False, slots=False)
 class AstroObjectIllumination(AbstractDirectionalIllumination):
     """
-    Astronomical Object Illumination scene element [``astro_object``].
+    Astronomical Object Illumination scene element
+    [``astroobject``, ``astro_object``].
 
     This illumination represents the light coming from a distant astronomical
     object (*e.g.* the Sun). The astronomical object uniformly illuminates a
