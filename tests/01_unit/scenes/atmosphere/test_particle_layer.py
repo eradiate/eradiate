@@ -439,3 +439,16 @@ def test_particle_layer_switches(mode_mono, has_absorption, has_scattering, expe
 
     except ValueError:
         assert expected == "raise"
+
+
+def test_particle_layer_wavelength_alignment(test_dataset_path):
+    """The single-scattering property dataset should contain the reference wavelength."""
+    ds = fresolver.load_dataset(test_dataset_path)
+    w1, w2 = ds["w"].values[[1, 2]]
+
+    assert ParticleLayer(dataset=ds, tau_ref=1.0, w_ref=w1 * ureg.nm)
+
+    with pytest.warns(
+        UserWarning, match="dataset does not contain the selected reference wavelength"
+    ):
+        ParticleLayer(dataset=ds, tau_ref=1.0, w_ref=0.5 * (w1 + w2) * ureg.nm)

@@ -129,9 +129,9 @@ def ert_seed_state():
 
 @pytest.fixture
 def particle_dataset_absorbing_only():
-    """Absorbing only particles radiative properties data set fixture."""
+    """Absorbing only particle radiative property data set fixture."""
     mu = np.linspace(-1.0, 1.0) * ureg.dimensionless
-    w = np.linspace(279.0, 2401.0) * ureg.nm
+    w = np.arange(220.0, 2500.0, 110.0) * ureg.nm
     arrays = [np.ones_like(mu) / ureg.steradian for _ in w]
     phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
     albedo = np.zeros_like(w) * ureg.dimensionless
@@ -143,9 +143,9 @@ def particle_dataset_absorbing_only():
 
 @pytest.fixture
 def particle_dataset_scattering_only():
-    """Scattering only particles radiative properties data set fixture."""
+    """Scattering only particle radiative property data set fixture."""
     mu = np.linspace(-1.0, 1.0) * ureg.dimensionless
-    w = np.linspace(279.0, 2401.0) * ureg.nm
+    w = np.arange(220.0, 2500.0, 110.0) * ureg.nm
     arrays = [np.ones_like(mu) / ureg.steradian for _ in w]
     phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
     albedo = np.ones_like(w) * ureg.dimensionless
@@ -158,7 +158,7 @@ def particle_dataset_scattering_only():
 @pytest.fixture
 def particle_dataset_test():
     """
-    Particles radiative properties data set fixture.
+    Particle radiative property dataset fixture.
 
     Particle radiative properties are spectrally constant with values specified
     below:
@@ -167,7 +167,7 @@ def particle_dataset_test():
         * the albedo is 0.8
     """
     mu = np.linspace(-1.0, 1.0) * ureg.dimensionless
-    w = np.linspace(279.0, 2401.0) * ureg.nm
+    w = np.arange(220.0, 2500.0, 110.0) * ureg.nm
     arrays = [np.ones_like(mu) / ureg.steradian for _ in w]
     phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
     albedo = 0.8 * np.ones_like(w) * ureg.dimensionless

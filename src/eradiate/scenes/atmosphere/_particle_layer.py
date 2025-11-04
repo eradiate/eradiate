@@ -4,6 +4,7 @@ Particle layers.
 
 from __future__ import annotations
 
+import warnings
 from functools import singledispatchmethod
 from typing import Literal
 
@@ -130,17 +131,29 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     w_ref: pint.Quantity = documented(
         pinttr.field(
             units=ucc.deferred("wavelength"),
-            default=550 * ureg.nm,
+            default=550.0 * ureg.nm,
             validator=[is_positive, pinttr.validators.has_compatible_units],
         ),
         doc="Reference wavelength at which the extinction optical thickness is "
-        "specified.\n"
+        "specified. To minimize the uncertainty on the computed extinction "
+        "coefficient, it is recommended that this wavelength is included in the "
+        "provided radiative property dataset.\n"
         "\n"
         "Unit-enabled field (default: ucc['wavelength']).",
         type="quantity",
         init_type="quantity or float",
-        default="550.0",
+        default="550.0 nm",
     )
+
+    @w_ref.validator
+    def _w_ref_validator(self, attribute, value):
+        w_units = self.dataset["w"].attrs["units"]
+        if not np.any(np.isclose(value.m_as(w_units), self.dataset["w"].values)):
+            warnings.warn(
+                "While initializing ParticleLayer: the provided aerosol "
+                "single-scattering property dataset does not contain the selected "
+                f"reference wavelength (w_ref = {value})"
+            )
 
     tau_ref: pint.Quantity = documented(
         pinttr.field(
