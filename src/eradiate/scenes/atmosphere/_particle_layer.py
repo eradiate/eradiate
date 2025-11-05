@@ -13,6 +13,7 @@ import numpy as np
 import pint
 import pinttr
 import xarray as xr
+from pinttrs.converters import ensure_units
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
@@ -33,6 +34,19 @@ from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id, summary_repr
 from ...validators import is_positive
+
+
+def _exp_scale(
+    z0: float = 0.0, z1: float = 0.0, z2: float = 1.0, rate: float = 5.0
+) -> float:
+    """
+    Compute a scaling factor such that an exponential distribution with a
+    normalized integral between :math:`z_0` and :math:`z_2` has, after scaling,
+    an integral between :math:`z_1` and :math:`z_2` equal to 1.
+    """
+    n = np.exp(-z0 * rate) - np.exp(-z2 * rate)
+    d = np.exp(-z1 * rate) - np.exp(-z2 * rate)
+    return n / d
 
 
 def _particle_layer_distribution_converter(value):
@@ -247,6 +261,83 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             data=self.dataset.phase,
             force_polarized_phase=self.force_polarized_phase,
             particle_shape=self.particle_shape,
+        )
+
+    # --------------------------------------------------------------------------
+    #                           Specific constructors
+    # --------------------------------------------------------------------------
+
+    @classmethod
+    def exponential(
+        cls,
+        *,
+        scale_height: float | pint.Quantity = 1.0 * ureg.km,
+        z_ref: float | pint.Quantity | None = None,
+        tau_ref: float | pint.Quantity = 0.2 * ureg.dimensionless,
+        bottom: float | pint.Quantity = 0.0 * ureg.km,
+        top: float | pint.Quantity = 1.0 * ureg.km,
+        **kwargs,
+    ) -> ParticleLayer:
+        r"""
+        This constructor initializes a :class:`ParticleLayer` instance with an
+        exponential density distribution.
+
+        The specified optical thickness and rate are enforced for the interval
+        :math:`[z_\mathrm{ref}, \text{top}]`, and the density distribution is
+        extrapolated in :math:`[\text{bottom}, z_\mathrm{ref}]`. This behaviour
+        is desirable in scenes with topography where :math:`\tau_\mathrm{ref}`
+        is known at a reference elevation, and where some parts of the surface
+        might lie below that elevation.
+
+        Parameters
+        ----------
+        scale_height : float or quantity, default: 1.0 km
+            Scaling height for the exponential density distribution, relative to
+            the reference altitude ``z_ref``.
+
+        z_ref : float or quantity, optional
+            Reference altitude that corresponds to the bottom of the region for
+            which the optical thickness is specified. If unset, defaults to
+            ``bottom``.
+
+        tau_ref : float or quantity, default: 0.1
+            Optical thickness at the reference wavelength ``w_ref`` for the
+            :math:`[z_\mathrm{ref}, \text{top}]` interval.
+
+        bottom : float or quantity, default: 0.0 km
+            Bottom altitude of the aerosol layer.
+
+        top : float or quantity, default: 1.0 km
+            Top altitude of the aerosol layer.
+
+        kwargs
+            All other keyword arguments are forwarded to the
+            :class:`ParticleLayer` constructor.
+        """
+        if z_ref is None:
+            z_ref = bottom
+
+        length_units = ucc.get("length")
+        top = ensure_units(top, length_units)
+        bottom = ensure_units(bottom, length_units)
+        z_ref = ensure_units(z_ref, length_units)
+
+        # Compute the exponential rate that ensures the
+        height = top - bottom
+        rate = height / scale_height
+
+        # Scale the optical thickness such that the
+        z0 = 0.0
+        z1 = (z_ref - bottom) / height
+        z2 = 1.0
+        tau = tau_ref * _exp_scale(z0, z1, z2, rate=rate)
+
+        return cls(
+            bottom=bottom,
+            top=top,
+            distribution={"type": "exponential", "rate": rate},
+            tau_ref=tau,
+            **kwargs,
         )
 
     # --------------------------------------------------------------------------

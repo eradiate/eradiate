@@ -452,3 +452,46 @@ def test_particle_layer_wavelength_alignment(test_dataset_path):
         UserWarning, match="dataset does not contain the selected reference wavelength"
     ):
         ParticleLayer(dataset=ds, tau_ref=1.0, w_ref=0.5 * (w1 + w2) * ureg.nm)
+
+
+def test_particle_layer_exponential(mode_mono):
+    """Unit tests for the ParticleLayer.exponential() constructor."""
+    # The default exponential layer has the expected defaults
+    l = ParticleLayer.exponential()
+    l_0 = ParticleLayer(distribution={"type": "exponential", "rate": 1.0})
+    assert repr(l) == repr(l_0)
+
+    # Dividing the scale height by 2 multiplies the rate by 2
+    l = ParticleLayer.exponential(scale_height=0.5 * ureg.km)
+    assert l.distribution.rate == 2.0
+
+    #
+    l = ParticleLayer.exponential(
+        scale_height=0.5 * ureg.km,
+        bottom=0.0 * ureg.km,
+        top=2.0 * ureg.km,
+        z_ref=1.0 * ureg.km,
+        tau_ref=0.2,
+    )
+    l_ref = ParticleLayer(
+        distribution={"type": "exponential", "rate": 1.0},
+        bottom=1.0 * ureg.km,
+        top=2.0 * ureg.km,
+        tau_ref=0.2,
+    )
+
+    assert l.distribution.rate == 4.0
+    assert np.isclose(l.tau_ref, 1.6779, rtol=1e-3)
+
+    si = SpectralIndex.new()
+
+    values = []
+    for l_ in [l, l_ref]:
+        sigma_t = l_.eval_radprops(si)["sigma_t"]
+        sigma_t = sigma_t.where(
+            (sigma_t["z_layer"] > 1000.0) & (sigma_t["z_layer"] < 2000.0)
+        ).dropna("z_layer")
+        print(f"sigma_t = {sigma_t}")
+        values.append(sigma_t)
+
+    np.testing.assert_allclose(*values)
