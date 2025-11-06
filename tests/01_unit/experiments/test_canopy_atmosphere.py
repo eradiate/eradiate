@@ -105,9 +105,7 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
         exp.scene, mi.Scene, drop_parameters=False
     )  # Do not drop untracked parameters: we want to check the surface transform
     assert np.allclose(
-        mi_wrapper.parameters["surface_shape.to_world"].transform_affine(
-            mi.Point3f(1, -1, 0)
-        ),
+        mi_wrapper.parameters["surface_shape.to_world"] @ mi.Point3f(1, -1, 0),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
 

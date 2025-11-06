@@ -64,12 +64,8 @@ def test_cuboid_params(mode_mono_double, kwargs, expected_transform):
     template, _ = traverse(cuboid)
     kernel_dict = template.render(ctx=KernelContext())
     to_world = kernel_dict["to_world"]
-    assert dr.allclose(
-        to_world.transform_affine(mi.Point3f(-1, -1, -1)), expected_transform[0]
-    )
-    assert dr.allclose(
-        to_world.transform_affine(mi.Point3f(1, 1, 1)), expected_transform[1]
-    )
+    assert dr.allclose(to_world @ mi.Point3f(-1, -1, -1), expected_transform[0])
+    assert dr.allclose(to_world @ mi.Point3f(1, 1, 1), expected_transform[1])
 
 
 def test_cuboid_atmosphere(mode_mono_double):

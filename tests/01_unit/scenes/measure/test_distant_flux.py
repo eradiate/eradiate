@@ -55,9 +55,9 @@ def test_distant_flux_direction(modes_all_double, direction, frame):
     to_world = template["to_world"]
 
     # The reference frame is rotated as expected
-    assert dr.allclose(to_world.transform_affine(mi.Vector3f(1, 0, 0)), frame[0])
-    assert dr.allclose(to_world.transform_affine(mi.Vector3f(0, 1, 0)), frame[1])
-    assert dr.allclose(to_world.transform_affine(mi.Vector3f(0, 0, 1)), frame[2])
+    assert dr.allclose(to_world * mi.Vector3f(1, 0, 0), frame[0])
+    assert dr.allclose(to_world * mi.Vector3f(0, 1, 0), frame[1])
+    assert dr.allclose(to_world * mi.Vector3f(0, 0, 1), frame[2])
 
 
 def test_distant_flux_viewing_angles(mode_mono):
