@@ -238,7 +238,7 @@ class TargetRectangle(Target):
             [0.5 * dx + xmin, 0.5 * dy + ymin, z]
         ) @ mi.ScalarTransform4f().scale([0.5 * dx, 0.5 * dy, 1.0])
 
-        return {"type": "rectangle", "to_world": to_world}
+        return {"type": "arectangle", "to_world": to_world}
 
 
 # ------------------------------------------------------------------------------

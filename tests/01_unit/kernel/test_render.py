@@ -24,11 +24,11 @@ SCENE_DICTS = {
         "bsdf": {"type": "diffuse", "id": "my_bsdf"},
         # Leading underscores ensures that shapes will be traverse first
         "_rectangle_1": {
-            "type": "rectangle",
+            "type": "arectangle",
             "bsdf": {"type": "ref", "id": "my_bsdf"},
         },
         "_rectangle_2": {
-            "type": "rectangle",
+            "type": "arectangle",
             "bsdf": {"type": "ref", "id": "my_bsdf"},
         },
         "_disk_1": {
@@ -44,11 +44,11 @@ SCENE_DICTS = {
         "type": "scene",
         "bsdf": {"type": "diffuse", "id": "diffuse_1"},
         "_rectangle_1": {
-            "type": "rectangle",
+            "type": "arectangle",
             "bsdf": {"type": "ref", "id": "diffuse_1"},
         },
         "_rectangle_2": {
-            "type": "rectangle",
+            "type": "arectangle",
             "bsdf": {"type": "diffuse", "id": "diffuse_2"},
         },
     },
@@ -61,11 +61,11 @@ def test_search_scene_parameter(mode_mono):
             "type": "scene",
             "bsdf": {"type": "diffuse", "id": "my_bsdf"},
             "rectangle_1": {
-                "type": "rectangle",
+                "type": "arectangle",
                 "bsdf": {"type": "ref", "id": "my_bsdf"},
             },
             "rectangle_2": {
-                "type": "rectangle",
+                "type": "arectangle",
                 "bsdf": {"type": "ref", "id": "my_bsdf"},
             },
             "disk_1": {
@@ -96,11 +96,11 @@ def test_mi_traverse_lookup(mode_mono):
             "type": "scene",
             "bsdf": {"type": "diffuse", "id": "my_bsdf"},
             "rectangle_1": {
-                "type": "rectangle",
+                "type": "arectangle",
                 "bsdf": {"type": "ref", "id": "my_bsdf"},
             },
             "rectangle_2": {
-                "type": "rectangle",
+                "type": "arectangle",
                 "bsdf": {"type": "ref", "id": "my_bsdf"},
             },
             "disk_1": {
@@ -202,7 +202,7 @@ def test_mi_render(mode_mono):
         {
             "type": "scene",
             "rectangle": {
-                "type": "rectangle",
+                "type": "arectangle",
                 "bsdf": {"type": "diffuse", "id": "my_bsdf"},
             },
             "sensor": {
@@ -265,7 +265,7 @@ def test_mi_render_multisensor(mode_mono):
         {
             "type": "scene",
             "rectangle": {
-                "type": "rectangle",
+                "type": "arectangle",
                 "bsdf": {"type": "diffuse", "id": "my_bsdf"},
             },
             "sensor1": {

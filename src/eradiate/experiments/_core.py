@@ -686,8 +686,6 @@ class EarthObservationExperiment(Experiment, ABC):
 
         # Run Mitsuba for each context
         logger.info("Launching simulation")
-        print("Running simulation")
-
         mi_results = mi_render(
             self.mi_scene,
             ctxs=ctxs,
@@ -695,8 +693,6 @@ class EarthObservationExperiment(Experiment, ABC):
             seed_state=seed_state,
             spp=spp,
         )
-
-        print("- done")
 
         # Assign collected results to the appropriate measure
         sensor_to_measure: dict[str, Measure] = {

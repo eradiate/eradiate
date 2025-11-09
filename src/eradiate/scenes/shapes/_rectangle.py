@@ -118,10 +118,7 @@ class RectangleShape(ShapeNode):
                 up=self.up,
             ) @ mi.ScalarTransform4f().scale([scale[0], scale[1], 1.0])
 
-        result = {
-            "type": "rectangle",
-            "to_world": to_world,
-        }
+        result = {"type": "arectangle", "to_world": to_world}
 
         return result
 

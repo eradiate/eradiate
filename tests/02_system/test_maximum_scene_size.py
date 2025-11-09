@@ -58,7 +58,7 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
                         "reflectance": rho,
                     },
                     "surface": {
-                        "type": "rectangle",
+                        "type": "arectangle",
                         "to_world": mi.ScalarTransform4f().scale(
                             mi.ScalarVector3f(scene_size, scene_size, 1)
                         ),

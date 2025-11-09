@@ -51,7 +51,7 @@ def test_atmosphere_experiment_extra_objects(mode_mono):
     )
     assert isinstance(exp.extra_objects["reference_surface"], RectangleShape)
     mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init())
-    assert mi_wrapper.obj.shapes()[0].id() == "reference_surface"
+    assert mi_wrapper.obj.shapes()[2].id() == "reference_surface"
     assert "reference_surface.bsdf.reflectance.value" in mi_wrapper.parameters.keys()
 
 
