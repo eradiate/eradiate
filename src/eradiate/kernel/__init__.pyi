@@ -12,6 +12,7 @@ from ._kernel_dict import dict_parameter as dict_parameter
 from ._kernel_dict import scene_parameter as scene_parameter
 from ._render import MitsubaObjectWrapper as MitsubaObjectWrapper
 from ._render import SearchSceneParameter as SearchSceneParameter
+from ._render import mi_load_dict as mi_load_dict
 from ._render import mi_render as mi_render
 from ._render import mi_traverse as mi_traverse
 from ._versions import check_kernel as check_kernel

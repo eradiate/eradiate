@@ -11,6 +11,7 @@ from eradiate.kernel import (
     MitsubaObjectWrapper,
     SceneParameter,
     SearchSceneParameter,
+    mi_load_dict,
     mi_render,
     mi_traverse,
 )
@@ -38,12 +39,24 @@ SCENE_DICTS = {
             "type": "disk",
             "bsdf": {"type": "diffuse"},
         },
-    }
+    },
+    "aliases": {
+        "type": "scene",
+        "bsdf": {"type": "diffuse", "id": "diffuse_1"},
+        "_rectangle_1": {
+            "type": "rectangle",
+            "bsdf": {"type": "ref", "id": "diffuse_1"},
+        },
+        "_rectangle_2": {
+            "type": "rectangle",
+            "bsdf": {"type": "diffuse", "id": "diffuse_2"},
+        },
+    },
 }
 
 
 def test_search_scene_parameter(mode_mono):
-    mi_scene = mi.load_dict(
+    mi_scene = mi_load_dict(
         {
             "type": "scene",
             "bsdf": {"type": "diffuse", "id": "my_bsdf"},
@@ -78,7 +91,7 @@ def test_search_scene_parameter(mode_mono):
 
 
 def test_mi_traverse_lookup(mode_mono):
-    mi_scene = mi.load_dict(
+    mi_scene = mi_load_dict(
         {
             "type": "scene",
             "bsdf": {"type": "diffuse", "id": "my_bsdf"},
@@ -122,6 +135,7 @@ def test_mi_traverse_lookup(mode_mono):
 
     # Parameter map is correctly extracted
     assert set(mi_wrapper.parameters.keys()) == {
+        "allow_thread_reordering",
         "my_bsdf.reflectance.value",
         "disk_1.to_world",
         "disk_1.silhouette_sampling_weight",
@@ -145,35 +159,29 @@ def test_mi_traverse_lookup(mode_mono):
     "scene_dict, name_id_override, expected",
     [
         (
-            "referenced_bsdf",
-            False,
+            "aliases",
+            None,
             {
-                "_disk_1.bsdf.reflectance.value",
-                "_disk_1.to_world",
-                "_disk_1.silhouette_sampling_weight",
-                "_disk_2.bsdf.reflectance.value",
-                "_disk_2.to_world",
-                "_disk_2.silhouette_sampling_weight",
-                "_rectangle_1.to_world",
+                "allow_thread_reordering",
                 "_rectangle_1.silhouette_sampling_weight",
-                "_rectangle_2.to_world",
+                "_rectangle_1.to_world",
+                "_rectangle_2.bsdf.reflectance.value",
                 "_rectangle_2.silhouette_sampling_weight",
+                "_rectangle_2.to_world",
+                "diffuse_1.reflectance.value",
             },
         ),
         (
-            "referenced_bsdf",
-            "my_bsdf",
+            "aliases",
+            "diffuse_2",
             {
-                "_disk_1.silhouette_sampling_weight",
-                "_disk_1.to_world",
-                "_disk_2.bsdf.reflectance.value",
-                "_disk_2.silhouette_sampling_weight",
-                "_disk_2.to_world",
+                "allow_thread_reordering",
                 "_rectangle_1.silhouette_sampling_weight",
                 "_rectangle_1.to_world",
                 "_rectangle_2.silhouette_sampling_weight",
                 "_rectangle_2.to_world",
-                "my_bsdf.reflectance.value",
+                "diffuse_1.reflectance.value",
+                "diffuse_2.reflectance.value",
             },
         ),
     ],
@@ -182,7 +190,7 @@ def test_mi_traverse_lookup(mode_mono):
 def test_mi_traverse_name_id_override(
     mode_mono, scene_dict, name_id_override, expected
 ):
-    mi_scene = mi.load_dict(SCENE_DICTS[scene_dict])
+    mi_scene = mi_load_dict(SCENE_DICTS[scene_dict])
 
     mi_wrapper = mi_traverse(mi_scene, name_id_override=name_id_override)
     assert isinstance(mi_wrapper.parameters, mi.SceneParameters)
@@ -190,7 +198,7 @@ def test_mi_traverse_name_id_override(
 
 
 def test_mi_render(mode_mono):
-    mi_scene = mi.load_dict(
+    mi_scene = mi_load_dict(
         {
             "type": "scene",
             "rectangle": {
@@ -253,7 +261,7 @@ def test_mi_render(mode_mono):
 
 
 def test_mi_render_multisensor(mode_mono):
-    mi_scene = mi.load_dict(
+    mi_scene = mi_load_dict(
         {
             "type": "scene",
             "rectangle": {

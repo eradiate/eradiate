@@ -4,7 +4,7 @@ import mitsuba as mi
 import pytest
 
 from ..contexts import KernelContext
-from ..kernel import MitsubaObjectWrapper, mi_traverse
+from ..kernel import MitsubaObjectWrapper, mi_load_dict, mi_traverse
 from ..scenes.core import CompositeSceneElement, NodeSceneElement, Scene, traverse
 
 
@@ -74,7 +74,7 @@ def check_scene_element(
     kernel_dict = kdict_template.render(ctx)
 
     try:
-        mi_obj = mi.load_dict(kernel_dict)
+        mi_obj = mi_load_dict(kernel_dict)
     except RuntimeError as e:
         pytest.fail(
             reason=f"could not load scene dictionary, got RuntimeError: {e}\n"

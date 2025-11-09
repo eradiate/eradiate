@@ -25,6 +25,7 @@ from ..kernel import (
     KernelDict,
     KernelSceneParameterMap,
     MitsubaObjectWrapper,
+    mi_load_dict,
     mi_render,
     mi_traverse,
 )
@@ -642,13 +643,11 @@ class EarthObservationExperiment(Experiment, ABC):
         try:
             ctx = self.context_init()
             self.mi_scene = mi_traverse(
-                mi.load_dict(kdict_template.render(ctx=ctx)),
+                mi_load_dict(kdict_template.render(ctx=ctx)),
                 umap_template=umap_template,
             )
         except RuntimeError as e:
             raise RuntimeError(f"(while loading kernel scene dictionary){e}") from e
-
-        self.mi_scene = mi_traverse(mi_scene, umap_template=umap_template)
 
         # Remove unused elements from Mitsuba scene parameter table
         if drop_parameters:

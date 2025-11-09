@@ -7,6 +7,7 @@ from eradiate import KernelContext
 from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
+from eradiate.kernel import mi_load_dict
 from eradiate.scenes.core import traverse
 from eradiate.scenes.shapes import CuboidShape
 from eradiate.test_tools.types import check_scene_element
@@ -82,7 +83,7 @@ def test_cuboid_atmosphere(mode_mono_double):
     with uck.override(length="m"):
         template, _ = traverse(cuboid)
         kernel_dict = template.render(ctx=KernelContext())
-        bbox = mi.load_dict(kernel_dict).bbox()
+        bbox = mi_load_dict(kernel_dict).bbox()
         assert dr.allclose(bbox.min, [-500, -500, -500])
         assert dr.allclose(bbox.max, [500, 500, 1000])
 

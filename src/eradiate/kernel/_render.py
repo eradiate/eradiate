@@ -183,6 +183,32 @@ class SceneParameters(_MitsubaSceneParameters):
         return self.properties[key]
 
 
+def mi_load_dict(dict: dict, parallel: bool = True, optimize: bool = False) -> object:
+    """
+    Load a Mitsuba scene or object from a Python dictionary.
+
+    This function is a thin wrapper around :func:`mitsuba.load_dict` with
+    defaults that are more appropriate for Eradiate.
+
+    Parameters
+    ----------
+    dict : dict
+        Python dictionary containing the object description.
+
+    parallel : bool, default: True
+        Whether the loading should be executed on multiple threads in parallel
+
+    optimize : bool, default: False
+        Whether to enable optimizations like merging identical objects.
+
+    Returns
+    -------
+    object
+        Mitsuba object.
+    """
+    return mi.load_dict(dict, parallel=parallel, optimize=optimize)
+
+
 def mi_traverse(
     obj: mi.Object,
     umap_template: KernelSceneParameterMap | None = None,
@@ -201,7 +227,7 @@ def mi_traverse(
         An additional update map template which is to be updated during
         traversal. This is used to perform parameter lookup during traversal.
 
-    name_id_override : str or list of str, optional
+    name_id_override : bool or str or list of str, optional
         If set, this argument will be used to select nodes in the scene tree
         whose names will be "pinned" to their ID. Passed values are used as
         regular expressions, with all that it implies regarding ID string

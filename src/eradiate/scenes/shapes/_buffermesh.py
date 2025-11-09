@@ -12,7 +12,7 @@ from ._core import ShapeInstance
 from ..core import BoundingBox, traverse
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...kernel import SceneParameter
+from ...kernel import SceneParameter, mi_load_dict
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 
@@ -107,7 +107,7 @@ class BufferMeshShape(ShapeInstance):
             template, _ = traverse(self.bsdf)
             kdict = template.render(ctx=KernelContext())
             kdict["id"] = self._bsdf_id  # TODO: Enforce ID control at BSDF level
-            bsdf = mi.load_dict(kdict)
+            bsdf = mi_load_dict(kdict)
             props["mesh_bsdf"] = bsdf
 
         mesh = mi.Mesh(
