@@ -12,6 +12,7 @@ import pinttr
 from pinttr.util import ensure_units
 
 from ._core import Measure
+from ..core import BoundingBox
 from ... import converters, frame, validators
 from ...attrs import define, documented
 from ...config import settings
@@ -99,19 +100,19 @@ def _target_point_rectangle_xyz_converter(x):
     )
 
 
-@define
+@attrs.define
 class TargetPoint(Target):
     """
-    Point target or origin specification.
+    Point target specification.
+
+    Parameters
+    ----------
+    xyz : quantity or array-like
+        Point coordinates. Unit-enabled field (default: ucc['length']).
     """
 
     # Target point in config units
-    xyz: pint.Quantity = documented(
-        pinttr.field(units=ucc.deferred("length")),
-        doc="Point coordinates.\n\nUnit-enabled field (default: ucc['length']).",
-        type="quantity",
-        init_type="array-like",
-    )
+    xyz: pint.Quantity = pinttr.field(units=ucc.deferred("length"))
 
     @xyz.validator
     def _xyz_validator(self, attribute, value):
@@ -126,119 +127,173 @@ class TargetPoint(Target):
         return self.xyz.m_as(uck.get("length"))
 
 
-@define
+@attrs.define(init=False)
 class TargetRectangle(Target):
     """
-    Rectangle target origin specification.
+    Rectangle target specification.
 
-    This class defines an axis-aligned rectangular zone where ray targets will
-    be sampled or ray origins will be projected.
+    This class defines a rectangular zone where ray targets will be sampled or
+    ray origins will be projected. It supports several parametrizations:
+
+    * bounds and altitude (``xmin``, ``xmax``, ``ymin``, ``ymax``, ``z``):
+      in that case, the rectangle is axis-aligned;
+    * centre position, edge lengths, normal vector and orientation
+      (``xyz``, ``size_x``, ``size_y``, ``n``, ``up``): in that case, the
+      rectangle is scaled and positioned using a look-at transformation;
+    * geometric transform (``to_world``): in that case, a geometric
+      transformation can be passed directly.
+
+    Parameters
+    ----------
+    to_world : mi.ScalarTransform4f
+        If this parametrization is used, ``to_world`` must be supplied in kernel
+        units.
+
+    xmin, xmax, ymin, ymax, z, size_x, size_y : float or quantity
+        Unit-enabled (default: ucc['length']). ``z`` may be omitted (if so, it
+        defaults to 0).
+
+    xyz : array-like or quantity
+        Unit-enabled (default: ucc['length']).
+
+    n, up : array-like
+
     """
 
-    xmin: pint.Quantity = documented(
-        pinttr.field(
-            converter=_target_point_rectangle_xyz_converter,
-            units=ucc.deferred("length"),
-        ),
-        doc="Lower bound on the X axis.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
-        type="quantity",
-        init_type="quantity or float",
-    )
+    to_world: "mi.ScalarTransform4f" = attrs.field()
 
-    xmax: pint.Quantity = documented(
-        pinttr.field(
-            converter=_target_point_rectangle_xyz_converter,
-            units=ucc.deferred("length"),
-        ),
-        doc="Upper bound on the X axis.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
-        type="quantity",
-        init_type="quantity or float",
-    )
+    _bbox: BoundingBox = attrs.field(repr=False)
 
-    ymin: pint.Quantity = documented(
-        pinttr.field(
-            converter=_target_point_rectangle_xyz_converter,
-            units=ucc.deferred("length"),
-        ),
-        doc="Lower bound on the Y axis.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
-        type="quantity",
-        init_type="quantity or float",
-    )
+    def __init__(self, **kwargs):
+        config_length = ucc.get("length")
+        kernel_length = uck.get("length")
+        bounds_kwargs = {"xmin", "xmax", "ymin", "ymax", "z"}
+        bounds_kwargs_no_z = {"xmin", "xmax", "ymin", "ymax"}
+        normal_kwargs = {"size_x", "size_y", "xyz", "n", "up"}
+        transform_kwargs = {"to_world"}
 
-    ymax: pint.Quantity = documented(
-        pinttr.field(
-            converter=_target_point_rectangle_xyz_converter,
-            units=ucc.deferred("length"),
-        ),
-        doc="Upper bound on the Y axis.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
-        type="quantity",
-        init_type="quantity or float",
-    )
+        if set(kwargs) == bounds_kwargs or set(kwargs) == bounds_kwargs_no_z:
+            xmin = ensure_units(kwargs["xmin"], default_units=config_length).m_as(
+                kernel_length
+            )
+            xmax = ensure_units(kwargs["xmax"], default_units=config_length).m_as(
+                kernel_length
+            )
+            ymin = ensure_units(kwargs["ymin"], default_units=config_length).m_as(
+                kernel_length
+            )
+            ymax = ensure_units(kwargs["ymax"], default_units=config_length).m_as(
+                kernel_length
+            )
+            z = ensure_units(kwargs.get("z", 0.0), default_units=config_length).m_as(
+                kernel_length
+            )
+            dx = xmax - xmin
+            dy = ymax - ymin
 
-    z: pint.Quantity = documented(
-        pinttr.field(
-            default=0.0,
-            converter=_target_point_rectangle_xyz_converter,
-            units=ucc.deferred("length"),
-        ),
-        doc="Altitude of the plane enclosing the rectangle.\n"
-        "\n"
-        "Unit-enabled field (default: ucc['length']).",
-        type="quantity",
-        init_type="quantity or float",
-        default="0.0",
-    )
+            translate = [0.5 * dx + xmin, 0.5 * dy + ymin, z]
+            scale = [0.5 * dx, 0.5 * dy, 1.0]
 
-    @xmin.validator
-    @xmax.validator
-    @ymin.validator
-    @ymax.validator
-    @z.validator
-    def _xyz_validator(self, attribute, value):
-        validators.on_quantity(validators.is_number)(self, attribute, value)
+            to_world = mi.ScalarTransform4f().translate(
+                translate
+            ) @ mi.ScalarTransform4f().scale(scale)
 
-    @xmin.validator
-    @xmax.validator
-    def _x_validator(self, attribute, value):
-        if not self.xmin < self.xmax:
-            raise ValueError(
-                f"while validating {attribute.name}: 'xmin' must be lower than 'xmax"
+        elif set(kwargs) == normal_kwargs:
+            dx = ensure_units(kwargs["size_x"], default_units=config_length).m_as(
+                kernel_length
+            )
+            dy = ensure_units(kwargs["size_y"], default_units=config_length).m_as(
+                kernel_length
+            )
+            origin = ensure_units(kwargs["xyz"], default_units=config_length).m_as(
+                kernel_length
+            )
+            direction = kwargs["n"]
+            up = kwargs["up"]
+            scale = [0.5 * dx, 0.5 * dy, 1.0]
+
+            to_world = mi.ScalarTransform4f().look_at(
+                origin=mi.ScalarPoint3f(origin),
+                target=mi.ScalarVector3f(origin + direction),
+                up=mi.ScalarVector3f(up),
+            ) @ mi.ScalarTransform4f().scale(scale)
+
+        elif set(kwargs) == transform_kwargs:
+            to_world = mi.ScalarTransform4f(kwargs["to_world"])
+
+        else:
+            raise TypeError(
+                f"Unhandled keyword argument combination {set(kwargs)} "
+                f"(allowed: {bounds_kwargs = }, {normal_kwargs = }, {transform_kwargs = }"
             )
 
-    @ymin.validator
-    @ymax.validator
-    def _y_validator(self, attribute, value):
-        if not self.ymin < self.ymax:
-            raise ValueError(
-                f"while validating {attribute.name}: 'ymin' must be lower than 'ymax"
-            )
+        bbox = mi.BoundingBox3f()
+        for p in [
+            to_world @ mi.ScalarPoint3f(*x)
+            for x in [[-1, -1, 0], [-1, 1, 0], [1, -1, 0], [1, 1, 0]]
+        ]:
+            bbox.expand(p)
+        bbox = BoundingBox(
+            (bbox.min.numpy() * kernel_length).to(config_length),
+            (bbox.max.numpy() * kernel_length).to(config_length),
+        )
+
+        self.__attrs_init__(to_world=to_world, bbox=bbox)
+
+    @property
+    def bbox(self) -> BoundingBox:
+        """Bounding (in configuration units)."""
+        return self._bbox
+
+    @property
+    def xmin(self) -> pint.Quantity:
+        """
+        .. deprecated:: 1.0.0
+
+        Alias to ``self.bbox.min[0]`` (for compatibility).
+        """
+        return self.bbox.min[0]
+
+    @property
+    def xmax(self) -> pint.Quantity:
+        """
+        .. deprecated:: 1.0.0
+
+        Alias to ``self.bbox.max[0]`` (for compatibility).
+        """
+        return self.bbox.max[0]
+
+    @property
+    def ymin(self) -> pint.Quantity:
+        """
+        .. deprecated:: 1.0.0
+
+        Alias to ``self.bbox.min[1]`` (for compatibility).
+        """
+        return self.bbox.min[1]
+
+    @property
+    def ymax(self) -> pint.Quantity:
+        """
+        .. deprecated:: 1.0.0
+
+        Alias to ``self.bbox.max[1]`` (for compatibility).
+        """
+        return self.bbox.max[1]
+
+    @property
+    def z(self) -> pint.Quantity:
+        """
+        .. deprecated:: 1.0.0
+
+        Alias to ``0.5 * (self.bbox.min[2] + self.bbox.max[2])`` (for compatibility).
+        """
+        return 0.5 * (self.bbox.min[2] + self.bbox.max[2])
 
     def kernel_item(self) -> dict:
         # Inherit docstring
 
-        kernel_length = uck.get("length")
-        xmin = self.xmin.m_as(kernel_length)
-        xmax = self.xmax.m_as(kernel_length)
-        ymin = self.ymin.m_as(kernel_length)
-        ymax = self.ymax.m_as(kernel_length)
-        z = self.z.m_as(kernel_length)
-
-        dx = xmax - xmin
-        dy = ymax - ymin
-
-        to_world = mi.ScalarTransform4f().translate(
-            [0.5 * dx + xmin, 0.5 * dy + ymin, z]
-        ) @ mi.ScalarTransform4f().scale([0.5 * dx, 0.5 * dy, 1.0])
-
-        return {"type": "arectangle", "to_world": to_world}
+        return {"type": "rectangle", "to_world": self.to_world}
 
 
 # ------------------------------------------------------------------------------
