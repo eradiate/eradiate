@@ -142,14 +142,15 @@ def gather_bitmaps(mode, experiment, raw_results, viewing_angles, solar_angles):
 
 
 @pytest.fixture
-def moment2_to_variance(experiment, gather_bitmaps):
+def moment2_to_variance(mode, experiment, gather_bitmaps):
     var_name, _ = experiment.measures[0].var
+    calculate_stokes = mode.is_polarized and var_name == "radiance"
 
     results_raw = gather_bitmaps[f"{var_name}_raw"]
     m2_raw = gather_bitmaps[f"{var_name}_m2_raw"]
     spp = gather_bitmaps["spp"]
 
-    return logic.moment2_to_variance(results_raw, m2_raw, spp)
+    return logic.moment2_to_variance(results_raw, m2_raw, spp, calculate_stokes)
 
 
 @pytest.fixture
@@ -221,13 +222,15 @@ def test_01_gather_bitmaps(mode, experiment, gather_bitmaps):
     solar_angle_sizes = {"sza": 1, "saa": 1}
     film_sizes = {"y_index": 32, "x_index": 32}
     all_sizes = {**spectral_sizes, **film_sizes, **solar_angle_sizes}
-    if mode.is_polarized:
-        all_sizes["stokes"] = 4
 
     expected_sizes = {
         "spp": spectral_sizes,
-        "radiance_raw": all_sizes,
-        "radiance_m2_raw": all_sizes,
+        "radiance_raw": all_sizes
+        if not mode.is_polarized
+        else {**all_sizes, "stokes": 4},
+        "radiance_m2_raw": all_sizes
+        if not mode.is_polarized
+        else {**all_sizes, "stokes": 1},
     }
 
     for var, da in gather_bitmaps.items():  # noqa: F402

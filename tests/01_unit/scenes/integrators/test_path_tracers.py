@@ -19,7 +19,7 @@ from eradiate.test_tools.types import check_scene_element
         VolPathMISIntegrator,
         PiecewiseVolPathIntegrator,
     ],
-    ids=["path", "volpath", "volpathmis", "piecewiese_volpath"],
+    ids=["path", "volpath", "volpathmis", "piecewise_volpath"],
 )
 @pytest.mark.parametrize(
     "kwargs",
@@ -54,7 +54,7 @@ def test_path_tracers_construct(modes_all, integrator_cls, kwargs):
             },
         ),
     ],
-    ids=["path", "volpath", "volpathmis", "piecewiese_volpath"],
+    ids=["path", "volpath", "volpathmis", "piecewise_volpath"],
 )
 def test_path_tracers_kernel_dict(mode_mono, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
@@ -91,7 +91,7 @@ def test_path_tracers_kernel_dict(mode_mono, integrator_cls, kwargs):
             },
         ),
     ],
-    ids=["path", "volpath", "volpathmis", "piecewiese_volpath"],
+    ids=["path", "volpath", "volpathmis", "piecewise_volpath"],
 )
 def test_moment_construct(mode_mono, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
@@ -129,7 +129,7 @@ def test_moment_construct(mode_mono, integrator_cls, kwargs):
             },
         ),
     ],
-    ids=["path", "volpath", "volpathmis", "piecewiese_volpath"],
+    ids=["path", "volpath", "volpathmis", "piecewise_volpath"],
 )
 def test_stokes_construct(mode_mono_polarized_single, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
@@ -186,12 +186,12 @@ def test_stokes_construct(mode_mono_polarized_single, integrator_cls, kwargs):
             },
         ),
     ],
-    ids=["path", "volpath", "volpathmis", "piecewiese_volpath"],
+    ids=["path", "volpath", "volpathmis", "piecewise_volpath"],
 )
 def test_stokes_moment_construct(mode_mono_polarized_single, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
     check_scene_element(integrator, mi.SamplingIntegrator)
 
     kdict_template, _ = traverse(integrator)
-    assert kdict_template.data["type"] == "moment"
-    assert kdict_template.data["nested.type"] == "stokes"
+    assert kdict_template.data["type"] == "stokes"
+    assert kdict_template.data["integrator.type"] == "moment"
