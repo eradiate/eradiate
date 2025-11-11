@@ -51,12 +51,9 @@ def test_heterogeneous_parameter_lookup(
         atmosphere=atmosphere_ckd if eradiate.mode().is_ckd else atmosphere_mono,
         illumination={"type": "directional", "zenith": 30.0},
         measures={
-            "type": "distant_flux",
+            "type": "distantflux",
             "id": "dflux",
-            "srf": {
-                "type": "multi_delta",
-                "wavelengths": 550.0 * ureg.nm,
-            },
+            "srf": {"type": "delta", "wavelengths": 550.0 * ureg.nm},
             "ray_offset": 1.0 * ureg.m,
         },
     )
@@ -66,7 +63,7 @@ def test_heterogeneous_parameter_lookup(
     # a member of the "dflux" sensor
     assert (
         exp.mi_scene.umap_template["medium_atmosphere.albedo.volume.data"].parameter_id
-        == "dflux.medium.albedo.volume.data"
+        == "medium_atmosphere.albedo.volume.data"
         if geometry == "spherical_shell"
-        else "dflux.medium.albedo.data"
+        else "medium_atmosphere.albedo.data"
     )

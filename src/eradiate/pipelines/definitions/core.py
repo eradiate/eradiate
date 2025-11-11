@@ -84,9 +84,12 @@ def _parameterize_variance(var_name):
     decorate_with=_parameterize_variance,
 )
 def moment2_to_variance(
-    raw_data: xr.DataArray, raw_m2_data: xr.DataArray, spp: xr.DataArray
+    raw_data: xr.DataArray,
+    raw_m2_data: xr.DataArray,
+    spp: xr.DataArray,
+    calculate_stokes: bool,
 ) -> xr.DataArray:
-    return logic.moment2_to_variance(raw_data, raw_m2_data, spp)
+    return logic.moment2_to_variance(raw_data, raw_m2_data, spp, calculate_stokes)
 
 
 def _parameterize_apply_spectral_response(var_name, measure_distant):

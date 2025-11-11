@@ -65,15 +65,17 @@ class MonteCarloIntegrator(Integrator):
         if self.stokes and not eradiate.mode().is_polarized:
             raise RuntimeError("stokes should only be set to True in polarized mode.")
 
+        if self.moment:
+            result = {"type": "moment", "nested": result}
+
+        # Important: the 'stokes' integrator has to come last because it needs
+        # sensor information
         if self.stokes:
             result = {
                 "type": "stokes",
                 "integrator": result,
                 "meridian_align": self.meridian_align,
             }
-
-        if self.moment:
-            result = {"type": "moment", "nested": result}
 
         return result
 

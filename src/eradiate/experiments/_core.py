@@ -709,18 +709,14 @@ class EarthObservationExperiment(Experiment, ABC):
             stokes = ["S0", "S1", "S2", "S3"]
             iquv = ["I", "Q", "U", "V"]
 
-            if self.integrator.moment:
-                stokes = ["nested." + s for s in stokes]
-                stokes += ["m2_" + s for s in stokes]
-                iquv += ["m2_" + s for s in iquv]
-
             for s, i in zip(stokes, iquv):
                 mapping[s] = i
 
         else:
             mapping = {"<root>": "bitmap"}
-            if self.integrator.moment:
-                mapping["m2_nested"] = "m2"
+
+        if self.integrator.moment:
+            mapping["m2_nested"] = "m2"
 
         # gather results and info from measures
         for ctx_index, spectral_group_dict in mi_results.items():
