@@ -103,7 +103,6 @@ nbsphinx_prolog = """
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#configuration
 
 intersphinx_mapping = {
-    "astropy": ("https://docs.astropy.org/en/stable/", None),
     "attr": ("https://www.attrs.org/en/stable/", None),
     "attrs": ("https://www.attrs.org/en/stable/", None),
     "cachetools": ("https://cachetools.readthedocs.io/en/stable/", None),

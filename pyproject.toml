@@ -44,7 +44,7 @@ dependencies = [
 kernel = ["eradiate-mitsuba==0.3.2"]
 recommended = [
   "aabbtree", # Used by the leaf collision detection feature
-  "astropy", # Used by the solar irradiance spectrum date-based scaling feature
+  "skyfield", # Used by the solar irradiance spectrum date-based scaling feature
   "ipython",
   "ipywidgets",
   "jupyterlab",
@@ -207,6 +207,8 @@ filterwarnings = [
   "ignore:numpy.core is deprecated and has been renamed to numpy._core.",
   # Remove the warnings coming from deprecated usage of utcnow in Joseki
   "ignore:.*utcnow.*:DeprecationWarning",
+  # Ignore Skyfield ephemeris file handle warnings (expected behavior)
+  "ignore:.*de421.bsp.*:ResourceWarning",
 ]
 markers = ["unit", "system", "regression"]
 testpaths = "tests"
