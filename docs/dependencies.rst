@@ -93,7 +93,7 @@ Others
 
 * `AABBTree <https://aabbtree.readthedocs.io/>`__: Used for collision detection
   in the lead cloud generator.
-* `astropy <https://docs.astropy.org/>`__,
+* `Skyfield <https://rhodesmill.org/skyfield/>`__,
   `python-dateutil <https://dateutil.readthedocs.io/>`__:
   Used for Earth-Sun distance calculation and date parsing in the Solar
   irradiance spectrum init code.

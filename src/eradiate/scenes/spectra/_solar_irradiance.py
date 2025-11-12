@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import importlib.util
 import warnings
+from pathlib import Path
 from typing import Any
 
 import attrs
@@ -13,12 +14,17 @@ import xarray as xr
 from ._core import Spectrum
 from ... import converters, validators
 from ...attrs import define, documented
+from ...config import settings
 from ...exceptions import DataError
 from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
+
+# Cache for Skyfield ephemeris loader (initialized lazily)
+_SKYFIELD_LOADER = None
+_SKYFIELD_EPHEMERIS = None
 
 
 def _datetime_converter(x: Any):
@@ -34,12 +40,12 @@ def _datetime_converter(x: Any):
             raise
 
         try:
-            importlib.import_module("astropy")
+            importlib.import_module("skyfield")
         except ModuleNotFoundError:
             warnings.warn(
                 "To use the date-based Solar irradiance scaling feature, you "
-                "must install astropy.\n"
-                "See instructions on https://www.astropy.org/."
+                "must install skyfield.\n"
+                "See instructions on https://rhodesmill.org/skyfield/."
             )
             raise
 
@@ -85,11 +91,11 @@ class SolarIrradianceSpectrum(Spectrum):
       :class:`ValueError` upon calling :meth:`kernel_dict`.
 
     * When the ``datetime`` field is set, the spectrum is automatically scaled
-      to account for the seasonal variations of the Earth-Sun distance using the
-      ephemeris of :func:`astropy.coordinates.get_sun`.
+      to account for the seasonal variations of the Earth-Sun distance using
+      ephemeris data from Skyfield (JPL ephemeris DE421).
       The dataset is assumed to be normalized to an Earth-Sun distance of 1 AU.
-      This will trigger the import of :mod:`astropy.coordinates` and consume a
-      significant amount of memory (150 MiB with astropy v5.1).
+      Ephemeris files are automatically downloaded and cached in Eradiate's
+      data directory (``<data_path>/cached/skyfield/``).
 
     * The ``scale`` field can be used to apply additional arbitrary scaling.
       It is mostly used for debugging purposes. It can also be used to rescale
@@ -172,25 +178,53 @@ class SolarIrradianceSpectrum(Spectrum):
             return 1.0
 
         else:
-            # Note: astropy.coordinates consumes a significant amount of memory
-            # (150 MiB with astropy v5.1). The import is therefore optional for
-            # performance.
-            import astropy.coordinates
-            import astropy.time
-            import astropy.units
+            # Note: The import is optional to avoid loading ephemeris data
+            # unless needed.
+            from skyfield.api import Loader, utc
+
+            # Suppress ResourceWarning from Skyfield's file handling
+            # Skyfield keeps ephemeris files open for performance reasons
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", category=ResourceWarning, message=".*de421.bsp.*"
+                )
+
+                # Use cached ephemeris loader to avoid repeated file opens
+                # Store ephemeris files in Eradiate's cache directory
+                global _SKYFIELD_LOADER, _SKYFIELD_EPHEMERIS
+                if _SKYFIELD_LOADER is None:
+                    # Create Skyfield cache directory in Eradiate's data path
+                    skyfield_cache_dir = (
+                        Path(settings["data_path"]) / "cached" / "skyfield"
+                    )
+                    skyfield_cache_dir.mkdir(parents=True, exist_ok=True)
+                    _SKYFIELD_LOADER = Loader(skyfield_cache_dir)
+                if _SKYFIELD_EPHEMERIS is None:
+                    _SKYFIELD_EPHEMERIS = _SKYFIELD_LOADER("de421.bsp")
+
+                # Get timescale
+                ts = _SKYFIELD_LOADER.timescale()
+
+                # Get Earth and Sun positions
+                earth = _SKYFIELD_EPHEMERIS["earth"]
+                sun = _SKYFIELD_EPHEMERIS["sun"]
+
+                # Convert datetime to skyfield time (ensure UTC timezone)
+                dt_utc = (
+                    self.datetime.replace(tzinfo=utc)
+                    if self.datetime.tzinfo is None
+                    else self.datetime
+                )
+                t = ts.from_datetime(dt_utc)
+
+                # Calculate Earth-Sun distance in AU
+                astrometric = earth.at(t).observe(sun)
+                distance_au = astrometric.distance().au
 
             # The irradiance scales as the inverse of d**2, where d is the
             # Earth-Sun distance divided by the AU (reference distance for all
             # Solar irradiance spectra in Eradiate).
-            return (
-                float(
-                    astropy.units.au
-                    / astropy.coordinates.get_sun(
-                        astropy.time.Time(self.datetime)
-                    ).distance
-                )
-                ** 2
-            )
+            return (1.0 / distance_au) ** 2
 
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         # Inherit docstring

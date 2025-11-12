@@ -1,12 +1,15 @@
-import astropy
+from pathlib import Path
+
 import attrs
 import dateutil
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
+from skyfield.api import Loader, utc
 
 import eradiate
 from eradiate import unit_registry as ureg
+from eradiate.config import settings
 from eradiate.spectral.index import SpectralIndex
 
 
@@ -72,19 +75,33 @@ def test_radiance_scaling(modes_all_double, measure, scale, datetime):
     result = eradiate.run(exp)
 
     # The radiance is proportional to the scaling factor
-    scale_datetime = (
-        (
-            float(
-                astropy.units.au
-                / astropy.coordinates.get_sun(
-                    astropy.time.Time(dateutil.parser.parse(datetime))
-                ).distance
-            )
-            ** 2
-        )
-        if datetime is not None
-        else 1.0
-    )
+    if datetime is not None:
+        # Use Eradiate's Skyfield cache directory
+        skyfield_cache_dir = Path(settings["data_path"]) / "cached" / "skyfield"
+        skyfield_cache_dir.mkdir(parents=True, exist_ok=True)
+        loader = Loader(skyfield_cache_dir)
+
+        # Load JPL ephemeris and timescale
+        ts = loader.timescale()
+        eph = loader("de421.bsp")
+
+        # Get Earth and Sun positions
+        earth = eph["earth"]
+        sun = eph["sun"]
+
+        # Convert datetime to skyfield time (ensure UTC timezone)
+        dt = dateutil.parser.parse(datetime)
+        dt_utc = dt.replace(tzinfo=utc) if dt.tzinfo is None else dt
+        t = ts.from_datetime(dt_utc)
+
+        # Calculate Earth-Sun distance in AU
+        astrometric = earth.at(t).observe(sun)
+        distance_au = astrometric.distance().au
+
+        # Compute scaling factor
+        scale_datetime = (1.0 / distance_au) ** 2
+    else:
+        scale_datetime = 1.0
     expected_radiance = (
         reference_irradiance.m * scale * scale_datetime * reflectance / np.pi
     )
