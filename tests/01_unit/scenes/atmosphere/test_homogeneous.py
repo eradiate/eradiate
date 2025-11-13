@@ -43,8 +43,8 @@ def test_homogeneous_atmosphere_params(mode_mono):
     mi_wrapper = check_scene_element(atmosphere)
 
     # Phase function parameters are exposed at highest level
-    assert "medium_atmosphere.phase_function.g" in umap_template
-    assert "medium_atmosphere.phase_function.g" in mi_wrapper.parameters.keys()
+    assert "phase_atmosphere.g" in umap_template
+    assert "phase_atmosphere.g" in mi_wrapper.parameters.keys()
     # Volume data source parameters are exposed at highest level
     assert "medium_atmosphere.sigma_t.value.value" in umap_template
     assert "medium_atmosphere.albedo.value.value" in umap_template
@@ -94,7 +94,7 @@ def test_homogeneous_atmosphere_geometry(mode_mono, kwargs, expected):
     mi_wrapper = check_scene_element(atmosphere)
 
     # Check scene shape type
-    mi_shape_type_name = mi_wrapper.obj.shapes()[0].class_().name()
+    mi_shape_type_name = mi_wrapper.obj.shapes()[0].class_name()
     assert mi_shape_type_name == expected["atmosphere_shape_type_name"]
 
     # Check scene bounding box
