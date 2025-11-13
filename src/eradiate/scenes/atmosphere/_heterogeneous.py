@@ -301,7 +301,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def _params_phase(self) -> dict:
         # Inherit docstring
-
         umap = traverse(self.phase)[1].data
 
         # Add prefix and lookup strategy to all entries
@@ -311,9 +310,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             result[uparam_key] = attrs.evolve(
                 uparam,
                 search=SearchSceneParameter(
-                    node_type=mi.Medium,
-                    node_id=self.medium_id,
-                    parameter_relpath=f"phase_function.{uparam_key}",
+                    node_type=mi.PhaseFunction,
+                    node_id=self.phase_id,
+                    parameter_relpath=uparam_key,
                 ),
             )
 
