@@ -23,7 +23,7 @@ dependencies = [
   "lazy_loader>=0.1",
   "matplotlib>=3.3",
   "netcdf4",
-  "numpy<2", # Capped to avoid Astropy 6.1+ / Python 3.9 conflict, sync with Conda requirement
+  "numpy",
   "pint",
   "pinttrs>=23.2.0",
   "pooch",
@@ -34,10 +34,7 @@ dependencies = [
   "typer>=0.9.0",
   "tqdm",
   "shellingham!=1.5.1", # Typer dependency; exclude this version which raises while previous don't
-  "xarray>=0.19,!=0.20.*,<2025",
-  # TODO: The <2025 cap was introduced to protect ourselves from a critical
-  #       performance regression, solved in 2025.7. This should be released
-  #       when dropping support for Python 3.9; we will still exclude 2025.{1-6}
+  "xarray>=2023,!=2025.1.*,!=2025.3.*,!=2025.4.*,!=2025.5.*,!=2025.6.*",
 ]
 
 [project.optional-dependencies]
@@ -96,7 +93,7 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
 
 [tool.pixi.dependencies]
-numpy = "<2" # Be sure to sync with PyPI requirement
+numpy = "*" # Be sure to sync with PyPI requirement
 pixi-pycharm = ">=0.0.10,<0.0.11"
 
 [tool.pixi.pypi-dependencies]
@@ -124,8 +121,12 @@ ninja = "*"
 [tool.pixi.target.win-64.activation]
 scripts = ["setpath.bat"]
 
-[tool.pixi.feature.py39.dependencies]
-python = "3.9.*" # Used to constrain dev environment
+[tool.pixi.feature]
+# All supported Python versions are listed
+py39 = { dependencies = { python = "3.9.*" } }
+py310 = { dependencies = { python = "3.10.*" } } # Current dev version
+py311 = { dependencies = { python = "3.11.*" } }
+py312 = { dependencies = { python = "3.12.*" } }
 
 [tool.pixi.feature.test.tasks]
 doctest = { cmd = "make -C docs doctest" }
@@ -194,21 +195,27 @@ docs-render-tutorials = { cmd = "python tutorials/run.py run" }
 #    'build.tools.python' entry in .readthedocs.yml
 docs-lock = { cmd = """
   uv pip compile --upgrade --quiet --no-progress
-    --python-version 3.9 --group docs --extra recommended
+    --python-version 3.10 --group docs --extra recommended
     --output-file docs/requirements.txt pyproject.toml
 """ }
 
 [tool.pixi.environments]
-default = { solve-group = "default" }
-prod = { features = ["py39", "kernel", "recommended"], solve-group = "default" }
-test = { features = ["py39", "recommended", "test"], solve-group = "default" }
+default = { solve-group = "dev" }
+prod = { features = ["py310", "kernel", "recommended"], solve-group = "dev" }
+test = { features = ["py310", "recommended", "test"], solve-group = "dev" }
 dev = { features = [
-  "py39",
+  "py310",
   "recommended",
   "test",
   "docs",
   "dev",
-], solve-group = "default" }
+], solve-group = "dev" }
+# The following environments exist only to ensure that a production environment
+# can be resolved
+py39 = { features = ["py39", "kernel", "recommended"] }
+py310 = { features = ["py310", "kernel", "recommended"] }
+py311 = { features = ["py311", "kernel", "recommended"] }
+py312 = { features = ["py312", "kernel", "recommended"] }
 
 [tool.pytest.ini_options]
 addopts = "-p no:robotframework"
@@ -216,8 +223,6 @@ filterwarnings = [
   "error",
   # Remove the following when environment issues are solved
   "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning",
-  # Remove the following when transition to NumPy 2 is complete
-  "ignore:numpy.core is deprecated and has been renamed to numpy._core.",
   # Ignore pyparsing deprecation warnings from matplotlib (remove when matplotlib is updated)
   "ignore:.*deprecated - use.*:DeprecationWarning:matplotlib.*",
   "ignore:.*argument is deprecated.*:DeprecationWarning:matplotlib.*",
