@@ -29,8 +29,10 @@ def main():
     section("Versions")
     message(f"• eradiate {eradiate.__version__}")
     message(f"• drjit {sys_info['drjit_version']}")
-    message(f"• mitsuba {sys_info['mitsuba_version']}")
-    message(f"• eradiate-mitsuba {sys_info['eradiate_mitsuba_version']}")
+    message(
+        f"• eradiate-mitsuba {sys_info['eradiate_mitsuba_version']} "
+        f"(based on mitsuba {sys_info['mitsuba_version']})"
+    )
     message(f"• numpy {sys_info['numpy']}")
     message(f"• scipy {sys_info['scipy']}")
     message(f"• xarray {sys_info['xarray']}")

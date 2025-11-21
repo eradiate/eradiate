@@ -75,13 +75,13 @@ def show() -> dict:
 
     result["cpu_info"] = _get_cpu_info()
     result["python"] = sys.version.replace("\n", "")
-    result["llvm_version"] = dr.llvm_version()
-    result["drjit_version"] = dr.__version__ + (" (DEBUG)" if dr.DEBUG else "")
-    result["mitsuba_version"] = mi.MI_VERSION + (" (DEBUG)" if mi.DEBUG else "")
+    result["llvm_version"] = dr.detail.llvm_version()
+    result["drjit_version"] = dr.__version__
+    result["mitsuba_version"] = mi.MI_VERSION
     try:
         eradiate_mitsuba_version = version("eradiate-mitsuba")
     except PackageNotFoundError:
-        eradiate_mitsuba_version = f"{mi.ERD_MI_VERSION}, not installed [DEV|DEBUG]"
+        eradiate_mitsuba_version = f"{mi.ERD_MI_VERSION}, not installed [DEV]"
     result["eradiate_mitsuba_version"] = eradiate_mitsuba_version
     result["mitsuba_compiler"] = import_module("mitsuba.config").CXX_COMPILER
 
