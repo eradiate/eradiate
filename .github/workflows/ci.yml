@@ -46,9 +46,9 @@ jobs:
       - name: Download datasets
         run: |
           eradiate data install core
-      - name: Eradiate show
+      - name: Eradiate sys-info
         run: |
-          eradiate show
+          eradiate sys-info
       - name: Run fast tests
         run: |
           pytest -p robotframework --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow -m "not slow" ./tests
@@ -74,9 +74,9 @@ jobs:
       - name: Download datasets
         run: |
           eradiate data install core
-      - name: Eradiate show
+      - name: Eradiate sys-info
         run: |
-          eradiate show
+          eradiate sys-info
       - name: Run all tests
         run: |
           pytest -p robotframework --robot-tagstatinclude unit --robot-tagstatinclude system --robot-tagstatinclude regression --robot-tagstatinclude slow ./tests
