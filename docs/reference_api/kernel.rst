@@ -24,13 +24,14 @@ Mitsuba scene templating
    dict_parameter
    scene_parameter
 
-Mitsuba scene traversal and rendering
--------------------------------------
+Mitsuba scene initialization, traversal and rendering
+-----------------------------------------------------
 
 .. autosummary::
    :toctree: generated/autosummary/
 
    MitsubaObjectWrapper
+   mi_load_dict
    mi_traverse
    mi_render
 
