@@ -534,6 +534,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/9b/2f/8a563851c86d8c8b25c6915a89f41f2d965de2c35e7407b633409deba901/shibuya-2025.7.14-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/f0/c031c7a0e14b75e68c69d90ae8966d6d2383f6e33379914eea0f41bf9518/skyfield-1.53-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/bb/46/e815e37cfb1f1108d80e45ee100c8a6d9f1d5999ccf1cf14dab7be6858dc/skyfield_data-7.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ed/dc/c02e01294f7265e63a7315fe086dd1df7dacb9f840a804da846b96d01b96/snowballstemmer-2.2.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/c2/fe97d779f3ef3b15f05c94a2f1e3d21732574ed441687474db9d342a7315/soupsieve-2.6-py3-none-any.whl
@@ -762,6 +763,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/9b/2f/8a563851c86d8c8b25c6915a89f41f2d965de2c35e7407b633409deba901/shibuya-2025.7.14-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/f0/c031c7a0e14b75e68c69d90ae8966d6d2383f6e33379914eea0f41bf9518/skyfield-1.53-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/bb/46/e815e37cfb1f1108d80e45ee100c8a6d9f1d5999ccf1cf14dab7be6858dc/skyfield_data-7.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ed/dc/c02e01294f7265e63a7315fe086dd1df7dacb9f840a804da846b96d01b96/snowballstemmer-2.2.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/c2/fe97d779f3ef3b15f05c94a2f1e3d21732574ed441687474db9d342a7315/soupsieve-2.6-py3-none-any.whl
@@ -990,6 +992,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/9b/2f/8a563851c86d8c8b25c6915a89f41f2d965de2c35e7407b633409deba901/shibuya-2025.7.14-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/f0/c031c7a0e14b75e68c69d90ae8966d6d2383f6e33379914eea0f41bf9518/skyfield-1.53-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/bb/46/e815e37cfb1f1108d80e45ee100c8a6d9f1d5999ccf1cf14dab7be6858dc/skyfield_data-7.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ed/dc/c02e01294f7265e63a7315fe086dd1df7dacb9f840a804da846b96d01b96/snowballstemmer-2.2.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/c2/fe97d779f3ef3b15f05c94a2f1e3d21732574ed441687474db9d342a7315/soupsieve-2.6-py3-none-any.whl
@@ -1224,6 +1227,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/9b/2f/8a563851c86d8c8b25c6915a89f41f2d965de2c35e7407b633409deba901/shibuya-2025.7.14-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/f0/c031c7a0e14b75e68c69d90ae8966d6d2383f6e33379914eea0f41bf9518/skyfield-1.53-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/bb/46/e815e37cfb1f1108d80e45ee100c8a6d9f1d5999ccf1cf14dab7be6858dc/skyfield_data-7.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ed/dc/c02e01294f7265e63a7315fe086dd1df7dacb9f840a804da846b96d01b96/snowballstemmer-2.2.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/c2/fe97d779f3ef3b15f05c94a2f1e3d21732574ed441687474db9d342a7315/soupsieve-2.6-py3-none-any.whl
@@ -2150,6 +2154,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/f0/c031c7a0e14b75e68c69d90ae8966d6d2383f6e33379914eea0f41bf9518/skyfield-1.53-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/bb/46/e815e37cfb1f1108d80e45ee100c8a6d9f1d5999ccf1cf14dab7be6858dc/skyfield_data-7.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/c2/fe97d779f3ef3b15f05c94a2f1e3d21732574ed441687474db9d342a7315/soupsieve-2.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f1/7b/ce1eafaf1a76852e2ec9b22edecf1daa58175c090266e9f6c64afcd81d91/stack_data-0.6.3-py3-none-any.whl
@@ -2339,6 +2344,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/f0/c031c7a0e14b75e68c69d90ae8966d6d2383f6e33379914eea0f41bf9518/skyfield-1.53-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/bb/46/e815e37cfb1f1108d80e45ee100c8a6d9f1d5999ccf1cf14dab7be6858dc/skyfield_data-7.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/c2/fe97d779f3ef3b15f05c94a2f1e3d21732574ed441687474db9d342a7315/soupsieve-2.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f1/7b/ce1eafaf1a76852e2ec9b22edecf1daa58175c090266e9f6c64afcd81d91/stack_data-0.6.3-py3-none-any.whl
@@ -2528,6 +2534,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/f0/c031c7a0e14b75e68c69d90ae8966d6d2383f6e33379914eea0f41bf9518/skyfield-1.53-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/bb/46/e815e37cfb1f1108d80e45ee100c8a6d9f1d5999ccf1cf14dab7be6858dc/skyfield_data-7.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/c2/fe97d779f3ef3b15f05c94a2f1e3d21732574ed441687474db9d342a7315/soupsieve-2.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f1/7b/ce1eafaf1a76852e2ec9b22edecf1daa58175c090266e9f6c64afcd81d91/stack_data-0.6.3-py3-none-any.whl
@@ -2723,6 +2730,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/17/f0/c031c7a0e14b75e68c69d90ae8966d6d2383f6e33379914eea0f41bf9518/skyfield-1.53-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/bb/46/e815e37cfb1f1108d80e45ee100c8a6d9f1d5999ccf1cf14dab7be6858dc/skyfield_data-7.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/c2/fe97d779f3ef3b15f05c94a2f1e3d21732574ed441687474db9d342a7315/soupsieve-2.6-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/f1/7b/ce1eafaf1a76852e2ec9b22edecf1daa58175c090266e9f6c64afcd81d91/stack_data-0.6.3-py3-none-any.whl
@@ -3651,7 +3659,7 @@ packages:
 - pypi: ./
   name: eradiate
   version: 1.0.1
-  sha256: 6ab096312cb8886e9895253bea99c008b97aaa923bc49c90643ec4330250a4ef
+  sha256: 3fae106d591613fbee0b4778b90e643fce99ffb64abda2d3c9e19df39f115f35
   requires_dist:
   - aenum
   - attrs>=22.2
@@ -7391,6 +7399,20 @@ packages:
   - jplephem>=2.13
   - numpy
   - sgp4>=2.13
+- pypi: https://files.pythonhosted.org/packages/bb/46/e815e37cfb1f1108d80e45ee100c8a6d9f1d5999ccf1cf14dab7be6858dc/skyfield_data-7.0.0-py2.py3-none-any.whl
+  name: skyfield-data
+  version: 7.0.0
+  sha256: 4279f999f7f8c5ef5d8bf1b714f301a0844ae5df3a3f0d23610b20d8789073f5
+  requires_dist:
+  - jplephem ; extra == 'dev'
+  - numpy ; extra == 'dev'
+  - tox ; extra == 'dev'
+  - colorama ; extra == 'dev'
+  - termcolor ; extra == 'dev'
+  - pytest ; extra == 'tests'
+  - skyfield ; extra == 'tests'
+  - mock ; extra == 'tests'
+  requires_python: '>=2.6,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7,<4'
 - pypi: https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl
   name: sniffio
   version: 1.3.1

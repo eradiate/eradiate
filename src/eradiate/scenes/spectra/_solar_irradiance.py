@@ -95,7 +95,9 @@ class SolarIrradianceSpectrum(Spectrum):
       ephemeris data from Skyfield (JPL ephemeris DE421).
       The dataset is assumed to be normalized to an Earth-Sun distance of 1 AU.
       Ephemeris files are automatically downloaded and cached in Eradiate's
-      data directory (``<data_path>/cached/skyfield/``).
+      data directory (``<data_path>/cached/skyfield/``). If the
+      `skyfield-data <https://github.com/brunobord/skyfield-data>`__ package is
+      installed, its data will be used.
 
     * The ``scale`` field can be used to apply additional arbitrary scaling.
       It is mostly used for debugging purposes. It can also be used to rescale
@@ -190,15 +192,22 @@ class SolarIrradianceSpectrum(Spectrum):
                 )
 
                 # Use cached ephemeris loader to avoid repeated file opens
-                # Store ephemeris files in Eradiate's cache directory
                 global _SKYFIELD_LOADER, _SKYFIELD_EPHEMERIS
                 if _SKYFIELD_LOADER is None:
-                    # Create Skyfield cache directory in Eradiate's data path
-                    skyfield_cache_dir = (
-                        Path(settings["data_path"]) / "cached" / "skyfield"
-                    )
-                    skyfield_cache_dir.mkdir(parents=True, exist_ok=True)
+                    try:
+                        # Use the skyfield-data package if available
+                        from skyfield_data import get_skyfield_data_path
+
+                        skyfield_cache_dir = get_skyfield_data_path()
+                    except ImportError:
+                        # Otherwise store ephemeris files in Eradiate's cache directory
+                        skyfield_cache_dir = (
+                            Path(settings["data_path"]) / "cached" / "skyfield"
+                        )
+                        skyfield_cache_dir.mkdir(parents=True, exist_ok=True)
+
                     _SKYFIELD_LOADER = Loader(skyfield_cache_dir)
+
                 if _SKYFIELD_EPHEMERIS is None:
                     _SKYFIELD_EPHEMERIS = _SKYFIELD_LOADER("de421.bsp")
 
