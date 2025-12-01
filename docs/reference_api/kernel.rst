@@ -44,7 +44,6 @@ Other helpers
    bitmap_to_dataarray
    bitmap_to_dataset
    eval_bsdf
-   install_logging
    map_cube
    map_unit_cube
    read_binary_grid3d
