@@ -676,10 +676,10 @@ class PairedStudentTTest(AbstractStudentTTest):
     null hypothesis. It is a two-tailed test.
 
     The paired test allow to introduce a covariance factor between the pairs.
-    By default, this covariance is equal to zero, thus assuming independance of
+    By default, this covariance is equal to zero, thus assuming independence of
     the two variables.
 
-    Contrary to the independant Student's T-test, this paired version of the
+    Contrary to the independent Student's T-test, this paired version of the
     test requires an equal degree of freedom of the two groups.
     """
 
