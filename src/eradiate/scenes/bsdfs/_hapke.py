@@ -9,6 +9,7 @@ from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
 from ...kernel import SceneParameter, SearchSceneParameter
+from ...units import unit_registry as ureg
 
 
 @define(eq=False, slots=False)
@@ -16,12 +17,17 @@ class HapkeBSDF(BSDF):
     """
     Hapke BSDF [``hapke``].
 
-    This BSDF implements the Hapke surface model as described in
-    :cite:`Hapke1984BidirectionalReflectanceSpectroscopy`. This highly flexible
-    and robust surface model allows for the characterisation of a sharp
-    back-scattering hot spot. The so-called Hapke model has been adapted to
-    several different use cases in the litterature, the version with 6
-    parameters implemented here is one of the most commonly used.
+    This BSDF implements  a bare soil reflection model based on the work of
+    Bruce Hapke. This variant is validated against the one presented by
+    :cite:t:`Nguyen2025MappingSurfaceProperties`.
+    It features 6 parameters and includes adjustments compared to the core
+    reference :cite:p:`Hapke2012TheoryReflectanceEmittance`. The unit test suite
+    used to validate this implementation used reference data from
+    :cite:t:`Pommerol2013PhotometricPropertiesMars`.
+
+    The default parameters are an order of magnitude of the results presented by
+    :cite:t:`Nguyen2025MappingSurfaceProperties` and notably neglect the
+    influence of the opposition effect.
 
     See Also
     --------
@@ -30,86 +36,94 @@ class HapkeBSDF(BSDF):
 
     w: Spectrum = documented(
         attrs.field(
-            default=None,
+            default=0.5,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
                 attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Single scattering albedo 'w'. Must be in [0; 1]",
+        doc="Single scattering albedo ω. Must be in [0, 1].",
         type=".Spectrum",
         init_type=".Spectrum or dict or float",
+        default="0.5",
     )
 
     b: Spectrum = documented(
         attrs.field(
-            default=None,
+            default=0.2,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
                 attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Anisotropy parameter 'b' Must be in [0; 1]",
+        doc="Asymmetry parameter of the Henyey-Greenstein phase function. "
+        "Must be in [0, 1].",
         type=".Spectrum",
         init_type=".Spectrum or dict or float",
+        default="0.2",
     )
 
     c: Spectrum | None = documented(
         attrs.field(
-            default=None,
+            default=0.5,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
                 attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Scattering coefficient 'c'. Must be in [0; 1]",
+        doc="Backscattering parameter of the Henyey-Greenstein phase function. "
+        "Must be in [0, 1].",
         type=".Spectrum",
         init_type=".Spectrum or dict or float",
+        default="0.5",
     )
 
     theta: Spectrum = documented(
         attrs.field(
-            default=0.183,
+            default=30.0 * ureg.deg,
             converter=spectrum_factory.converter("angle"),
             validator=[
                 attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("angle"),
             ],
         ),
-        doc="Photometric roughness 'theta'. Angle in degree. Must be in [0; 90]°",
+        doc="Photometric roughness θ. Angle in degree. Must be in [0, 90]°.",
         type=".Spectrum",
         init_type="quantity or float",
+        default="30.0",
     )
 
     B_0: Spectrum = documented(
         attrs.field(
-            default=None,
+            default=0.0,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
                 attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="Shadow hiding opposition effect amplitude 'B_0'. Must be in [0; 1]",
+        doc="Intensity of shadow hiding opposition effect. Must be in [0, 1].",
         type=".Spectrum",
         init_type=".Spectrum or dict or float",
+        default="0.0",
     )
 
     h: Spectrum = documented(
         attrs.field(
-            default=None,
+            default=0.0,
             converter=spectrum_factory.converter("dimensionless"),
             validator=[
                 attrs.validators.instance_of(Spectrum),
                 validators.has_quantity("dimensionless"),
             ],
         ),
-        doc="shadow hiding opposition effect width 'h'. Must be in [0; 1]",
+        doc="Width of shadow hiding opposition effect . Must be in [0, 1].",
         type=".Spectrum",
         init_type=".Spectrum or dict or float",
+        default="0.0",
     )
 
     @property
