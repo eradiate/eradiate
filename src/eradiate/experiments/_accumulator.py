@@ -43,7 +43,11 @@ from ..scenes.illumination._directional_periodic import (
 from ..scenes.illumination._isotropic_periodic import (
     IsotropicPeriodicIllumination,
 )
-from ..scenes.integrators import PAccumulatorIntegrator, integrator_factory
+from ..scenes.integrators import (
+    PAccumulatorDebugIntegrator,
+    PAccumulatorIntegrator,
+    integrator_factory,
+)
 from ..scenes.measure import (
     AbsorbedFluxMeasure,
     CountMeasure,
@@ -109,7 +113,9 @@ class AccumulatorExperiment(EarthObservationExperiment):
         attrs.field(
             factory=PAccumulatorIntegrator,
             converter=integrator_factory.convert,
-            validator=attrs.validators.instance_of(PAccumulatorIntegrator),
+            validator=attrs.validators.instance_of(
+                (PAccumulatorIntegrator, PAccumulatorDebugIntegrator)
+            ),
         ),
         doc="Monte Carlo integration algorithm specification. "
         "The :class:`.PAccumualtorIntegrator` is the only compatible integrator "
@@ -248,7 +254,9 @@ class AccumulatorExperiment(EarthObservationExperiment):
         """
         Ensures that the integrator is compatible with the atmosphere and geometry.
         """
-        if isinstance(self.integrator, PAccumulatorIntegrator):
+        if isinstance(
+            self.integrator, (PAccumulatorIntegrator, PAccumulatorDebugIntegrator)
+        ):
             if self.periodic_box is not None:
                 self.integrator = attrs.evolve(
                     self.integrator,
