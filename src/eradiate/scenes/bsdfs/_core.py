@@ -11,15 +11,15 @@ bsdf_factory.register_lazy_batch(
     [
         ("_black.BlackBSDF", "black", {}),
         ("_checkerboard.CheckerboardBSDF", "checkerboard", {}),
+        ("_hapke.HapkeBSDF", "hapke", {}),
         ("_lambertian.LambertianBSDF", "lambertian", {}),
         ("_mqdiffuse.MQDiffuseBSDF", "mqdiffuse", {}),
-        ("_ocean_legacy.OceanLegacyBSDF", "ocean_legacy", {}),
         ("_ocean_grasp.OceanGraspBSDF", "ocean_grasp", {}),
+        ("_ocean_legacy.OceanLegacyBSDF", "ocean_legacy", {}),
         ("_ocean_mishchenko.OceanMishchenkoBSDF", "ocean_mishchenko", {}),
         ("_opacity_mask.OpacityMaskBSDF", "opacity_mask", {}),
         ("_rpv.RPVBSDF", "rpv", {}),
         ("_rtls.RTLSBSDF", "rtls", {}),
-        ("_hapke.HapkeBSDF", "hapke", {}),
     ],
     cls_prefix="eradiate.scenes.bsdfs",
 )
