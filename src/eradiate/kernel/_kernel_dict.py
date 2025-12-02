@@ -192,7 +192,10 @@ class KernelDict(UserDict):
     automatically flattened.
     """
 
-    data: dict = attrs.field(factory=dict, converter=flatten)
+    data: dict = attrs.field(
+        factory=dict,
+        converter=lambda x: (x.data if isinstance(x, KernelDict) else flatten(x)),
+    )
 
     def __setitem__(self, key, value):
         if isinstance(value, Mapping):
