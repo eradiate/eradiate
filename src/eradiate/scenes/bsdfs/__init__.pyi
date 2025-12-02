@@ -4,6 +4,7 @@ from ._core import BSDF as BSDF
 from ._core import bsdf_factory as bsdf_factory
 from ._hapke import HapkeBSDF as HapkeBSDF
 from ._lambertian import LambertianBSDF as LambertianBSDF
+from ._maignan import MaignanBSDF as MaignanBSDF
 from ._mqdiffuse import MQDiffuseBSDF as MQDiffuseBSDF
 from ._ocean_grasp import OceanGraspBSDF as OceanGraspBSDF
 from ._ocean_legacy import OceanLegacyBSDF as OceanLegacyBSDF
