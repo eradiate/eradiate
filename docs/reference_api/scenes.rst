@@ -322,6 +322,7 @@ Quick access
    CheckerboardBSDF
    HapkeBSDF
    LambertianBSDF
+   MaignanBSDF
    MQDiffuseBSDF
    OceanGraspBSDF
    OceanLegacyBSDF

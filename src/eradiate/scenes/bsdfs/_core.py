@@ -13,6 +13,7 @@ bsdf_factory.register_lazy_batch(
         ("_checkerboard.CheckerboardBSDF", "checkerboard", {}),
         ("_hapke.HapkeBSDF", "hapke", {}),
         ("_lambertian.LambertianBSDF", "lambertian", {}),
+        ("_maignan.MaignanBSDF", "maignan", {}),
         ("_mqdiffuse.MQDiffuseBSDF", "mqdiffuse", {}),
         ("_ocean_grasp.OceanGraspBSDF", "ocean_grasp", {}),
         ("_ocean_legacy.OceanLegacyBSDF", "ocean_legacy", {}),
