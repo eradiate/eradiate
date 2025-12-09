@@ -60,17 +60,9 @@ Update data files
 -----------------
 
 Optionally, you may want to make sure that the data files you'll use are
-up-to-date. For that purpose, you can refresh remote file registries and purge
-Eradiate's data cache:
+up-to-date. To make sure that the data required for testing is correctly
+installed, use the same procedure as for an end-user setup:
 
 .. code:: shell
 
-   pixi run -e dev eradiate data update-registries
-   pixi run -e dev eradiate data purge-cache --keep
-
-.. note::
-   For a more aggressive cleanup, just run
-
-   .. code:: shell
-
-      pixi run -e dev eradiate data purge-cache
+   eradiate data install core
