@@ -49,8 +49,13 @@ class MonteCarloIntegrator(Integrator):
     def kernel_type(self) -> str:
         raise NotImplementedError
 
-    @property
-    def template(self) -> dict:
+    def _build_kernel_dict(self) -> dict:
+        """
+        Build the kernel-specific dictionary.
+
+        Override this method in subclasses to add integrator-specific parameters.
+        The base implementation handles common Monte Carlo integrator parameters.
+        """
         result = {"type": self.kernel_type}
 
         if self.timeout is not None:
@@ -62,9 +67,18 @@ class MonteCarloIntegrator(Integrator):
         if self.hide_emitters is not None:
             result["hide_emitters"] = self.hide_emitters
 
+        return result
+
+    @property
+    def template(self) -> dict:
+        # Validation
         if self.stokes and not eradiate.mode().is_polarized:
             raise RuntimeError("stokes should only be set to True in polarized mode.")
 
+        # Build the kernel dict (children can override _build_kernel_dict)
+        result = self._build_kernel_dict()
+
+        # Apply wrapping layers
         if self.moment:
             result = {"type": "moment", "nested": result}
 
@@ -110,6 +124,51 @@ class VolPathIntegrator(MonteCarloIntegrator):
 
 
 @define(eq=False, slots=False)
+class EOVolPathIntegrator(MonteCarloIntegrator):
+    """
+    A thin interface to the EO volumetric path tracer kernel plugin [``volpath``].
+
+    This integrator samples paths using random walks starting from the sensor.
+    It supports multiple scattering, accounts for volume interactions, and
+    implements the DDIS variance reduction method.
+    """
+
+    rr_depth: int | None = documented(
+        attrs.field(default=1000, converter=attrs.converters.optional(int)),
+        doc="Minimum path depth after which the implementation starts applying "
+        "the Russian roulette path termination criterion.",
+        type="int or None",
+        init_type="int, optional",
+    )
+
+    rr_factor = documented(
+        attrs.field(default=0.97, converter=attrs.converters.optional(float)),
+        doc="Specifies the maximum probability to keep a path when Russian "
+        "Roulette is evaluated.",
+        type="float",
+        init_type="float",
+    )
+
+    ddis_threshold = documented(
+        attrs.field(default=0.1, converter=attrs.converters.optional(float)),
+        doc="Specifies the probability to importance sample the phase using the "
+        "emitter as incident direction.",
+        type="float",
+        init_type="float",
+    )
+
+    @property
+    def kernel_type(self) -> str:
+        return "eovolpath"
+
+    def _build_kernel_dict(self) -> dict:
+        result = super()._build_kernel_dict()
+        result["ddis_threshold"] = self.ddis_threshold
+        result["rr_factor"] = self.rr_factor
+        return result
+
+
+@define(eq=False, slots=False)
 class VolPathMISIntegrator(MonteCarloIntegrator):
     """
     A thin interface to the volumetric path tracer kernel plugin [``volpathmis``].
@@ -126,12 +185,10 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
     def kernel_type(self) -> str:
         return "volpathmis"
 
-    @property
-    def template(self) -> dict:
-        result = super().template
+    def _build_kernel_dict(self) -> dict:
+        result = super()._build_kernel_dict()
         if self.use_spectral_mis is not None:
             result["use_spectral_mis"] = self.use_spectral_mis
-
         return result
 
 
