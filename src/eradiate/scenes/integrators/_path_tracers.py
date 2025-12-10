@@ -49,8 +49,13 @@ class MonteCarloIntegrator(Integrator):
     def kernel_type(self) -> str:
         raise NotImplementedError
 
-    @property
-    def template(self) -> dict:
+    def _build_kernel_dict(self) -> dict:
+        """
+        Build the kernel-specific dictionary.
+
+        Override this method in subclasses to add integrator-specific parameters.
+        The base implementation handles common Monte Carlo integrator parameters.
+        """
         result = {"type": self.kernel_type}
 
         if self.timeout is not None:
@@ -62,9 +67,18 @@ class MonteCarloIntegrator(Integrator):
         if self.hide_emitters is not None:
             result["hide_emitters"] = self.hide_emitters
 
+        return result
+
+    @property
+    def template(self) -> dict:
+        # Validation
         if self.stokes and not eradiate.mode().is_polarized:
             raise RuntimeError("stokes should only be set to True in polarized mode.")
 
+        # Build the kernel dict (children can override _build_kernel_dict)
+        result = self._build_kernel_dict()
+
+        # Apply wrapping layers
         if self.moment:
             result = {"type": "moment", "nested": result}
 
@@ -104,9 +118,27 @@ class VolPathIntegrator(MonteCarloIntegrator):
     It supports multiple scattering and accounts for volume interactions.
     """
 
+    ddis_threshold = attrs.field(
+        default=0.0, converter=attrs.converters.optional(float)
+    )
+
+    ddis_method = attrs.field(default=0, converter=attrs.converters.optional(int))
+
+    max_cp_depth = attrs.field(default=1, converter=attrs.converters.optional(int))
+
+    first_cp_nee = attrs.field(default=1, converter=attrs.converters.optional(int))
+
     @property
     def kernel_type(self) -> str:
         return "volpath"
+
+    def _build_kernel_dict(self) -> dict:
+        result = super()._build_kernel_dict()
+        result["ddis_threshold"] = self.ddis_threshold
+        result["ddis_method"] = self.ddis_method
+        result["max_cp_depth"] = self.max_cp_depth
+        result["first_cp_nee"] = self.first_cp_nee
+        return result
 
 
 @define(eq=False, slots=False)
@@ -126,12 +158,10 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
     def kernel_type(self) -> str:
         return "volpathmis"
 
-    @property
-    def template(self) -> dict:
-        result = super().template
+    def _build_kernel_dict(self) -> dict:
+        result = super()._build_kernel_dict()
         if self.use_spectral_mis is not None:
             result["use_spectral_mis"] = self.use_spectral_mis
-
         return result
 
 
