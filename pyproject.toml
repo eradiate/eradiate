@@ -38,6 +38,7 @@ dependencies = [
   # TODO: The <2025 cap was introduced to protect ourselves from a critical
   #       performance regression, solved in 2025.7. This should be released
   #       when dropping support for Python 3.9; we will still exclude 2025.{1-6}
+  "xarray-validate==0.0.5",
 ]
 
 [project.optional-dependencies]
