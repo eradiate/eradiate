@@ -1,126 +1,35 @@
-attrs:
-  type: dict
-  required: false
-dims:
-  type: dict
-  allow_unknown: false
-  schema:
-    w: integer
-    mu: integer
-    i: integer
-    j: integer
-coords:
-  type: dict
-  allow_unknown: true
-  schema:
-    w:
-      required: true
-      type: dict
-      schema:
-        dims:
-          equal_list: [ w ]
-        dtype:
-          allowed: [ float32, float64 ]
-        attrs:
-          type: dict
-          schema:
-            standard_name: string
-            long_name: string
-            units:
-              units_compatible: nm
-    i:
-      required: true
-      type: dict
-      schema:
-        dims:
-          equal_list: [ i ]
-        dtype:
-          allowed: [ int32, int64 ]
-        attrs:
-          type: dict
-          schema:
-            standard_name: string
-            long_name: string
-            units:
-              units_compatible: dimensionless
-    j:
-      required: true
-      type: dict
-      schema:
-        dims:
-          equal_list: [ j ]
-        dtype:
-          allowed: [ int32, int64 ]
-        attrs:
-          type: dict
-          schema:
-            standard_name: string
-            long_name: string
-            units:
-              units_compatible: dimensionless
-    mu:
-      required: true
-      type: dict
-      schema:
-        dims:
-          equal_list: [ mu ]
-        dtype:
-          allowed: [ float32, float64 ]
-        attrs:
-          type: dict
-          schema:
-            standard_name: string
-            long_name: string
-            units:
-              units_compatible: dimensionless
 data_vars:
-  type: dict
-  allow_unknown: true
-  schema:
-    sigma_t:
-      required: true
-      type: dict
-      schema:
-        dims:
-          equal_list: [ w ]
-        dtype:
-          allowed: [ float32, float64 ]
-        attrs:
-          type: dict
-          schema:
-            standard_name: string
-            long_name: string
-            units:
-              anyof:
-              - units_compatible: dimensionless
-              - units_compatible: 1 / m
-    albedo:
-      required: true
-      type: dict
-      schema:
-        dims:
-          equal_list: [ w ]
-        dtype:
-          allowed: [ float32, float64 ]
-        attrs:
-          type: dict
-          schema:
-            standard_name: string
-            long_name: string
-            units:
-              units_compatible: dimensionless
-    phase:
-      required: true
-      type: dict
-      schema:
-        dims:
-          equal_list: [ w, mu, i, j ]
-        dtype:
-          allowed: [ float32, float64 ]
-        attrs:
-          type: dict
-          schema:
-            standard_name: string
-            long_name: string
-            units:
-              units_compatible: dimensionless  # TODO: check (documentation mismatch)
+  sigma_t:
+    dtype: ["floating"]
+    dims: ["w"]
+    attrs:
+      units:
+        units_compatible: "km^-1"
+  albedo:
+    dtype: ["floating"]
+    dims: ["w"]
+  phase:
+    dtype: ["floating"]
+    dims:
+      dims: ["w", "mu", "i", "j"]
+
+coords:
+  coords:
+    w:
+      dtype: ["floating"]
+      dims: ["w"]
+      attrs:
+        units:
+          units_compatible: "micrometer"
+    mu:
+      dtype: ["floating"]
+      dims: ["mu"]
+    theta*:  # star makes that field optional
+      dtype: ["floating"]
+      dims: ["mu"]
+    i:
+      dtype: "integer"
+      dims: ["i"]
+    j:
+      dtype: "integer"
+      dims: ["j"]

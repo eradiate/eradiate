@@ -2,7 +2,7 @@ import pprint
 
 import pytest
 
-from eradiate.data._validation import DatasetValidator
+from eradiate.data._validation import SCHEMA_REGISTRY
 from eradiate.data.io import load_aerosol_libradtran
 
 
@@ -38,9 +38,11 @@ def test_load_aerosol_libradtran(mode_mono, fname, kwargs, loading_exception):
     if loading_exception is None:
         ds = load_aerosol_libradtran(fname, **kwargs)
         # Check that the produced dataset validates against the aerosol format schema
-        v = DatasetValidator()
-        v.validate(ds, schema="particle_dataset_v1")
-        assert not v.errors, f"Dataset validation errors\n{pprint.pformat(v.errors)}"
+        schema = SCHEMA_REGISTRY["particle_dataset_v1"]
+        result = schema.validate(ds, mode="lazy")
+        assert not result.errors, (
+            f"Dataset validation errors\n{pprint.pformat(result.errors)}"
+        )
 
     else:
         with pytest.raises(loading_exception):
