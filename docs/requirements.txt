@@ -6,7 +6,7 @@ aenum==3.1.16
     # via eradiate (pyproject.toml)
 alabaster==0.7.16
     # via sphinx
-anyio==4.11.0
+anyio==4.12.0
     # via
     #   httpx
     #   jupyter-server
@@ -32,15 +32,15 @@ babel==2.17.0
     # via
     #   jupyterlab-server
     #   sphinx
-beautifulsoup4==4.14.2
+beautifulsoup4==4.14.3
     # via nbconvert
 bleach==6.2.0
     # via nbconvert
-cachetools==6.2.2
+cachetools==6.2.4
     # via eradiate (pyproject.toml)
 cerberus==1.3.8
     # via eradiate (pyproject.toml)
-certifi==2025.11.12
+certifi==2026.1.4
     # via
     #   httpcore
     #   httpx
@@ -67,7 +67,7 @@ contourpy==1.3.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-debugpy==1.8.17
+debugpy==1.8.19
     # via ipykernel
 decorator==5.2.1
     # via ipython
@@ -97,7 +97,7 @@ flexcache==0.3
     # via pint
 flexparser==0.4
     # via pint
-fonttools==4.60.1
+fonttools==4.60.2
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
@@ -117,7 +117,7 @@ idna==3.11
     #   requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==8.7.0
+importlib-metadata==8.7.1
     # via
     #   jupyter-client
     #   jupyter-lsp
@@ -160,7 +160,7 @@ joseki==2.6.1
     # via eradiate (pyproject.toml)
 jplephem==2.23
     # via skyfield
-json5==0.12.1
+json5==0.13.0
     # via jupyterlab-server
 jsonpointer==3.0.0
     # via jsonschema
@@ -197,7 +197,7 @@ jupyter-server==2.17.0
     #   notebook-shim
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.5.0
+jupyterlab==4.5.1
     # via eradiate (pyproject.toml)
 jupyterlab-pygments==0.3.0
     # via nbconvert
@@ -236,7 +236,7 @@ mdit-py-plugins==0.4.2
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-mistune==3.1.4
+mistune==3.2.0
     # via nbconvert
 mypy-extensions==1.1.0
     # via typing-inspect
@@ -254,7 +254,7 @@ nbformat==5.10.4
     #   nbclient
     #   nbconvert
     #   nbsphinx
-nbsphinx==0.9.7
+nbsphinx==0.9.8
     # via eradiate (pyproject.toml:docs)
 nest-asyncio==1.6.0
     # via ipykernel
@@ -331,7 +331,7 @@ prometheus-client==0.23.1
     # via jupyter-server
 prompt-toolkit==3.0.52
     # via ipython
-psutil==7.1.3
+psutil==7.2.1
     # via ipykernel
 ptyprocess==0.7.0
     # via
@@ -357,7 +357,7 @@ pygments==2.19.2
     #   sphinx
 pygments-styles==0.3.0
     # via shibuya
-pyparsing==3.2.5
+pyparsing==3.3.1
     # via matplotlib
 pytest==8.4.2
     # via eradiate (pyproject.toml:docs)
@@ -406,16 +406,14 @@ rich==14.2.0
     # via
     #   eradiate (pyproject.toml)
     #   typer
-robotframework==7.3.2
+robotframework==7.4.1
     # via eradiate (pyproject.toml:docs)
 rpds-py==0.27.1
     # via
     #   jsonschema
     #   referencing
-ruamel-yaml==0.18.16
+ruamel-yaml==0.19.1
     # via eradiate (pyproject.toml)
-ruamel-yaml-clib==0.2.15
-    # via ruamel-yaml
 scipy==1.13.1
     # via
     #   eradiate (pyproject.toml)
@@ -425,7 +423,7 @@ seaborn==0.13.2
     # via
     #   eradiate (pyproject.toml)
     #   eradiate (pyproject.toml:docs)
-send2trash==1.8.3
+send2trash==2.0.0
     # via jupyter-server
 setuptools==80.9.0
     # via jupyterlab
@@ -445,11 +443,9 @@ six==1.17.0
     #   rfc3339-validator
 skyfield==1.53
     # via eradiate (pyproject.toml)
-sniffio==1.3.1
-    # via anyio
 snowballstemmer==3.0.1
     # via sphinx
-soupsieve==2.8
+soupsieve==2.8.1
     # via beautifulsoup4
 sphinx==7.4.7
     # via
@@ -468,7 +464,7 @@ sphinx-copybutton==0.5.2
     # via eradiate (pyproject.toml:docs)
 sphinx-design==0.6.1
     # via eradiate (pyproject.toml:docs)
-sphinx-iconify==0.2.1
+sphinx-iconify==0.3.0
     # via eradiate (pyproject.toml:docs)
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
@@ -497,7 +493,7 @@ tomli==2.3.0
     #   jupyterlab
     #   pytest
     #   sphinx
-tornado==6.5.2
+tornado==6.5.4
     # via
     #   ipykernel
     #   jupyter-client
@@ -522,7 +518,7 @@ traitlets==5.14.3
     #   nbconvert
     #   nbformat
     #   nbsphinx
-typer==0.20.0
+typer==0.21.0
     # via eradiate (pyproject.toml)
 typing-extensions==4.15.0
     # via
@@ -542,13 +538,13 @@ typing-extensions==4.15.0
     #   typing-inspect
 typing-inspect==0.9.0
     # via sf-hamilton
-tzdata==2025.2
+tzdata==2025.3
     # via
     #   arrow
     #   pandas
 uri-template==1.3.0
     # via jsonschema
-urllib3==2.5.0
+urllib3==2.6.2
     # via requests
 ussa1976==0.3.4
     # via joseki
