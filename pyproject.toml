@@ -206,6 +206,8 @@ filterwarnings = [
   "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning",
   # Remove the following when transition to NumPy 2 is complete
   "ignore:numpy.core is deprecated and has been renamed to numpy._core.",
+  # Ignore pyparsing deprecation warnings from matplotlib (remove when matplotlib is updated)
+  "ignore:.*:DeprecationWarning:matplotlib.*",
   # Remove the warnings coming from deprecated usage of utcnow in Joseki
   "ignore:.*utcnow.*:DeprecationWarning",
   # Ignore Skyfield ephemeris file handle warnings (expected behaviour)
