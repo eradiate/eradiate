@@ -130,9 +130,21 @@ python = "3.9.*" # Used to constrain dev environment
 [tool.pixi.feature.test.tasks]
 doctest = { cmd = "make -C docs doctest" }
 test = { cmd = "pytest" }
-test-cov = { cmd = "pytest --cov=src/eradiate --cov-report=html --cov-report=json --cov-report=term-missing" }
 test-quick = { cmd = "pytest -m \"not slow and not regression\"" }
-test-cov-quick = { cmd = "pytest --cov=src/eradiate --cov-report=html --cov-report=json --cov-report=term-missing -m \"not slow and not regression\"" }
+test-cov = { cmd = """
+  pytest
+    --cov=src/eradiate
+    --cov-report=html
+    --cov-report=json
+    --cov-report=term-missing
+""" }
+test-cov-quick = { cmd = """
+  pytest -m \"not slow and not regression\"
+    --cov=src/eradiate
+    --cov-report=html
+    --cov-report=json
+    --cov-report=term-missing
+""" }
 test-report = { cmd = """
   pytest -p robotframework
     --robot-tagstatinclude unit
