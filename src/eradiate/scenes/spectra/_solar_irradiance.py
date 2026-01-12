@@ -240,14 +240,17 @@ class SolarIrradianceSpectrum(Spectrum):
 
         w_units = ureg(self.dataset.ssi.w.attrs["units"])
         irradiance = to_quantity(
-            self.dataset.ssi.interp(w=w.m_as(w_units), method="linear")
+            self.dataset.ssi.interp(w=np.atleast_1d(w.m_as(w_units)), method="linear")
         )
 
         # Raise if out of bounds or ill-formed dataset
         if np.any(np.isnan(irradiance.magnitude)):
             raise ValueError("interpolation of solar irradiance dataset returned nan")
 
-        return irradiance * self.scale * self._scale_earth_sun_distance()
+        result = irradiance * self.scale * self._scale_earth_sun_distance()
+
+        # Squeeze result if input was scalar
+        return result.squeeze() if np.isscalar(w.magnitude) else result
 
     def eval_ckd(self, w: pint.Quantity, g: float) -> pint.Quantity:
         return self.eval_mono(w=w)

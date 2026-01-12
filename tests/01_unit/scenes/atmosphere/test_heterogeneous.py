@@ -178,7 +178,7 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
             values[component] = (
                 float(
                     radprofile.data_vars[field].interp(
-                        z_layer=z.m_as(z_units),
+                        z_layer=float(z.m_as(z_units)),
                         kwargs={"fill_value": 0.0},
                         method="nearest",
                     )

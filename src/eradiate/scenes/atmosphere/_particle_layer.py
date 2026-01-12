@@ -286,7 +286,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         if len(ds["w"]) == 1:
             interpolated = to_quantity(ds.albedo.sel(w=wavelengths, method="nearest"))
         else:
-            interpolated = to_quantity(ds.albedo.interp(w=wavelengths))
+            interpolated = to_quantity(ds.albedo.interp(w=np.atleast_1d(wavelengths)))
         where_present = np.reshape(self.eval_fractions(zgrid) > 0, (1, -1))
         return interpolated * where_present
 
@@ -309,7 +309,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         else:
             sigma_t_star = to_quantity(ds.sigma_t.interp(w=wavelengths))
             sigma_t_star_ref = to_quantity(
-                ds.sigma_t.interp(w=self.w_ref.m_as(ds_w_units))
+                ds.sigma_t.interp(w=np.atleast_1d(self.w_ref.m_as(ds_w_units)))
             )
 
         # Compute target optical thickness value
