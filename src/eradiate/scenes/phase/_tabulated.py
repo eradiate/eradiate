@@ -169,15 +169,14 @@ class TabulatedPhaseFunction(PhaseFunction):
             of `w` (angle dimension comes last).
         """
         w_units = self.data.w.attrs["units"]
-
-        return (
+        result = (
             self.data.isel(i=i, j=j)
-            .interp(
-                w=w.m_as(w_units),
-                kwargs=dict(bounds_error=True),
-            )
+            .interp(w=np.atleast_1d(w.m_as(w_units)), kwargs={"bounds_error": True})
             .data
         )
+
+        # Squeeze result if input was scalar
+        return result.squeeze() if np.isscalar(w.magnitude) else result
 
     def eval_ckd(self, w: pint.Quantity, g: float, i: int, j: int) -> np.ndarray:
         """

@@ -918,7 +918,7 @@ class MonoAbsorptionDatabase(AbsorptionDatabase):
         w_u = ureg(ds.w.units)
         # Note: Support for wavenumber spectral lookup mode is suboptimal
         w_m = (1.0 / w).m_as(w_u) if w_u.check("[length]^-1") else w.m_as(w_u)
-        result = ds.sigma_a.interp(w=w_m, method="linear")
+        result = ds.sigma_a.interp(w=np.atleast_1d(w_m), method="linear")
 
         # Interpolate on thermophysical dimensions
         result, x_ds = self._interp_thermophysical(
@@ -1026,7 +1026,7 @@ class CKDAbsorptionDatabase(AbsorptionDatabase):
         result = ds.sigma_a.sel(w=w_m, method="nearest")
 
         # Interpolate along g
-        result = result.interp(g=g).drop_vars("g")
+        result = result.interp(g=np.atleast_1d(g)).squeeze("g", drop=True)
 
         # Interpolate on thermophysical dimensions
         result, x_ds = self._interp_thermophysical(
