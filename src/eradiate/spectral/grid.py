@@ -19,7 +19,11 @@ from .._mode import ModeFlag, SubtypeDispatcher
 from ..attrs import define, documented
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
 from ..quad import Quad
-from ..radprops import AbsorptionDatabase, CKDAbsorptionDatabase, MonoAbsorptionDatabase
+from ..radprops._absorption import (
+    AbsorptionDatabase,
+    CKDAbsorptionDatabase,
+    MonoAbsorptionDatabase,
+)
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.misc import deduplicate_sorted, summary_repr

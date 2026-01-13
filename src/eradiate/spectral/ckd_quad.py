@@ -9,7 +9,7 @@ import xarray as xr
 
 from ..attrs import documented, frozen
 from ..quad import Quad, QuadType
-from ..radprops import CKDAbsorptionDatabase
+from ..radprops._absorption import CKDAbsorptionDatabase
 
 
 class CKDQuadPolicy(enum.Enum):
