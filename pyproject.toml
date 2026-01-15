@@ -60,7 +60,7 @@ docs = [
   "seaborn",
   "sphinx",
   "sphinxcontrib-bibtex>=2.0",
-  "sphinx-autobuild<=2021", # Capped because v2024+ raises
+  "sphinx-autobuild>=2024", # Capped because v2024+ raises
   "sphinx-copybutton",
   "sphinx-design",
   "sphinx-iconify",
