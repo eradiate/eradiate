@@ -163,7 +163,10 @@ def aggregate_ckd_quad(
                     interval=interval,
                 )
 
-    result.attrs = raw_data.attrs
+    if is_variance:  # At the moment, we do not populate metadata for variance
+        result.attrs.clear()
+    else:
+        result.attrs = raw_data.attrs.copy()
     result.name = result_name
 
     # TODO: Provide separate implementation
