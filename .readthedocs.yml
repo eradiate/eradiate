@@ -9,7 +9,7 @@ build:
   tools:
     # Important: If the version changes, do not forget to sync it with the
     # 'docs-lock' Pixi task in pyproject.toml
-    python: "3.9"
+    python: "3.10"
 
 python:
   # Install Eradiate package in environment
