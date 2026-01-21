@@ -12,10 +12,6 @@ import eradiate
 from eradiate import unit_registry as ureg
 
 
-def map_to_0_360(x: float) -> float:
-    return x % 360
-
-
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])
 def test_film_to_angular_coord_conversion_multi_distant(
     mode_mono, illumination_azimuth, artefact_dir
@@ -127,7 +123,7 @@ def test_film_to_angular_coord_conversion_multi_distant(
     results = {name: eradiate.run(exp) for name, exp in experiments.items()}
 
     def select_brf(brf, orientation):
-        relative_azimuth = map_to_0_360(measure_azimuth - illumination_azimuth)
+        relative_azimuth = (measure_azimuth - illumination_azimuth) % 360.0
 
         if relative_azimuth == 0.0:
             return (
@@ -216,19 +212,13 @@ def where_azimuth(
     if start < stop:
         return da.where((da.vaa > start) & (da.vaa < stop))
     else:
-        return xr.merge(
-            [
-                da.where((da.vaa > start) & (da.vaa < 360.0)),
-                da.where((da.vaa > 0.0) & (da.vaa < stop)),
-            ]
-        )[name]
+        return da.where(
+            ((da.vaa > start) & (da.vaa < 360.0)) | ((da.vaa > 0.0) & (da.vaa < stop))
+        )
 
 
 def select_orientation(
-    da: xr.DataArray,
-    name: str,
-    illumination_azimuth: float,
-    orientation: str,
+    da: xr.DataArray, name: str, illumination_azimuth: float, orientation: str
 ) -> xr.DataArray:
     r"""
     Select hemispherical data in requested orientation.
@@ -259,21 +249,14 @@ def select_orientation(
     DataArray
         Data in forward direction.
     """
-    return (
-        where_azimuth(
-            da=da,
-            name=name,
-            start=map_to_0_360(illumination_azimuth + 90.0),
-            stop=map_to_0_360(illumination_azimuth + 270.0),
-        )
-        if orientation == "forward"
-        else where_azimuth(
-            da=da,
-            name=name,
-            start=map_to_0_360(illumination_azimuth + 270.0),
-            stop=map_to_0_360(illumination_azimuth + 90.0),
-        )
-    )
+    if orientation == "forward":
+        start = (illumination_azimuth + 90.0) % 360.0
+        stop = (illumination_azimuth + 270.0) % 360.0
+    else:
+        start = (illumination_azimuth + 270.0) % 360.0
+        stop = (illumination_azimuth + 90.0) % 360.0
+
+    return where_azimuth(da=da, name=name, start=start, stop=stop)
 
 
 def is_forward_scattering(
