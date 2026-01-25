@@ -1092,24 +1092,28 @@ class TestMetricsPlugin:
     """
     Pytest plugin to collect and report test metrics.
 
-    This plugin records test duration and other metrics, storing them in a
-    JSON file for later analysis. It collects detailed system information
+    This plugin records test duration and other metrics, optionally storing them
+    in a JSON file for later analysis. It collects detailed system information
     and supports comparison between test runs.
+
+    Test durations are reported inline as tests complete only in verbose mode.
 
     Parameters
     ----------
     output_path : Path or None
         Path to the JSON file where metrics will be written.
-    top_n : int
-        Number of slowest tests to display in the terminal summary.
     """
 
-    def __init__(self, output_path: Path | None = None, top_n: int = 10):
+    def __init__(self, output_path: Path | None = None):
         self.output_path = output_path
-        self.top_n = top_n
-        self.report = MetricReport(
-            eradiate_version=eradiate_version,
-        )
+        self.report = MetricReport(eradiate_version=eradiate_version)
+        self._verbose: bool = False
+        self._terminal: pytest.TerminalReporter | None = None
+
+    def pytest_configure(self, config: pytest.Config):
+        """Store config for verbosity check."""
+        self._verbose = config.option.verbose > 0
+        self._terminal = config.pluginmanager.get_plugin("terminalreporter")
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self, item: pytest.Item, call: pytest.CallInfo):
@@ -1129,6 +1133,31 @@ class TestMetricsPlugin:
                 markers=markers,
             )
 
+    @pytest.hookimpl(hookwrapper=True)
+    def pytest_report_teststatus(
+        self, report: pytest.TestReport, config: pytest.Config
+    ):
+        """Append duration to test status in verbose mode."""
+        outcome = yield
+
+        if report.when != "call" or not self._verbose:
+            return
+
+        result = outcome.get_result()
+        if result is None:
+            return
+
+        category, letter, word = result
+
+        # Append duration to the word shown in verbose mode
+        if isinstance(word, str):
+            word_with_duration = f"{word} ({report.duration:.3f}s)"
+        else:
+            # word can be a tuple (word, markup_dict)
+            word_with_duration = (f"{word[0]} ({report.duration:.3f}s)", word[1])
+
+        outcome.force_result((category, letter, word_with_duration))
+
     def pytest_sessionstart(self, session: pytest.Session):
         """Record session start time and collect system info."""
         self.report.session_start = datetime.datetime.now(datetime.timezone.utc)
@@ -1141,27 +1170,3 @@ class TestMetricsPlugin:
 
         if self.output_path is not None:
             self.report.save(self.output_path)
-
-    def pytest_terminal_summary(
-        self, terminalreporter: pytest.TerminalReporter, exitstatus: int
-    ):
-        """Display slowest tests in terminal output."""
-        if not self.report.tests:
-            return
-
-        terminalreporter.write_sep("=", "slowest tests")
-
-        # Sort by duration descending
-        sorted_tests = sorted(
-            self.report.tests.values(), key=lambda t: t.duration, reverse=True
-        )
-
-        for test in sorted_tests[: self.top_n]:
-            terminalreporter.write_line(
-                f"{test.duration:>8.3f}s {test.outcome:<7} {test.node_id}"
-            )
-
-        # Total duration
-        terminalreporter.write_line(
-            f"\nTotal test duration: {self.report.total_duration:.3f}s"
-        )

@@ -42,14 +42,6 @@ def pytest_addoption(parser):
         metavar="PATH",
         help="Write test metrics to JSON file at PATH (implies --metrics)",
     )
-    parser.addoption(
-        "--metrics-top-n",
-        action="store",
-        default=10,
-        type=int,
-        metavar="N",
-        help="Number of slowest tests to display in summary (default: 10)",
-    )
 
 
 # See: https://stackoverflow.com/a/55301318/3645374
@@ -121,10 +113,8 @@ def pytest_configure(config):
 
     # --metrics-output implies --metrics
     if metrics_enabled or metrics_output:
-        metrics_top_n = config.getoption("metrics_top_n")
         output_path = Path(metrics_output) if metrics_output else None
-
-        plugin = TestMetricsPlugin(output_path=output_path, top_n=metrics_top_n)
+        plugin = TestMetricsPlugin(output_path=output_path)
         config.pluginmanager.register(plugin, "test_metrics_plugin")
 
 
