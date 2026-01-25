@@ -1,11 +1,15 @@
+from __future__ import annotations
+
 import logging
 import os
+from pathlib import Path
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pytest
 
 import eradiate
+from eradiate.test_tools.pytest_metrics import TestMetricsPlugin
 
 mpl.use("Agg")
 eradiate.plot.set_style()
@@ -24,6 +28,27 @@ def pytest_addoption(parser):
         "--artefact-dir",
         action="store",
         default=os.path.join(eradiate_source_dir, "test_artefacts/"),
+    )
+    parser.addoption(
+        "--metrics",
+        action="store_true",
+        default=False,
+        help="Enable test metrics collection and display slowest tests summary",
+    )
+    parser.addoption(
+        "--metrics-output",
+        action="store",
+        default=None,
+        metavar="PATH",
+        help="Write test metrics to YAML file at PATH (implies --metrics)",
+    )
+    parser.addoption(
+        "--metrics-top-n",
+        action="store",
+        default=10,
+        type=int,
+        metavar="N",
+        help="Number of slowest tests to display in summary (default: 10)",
     )
 
 
@@ -89,6 +114,18 @@ def pytest_configure(config):
 
     # Silence Joseki
     logging.getLogger("joseki").setLevel(logging.WARNING)
+
+    # Register test metrics plugin if enabled
+    metrics_enabled = config.getoption("metrics")
+    metrics_output = config.getoption("metrics_output")
+
+    # --metrics-output implies --metrics
+    if metrics_enabled or metrics_output:
+        metrics_top_n = config.getoption("metrics_top_n")
+        output_path = Path(metrics_output) if metrics_output else None
+
+        plugin = TestMetricsPlugin(output_path=output_path, top_n=metrics_top_n)
+        config.pluginmanager.register(plugin, "test_metrics_plugin")
 
 
 # ------------------------------------------------------------------------------
