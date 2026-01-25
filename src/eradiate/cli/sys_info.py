@@ -9,7 +9,8 @@ def main():
     """
     Display information useful for debugging.
     """
-    import eradiate.util.sys_info
+    import eradiate
+    from eradiate.util.sys_info import SysInfo
 
     from ._console import message, section, warning
 
@@ -20,22 +21,22 @@ def main():
     for w in warnings:
         warning("• " + w)
 
-    sys_info = eradiate.util.sys_info.show()
+    sys_info = SysInfo.collect()
     section("System")
-    message(f"CPU: {sys_info['cpu_info']}")
-    message(f"OS: {sys_info['os']}")
-    message(f"Python: {sys_info['python']}")
+    message(f"CPU: {sys_info.cpu}")
+    message(f"OS: {sys_info.os}")
+    message(f"Python: {sys_info.python}")
 
     section("Versions")
     message(f"• eradiate {eradiate.__version__}")
-    message(f"• drjit {sys_info['drjit_version']}")
+    message(f"• drjit {sys_info.drjit_version}")
     message(
-        f"• eradiate-mitsuba {sys_info['eradiate_mitsuba_version']} "
-        f"(based on mitsuba {sys_info['mitsuba_version']})"
+        f"• eradiate-mitsuba {sys_info.eradiate_mitsuba_version} "
+        f"(based on mitsuba {sys_info.mitsuba_version})"
     )
-    message(f"• numpy {sys_info['numpy']}")
-    message(f"• scipy {sys_info['scipy']}")
-    message(f"• xarray {sys_info['xarray']}")
+    message(f"• numpy {sys_info.packages.get('numpy', 'not found')}")
+    message(f"• scipy {sys_info.packages.get('scipy', 'not found')}")
+    message(f"• xarray {sys_info.packages.get('xarray', 'not found')}")
 
     try:
         import mitsuba as mi

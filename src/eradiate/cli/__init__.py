@@ -9,7 +9,7 @@ import typer
 from rich.logging import RichHandler
 from typing_extensions import Annotated
 
-from . import data, srf, sys_info
+from . import data, srf, sys_info, testing
 
 
 class LogLevel(str, Enum):
@@ -73,6 +73,7 @@ app.command(name="sys-info", help=sys_info.__doc__)(sys_info.main)
 app.command(name="show", help="Alias to 'sys-info' (deprecated).")(sys_info.main)
 app.add_typer(data.app, name="data")
 app.add_typer(srf.app, name="srf")
+app.add_typer(testing.app, name="testing")
 
 
 def main():
