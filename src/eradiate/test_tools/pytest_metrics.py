@@ -587,6 +587,58 @@ class MetricReport:
 #                           Report Comparison
 # -----------------------------------------------------------------------------
 
+T = Any  # Type variable for generic ItemDiff
+
+
+@attrs.define
+class ItemDiff:
+    """
+    Generic difference container for before/after comparison of a single item.
+
+    This class captures the state of an item in two reports and provides
+    utilities to determine if the item has changed.
+    """
+
+    before: Any = None
+    after: Any = None
+
+    @property
+    def changed(self) -> bool:
+        """Whether the value changed between before and after."""
+        return self.before != self.after
+
+    @property
+    def change(self) -> tuple[Any, Any] | None:
+        """Return (before, after) tuple if changed, None otherwise."""
+        if self.changed:
+            return (self.before, self.after)
+        return None
+
+
+@attrs.define
+class NumericDiff(ItemDiff):
+    """
+    Difference container for numeric values with change calculation support.
+
+    Extends ItemDiff with methods for calculating absolute and percentage changes.
+    """
+
+    @property
+    def absolute_change(self) -> float | None:
+        """Absolute change (after - before)."""
+        if self.before is None or self.after is None:
+            return None
+        return self.after - self.before
+
+    @property
+    def percent_change(self) -> float | None:
+        """Percentage change relative to before value."""
+        if self.before is None or self.after is None:
+            return None
+        if self.before == 0:
+            return None
+        return ((self.after - self.before) / self.before) * 100
+
 
 @attrs.define
 class TestDiff:
@@ -594,81 +646,101 @@ class TestDiff:
 
     node_id: str
     status: str  # "added", "removed", "changed", "unchanged"
+    duration: NumericDiff = attrs.field(factory=NumericDiff)
+    outcome: ItemDiff = attrs.field(factory=ItemDiff)
 
-    # Only for changed/unchanged tests
-    duration_before: float | None = None
-    duration_after: float | None = None
-    outcome_before: str | None = None
-    outcome_after: str | None = None
+    @property
+    def duration_before(self) -> float | None:
+        """Duration before (for backward compatibility)."""
+        return self.duration.before
+
+    @property
+    def duration_after(self) -> float | None:
+        """Duration after (for backward compatibility)."""
+        return self.duration.after
 
     @property
     def duration_change(self) -> float | None:
         """Absolute duration change in seconds."""
-        if self.duration_before is None or self.duration_after is None:
-            return None
-        return self.duration_after - self.duration_before
+        return self.duration.absolute_change
 
     @property
     def duration_change_percent(self) -> float | None:
         """Relative duration change in percent."""
-        if self.duration_before is None or self.duration_after is None:
-            return None
-        if self.duration_before == 0:
-            return None
-        return (
-            (self.duration_after - self.duration_before) / self.duration_before
-        ) * 100
+        return self.duration.percent_change
+
+    @property
+    def outcome_before(self) -> str | None:
+        """Outcome before (for backward compatibility)."""
+        return self.outcome.before
+
+    @property
+    def outcome_after(self) -> str | None:
+        """Outcome after (for backward compatibility)."""
+        return self.outcome.after
 
     @property
     def outcome_changed(self) -> bool:
         """Whether the test outcome changed."""
-        return self.outcome_before != self.outcome_after
+        return self.outcome.changed
+
+
+# Environment field names used in EnvironmentDiff
+ENV_FIELDS = ("hostname", "platform", "cpu", "memory", "python_version", "eradiate_version")
 
 
 @attrs.define
 class EnvironmentDiff:
-    """Differences in environment between two reports."""
+    """
+    Differences in environment between two reports.
 
-    hostname_changed: bool = False
-    hostname_before: str | None = None
-    hostname_after: str | None = None
+    Uses a dictionary mapping field names to ItemDiff instances for scalar fields,
+    and a separate dict for package version changes.
+    """
 
-    platform_changed: bool = False
-    platform_before: str | None = None
-    platform_after: str | None = None
+    fields: dict[str, ItemDiff] = attrs.field(factory=dict)
+    package_changes: dict[str, ItemDiff] = attrs.field(factory=dict)
 
-    cpu_changed: bool = False
-    cpu_before: str | None = None
-    cpu_after: str | None = None
+    @classmethod
+    def create(cls) -> EnvironmentDiff:
+        """Create an EnvironmentDiff with empty ItemDiff for each standard field."""
+        fields = {name: ItemDiff() for name in ENV_FIELDS}
+        return cls(fields=fields)
 
-    memory_changed: bool = False
-    memory_before_gb: float | None = None
-    memory_after_gb: float | None = None
+    # Mapping from old attribute prefixes to new field names
+    _ATTR_TO_FIELD = {
+        "hostname": "hostname",
+        "platform": "platform",
+        "cpu": "cpu",
+        "memory": "memory",
+        "python_version": "python_version",
+        "python": "python_version",  # python_before -> python_version
+        "eradiate_version": "eradiate_version",
+        "eradiate": "eradiate_version",  # eradiate_before -> eradiate_version
+    }
 
-    python_version_changed: bool = False
-    python_before: str | None = None
-    python_after: str | None = None
+    def __getattr__(self, name: str) -> Any:
+        """Provide backward-compatible attribute access."""
+        # Special cases for memory_before_gb and memory_after_gb
+        if name == "memory_before_gb":
+            return self.fields.get("memory", ItemDiff()).before
+        if name == "memory_after_gb":
+            return self.fields.get("memory", ItemDiff()).after
 
-    eradiate_version_changed: bool = False
-    eradiate_before: str | None = None
-    eradiate_after: str | None = None
+        # Handle *_changed, *_before, *_after patterns
+        for suffix, attr in [("_changed", "changed"), ("_before", "before"), ("_after", "after")]:
+            if name.endswith(suffix):
+                attr_prefix = name[: -len(suffix)]
+                field_name = self._ATTR_TO_FIELD.get(attr_prefix)
+                if field_name and field_name in self.fields:
+                    return getattr(self.fields[field_name], attr)
 
-    package_changes: dict[str, tuple[str | None, str | None]] = attrs.field(
-        factory=dict
-    )
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
     @property
     def has_changes(self) -> bool:
         """Whether there are any environment changes."""
-        return (
-            self.hostname_changed
-            or self.platform_changed
-            or self.cpu_changed
-            or self.memory_changed
-            or self.python_version_changed
-            or self.eradiate_version_changed
-            or bool(self.package_changes)
-        )
+        return any(diff.changed for diff in self.fields.values()) or bool(self.package_changes)
 
 
 @attrs.define
@@ -713,77 +785,30 @@ class ReportComparison:
         )
 
     @staticmethod
+    def _get_env_value(report: MetricReport, field: str) -> Any:
+        """Extract an environment field value from a report."""
+        extractors = {
+            "hostname": lambda r: r.system.hostname if r.system else None,
+            "platform": lambda r: r.system.platform if r.system else None,
+            "cpu": lambda r: r.system.cpu.model if r.system and r.system.cpu else None,
+            "memory": lambda r: r.system.memory.total_gb if r.system and r.system.memory else None,
+            "python_version": lambda r: r.system.python.version if r.system and r.system.python else None,
+            "eradiate_version": lambda r: r.eradiate_version,
+        }
+        return extractors[field](report)
+
+    @classmethod
     def _compare_environment(
-        before: MetricReport, after: MetricReport
+        cls, before: MetricReport, after: MetricReport
     ) -> EnvironmentDiff:
         """Compare environment information between reports."""
-        diff = EnvironmentDiff()
+        diff = EnvironmentDiff.create()
 
-        # Compare hostnames
-        hostname_before = before.system.hostname if before.system else None
-        hostname_after = after.system.hostname if after.system else None
-        if hostname_before != hostname_after:
-            diff.hostname_changed = True
-            diff.hostname_before = hostname_before
-            diff.hostname_after = hostname_after
-
-        # Compare platforms
-        platform_before = before.system.platform if before.system else None
-        platform_after = after.system.platform if after.system else None
-        if platform_before != platform_after:
-            diff.platform_changed = True
-            diff.platform_before = platform_before
-            diff.platform_after = platform_after
-
-        # Compare CPUs
-        cpu_before = (
-            before.system.cpu.model if before.system and before.system.cpu else None
-        )
-        cpu_after = (
-            after.system.cpu.model if after.system and after.system.cpu else None
-        )
-        if cpu_before != cpu_after:
-            diff.cpu_changed = True
-            diff.cpu_before = cpu_before
-            diff.cpu_after = cpu_after
-
-        # Compare memory
-        mem_before = (
-            before.system.memory.total_gb
-            if before.system and before.system.memory
-            else None
-        )
-        mem_after = (
-            after.system.memory.total_gb
-            if after.system and after.system.memory
-            else None
-        )
-        if mem_before != mem_after:
-            diff.memory_changed = True
-            diff.memory_before_gb = mem_before
-            diff.memory_after_gb = mem_after
-
-        # Compare Python versions
-        py_before = (
-            before.system.python.version
-            if before.system and before.system.python
-            else None
-        )
-        py_after = (
-            after.system.python.version
-            if after.system and after.system.python
-            else None
-        )
-        if py_before != py_after:
-            diff.python_version_changed = True
-            diff.python_before = py_before
-            diff.python_after = py_after
-
-        # Compare Eradiate versions
-        if before.eradiate_version != after.eradiate_version:
-            diff.eradiate_version_changed = True
-            diff.eradiate_before = before.eradiate_version
-            diff.eradiate_after = after.eradiate_version
+        # Compare all standard fields using the extractors
+        for field in ENV_FIELDS:
+            val_before = cls._get_env_value(before, field)
+            val_after = cls._get_env_value(after, field)
+            diff.fields[field] = ItemDiff(before=val_before, after=val_after)
 
         # Compare package versions
         pkgs_before = (
@@ -797,10 +822,9 @@ class ReportComparison:
         all_packages = set(pkgs_before.keys()) | set(pkgs_after.keys())
 
         for pkg in all_packages:
-            ver_before = pkgs_before.get(pkg)
-            ver_after = pkgs_after.get(pkg)
-            if ver_before != ver_after:
-                diff.package_changes[pkg] = (ver_before, ver_after)
+            pkg_diff = ItemDiff(before=pkgs_before.get(pkg), after=pkgs_after.get(pkg))
+            if pkg_diff.changed:
+                diff.package_changes[pkg] = pkg_diff
 
         return diff
 
@@ -820,8 +844,8 @@ class ReportComparison:
             diffs[node_id] = TestDiff(
                 node_id=node_id,
                 status="added",
-                duration_after=test.duration,
-                outcome_after=test.outcome,
+                duration=NumericDiff(after=test.duration),
+                outcome=ItemDiff(after=test.outcome),
             )
 
         # Tests removed in 'after'
@@ -830,8 +854,8 @@ class ReportComparison:
             diffs[node_id] = TestDiff(
                 node_id=node_id,
                 status="removed",
-                duration_before=test.duration,
-                outcome_before=test.outcome,
+                duration=NumericDiff(before=test.duration),
+                outcome=ItemDiff(before=test.outcome),
             )
 
         # Tests present in both
@@ -839,16 +863,14 @@ class ReportComparison:
             test_before = before.tests[node_id]
             test_after = after.tests[node_id]
 
-            outcome_changed = test_before.outcome != test_after.outcome
-            status = "changed" if outcome_changed else "unchanged"
+            outcome = ItemDiff(before=test_before.outcome, after=test_after.outcome)
+            status = "changed" if outcome.changed else "unchanged"
 
             diffs[node_id] = TestDiff(
                 node_id=node_id,
                 status=status,
-                duration_before=test_before.duration,
-                duration_after=test_after.duration,
-                outcome_before=test_before.outcome,
-                outcome_after=test_after.outcome,
+                duration=NumericDiff(before=test_before.duration, after=test_after.duration),
+                outcome=outcome,
             )
 
         return diffs
@@ -999,10 +1021,8 @@ class ReportComparison:
                 )
             if self.environment.package_changes:
                 lines.append("  Package changes:")
-                for pkg, (v_before, v_after) in sorted(
-                    self.environment.package_changes.items()
-                ):
-                    lines.append(f"    {pkg}: {v_before} -> {v_after}")
+                for pkg, pkg_diff in sorted(self.environment.package_changes.items()):
+                    lines.append(f"    {pkg}: {pkg_diff.before} -> {pkg_diff.after}")
             lines.append("")
 
         # Test count changes
