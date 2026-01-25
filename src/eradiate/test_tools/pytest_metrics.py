@@ -1084,10 +1084,6 @@ class ReportComparison:
 # -----------------------------------------------------------------------------
 
 
-# Keep the old TestMetrics class as an alias for backwards compatibility
-TestMetrics = TestResult
-
-
 class TestMetricsPlugin:
     """
     Pytest plugin to collect and report test metrics.
