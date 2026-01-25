@@ -40,7 +40,7 @@ def pytest_addoption(parser):
         action="store",
         default=None,
         metavar="PATH",
-        help="Write test metrics to YAML file at PATH (implies --metrics)",
+        help="Write test metrics to JSON file at PATH (implies --metrics)",
     )
     parser.addoption(
         "--metrics-top-n",
