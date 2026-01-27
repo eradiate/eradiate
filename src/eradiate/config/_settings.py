@@ -104,6 +104,24 @@ def _validate_source_dir(value: Path | None) -> bool:
     return True
 
 
+def _path_converter(value: Path | str | list[Path | str]) -> list[Path]:
+    """
+    Helper function that converts ERADIATE_PATH environment variable contents to
+    a list of Path instances.
+    """
+
+    if isinstance(value, list):
+        return [Path(x) for x in value]
+
+    if isinstance(value, Path):
+        return [value]
+
+    if isinstance(value, str):
+        return _path_converter(value.split(":"))
+
+    raise NotImplementedError(f"Cannot convert value of type {type(value)}")
+
+
 #: Main settings data structure. See the `Dynaconf documentation <https://www.dynaconf.com/>`__
 #: for details.
 settings = Dynaconf(
@@ -144,7 +162,7 @@ settings = Dynaconf(
         ),
         Validator(
             "PATH",
-            cast=list,
+            cast=_path_converter,
             default=_defaults.path,
         ),
         Validator(
