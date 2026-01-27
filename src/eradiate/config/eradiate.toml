@@ -22,7 +22,9 @@ progress = "spectral_loop"
 ## Offline mode switch: if true, data download attempts will be suppressed
 offline = false
 
-## List of paths to always add to the file resolver
+## List of paths to always prepend to the file resolver (will be searched first)
+## If you use the corresponding environment variable, use ":" as a separator
+## E.g. ERADIATE_PATH="/some/path:/some/other/path"
 path = []
 
 ## Absolute path to downloaded data folder. The default is ~/.cache/eradiate/
