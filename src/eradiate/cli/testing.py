@@ -121,14 +121,22 @@ def _print_json_comparison(comparison, threshold: float, min_duration: float):
 
     # Build environment changes dict
     env_changes: dict[str, Any] = {}
-    for field_name, diff in comp.environment.fields.items():
+
+    # Eradiate version (from MetricReport, not SysInfo)
+    if comp.eradiate_version.changed:
+        env_changes["eradiate_version"] = {
+            "before": comp.eradiate_version.before,
+            "after": comp.eradiate_version.after,
+        }
+
+    for field_name, diff in comp.sysinfo.fields.items():
         if diff.changed:
             env_changes[field_name] = {"before": diff.before, "after": diff.after}
 
-    if comp.environment.package_changes:
+    if comp.sysinfo.package_changes:
         env_changes["packages"] = {
             pkg: {"before": diff.before, "after": diff.after}
-            for pkg, diff in comp.environment.package_changes.items()
+            for pkg, diff in comp.sysinfo.package_changes.items()
         }
 
     # Build test changes
@@ -192,37 +200,49 @@ def _print_json_comparison(comparison, threshold: float, min_duration: float):
     print(json.dumps(output, indent=2))
 
 
+def _print_env_changes(comp, newline: bool = False) -> bool:
+    """
+    Print environment changes if any exist.
+
+    Returns True if any output was printed.
+    """
+    from eradiate.test_tools.pytest_metrics import SYSINFO_FIELDS
+
+    has_env_changes = comp.sysinfo.has_changes or comp.eradiate_version.changed
+    if not has_env_changes:
+        return False
+
+    section("Environment changes", newline=newline)
+
+    # Eradiate version (from MetricReport, not SysInfo)
+    if comp.eradiate_version.changed:
+        message(
+            f"  Eradiate: {comp.eradiate_version.before} -> "
+            f"{comp.eradiate_version.after}"
+        )
+
+    # SysInfo fields
+    for field_name, label in SYSINFO_FIELDS.items():
+        diff = comp.sysinfo.fields.get(field_name)
+        if diff and diff.changed:
+            message(f"  {label}: {diff.before} -> {diff.after}")
+
+    if comp.sysinfo.package_changes:
+        message("  Packages:")
+        for pkg, pkg_diff in sorted(comp.sysinfo.package_changes.items()):
+            message(f"    {pkg}: {pkg_diff.before} -> {pkg_diff.after}")
+
+    return True
+
+
 def _print_concise_comparison(comparison, threshold: float, min_duration: float):
     """Print only significant differences."""
     from eradiate.test_tools.pytest_metrics import ReportComparison
 
     comp: ReportComparison = comparison
-    has_output = False
 
     # Environment changes
-    if comp.environment.has_changes:
-        section("Environment changes", newline=False)
-        has_output = True
-
-        # Display labels for each environment field
-        field_labels = {
-            "hostname": "Hostname",
-            "platform": "Platform",
-            "cpu": "CPU",
-            "ram_gb": "RAM (GB)",
-            "python": "Python",
-            "eradiate_version": "Eradiate",
-        }
-
-        for field_name, label in field_labels.items():
-            diff = comp.environment.fields.get(field_name)
-            if diff and diff.changed:
-                message(f"  {label}: {diff.before} -> {diff.after}")
-
-        if comp.environment.package_changes:
-            message("  Packages:")
-            for pkg, pkg_diff in sorted(comp.environment.package_changes.items()):
-                message(f"    {pkg}: {pkg_diff.before} -> {pkg_diff.after}")
+    has_output = _print_env_changes(comp, newline=False)
 
     # Test count changes
     added = comp.added_tests
@@ -317,29 +337,8 @@ def _print_verbose_comparison(comparison, threshold: float, min_duration: float)
 
     comp: ReportComparison = comparison
 
-    # Environment changes (same as concise)
-    if comp.environment.has_changes:
-        section("Environment changes", newline=False)
-
-        # Display labels for each environment field
-        field_labels = {
-            "hostname": "Hostname",
-            "platform": "Platform",
-            "cpu": "CPU",
-            "ram_gb": "RAM (GB)",
-            "python": "Python",
-            "eradiate_version": "Eradiate",
-        }
-
-        for field_name, label in field_labels.items():
-            diff = comp.environment.fields.get(field_name)
-            if diff and diff.changed:
-                message(f"  {label}: {diff.before} -> {diff.after}")
-
-        if comp.environment.package_changes:
-            message("  Packages:")
-            for pkg, pkg_diff in sorted(comp.environment.package_changes.items()):
-                message(f"    {pkg}: {pkg_diff.before} -> {pkg_diff.after}")
+    # Environment changes
+    _print_env_changes(comp, newline=False)
 
     # Test changes
     added = comp.added_tests

@@ -172,8 +172,6 @@ class MetricReport:
 #                           Report Comparison
 # -----------------------------------------------------------------------------
 
-T = Any  # Type variable for generic ItemDiff
-
 
 @attrs.define
 class ItemDiff:
@@ -196,7 +194,7 @@ class ItemDiff:
     def change(self) -> tuple[Any, Any] | None:
         """Return (before, after) tuple if changed, None otherwise."""
         if self.changed:
-            return (self.before, self.after)
+            return self.before, self.after
         return None
 
 
@@ -235,38 +233,83 @@ class TestDiff:
     outcome: ItemDiff = attrs.field(factory=ItemDiff)
 
 
-# Environment field names used in EnvironmentDiff
-ENV_FIELDS = (
-    "hostname",
-    "platform",
-    "cpu",
-    "ram_gb",
-    "python",
-    "eradiate_version",
-)
+# SysInfo fields to compare: maps field name to display label
+SYSINFO_FIELDS: dict[str, str] = {
+    "hostname": "Hostname",
+    "platform": "Platform",
+    "platform_release": "Platform Release",
+    "os": "OS",
+    "cpu": "CPU",
+    "ram_gb": "RAM (GB)",
+    "llvm_version": "LLVM",
+    "gpus": "GPUs",
+    "cuda_version": "CUDA",
+    "python": "Python",
+    "drjit_version": "Dr.Jit",
+    "mitsuba_version": "Mitsuba",
+    "eradiate_mitsuba_version": "Eradiate-Mitsuba",
+    "mitsuba_compiler": "Mitsuba Compiler",
+}
 
 
 @attrs.define
-class EnvironmentDiff:
+class SysInfoDiff:
     """
-    Differences in environment between two reports.
+    Differences between two SysInfo instances.
 
     Uses a dictionary mapping field names to ItemDiff instances for scalar fields,
     and a separate dict for package version changes.
     """
 
+    before: SysInfo | None = None
+    after: SysInfo | None = None
     fields: dict[str, ItemDiff] = attrs.field(factory=dict)
     package_changes: dict[str, ItemDiff] = attrs.field(factory=dict)
 
     @classmethod
-    def create(cls) -> EnvironmentDiff:
-        """Create an EnvironmentDiff with empty ItemDiff for each standard field."""
-        fields = {name: ItemDiff() for name in ENV_FIELDS}
-        return cls(fields=fields)
+    def compare(cls, before: SysInfo | None, after: SysInfo | None) -> SysInfoDiff:
+        """
+        Create a SysInfoDiff by comparing two SysInfo instances.
+
+        Parameters
+        ----------
+        before
+            The baseline SysInfo.
+        after
+            The SysInfo to compare against the baseline.
+
+        Returns
+        -------
+        SysInfoDiff
+            Difference between the two SysInfo instances.
+        """
+        fields = {}
+        for field_name in SYSINFO_FIELDS:
+            val_before = getattr(before, field_name, None) if before else None
+            val_after = getattr(after, field_name, None) if after else None
+            fields[field_name] = ItemDiff(before=val_before, after=val_after)
+
+        # Compare package versions
+        pkgs_before = before.packages if before else {}
+        pkgs_after = after.packages if after else {}
+        all_packages = set(pkgs_before.keys()) | set(pkgs_after.keys())
+
+        package_changes = {}
+        for pkg in all_packages:
+            pkg_diff = ItemDiff(before=pkgs_before.get(pkg), after=pkgs_after.get(pkg))
+            if pkg_diff.changed:
+                package_changes[pkg] = pkg_diff
+
+        return cls(
+            before=before,
+            after=after,
+            fields=fields,
+            package_changes=package_changes,
+        )
 
     @property
     def has_changes(self) -> bool:
-        """Whether there are any environment changes."""
+        """Whether there are any SysInfo changes."""
         return any(diff.changed for diff in self.fields.values()) or bool(
             self.package_changes
         )
@@ -278,12 +321,13 @@ class ReportComparison:
     Comparison between two metric reports.
 
     This class provides detailed analysis of differences between two test runs,
-    including environment changes and per-test performance differences.
+    including system info changes and per-test performance differences.
     """
 
     before: MetricReport
     after: MetricReport
-    environment: EnvironmentDiff
+    sysinfo: SysInfoDiff
+    eradiate_version: ItemDiff = attrs.field(factory=ItemDiff)
     test_diffs: dict[str, TestDiff] = attrs.field(factory=dict)
 
     @classmethod
@@ -303,49 +347,19 @@ class ReportComparison:
         ReportComparison
             Detailed comparison results.
         """
-        env_diff = cls._compare_environment(before, after)
+        sysinfo_diff = SysInfoDiff.compare(before.system, after.system)
+        eradiate_version_diff = ItemDiff(
+            before=before.eradiate_version, after=after.eradiate_version
+        )
         test_diffs = cls._compare_tests(before, after)
 
         return cls(
             before=before,
             after=after,
-            environment=env_diff,
+            sysinfo=sysinfo_diff,
+            eradiate_version=eradiate_version_diff,
             test_diffs=test_diffs,
         )
-
-    @staticmethod
-    def _get_env_value(report: MetricReport, field: str) -> Any:
-        """Extract an environment field value from a report."""
-        if field == "eradiate_version":
-            return report.eradiate_version
-        if report.system is None:
-            return None
-        return getattr(report.system, field, None)
-
-    @classmethod
-    def _compare_environment(
-        cls, before: MetricReport, after: MetricReport
-    ) -> EnvironmentDiff:
-        """Compare environment information between reports."""
-        diff = EnvironmentDiff.create()
-
-        # Compare all standard fields using the extractors
-        for field in ENV_FIELDS:
-            val_before = cls._get_env_value(before, field)
-            val_after = cls._get_env_value(after, field)
-            diff.fields[field] = ItemDiff(before=val_before, after=val_after)
-
-        # Compare package versions
-        pkgs_before = before.system.packages if before.system else {}
-        pkgs_after = after.system.packages if after.system else {}
-        all_packages = set(pkgs_before.keys()) | set(pkgs_after.keys())
-
-        for pkg in all_packages:
-            pkg_diff = ItemDiff(before=pkgs_before.get(pkg), after=pkgs_after.get(pkg))
-            if pkg_diff.changed:
-                diff.package_changes[pkg] = pkg_diff
-
-        return diff
 
     @staticmethod
     def _compare_tests(
@@ -506,28 +520,27 @@ class ReportComparison:
         lines = ["=" * 60, "Test metrics comparison summary", "=" * 60, ""]
 
         # Environment changes
-        if self.environment.has_changes:
+        has_env_changes = self.sysinfo.has_changes or self.eradiate_version.changed
+        if has_env_changes:
             lines.append("Environment changes:")
             lines.append("-" * 40)
 
-            # Display labels for each environment field
-            field_labels = {
-                "hostname": "Hostname",
-                "platform": "Platform",
-                "cpu": "CPU",
-                "ram_gb": "RAM (GB)",
-                "python": "Python",
-                "eradiate_version": "Eradiate",
-            }
+            # Eradiate version (from MetricReport, not SysInfo)
+            if self.eradiate_version.changed:
+                lines.append(
+                    f"  Eradiate: {self.eradiate_version.before} -> "
+                    f"{self.eradiate_version.after}"
+                )
 
-            for field_name, label in field_labels.items():
-                diff = self.environment.fields.get(field_name)
+            # SysInfo fields
+            for field_name, label in SYSINFO_FIELDS.items():
+                diff = self.sysinfo.fields.get(field_name)
                 if diff and diff.changed:
                     lines.append(f"  {label}: {diff.before} -> {diff.after}")
 
-            if self.environment.package_changes:
+            if self.sysinfo.package_changes:
                 lines.append("  Package changes:")
-                for pkg, pkg_diff in sorted(self.environment.package_changes.items()):
+                for pkg, pkg_diff in sorted(self.sysinfo.package_changes.items()):
                     lines.append(f"    {pkg}: {pkg_diff.before} -> {pkg_diff.after}")
             lines.append("")
 

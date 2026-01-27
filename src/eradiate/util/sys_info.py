@@ -393,7 +393,7 @@ class SysInfo(DictMixin):
             cuda_version=_get_cuda_version(),
             python=sys.version.replace("\n", ""),
             packages=pkg_versions,
-            llvm_version=",".join(list(map(str, dr.detail.llvm_version()))),
+            llvm_version=".".join(list(map(str, dr.detail.llvm_version()))),
             drjit_version=dr.__version__,
             mitsuba_version=mi.MI_VERSION,
             eradiate_mitsuba_version=eradiate_mitsuba_version,
