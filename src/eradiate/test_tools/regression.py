@@ -15,7 +15,6 @@ import xarray as xr
 from numpy.typing import ArrayLike
 from robot.api import logger
 
-from .. import fresolver
 from ..attrs import define, documented
 from ..exceptions import DataError
 from ..typing import PathLike
@@ -195,6 +194,8 @@ def reference_converter(
     if isinstance(value, (str, os.PathLike, bytes)):
         try:
             logger.info(f'Looking up "{str(value)}" on disk', also_console=True)
+            from .. import fresolver
+
             fname = fresolver.resolve(value)
             logger.info(f"Resolved path: {fname}", also_console=True)
             return xr.load_dataset(fname)
@@ -514,8 +515,8 @@ class RMSETest(RegressionTest):
     METRIC_NAME = "rmse"
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
-        value_np = self.value.brf.values
-        ref_np = self.reference.brf.values
+        value_np = self.value[self.variable].values
+        ref_np = self.reference[self.variable].values
         if np.shape(value_np) != np.shape(ref_np):
             raise ValueError(
                 f"Result and reference do not have the same shape! "
@@ -548,9 +549,9 @@ class Chi2Test(RegressionTest):
     METRIC_NAME = "X² p-value"
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
-        ref_np = self.reference.brf.values
+        ref_np = self.reference[self.variable].values
 
-        result_np = self.value.brf.values
+        result_np = self.value[self.variable].values
         histo_bins = np.linspace(ref_np.min(), ref_np.max(), 20)
         histo_ref = np.histogram(ref_np, histo_bins)[0]
         histo_res = np.histogram(result_np, histo_bins)[0]
