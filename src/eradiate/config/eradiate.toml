@@ -34,6 +34,11 @@ data_path = "~/Downloads/eradiate/"
 data_url = "https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v1/"
 
 [absorption_database.error_handling]
+# Each coordinate in the absorption database is associated an error handling
+# policy. For each issue (missing coordinate [missing], missing dimension
+# [scalar] or out-of-bounds query [bounds]), the error is handled either raising
+# an exception [raise], emitting a warning [warn] or silently ignoring the issue
+# [ignore].
 # This configuration ignores bound errors on pressure and temperature variables
 # because this usually occurs at high altitude, where the absorption coefficient
 # is very low and can be safely forced to 0.

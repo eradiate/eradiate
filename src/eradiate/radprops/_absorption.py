@@ -734,7 +734,7 @@ class AbsorptionDatabase:
             evaluated.
 
         error_handling_config : .ErrorHandlingConfiguration, optional
-            The error handling policy applied if corrdinates are missing, do not
+            The error handling policy applied if coordinates are missing, do not
             have the appropriate dimension or are out of the dataset's bounds.
             If unset, the default policy specified by the
             ``absorption_dataset.error_handling`` setting is applied.
