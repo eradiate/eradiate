@@ -104,7 +104,7 @@ ERROR_HANDLING_CONFIG_DEFAULT = ErrorHandlingConfiguration.convert(
 # ------------------------------------------------------------------------------
 
 
-@define(repr=False, eq=False)
+@define(slots=False, repr=False, eq=False)
 class AbsorptionDatabase:
     """
     Common parent type for absorption coefficient databases.
