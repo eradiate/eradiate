@@ -1,4 +1,5 @@
 from ._blend import BlendPhaseFunction as BlendPhaseFunction
+from ._multi import Multi1DPhaseFunction as Multi1DPhaseFunction
 from ._core import PhaseFunction as PhaseFunction
 from ._core import phase_function_factory as phase_function_factory
 from ._hg import HenyeyGreensteinPhaseFunction as HenyeyGreensteinPhaseFunction
