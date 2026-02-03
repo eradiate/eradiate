@@ -14,7 +14,7 @@ from ._kernel_dict import KernelSceneParameterMap
 from .. import config
 from ..attrs import define, documented, frozen
 from ..contexts import KernelContext
-from ..rng import SeedState, root_seed_state
+from ..rng import SeedState, get_seed_state
 
 logger = logging.getLogger(__name__)
 
@@ -421,7 +421,7 @@ def mi_render(
 
     if seed_state is None:
         logger.debug("Using default RNG seed generator")
-        seed_state = root_seed_state
+        seed_state = get_seed_state()
 
     results = {}
 

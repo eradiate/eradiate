@@ -74,5 +74,43 @@ class SeedState:
         return np.random.default_rng(seed=seed)
 
 
-#: Deterministic root seed state (see :class:`.SeedState`).
-root_seed_state = SeedState(0)
+_root_seed_state: SeedState | None = None
+
+
+def reset_seed_state(seed: int | None = None) -> None:
+    """
+    Reset the shared-state seed sequence.
+
+    Parameters
+    ----------
+    seed : int, optional
+        Value used to seed the sequence. If unset, the default specified in the
+        configuration is used.
+    """
+    global _root_seed_state
+
+    if seed is None:
+        from .config import settings
+
+        seed = settings.get("rng_seed")
+        if seed == "random":
+            seed = None
+        else:
+            seed = int(seed)
+
+    _root_seed_state = SeedState(seed=seed)
+
+
+def get_seed_state() -> SeedState:
+    """
+    Get shared-state seed sequence. When accessed for the first time, the seed
+    sequence is initialized with the default specified in the configuration.
+
+    Returns
+    -------
+    SeedState
+    """
+    global _root_seed_state
+    if _root_seed_state is None:
+        reset_seed_state()
+    return _root_seed_state

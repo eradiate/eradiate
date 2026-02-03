@@ -5,8 +5,9 @@
 
 .. py:currentmodule:: eradiate.rng
 
-.. autodata:: root_seed_state
-   :annotation:
+.. autofunction:: get_seed_state
+
+.. autofunction:: reset_seed_state
 
 .. autoclass:: SeedState
    :members:

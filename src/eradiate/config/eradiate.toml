@@ -22,6 +22,13 @@ progress = "spectral_loop"
 ## Offline mode switch: if true, data download attempts will be suppressed
 offline = false
 
+## Seed for the RNG seeding sequence
+## By default (if this parameter is unset), the seed sequence is seeded with a
+## default value. This ensures the reproducibility of results. A user-defined
+## value can be used, and it is also possible to randomize the seed.
+## Valid values: int or "random"
+rng_seed = 42
+
 ## List of paths to always prepend to the file resolver (will be searched first)
 ## If you use the corresponding environment variable, use ":" as a separator
 ## E.g. ERADIATE_PATH="/some/path:/some/other/path"
