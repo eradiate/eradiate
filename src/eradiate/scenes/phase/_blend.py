@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing as t
+from abc import abstractmethod
 from collections import abc as cabc
 
 import attrs
@@ -15,18 +16,24 @@ from ...contexts import KernelContext
 from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...spectral.index import SpectralIndex
 from ...util.misc import cache_by_id
+from ...util.deprecation import deprecated
 
 
 @attrs.define(eq=False, slots=False)
-class BlendPhaseFunction(PhaseFunction):
-    """
-    Blended phase function [``blend_phase``].
+class AbstractBlendPhaseFunction(PhaseFunction):
 
-    This phase function aggregates two or more sub-phase functions
+    """
+    Abstract Blended phase function.
+
+    Subclass phase functions aggregate two or more sub-phase functions
     (*components*) and blends them based on its `weights` parameter. Weights are
     usually based on the associated medium's scattering coefficient.
+
+    This abstract interface delagates the validation of the `weights` structure
+    to subclasses through the `_weights_validator_impl` method.
     """
 
+    
     components: list[PhaseFunction] = documented(
         attrs.field(
             converter=lambda x: [phase_function_factory.convert(y) for y in x],
@@ -64,28 +71,16 @@ class BlendPhaseFunction(PhaseFunction):
         "This parameter is required and has no default.",
     )
 
+
+    @abstractmethod
+    def _weights_validator_impl(self, attribute, value):
+        ...
+    
+
     @weights.validator
     def _weights_validator(self, attribute, value):
-        if isinstance(value, np.ndarray):
-            if value.ndim == 0 or value.ndim > 2:
-                raise ValueError(
-                    f"while validating '{attribute.name}': array must have 1 or 2 "
-                    f"dimensions, got {value.ndim}"
-                )
+        self._weights_validator_impl(attribute, value)
 
-            if not value.shape[0] == len(self.components):
-                raise ValueError(
-                    f"while validating '{attribute.name}': array must have shape "
-                    "(n,) or (n, m) where n is the number of components; got "
-                    f"{value.shape}"
-                )
-
-        elif isinstance(value, cabc.Sequence):
-            if not len(value) == len(self.components):
-                raise ValueError(
-                    f"while validating '{attribute.name}': weight and component "
-                    "lists must have the same length"
-                )
 
     geometry: SceneGeometry | None = documented(
         attrs.field(
@@ -110,8 +105,68 @@ class BlendPhaseFunction(PhaseFunction):
         for component in self.components:
             component.update()
 
-            if isinstance(component, BlendPhaseFunction):
+            if isinstance(component, AbstractBlendPhaseFunction):
                 component.geometry = self.geometry
+
+
+@attrs.define(eq=False, slots=False)
+class Abstract1DBlendPhaseFunction(AbstractBlendPhaseFunction):
+
+    """
+    Abstract 1D Blended phase function.
+
+    Implementation of this blended phase function feature a one dimensional
+    (vertical) structure.
+    """
+
+    def _weights_validator_impl(self, attribute, value):
+        if isinstance(value, np.ndarray):
+            if value.ndim == 0 or value.ndim > 2:
+                raise ValueError(
+                    f"while validating '{attribute.name}': array must have 1 or 2 "
+                    f"dimensions, got {value.ndim}"
+                )
+
+            if not value.shape[0] == len(self.components):
+                raise ValueError(
+                    f"while validating '{attribute.name}': array must have shape "
+                    "(n,) or (n, m) where n is the number of components; got "
+                    f"{value.shape}"
+                )
+
+        elif isinstance(value, cabc.Sequence):
+            if not len(value) == len(self.components):
+                raise ValueError(
+                    f"while validating '{attribute.name}': weight and component "
+                    "lists must have the same length"
+                )
+
+
+
+@attrs.define(eq=False, slots=False)
+@deprecated(
+    deprecated_in="1.0.2",
+    removed_in="1.0.3",
+    details="eradiate.scenes.phase.BlendPhaseFunction is deprecated in favor of "
+    "eradiate.scenes.phase.Multi1DPhaseFunction",
+)
+class BlendPhaseFunction(Abstract1DBlendPhaseFunction):
+
+    """
+    Blended phase function [``blend_phase``].
+
+    Blending of sub-phases is implemented using the `blendphase` plugin of
+    mitsuba. This plugin only allows linear interpolation between two nested
+    phases. This class thus implements a binary tree of phase function, each
+    node's weight being set to the conditional probability of selecting its left
+    hand child, knowing it was selected first.
+
+    **Deprecation:** The eradiate kernel's `multiphase` plugin allows to define
+    conditional probabilities as a one dimensional set of weights instead. The
+    class `eradiate.scenes.phase.Multi1DPhaseFunction` provides the same level
+    of functionality and is now the preferred way of configuring blended phase
+    functions in Eradiate.
+    """
 
     @cache_by_id
     def _eval_conditional_weights_impl(self, si: SpectralIndex) -> np.ndarray:
