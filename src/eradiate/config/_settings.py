@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import enum
 import os
-import typing as t
 from pathlib import Path
+from typing import Any
 
 from dynaconf import Dynaconf, Validator
 
@@ -20,7 +20,7 @@ class ProgressLevel(enum.IntEnum):
     """
 
     @staticmethod
-    def convert(value: t.Any) -> ProgressLevel:
+    def convert(value: Any) -> ProgressLevel:
         """
         Attempt conversion of a value to an :class:`.ProgressLevel`
         instance. The conversion protocol is as follows:
@@ -122,6 +122,25 @@ def _path_converter(value: Path | str | list[Path | str]) -> list[Path]:
     raise NotImplementedError(f"Cannot convert value of type {type(value)}")
 
 
+def _rng_seed_converter(value: Any):
+    if value == "random":
+        return value
+
+    try:
+        value = int(value)
+    except TypeError:
+        raise ValueError(
+            f"While converting RNG_SEED: Cannot convert value ({value!r}) to int"
+        )
+
+    if value < 0:
+        raise ValueError(
+            f"While converting RNG_SEED: value must be a positive integer (got {value})"
+        )
+
+    return value
+
+
 #: Main settings data structure. See the `Dynaconf documentation <https://www.dynaconf.com/>`__
 #: for details.
 settings = Dynaconf(
@@ -169,6 +188,11 @@ settings = Dynaconf(
             "PROGRESS",
             cast=ProgressLevel.convert,
             default=_defaults.progress,
+        ),
+        Validator(
+            "RNG_SEED",
+            cast=_rng_seed_converter,
+            default=_defaults.rng_seed,
         ),
     ],
 )
