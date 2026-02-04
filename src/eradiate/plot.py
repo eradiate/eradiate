@@ -7,6 +7,7 @@ import matplotlib.pyplot as _plt
 import numpy as np
 import seaborn as sns
 import xarray as xr
+from axsdb import CKDAbsorptionDatabase, MonoAbsorptionDatabase
 from cycler import cycler
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
@@ -14,8 +15,6 @@ from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.gridspec import SubplotSpec
 from xarray.plot import FacetGrid
-
-from .radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
 
 
 def set_style(rc=None):

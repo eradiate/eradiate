@@ -6,10 +6,10 @@ import warnings
 import attrs
 import pint
 import xarray as xr
+from axsdb import CKDAbsorptionDatabase
 
 from ..attrs import documented, frozen
 from ..quad import Quad, QuadType
-from ..radprops._absorption import CKDAbsorptionDatabase
 
 
 class CKDQuadPolicy(enum.Enum):

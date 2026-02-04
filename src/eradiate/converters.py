@@ -2,6 +2,7 @@ from __future__ import annotations
 
 __all__ = [
     "auto_or",
+    "convert_absdb",
     "convert_thermoprops",
     "on_quantity",
     "passthrough",
@@ -20,10 +21,13 @@ import mitsuba as mi
 import numpy as np
 import pint
 import xarray as xr
+from axsdb import AbsorptionDatabase
+
+import eradiate
 
 from .attrs import AUTO
 from .data import fresolver
-from .exceptions import DataError
+from .exceptions import DataError, UnsupportedModeError
 from .typing import PathLike
 
 
@@ -221,3 +225,55 @@ def convert_thermoprops(value: Any) -> xr.Dataset:
     raise TypeError(
         f"invalid type for 'thermoprops': {type(value)} (expected Dataset or path-like)"
     )
+
+
+def convert_absdb(value: Any) -> AbsorptionDatabase:
+    """
+    Attempt conversion of a value to an absorption database.
+
+    Parameters
+    ----------
+    value
+        The value for which conversion is attempted.
+
+    Returns
+    -------
+    MonoAbsorptionDatabase or CKDAbsorptionDatabase
+
+    Notes
+    -----
+    Conversion rules are as follows:
+
+    * If ``value`` is a string, try converting using the factory's
+      :meth:`~axsdb.AbsorptionDatabaseFactory.create` method. Do not raise if
+      this fails.
+    * If ``value`` is a string or a path, try converting using the
+      :meth:`~axsdb.AbsorptionDatabase.from_directory` constructor after passing
+      through the file resolver. The returned type is consistent with the active
+      mode.
+    * If ``value`` is a dict, try converting using the
+      :meth:`~axsdb.AbsorptionDatabase.from_dict` constructor. The returned type
+      is consistent with the active mode.
+    * Otherwise, do not convert.
+    """
+
+    if isinstance(value, str):
+        from .radprops import absdb_factory
+
+        try:
+            return absdb_factory.create(value)
+        except (ValueError, KeyError):
+            pass
+
+    if isinstance(value, (str, Path)):
+        value = fresolver.resolve(value)
+
+    mode = eradiate.get_mode()
+    if mode.is_mono:
+        mode = "mono"
+    elif mode.is_ckd:
+        mode = "ckd"
+    else:
+        raise UnsupportedModeError(supported=["mono", "ckd"])
+
+    return AbsorptionDatabase.convert(value, mode)

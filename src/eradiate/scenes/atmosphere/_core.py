@@ -8,6 +8,7 @@ import mitsuba as mi
 import numpy as np
 import pint
 import xarray as xr
+from axsdb import AbsorptionDatabase
 
 from ..core import (
     CompositeSceneElement,
@@ -26,7 +27,7 @@ from ...kernel import (
     SceneParameter,
     SearchSceneParameter,
 )
-from ...radprops import AbsorptionDatabase, ZGrid
+from ...radprops import ZGrid
 from ...spectral.index import SpectralIndex
 from ...units import symbol
 from ...units import unit_context_config as ucc
