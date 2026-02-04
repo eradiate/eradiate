@@ -41,6 +41,12 @@ data_path = "~/Downloads/eradiate/"
 data_url = "https://eradiate-data-registry.s3.eu-west-3.amazonaws.com/registry-v1/"
 
 [absorption_database.error_handling]
+# This section defines the default error handling configuration applied to
+# absorption databases instantiated from the factory. This does *not* apply to
+# AxsDB globally: users creating databases manually should get this default
+# configuration using eradiate.radprops.absorption.get_default_error_handling_config()
+# or expect AxsDB to apply its global defaults.
+#
 # Each coordinate in the absorption database is associated an error handling
 # policy. For each issue (missing coordinate [missing], missing dimension
 # [scalar] or out-of-bounds query [bounds]), the error is handled either raising

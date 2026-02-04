@@ -9,35 +9,18 @@ import joseki
 import numpy as np
 import pint
 import xarray as xr
-
-import eradiate
+from axsdb import AbsorptionDatabase, ErrorHandlingConfiguration
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ..core import traverse
 from ..phase import PhaseFunction, RayleighPhaseFunction
+from ... import converters
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...converters import convert_thermoprops
-from ...exceptions import UnsupportedModeError
-from ...radprops import (
-    AbsorptionDatabase,
-    AtmosphereRadProfile,
-    ErrorHandlingConfiguration,
-    RadProfile,
-    ZGrid,
-)
+from ...radprops import AtmosphereRadProfile, RadProfile, ZGrid, get_default_absdb
 from ...spectral.index import SpectralIndex
 from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
-
-
-def _default_absorption_data():
-    if eradiate.mode().is_mono:
-        return "komodo"
-    elif eradiate.mode().is_ckd:
-        return "monotropa"
-    else:
-        raise UnsupportedModeError(unsupported=["mono", "ckd"])
 
 
 @define(eq=False, slots=False)
@@ -80,8 +63,8 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     _absorption_data: AbsorptionDatabase = documented(
         attrs.field(
             kw_only=True,
-            factory=AbsorptionDatabase.default,
-            converter=AbsorptionDatabase.convert,
+            factory=get_default_absdb,
+            converter=converters.convert_absdb,
             validator=attrs.validators.instance_of(AbsorptionDatabase),
         ),
         doc="Absorption coefficient data. The passed value is pre-processed by "
@@ -99,7 +82,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
                 z=np.linspace(0.0, 120.0, 121) * ureg.km,
                 additional_molecules=False,
             ),
-            converter=attrs.converters.optional(convert_thermoprops),
+            converter=attrs.converters.optional(converters.convert_thermoprops),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(xr.Dataset)
             ),

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from eradiate.quad import Quad
-from eradiate.radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
+from eradiate.radprops import absdb_factory
 from eradiate.spectral import CKDSpectralIndex
 from eradiate.spectral.ckd_quad import CKDQuadConfig
 from eradiate.spectral.grid import CKDSpectralGrid, MonoSpectralGrid
@@ -37,7 +37,7 @@ def test_mono_spectral_grid_default():
 
 
 def test_mono_spectral_grid_from_absorption_database():
-    abs_db = MonoAbsorptionDatabase.from_name("komodo")
+    abs_db = absdb_factory.create("komodo")
     grid = MonoSpectralGrid.from_absorption_database(abs_db)
     np.testing.assert_allclose(
         grid.wavelengths.m, abs_db.spectral_coverage.index.get_level_values(1).values
@@ -184,7 +184,7 @@ def test_ckd_spectral_grid_from_absorption_database(mode_ckd):
     # The 'monotropa' database is a notable problematic case: its wavelength
     # coordinate is set to values that match the central wavenumber of each bin,
     # and not to the middle of the spectral interval in the wavelength space.
-    abs_db = CKDAbsorptionDatabase.from_name("monotropa")
+    abs_db = absdb_factory.create("monotropa")
     grid = CKDSpectralGrid.from_absorption_database(abs_db)
     wcenters_expected = abs_db.spectral_coverage.index.get_level_values(1).values
     np.testing.assert_allclose(grid.wcenters.m, wcenters_expected)

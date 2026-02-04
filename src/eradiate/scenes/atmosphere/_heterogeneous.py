@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 from collections import abc as cabc
+from typing import TYPE_CHECKING
 
 import attrs
 import mitsuba as mi
@@ -20,11 +21,14 @@ from ..phase import BlendPhaseFunction, PhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel import SearchSceneParameter
-from ...radprops import AbsorptionDatabase, ZGrid
+from ...radprops import ZGrid
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
+
+if TYPE_CHECKING:
+    from axsdb import AbsorptionDatabase
 
 logger = logging.getLogger(__name__)
 

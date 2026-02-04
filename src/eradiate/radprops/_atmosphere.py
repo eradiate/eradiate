@@ -8,13 +8,14 @@ import attrs
 import numpy as np
 import pint
 import xarray as xr
+from axsdb import AbsorptionDatabase
 from joseki.profiles.core import interp
 
-from ._absorption import AbsorptionDatabase
+from ._absorption import get_default_absdb
 from ._core import RadProfile, ZGrid, make_dataset
 from .rayleigh import compute_sigma_s_air, depolarization_bates, depolarization_bodhaine
+from .. import converters
 from ..attrs import define, documented
-from ..converters import convert_thermoprops
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 from ..util.misc import cache_by_id, summary_repr
@@ -43,8 +44,8 @@ class AtmosphereRadProfile(RadProfile):
 
     absorption_data: AbsorptionDatabase = documented(
         attrs.field(
-            factory=AbsorptionDatabase.default,
-            converter=AbsorptionDatabase.convert,
+            factory=get_default_absdb,
+            converter=converters.convert_absdb,
             validator=attrs.validators.instance_of(AbsorptionDatabase),
         ),
         doc="Absorption coefficient data. The passed value is pre-processed by "
@@ -57,7 +58,7 @@ class AtmosphereRadProfile(RadProfile):
     thermoprops: xr.Dataset = documented(
         attrs.field(
             default=_THERMOPROPS_DEFAULT,
-            converter=convert_thermoprops,
+            converter=converters.convert_thermoprops,
             repr=summary_repr,
         ),
         doc="Thermophysical property dataset. If a path is passed, Eradiate will "

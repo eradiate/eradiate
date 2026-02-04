@@ -3,13 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import attrs
+from axsdb import CKDAbsorptionDatabase, MonoAbsorptionDatabase
 
 import eradiate
 from eradiate.plot import (
     absorption_database_spectral_coverage_ckd,
     absorption_database_spectral_coverage_mono,
 )
-from eradiate.radprops import CKDAbsorptionDatabase, MonoAbsorptionDatabase
+from eradiate.radprops import absdb_factory
 
 from ..util import DOCS_ROOT_DIR, jinja_environment, savefig, write_if_modified
 
@@ -31,7 +32,7 @@ def generate_absorption_database_visual(
         return
 
     print(f"Generating molecular absorption database visual in '{outfile}'")
-    db = eradiate.radprops.AbsorptionDatabase.from_name(info.keyword)
+    db = absdb_factory.create(info.keyword)
 
     if isinstance(db, MonoAbsorptionDatabase):
         fig, _ = absorption_database_spectral_coverage_mono(db)

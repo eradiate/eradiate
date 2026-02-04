@@ -104,6 +104,7 @@ nbsphinx_prolog = """
 
 intersphinx_mapping = {
     "attrs": ("https://www.attrs.org/en/stable/", None),
+    "axsdb": ("https://axsdb.readthedocs.io/en/latest/", None),
     "cachetools": ("https://cachetools.readthedocs.io/en/stable/", None),
     "dateutil": ("https://dateutil.readthedocs.io/en/stable/", None),
     "dessinemoi": ("https://dessinemoi.readthedocs.io/en/stable/", None),
