@@ -107,6 +107,10 @@ class AbstractBlendPhaseFunction(PhaseFunction):
 
             if isinstance(component, AbstractBlendPhaseFunction):
                 component.geometry = self.geometry
+    
+    @abstractmethod
+    def normalized(self, ctx: KernelContext) -> AbstractBlendPhaseFunction:
+        ...            
 
 
 @attrs.define(eq=False, slots=False)
@@ -365,3 +369,7 @@ class BlendPhaseFunction(Abstract1DBlendPhaseFunction):
             result.update({**{f"{prefix}phase_1.{k}": v for k, v in params.items()}})
 
         return result
+
+    def normalized(self, _: KernelContext):
+        return attr.evolve(self)
+

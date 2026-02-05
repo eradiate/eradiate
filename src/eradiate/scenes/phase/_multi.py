@@ -48,7 +48,7 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
     @property
     def template(self):
 
-        result = {"type": "multiphase"}
+        result = {"type": "multiphase", "use_mis": False}
 
         for i in range(len(self.components)):
 
@@ -161,3 +161,19 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
                 raise NotImplementedError
         
         return result
+
+    def normalized(self, ctx: KernelContext) -> Multi1DPhaseFunction:
+
+        weights = self.weights
+        if callable(self.weights[0]):
+            weights=np.asarray([c(ctx.si) for c in self.weights])
+
+        min_weights = weights.min(axis=0, keepdims=True) 
+        sum_weights = weights.sum(axis=0, keepdims=True)
+        weights_normalized = weights / sum_weights
+
+        return Multi1DPhaseFunction(
+            components=self.components,
+            weights=weights_normalized,
+            geometry=self.geometry,
+        )
