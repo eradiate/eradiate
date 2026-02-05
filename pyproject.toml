@@ -268,7 +268,7 @@ include-package-data = true # Required because of package data
 [tool.setuptools.package-data]
 # Required by PEP 561
 # https://mypy.readthedocs.io/en/stable/installed_packages.html#creating-pep-561-compatible-packages
-"eradiate" = ["py.typed", "*.pyi", "*.mplstyle"]
+"eradiate" = ["py.typed", "*.pyi", "*.mplstyle", "units.txt"]
 "eradiate.config" = ["*.toml"]
 "eradiate.data" = ["*.yml"]
 
