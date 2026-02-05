@@ -54,7 +54,9 @@ def assert_cmp_dict(value, expected):
 
 
 @pytest.mark.parametrize(
-    "phase_constructor", [BlendPhaseFunction, Multi1DPhaseFunction], ids=["blend", "multi"]
+    "phase_constructor",
+    [BlendPhaseFunction, Multi1DPhaseFunction],
+    ids=["blend", "multi"],
 )
 def test_blend_phase_construct_basic(phase_constructor):
     """
@@ -88,7 +90,9 @@ def test_blend_phase_construct_basic(phase_constructor):
 
 
 @pytest.mark.parametrize(
-    "phase_constructor", [BlendPhaseFunction, Multi1DPhaseFunction], ids=["blend", "multi"]
+    "phase_constructor",
+    [BlendPhaseFunction, Multi1DPhaseFunction],
+    ids=["blend", "multi"],
 )
 def test_blend_phase_construct_array(modes_all_double, phase_constructor):
     """
@@ -159,7 +163,10 @@ def test_blend_phase_weights(mode_mono, phase_constructor, weights, expected):
     "phase_cls,weight_keys",
     [
         (BlendPhaseFunction, ["weight.to_world"]),
-        (Multi1DPhaseFunction, ["weight_0.to_world", "weight_1.to_world", "weight_2.to_world"]),
+        (
+            Multi1DPhaseFunction,
+            ["weight_0.to_world", "weight_1.to_world", "weight_2.to_world"],
+        ),
     ],
     ids=["blend", "multi1d"],
 )
@@ -242,66 +249,6 @@ def test_phase_geometry(mode_mono, geometry, phase_cls, weight_keys):
         "array",
     ],
 )
-def test_blend_phase_kernel_dict_2_components(mode_mono, kwargs):
-    """
-    Blendphase with 2 components produces correct kernel dict and can be loaded.
-    """
-    phase = BlendPhaseFunction(
-        components=[{"type": "isotropic"}, {"type": "rayleigh"}],
-        **kwargs,
-    )
-    check_scene_element(phase, mi.PhaseFunction)
-
-    template, params = traverse(phase)
-    ctx = KernelContext()
-    kernel_dict = mi_to_numpy(template.render(ctx, nested=False))
-
-    # Check that the kernel dict is correct
-    expected = {
-        "type": "blendphase",
-        "phase_0.type": "isotropic",
-        "phase_1.type": "rayleigh",
-        "weight.type": "gridvolume",
-        "weight.grid": np.reshape(phase.eval_conditional_weights(ctx.si), (-1, 1, 1)),
-        "weight.filter_type": "nearest",
-    }
-    if "geometry" in kwargs:
-        geometry = SceneGeometry.convert(kwargs["geometry"])
-        expected["weight.to_world"] = np.array(
-            geometry.atmosphere_volume_to_world.matrix
-        )
-
-    assert_cmp_dict(kernel_dict, expected)
-
-    # Check that the parameter map is correct
-    assert set(params.keys()) == {"weight.data"}
-
-
-@pytest.mark.parametrize(
-    "kwargs",
-    [
-        {"weights": [0.0, 0.0]},
-        {"weights": [1.0, 0.0]},
-        {"weights": [0.0, 1.0]},
-        {"weights": [0.5, 0.5]},
-        {"weights": [0.3, 0.7]},
-        {
-            "weights": [
-                np.array([1.0, 0.7, 0.5, 0.3, 0.0]),
-                np.array([0.0, 0.3, 0.5, 0.7, 1.0]),
-            ],
-            "geometry": "plane_parallel",
-        },
-    ],
-    ids=[
-        "scalar0",
-        "scalar1",
-        "scalar2",
-        "scalar3",
-        "scalar4",
-        "array",
-    ],
-)
 @pytest.mark.parametrize(
     "phase_cls",
     [BlendPhaseFunction, Multi1DPhaseFunction],
@@ -328,7 +275,9 @@ def test_phase_kernel_dict_2_components(mode_mono, kwargs, phase_cls):
             "phase_0.type": "isotropic",
             "phase_1.type": "rayleigh",
             "weight.type": "gridvolume",
-            "weight.grid": np.reshape(phase.eval_conditional_weights(ctx.si), (-1, 1, 1)),
+            "weight.grid": np.reshape(
+                phase.eval_conditional_weights(ctx.si), (-1, 1, 1)
+            ),
             "weight.filter_type": "nearest",
         }
         weight_to_world_key = "weight.to_world"
@@ -336,6 +285,7 @@ def test_phase_kernel_dict_2_components(mode_mono, kwargs, phase_cls):
     else:  # Multi1DPhaseFunction
         expected = {
             "type": "multiphase",
+            "use_mis": False,
             "phase_0.type": "isotropic",
             "phase_1.type": "rayleigh",
             "weight_0.type": "gridvolume",
