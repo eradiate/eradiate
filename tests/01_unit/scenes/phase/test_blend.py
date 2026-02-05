@@ -159,7 +159,7 @@ def test_blend_phase_weights(mode_mono, phase_constructor, weights, expected):
     "phase_cls,weight_keys",
     [
         (BlendPhaseFunction, ["weight.to_world"]),
-        (Multi1DPhaseFunction, ["weight0.to_world", "weight1.to_world", "weight2.to_world"]),
+        (Multi1DPhaseFunction, ["weight_0.to_world", "weight_1.to_world", "weight_2.to_world"]),
     ],
     ids=["blend", "multi1d"],
 )
@@ -336,17 +336,17 @@ def test_phase_kernel_dict_2_components(mode_mono, kwargs, phase_cls):
     else:  # Multi1DPhaseFunction
         expected = {
             "type": "multiphase",
-            "phase0.type": "isotropic",
-            "phase1.type": "rayleigh",
-            "weight0.type": "gridvolume",
-            "weight0.grid": np.reshape(phase._eval_weights(ctx.si, 0), (-1, 1, 1)),
-            "weight0.filter_type": "nearest",
-            "weight1.type": "gridvolume",
-            "weight1.grid": np.reshape(phase._eval_weights(ctx.si, 1), (-1, 1, 1)),
-            "weight1.filter_type": "nearest",
+            "phase_0.type": "isotropic",
+            "phase_1.type": "rayleigh",
+            "weight_0.type": "gridvolume",
+            "weight_0.grid": np.reshape(phase._eval_weights(ctx.si, 0), (-1, 1, 1)),
+            "weight_0.filter_type": "nearest",
+            "weight_1.type": "gridvolume",
+            "weight_1.grid": np.reshape(phase._eval_weights(ctx.si, 1), (-1, 1, 1)),
+            "weight_1.filter_type": "nearest",
         }
-        weight_to_world_key = "weight0.to_world"
-        expected_params = {"weight0.data", "weight1.data"}
+        weight_to_world_key = "weight_0.to_world"
+        expected_params = {"weight_0.data", "weight_1.data"}
 
     if "geometry" in kwargs:
         geometry = SceneGeometry.convert(kwargs["geometry"])
@@ -354,7 +354,7 @@ def test_phase_kernel_dict_2_components(mode_mono, kwargs, phase_cls):
             geometry.atmosphere_volume_to_world.matrix
         )
         if phase_cls is Multi1DPhaseFunction:
-            expected["weight1.to_world"] = np.array(
+            expected["weight_1.to_world"] = np.array(
                 geometry.atmosphere_volume_to_world.matrix
             )
 
