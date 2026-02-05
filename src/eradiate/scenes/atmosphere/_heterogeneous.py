@@ -16,7 +16,7 @@ from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
 from ..core import traverse
-from ..phase import BlendPhaseFunction, PhaseFunction
+from ..phase import Multi1DPhaseFunction, PhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel import SearchSceneParameter
@@ -289,7 +289,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
                 weights.append(eval_sigma_s)
 
-            return BlendPhaseFunction(
+            return Multi1DPhaseFunction(
                 components=components, weights=weights, geometry=self.geometry
             )
 
