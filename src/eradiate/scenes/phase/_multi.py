@@ -64,7 +64,7 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
             template, _ = traverse(self.components[i])
             result.update(
                 {
-                    **{f"phase{i}.{k}": v for k, v in template.items()},
+                    **{f"phase_{i}.{k}": v for k, v in template.items()},
                     #f"{prefix}.type": "blendphase",
                 }
             )
@@ -84,27 +84,27 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
                 self.geometry, PlaneParallelGeometry
             ):
 
-                result[f"weight{i}.type"] = "gridvolume"
-                result[f"weight{i}.grid"] = DictParameter(eval_weights)
-                result[f"weight{i}.filter_type"] = "nearest"
+                result[f"weight_{i}.type"] = "gridvolume"
+                result[f"weight_{i}.grid"] = DictParameter(eval_weights)
+                result[f"weight_{i}.filter_type"] = "nearest"
 
                 if self.geometry is not None:
-                    result[f"weight{i}.to_world"] = (
+                    result[f"weight_{i}.to_world"] = (
                         self.geometry.atmosphere_volume_to_world
                     )
 
             elif isinstance(self.geometry, SphericalShellGeometry):
                 
-                result[f"weight{i}.type"] = "sphericalcoordsvolume"
-                result[f"weight{i}.volume.type"] = "gridvolume"
-                result[f"weight{i}.volume.grid"] = DictParameter(
+                result[f"weight_{i}.type"] = "sphericalcoordsvolume"
+                result[f"weight_{i}.volume.type"] = "gridvolume"
+                result[f"weight_{i}.volume.grid"] = DictParameter(
                     eval_weights
                 )
-                result[f"weight{i}.volume.filter_type"] = "nearest"
-                result[f"weight{i}.to_world"] = (
+                result[f"weight_{i}.volume.filter_type"] = "nearest"
+                result[f"weight_{i}.to_world"] = (
                     self.geometry.atmosphere_volume_to_world
                 )
-                result[f"weight{i}.rmin"] = self.geometry.atmosphere_volume_rmin
+                result[f"weight_{i}.rmin"] = self.geometry.atmosphere_volume_rmin
         
         return result
 
@@ -121,7 +121,7 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
             _, params = traverse(self.components[i])
             result.update(
                 {
-                    **{f"phase{i}.{k}": v for k, v in params.items()},
+                    **{f"phase_{i}.{k}": v for k, v in params.items()},
                 }
             )
 
@@ -138,7 +138,7 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
                     ).astype(np.float32)
 
                 # Assign conditional weight to second component
-                result[f"weight{i}.data"] = SceneParameter(
+                result[f"weight_{i}.data"] = SceneParameter(
                     eval_weights,
                     KernelSceneParameterFlags.SPECTRAL,
                 )
@@ -152,7 +152,7 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
                     ).astype(np.float32)
 
                 # Assign conditional weight to second component
-                result[f"weight{i}.volume.data"] = SceneParameter(
+                result[f"weight_{i}.volume.data"] = SceneParameter(
                     eval_weights,
                     KernelSceneParameterFlags.SPECTRAL,
                 )
