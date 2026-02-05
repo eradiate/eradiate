@@ -164,7 +164,7 @@ class BlendPhaseFunction(Abstract1DBlendPhaseFunction):
     **Deprecation:** The eradiate kernel's `multiphase` plugin allows to define
     conditional probabilities as a one dimensional set of weights instead. The
     class `eradiate.scenes.phase.Multi1DPhaseFunction` provides the same level
-    of functionality and is now the preferred way of configuring blended phase
+    of functionality and is now the preferred way for configuring blended phase
     functions in Eradiate.
     """
 
