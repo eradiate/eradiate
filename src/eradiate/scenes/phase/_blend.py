@@ -15,13 +15,12 @@ from ...attrs import documented
 from ...contexts import KernelContext
 from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...spectral.index import SpectralIndex
-from ...util.misc import cache_by_id
 from ...util.deprecation import deprecated
+from ...util.misc import cache_by_id
 
 
 @attrs.define(eq=False, slots=False)
 class AbstractBlendPhaseFunction(PhaseFunction):
-
     """
     Abstract Blended phase function.
 
@@ -33,7 +32,6 @@ class AbstractBlendPhaseFunction(PhaseFunction):
     to subclasses through the `_weights_validator_impl` method.
     """
 
-    
     components: list[PhaseFunction] = documented(
         attrs.field(
             converter=lambda x: [phase_function_factory.convert(y) for y in x],
@@ -71,16 +69,12 @@ class AbstractBlendPhaseFunction(PhaseFunction):
         "This parameter is required and has no default.",
     )
 
-
     @abstractmethod
-    def _weights_validator_impl(self, attribute, value):
-        ...
-    
+    def _weights_validator_impl(self, attribute, value): ...
 
     @weights.validator
     def _weights_validator(self, attribute, value):
         self._weights_validator_impl(attribute, value)
-
 
     geometry: SceneGeometry | None = documented(
         attrs.field(
@@ -107,15 +101,13 @@ class AbstractBlendPhaseFunction(PhaseFunction):
 
             if isinstance(component, AbstractBlendPhaseFunction):
                 component.geometry = self.geometry
-    
+
     @abstractmethod
-    def normalized(self, ctx: KernelContext) -> AbstractBlendPhaseFunction:
-        ...            
+    def normalized(self, ctx: KernelContext) -> AbstractBlendPhaseFunction: ...
 
 
 @attrs.define(eq=False, slots=False)
 class Abstract1DBlendPhaseFunction(AbstractBlendPhaseFunction):
-
     """
     Abstract 1D Blended phase function.
 
@@ -146,6 +138,35 @@ class Abstract1DBlendPhaseFunction(AbstractBlendPhaseFunction):
                 )
 
 
+@attrs.define(eq=False, slots=False)
+class Abstract3DBlendPhaseFunction(AbstractBlendPhaseFunction):
+    """
+    Abstract 3D Blended phase function
+
+    This implementation of this phase function feature a 3D grid of phase
+    weights, suitable for usage of the `multiphase` kernel plugin.
+    """
+
+    def _weights_validator_impl(self, attribute, value):
+        if isinstance(value, np.ndarray):
+            if value.ndim != 4:
+                raise ValueError(
+                    f"while validating '{attribute.name}': array must have 4 "
+                    f"dimensions, got {valude.ndim}"
+                )
+            if not value.shape[0] == len(self.components):
+                raise ValueError(
+                    f"while validating '{attribute.name}': array must have shape "
+                    "(n, m, k, l) where n is the number of components; got "
+                    f"{value.shape}",
+                )
+        elif isinstance(value, cabc.Sequence):
+            if not len(value) == len(self.components):
+                raise ValueError(
+                    f"while validating '{attribute.name}': weight and component "
+                    "lists must have the same length"
+                )
+
 
 @attrs.define(eq=False, slots=False)
 @deprecated(
@@ -155,7 +176,6 @@ class Abstract1DBlendPhaseFunction(AbstractBlendPhaseFunction):
     "eradiate.scenes.phase.Multi1DPhaseFunction",
 )
 class BlendPhaseFunction(Abstract1DBlendPhaseFunction):
-
     """
     Blended phase function [``blend_phase``].
 
@@ -372,4 +392,3 @@ class BlendPhaseFunction(Abstract1DBlendPhaseFunction):
 
     def normalized(self, _: KernelContext):
         return attr.evolve(self)
-
