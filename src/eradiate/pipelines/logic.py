@@ -603,12 +603,12 @@ def gather_bitmaps(
 
            {
                <loop_index_0>: {
-                   {"bitmap": <bitmap_0>},
-                   {"spp": <sample_count_0>},
+                   "bitmap": <bitmap_0>,
+                   "spp": <sample_count_0>,
                },
                <loop_index_1>: {
-                   {"bitmap": <bitmap_1>},
-                   {"spp": <sample_count_1>},
+                   "bitmap": <bitmap_1>,
+                   "spp": <sample_count_1>,
                },
                ...
            }
