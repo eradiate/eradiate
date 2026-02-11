@@ -276,6 +276,7 @@ include-package-data = true # Required because of package data
 "eradiate" = ["py.typed", "*.pyi", "*.mplstyle", "units.txt"]
 "eradiate.config" = ["*.toml"]
 "eradiate.data" = ["*.yml"]
+"eradiate.data.schemas" = ["*.yml"]
 
 [tool.setuptools.packages.find]
 include = ["eradiate*"]
