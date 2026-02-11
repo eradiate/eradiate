@@ -1,3 +1,0 @@
-include src/eradiate/config/*.toml
-include src/eradiate/data/schemas/*.yml
-include src/eradiate/units.txt
