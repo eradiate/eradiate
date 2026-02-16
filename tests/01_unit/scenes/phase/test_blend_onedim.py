@@ -285,7 +285,7 @@ def test_phase_kernel_dict_2_components(mode_mono, kwargs, phase_cls):
     else:  # Multi1DPhaseFunction
         expected = {
             "type": "multiphase",
-            "use_mis": False,
+            "use_mis": True,
             "phase_0.type": "isotropic",
             "phase_1.type": "rayleigh",
             "weight_0.type": "gridvolume",
