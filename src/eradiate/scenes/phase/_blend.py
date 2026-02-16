@@ -19,6 +19,17 @@ from ...util.deprecation import deprecated
 from ...util.misc import cache_by_id
 
 
+def _weights_converter(x):
+    if isinstance(x, np.ndarray):
+        return x
+    dt_value = x
+    for _ in range(np.ndim(dt_value)):
+        dt_value = dt_value[0]
+    if callable(dt_value):
+        return x
+    return np.array(x, dtype=np.float64)
+
+
 @attrs.define(eq=False, slots=False)
 class AbstractBlendPhaseFunction(PhaseFunction):
     """
@@ -55,7 +66,7 @@ class AbstractBlendPhaseFunction(PhaseFunction):
 
     weights: np.ndarray | list[t.Callable[[KernelContext], np.ndarray]] = documented(
         attrs.field(
-            converter=lambda x: x if callable(x[0]) else np.array(x, dtype=np.float64),
+            converter=_weights_converter,
             kw_only=True,
         ),
         type="ndarray or list of callables",
@@ -164,7 +175,7 @@ class Abstract3DBlendPhaseFunction(AbstractBlendPhaseFunction):
             if not len(value) == len(self.components):
                 raise ValueError(
                     f"while validating '{attribute.name}': weight and component "
-                    "lists must have the same length"
+                    f"lists must have the same length"
                 )
 
 
