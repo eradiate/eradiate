@@ -45,7 +45,8 @@
 .. autosummary::
     :toctree: generated/autosummary/
 
-    rami4atm.create_rami4atm
+    rami4atm.create_rami4atm_boa
+    rami4atm.create_rami4atm_toa
     rami4atm.registry
 
 ``eradiate.test_tools.types``

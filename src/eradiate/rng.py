@@ -92,7 +92,7 @@ def reset_seed_state(seed: int | None = None) -> None:
     if seed is None:
         from .config import settings
 
-        seed = settings.get("rng_seed")
+        seed = settings.get("RNG_SEED")
         if seed == "random":
             seed = None
         else:
