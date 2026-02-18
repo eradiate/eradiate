@@ -16,7 +16,7 @@ from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
 from ..core import traverse
-from ..phase import Multi1DPhaseFunction, PhaseFunction
+from ..phase import Multi1DPhaseFunction, Multi3DPhaseFunction, PhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel import SearchSceneParameter
@@ -289,9 +289,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
                 weights.append(eval_sigma_s)
 
-            return Multi1DPhaseFunction(
+            onedim = Multi1DPhaseFunction(
                 components=components, weights=weights, geometry=self.geometry
             )
+
+            return Multi3DPhaseFunction.from_onedim_to_grid(onedim, (3, 3))
 
     @property
     def _template_phase(self) -> dict:
