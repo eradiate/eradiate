@@ -236,7 +236,7 @@ def test_heterogeneous_mix_weights(
 
     # Weights should be non-zero over the first 50 km, and 0 above
     # (all to the molecular component)
-    weights = np.squeeze(mi_params["weight.data"])
+    weights = np.squeeze(mi_params["weight_1.data"])
     assert len(weights) == geometry.zgrid.n_layers
 
     middle = np.argwhere(geometry.zgrid.layers <= 50.0 * ureg.km).max() + 1
@@ -265,15 +265,20 @@ def test_heterogeneous_mix_weights(
             ),
         ],
     )
-    mi_wrapper = check_scene_element(mixed.phase, mi.PhaseFunction)
-    weight_1 = np.squeeze(mi_wrapper.parameters["weight.data"])
-    weight_2 = np.squeeze(mi_wrapper.parameters["phase_1.weight.data"])
+    mi_wrapper = check_scene_element(mixed.phase.normalized(ctx), mi.PhaseFunction)
+    weight_0 = np.squeeze(mi_wrapper.parameters["weight_0.data"])
+    weight_1 = np.squeeze(mi_wrapper.parameters["weight_1.data"])
+    weight_2 = np.squeeze(mi_wrapper.parameters["weight_2.data"])
+
+    # raise ValueError(np.asarray([weight_0, weight_1, weight_2]))
 
     middle = np.argwhere(geometry.zgrid.layers <= 50.0 * ureg.km).max() + 1
     fourfive = np.argwhere(geometry.zgrid.layers <= 80.0 * ureg.km).max() + 1
 
-    assert np.all(weight_1[:middle] == 0.0)
-    assert np.all(weight_1[middle:] == 1.0)
+    assert np.all(weight_0[:middle] == 1.0)
+    assert np.all(weight_0[middle:] == 0.0)
+    assert np.all(weight_1[middle:fourfive] == 1.0)
+    assert np.all(weight_1[:middle] == 0.0) and np.all(weight_1[fourfive:] == 0.0)
     assert np.all(weight_2[:fourfive] == 0.0)
     assert np.all(weight_2[fourfive:] == 1.0)
 
@@ -297,12 +302,15 @@ def test_heterogeneous_mix_weights(
             ),
         ],
     )
-    mi_wrapper = check_scene_element(mixed.phase, mi.PhaseFunction)
-    weights = np.squeeze(mi_wrapper.parameters["weight.data"])
+    mi_wrapper = check_scene_element(mixed.phase.normalized(ctx), mi.PhaseFunction)
+    weights_0 = np.squeeze(mi_wrapper.parameters["weight_0.data"])
+    weights_1 = np.squeeze(mi_wrapper.parameters["weight_1.data"])
     middle = np.argwhere(geometry.zgrid.layers <= 50.0 * ureg.km).max() + 1
 
-    assert np.all(weights[:middle] == 0.0)
-    assert np.all(weights[middle:] == 0.5)
+    assert np.all(weights_0[:middle] == 1.0)
+    assert np.all(weights_0[middle:] == 0.5)
+    assert np.all(weights_1[:middle] == 0.0)
+    assert np.all(weights_1[middle:] == 0.5)
 
 
 @pytest.mark.slow
@@ -364,7 +372,7 @@ def test_heterogeneous_absorbing_mol_atm(
 
     # Collect phase function weights
     mi_wrapper = check_scene_element(atmosphere.phase, mi.PhaseFunction)
-    weights = np.squeeze(mi_wrapper.parameters["weight.volume.data"])
+    weights = np.squeeze(mi_wrapper.parameters["weight_1.volume.data"])
 
     # Extract phase function weights
     inside_particle_layer = (atmosphere.geometry.zgrid.layers >= pl_bottom) & (
@@ -372,15 +380,15 @@ def test_heterogeneous_absorbing_mol_atm(
     )
 
     # Outside the particle layer, the phase function weight should be zero.
-    assert np.all(weights[~inside_particle_layer] == 0.0)
+    assert np.all(weights.T[~inside_particle_layer] == 0.0)
 
     # Within the particle layer, the phase function weight should be:
     #   - zero, if the particle layer is not scattering (i.e., absorbing-only)
     #   - larger than zero, if the particle layer is scattering
     if particle_radprops == "particle_dataset_absorbing_only":
-        assert np.all(weights[inside_particle_layer] == 0.0)
+        assert np.all(weights.T[inside_particle_layer] == 0.0)
     elif particle_radprops == "particle_dataset_scattering_only":
-        assert np.all(weights[inside_particle_layer] > 0.0)
+        assert np.all(weights.T[inside_particle_layer] > 0.0)
     else:
         raise ValueError(
             f"Test parametrisation inconsistent. Expected 'absorbing_only' or "

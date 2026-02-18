@@ -8,6 +8,7 @@
 .idea/
 .vscode/
 .vs/
+*.swp
 
 # pixi environments
 .pixi

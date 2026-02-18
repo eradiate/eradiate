@@ -17,6 +17,11 @@ phase_function_factory.register_lazy_batch(
             {},
         ),
         (
+            "_multi.Multi1DPhaseFunction",
+            "multi_phase",
+            {},
+        ),
+        (
             "_hg.HenyeyGreensteinPhaseFunction",
             "hg",
             {},
