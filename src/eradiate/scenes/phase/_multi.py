@@ -48,7 +48,7 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
         weights = self._eval_weights_impl(si)
 
         if n_component is None:
-            n_component = range(len(self.components) - 1)
+            n_component = range(len(self.components))
         elif isinstance(n_component, int):
             n_component = [n_component]
 
@@ -238,7 +238,7 @@ class Multi3DPhaseFunction(Abstract3DBlendPhaseFunction):
         weights = self._eval_weights_impl(si)
 
         if n_component is None:
-            n_component = range(len(self.components) - 1)
+            n_component = range(len(self.components))
         elif isinstance(n_component, int):
             n_component = [n_component]
 
