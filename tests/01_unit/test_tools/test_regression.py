@@ -80,7 +80,7 @@ def test_reference_converter(tmp_path):
     # test proper handling of missing and unreadable reference
 
     # file does not exist
-    with pytest.raises(ValueError):
+    assert (
         tt.Chi2Test(
             name="chi2",
             archive_dir="tests/",
@@ -88,13 +88,18 @@ def test_reference_converter(tmp_path):
             threshold=0.05,
             reference="./this/file/doesnot.exist",
             plot=False,
-        )
+        ).reference
+        is None
+    )
 
     # wrong file type
-    tempfile = tmp_path / "hello.txt"
-    tempfile.write_text("test")
+    with pytest.raises(
+        ValueError,
+        match="did not find a match in any of xarray's currently installed IO backends",
+    ):
+        tempfile = tmp_path / "hello.txt"
+        tempfile.write_text("test")
 
-    with pytest.raises(ValueError):
         tt.Chi2Test(
             name="chi2",
             archive_dir="tests/",
@@ -105,7 +110,7 @@ def test_reference_converter(tmp_path):
         )
 
     # wrong data type
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Reference must be provided as a Dataset"):
         tt.Chi2Test(
             name="chi2",
             archive_dir="tests/",

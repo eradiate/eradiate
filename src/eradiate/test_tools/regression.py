@@ -16,7 +16,6 @@ from numpy.typing import ArrayLike
 from robot.api import logger
 
 from ..attrs import define, documented
-from ..exceptions import DataError
 from ..typing import PathLike
 from ..util.misc import summary_repr
 
@@ -161,9 +160,7 @@ def figure_to_html(fig: plt.Figure) -> str:
     )
 
 
-def reference_converter(
-    value: PathLike | xr.Dataset | None,
-) -> xr.Dataset | None:
+def reference_converter(value: PathLike | xr.Dataset | None) -> xr.Dataset | None:
     """
     A converter for handling the reference data attribute.
 
@@ -173,21 +170,26 @@ def reference_converter(
         Path to the reference dataset file or dataset identifier or Dataset or
         None.
 
-    Raises
-    ------
-    ValueError
-        If the reference data is not a valid dataset.
-
     Returns
     -------
     xr.Dataset or None
         The reference dataset.
 
+    Raises
+    ------
+    ValueError
+        If the reference data is not a valid dataset.
+
     Notes
     -----
+    The ``value`` argument is processed as follows:
+
     * ``None`` and datasets are passed through.
-    * If ``value`` is a path, resolve it with the path resolver and try to load it.
-    * If ``value`` is a path to a file that does not exist, return ``None``.
+    * If ``value`` is a path, resolve it with the path resolver. If the path
+      points to a non-existing location, return ``None``. Otherwise, try to load
+      it as a Dataset.
+
+    Anything else raises a :class:`ValueError`.
     """
     if value is None:
         return value
@@ -196,23 +198,20 @@ def reference_converter(
         return value
 
     if isinstance(value, (str, os.PathLike, bytes)):
-        try:
-            logger.info(f'Looking up "{str(value)}" on disk', also_console=True)
-            from .. import fresolver
+        logger.info(f'Looking up "{str(value)}" on disk', also_console=True)
+        from .. import fresolver
 
-            fname = fresolver.resolve(value)
-            logger.info(f"Resolved path: {fname}", also_console=True)
-            return xr.load_dataset(fname)
+        fname = fresolver.resolve(value)
+        logger.info(f"Resolved path: {fname}", also_console=True)
 
-        except (DataError, FileNotFoundError):
-            pass
+        if not fname.exists():
+            return None
 
-        # File not found: most likely means reference data does not exist
-        return None
+        return xr.load_dataset(fname)
 
     raise ValueError(
         "Reference must be provided as a Dataset, a file path or None. "
-        f"Got {type(value).__name__}"
+        f"Got a {type(value).__name__}"
     )
 
 
