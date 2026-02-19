@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import enum
 import re
-import typing as t
 from textwrap import dedent, indent
+from typing import Any, Literal, TypeVar, cast
 
 import attrs
 
 from .util import numpydoc
+
+_AttribT = TypeVar("_AttribT")
 
 
 class _Auto:
@@ -279,12 +281,12 @@ def parse_docs(cls: type) -> type:
 
 
 def documented(
-    attrib: attrs.Attribute,
+    attrib: _AttribT,
     doc: str | None = None,
     type: str | None = None,
     init_type: str | None = None,
     default: str | None = None,
-) -> attrs.Attribute:
+) -> _AttribT:
     """
     Declare an attrs field as documented.
 
@@ -315,23 +317,27 @@ def documented(
     --------
     :func:`attrs.field`, :func:`pinttr.field`, :func:`parse_docs`
     """
+    _attrib = cast(
+        Any, attrib
+    )  # _CountingAttr.metadata is a plain dict, not typed publicly
+
     if doc is not None:
-        attrib.metadata[MetadataKey.DOC] = doc
+        _attrib.metadata[MetadataKey.DOC] = doc
 
     if type is not None:
-        attrib.metadata[MetadataKey.TYPE] = type
+        _attrib.metadata[MetadataKey.TYPE] = type
 
     if init_type is not None:
-        attrib.metadata[MetadataKey.INIT_TYPE] = init_type
+        _attrib.metadata[MetadataKey.INIT_TYPE] = init_type
 
     if default is not None:
-        attrib.metadata[MetadataKey.DEFAULT] = default
+        _attrib.metadata[MetadataKey.DEFAULT] = default
 
     return attrib
 
 
 def get_doc(
-    cls: type, attrib: str, field: t.Literal["doc", "type", "init_type", "default"]
+    cls: type, attrib: str, field: Literal["doc", "type", "init_type", "default"]
 ) -> str:
     """
     Fetch attribute documentation field. Requires field metadata to be processed
