@@ -4,7 +4,7 @@ import os
 from abc import ABC, abstractmethod
 from io import StringIO
 from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import attrs
 import matplotlib.pyplot as plt
@@ -20,6 +20,10 @@ from ..exceptions import DataError
 from ..typing import PathLike
 from ..util.misc import summary_repr
 
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+
 
 def regression_test_plots(
     ref: ArrayLike,
@@ -30,7 +34,7 @@ def regression_test_plots(
     result_var: ArrayLike | None = None,
     xlabel: str | None = None,
     ylabel: str | None = None,
-) -> tuple[plt.Figure, list[list[plt.Axes]]]:
+) -> tuple[Figure, list[list[Axes]]]:
     """
     Create regression test report plots. Plot errorbars if both ref_var and
     result_var are set.
