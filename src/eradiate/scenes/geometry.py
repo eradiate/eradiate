@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing as t
 from abc import ABC, abstractmethod
+from enum import Enum
 
 import attrs
 import mitsuba as mi
@@ -17,6 +18,23 @@ from ..radprops import ZGrid
 from ..units import unit_context_config as ucc
 from ..units import unit_context_kernel as uck
 from ..units import unit_registry as ureg
+
+
+class WrapMode(Enum):
+    CLAMP = 0
+    REPEAT = 1
+    MIRROR = 2
+
+    def __str__(self):
+        return self.name.lower()
+
+
+class FilterType(Enum):
+    TRILINEAR = 0
+    NEAREST = 1
+
+    def __str__(self) -> str:
+        return self.name.lower()
 
 
 @define
@@ -64,6 +82,32 @@ class SceneGeometry(ABC):
         "the atmosphere object height is less than 100 m) is used.",
         type=".ZGrid",
         init_type=".ZGrid, quantity or ndarray, optional",
+    )
+
+    filter_type: FilterType = documented(
+        attrs.field(
+            default=FilterType.NEAREST,
+            converter=FilterType,
+            validator=attrs.validators.instance_of(FilterType),
+            kw_only=True,
+        ),
+        doc="Volume filter type",
+        default="WrapMode.NEAREST",
+        type=".FilterType",
+        init_type=".FilterType",
+    )
+
+    wrap_mode: WrapMode = documented(
+        attrs.field(
+            default=WrapMode.CLAMP,
+            converter=WrapMode,
+            validator=attrs.validators.instance_of(WrapMode),
+            kw_only=True,
+        ),
+        doc="Volume wrap mode",
+        default="WrapMode.CLAMP",
+        type=".WrapMode",
+        init_type=".WrapMode",
     )
 
     def __attrs_post_init__(self) -> None:
@@ -263,3 +307,29 @@ class SphericalShellGeometry(SceneGeometry):
         return SphereShape.surface(
             altitude=self.ground_altitude, planet_radius=self.planet_radius
         )
+
+
+@define(slots=False)
+class XYGrid:
+    xy_resolution: tuple[int, int] = documented(
+        attrs.field(
+            default=(3, 3),
+            converter=tuple,
+            validator=attrs.validators.instance_of(tuple[int, int]),
+            kw_only=True,
+        ),
+        doc="Grid horizontal resolution",
+        type="tuple[int,int]",
+        init_type="tupe[int,int]",
+        default="(3,3)",
+    )
+
+
+@define
+class GriddedParallelGeometry(PlaneParallelGeometry, XYGrid):
+    pass
+
+
+@define
+class GriddedSphericalShellGeometry(SphericalShellGeometry, XYGrid):
+    pass

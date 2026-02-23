@@ -277,6 +277,12 @@ class BlendPhaseFunction(Abstract1DBlendPhaseFunction):
     def template(self) -> dict:
         result = {"type": "blendphase"}
 
+        filter_type = "nearest"
+        wrap_mode = "clamp"
+        if self.geometry is not None:
+            filter_type = str(self.geometry.filter_type)
+            wrap_mode = str(self.geometry.wrap_mode)
+
         for i in range(len(self.components) - 1):
             prefix = "phase_1." * i
 
@@ -306,7 +312,8 @@ class BlendPhaseFunction(Abstract1DBlendPhaseFunction):
 
                 result[f"{prefix}weight.type"] = "gridvolume"
                 result[f"{prefix}weight.grid"] = DictParameter(eval_conditional_weights)
-                result[f"{prefix}weight.filter_type"] = "nearest"
+                result[f"{prefix}weight.filter_type"] = filter_type
+                result[f"{prefix}weight.wrap_mode"] = wrap_mode
 
                 if self.geometry is not None:
                     result[f"{prefix}weight.to_world"] = (
@@ -328,7 +335,8 @@ class BlendPhaseFunction(Abstract1DBlendPhaseFunction):
                 result[f"{prefix}weight.volume.grid"] = DictParameter(
                     eval_conditional_weights
                 )
-                result[f"{prefix}weight.volume.filter_type"] = "nearest"
+                result[f"{prefix}weight.volume.filter_type"] = filter_type
+                result[f"{prefix}weight.volume.wrap_mode"] = wrap_mode
                 result[f"{prefix}weight.to_world"] = (
                     self.geometry.atmosphere_volume_to_world
                 )

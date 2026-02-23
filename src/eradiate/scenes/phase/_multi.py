@@ -56,10 +56,18 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
 
     @property
     def template(self):
-        if self.geometry is None or isinstance(self.geometry, PlaneParallelGeometry):
+        if self.geometry is None:
             dim_order = (-1, 1, 1)
+            filter_type = "nearest"
+            wrap_mode = "clamp"
+        elif isinstance(self.geometry, PlaneParallelGeometry):
+            dim_order = (-1, 1, 1)
+            filter_type = str(self.geometry.filter_type)
+            wrap_mode = str(self.geometry.wrap_mode)
         elif isinstance(self.geometry, SphericalShellGeometry):
             dim_order = (1, 1, -1)
+            filter_type = str(self.geometry.filter_type)
+            wrap_mode = str(self.geometry.wrap_mode)
         else:
             raise ValueError(
                 f"unhandled scene geometry type '{type(self.geometry).__name__}'"
@@ -89,7 +97,8 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
             ):
                 result[f"weight_{i}.type"] = "gridvolume"
                 result[f"weight_{i}.grid"] = DictParameter(eval_weights)
-                result[f"weight_{i}.filter_type"] = "nearest"
+                result[f"weight_{i}.filter_type"] = filter_type
+                result[f"weight_{i}.wrap_mode"] = wrap_mode
 
                 if self.geometry is not None:
                     result[f"weight_{i}.to_world"] = (
@@ -100,7 +109,8 @@ class Multi1DPhaseFunction(Abstract1DBlendPhaseFunction):
                 result[f"weight_{i}.type"] = "sphericalcoordsvolume"
                 result[f"weight_{i}.volume.type"] = "gridvolume"
                 result[f"weight_{i}.volume.grid"] = DictParameter(eval_weights)
-                result[f"weight_{i}.volume.filter_type"] = "nearest"
+                result[f"weight_{i}.volume.filter_type"] = filter_type
+                result[f"weight_{i}.volume.wrap_mode"] = wrap_mode
                 result[f"weight_{i}.to_world"] = (
                     self.geometry.atmosphere_volume_to_world
                 )
@@ -253,6 +263,12 @@ class Multi3DPhaseFunction(Abstract3DBlendPhaseFunction):
                 f"unhandled scene geometry type '{type(self.geometry).__name__}'"
             )
 
+        filter_type = "nearest"
+        wrap_mode = "clamp"
+        if self.geometry is not None:
+            filter_type = str(self.geometry.filter_type)
+            wrap_mode = str(self.geometry.wrap_mode)
+
         result = {"type": "multiphase", "use_mis": self.use_mis}
 
         for i in range(len(self.components)):
@@ -272,7 +288,8 @@ class Multi3DPhaseFunction(Abstract3DBlendPhaseFunction):
 
                 result[f"weight_{i}.type"] = "gridvolume"
                 result[f"weight_{i}.grid"] = DictParameter(eval_weights)
-                result[f"weight_{i}.filter_type"] = "nearest"
+                result[f"weight_{i}.filter_type"] = filter_type
+                result[f"weight_{i}.wrap_mode"] = wrap_mode
 
                 if self.geometry is not None:
                     result[f"weight_{i}.to_world"] = (
@@ -287,7 +304,8 @@ class Multi3DPhaseFunction(Abstract3DBlendPhaseFunction):
                 result[f"weight_{i}.type"] = "sphericalcoordsvolume"
                 result[f"weight_{i}.volume.type"] = "gridvolume"
                 result[f"weight_{i}.volume.grid"] = DictParameter(eval_weights)
-                result[f"weight_{i}.volume.filter_type"] = "nearest"
+                result[f"weight_{i}.volume.filter_type"] = filter_type
+                result[f"weight_{i}.volume.wrap_mode"] = wrap_mode
                 result[f"weight_{i}.to_world"] = (
                     self.geometry.atmosphere_volume_to_world
                 )

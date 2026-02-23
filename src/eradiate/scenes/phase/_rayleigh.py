@@ -96,8 +96,12 @@ class RayleighPhaseFunction(PhaseFunction):
             ):
                 if self.geometry is None:
                     to_world = mi.ScalarTransform4f()
+                    filter_type = "nearest"
+                    wrap_mode = "clamp"
                 else:
                     to_world = self.geometry.atmosphere_volume_to_world
+                    filter_type = str(self.geometry.filter_type)
+                    wrap_mode = str(self.geometry.wrap_mode)
 
                 result["depolarization.type"] = "gridvolume"
                 result["depolarization.grid"] = DictParameter(
@@ -109,7 +113,8 @@ class RayleighPhaseFunction(PhaseFunction):
                     ),
                 )
                 result["depolarization.to_world"] = to_world
-                result["depolarization.filter_type"] = "nearest"
+                result["depolarization.filter_type"] = filter_type
+                result["depolarization.wrap_mode"] = wrap_mode
 
             elif isinstance(self.geometry, SphericalShellGeometry):
                 volume_rmin = self.geometry.atmosphere_volume_rmin
@@ -125,7 +130,8 @@ class RayleighPhaseFunction(PhaseFunction):
                         ).astype(np.float32),
                     ),
                 )
-                result["depolarization.volume.filter_type"] = "nearest"
+                result["depolarization.volume.filter_type"] = filter_type
+                result["depolarization.volume.wrap_mode"] = wrap_mode
                 result["depolarization.to_world"] = to_world
                 result["depolarization.rmin"] = volume_rmin
 
