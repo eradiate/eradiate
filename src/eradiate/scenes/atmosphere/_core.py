@@ -324,9 +324,10 @@ class Atmosphere(CompositeSceneElement, ABC):
 
 
 @define(eq=False, slots=False)
-class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
+class AtmosphericColumn(Atmosphere, ABC):
     """
-    Abstract base class for heterogeneous atmospheres.
+    Abstract base for atmospheric media exposing an albedo, extinction, absorption,
+    scattering coefficients and a transmittance.
     """
 
     scale: float | None = documented(
@@ -401,7 +402,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         zgrid : .ZGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+            (see :meth:`zgrid <.AtmosphericColumn.geometry.zgrid>`).
 
         optional_fields : bool, optional, default: False
             If ``True``, also output the absorption and scattering coefficients,
@@ -505,7 +506,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         zgrid : .ZGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+            (see :meth:`zgrid <.AtmosphericColumn.geometry.zgrid>`).
 
         Returns
         -------
@@ -530,7 +531,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         zgrid : .ZGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+            (see :meth:`zgrid <.AtmosphericColumn.geometry.zgrid>`).
 
         Returns
         -------
@@ -554,7 +555,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         zgrid : .ZGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+            (see :meth:`zgrid <.AtmosphericColumn.column.zgrid>`).
 
         Returns
         -------
@@ -578,7 +579,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         zgrid : .ZGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+            (see :meth:`zgrid <.AtmosphericColumn.geometry.zgrid>`).
 
         Returns
         -------

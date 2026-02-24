@@ -7,7 +7,7 @@ import pandas as pd
 import xarray as xr
 from tqdm.auto import tqdm
 
-from ._core import AbstractHeterogeneousAtmosphere
+from ._core import AtmosphericColumn
 from ._heterogeneous import HeterogeneousAtmosphere
 from ...cfconventions import ATTRIBUTES
 from ...spectral import (
@@ -21,7 +21,7 @@ from ...units import unit_context_config as ucc
 
 
 def eval_transmittance_mono(
-    atmosphere: AbstractHeterogeneousAtmosphere,
+    atmosphere: AtmosphericColumn,
     spectral_grid: MonoSpectralGrid,
     interaction: Literal["extinction", "absorption", "scattering"] = "extinction",
 ) -> xr.DataArray:
@@ -31,7 +31,7 @@ def eval_transmittance_mono(
 
     Parameters
     ----------
-    atmosphere : .AbstractHeterogeneousAtmosphere
+    atmosphere : .AtmosphericColumn
         1D atmosphere for which transmittance is evaluated.
 
     spectral_grid : .MonoSpectralGrid
@@ -71,7 +71,7 @@ def eval_transmittance_mono(
 
 
 def eval_transmittance_ckd(
-    atmosphere: AbstractHeterogeneousAtmosphere,
+    atmosphere: AtmosphericColumn,
     spectral_grid: CKDSpectralGrid,
     ckd_quad_config: CKDQuadConfig | None = None,
     interaction: Literal["extinction", "absorption", "scattering"] = "extinction",
@@ -81,7 +81,7 @@ def eval_transmittance_ckd(
 
     Parameters
     ----------
-    atmosphere : .AbstractHeterogeneousAtmosphere
+    atmosphere : .AtmosphericColumn
         1D atmosphere for which transmittance is evaluated.
 
     spectral_grid : .CKDSpectralGrid

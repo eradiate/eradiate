@@ -14,7 +14,7 @@ import pint
 import pinttr
 import xarray as xr
 
-from ._core import AbstractHeterogeneousAtmosphere
+from ._core import AtmosphericColumn
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import traverse
 from ..phase import TabulatedPhaseFunction
@@ -48,7 +48,7 @@ def _particle_layer_distribution_converter(value):
 
 
 @define(eq=False, slots=False)
-class ParticleLayer(AbstractHeterogeneousAtmosphere):
+class ParticleLayer(AtmosphericColumn):
     """
     Particle layer scene element [``particle_layer``].
 

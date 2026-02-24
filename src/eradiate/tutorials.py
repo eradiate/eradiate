@@ -11,7 +11,7 @@ from numpy.typing import ArrayLike
 
 from .config import settings
 from .frame import AzimuthConvention
-from .scenes.atmosphere import AbstractHeterogeneousAtmosphere
+from .scenes.atmosphere import AtmosphericColumn
 from .spectral import SpectralIndex
 
 
@@ -140,7 +140,7 @@ def plot_polarfilm(
 
 
 def plot_sigma_t(
-    *atmospheres: AbstractHeterogeneousAtmosphere,
+    *atmospheres: AtmosphericColumn,
     labels: list[str] | None = None,
     altitude_extent: tuple[float, float] | None = None,
     si: SpectralIndex | None = None,
@@ -152,7 +152,7 @@ def plot_sigma_t(
 
     Parameters
     ----------
-    *atmospheres : .AbstractHeterogeneousAtmosphere
+    *atmospheres : .AtmosphericColumn
         One or several atmosphere objects for which to plot the extinction
         coefficient.
 
