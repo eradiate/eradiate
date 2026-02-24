@@ -308,3 +308,218 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         _, result = traverse(self.phase)
         return result.data
+
+
+def thermoprops_grid_converter(parameter) -> list[xr.Dataset]:
+    if isinstance(parameter, list):
+        return [convert_thermoprops(x) for x in parameter]
+    raise ValueError(
+        f"Could not convert parameter of type {type(parameter)} "
+        " to an AbsorptionDatabase grid of unknown size."
+    )
+
+
+@define(equals=False, slots=False)
+class AbstractMolecularAtmosphere(AbstractHeterogeneousAtmosphere):
+    _absorption_data: AbsorptionDatabase = documented(
+        attrs.field(
+            kw_only=True,
+            factory=AbsorptionDatabase.default,
+            converter=AbsorptionDatabase.convert,
+            validator=attrs.validators.instance_of(AbsorptionDatabase),
+        ),
+        doc="Absorption coefficient data. The passed value is pre-processed by "
+        ":meth:`.AbsorptionDatabase.convert`.",
+        type="AbsorptionDatabase",
+        init_type="str or path-like or dict or .AbsorptionDatabase",
+        default=":meth:`AbsorptionDatabase.default() <.AbsorptionDatabase.default>`",
+    )
+
+    has_absorption: bool = documented(
+        attrs.field(kw_only=True, default=True, converter=bool),
+        doc="Absorption switch. If ``True``, the absorption coefficient is "
+        "computed. Else, the absorption coefficient is set to zero.",
+        type="bool",
+        default="True",
+    )
+
+    has_scattering: bool = documented(
+        attrs.field(kw_only=True, default=True, converter=bool),
+        doc="Scattering switch. If ``True``, the scattering coefficient is "
+        "computed. Else, the scattering coefficient is set to zero.",
+        type="bool",
+        default="True",
+    )
+
+    @has_absorption.validator
+    @has_scattering.validator
+    def _switch_validator(self, attribute, value):
+        if not self.has_absorption and not self.has_scattering:
+            raise ValueError(
+                f"while validating {attribute.name}: at least one of "
+                "'has_absorption' and 'has_scattering' must be True"
+            )
+
+    error_handler_config: ErrorHandlingConfiguration | None = documented(
+        attrs.field(
+            kw_only=True,
+            default=None,
+            converter=ErrorHandlingConfiguration.convert,
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(ErrorHandlingConfiguration)
+            ),
+        ),
+        doc="Error handler configuration for absorption data interpolation. If "
+        "unset, the global configuration specified in the "
+        "``absorption_database.error_handling`` section is used. ",
+        type=".ErrorHandlingConfiguration or None",
+        init_type="dict or .ErrorHandlingConfiguration, optional",
+    )
+
+    @property
+    def absorption_data(self) -> AbsorptionDatabase:
+        return self._absorption_data
+
+    @property
+    def _template_phase(self) -> dict:
+        result, _ = traverse(self.phase)
+        return result.data
+
+    @property
+    def _params_phase(self) -> dict:
+        _, result = travers(self.phase)
+        return result.data
+
+
+@define(equals=False, slots=False)
+class GriddedMolecularAtmosphere(AbstractMolecularAtmosphere):
+    # TBD : attrs post init check geometry is gridded
+    _grid_resolution: tuple[int, int] = documented(
+        attrs.field(
+            kw_only=True,
+            converter=tuple,
+            validator=attrs.validators.instance_of(tuple[int, int]),
+            default=(3, 3),
+        ),
+        doc="TBD",
+        type="tuple(int,int)",
+        init_type="tuple(int, int)",
+        default="(3,3)",
+    )
+
+    _thermoprops_grid: list[xr.Dataset] = documented(
+        attrs.field(
+            kw_only=True,
+            converter=thermoprops_grid_converter,
+            validator=attrs.validators.instance_of(list),
+            repr=summary_repr,
+        ),
+        doc="TBD",
+        type="List[Dataset]",
+        init_type="List of Dataset or path-like or dict or None",
+    )
+
+    _radprops_profile_grid: list[RadProfile] = documented(
+        attrs.field(
+            kw_only=True,
+            default=None,
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(list[RadProfile])
+            ),
+        ),
+        doc="Radiative property profile. TBD",
+        type="list(RadProfile)",
+        init_type="list of .RadProfile or None",
+        default="None",
+    )
+
+    @_grid_resolution.validator
+    def _validate_grid(self, attribute, value):
+        x_dim, y_dim = value
+        size = x_dim * y_dim
+        assert len(_thermoprops_grid) == size
+        assert len(_radprops_profile_grid) == size
+
+    @property
+    def grid_size(self):
+        return self._grid_resolution[0] * self._grid_resolution[1]
+
+    @property
+    def thermoprops_grid(self) -> list[xr.Dataset]:
+        return self._thermoprops_grid
+
+    @property
+    def radprops_profile_grid(self) -> list[RadProfile]:
+        return self._radprops_profile_grid
+
+    def update(self) -> None:
+        self.phase.id = self.phase_id
+        for i, thermoprops in enumerate(self._thermoprops_grid):
+            self._radprops_profile_grid[i] = AtmosphereRadProfile(
+                thermoprops=thermoprops,
+                has_scattering=self.has_scattering,
+                has_absorption=self.has_absorption,
+                absorption_data=self.absorption_data,
+                rayleigh_depolarization=self.rayleigh_depolarization,
+            )
+
+    @property
+    def phase(self) -> PhaseFunction:
+        if eradiate.mode().is_polarized:
+            raise NotImplementedError(
+                "The 3D molecular polarization is not implemented yet, this class is WIP"
+            )
+
+        return RayleighPhaseFunction()
+
+    def eval_mfp(self, ctx: KernelContext) -> np.ndarray:
+        min_sigma_s = min(
+            [
+                radprof.eval_sigma_s(ctx.si).min()
+                for radprof in self._radprops_profile_grid
+            ]
+        )
+
+        return np.divide(
+            1.0, min_sigma_s, where=min_sigma_s != 0.0, out=np.array([np.inf])
+        )
+
+    # TBD handle shape of the atmophere? Shape type is not compatible with 3D
+
+    def apply_radprops_profiles(
+        self, si: SpectralIndex, zgrid: Zgrid | None, eval_method
+    ) -> list[pint.Quantity]:
+        zgrid = zgrid or self.geometry.zgrid
+        properties = [
+            eval_method(radprops_profile, si, zgrid)
+            for radprops_profile in self._radprops_profile_grid
+        ]
+        return properties
+
+    def eval_albedo(
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
+    ) -> pint.Quantity:
+        return self.apply_radprops_profiles(
+            si, zgrid, lambda rp, idx, grid: rp.eval_albedo(idx, grid)
+        )
+
+    def eval_sigma_t(
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
+    ) -> pint.Quantity:
+        return self.apply_radprops_profiles(
+            si, zgrid, lambda rp, idx, grid: rp.eval_sigma_t(idx, grid)
+        )
+
+    def eval_sigma_a(
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
+    ) -> pint.Quantity:
+        return self.apply_radprops_profiles(
+            si, zgrid, lambda rp, idx, grid: rp.sigma_a(idx, grid)
+        )
+
+    def eval_sigma_s(
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
+    ) -> pint.Quantity:
+        return self.apply_radprops_profiles(
+            si, zgrid, lambda rp, idx, grid: rp.eval_sigma_s(idx, grid)
+        )

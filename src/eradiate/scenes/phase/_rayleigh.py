@@ -90,19 +90,18 @@ class RayleighPhaseFunction(PhaseFunction):
     def template(self) -> dict:
         if eradiate.mode().is_polarized:
             result = {"type": "rayleigh_polarized"}
+            if self.geometry is None:
+                to_world = mi.ScalarTransform4f()
+                filter_type = "nearest"
+                wrap_mode = "clamp"
+            else:
+                to_world = self.geometry.atmosphere_volume_to_world
+                filter_type = str(self.geometry.filter_type)
+                wrap_mode = str(self.geometry.wrap_mode)
 
             if self.geometry is None or isinstance(
                 self.geometry, PlaneParallelGeometry
             ):
-                if self.geometry is None:
-                    to_world = mi.ScalarTransform4f()
-                    filter_type = "nearest"
-                    wrap_mode = "clamp"
-                else:
-                    to_world = self.geometry.atmosphere_volume_to_world
-                    filter_type = str(self.geometry.filter_type)
-                    wrap_mode = str(self.geometry.wrap_mode)
-
                 result["depolarization.type"] = "gridvolume"
                 result["depolarization.grid"] = DictParameter(
                     lambda ctx: mi.VolumeGrid(
