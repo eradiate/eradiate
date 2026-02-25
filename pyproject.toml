@@ -121,6 +121,11 @@ ninja = "*"
 [tool.pixi.target.win-64.activation]
 scripts = ["setpath.bat"]
 
+[tool.pixi.target.osx-64.pypi-dependencies]
+# AxsDB depends on Numba. Old x86_64 macs are no longer supported, so we need to
+# constrain specifically numba for this platform.
+numba = "<0.63"
+
 [tool.pixi.feature]
 # All supported Python versions are listed
 py39 = { dependencies = { python = "3.9.*" } }
