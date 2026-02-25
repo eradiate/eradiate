@@ -24,6 +24,7 @@ dependencies = [
   "lazy_loader>=0.1",
   "matplotlib>=3.3",
   "netcdf4",
+  "networkx>=3.0",
   "numpy",
   "pint",
   "pinttrs>=23.2.0",
