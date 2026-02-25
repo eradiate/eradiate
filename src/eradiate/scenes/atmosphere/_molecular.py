@@ -40,7 +40,7 @@ def _default_absorption_data():
         raise UnsupportedModeError(unsupported=["mono", "ckd"])
 
 
-@define(equals=False, slots=False)
+@define(eq=False, slots=False)
 class AbstractMolecularAtmosphere(AtmosphericColumn):
     _absorption_data: AbsorptionDatabase = documented(
         attrs.field(
@@ -108,7 +108,7 @@ class AbstractMolecularAtmosphere(AtmosphericColumn):
 
     @property
     def _params_phase(self) -> dict:
-        _, result = travers(self.phase)
+        _, result = traverse(self.phase)
         return result.data
 
 
@@ -315,7 +315,7 @@ def thermoprops_grid_converter(parameter) -> list[xr.Dataset]:
     )
 
 
-@define(equals=False, slots=False)
+@define(eq=False, slots=False)
 class GriddedMolecularAtmosphere(AbstractMolecularAtmosphere):
     # TBD : attrs post init check geometry is gridded
     _grid_resolution: tuple[int, int] = documented(
