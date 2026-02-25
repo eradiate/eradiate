@@ -2,8 +2,12 @@ from ._core import AbstractHeterogeneousAtmosphere as AbstractHeterogeneousAtmos
 from ._core import Atmosphere as Atmosphere
 from ._core import atmosphere_factory as atmosphere_factory
 from ._heterogeneous import AtmosphericColumn as AtmosphericColumn
+from ._heterogeneous import (
+    GriddedHeterogeneousAtmosphere as GriddedHeterogeneousAtmosphere,
+)
 from ._heterogeneous import HeterogeneousAtmosphere as HeterogeneousAtmosphere
 from ._homogeneous import HomogeneousAtmosphere as HomogeneousAtmosphere
+from ._molecular import GriddedMolecularAtmosphere as GriddedMolecularAtmosphere
 from ._molecular import MolecularAtmosphere as MolecularAtmosphere
 from ._particle_dist import ArrayParticleDistribution as ArrayParticleDistribution
 from ._particle_dist import (

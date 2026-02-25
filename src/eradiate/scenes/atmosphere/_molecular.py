@@ -322,7 +322,7 @@ class GriddedMolecularAtmosphere(AbstractMolecularAtmosphere):
         attrs.field(
             kw_only=True,
             converter=tuple,
-            validator=attrs.validators.instance_of(tuple[int, int]),
+            validator=attrs.validators.instance_of(tuple),
             default=(3, 3),
         ),
         doc="TBD",
@@ -347,9 +347,7 @@ class GriddedMolecularAtmosphere(AbstractMolecularAtmosphere):
         attrs.field(
             kw_only=True,
             default=None,
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(list[RadProfile])
-            ),
+            validator=attrs.validators.optional(attrs.validators.instance_of(list)),
         ),
         doc="Radiative property profile. TBD",
         type="list(RadProfile)",
@@ -361,12 +359,17 @@ class GriddedMolecularAtmosphere(AbstractMolecularAtmosphere):
     def _validate_grid(self, attribute, value):
         x_dim, y_dim = value
         size = x_dim * y_dim
-        assert len(_thermoprops_grid) == size
-        assert len(_radprops_profile_grid) == size
+        assert len(self._thermoprops_grid) == size
+        if self._radprops_profile_grid is not None:
+            assert len(self._radprops_profile_grid) == size
 
     @property
     def grid_size(self):
         return self._grid_resolution[0] * self._grid_resolution[1]
+
+    @property
+    def grid_resolution(self):
+        return self._grid_resolution
 
     @property
     def thermoprops_grid(self) -> list[xr.Dataset]:
@@ -378,14 +381,18 @@ class GriddedMolecularAtmosphere(AbstractMolecularAtmosphere):
 
     def update(self) -> None:
         self.phase.id = self.phase_id
+        radprofiles = []
         for i, thermoprops in enumerate(self._thermoprops_grid):
-            self._radprops_profile_grid[i] = AtmosphereRadProfile(
-                thermoprops=thermoprops,
-                has_scattering=self.has_scattering,
-                has_absorption=self.has_absorption,
-                absorption_data=self.absorption_data,
-                rayleigh_depolarization=self.rayleigh_depolarization,
+            radprofiles.append(
+                AtmosphereRadProfile(
+                    thermoprops=thermoprops,
+                    has_scattering=self.has_scattering,
+                    has_absorption=self.has_absorption,
+                    absorption_data=self.absorption_data,
+                    rayleigh_depolarization=None,  # TBD
+                )
             )
+        self._radprops_profile_grid = radprofiles
 
     @property
     def phase(self) -> PhaseFunction:
