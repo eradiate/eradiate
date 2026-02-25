@@ -61,6 +61,10 @@ def test_rami4atm(mode_ckd_double, case, artefact_dir):
     )
     logger.info(reference._repr_html_(), html=True)
 
+    import logging
+
+    from eradiate.util.misc import LoggingContext
+
     for variable in variables:
         logger.info(f"Testing {variable}")
 
@@ -74,6 +78,7 @@ def test_rami4atm(mode_ckd_double, case, artefact_dir):
             plot=False,
         )
 
-        passed = test.run(diagnostic=True)
+        with LoggingContext(logging.getLogger("mitsuba"), logging.DEBUG):
+            passed = test.run(diagnostic=True)
 
         assert passed

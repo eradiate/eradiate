@@ -279,6 +279,7 @@ def test_phase_kernel_dict_2_components(mode_mono, kwargs, phase_cls):
                 phase.eval_conditional_weights(ctx.si), (-1, 1, 1)
             ),
             "weight.filter_type": "nearest",
+            "weight.wrap_mode": "clamp",
         }
         weight_to_world_key = "weight.to_world"
         expected_params = {"weight.data"}
@@ -291,9 +292,11 @@ def test_phase_kernel_dict_2_components(mode_mono, kwargs, phase_cls):
             "weight_0.type": "gridvolume",
             "weight_0.grid": np.reshape(phase._eval_weights(ctx.si, 0), (-1, 1, 1)),
             "weight_0.filter_type": "nearest",
+            "weight_0.wrap_mode": "clamp",
             "weight_1.type": "gridvolume",
             "weight_1.grid": np.reshape(phase._eval_weights(ctx.si, 1), (-1, 1, 1)),
             "weight_1.filter_type": "nearest",
+            "weight_1.wrap_mode": "clamp",
         }
         weight_to_world_key = "weight_0.to_world"
         expected_params = {"weight_0.data", "weight_1.data"}
@@ -377,12 +380,14 @@ def test_blend_phase_kernel_dict_3_components(mode_mono, kwargs, expected_mi_wei
         "weight.type": "gridvolume",
         "weight.grid": np.reshape(expected_mi_weights[0], (-1, 1, 1)),
         "weight.filter_type": "nearest",
+        "weight.wrap_mode": "clamp",
         "phase_0.type": "hg",
         "phase_0.g": -0.1,
         "phase_1.type": "blendphase",
         "phase_1.weight.type": "gridvolume",
         "phase_1.weight.grid": np.reshape(expected_mi_weights[1], (-1, 1, 1)),
         "phase_1.weight.filter_type": "nearest",
+        "phase_1.weight.wrap_mode": "clamp",
         "phase_1.phase_0.type": "rayleigh",
         "phase_1.phase_1.type": "hg",
         "phase_1.phase_1.g": 0.1,
