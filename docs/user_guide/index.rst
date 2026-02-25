@@ -61,6 +61,7 @@ Guides
    dem_experiment
    canopy_scene_loader
    spectral_discretization.ipynb
+   pipeline_engine.ipynb
    conventions
    unit_guide_user
    radiometric_kernel_interface

@@ -7,41 +7,15 @@ Pipeline configuration
 ----------------------
 
 Post-processing pipelines are configured using a dictionary specifying
-parameters listed in the table below. This dictionary is used as the input of
-the :func:`eradiate.pipelines.driver` function. It should be noted that
-:func:`eradiate.pipelines.config` can be used to generate a configuration
-dictionary easily.
-
-.. list-table:: Pipeline configuration variables
-   :widths: 20 10 70
-   :header-rows: 1
-
-   * - Parameter
-     - Type
-     - Description
-   * - ``add_viewing_angles``
-     - :class:`bool`
-     - Whether the measure provides viewing angles that can be mapped to film
-       pixels.
-   * - ``apply_spectral_response``
-     - :class:`bool`
-     - Whether we should apply SRF weighting (a.k.a convolution) to spectral
-       variables.
-   * - ``measure_distant``
-     - :class:`bool`
-     - Whether we are processing the results of a distant measure.
-   * - ``mode_id``
-     - :class:`str`
-     - The ID of the Eradiate mode for which the pipeline is configured.
-   * - ``var_name``, ``var_metadata``
-     - :class:`str`
-     - The name and metadata for the physical variable that is being processed.
+parameters listed in the documentation of the
+:func:`~eradiate.pipelines.definitions.build_pipeline` function, which
+implements post-processing pipeline assembly.
+Configuration generation is automated by the :func:`~eradiate.pipelines.config`
+helper function.
 
 Many nodes of the DAG defining the pipeline are tagged for filtering upon query.
 Tags explicitly used in the pipeline setup and execution are listed in the table
-below. The :func:`eradiate.pipelines.outputs` function leverages these tags to
-generate a list of default output nodes when running the post-processing
-pipeline.
+below.
 
 .. list-table:: Pipeline node tags
    :widths: 15 15 70
@@ -66,22 +40,21 @@ pipeline.
      - ``"coord"``
      - The output is a coordinate variable.
 
-Hamilton driver creation and manipulation
------------------------------------------
+.. autofunction:: eradiate.pipelines.config
 
-.. note::
-   The following entry points are defined in the ``eradiate.pipelines.core``
-   module.
+Pipeline assembly (``eradiate.pipelines.definitions``)
+------------------------------------------------------
 
-.. py:currentmodule:: eradiate.pipelines
+.. automodule:: eradiate.pipelines.definitions
+   :members:
+   :autosummary:
 
-.. autosummary::
-   :toctree: generated/autosummary/
+Pipeline engine (``eradiate.pipelines.engine``)
+-----------------------------------------------
 
-   config
-   driver
-   list_variables
-   outputs
+.. automodule:: eradiate.pipelines.engine
+   :members:
+   :autosummary:
 
 Pipeline logic (``eradiate.pipelines.logic``)
 ---------------------------------------------
