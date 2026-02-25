@@ -115,8 +115,6 @@ fonttools==4.61.1
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
-graphviz==0.21
-    # via eradiate (pyproject.toml)
 h11==0.16.0
     # via
     #   httpcore
@@ -242,8 +240,6 @@ mdurl==0.1.2
     # via markdown-it-py
 mistune==3.2.0
     # via nbconvert
-mypy-extensions==1.1.0
-    # via typing-inspect
 myst-parser==4.0.1
     # via eradiate (pyproject.toml:docs)
 nbclient==0.10.4
@@ -268,6 +264,8 @@ netcdf4==1.7.4
     #   axsdb
     #   joseki
     #   ussa1976
+networkx==3.4.2
+    # via eradiate (pyproject.toml)
 notebook-shim==0.2.4
     # via jupyterlab
 numba==0.64.0
@@ -285,7 +283,6 @@ numpy==2.2.6
     #   pandas
     #   scipy
     #   seaborn
-    #   sf-hamilton
     #   skyfield
     #   ussa1976
     #   xarray
@@ -309,7 +306,6 @@ pandas==2.3.3
     # via
     #   joseki
     #   seaborn
-    #   sf-hamilton
     #   xarray
 pandocfilters==1.5.1
     # via nbconvert
@@ -356,6 +352,8 @@ pybtex-docutils==1.0.3
     # via sphinxcontrib-bibtex
 pycparser==3.0
     # via cffi
+pydot==4.0.1
+    # via eradiate (pyproject.toml)
 pygments==2.19.2
     # via
     #   ipython
@@ -367,7 +365,9 @@ pygments==2.19.2
 pygments-styles==0.3.0
     # via shibuya
 pyparsing==3.3.2
-    # via matplotlib
+    # via
+    #   matplotlib
+    #   pydot
 pytest==9.0.2
     # via eradiate (pyproject.toml:docs)
 python-dateutil==2.9.0.post0
@@ -437,8 +437,6 @@ send2trash==2.1.0
     # via jupyter-server
 setuptools==82.0.0
     # via jupyterlab
-sf-hamilton==1.89.0
-    # via eradiate (pyproject.toml)
 sgp4==2.25
     # via skyfield
 shellingham==1.5.4
@@ -545,12 +543,8 @@ typing-extensions==4.15.0
     #   mistune
     #   pint
     #   referencing
-    #   sf-hamilton
     #   starlette
-    #   typing-inspect
     #   uvicorn
-typing-inspect==0.9.0
-    # via sf-hamilton
 tzdata==2025.3
     # via
     #   arrow
