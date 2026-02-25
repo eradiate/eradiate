@@ -8,6 +8,7 @@ from eradiate.scenes.atmosphere import (
     GriddedHeterogeneousAtmosphere,
     GriddedMolecularAtmosphere,
 )
+from eradiate.scenes.geometry import GriddedParallelGeometry
 from eradiate.test_tools.regression import SidakTTest
 from eradiate.test_tools.test_cases import rami4atm
 
@@ -33,27 +34,38 @@ def test_rami4atm_gridded(mode_ckd_double, case, artefact_dir):
 
     srf_id, exps = ctor(spp=1000)
 
-    resolution = (4, 3)
+    resolution = (7, 4)
     resx, resy = resolution
 
-    for exp in exps:
+    for i in range(len(exps)):
+        exp = exps[i]
+
         mol_atm_1d = exp.atmosphere.molecular_atmosphere
 
         thermoprops_grid = [
             mol_atm_1d.thermoprops for _ in range(resx) for __ in range(resy)
         ]
 
+        geometry = GriddedParallelGeometry(
+            zgrid=mol_atm_1d.geometry.zgrid,
+            xy_resolution=resolution,
+        )
+
         atm = GriddedHeterogeneousAtmosphere(
+            geometry=geometry,
             molecular_atmosphere=GriddedMolecularAtmosphere(
+                geometry=geometry,
                 absorption_data=mol_atm_1d.absorption_data,
                 thermoprops_grid=thermoprops_grid,
                 grid_resolution=resolution,
                 has_absorption=mol_atm_1d.has_absorption,
                 has_scattering=mol_atm_1d.has_scattering,
-            )
+            ),
         )
 
-        exp = attrs.evolve(exp, atmosphere=atm)
+        exp = attrs.evolve(exp, atmosphere=atm, geometry=geometry)
+
+        exps[i] = exp
 
     srf = fresolver.load_dataset(f"srf/{srf_id}.nc")
 

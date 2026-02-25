@@ -315,7 +315,7 @@ class XYGrid:
         attrs.field(
             default=(3, 3),
             converter=tuple,
-            validator=attrs.validators.instance_of(tuple[int, int]),
+            validator=attrs.validators.instance_of(tuple),
             kw_only=True,
         ),
         doc="Grid horizontal resolution",

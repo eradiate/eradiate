@@ -363,14 +363,20 @@ class GriddedHeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @cache_by_id
     def _eval_sigma_t_impl(self, si: SpectralIndex) -> pint.Quantity:
-        result = np.zeros((len(self.components), self.geometry.zgrid.n_layers))
+        resolution = self.geometry.xy_resolution
+        res_x, res_y = resolution
+        result = np.zeros(
+            (len(self.components), res_x, res_y, self.geometry.zgrid.n_layers)
+        )
         sigma_units = ucc.get("collision_coefficient")
 
-        # Evaluate extinction for current component
+        # Evaluate scattering coefficient for current component
         for i, component in enumerate(self.components):
-            result[i] = component.eval_sigma_t(si, self.geometry.zgrid).m_as(
-                sigma_units
-            )
+            sigma_t_tab = component.eval_sigma_t(si, self.geometry.zgrid)
+            for x in range(res_x):
+                for y in range(res_y):
+                    sigma_t_col = sigma_t_tab[x + y * res_x]
+                    result[i, x, y, :] = sigma_t_col.m_as(sigma_units)
 
         return result * sigma_units
 
@@ -392,14 +398,20 @@ class GriddedHeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @cache_by_id
     def _eval_sigma_s_impl(self, si: SpectralIndex) -> pint.Quantity:
-        result = np.zeros((len(self.components), self.geometry.zgrid.n_layers))
+        resolution = self.geometry.xy_resolution
+        res_x, res_y = resolution
+        result = np.zeros(
+            (len(self.components), res_x, res_y, self.geometry.zgrid.n_layers)
+        )
         sigma_units = ucc.get("collision_coefficient")
 
         # Evaluate scattering coefficient for current component
         for i, component in enumerate(self.components):
-            result[i] = component.eval_sigma_s(si, self.geometry.zgrid).m_as(
-                sigma_units
-            )
+            sigma_s_tab = component.eval_sigma_s(si, self.geometry.zgrid)
+            for x in range(res_x):
+                for y in range(res_y):
+                    sigma_s_col = sigma_s_tab[x + y * res_x]
+                    result[i, x, y, :] = sigma_s_col.m_as(sigma_units)
 
         return result * sigma_units
 
