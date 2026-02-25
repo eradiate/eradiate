@@ -24,6 +24,7 @@ dependencies = [
   "lazy_loader>=0.1",
   "matplotlib>=3.3",
   "netcdf4",
+  "networkx>=3.0",
   "numpy",
   "pint",
   "pinttrs>=23.2.0",
@@ -31,7 +32,6 @@ dependencies = [
   "rich",
   "ruamel.yaml",
   "scipy",
-  "sf-hamilton>=1.40",
   "typer>=0.9.0",
   "tqdm",
   "shellingham!=1.5.1", # Typer dependency; exclude this version which raises while previous don't
@@ -46,8 +46,8 @@ recommended = [
   "ipython",
   "ipywidgets",
   "jupyterlab",
+  "pydot", # Used to visualize post-processing pipeline DAGs
   "python-dateutil", # Used by the Solar irradiance spectrum date-based scaling feature
-  "graphviz", # Used to visualize post-processing pipeline DAGs
   "seaborn", # Used to define the Eradiate plotting style
 ]
 

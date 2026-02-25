@@ -1,3 +1,7 @@
+"""
+Basic components of post-processing pipeline assembly.
+"""
+
 from __future__ import annotations
 
 import itertools

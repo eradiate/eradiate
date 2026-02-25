@@ -1,26 +1,18 @@
 """
 This module contains the infrastructure, definitions, and logic for all
-post-processing pipeline operations. The implementation complies with the
-`Hamilton <https://hamilton.dagworks.io/>`__ dataflow framework's specifications:
-the post-processing pipeline is modelled as a directed acyclic graph (DAG), and
-all post-processing operations are a node in that DAG.
+post-processing pipeline operations. The pipeline is modelled as a directed
+acyclic graph (DAG) built with a lightweight custom engine.
 
 For clarity, the implementation is split as follows:
 
+* :mod:`eradiate.pipelines.engine` provides the fundamental logic powering each
 * :mod:`eradiate.pipelines.logic` provides the fundamental logic powering each
   step of post-processing;
-* :mod:`eradiate.pipelines.definitions` contains the pipeline definition and is
-  intended to be consumed by the Hamilton driver constructor for pipeline
-  initialization;
-* :mod:`eradiate.pipelines.core` provides convenience entry points to facilitate
-  post-processing pipeline initialization.
-
-See Also
---------
-
-* :class:`hamilton.driver.Driver`
-* `Hamilton's documentation on tags \
-  <https://hamilton.dagworks.io/en/latest/reference/decorators/tag/#tag>`__
+* :mod:`eradiate.pipelines.definitions` contains the imperative pipeline builder
+  (:func:`~eradiate.pipelines.definitions.build_pipeline`);
+* :mod:`eradiate.pipelines._config` (private) provides the
+  :func:`~eradiate.pipelines.config` utility for generating pipeline
+  configuration dictionaries.
 """
 
 import lazy_loader
