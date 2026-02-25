@@ -12,7 +12,6 @@ import mitsuba as mi
 import numpy as np
 import pinttr
 import xarray as xr
-from hamilton.driver import Driver
 
 import eradiate
 
@@ -29,6 +28,8 @@ from ..kernel import (
     mi_render,
     mi_traverse,
 )
+from ..pipelines.definitions import build_pipeline
+from ..pipelines.engine import Pipeline
 from ..quad import Quad
 from ..rng import SeedState
 from ..scenes.core import Scene, SceneElement, get_factory, traverse
@@ -360,7 +361,7 @@ class Experiment(ABC):
         pass
 
     @abstractmethod
-    def pipeline(self, measure: Measure | int) -> Driver:
+    def pipeline(self, measure: Measure | int) -> Pipeline:
         """
         Return the post-processing pipeline for a given measure.
 
@@ -371,7 +372,7 @@ class Experiment(ABC):
 
         Returns
         -------
-        hamilton.driver.Driver
+        .Pipeline
         """
         pass
 
@@ -748,32 +749,42 @@ class EarthObservationExperiment(Experiment, ABC):
         # Run pipelines
         for i in measures:
             measure = self.measures[i]
-            drv: Driver = self.pipeline(measure)
+            pipeline: Pipeline = self.pipeline(measure)
             inputs = self._pipeline_inputs(i)
-            outputs = pl.outputs(drv)
-            result = drv.execute(final_vars=outputs, inputs=inputs)
+            outputs = pipeline.get_nodes_by_metadata(final=True, kind="data")
+            result = pipeline.execute(outputs=outputs, inputs=inputs)
             self.results[measure.id] = xr.Dataset({var: result[var] for var in outputs})
 
-    def pipeline(self, measure: Measure | int | str) -> Driver:
+    def pipeline(self, measure: Measure | int | str) -> Pipeline:
         # Inherit docstring
         if isinstance(measure, (int, str)):
             measure = self.measures.resolve(measure)
         config = pl.config(measure, integrator=self.integrator)
-        return eradiate.pipelines.driver(config, "eradiate.pipelines.definitions.core")
+        return build_pipeline(config)
 
     def _pipeline_inputs(self, i_measure: int):
         # This convenience function collects pipeline inputs for a specific measure
 
         measure = self.measures[i_measure]
+        config = pl.config(measure, integrator=self.integrator)
+
         result = {
+            # Runtime data
             "bitmaps": measure.mi_results,
             "spectral_grid": self.spectral_grids[i_measure],
             "ckd_quads": self.ckd_quads[i_measure],
             "illumination": self.illumination,
-            "srf": measure.srf,
+            # Config scalars required as virtual inputs
+            "mode_id": config["mode_id"],
+            "var_name": config["var_name"],
+            "var_metadata": config["var_metadata"],
+            "calculate_variance": config["calculate_variance"],
+            "calculate_stokes": config["calculate_stokes"],
         }
 
-        config = pl.config(measure)
+        if config.get("apply_spectral_response", False):
+            result["srf"] = measure.srf
+
         if config.get("add_viewing_angles", False):
             result["angles"] = measure.viewing_angles.m_as(ureg.deg)
         else:
