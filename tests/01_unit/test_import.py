@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 
 
 def test_eager_import():
@@ -11,5 +12,5 @@ def test_eager_import():
     env = os.environ.copy()
     env["EAGER_IMPORT"] = "1"
 
-    result = subprocess.call(["python", "-c", "import eradiate"], env=env)
+    result = subprocess.call([sys.executable, "-c", "import eradiate"], env=env)
     assert result == 0
