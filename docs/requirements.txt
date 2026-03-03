@@ -14,8 +14,6 @@ anyio==4.12.1
     #   jupyter-server
     #   starlette
     #   watchfiles
-appnope==0.1.4
-    # via ipykernel
 argon2-cffi==25.1.0
     # via jupyter-server
 argon2-cffi-bindings==25.1.0
@@ -45,7 +43,7 @@ beautifulsoup4==4.14.3
     # via nbconvert
 bleach==6.3.0
     # via nbconvert
-cachetools==7.0.1
+cachetools==7.0.2
     # via
     #   eradiate (pyproject.toml)
     #   axsdb
@@ -87,7 +85,7 @@ decorator==5.2.1
     # via ipython
 defusedxml==0.7.1
     # via nbconvert
-dessinemoi==25.1.0
+dessinemoi==26.1.0
     # via eradiate (pyproject.toml)
 docutils==0.21.2
     # via
@@ -129,7 +127,7 @@ idna==3.11
     #   httpx
     #   jsonschema
     #   requests
-imagesize==1.4.1
+imagesize==2.0.0
     # via sphinx
 importlib-resources==6.5.2
     # via joseki
@@ -379,7 +377,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-json-logger==4.0.0
     # via jupyter-events
-pytz==2025.2
+pytz==2026.1.post1
     # via pandas
 pyyaml==6.0.3
     # via
@@ -415,7 +413,7 @@ rich==14.3.3
     # via
     #   eradiate (pyproject.toml)
     #   typer
-robotframework==7.4.1
+robotframework==7.4.2
     # via eradiate (pyproject.toml:docs)
 rpds-py==0.30.0
     # via

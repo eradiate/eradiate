@@ -9,7 +9,7 @@ license = { text = "LGPLv3" }
 maintainers = [{ name = "The Eradiate Team" }]
 name = "eradiate"
 readme = "resources/README_PyPI.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.14"
 version = "1.0.1"
 dependencies = [
   "aenum",
@@ -39,7 +39,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-kernel = ["eradiate-mitsuba==0.3.2"]
+kernel = ["eradiate-mitsuba==0.4.2rc2"]
 recommended = [
   "aabbtree", # Used by the leaf collision detection feature
   "skyfield", # Used by the solar irradiance spectrum date-based scaling feature
