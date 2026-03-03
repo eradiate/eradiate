@@ -18,7 +18,9 @@ from ..core import (
 from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
 from ..phase import PhaseFunction
 from ..shapes import Shape
+from ... import validators
 from ..._factory import Factory
+from ..._mode import get_mode
 from ...attrs import define, documented, get_doc
 from ...contexts import KernelContext
 from ...kernel import (
@@ -99,6 +101,25 @@ class Atmosphere(CompositeSceneElement, ABC):
         type=".SceneGeometry",
         init_type=".SceneGeometry or dict or str, optional",
         default='"plane_parallel"',
+    )
+
+    extremum_resolution: tuple[int, int, int] = documented(
+        attrs.field(
+            default=(1, 1, 1),
+            validator=validators.is_vector3,
+        ),
+        doc="[EXPERIMENTAL] Resolution of the extremum structure. Applies to "
+        "both plane parallel and spherical shell geometries but the latter only "
+        "accepts a resolution greater than one along its radial dimension "
+        "(first dimension). Also note than in plane parallel the dimensions are "
+        "[x, y, z] and in spherical shell [r, theta, phi]. "
+        "The default value (1, 1, 1) falls back to a global majorant. In plane "
+        "parallel, set to (0,0,0) to trigger an adaptive search of the optimal"
+        "resolution. Note that this is an expensive search that triggers at "
+        "spectral update.",
+        type="tuple[int, int, int]",
+        init_type="tuple[int, int, int]",
+        default="(1,1,1)",
     )
 
     # --------------------------------------------------------------------------
@@ -644,6 +665,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def _template_medium(self) -> dict:
         # Inherit docstring
 
+        extremum = None
+        sigma_t_id = f"{self.id}_sigma_t"
+
         if isinstance(self.geometry, PlaneParallelGeometry):
             to_world = self.geometry.atmosphere_volume_to_world
 
@@ -664,6 +688,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 },
                 "sigma_t": {
                     "type": "gridvolume",
+                    "id": sigma_t_id,
                     "grid": DictParameter(
                         lambda ctx: mi.VolumeGrid(
                             np.reshape(
@@ -676,8 +701,18 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     ),
                     "to_world": to_world,
                     "filter_type": "nearest",
+                    "accel": False,
                 },
             }
+
+            if medium == "heterogeneous":
+                if self.extremum_resolution != (1, 1, 1):
+                    extremum = {
+                        "type": "extremum_grid",
+                        "volume": {"type": "ref", "id": sigma_t_id},
+                        "resolution": self.extremum_resolution,
+                        "to_world": to_world,
+                    }
 
         elif isinstance(self.geometry, SphericalShellGeometry):
             volume_rmin = self.geometry.atmosphere_volume_rmin
@@ -704,6 +739,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 },
                 "sigma_t": {
                     "type": "sphericalcoordsvolume",
+                    "id": sigma_t_id,
                     "volume": {
                         "type": "gridvolume",
                         "grid": DictParameter(
@@ -717,11 +753,21 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                             ),
                         ),
                         "filter_type": "nearest",
+                        "accel": False,
                     },
                     "to_world": to_world,
                     "rmin": volume_rmin,
                 },
             }
+
+            if self.extremum_resolution != (1, 1, 1):
+                extremum = {
+                    "type": "extremum_spherical",
+                    "volume": {"type": "ref", "id": sigma_t_id},
+                    "rmin": volume_rmin,
+                    "resolution": self.extremum_resolution,
+                    "to_world": to_world,
+                }
 
         else:
             raise ValueError(
@@ -731,6 +777,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         # Create medium dictionary
         result = {
             "type": medium,
+            "has_spectral_extinction": (
+                (not get_mode().check(mi_color_mode="mono")) or (medium == "piecewise")
+            ),
             **volumes,
             # Note: "phase" is deliberately unset, this is left to the
             # Atmosphere.template property
@@ -738,6 +787,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         if self.scale is not None:
             result["scale"] = self.scale
+
+        if extremum is not None:
+            result["extremum"] = extremum
 
         return result
 
