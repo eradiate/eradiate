@@ -386,3 +386,58 @@ def test_heterogeneous_absorbing_mol_atm(
             f"Test parametrisation inconsistent. Expected 'absorbing_only' or "
             f"'scattering_only' (got {particle_radprops})"
         )
+
+
+@pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
+@pytest.mark.parametrize("force_majorant", [False, True])
+def test_heterogeneous_medium_type(
+    mode_mono, geometry, force_majorant, atmosphere_us_standard_mono
+):
+    atmosphere = HeterogeneousAtmosphere(
+        geometry=geometry,
+        molecular_atmosphere=atmosphere_us_standard_mono,
+        force_majorant=force_majorant,
+    )
+    template = atmosphere._template_medium
+
+    if geometry == "plane_parallel":
+        if force_majorant:
+            assert template["type"] == "heterogeneous"
+        else:
+            assert template["type"] == "piecewise"
+    elif geometry == "spherical_shell":
+        assert template["type"] == "heterogeneous"
+
+
+@pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
+@pytest.mark.parametrize("force_majorant", [False, True])
+def test_heterogenous_extremum_type(
+    mode_mono, geometry, force_majorant, atmosphere_us_standard_mono
+):
+    atmosphere = HeterogeneousAtmosphere(
+        geometry=geometry,
+        molecular_atmosphere=atmosphere_us_standard_mono,
+        force_majorant=force_majorant,
+        extremum_resolution=(1, 1, 1),
+    )
+
+    template = atmosphere._template_medium
+    assert "extremum" not in template
+
+    atmosphere = HeterogeneousAtmosphere(
+        geometry=geometry,
+        molecular_atmosphere=atmosphere_us_standard_mono,
+        force_majorant=force_majorant,
+        extremum_resolution=(1, 1, 12) if geometry == "plane_parallel" else (12, 1, 1),
+    )
+    template = atmosphere._template_medium
+
+    if geometry == "plane_parallel":
+        if force_majorant:
+            assert "extremum" in template
+            assert template["extremum"]["type"] == "extremum_grid"
+        else:
+            assert "extremum" not in template
+    elif geometry == "spherical_shell":
+        assert "extremum" in template
+        assert template["extremum"]["type"] == "extremum_spherical"
