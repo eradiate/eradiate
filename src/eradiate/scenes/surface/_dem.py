@@ -334,7 +334,9 @@ def mesh_from_dem(
             )
 
         # Add default units if quantity is unitless
-        planet_radius = pinttrs.util.ensure_units(planet_radius, ucc.get("length"))
+        planet_radius = pinttrs.util.ensure_units(
+            planet_radius, default_units=ucc.get("length")
+        )
 
     # Set default planet radius value
     planet_radius = EARTH_RADIUS if planet_radius is None else planet_radius

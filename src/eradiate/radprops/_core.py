@@ -206,7 +206,7 @@ class ZGrid:
     )
 
     def __init__(self, levels: np.typing.ArrayLike):
-        levels = ensure_units(levels, ucc.get("length"))
+        levels = ensure_units(levels, default_units=ucc.get("length"))
         layer_height = np.diff(levels)
         if not np.allclose(layer_height, layer_height[0]):
             raise ValueError("levels must be regularly spaced")
