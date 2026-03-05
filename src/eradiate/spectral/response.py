@@ -206,7 +206,7 @@ class UniformSRF(SpectralResponseFunction):
         # Inherit docstring
 
         w_units = ucc.get("wavelength")
-        w_m = pinttrs.util.ensure_units(w, w_units).m_as(w_units)
+        w_m = pinttrs.util.ensure_units(w, default_units=w_units).m_as(w_units)
 
         return (
             np.where(
@@ -417,7 +417,9 @@ class BandSRF(SpectralResponseFunction):
         # Inherit docstring
 
         w_units = self.wavelengths.u
-        w_m = pinttrs.util.ensure_units(w, ucc.get("wavelength")).m_as(w_units)
+        w_m = pinttrs.util.ensure_units(w, default_units=ucc.get("wavelength")).m_as(
+            w_units
+        )
         return (
             np.interp(w_m, self.wavelengths.m, self.values.m, left=0.0, right=0.0)
             * self.values.u
@@ -441,8 +443,8 @@ class BandSRF(SpectralResponseFunction):
         integral : quantity
             Integral as a scalar quantity.
         """
-        wmin = ensure_units(wmin, ucc.get("wavelength"))
-        wmax = ensure_units(wmax, ucc.get("wavelength"))
+        wmin = ensure_units(wmin, default_units=ucc.get("wavelength"))
+        wmax = ensure_units(wmax, default_units=ucc.get("wavelength"))
 
         # Assemble spectral integration mesh
         w_u = self.wavelengths.u
@@ -483,7 +485,7 @@ class BandSRF(SpectralResponseFunction):
             ``wavelength`` has shape (N,).
         """
         w_u = ucc.get("wavelength")
-        w_m = ensure_units(w, w_u).m_as(w_u)
+        w_m = ensure_units(w, default_units=w_u).m_as(w_u)
 
         # Evaluate SRF at mesh nodes
         values_m = self.eval(w).m

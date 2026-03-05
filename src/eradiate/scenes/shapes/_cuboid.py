@@ -124,7 +124,7 @@ class CuboidShape(ShapeNode):
         """
 
         length_unit = ucc.get("length")
-        p = np.atleast_2d(ensure_units(p, length_unit))
+        p = np.atleast_2d(ensure_units(p, default_units=length_unit))
 
         if self.to_world is None:
             node_min = self.center - 0.5 * self.edges
