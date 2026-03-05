@@ -515,7 +515,7 @@ class BoundingBox:
         result : array of bool or bool
             ``True`` iff ``p`` in within the bounding box.
         """
-        p = np.atleast_2d(ensure_units(p, ucc.get("length")))
+        p = np.atleast_2d(ensure_units(p, default_units=ucc.get("length")))
 
         cmp = (
             np.logical_and(p > self.min, p < self.max)

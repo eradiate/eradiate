@@ -140,7 +140,7 @@ class Layout(ABC):
 
 
 def _angles_converter(value):
-    value = pinttrs.util.ensure_units(value, ucc.deferred("angle"))
+    value = pinttrs.util.ensure_units(value, default_units=ucc.deferred("angle"))
     angle_units = value.u
     magnitude = np.reshape(value.m_as(ureg.deg), (-1, 2))
     zeniths = magnitude[:, 0]

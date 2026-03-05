@@ -257,9 +257,9 @@ class MonoSpectralGrid(SpectralGrid):
             Generated spectral grid.
         """
         w_u = ucc.get("wavelength")
-        start = ensure_units(start, w_u).m_as(w_u)
-        stop = ensure_units(stop, w_u).m_as(w_u)
-        step = ensure_units(step, w_u).m_as(w_u)
+        start = ensure_units(start, default_units=w_u).m_as(w_u)
+        stop = ensure_units(stop, default_units=w_u).m_as(w_u)
+        step = ensure_units(step, default_units=w_u).m_as(w_u)
         return MonoSpectralGrid(wavelengths=np.arange(start, stop, step) * w_u)
 
     @classmethod
@@ -388,8 +388,8 @@ class CKDSpectralGrid(SpectralGrid):
     ):
         # Ensure consistent units and appropriate dtype
         w_u = ucc.get("wavelength")
-        wmins_m = ensure_units(wmins, w_u).m_as(w_u).astype(np.float64)
-        wmaxs_m = ensure_units(wmaxs, w_u).m_as(w_u).astype(np.float64)
+        wmins_m = ensure_units(wmins, default_units=w_u).m_as(w_u).astype(np.float64)
+        wmaxs_m = ensure_units(wmaxs, default_units=w_u).m_as(w_u).astype(np.float64)
 
         # Detect bound mismatch
         diff_bounds = wmaxs_m[:-1] - wmins_m[1:]
@@ -509,9 +509,9 @@ class CKDSpectralGrid(SpectralGrid):
             Generated CKD spectral grid.
         """
         w_u = ucc.get("wavelength")
-        start_m = ensure_units(start, w_u).m_as(w_u)
-        stop_m = ensure_units(stop, w_u).m_as(w_u)
-        width_m = ensure_units(step, w_u).m_as(w_u)
+        start_m = ensure_units(start, default_units=w_u).m_as(w_u)
+        stop_m = ensure_units(stop, default_units=w_u).m_as(w_u)
+        width_m = ensure_units(step, default_units=w_u).m_as(w_u)
 
         wcenters_m = np.arange(start_m, stop_m, width_m)
         wmins_m = wcenters_m - 0.5 * width_m

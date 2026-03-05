@@ -68,7 +68,7 @@ class UniformSpectrum(Spectrum):
         # If a quantity is set and a unitless value is passed, it is
         # automatically applied appropriate units
         if quantity is not None and not isinstance(value, pint.Quantity):
-            value = pinttrs.util.ensure_units(value, ucc.get(quantity))
+            value = pinttrs.util.ensure_units(value, default_units=ucc.get(quantity))
 
         self.__attrs_init__(id=id, quantity=quantity, value=value)
 

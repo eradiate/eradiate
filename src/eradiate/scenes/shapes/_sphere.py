@@ -115,7 +115,9 @@ class SphereShape(ShapeNode):
             to_world = mi.ScalarTransform4f().translate(
                 self.center.m_as(length_units)
             ) @ mi.ScalarTransform4f().scale(self.radius.m_as(length_units))
-        p = np.atleast_2d(ensure_units(p, ucc.get("length")).m_as(length_units))
+        p = np.atleast_2d(
+            ensure_units(p, default_units=ucc.get("length")).m_as(length_units)
+        )
         c = to_world @ (0, 0, 0)
         d = np.linalg.norm(p - c, axis=1)
         r = np.linalg.norm(to_world @ (1, 0, 0) - c)
