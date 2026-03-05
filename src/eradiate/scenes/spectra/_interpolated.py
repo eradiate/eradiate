@@ -143,7 +143,7 @@ class InterpolatedSpectrum(Spectrum):
         # If a quantity is set and a unitless value is passed, it is
         # automatically applied appropriate units
         if quantity is not None and not isinstance(values, pint.Quantity):
-            values = pinttr.util.ensure_units(values, ucc.get(quantity))
+            values = pinttr.util.ensure_units(values, default_units=ucc.get(quantity))
 
         self.__attrs_init__(
             id=id, quantity=quantity, wavelengths=wavelengths, values=values

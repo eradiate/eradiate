@@ -793,7 +793,9 @@ def spectral_response(srf: SpectralResponseFunction) -> xr.DataArray:
 
     if isinstance(srf, BandSRF):
         srf_w = srf.wavelengths
-        srf_values = pinttrs.util.ensure_units(srf.values, ureg.dimensionless)
+        srf_values = pinttrs.util.ensure_units(
+            srf.values, default_units=ureg.dimensionless
+        )
 
     else:
         raise TypeError(f"unsupported SRF type '{srf.__class__.__name__}'")

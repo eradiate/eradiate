@@ -115,7 +115,9 @@ class SphereShape(ShapeNode):
             trafo = mi.Transform4f.translate(
                 self.center.m_as(length_units)
             ) @ mi.Transform4f.scale(self.radius.m_as(length_units))
-        p = np.atleast_2d(ensure_units(p, ucc.get("length")).m_as(length_units))
+        p = np.atleast_2d(
+            ensure_units(p, default_units=ucc.get("length")).m_as(length_units)
+        )
         c = trafo @ (0, 0, 0)
         d = np.linalg.norm(p - c, axis=1)
         r = np.linalg.norm(trafo @ (1, 0, 0) - c)

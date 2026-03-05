@@ -695,7 +695,7 @@ class AbsorptionDatabase:
         chunks = self._chunks[lookup_mode]
 
         # Make sure that 'values' has the right units
-        values = ensure_units(np.atleast_1d(values), chunks.units)
+        values = ensure_units(np.atleast_1d(values), default_units=chunks.units)
 
         # Perform bound check
         out_bound = (values < chunks.min()) | (values > chunks.max())
