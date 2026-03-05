@@ -60,6 +60,19 @@ class KernelContext(Context):
         default=":meth:`SpectralIndex.new() <.SpectralIndex.new>`",
     )
 
+    active_sensors: list[int] | None = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(
+                lambda x: [x] if isinstance(x, int) else list(x)
+            ),
+        ),
+        doc="List of active sensors.",
+        type="list of int",
+        init_type="list of int or int, optional",
+        default="None",
+    )
+
     kwargs: dict[str, t.Any] = documented(
         attrs.field(factory=dict),
         doc="Object-specific parameter overrides.",
