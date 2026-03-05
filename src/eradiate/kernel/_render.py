@@ -379,7 +379,6 @@ def mi_traverse(
 def mi_render(
     mi_scene: MitsubaObjectWrapper,
     ctxs: list[KernelContext],
-    sensors: None | int | list[int] = None,
     spp: int = 0,
     seed_state: SeedState | None = None,
 ) -> dict[t.Any, mi.Bitmap]:
@@ -395,10 +394,6 @@ def mi_render(
     ctxs : list of :class:`.KernelContext`
         List of contexts used to generate the parameter update table at each
         iteration.
-
-    sensors : int or list of int, optional
-        Sensor indices to render. If ``None`` (default), all sensors are
-        rendered.
 
     spp : int, optional, default: 0
         Number of samples per pixel. If set to 0 (default), the value set in the
@@ -444,15 +439,13 @@ def mi_render(
             logger.debug("Updating Mitsuba scene parameters")
             mi_scene.parameters.update(mi_scene.umap_template.render(ctx))
 
-            if sensors is None:
+            active_sensors = ctx.active_sensors
+            if active_sensors is None:
                 mi_sensors = [
                     (i, sensor) for i, sensor in enumerate(mi_scene.obj.sensors())
                 ]
-
             else:
-                if isinstance(sensors, int):
-                    sensors = [sensors]
-                mi_sensors = [(i, mi_scene.obj.sensors()[i]) for i in sensors]
+                mi_sensors = [(i, mi_scene.obj.sensors()[i]) for i in active_sensors]
 
             # Loop on sensors
             for i_sensor, mi_sensor in mi_sensors:

@@ -1,5 +1,3 @@
-from itertools import product
-
 import mitsuba as mi
 import numpy as np
 import pytest
@@ -197,138 +195,140 @@ def test_mi_traverse_name_id_override(
     assert set(mi_wrapper.parameters.keys()) == expected
 
 
-def test_mi_render(mode_mono):
-    mi_scene = mi_load_dict(
-        {
-            "type": "scene",
-            "rectangle": {
-                "type": "arectangle",
-                "bsdf": {"type": "diffuse", "id": "my_bsdf"},
-            },
-            "sensor": {
-                "type": "distant",
-                "film": {"type": "hdrfilm", "width": 1, "height": 1},
-                "direction": [0, 0, -1],
-                "target": [0, 0, 0],
-            },
-            "illumination": {
-                "type": "directional",
-                "direction": [0, 0, -1],
-                "irradiance": 1.0,
-            },
-            "integrator": {"type": "path"},
-        }
-    )
+class TestMiRender:
+    def test_context_loop(self, mode_mono):
+        mi_scene = mi_load_dict(
+            {
+                "type": "scene",
+                "rectangle": {
+                    "type": "arectangle",
+                    "bsdf": {"type": "diffuse", "id": "my_bsdf"},
+                },
+                "sensor": {
+                    "type": "distant",
+                    "film": {"type": "hdrfilm", "width": 1, "height": 1},
+                    "direction": [0, 0, -1],
+                    "target": [0, 0, 0],
+                },
+                "illumination": {
+                    "type": "directional",
+                    "direction": [0, 0, -1],
+                    "irradiance": 1.0,
+                },
+                "integrator": {"type": "path"},
+            }
+        )
 
-    umap_template = KernelSceneParameterMap(
-        {
-            "my_bsdf.reflectance.value": SceneParameter(
-                func=lambda ctx: ctx.kwargs["r"],
-                flags=KernelSceneParameterFlags.ALL,
-                search=SearchSceneParameter(
-                    node_type=mi.BSDF,
-                    node_id="my_bsdf",
-                    parameter_relpath="reflectance.value",
-                ),
+        umap_template = KernelSceneParameterMap(
+            {
+                "my_bsdf.reflectance.value": SceneParameter(
+                    func=lambda ctx: ctx.kwargs["r"],
+                    flags=KernelSceneParameterFlags.ALL,
+                    search=SearchSceneParameter(
+                        node_type=mi.BSDF,
+                        node_id="my_bsdf",
+                        parameter_relpath="reflectance.value",
+                    ),
+                )
+            }
+        )
+
+        mi_wrapper = mi_traverse(mi_scene, umap_template)
+
+        reflectances = [0.0, 0.5, 1.0]
+        wavelengths = [400.0, 500.0, 600.0] * ureg.nm
+
+        result = mi_render(
+            mi_wrapper,
+            ctxs=[
+                KernelContext(si=SpectralIndex.new(w=w), kwargs={"r": r})
+                for (r, w) in zip(reflectances, wavelengths)
+            ],
+        )
+
+        assert isinstance(result, dict)
+
+        expected = []
+        actual = []
+        for _, (r, w) in enumerate(zip(reflectances, wavelengths)):
+            siah = SpectralIndex.new(w=w).as_hashable
+            assert isinstance(result[siah]["sensor"], mi.Bitmap)
+            expected.append(r / np.pi)
+            actual.append(np.squeeze(result[siah]["sensor"]))
+
+        np.testing.assert_allclose(actual, expected)
+
+    def test_multisensor(self, mode_mono):
+        mi_scene = mi_load_dict(
+            {
+                "type": "scene",
+                "rectangle": {
+                    "type": "arectangle",
+                    "bsdf": {"type": "diffuse", "id": "my_bsdf"},
+                },
+                "sensor1": {
+                    "type": "distant",
+                    "film": {"type": "hdrfilm", "width": 1, "height": 1},
+                    "direction": [0, 0, -1],
+                    "target": [0, 0, 0],
+                },
+                "sensor2": {
+                    "type": "distant",
+                    "film": {"type": "hdrfilm", "width": 1, "height": 1},
+                    "direction": [0, 0, -1],
+                    "target": [0, 0, 0],
+                },
+                "illumination": {
+                    "type": "directional",
+                    "direction": [0, 0, -1],
+                    "irradiance": 1.0,
+                },
+                "integrator": {"type": "path"},
+            }
+        )
+
+        umap_template = KernelSceneParameterMap(
+            {
+                "my_bsdf.reflectance.value": SceneParameter(
+                    func=lambda ctx: ctx.kwargs["r"],
+                    flags=KernelSceneParameterFlags.ALL,
+                    search=SearchSceneParameter(
+                        node_type=mi.BSDF,
+                        node_id="my_bsdf",
+                        parameter_relpath="reflectance.value",
+                    ),
+                )
+            }
+        )
+
+        mi_wrapper = mi_traverse(mi_scene, umap_template)
+
+        reflectances = [0.0, 0.5, 1.0]
+        wavelengths = [400.0, 500.0, 600.0] * ureg.nm
+        active_sensors = [(0, 1), (0,), (1,)]
+
+        result = mi_render(
+            mi_wrapper,
+            ctxs=[
+                KernelContext(
+                    si=SpectralIndex.new(w=w), active_sensors=s, kwargs={"r": r}
+                )
+                for (r, w, s) in zip(reflectances, wavelengths, active_sensors)
+            ],
+        )
+
+        # The result must be a nested dict with one level-one element per wavelength,
+        # and one level-two element per active sensor
+        assert isinstance(result, dict)
+        assert np.allclose(list(result.keys()), [w.m for w in wavelengths])
+
+        for spectral_key, sensor_keys in [
+            (400.0, ["sensor1", "sensor2"]),
+            (500.0, ["sensor1"]),
+            (600.0, ["sensor2"]),
+        ]:
+            assert set(result[spectral_key].keys()) == set(sensor_keys)
+            assert all(
+                isinstance(result[spectral_key][sensor_key], mi.Bitmap)
+                for sensor_key in sensor_keys
             )
-        }
-    )
-
-    mi_wrapper = mi_traverse(mi_scene, umap_template)
-
-    reflectances = [0.0, 0.5, 1.0]
-    wavelengths = [400.0, 500.0, 600.0] * ureg.nm
-
-    result = mi_render(
-        mi_wrapper,
-        ctxs=[
-            KernelContext(si=SpectralIndex.new(w=w), kwargs={"r": r})
-            for (r, w) in zip(reflectances, wavelengths)
-        ],
-    )
-
-    assert isinstance(result, dict)
-
-    expected = []
-    actual = []
-    for _, (r, w) in enumerate(zip(reflectances, wavelengths)):
-        siah = SpectralIndex.new(w=w).as_hashable
-        assert isinstance(result[siah]["sensor"], mi.Bitmap)
-        expected.append(r / np.pi)
-        actual.append(np.squeeze(result[siah]["sensor"]))
-
-    np.testing.assert_allclose(actual, expected)
-
-
-def test_mi_render_multisensor(mode_mono):
-    mi_scene = mi_load_dict(
-        {
-            "type": "scene",
-            "rectangle": {
-                "type": "arectangle",
-                "bsdf": {"type": "diffuse", "id": "my_bsdf"},
-            },
-            "sensor1": {
-                "type": "distant",
-                "film": {"type": "hdrfilm", "width": 1, "height": 1},
-                "direction": [0, 0, -1],
-                "target": [0, 0, 0],
-            },
-            "sensor2": {
-                "type": "distant",
-                "film": {"type": "hdrfilm", "width": 1, "height": 1},
-                "direction": [0, 0, -1],
-                "target": [0, 0, 0],
-            },
-            "illumination": {
-                "type": "directional",
-                "direction": [0, 0, -1],
-                "irradiance": 1.0,
-            },
-            "integrator": {"type": "path"},
-        }
-    )
-
-    umap_template = KernelSceneParameterMap(
-        {
-            "my_bsdf.reflectance.value": SceneParameter(
-                func=lambda ctx: ctx.kwargs["r"],
-                flags=KernelSceneParameterFlags.ALL,
-                search=SearchSceneParameter(
-                    node_type=mi.BSDF,
-                    node_id="my_bsdf",
-                    parameter_relpath="reflectance.value",
-                ),
-            )
-        }
-    )
-
-    mi_wrapper = mi_traverse(mi_scene, umap_template)
-
-    reflectances = [0.0, 0.5, 1.0]
-    wavelengths = [400.0, 500.0, 600.0] * ureg.nm
-
-    result = mi_render(
-        mi_wrapper,
-        ctxs=[
-            KernelContext(si=SpectralIndex.new(w=w), kwargs={"r": r})
-            for (r, w) in zip(reflectances, wavelengths)
-        ],
-    )
-
-    # The result must be a nested dict with one level-one element per wavelength,
-    # and one level-two element per sensor
-    assert isinstance(result, dict)
-    assert np.allclose(
-        list(result.keys()),
-        [w.m for w in wavelengths],
-    )
-
-    sensors_keys = set()
-    for spectral_key in result.keys():
-        sensors_keys.update(set(result[spectral_key].keys()))
-    assert sensors_keys == {"sensor1", "sensor2"}
-    assert all(
-        isinstance(result[spectral_key][sensor_key], mi.Bitmap)
-        for (spectral_key, sensor_key) in product(result.keys(), sensors_keys)
-    )

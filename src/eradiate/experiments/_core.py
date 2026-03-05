@@ -49,7 +49,6 @@ from ..spectral.ckd_quad import CKDQuadConfig
 from ..spectral.grid import CKDSpectralGrid, MonoSpectralGrid, SpectralGrid
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_registry as ureg
-from ..util.misc import deduplicate_sorted
 
 logger = logging.getLogger(__name__)
 
@@ -581,31 +580,52 @@ class EarthObservationExperiment(Experiment, ABC):
     def contexts(self, measures: None | int | list[int] = None) -> list[KernelContext]:
         # Inherit docstring
 
-        # Collect contexts from all measures
-        sis = []
-
         if measures is None:
             measures = list(range(len(self.measures)))
 
         if isinstance(measures, int):
             measures = [measures]
 
+        # Map measure indices to sensor indices
+        if self.mi_scene is None:
+            raise RuntimeError(
+                "Kernel scene is not initialized. Call init() before contexts()."
+            )
+
+        measure_to_sensor = {}
+        mi_sensors_ids = [s.id() for s in self.mi_scene.obj.sensors()]
         for measure_index in measures:
-            _si = list(self.spectral_indices(measure_index))
-            sis.extend(_si)
+            measure = self.measures[measure_index]
+            measure_to_sensor[measure_index] = mi_sensors_ids.index(measure.sensor_id)
 
-        # Sort and remove duplicates
-        key = {
-            MonoSpectralIndex: lambda si: si.w.m,
-            CKDSpectralIndex: lambda si: (si.w.m, si.g),
-        }[SpectralIndex.subtypes.resolve()]
+        # Collect contexts from all measures
+        # Maps spectral index hash to (spectral index, active sensor list)
+        si_hash_to_si = {}
 
-        sis = deduplicate_sorted(
-            sorted(sis, key=key), cmp=lambda x, y: key(x) == key(y)
-        )
+        for measure_index in measures:
+            sis = list(self.spectral_indices(measure_index))
+            sensor_index = measure_to_sensor[measure_index]
+            for si in sis:
+                si_hash = si.as_hashable
+                if si_hash not in si_hash_to_si:
+                    si_hash_to_si[si_hash] = (si, [sensor_index])
+                else:
+                    si_hash_to_si[si_hash][1].append(sensor_index)
 
+        # Generate final list of contexts
         kwargs = self._context_kwargs()
-        return [KernelContext(si, kwargs=kwargs) for si in sis]
+        result = [
+            KernelContext(si, active_sensors=active_sensors, kwargs=kwargs)
+            for si, active_sensors in si_hash_to_si.values()
+        ]
+
+        key = {
+            MonoSpectralIndex: lambda ctx: ctx.si.w.m,
+            CKDSpectralIndex: lambda ctx: (ctx.si.w.m, ctx.si.g),
+        }[SpectralIndex.subtypes.resolve()]
+        result.sort(key=key)
+
+        return result
 
     @property
     @abstractmethod
@@ -678,22 +698,9 @@ class EarthObservationExperiment(Experiment, ABC):
         measure_idxs = [self.measures.get_index(measure.id) for measure in measures]
         ctxs = self.contexts(measure_idxs)
 
-        # Collect active sensor IDs
-        active_sensors = [measure.sensor_id for measure in measures]
-        mi_sensors = self.mi_scene.obj.sensors()
-        active_sensors = [
-            i for i, sensor in enumerate(mi_sensors) if sensor.id() in active_sensors
-        ]
-
         # Run Mitsuba for each context
         logger.info("Launching simulation")
-        mi_results = mi_render(
-            self.mi_scene,
-            ctxs=ctxs,
-            sensors=active_sensors,
-            seed_state=seed_state,
-            spp=spp,
-        )
+        mi_results = mi_render(self.mi_scene, ctxs=ctxs, seed_state=seed_state, spp=spp)
 
         # Assign collected results to the appropriate measure
         sensor_to_measure: dict[str, Measure] = {

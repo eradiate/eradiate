@@ -17,7 +17,7 @@ class ConcreteEarthObservationExperiment(EarthObservationExperiment):
 
     @property
     def scene_objects(self) -> dict[str, SceneElement]:
-        return {}
+        return {measure.id: measure for measure in self.measures}
 
 
 def test_contexts(mode_mono):
@@ -40,18 +40,26 @@ def test_contexts(mode_mono):
         ]
     )
 
+    # Check initialization context
     assert np.allclose(exp.context_init().si.w.m, 440.0)
 
+    # We need to init the scene so that mapping measures to sensors is possible
+    exp.init()
+
+    # Check contexts generated for each measure configuration
     for measures, expected in [
-        (None, [440.0, 550.0, 660.0]),
-        (0, [440.0]),
-        ([0, 1], [440.0, 550.0]),
-        ([0, 1, 2], [440.0, 550.0]),
-        ([1, 3], [550.0, 660.0]),
-        ([2, 3], [440.0, 550.0, 660.0]),
+        (None, [(440.0, [0, 2]), (550.0, [1, 2, 3]), (660.0, [3])]),
+        (0, [(440.0, [0])]),
+        ([0, 1], [(440.0, [0]), (550.0, [1])]),
+        ([0, 1, 2], [(440.0, [0, 2]), (550.0, [1, 2])]),
+        ([1, 3], [(550.0, [1, 3]), (660.0, [3])]),
+        ([2, 3], [(440.0, [2]), (550.0, [2, 3]), (660.0, [3])]),
     ]:
-        result = [ctx.si.w.m for ctx in exp.contexts(measures)]
-        assert np.allclose(result, expected), f"{measures = }"
+        result = exp.contexts(measures)
+        assert len(result) == len(expected)
+        for ctx, (w, sensors) in zip(result, expected):
+            assert np.isclose(ctx.si.w.m, w), f"{measures = }, {w = }"
+            assert ctx.active_sensors == sensors, f"{measures = }, {w = }"
 
 
 @pytest.fixture()
