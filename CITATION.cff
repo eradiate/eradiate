@@ -42,5 +42,5 @@ identifiers:
 repository-code: 'https://github.com/eradiate/eradiate'
 url: 'https://www.eradiate.eu'
 license: LGPL-3.0
-version: 1.0.1
-date-released: '2025-10-14'
+version: 1.0.2
+date-released: '2026-03-09'
