@@ -5,6 +5,8 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -340,6 +342,8 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -1269,6 +1273,8 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -1970,6 +1976,8 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -3862,8 +3870,8 @@ packages:
   requires_python: '>=3.8'
 - pypi: ./
   name: eradiate
-  version: 1.0.1
-  sha256: a6d950bad6b1a7c30d116ed6351835f3c9903a255a3cb7d1fc05d519cc332ebd
+  version: 1.0.2
+  sha256: 0d5713d4a653789e6b95c7b3bc5bf3728ff142a32d5f7b8ce079af4bd568eb35
   requires_dist:
   - aenum
   - attrs>=22.2
@@ -3898,7 +3906,6 @@ packages:
   - graphviz ; extra == 'recommended'
   - seaborn ; extra == 'recommended'
   requires_python: '>=3.9,<3.13'
-  editable: true
 - pypi: https://files.pythonhosted.org/packages/1a/84/44f6d833e3001ab9262d57f0592362d6d7852a61b4e027c6a3d3c0105fe3/eradiate_mitsuba-0.3.2-cp39-cp39-win_amd64.whl
   name: eradiate-mitsuba
   version: 0.3.2
