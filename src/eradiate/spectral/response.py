@@ -634,6 +634,21 @@ class BandSRF(SpectralResponseFunction):
         # Compute integral
         return spi.cumulative_trapezoid(values_m, w_m) * w_u
 
+    def central_wavelength(self) -> pint.Quantity:
+        """
+        Return central wavelength.
+
+        Returns
+        -------
+        pint.Quantity
+        """
+        b = BandSRF(
+            wavelengths=self.wavelengths, values=self.values * self.wavelengths.m
+        )
+        wmin, wmax = self.support()
+        w_units = self.wavelengths.u
+        return b.integrate(wmin, wmax) / self.integrate(wmin, wmax) * w_units
+
 
 def make_gaussian(*args, **kwargs) -> xr.Dataset:
     """
