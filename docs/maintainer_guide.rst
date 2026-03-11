@@ -86,23 +86,23 @@ Making a release of Eradiate
          pixi run bump
 
    7. Update the change log.
-   8. Commit the changes:
-
-      .. code:: shell
-
-         git commit -am "Bump version to $RELEASE_VERSION"
-
-   9. Update the version and release date fields in ``CITATION.cff``:
+   8. Update the version and release date fields in ``CITATION.cff``:
 
       .. code:: shell
 
          pixi run release update-citation
 
-   10. Update the PyPI README content:
+   9. Update the PyPI README content:
+
+      .. code:: shell
+
+         pixi run release update-pypi-readme
+
+   10. Commit the changes:
 
        .. code:: shell
 
-          pixi run release update-pypi-readme
+          git commit -am "Bump version to $RELEASE_VERSION"
 
    11. Push the changes:
 
