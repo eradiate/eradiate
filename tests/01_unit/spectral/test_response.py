@@ -114,6 +114,17 @@ def test_band_srf():
     ).integrate_cumulative([400, 500, 550, 600, 700])
     np.testing.assert_equal(integral.m_as("nm"), [0, 25, 50, 50])
 
+    # Central wavelength
+    central_wavelength = BandSRF(
+        wavelengths=[500, 550, 600], values=[0, 1, 0]
+    ).central_wavelength()
+    np.testing.assert_allclose(central_wavelength, 550.0 * ureg.nm)
+
+    central_wavelength = BandSRF(
+        wavelengths=[500, 533, 567, 600], values=[0, 0.5, 1, 0]
+    ).central_wavelength()
+    np.testing.assert_allclose(central_wavelength, 555.666667 * ureg.nm)
+
     # Export to xarray
     da = BandSRF(wavelengths=[500, 550, 600], values=[0, 1, 0]).to_dataarray()
     expected = xr.DataArray(np.array([0, 1, 0]), coords={"w": [500, 550, 600]})
