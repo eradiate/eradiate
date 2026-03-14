@@ -46,6 +46,8 @@ Dataset index
 ``govaerts_2021-continental-extrapolated``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+An aerosol dataset representative of continental aerosol classes to support the `RAMI4ATM benchmarking exercise <https://rami-benchmark.jrc.ec.europa.eu/_www/RAMI4ATM/phase_RAMI4ATM_p.php?strPhase=RAMI4ATM#tagATMcA>`__. The single-scattering properties were computed using miepython.
+
 .. dropdown:: Data path
 
     ``aerosol/govaerts_2021-continental-extrapolated.nc``
@@ -54,6 +56,8 @@ Dataset index
 
 ``govaerts_2021-desert-extrapolated``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An aerosol dataset representative of desert aerosol classes to support the `RAMI4ATM benchmarking exercise <https://rami-benchmark.jrc.ec.europa.eu/_www/RAMI4ATM/phase_RAMI4ATM_p.php?strPhase=RAMI4ATM#tagATMcA>`__. The single-scattering properties were computed using miepython.
 
 .. dropdown:: Data path
 
@@ -64,6 +68,8 @@ Dataset index
 ``sixsv-biomass_burning``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+None
+
 .. dropdown:: Data path
 
     ``aerosol/sixsv-biomass_burning.nc``
@@ -72,6 +78,8 @@ Dataset index
 
 ``sixsv-continental``
 ^^^^^^^^^^^^^^^^^^^^^
+
+None
 
 .. dropdown:: Data path
 
@@ -82,6 +90,8 @@ Dataset index
 ``sixsv-desert``
 ^^^^^^^^^^^^^^^^
 
+None
+
 .. dropdown:: Data path
 
     ``aerosol/sixsv-desert.nc``
@@ -90,6 +100,8 @@ Dataset index
 
 ``sixsv-maritime``
 ^^^^^^^^^^^^^^^^^^
+
+None
 
 .. dropdown:: Data path
 
@@ -100,6 +112,8 @@ Dataset index
 ``sixsv-stratospheric``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
+None
+
 .. dropdown:: Data path
 
     ``aerosol/sixsv-stratospheric.nc``
@@ -108,6 +122,8 @@ Dataset index
 
 ``sixsv-urban``
 ^^^^^^^^^^^^^^^
+
+None
 
 .. dropdown:: Data path
 
