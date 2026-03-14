@@ -47,6 +47,8 @@ Dataset index
 ``{{entry.keyword}}``
 {{'^' * ((entry.keyword|length) + 4)}}
 
+{{entry.description}}
+
 .. dropdown:: Data path
 
     ``{{entry.fname}}``
