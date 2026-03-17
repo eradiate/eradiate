@@ -279,9 +279,29 @@ def apply_spectral_response(
 
     # Initialize storage (we want to keep all coordinate variables)
     result = xr.full_like(spectral_data, np.nan).isel(w=0, drop=True)
-    result.values = var_srf_int.values / srf_int.m_as(w_units)
 
     # Apply SRF to variable and store result
+    result.values = var_srf_int.values / srf_int.m_as(w_units)
+
+    if isinstance(srf, BandSRF):
+        # Add SRF central wavelength as a scalar coordinate
+        w_srf = srf.central_wavelength()
+        result = result.assign_coords(
+            {
+                "w_srf": (
+                    [],
+                    w_srf.m,
+                    {
+                        "standard_name": "central_wavelength",
+                        "long_name": "SRF central wavelength",
+                        "units": symbol(w_srf.u),
+                        "comment": "Relevant only for SRF-weighted variables",
+                    },
+                )
+            }
+        )
+
+    # Apply metadata
     attrs = spectral_values.attrs.copy()
     if "standard_name" in attrs:
         attrs["standard_name"] += "_srf"
