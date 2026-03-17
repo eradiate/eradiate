@@ -319,12 +319,15 @@ def test_04_apply_spectral_response_main(
     assert set(result.dims) == expected_dims
 
     # Coordinate checks
-    expected_coords = set(raw.coords) - ({"w"} | {"bin_wmax", "bin_wmin"})
+    expected_coords = (set(raw.coords) | {"w_srf"}) - {"w", "bin_wmax", "bin_wmin"}
     assert set(result.coords) == expected_coords
 
     # The step adds an SRF-weighted variable
     assert apply_spectral_response.name == f"{var_name}_srf"
     assert np.all(apply_spectral_response.values > 0.0)
+
+    # The recorded central wavelength is correct
+    np.testing.assert_approx_equal(result["w_srf"].values, 559.84824506)
 
 
 @pytest.mark.parametrize("mode_id", ["ckd"])
