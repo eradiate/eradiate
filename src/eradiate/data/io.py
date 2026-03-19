@@ -5,7 +5,6 @@ Data loading, conversion and output components.
 from __future__ import annotations
 
 import warnings
-from typing import Literal
 
 import numpy as np
 import pint
@@ -13,6 +12,7 @@ import pinttrs
 import xarray as xr
 
 from ._file_resolver import fresolver
+from .convert import libradtran_to_aer_core_v2
 from ..typing import PathLike
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -39,7 +39,6 @@ def _get_units(ds, var, fallback_units=None):
 
 def load_aerosol_libradtran(
     data: PathLike | xr.Dataset,
-    particle_shape: Literal["spherical", "spheroidal"] | None = None,
     tolerance: dict[str, pint.Quantity | float] | None = None,
     wbounds: tuple = (None, None),
     fallback_units: dict[str, str] | None = None,
@@ -54,11 +53,6 @@ def load_aerosol_libradtran(
     data : Dataset or path-like
         A libRadtran NetCDF aerosol dataset. If a path is passed, it will be
         resolved by the file resolver and tentatively loaded into memory.
-
-    particle_shape : {"spherical", "spheroidal"}, optional
-        The expected shape of the particle (this will tell the phase matrix
-        coefficients it should expect). If unset, the shape is inferred from the
-        input dataset.
 
     reff, hum : float or quantity
         For datasets with a humidity or effective radius dimension, the
@@ -87,6 +81,10 @@ def load_aerosol_libradtran(
     -------
     Dataset
 
+    See Also
+    --------
+    :func:`.libradtran_to_aer_core_v2`
+
     Notes
     -----
     .. list-table::
@@ -106,15 +104,14 @@ def load_aerosol_libradtran(
           - Wavelength
           - ``ucc.get("wavelength")`` (usually, nm)
 
-    * The current implementation resamples the angular dimension at the
-      highest resolution to minimize the loss of information on phase matrix
-      coefficients.
-
-    * All conversion is done in memory: very large dataset might result in
-      massive converted data. In such case, an easy way to split the conversion
+    * All conversion is done in memory: very large datasets might result in
+      massive converted data. In such cases, an easy way to split the conversion
       is to chunk it on the spectral dimension.
     """
+    # Map variables to their associated dimension names
     VARS_TO_DIMS = {"wavelen": "nlam", "reff": "nreff", "hum": "nhum"}
+
+    # Map kwargs to associated default units in case non-quantities are passed
     KWARG_TO_DEFAULT_UNITS = {
         "w": ucc.get("wavelength"),
         "hum": ureg.Unit("percent"),
@@ -126,10 +123,8 @@ def load_aerosol_libradtran(
         data = fresolver.load_dataset(data)
 
     # Extract required variables
-    vars = ["phase", "ext", "ssa", "theta", "wavelen"]
-    for var in ["reff", "hum"]:
-        if var in data:
-            vars.append(var)
+    vars = ["phase", "ext", "ssa", "theta", "wavelen", "ntheta", "pmom", "nmom"]
+    vars.extend([x for x in ["reff", "hum"] if x in data])
     data = data[vars]
 
     # Select on humidity and effective radius
@@ -138,7 +133,7 @@ def load_aerosol_libradtran(
 
     for kwarg in ["hum", "reff"]:
         var = kwarg
-        if var not in data:
+        if var not in data.dims:  # skip if dimension is missing
             continue
 
         units = _get_units(data, var, fallback_units)
@@ -174,7 +169,8 @@ def load_aerosol_libradtran(
     if kwargs:
         warnings.warn(
             "load_aerosol_libradtran() got unexpected keyword arguments "
-            f"{list(kwargs.keys())}, which were not used"
+            f"{list(kwargs.keys())}, which were not used",
+            stacklevel=2,
         )
 
     # Filter wavelengths if requested
@@ -194,77 +190,4 @@ def load_aerosol_libradtran(
         )
         data = data.where(data["wavelen"] <= wmax).dropna("nlam", how="all")
 
-    wavelength = data["wavelen"].values * units
-
-    # Phase function
-    if particle_shape is None:
-        if len(data["nphamat"] == 4):
-            particle_shape = "spherical"
-        elif len(data["nphamat"] == 6):
-            particle_shape = "spheroidal"
-        else:
-            raise ValueError("Could not detect particle shape type")
-
-    if particle_shape == "spherical":
-        ij_to_nphamat = {
-            (0, 0): 0,
-            (1, 1): 0,
-            (0, 1): 1,
-            (1, 0): 1,
-            (2, 2): 2,
-            (3, 3): 2,
-            (2, 3): 3,
-            (3, 2): 3,
-        }
-    elif particle_shape == "spheroidal":
-        ij_to_nphamat = {
-            (0, 0): 0,
-            (0, 1): 1,
-            (1, 0): 1,
-            (1, 1): 4,
-            (2, 2): 2,
-            (2, 3): 3,
-            (3, 2): 3,
-            (3, 3): 5,
-        }
-    else:
-        raise NotImplementedError(f"Unknown particle shape '{particle_shape}'")
-
-    # -- Create angular grid (highest resolution possible)
-    mus = np.cos(np.deg2rad(data["theta"].values.ravel()))
-    mus = mus[~np.isnan(mus)]
-    mus = np.unique(mus)
-
-    # -- Resample all phase matrix components and fill data array with shape
-    #    [wavelength, theta, i, j]
-    n_wavelength = len(wavelength)
-    n_theta = len(mus)
-    phase_np = np.zeros((n_wavelength, n_theta, 4, 4))
-
-    for i_wavelength in range(n_wavelength):
-        for (i, j), nphamat in ij_to_nphamat.items():
-            data_selected = data.isel(nlam=i_wavelength, nphamat=nphamat).dropna(
-                "nthetamax"
-            )
-            x = mus
-            xp = np.cos(np.deg2rad(data_selected["theta"].values)).ravel()
-            fp = data_selected["phase"].values
-            p = np.interp(x, xp, fp)
-            phase_np[i_wavelength, :, i, j] = p
-
-    # Populate Eradiate dataset with correct format
-    phase_eradiate = xr.Dataset(
-        data_vars={
-            "sigma_t": (["w"], data["ext"].values, {"units": "1/km"}),
-            "albedo": (["w"], data["ssa"].values, {"units": ""}),
-            "phase": (["w", "mu", "i", "j"], phase_np),
-        },
-        coords={
-            "w": ("w", wavelength.m_as("nm"), {"units": "nm"}),
-            "mu": ("mu", mus),
-            "i": ("i", range(4)),
-            "j": ("j", range(4)),
-        },
-    )
-
-    return phase_eradiate
+    return libradtran_to_aer_core_v2(data, fallback_units=fallback_units)

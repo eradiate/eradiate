@@ -23,6 +23,7 @@
    RadProfile
    ArrayRadProfile
    AtmosphereRadProfile
+   ParticleProperties
 
 .. rubric:: Functions
 

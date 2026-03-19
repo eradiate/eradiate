@@ -6,32 +6,28 @@ from __future__ import annotations
 
 import warnings
 from functools import singledispatchmethod
-from typing import Literal
 
 import attrs
 import numpy as np
 import pint
 import pinttrs
-import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
 from ..core import traverse
-from ..phase import TabulatedPhaseFunction
-from ... import converters
+from ..phase import ParticlePhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel import SceneParameter
-from ...radprops import ZGrid
+from ...radprops import ParticleProperties, ZGrid
 from ...spectral.index import (
     CKDSpectralIndex,
     MonoSpectralIndex,
     SpectralIndex,
 )
-from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
-from ...util.misc import cache_by_id, summary_repr
+from ...util.misc import cache_by_id
 from ...validators import is_positive
 
 
@@ -47,7 +43,7 @@ def _particle_layer_distribution_converter(value):
     return particle_distribution_factory.convert(value)
 
 
-@define(eq=False, slots=False)
+@define(eq=False, slots=False, init=False)
 class ParticleLayer(AbstractHeterogeneousAtmosphere):
     """
     Particle layer scene element [``particle_layer``].
@@ -147,8 +143,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     @w_ref.validator
     def _w_ref_validator(self, attribute, value):
-        w_units = self.dataset["w"].attrs["units"]
-        if not np.any(np.isclose(value.m_as(w_units), self.dataset["w"].values)):
+        w_units = self.particle_properties.w.u
+        if not np.any(np.isclose(value.m_as(w_units), self.particle_properties.w.m)):
             warnings.warn(
                 "While initializing ParticleLayer: the provided aerosol "
                 "single-scattering property dataset does not contain the selected "
@@ -158,7 +154,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     tau_ref: pint.Quantity = documented(
         pinttrs.field(
             units=ucc.deferred("dimensionless"),
-            default=ureg.Quantity(0.2, ureg.dimensionless),
+            factory=lambda: ureg.Quantity(0.2, ureg.dimensionless),
             validator=[is_positive, pinttrs.validators.has_compatible_units],
         ),
         doc="Extinction optical thickness at the reference wavelength.\n"
@@ -169,28 +165,14 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="0.2",
     )
 
-    dataset: xr.Dataset = documented(
+    particle_properties: ParticleProperties = documented(
         attrs.field(
             default="govaerts_2021-continental",
-            converter=converters.passthrough_type(xr.Dataset)(
-                attrs.converters.pipe(
-                    converters.resolve_keyword(lambda x: f"aerosol/{x}.nc"),
-                    converters.resolve_path,
-                    converters.load_dataset,
-                )
-            ),
-            validator=attrs.validators.instance_of(xr.Dataset),
-            repr=summary_repr,
+            converter=ParticleProperties.convert,
         ),
-        doc="Particle radiative property data set. "
-        "If an xarray dataset is passed, the dataset is used as is "
-        "(refer to the data guide for the format requirements of this dataset). "
-        "If a path is passed, the converter looks it up on the hard drive, using "
-        "the file resolver. "
-        "If a string is passed, it is interpreted as a particle radiative "
-        "property dataset identifier.",
-        type="Dataset",
-        init_type="Dataset or path-like or str",
+        doc="Particle single-scattering properties.",
+        type="ParticleProperties",
+        init_type="ParticleProperties or Dataset or path-like or str",
         default='"govaerts_2021-continental"',
     )
 
@@ -229,24 +211,23 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="False",
     )
 
-    particle_shape: Literal["spherical", "spheroidal"] = documented(
-        attrs.field(default="spherical", kw_only=True),
-        doc="Defines the shape of the particle. Only used in polarized mode.\n\n"
-        '* ``"spherical"``: 4 coefficients considered [m11, m12, m33, m34].\n'
-        '* ``"spheroidal"``: 6 coefficients considered [m11, m12, m22, m33, m34, m44].',
-        type="str",
-        init_type='{"spherical", "spheroidal"}',
-        default='"spherical"',
-    )
+    _phase: ParticlePhaseFunction | None = attrs.field(default=None, init=False)
 
-    _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
+    def __init__(self, *args, dataset=None, **kwargs):
+        if dataset is not None:
+            warnings.warn(
+                "The 'dataset' argument is deprecated; use 'particle_properties' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            kwargs.setdefault("particle_properties", dataset)
+        self.__attrs_init__(*args, **kwargs)
 
     def update(self) -> None:
-        self._phase = TabulatedPhaseFunction(
+        self._phase = ParticlePhaseFunction(
             id=self.phase_id,
-            data=self.dataset.phase,
-            force_polarized_phase=self.force_polarized_phase,
-            particle_shape=self.particle_shape,
+            particle_properties=self.particle_properties,
+            force_polarized=self.force_polarized_phase,
         )
 
     # --------------------------------------------------------------------------
@@ -280,15 +261,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         # Return albedo from dataset (without accounting for bypass switches)
         # This routine is vectorized and returns an array of shape
         # (n_wavelengths, n_layers)
-        ds = self.dataset
-        wavelengths = w.m_as(ds.w.attrs["units"])
-
-        if len(ds["w"]) == 1:
-            interpolated = to_quantity(ds.albedo.sel(w=wavelengths, method="nearest"))
-        else:
-            interpolated = to_quantity(ds.albedo.interp(w=np.atleast_1d(wavelengths)))
-        where_present = np.reshape(self.eval_fractions(zgrid) > 0, (1, -1))
-        return interpolated * where_present
+        pp = self.particle_properties
+        albedo = pp.eval_ssa(w)
+        zmask = np.reshape(self.eval_fractions(zgrid) > 0, (1, -1))
+        return albedo * zmask
 
     @cache_by_id
     def _eval_sigma_t_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
@@ -297,20 +273,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         # array of shape (n_wavelengths, n_layers)
 
         # Collect input data
-        ds = self.dataset
-        ds_w_units = ureg(ds.w.attrs["units"])
-        wavelengths = np.atleast_1d(w.m_as(ds_w_units))
-
-        if len(ds["w"]) == 1:
-            sigma_t_star = to_quantity(ds.sigma_t.sel(w=wavelengths, method="nearest"))
-            sigma_t_star_ref = to_quantity(
-                ds.sigma_t.sel(w=self.w_ref.m_as(ds_w_units), method="nearest")
-            )
-        else:
-            sigma_t_star = to_quantity(ds.sigma_t.interp(w=wavelengths))
-            sigma_t_star_ref = to_quantity(
-                ds.sigma_t.interp(w=np.atleast_1d(self.w_ref.m_as(ds_w_units)))
-            )
+        w = np.atleast_1d(w)
+        pp = self.particle_properties
+        sigma_t_star = pp.eval_ext(w)
+        sigma_t_star_ref = pp.eval_ext(self.w_ref)
 
         # Compute target optical thickness value
         tau = self.tau_ref * sigma_t_star / sigma_t_star_ref
@@ -320,7 +286,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         #  routines
         fractions = self.eval_fractions(zgrid)
         tau_layers = np.broadcast_to(
-            np.reshape(tau, (-1, 1)), (len(wavelengths), zgrid.n_layers)
+            np.reshape(tau, (-1, 1)), (len(w), zgrid.n_layers)
         ) * np.reshape(fractions, (1, -1))
 
         # Compute corresponding average coefficient
@@ -387,9 +353,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     @singledispatchmethod
     def eval_sigma_t(
-        self,
-        si: SpectralIndex,
-        zgrid: ZGrid | None = None,
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
@@ -397,16 +361,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     @eval_sigma_t.register(MonoSpectralIndex)
     def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_t_mono(
-            w=si.w,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            w=si.w, zgrid=self.geometry.zgrid if zgrid is None else zgrid
         )
 
     @eval_sigma_t.register(CKDSpectralIndex)
     def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_t_ckd(
-            w=si.w,
-            g=si.g,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            w=si.w, g=si.g, zgrid=self.geometry.zgrid if zgrid is None else zgrid
         )
 
     def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
@@ -416,26 +377,21 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             return result
 
         elif not self.has_absorption and self.has_scattering:
-            return result - self._eval_sigma_a_impl(w, zgrid)
+            return result - self._eval_sigma_a_impl(w, zgrid).squeeze()
 
         elif self.has_absorption and not self.has_scattering:
-            return result - self._eval_sigma_s_impl(w, zgrid)
+            return result - self._eval_sigma_s_impl(w, zgrid).squeeze()
 
         raise RuntimeError
 
     def eval_sigma_t_ckd(
-        self,
-        w: pint.Quantity,
-        g: float,
-        zgrid: ZGrid,
+        self, w: pint.Quantity, g: float, zgrid: ZGrid
     ) -> pint.Quantity:
         return self.eval_sigma_t_mono(w=w, zgrid=zgrid)
 
     @singledispatchmethod
     def eval_sigma_a(
-        self,
-        si: SpectralIndex,
-        zgrid: ZGrid | None = None,
+        self, si: SpectralIndex, zgrid: ZGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
@@ -443,16 +399,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     @eval_sigma_a.register(MonoSpectralIndex)
     def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_a_mono(
-            w=si.w,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            w=si.w, zgrid=self.geometry.zgrid if zgrid is None else zgrid
         )
 
     @eval_sigma_a.register(CKDSpectralIndex)
     def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_a_ckd(
-            w=si.w,
-            g=si.g,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            w=si.w, g=si.g, zgrid=self.geometry.zgrid if zgrid is None else zgrid
         )
 
     def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
@@ -474,16 +427,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     @eval_sigma_s.register(MonoSpectralIndex)
     def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_s_mono(
-            w=si.w,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            w=si.w, zgrid=self.geometry.zgrid if zgrid is None else zgrid
         )
 
     @eval_sigma_s.register(CKDSpectralIndex)
     def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_s_ckd(
-            w=si.w,
-            g=si.g,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            w=si.w, g=si.g, zgrid=self.geometry.zgrid if zgrid is None else zgrid
         )
 
     def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
@@ -500,7 +450,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
 
     @property
-    def phase(self) -> TabulatedPhaseFunction:
+    def phase(self) -> ParticlePhaseFunction:
         # Inherit docstring
         return self._phase
 

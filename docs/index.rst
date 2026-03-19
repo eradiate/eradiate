@@ -77,6 +77,7 @@ Python and C++17. It relies on a radiometric kernel based on the
    :caption: Data
 
    Introduction <data/intro>
+   Data formats <data/formats>
    Atmosphere: Aerosols / particles <data/aerosols_particles>
    Atmosphere: Molecular absorption <data/absorption_databases>
    Atmosphere: Thermophysical properties <data/atmosphere_thermoprops>
