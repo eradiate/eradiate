@@ -7,7 +7,7 @@ metadata:
 resources: # List of resource aliases
   # Each entry of this mapping takes as key an alias name, and as values
   # one or several resource paths or aliases.
-  aerosol: aerosol/core-v1
+  aerosol: aerosol/core-v2
   bsdf: bsdf/core-v1
   constant: constant/core-v1
   gecko: absorption_mono/gecko-v1

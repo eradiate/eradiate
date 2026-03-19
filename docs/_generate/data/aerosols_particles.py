@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import attrs
+import xarray as xr
 
 import eradiate
 from eradiate.plot import dashboard_particle_dataset
@@ -27,7 +28,9 @@ def generate_particle_radprops_visual(
     if outfile.is_file() and not force:  # Skip if file exists
         return
 
-    with eradiate.data.open_dataset(info.fname) as ds:
+    fname = eradiate.fresolver.resolve(info.fname)
+
+    with xr.open_dataset(fname) as ds:
         print(f"Generating particle radiative property visual in '{outfile}'")
         fig, _ = dashboard_particle_dataset(ds)
         savefig(fig, outfile, dpi=150, bbox_inches="tight")
