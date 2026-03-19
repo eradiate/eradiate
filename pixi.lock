@@ -7736,7 +7736,7 @@ packages:
 - pypi: ./
   name: eradiate
   version: 1.0.1
-  sha256: 2f6f541cb80b5688cda975d4d80d891226f36d9b7aada00a2c9a6aa321b05405
+  sha256: 43b033ab4afe07e1f4bf2d2e599b1f7b9367d6db8a36948426bd1ec7ca1d1c2a
   requires_dist:
   - aenum
   - axsdb>=0.1.2,<0.2
@@ -7762,7 +7762,7 @@ packages:
   - tqdm
   - shellingham!=1.5.1
   - xarray>=2023
-  - eradiate-mitsuba==0.4.3 ; extra == 'kernel'
+  - eradiate-mitsuba>=0.4.3,<0.5.0 ; extra == 'kernel'
   - aabbtree ; extra == 'recommended'
   - skyfield ; extra == 'recommended'
   - ipython ; extra == 'recommended'
