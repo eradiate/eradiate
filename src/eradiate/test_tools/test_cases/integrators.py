@@ -51,7 +51,7 @@ def _create_integrator_surface(
                 "bottom": 1 * ureg.km,
                 "top": 2 * ureg.km,
                 "tau_ref": 0.2,
-                "dataset": "govaerts_2021-continental",
+                "particle_properties": "govaerts_2021-continental",
             },
         },
         integrator=integrator_dict,
@@ -117,7 +117,7 @@ def create_integrator_canopy(absorption_database_error_handler_config, integrato
                 "top": 2 * ureg.km,
                 "distribution": {"type": "uniform"},
                 "tau_ref": 0.2,
-                "dataset": "govaerts_2021-continental",
+                "particle_properties": "govaerts_2021-continental",
             },
         },
         canopy={

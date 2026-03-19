@@ -182,10 +182,10 @@ def create_rami4atm_toa(
         }
 
         if aerosol_id == "c":
-            particle_layer["dataset"] = "govaerts_2021-continental"
+            particle_layer["particle_properties"] = "govaerts_2021-continental"
 
         else:  # aerosol_id == "d":
-            particle_layer["dataset"] = "govaerts_2021-desert"
+            particle_layer["particle_properties"] = "govaerts_2021-desert"
 
     else:
         raise ValueError(f"Unhandled particle layer component id '{aerosol_id}'")

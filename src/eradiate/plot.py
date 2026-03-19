@@ -233,16 +233,13 @@ def dashboard_particle_dataset(
         A Seaborn palette specification used to colour the phase function line
         plots.
     """
-    df = ds.phase.isel(i=0, j=0, drop=True).to_dataframe()[["phase"]]
-    df = df.sort_values(["w", "mu"]).reset_index()
-    df["theta"] = np.arccos(df["mu"])
-    phase_min = df["phase"].min()
-    phase_max = df["phase"].max()
-    # print(f"{phase_min = }, {phase_max = }")
+    phase_min = ds["phase"].min()
+    phase_max = ds["phase"].max()
 
+    w = ds["w"].values
     w_chunks = [
         (chunk.min(), chunk.max())
-        for chunk in _chunk_array(np.unique(df["w"]), phase_wavelength_chunk_size)
+        for chunk in _chunk_array(np.unique(w), phase_wavelength_chunk_size)
     ]
     naxs_phase = len(w_chunks)
     ncols = 2
@@ -250,10 +247,7 @@ def dashboard_particle_dataset(
     height_ratios = [0.5, 0.5] + [1 for _ in range(nrows_phase)]
 
     fig, axs = plt.subplot_mosaic(
-        [
-            ["sigma_t", "sigma_t"],
-            ["albedo", "albedo"],
-        ]
+        [["ext", "ext"], ["ssa", "ssa"]]
         + [[f"phase_{i * 2}", f"phase_{i * 2 + 1}"] for i in range(nrows_phase)],
         height_ratios=height_ratios,
         figsize=(4 * ncols, 4 * sum(height_ratios)),
@@ -261,7 +255,7 @@ def dashboard_particle_dataset(
         layout="constrained",
     )
 
-    for i_var, var in enumerate(["sigma_t", "albedo"]):
+    for i_var, var in enumerate(["ext", "ssa"]):
         gs = axs[var].get_gridspec()
         start = i_var * ncols
         stop = start + 1
@@ -270,34 +264,35 @@ def dashboard_particle_dataset(
         ds[var].plot(ax=axs[var], ls=":", marker=".")
 
     for i_phase, (wmin, wmax) in enumerate(w_chunks):
-        _df = df.where((df["w"] >= wmin) & (df["w"] <= wmax)).dropna()
-        ax = axs[f"phase_{i_phase}"]
-        sns.lineplot(
-            ax=ax,
-            data=_df,
-            x="theta",
-            y="phase",
-            hue="w",
-            hue_norm=PiecewiseNorm(levels=_df["w"].values),
-            legend="full",
-            palette=palette,
+        da = (
+            ds["phase"]
+            .sel(phamat="11")
+            .where((ds["w"] >= wmin) & (ds["w"] <= wmax))
+            .dropna(dim="w")
         )
-        ax.set_rlim([phase_min * 0.5, phase_max * 5.0])
-        ax.set_rscale("log")
-        ax.set_thetagrids(np.arange(0, 181, 45))
-        ax.set_thetamax(180)
-        ax.set_xlabel("")
-        ax.set_ylabel("")
+        ax = axs[f"phase_{i_phase}"]
+
+        for i_w, w_ in enumerate(da["w"]):
+            theta = np.deg2rad(da.isel(w=i_w)["theta"])
+            r = da.isel(w=i_w).values
+            ax.plot(theta, r, label=f"{w_}")
+
+            ax.set_rlim([phase_min * 0.5, phase_max * 5.0])
+            ax.set_rscale("log")
+            ax.set_thetagrids(np.arange(0, 181, 45))
+            ax.set_thetamax(180)
+            ax.set_xlabel("")
+            ax.set_ylabel("")
 
         # Deal with legend entries
         lgd_title = "wavelength"  # default value, overridden by metadata if any
         for field in ["long_name", "standard_name"]:
-            if field in ds.w.attrs:
-                lgd_title = ds.w.attrs[field]
+            if field in ds["w"].attrs:
+                lgd_title = ds["w"].attrs[field]
                 break
 
-        if "units" in ds.w.attrs:
-            lgd_title += f" [{ds.w.units}]"
+        if "units" in ds["w"].attrs:
+            lgd_title += f" [{ds['w'].units}]"
 
         lgd = ax.legend(
             loc="upper center",
@@ -305,7 +300,7 @@ def dashboard_particle_dataset(
             bbox_to_anchor=(0.5, 0.1),
             title=lgd_title,
         )
-        new_labels = [f"{w:.3g}" for w in np.unique(_df["w"].values)]
+        new_labels = [f"{w:.3g}" for w in da["w"].values]
         for i, _ in enumerate(lgd.get_texts()):
             lgd.get_texts()[i].set_text(new_labels[i])
 

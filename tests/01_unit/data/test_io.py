@@ -1,8 +1,5 @@
-import pprint
-
 import pytest
 
-from eradiate.data._validation import DatasetValidator
 from eradiate.data.io import load_aerosol_libradtran
 
 
@@ -16,7 +13,14 @@ from eradiate.data.io import load_aerosol_libradtran
         ("tests/libradtran_samples/soot.mie.cdf", {}, None),
         (
             "tests/libradtran_samples/mopsmap.cdf",
-            {"fallback_units": {"reff": "percent", "wavelen": "um"}},
+            {
+                "fallback_units": {
+                    "reff": "percent",
+                    "wavelen": "um",
+                    "ext": "m ** 3 / g / km",
+                    "ssa": "",
+                }
+            },
             None,
         ),
         ("tests/libradtran_samples/mopsmap.cdf", {}, ValueError),
@@ -33,14 +37,12 @@ from eradiate.data.io import load_aerosol_libradtran
 )
 def test_load_aerosol_libradtran(mode_mono, fname, kwargs, loading_exception):
     """
-    Test libRadtran aerosol converter with a monochromatic
+    Test libRadtran aerosol file loading (automatic conversion) with various
+    samples.
     """
     if loading_exception is None:
-        ds = load_aerosol_libradtran(fname, **kwargs)
-        # Check that the produced dataset validates against the aerosol format schema
-        v = DatasetValidator()
-        v.validate(ds, schema="particle_dataset_v1")
-        assert not v.errors, f"Dataset validation errors\n{pprint.pformat(v.errors)}"
+        assert load_aerosol_libradtran(fname, **kwargs)
+        # TODO: Add dataset validation once Pandera integration is here
 
     else:
         with pytest.raises(loading_exception):

@@ -85,7 +85,7 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmoshphere=False
                     "tau_ref": 0.1,
                     "w_ref": 550 * ureg.nm,
                     "has_absorption": True,
-                    "dataset": UB,
+                    "particle_properties": UB,
                 }
             ],
         }

@@ -27,13 +27,13 @@ phase_function_factory.register_lazy_batch(
             {},
         ),
         (
-            "_rayleigh.RayleighPhaseFunction",
-            "rayleigh",
+            "_particles.ParticlePhaseFunction",
+            "particlephase",
             {},
         ),
         (
-            "_tabulated.TabulatedPhaseFunction",
-            "tab_phase",
+            "_rayleigh.RayleighPhaseFunction",
+            "rayleigh",
             {},
         ),
     ],
