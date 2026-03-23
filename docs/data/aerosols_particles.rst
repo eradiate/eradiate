@@ -68,7 +68,7 @@ An aerosol dataset representative of desert aerosol classes to support the `RAMI
 ``sixsv-biomass_burning``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-None
+
 
 .. dropdown:: Data path
 
@@ -79,7 +79,7 @@ None
 ``sixsv-continental``
 ^^^^^^^^^^^^^^^^^^^^^
 
-None
+
 
 .. dropdown:: Data path
 
@@ -90,7 +90,7 @@ None
 ``sixsv-desert``
 ^^^^^^^^^^^^^^^^
 
-None
+
 
 .. dropdown:: Data path
 
@@ -101,7 +101,7 @@ None
 ``sixsv-maritime``
 ^^^^^^^^^^^^^^^^^^
 
-None
+
 
 .. dropdown:: Data path
 
@@ -112,7 +112,7 @@ None
 ``sixsv-stratospheric``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-None
+
 
 .. dropdown:: Data path
 
@@ -123,7 +123,7 @@ None
 ``sixsv-urban``
 ^^^^^^^^^^^^^^^
 
-None
+
 
 .. dropdown:: Data path
 
