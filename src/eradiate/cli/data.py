@@ -6,7 +6,7 @@ import typer
 
 from eradiate import asset_manager, fresolver
 
-from ._console import message, section
+from ._console import console, make_table, message, section
 
 app = typer.Typer()
 
@@ -35,16 +35,18 @@ def main(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         asset_manager_info = asset_manager.info()
         section("Asset manager")
-        message(f"• Remote storage URL: {asset_manager_info['remote_url']}")
-        message(
-            f"• Asset cache location [{asset_manager_info['cache_size']:.3g~P}]: "
-            f"{asset_manager_info['cache_dir']}"
+        table = make_table()
+        table.add_row("Remote storage URL", str(asset_manager_info["remote_url"]))
+        table.add_row(
+            f"Asset cache [{asset_manager_info['cache_size']:.3g~P}]",
+            str(asset_manager_info["cache_dir"]),
         )
-        message(
-            f"• Unpacked asset location [{asset_manager_info['unpack_size']:.3g~P}]: "
-            f"{asset_manager_info['unpack_dir']}"
+        table.add_row(
+            f"Unpacked assets [{asset_manager_info['unpack_size']:.3g~P}]",
+            str(asset_manager_info["unpack_dir"]),
         )
-        message(f"• Installation location: {asset_manager_info['install_dir']}")
+        table.add_row("Installation location", str(asset_manager_info["install_dir"]))
+        console.print(table)
 
         fresolver_info = fresolver.info()
         section("File resolver")
