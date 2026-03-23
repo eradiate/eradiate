@@ -86,7 +86,7 @@ def show() -> dict:
     result["mitsuba_compiler"] = import_module("mitsuba.config").CXX_COMPILER
 
     # Python dependencies
-    for package in ["numpy", "scipy", "xarray"]:
+    for package in ["numpy", "scipy", "xarray", "axsdb", "joseki"]:
         try:
             mod = importlib.import_module(package)
             result[package] = mod.__version__
