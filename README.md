@@ -54,7 +54,7 @@ equation.
   <summary>
   Band simulation
   </summary>
-  These simulations computes results in spectral bands.
+  These simulations compute results in spectral bands.
   The correlated <em>k</em>-distribution (CKD) method with configurable
   quadrature rule is used. This method achieves a trade-off between performance
   and accuracy for the simulation of absorption by gases.
@@ -99,7 +99,7 @@ equation.
 
   <details>
   <summary>
-  Lambertian, RPV, Ross Thick-Li Sparse, Hapke and ocean surface reflection models
+  Lambertian, RPV, Ross Thick-Li Sparse, Hapke, Maignan and ocean surface reflection models
   </summary>
   All models can be parametrized against the spectral dimension.
   </details>
@@ -309,9 +309,9 @@ Example:
     license = {LGPL-3.0},
     title = {Eradiate radiative transfer model},
     url = {https://github.com/eradiate/eradiate},
-    doi = {10.5281/zenodo.13897261},
-    year = {2024},
-    version = {0.29.0},
+    doi = {10.5281/zenodo.19186132},
+    year = {2026},
+    version = {1.1.0},
 }
 ```
 
