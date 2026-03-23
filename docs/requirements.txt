@@ -2,7 +2,7 @@
 #    uv pip compile --python-version 3.10 --group docs --extra recommended --output-file docs/requirements.txt pyproject.toml
 aabbtree==2.8.1
     # via eradiate (pyproject.toml)
-aenum==3.1.16
+aenum==3.1.17
     # via eradiate (pyproject.toml)
 alabaster==1.0.0
     # via sphinx
@@ -24,7 +24,7 @@ asttokens==3.0.1
     # via stack-data
 async-lru==2.3.0
     # via jupyterlab
-attrs==25.4.0
+attrs==26.1.0
     # via
     #   eradiate (pyproject.toml)
     #   axsdb
@@ -162,7 +162,7 @@ jplephem==2.24
     # via skyfield
 json5==0.13.0
     # via jupyterlab-server
-jsonpointer==3.0.0
+jsonpointer==3.1.0
     # via jsonschema
 jsonschema==4.26.0
     # via
@@ -488,7 +488,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 stack-data==0.6.3
     # via ipython
-starlette==0.52.1
+starlette==1.0.0
     # via sphinx-autobuild
 terminado==0.18.1
     # via
