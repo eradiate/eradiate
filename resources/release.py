@@ -11,6 +11,7 @@ from pathlib import Path
 
 import click
 import tomlkit
+from packaging.requirements import Requirement
 from packaging.version import Version
 
 
@@ -32,15 +33,14 @@ def get_package_requirements(pyproject_path):
     with open(pyproject_path, "r") as f:
         pyproject = tomlkit.load(f)
 
-    version_optional = Version(
+    req = Requirement(
         [
             x
             for x in pyproject["project"]["optional-dependencies"]["kernel"]
             if x.startswith("eradiate-mitsuba")
-        ][0].split("==")[1]
+        ][0]
     )
-
-    return version_optional
+    return req.specifier
 
 
 def get_mi_header_versions(header_path):
@@ -170,16 +170,21 @@ def _check_mitsuba_requirements(
     # Display diagnostics and how to fix issues
     diagnostics = {}
 
-    mitsuba_versions = {
-        info["required_mitsuba_package_optional"],
+    specifier = info["required_mitsuba_package_optional"]
+    exact_mitsuba_versions = {
         info["eradiate_kernel_mitsuba_patch_version"],
         info["mi_header_mitsuba_patch_version"],
         info["submodule_latest_tag_version"],
     }
-    if len(mitsuba_versions) > 1:
+    versions_not_in_specifier = [
+        v for v in exact_mitsuba_versions if v not in specifier
+    ]
+    exact_versions_mismatched = len(exact_mitsuba_versions) > 1
+
+    if versions_not_in_specifier or exact_versions_mismatched:
         diagnostics["mitsuba_version_mismatch"] = (
             "The following versions are not aligned:\n"
-            f"* eradiate-mitsuba package requirement [{info['required_mitsuba_package_optional']}]\n"
+            f"* eradiate-mitsuba package requirement [{specifier}]\n"
             "  retrieved from 'pyproject.toml' ('optional' group)\n"
             f"* mitsuba submodule patch version [{info['mi_header_mitsuba_patch_version']}]\n"
             "  retrieved from 'mitsuba.h'\n"
