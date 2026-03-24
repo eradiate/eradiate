@@ -162,7 +162,7 @@ jplephem==2.24
     # via skyfield
 json5==0.13.0
     # via jupyterlab-server
-jsonpointer==3.1.0
+jsonpointer==3.1.1
     # via jsonschema
 jsonschema==4.26.0
     # via
