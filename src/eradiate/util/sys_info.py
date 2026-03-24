@@ -47,9 +47,13 @@ def _get_cpu_info():
     if sys.platform.startswith("win32"):
         return platform.processor()
     elif sys.platform.startswith("darwin"):
-        return subprocess.check_output(
-            ["/usr/sbin/sysctl", "-n", "machdep.cpu.brand_string"]
-        ).strip()
+        return (
+            subprocess.check_output(
+                ["/usr/sbin/sysctl", "-n", "machdep.cpu.brand_string"]
+            )
+            .decode()
+            .strip()
+        )
     elif sys.platform.startswith("linux"):
         command = "cat /proc/cpuinfo"
         all_info = subprocess.check_output(command, shell=True).decode().strip()
