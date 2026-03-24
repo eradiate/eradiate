@@ -71,14 +71,6 @@ def make_aer_core_v2(
                 "long_name": "single-scattering albedo",
             },
         ),
-        "nangle": (
-            "w",
-            np.full_like(w, len(mu), dtype="int32"),
-            {
-                "standard_name": "nangle",
-                "long_name": "number of scattering angle values",
-            },
-        ),
         "phase": (
             ["phamat", "w", "iangle"],
             phase.m,
