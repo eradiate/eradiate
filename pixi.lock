@@ -7735,8 +7735,8 @@ packages:
   requires_python: '>=3.8'
 - pypi: ./
   name: eradiate
-  version: 1.1.0
-  sha256: 7e43eef6d641c566c2cc5017fd278892f3a991f837c56ddc95cc15600097a06e
+  version: 1.2.0.dev0
+  sha256: bbfa9cf3881da7033387073d6e46d6f2a07b9f71b7b0383d159a68cc7de4d829
   requires_dist:
   - aenum
   - axsdb>=0.1.2,<0.2
