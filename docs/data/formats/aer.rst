@@ -37,20 +37,17 @@ Coordinates
       (*e.g.* "11", "12", etc.)
     * ``theta(w, iangle)`` float [angle]: scattering angle θ
     * ``mu(w, iangle)`` float [—]: value of cos θ
-    * ``imom(imom)`` int [—], optional: index of the Legendre coefficients
 
 Data variables
     *When relevant, units are required and  specified in the "units" metadata field.*
 
     * ``ext(w)`` float [1 / length]: extinction coefficient per unit concentration
     * ``ssa(w)`` float [—]: single-scattering albedo
-    * ``nangle(w)`` int [—]: number of cos θ values (all values in ``mu``,
-      ``theta`` and ``phase`` beyond this index are nan)
     * ``phase(phamat, w, iangle)`` float [1 / solid angle]: value of the phase
-      function
-    * ``nmom(w)`` int [—], optional: number of Legendre coefficients (all values
-      in ``pmom`` beyond this index are 0)
-    * ``pmom(w, imom)`` float [—], optional: values of Legendre coefficient
+      function (integral normalized to 2)
+    * ``nmom(w)`` int [—], optional: number of nonzero Legendre coefficients
+      (all values in ``pmom`` beyond this index are nan)
+    * ``pmom(phamat, w, imom)`` float [—], optional: values of Legendre coefficient
 
 .. list-table:: Mapping of dimensions in the Aer-Core v2 format to the libRadtran equivalent.
     :header-rows: 1

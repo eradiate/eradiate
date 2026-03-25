@@ -5,9 +5,32 @@ import datetime
 import numpy as np
 import pint
 import xarray as xr
+from axsdb.math import interp1d
 
 from ..units import symbol, to_quantity
 from ..units import unit_registry as ureg
+
+
+def _convert_units(value: str):
+    if value == "per cent":
+        return "percent"
+    return value
+
+
+def _get_units(ds, var, fallback_units=None):
+    if "units" in ds[var].attrs:
+        units = ds[var].attrs["units"]
+        if units == "-":
+            units = ""
+        return ureg.Unit(_convert_units(units))
+    elif fallback_units is not None and var in fallback_units:
+        return ureg.Unit(_convert_units(fallback_units[var]))
+    else:
+        raise ValueError(
+            "load_aerosol_libradtran(): The input dataset specifies no units "
+            f"for variable '{var}'; this can be addressed by passing them through "
+            "the 'fallback_units' parameter."
+        )
 
 
 def make_aer_core_v2(
@@ -17,8 +40,10 @@ def make_aer_core_v2(
     theta: pint.Quantity,
     ext: pint.Quantity,
     ssa: pint.Quantity,
-    phase: pint.Quantity,
-    attrs: dict,
+    phase: np.ndarray,
+    pmom: np.ndarray | None = None,
+    nmom: np.ndarray | None = None,
+    attrs: dict | None = None,
 ) -> xr.Dataset:
     """
     Create a new dataset in the Aer-Core v2 format.
@@ -26,25 +51,32 @@ def make_aer_core_v2(
     Parameters
     ----------
     w : quantity
-        Wavelength.
+        Wavelength, shape (nw,).
 
     phamat : list of str
-        Phase matrix component list.
+        Phase matrix component list, shape (nphamat,).
 
     mu : quantity
-        Scattering angle cosine.
+        Scattering angle cosine, shape (nw, nangle).
 
     theta : quantity
-        Scattering angle.
+        Scattering angle, shape (nw, nangle).
 
     ext : quantity
-        Extinction coefficient.
+        Extinction coefficient, shape (nw,).
 
     ssa : quantity
-        Single-scattering albedo.
+        Single-scattering albedo, shape (nw,).
 
     phase : quantity
-        Phase matrix values.
+        Phase matrix values, shape (nphamat, nw, nangle).
+        Integral normalized to 2 (*i.e.* ∫ p(μ) dμ = 2).
+
+    pmom : ndarray, optional
+        Legendre polynomials, shape (nw, nimom).
+
+    nmom : ndarray, optional
+        Number of Legendre polynomials, shape (nw,).
 
     attrs : dict
         Dataset attributes.
@@ -79,11 +111,31 @@ def make_aer_core_v2(
                 "standard_name": "phase_matrix",
                 "long_name": "phase matrix",
                 "units": symbol(phase.u),
+                "comment": "integral normalized to 2",
             },
         ),
-        # "nmom": ("w", [1]),
-        # "pmom": (["w", "imom"], [[0]])
     }
+
+    if nmom is not None:
+        data_vars["nmom"] = (
+            "w",
+            nmom,
+            {
+                "standard_name": "n_legendre_polys",
+                "long_name": "number of Legendre polynomials",
+            },
+        )
+
+    if pmom is not None:
+        data_vars["pmom"] = (
+            ["phamat", "w", "imom"],
+            pmom,
+            {
+                "standard_name": "legendre_polys",
+                "long_name": "Legendre polynomials",
+                "comment": "including factor 2l+1",
+            },
+        )
 
     coords = {
         "w": (
@@ -105,11 +157,11 @@ def make_aer_core_v2(
         ),
         "mu": (
             ["w", "iangle"],
-            mu,
+            mu.m,
             {
                 "standard_name": "cos_scattering_angle",
                 "long_name": "scattering angle cosine",
-                "units": "",
+                "units": symbol(mu.u),
             },
         ),
         "theta": (
@@ -121,19 +173,23 @@ def make_aer_core_v2(
                 "units": symbol(theta.u),
             },
         ),
-        # "imom": ("imom", [0]),
     }
 
-    return xr.Dataset(data_vars=data_vars, coords=coords, attrs=attrs)
+    return xr.Dataset(data_vars=data_vars, coords=coords, attrs=attrs or {})
 
 
-def aer_v1_to_aer_core_v2(ds: xr.Dataset) -> xr.Dataset:
+def aer_v1_to_aer_core_v2(ds: xr.Dataset, phase_scale: float = 1.0) -> xr.Dataset:
     """
     Convert a dataset in the Aer v1 format to Aer-Core v2.
 
     Parameters
     ----------
     ds : Dataset
+        A dataset in the Aer v1 format.
+
+    phase_scale : float, default: 1.0
+        A scaling factor that is applied to change the normalization of phase
+        function values.
 
     Returns
     -------
@@ -160,7 +216,8 @@ def aer_v1_to_aer_core_v2(ds: xr.Dataset) -> xr.Dataset:
     nangles = ds.sizes["mu"]
     nw = ds.sizes["w"]
     mu = np.broadcast_to(ds["mu"].values.astype("float32"), (nw, nangles))
-    theta = (np.acos(mu) * ureg("rad")).astype("float32")
+    mu = mu * ureg("dimensionless")
+    theta = (np.acos(mu) * ureg("rad")).to("deg").astype("float32")
 
     _phase_datasets = {}
     for ij, (i, j) in PHAMAT_TO_IDX:
@@ -177,9 +234,14 @@ def aer_v1_to_aer_core_v2(ds: xr.Dataset) -> xr.Dataset:
         except KeyError:
             pass
 
-    phase = to_quantity(
-        xr.concat(_phase_datasets.values(), dim="phamat").transpose("phamat", "w", "mu")
-    ).astype("float32")
+    phase = (
+        to_quantity(
+            xr.concat(_phase_datasets.values(), dim="phamat").transpose(
+                "phamat", "w", "mu"
+            )
+        ).astype("float32")
+        * phase_scale
+    )
 
     attrs = ds.attrs.copy()
     utcnow = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -204,5 +266,97 @@ def aer_v1_to_aer_core_v2(ds: xr.Dataset) -> xr.Dataset:
     )
 
 
-def libradtran_to_aer_core_v2(ds: xr.Dataset) -> xr.Dataset:
-    pass
+def libradtran_to_aer_core_v2(
+    ds: xr.Dataset,
+    attrs: dict | None = None,
+    fallback_units: dict[str, str] | None = None,
+) -> xr.Dataset:
+    PHAMAT_TO_IDX = [
+        # Coefficients for spherical particles
+        ("11", 0),
+        ("12", 1),
+        ("33", 2),
+        ("34", 3),
+        # Additional for spheroidal particles
+        ("22", 4),
+        ("44", 5),
+    ]
+
+    # Gather wavelengths
+    units = _get_units(ds, "wavelen", fallback_units)
+    w = ds["wavelen"].values * units
+    nw = len(w)
+
+    # Gather extinction coefficients
+    units = _get_units(ds, "ext", fallback_units)
+    ext = ds["ext"].values * units
+
+    # Gather albedo
+    units = _get_units(ds, "ssa", fallback_units)
+    ssa = ds["ssa"].values * units
+
+    # Process phase function entries
+    nangles = ds.sizes["nthetamax"]
+    nphamat = ds.sizes["nphamat"]
+    phamat = [x for x, _ in PHAMAT_TO_IDX[:nphamat]]
+
+    # --- Allocate result arrays ---
+    phase = np.full((nphamat, nw, nangles), np.nan)
+    theta = np.full((nw, nangles), np.nan)
+
+    # --- For each wavelength, refine the scattering angle grid
+    #     and interpolate the phase function on it ---
+    for iw in range(nw):
+        # Refine scattering angle grid, interpolating nans linearly
+        ntheta_ = int(ds["ntheta"].isel(nlam=iw, nphamat=0).values)
+        theta_ = (
+            ds["theta"].isel(nlam=iw, nphamat=0).values[:ntheta_]
+        )  # keep only mesh for (1,1) component
+        theta_refined = np.full((nangles,), np.nan)
+        idx_dst = np.linspace(0, nangles - 1, ntheta_, dtype="int32")
+        theta_refined[idx_dst] = theta_
+
+        for i, j in zip(idx_dst[:-1], idx_dst[1:]):
+            interpolated = np.linspace(
+                theta_refined[i], theta_refined[j], j - i + 1, dtype=theta_refined.dtype
+            )[1:-1]
+            theta_refined[i + 1 : j] = interpolated
+
+        # Sort input angles in ascending order
+        idx_sort = np.argsort(theta_)
+        phase_ = ds["phase"].isel(nlam=iw).values[:, idx_sort]
+        theta_ = theta_[idx_sort]
+
+        # Resample phase function using high-performance 1D interpolator with spectator dims support
+        phase_refined = interp1d(theta_, phase_, theta_refined)
+
+        # Store resampled angular grid and phase function
+        theta[iw, :] = theta_refined
+        phase[:, iw, :] = phase_refined
+
+    # TODO: Check if interpolation in mu space wouldn't be better
+    mu = np.cos(np.deg2rad(theta)) * ureg("dimensionless")
+    phase *= ureg("1 / sr")
+    theta *= ureg("deg")
+
+    # Copy Legendre coefficients
+    pmom = ds["pmom"].transpose("nphamat", "nlam", "nmommax").values
+    nmom = np.full_like(w, -1, dtype="int32")
+    for iw in range(nw):
+        nmom[iw] = np.count_nonzero(~np.isnan(pmom[0, iw, :]))
+
+    # Add metadata
+    attrs = attrs or ds.attrs
+
+    return make_aer_core_v2(
+        w=w,
+        phamat=phamat,
+        mu=mu,
+        theta=theta,
+        ext=ext,
+        ssa=ssa,
+        phase=phase,
+        nmom=nmom,
+        pmom=pmom,
+        attrs=attrs,
+    )
