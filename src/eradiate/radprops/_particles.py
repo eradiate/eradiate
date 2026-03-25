@@ -277,7 +277,52 @@ class ParticleProperties:
 
         return mu_out, phase_out
 
-    def eval_pmom(self, w: pint.Quantity):
+    def eval_pmom(self, w: pint.Quantity) -> np.ndarray:
         """
-        Evaluate Legendre polynomials at wavelength ``w``.
+        Evaluate Legendre moments at wavelength ``w`` by interpolation.
+
+        The two bracketing wavelengths are weighted by their scattering coefficient
+        (extinction × single-scattering albedo). This ensures that a wavelength
+        with no scattering contributes nothing to the interpolated phase function
+        regardless of its spectral proximity.
+
+        Parameters
+        ----------
+        w : quantity
+            Query wavelength (scalar).
+
+        Returns
+        -------
+        ndarray
+            Legendre moment array, shape ``(nmom, nphamat)``.
         """
+        w_m = float(np.atleast_1d(w.to(ucc.get("wavelength")).m)[0])
+        w_arr = self.w.m  # (nw,)
+
+        # Bracket the query wavelength
+        idx_r = int(np.searchsorted(w_arr, w_m, side="right"))
+        idx_r = np.clip(idx_r, 1, len(w_arr) - 1)
+        idx_l = idx_r - 1
+
+        w_l, w_r = w_arr[idx_l], w_arr[idx_r]
+        t = 0.0 if w_l == w_r else (w_m - w_l) / (w_r - w_l)
+
+        # Scattering coefficients at bracketing wavelengths
+        ext_arr = self.ext.m  # (nw,)
+        ssa_arr = self.ssa.m  # (nw,)
+        scat_l = ext_arr[idx_l] * ssa_arr[idx_l]
+        scat_r = ext_arr[idx_r] * ssa_arr[idx_r]
+
+        # Denominator = linearly interpolated scattering coefficient
+        denom = (1.0 - t) * scat_l + t * scat_r
+        if denom == 0.0:
+            # No scattering at this wavelength; return zero moments
+            pmom = self.pmom  # (nmom, phamat, nw)
+            return np.zeros(pmom.values.shape[:2])
+
+        # Scattering-weighted interpolation weights (sum to 1 when denom != 0)
+        w0 = (1.0 - t) * scat_l / denom
+        w1 = t * scat_r / denom
+
+        pmom = self.pmom  # (nmom, phamat, nw)
+        return w0 * pmom.values[:, :, idx_l] + w1 * pmom.values[:, :, idx_r]
