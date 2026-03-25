@@ -12,7 +12,7 @@ from ..units import unit_registry as ureg
 
 def make_aer_core_v2(
     w: pint.Quantity,
-    phamat: list[int],
+    phamat: list[str],
     mu: pint.Quantity,
     theta: pint.Quantity,
     ext: pint.Quantity,
@@ -28,7 +28,7 @@ def make_aer_core_v2(
     w : quantity
         Wavelength.
 
-    phamat : list of int
+    phamat : list of str
         Phase matrix component list.
 
     mu : quantity
@@ -69,6 +69,7 @@ def make_aer_core_v2(
             {
                 "standard_name": "single_scattering_albedo",
                 "long_name": "single-scattering albedo",
+                "units": symbol(ssa.u),
             },
         ),
         "phase": (
@@ -103,7 +104,7 @@ def make_aer_core_v2(
             },
         ),
         "mu": (
-            "iangle",
+            ["w", "iangle"],
             mu,
             {
                 "standard_name": "cos_scattering_angle",
@@ -112,7 +113,7 @@ def make_aer_core_v2(
             },
         ),
         "theta": (
-            "iangle",
+            ["w", "iangle"],
             theta.m,
             {
                 "standard_name": "scattering_angle",
@@ -142,7 +143,7 @@ def aer_v1_to_aer_core_v2(ds: xr.Dataset) -> xr.Dataset:
     # This list maps phamat values to (i, j) pairs. The order follows libRadtran's
     # layout (first, coefficients for spherical particles; then additional coefficients
     # for spheroidal particles)
-    phamat = [
+    PHAMAT_TO_IDX = [
         # Coefficients for spherical particles
         ("11", (0, 0)),
         ("12", (0, 1)),
@@ -156,11 +157,13 @@ def aer_v1_to_aer_core_v2(ds: xr.Dataset) -> xr.Dataset:
     w = to_quantity(ds["w"]).astype("float32")
     ext = to_quantity(ds["sigma_t"]).astype("float32")
     ssa = to_quantity(ds["albedo"]).astype("float32")
-    mu = ds["mu"].values.astype("float32")
+    nangles = ds.sizes["mu"]
+    nw = ds.sizes["w"]
+    mu = np.broadcast_to(ds["mu"].values.astype("float32"), (nw, nangles))
     theta = (np.acos(mu) * ureg("rad")).astype("float32")
 
     _phase_datasets = {}
-    for ij, (i, j) in phamat:
+    for ij, (i, j) in PHAMAT_TO_IDX:
         try:
             _phase_datasets[ij] = ds["phase"].sel(i=i, j=j, drop=True)
         except KeyError:
@@ -199,3 +202,7 @@ def aer_v1_to_aer_core_v2(ds: xr.Dataset) -> xr.Dataset:
         phase=phase,
         attrs=attrs,
     )
+
+
+def libradtran_to_aer_core_v2(ds: xr.Dataset) -> xr.Dataset:
+    pass

@@ -21,7 +21,7 @@ from ..units import unit_registry as ureg
 #   could yield a 50–100x speedup over pure Python with the same logic.
 def _rdp1d_log(mu: np.ndarray, values: np.ndarray, n_out: int) -> np.ndarray:
     """
-    Decimate a 1D phase function using Ramer-Douglas-Peucker in log space.
+    Decimate a 1D phase function using Ramer-Douglas-Peucker (RDP) in log space.
 
     Selects ``n_out`` indices from ``mu`` that best preserve the shape of
     ``values`` under piecewise-linear interpolation in log(values) vs mu space.
@@ -35,8 +35,10 @@ def _rdp1d_log(mu: np.ndarray, values: np.ndarray, n_out: int) -> np.ndarray:
     ----------
     mu : ndarray
         Scattering angle cosines, shape ``(n,)``, sorted ascending.
+
     values : ndarray
         Phase function values, shape ``(n,)``. Must be strictly positive.
+
     n_out : int
         Number of output points. Must satisfy ``2 <= n_out <= len(mu)``.
 
@@ -179,6 +181,7 @@ class ParticleProperties:
         -------
         mu : ndarray
             Scattering angle cosines, shape ``(nangle,)``.
+
         phase : ndarray
             Phase values, shape ``(nphamat, nangle)``.
         """
@@ -192,8 +195,8 @@ class ParticleProperties:
 
         if mu_coord.dims == ("iangle",):
             mu = mu_coord.values[:nangle]
-        else:  # (iangle, w)
-            mu = mu_coord.values[:nangle, w_idx]
+        else:  # (w, iangle)
+            mu = mu_coord.values[w_idx, :nangle]
 
         # phase is cached as (phamat, iangle, w)
         phase = self.phase.values[:, :nangle, w_idx]  # (nphamat, nangle)
@@ -217,6 +220,7 @@ class ParticleProperties:
         -------
         mu : ndarray
             Scattering angle cosines of the output grid, shape ``(nangle,)``.
+
         phase : ndarray
             Phase function values in sr⁻¹, shape ``(nphamat, nangle)``.
         """

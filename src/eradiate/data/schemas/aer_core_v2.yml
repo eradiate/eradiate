@@ -1,0 +1,146 @@
+dims:
+  type: dict
+  allow_unknown: true  # imom is optional
+  schema:
+    w: integer
+    phamat: integer
+    iangle: integer
+coords:
+  type: dict
+  allow_unknown: true
+  schema:
+    w:
+      required: true
+      type: dict
+      schema:
+        dims:
+          equal_list: [ w ]
+        dtype:
+          allowed: [ float32, float64 ]
+        attrs:
+          type: dict
+          schema:
+            standard_name: string
+            long_name: string
+            units:
+              units_compatible: nm
+    phamat:
+      required: true
+      type: dict
+      schema:
+        dims:
+          equal_list: [ phamat ]
+        dtype:
+          allowed: [ "<U2" ]
+    mu:
+      required: true
+      type: dict
+      schema:
+        dims:
+          equal_list: [ w, iangle ]
+        dtype:
+          allowed: [ float32, float64 ]
+        attrs:
+          type: dict
+          schema:
+            standard_name: string
+            long_name: string
+            units:
+              units_compatible: dimensionless
+    theta:
+      required: true
+      type: dict
+      schema:
+        dims:
+          equal_list: [ w, iangle ]
+        dtype:
+          allowed: [ float32, float64 ]
+        attrs:
+          type: dict
+          schema:
+            standard_name: string
+            long_name: string
+            units:
+              units_compatible: rad
+    imom:
+      required: false
+      type: dict
+      schema:
+        dims:
+          equal_list: [ imom ]
+        dtype:
+          allowed: [ int32, int64 ]
+data_vars:
+  type: dict
+  allow_unknown: false
+  schema:
+    ext:
+      required: true
+      type: dict
+      schema:
+        dims:
+          equal_list: [ w ]
+        dtype:
+          allowed: [ float32, float64 ]
+        attrs:
+          type: dict
+          schema:
+            standard_name: string
+            long_name: string
+            units:
+              units_compatible: 1 / m
+    ssa:
+      required: true
+      type: dict
+      schema:
+        dims:
+          equal_list: [ w ]
+        dtype:
+          allowed: [ float32, float64 ]
+        attrs:
+          type: dict
+          schema:
+            standard_name: string
+            long_name: string
+    phase:
+      required: true
+      type: dict
+      schema:
+        dims:
+          equal_list: [ phamat, w, iangle ]
+        dtype:
+          allowed: [ float32, float64 ]
+        attrs:
+          type: dict
+          schema:
+            standard_name: string
+            long_name: string
+            units:
+              units_compatible: 1 / sr
+    nangle:
+      required: false
+      type: dict
+      schema:
+        dims:
+          equal_list: [ w ]
+        dtype:
+          allowed: [ int32, int64 ]
+    nmom:
+      required: false
+      type: dict
+      schema:
+        dims:
+          equal_list: [ w ]
+        dtype:
+          allowed: [ int32, int64 ]
+    pmom:
+      required: false
+      type: dict
+      schema:
+        dims:
+          equal_list: [ w, imom ]
+        dtype:
+          allowed: [ float32, float64 ]
+attrs:
+  required: false
+  type: dict

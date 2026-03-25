@@ -35,8 +35,8 @@ Coordinates
     * ``w(w)`` float [length]: wavelength
     * ``phamat(phamat)`` str [—]: row and column indices of the phase matrix coefficient
       (*e.g.* "11", "12", etc.)
-    * ``theta(iangle, w)`` float [angle]: scattering angle θ
-    * ``mu(iangle, w)`` float [—]: value of cos θ
+    * ``theta(w, iangle)`` float [angle]: scattering angle θ
+    * ``mu(w, iangle)`` float [—]: value of cos θ
     * ``imom(imom)`` int [—], optional: index of the Legendre coefficients
 
 Data variables
