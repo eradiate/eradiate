@@ -116,6 +116,7 @@ class ParticleProperties:
     _phase: xr.DataArray | None = attrs.field(default=None, init=False, repr=False)
     _ext: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
     _ssa: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
+    _pmom: xr.DataArray | None = attrs.field(default=None, init=False, repr=False)
 
     @property
     def w(self) -> pint.Quantity:
@@ -157,6 +158,16 @@ class ParticleProperties:
         if self._phase is None:
             self._phase = self.data["phase"].transpose("phamat", "iangle", "w")
         return self._phase
+
+    @property
+    def pmom(self) -> xr.DataArray:
+        """
+        Return the ``pmom`` variable of ``data``.
+        The DataArray is cached to minimize overhead.
+        """
+        if self._pmom is None:
+            self._pmom = self.data["pmom"].transpose("imom", "phamat", "w")
+        return self._pmom
 
     def eval_ext(self, w: pint.Quantity) -> pint.Quantity:
         return np.interp(w, self.w, self.ext)
@@ -252,7 +263,7 @@ class ParticleProperties:
             t = (w_m - w_l) / (w_r - w_l)
         phase_union = phase1_union + t * (phase2_union - phase1_union)
 
-        # --- Step 5: decimate to optimised grid ---
+        # --- Step 5: decimate to optimized grid ---
         n_out = min(len(mu_union), iangle_size)
         if n_out < len(mu_union):
             # Use the m11 component (index 0) as the representative curve;
@@ -265,3 +276,8 @@ class ParticleProperties:
             phase_out = phase_union
 
         return mu_out, phase_out
+
+    def eval_pmom(self, w: pint.Quantity):
+        """
+        Evaluate Legendre polynomials at wavelength ``w``.
+        """
