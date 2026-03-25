@@ -116,6 +116,7 @@ class ParticleProperties:
     _phase: xr.DataArray | None = attrs.field(default=None, init=False, repr=False)
     _ext: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
     _ssa: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
+    _scat: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
     _pmom: xr.DataArray | None = attrs.field(default=None, init=False, repr=False)
 
     @property
@@ -147,6 +148,16 @@ class ParticleProperties:
         if self._ssa is None:
             self._ssa = self.data["ssa"].values * ureg.dimensionless
         return self._ssa
+
+    @property
+    def scat(self) -> pint.Quantity:
+        """
+        Return the scattering coefficient array (extinction × SSA) as a quantity.
+        The array is cached to minimize overhead.
+        """
+        if self._scat is None:
+            self._scat = self.ext * self.ssa
+        return self._scat
 
     @property
     def phase(self) -> xr.DataArray:
@@ -213,14 +224,74 @@ class ParticleProperties:
         phase = self.phase.values[:, :nangle, w_idx]  # (nphamat, nangle)
         return mu, phase
 
+    def _bracket_and_weights(
+        self, w: pint.Quantity
+    ) -> tuple[int, int, float, float, float]:
+        """
+        Locate the bracketing wavelength indices for ``w`` and compute
+        scattering-coefficient-weighted interpolation weights.
+
+        Weights are proportional to the scattering coefficient at each bracket
+        wavelength. This matches libRadtran's spectral mixing rule. When the
+        scattering coefficient is zero at both brackets, the weights fall back
+        to plain linear interpolation in wavelength.
+
+        Parameters
+        ----------
+        w : quantity
+            Query wavelength (scalar).
+
+        Returns
+        -------
+        idx_l : int
+            Index of the left bracketing wavelength.
+
+        idx_r : int
+            Index of the right bracketing wavelength.
+
+        w0 : float
+            Weight for ``idx_l``.
+
+        w1 : float
+            Weight for ``idx_r``.
+
+        scat_denom : float
+            Linearly interpolated scattering coefficient used as denominator.
+            Zero when there is no scattering at either bracketing wavelength.
+        """
+        w_m = float(np.atleast_1d(w.to(ucc.get("wavelength")).m)[0])
+        w_arr = self.w.m
+
+        idx_r = int(np.searchsorted(w_arr, w_m, side="right"))
+        idx_r = np.clip(idx_r, 1, len(w_arr) - 1)
+        idx_l = idx_r - 1
+
+        w_l, w_r = w_arr[idx_l], w_arr[idx_r]
+        t = 0.0 if w_l == w_r else (w_m - w_l) / (w_r - w_l)
+
+        scat_arr = self.scat.m
+        scat_l = scat_arr[idx_l]
+        scat_r = scat_arr[idx_r]
+        scat_denom = (1.0 - t) * scat_l + t * scat_r
+
+        if scat_denom == 0.0:
+            w0, w1 = 1.0 - t, t
+        else:
+            w0 = (1.0 - t) * scat_l / scat_denom
+            w1 = t * scat_r / scat_denom
+
+        return idx_l, idx_r, w0, w1, scat_denom
+
     def eval_phase(self, w: pint.Quantity) -> tuple[np.ndarray, np.ndarray]:
         """
-        Evaluate the phase function at wavelength ``w`` by linear interpolation.
+        Evaluate the phase function at wavelength ``w`` by interpolation.
 
-        When the two bracketing wavelengths have different mu grids, the phase
-        function is resampled onto their union grid before interpolation, then
-        decimated back to a grid of optimal size using a greedy log-space RDP
-        algorithm.
+        Bracketing wavelengths are weighted by their scattering coefficient
+        (extinction × single-scattering albedo), matching the libRadtran
+        ``interpolate_ssprop_in_lambda`` scheme. When the two bracketing
+        wavelengths have different mu grids, the phase function is resampled
+        onto their union grid before interpolation, then decimated back to a
+        grid of optimal size using a greedy log-space RDP algorithm.
 
         Parameters
         ----------
@@ -235,14 +306,10 @@ class ParticleProperties:
         phase : ndarray
             Phase function values in sr⁻¹, shape ``(nphamat, nangle)``.
         """
-        w_m = float(np.atleast_1d(w.to(ucc.get("wavelength")).m)[0])
-        w_arr = self.w.m  # (nw,)
         iangle_size = self.data.sizes["iangle"]
 
-        # --- Step 1: bracket wavelengths ---
-        idx_r = int(np.searchsorted(w_arr, w_m, side="right"))
-        idx_r = np.clip(idx_r, 1, len(w_arr) - 1)
-        idx_l = idx_r - 1
+        # --- Step 1: bracket wavelengths and compute mixing weights ---
+        idx_l, idx_r, w0, w1, _ = self._bracket_and_weights(w)
 
         mu1, phase1 = self._get_mu_phase(idx_l)
         mu2, phase2 = self._get_mu_phase(idx_r)
@@ -255,13 +322,8 @@ class ParticleProperties:
         phase1_union = interp1d(mu1, phase1, mu_union, bounds="clamp")
         phase2_union = interp1d(mu2, phase2, mu_union, bounds="clamp")
 
-        # --- Step 4: spectral interpolation ---
-        w_l, w_r = w_arr[idx_l], w_arr[idx_r]
-        if w_l == w_r:
-            t = 0.0
-        else:
-            t = (w_m - w_l) / (w_r - w_l)
-        phase_union = phase1_union + t * (phase2_union - phase1_union)
+        # --- Step 4: scattering-weighted spectral interpolation ---
+        phase_union = w0 * phase1_union + w1 * phase2_union
 
         # --- Step 5: decimate to optimized grid ---
         n_out = min(len(mu_union), iangle_size)
@@ -277,52 +339,50 @@ class ParticleProperties:
 
         return mu_out, phase_out
 
-    def eval_pmom(self, w: pint.Quantity) -> np.ndarray:
+    def eval_pmom(self, w: pint.Quantity, clip: bool = False) -> tuple[np.ndarray, int]:
         """
         Evaluate Legendre moments at wavelength ``w`` by interpolation.
 
         The two bracketing wavelengths are weighted by their scattering coefficient
         (extinction × single-scattering albedo). This ensures that a wavelength
         with no scattering contributes nothing to the interpolated phase function
-        regardless of its spectral proximity.
+        regardless of its spectral proximity. NaN values in the source data are
+        treated as zero.
 
         Parameters
         ----------
         w : quantity
             Query wavelength (scalar).
 
+        clip : bool, optional
+            If ``True``, trailing all-zero rows are removed from ``values``,
+            so ``values.shape[0] == nleg``.
+
         Returns
         -------
-        ndarray
-            Legendre moment array, shape ``(nmom, nphamat)``.
+        values : ndarray
+            Legendre moment array, shape ``(nmom, nphamat)`` or
+            ``(nleg, nphamat)`` when ``clip=True``.
+
+        nleg : int
+            Number of nonzero Legendre coefficients (index of the last nonzero
+            entry + 1, across all phase matrix components).
         """
-        w_m = float(np.atleast_1d(w.to(ucc.get("wavelength")).m)[0])
-        w_arr = self.w.m  # (nw,)
-
-        # Bracket the query wavelength
-        idx_r = int(np.searchsorted(w_arr, w_m, side="right"))
-        idx_r = np.clip(idx_r, 1, len(w_arr) - 1)
-        idx_l = idx_r - 1
-
-        w_l, w_r = w_arr[idx_l], w_arr[idx_r]
-        t = 0.0 if w_l == w_r else (w_m - w_l) / (w_r - w_l)
-
-        # Scattering coefficients at bracketing wavelengths
-        ext_arr = self.ext.m  # (nw,)
-        ssa_arr = self.ssa.m  # (nw,)
-        scat_l = ext_arr[idx_l] * ssa_arr[idx_l]
-        scat_r = ext_arr[idx_r] * ssa_arr[idx_r]
-
-        # Denominator = linearly interpolated scattering coefficient
-        denom = (1.0 - t) * scat_l + t * scat_r
-        if denom == 0.0:
-            # No scattering at this wavelength; return zero moments
-            pmom = self.pmom  # (nmom, phamat, nw)
-            return np.zeros(pmom.values.shape[:2])
-
-        # Scattering-weighted interpolation weights (sum to 1 when denom != 0)
-        w0 = (1.0 - t) * scat_l / denom
-        w1 = t * scat_r / denom
+        idx_l, idx_r, w0, w1, scat_denom = self._bracket_and_weights(w)
 
         pmom = self.pmom  # (nmom, phamat, nw)
-        return w0 * pmom.values[:, :, idx_l] + w1 * pmom.values[:, :, idx_r]
+
+        if scat_denom == 0.0:
+            # No scattering at this wavelength; phase function is irrelevant
+            return np.zeros(
+                (0, pmom.values.shape[1]) if clip else pmom.values.shape[:2]
+            ), 0
+        v_l = np.nan_to_num(pmom.values[:, :, idx_l])
+        v_r = np.nan_to_num(pmom.values[:, :, idx_r])
+        values = w0 * v_l + w1 * v_r
+
+        # Index of last nonzero moment (across all phase matrix components) + 1
+        nonzero_rows = np.any(values != 0.0, axis=1)  # (nmom,)
+        nleg = int(np.flatnonzero(nonzero_rows)[-1] + 1) if nonzero_rows.any() else 0
+
+        return values[:nleg] if clip else values, nleg
