@@ -7,7 +7,7 @@ import pytest
 import xarray as xr
 
 from eradiate import unit_registry as ureg
-from eradiate.radprops._particles import ParticleProperties, _rdp1d_log  # noqa: PLC2701
+from eradiate.radprops._particles import ParticleProperties, _rdp1d_log
 
 # ---------------------------------------------------------------------------
 # Dataset factory helpers
@@ -31,14 +31,17 @@ _PMOM_DATA[2] = [[0.1, 0.15, 0.05]]
 def make_dataset(
     *, with_nangle: bool = False, mu_2d: bool = False, zero_scat_idx: int | None = None
 ) -> xr.Dataset:
-    """Build a minimal dataset for ``ParticleProperties``.
+    """
+    Build a minimal dataset for ``ParticleProperties``.
 
     Parameters
     ----------
     with_nangle
         If ``True``, add an ``nangle(w)`` variable (NaN-padded iangle variant).
+
     mu_2d
         If ``True``, make ``mu`` have dims ``(w, iangle)`` instead of ``(iangle,)``.
+
     zero_scat_idx
         If not ``None``, set ``ssa`` to 0 at that wavelength index.
     """
@@ -86,12 +89,9 @@ def pp() -> ParticleProperties:
     return ParticleProperties(data=make_dataset())
 
 
-# ---------------------------------------------------------------------------
-# _rdp1d_log
-# ---------------------------------------------------------------------------
-
-
 class TestRdp1dLog:
+    """Tests for the _rdp1d_log() function."""
+
     @pytest.mark.parametrize("n_out", [3, 5, 10])
     def test_passthrough(self, n_out):
         """n_out >= n returns np.arange(n)."""
@@ -142,12 +142,9 @@ class TestRdp1dLog:
         assert 10 in result
 
 
-# ---------------------------------------------------------------------------
-# ParticleProperties
-# ---------------------------------------------------------------------------
-
-
 class TestParticleProperties:
+    """Tests for the ParticleProperties class."""
+
     def test_constructor(self):
         ds = make_dataset()
         pp = ParticleProperties(data=ds)

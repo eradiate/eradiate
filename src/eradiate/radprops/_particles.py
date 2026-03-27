@@ -152,7 +152,7 @@ class ParticleProperties:
     @property
     def scat(self) -> pint.Quantity:
         """
-        Return the scattering coefficient array (extinction × SSA) as a quantity.
+        Return the scattering coefficient array as a quantity.
         The array is cached to minimize overhead.
         """
         if self._scat is None:
@@ -199,17 +199,7 @@ class ParticleProperties:
 
     def eval_ssa(self, w: pint.Quantity) -> pint.Quantity:
         """
-        Evaluate the single-scattering albedo at wavelength ``w`` using
-        extinction-weighted interpolation, matching libRadtran's
-        ``interpolate_ssprop_in_lambda`` scheme.
-
-        The interpolated SSA is computed as::
-
-            ssa(w) = [(1-t)*ext_l*ssa_l + t*ext_r*ssa_r] / ext(w)
-
-        where ``ext(w)`` is the linearly interpolated extinction coefficient.
-        When ``ext(w)`` is zero the method falls back to plain linear
-        interpolation.
+        Evaluate the single-scattering albedo at wavelength ``w``.
 
         Parameters
         ----------
@@ -220,6 +210,18 @@ class ParticleProperties:
         -------
         quantity
             Dimensionless SSA, same shape as ``w``.
+
+        Notes
+        -----
+        The spectral interpolation scheme weighs bracketing wavelengths with the
+        extinction coefficient, similar to libRadtran. The interpolated SSA is
+        computed as::
+
+            ssa(w) = [(1-t)*ext_l*ssa_l + t*ext_r*ssa_r] / ext(w)
+
+        where ``ext(w)`` is the linearly interpolated extinction coefficient.
+        When ``ext(w)`` is zero the method falls back to plain linear
+        interpolation.
         """
         idx_l, idx_r, t = self._locate(w)
         ext = self.ext.m
