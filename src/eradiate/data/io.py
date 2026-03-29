@@ -110,8 +110,8 @@ def load_aerosol_libradtran(
       highest resolution to minimize the loss of information on phase matrix
       coefficients.
 
-    * All conversion is done in memory: very large dataset might result in
-      massive converted data. In such case, an easy way to split the conversion
+    * All conversion is done in memory: very large datasets might result in
+      massive converted data. In such cases, an easy way to split the conversion
       is to chunk it on the spectral dimension.
     """
     VARS_TO_DIMS = {"wavelen": "nlam", "reff": "nreff", "hum": "nhum"}

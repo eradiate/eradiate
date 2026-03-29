@@ -180,7 +180,8 @@ def make_aer_core_v2(
 
 def aer_v1_to_aer_core_v2(ds: xr.Dataset, phase_scale: float = 1.0) -> xr.Dataset:
     """
-    Convert a dataset in the Aer v1 format to Aer-Core v2.
+    Convert a dataset in the :ref:`Aer v1 <sec-data-formats-aer_v1>`
+    format to :ref:`Aer-Core v2 <sec-data-formats-aer_core_v2>`.
 
     Parameters
     ----------
@@ -271,6 +272,34 @@ def libradtran_to_aer_core_v2(
     attrs: dict | None = None,
     fallback_units: dict[str, str] | None = None,
 ) -> xr.Dataset:
+    """
+    Convert a dataset in the libRadtran scattering particle property format to
+    the :ref:`Aer-Core v2 <sec-data-formats-aer_core_v2>` format.
+
+    Parameters
+    ----------
+    ds : Dataset
+        A dataset in the libRadtran format. No additional dimensions such as the
+        effective radius or humidity are considered.
+
+    attrs : dict, optional
+        Additional metadata applied to the converted dataset.
+
+    fallback_units : dict, optional
+        A mapping that specifies units to apply to variables that are missing
+        them.
+
+    Returns
+    -------
+    xr.Dataset
+
+    Notes
+    -----
+    The adaptive angular grid is preserved and refined to feature a constant
+    grid point count. This does not change the size of the data in memory, but
+    can change the size of the stored data on disk depending on the chosen
+    compression method.
+    """
     PHAMAT_TO_IDX = [
         # Coefficients for spherical particles
         ("11", 0),

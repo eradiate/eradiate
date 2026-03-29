@@ -11,6 +11,7 @@ Modules
 .. autosummary::
    :toctree: generated/autosummary/
 
+   convert
    io
 
 Classes
