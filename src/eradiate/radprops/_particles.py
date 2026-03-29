@@ -241,7 +241,7 @@ class ParticleProperties:
         Extract the valid mu grid and phase values for a single wavelength index.
 
         Handles both 1D ``mu(iangle)`` (legacy, same grid for all wavelengths)
-        and 2D ``mu(iangle, w)`` (per-wavelength grid). Respects ``nangle`` if
+        and 2D ``mu(iangle, w)`` (per-wavelength grid). Respects ``nangles`` if
         present to strip NaN-padding.
 
         Parameters
@@ -252,26 +252,26 @@ class ParticleProperties:
         Returns
         -------
         mu : ndarray
-            Scattering angle cosines, shape ``(nangle,)``.
+            Scattering angle cosines, shape ``(nangles,)``.
 
         phase : ndarray
-            Phase values, shape ``(nphamat, nangle)``.
+            Phase values, shape ``(nphamat, nangles)``.
         """
         ds = self.data
         mu_coord = ds["mu"]
 
-        if "nangle" in ds:
-            nangle = int(ds["nangle"].values[w_idx])
+        if "nangles" in ds:
+            nangles = int(ds["nangles"].values[w_idx])
         else:
-            nangle = ds.sizes["iangle"]
+            nangles = ds.sizes["iangle"]
 
         if mu_coord.dims == ("iangle",):
-            mu = mu_coord.values[:nangle]
+            mu = mu_coord.values[:nangles]
         else:  # (w, iangle)
-            mu = mu_coord.values[w_idx, :nangle]
+            mu = mu_coord.values[w_idx, :nangles]
 
         # phase is cached as (phamat, iangle, w)
-        phase = self.phase.values[:, :nangle, w_idx]  # (nphamat, nangle)
+        phase = self.phase.values[:, :nangles, w_idx]  # (nphamat, nangles)
         return mu, phase
 
     def _locate(self, w: pint.Quantity) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -369,10 +369,10 @@ class ParticleProperties:
         Returns
         -------
         mu : ndarray
-            Scattering angle cosines of the output grid, shape ``(nangle,)``.
+            Scattering angle cosines of the output grid, shape ``(nangles,)``.
 
         phase : ndarray
-            Phase function values in sr⁻¹, shape ``(nphamat, nangle)``.
+            Phase function values in sr⁻¹, shape ``(nphamat, nangles)``.
 
         Notes
         -----

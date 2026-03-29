@@ -1,6 +1,8 @@
 Aerosol / particles (Aer)
 =========================
 
+.. _sec-data-formats-aer_core_v2:
+
 Aer-Core v2
 -----------
 
@@ -17,7 +19,7 @@ This does not increase the in-memory size of the dataset.
     The reason why the number of θ points is kept constant is that updating the
     number of angular samples during the simulation is inefficient.
     Should this feature be reintroduced, all that would be required would be to
-    add an ``nangle`` variable indexed by the ``w`` dimension.
+    add an ``nangles`` variable indexed by the ``w`` dimension.
 
 Format
     ``xarray.Dataset`` (in-memory), NetCDF (storage)
@@ -68,5 +70,61 @@ Data variables
       * ``imom``
       * ``nmommax``
 
-Aer v1
-------
+.. _sec-data-formats-aer_v1:
+
+Aer v1 (legacy)
+---------------
+
+The original aerosol / particle single-scattering radiative property format,
+used until Eradiate v1.2.0. This format uses dense phase matrix storage and a
+fixed ``mu`` grid. I was replaced by the more storage-efficient Aer-Core v2
+format. Data provided in this format must be converted to the Aer-Core v2 format
+using the :func:`aer_v1_to_aer_core_v2` function.
+
+Format
+    ``xarray.Dataset`` (in-memory), NetCDF (storage)
+
+Dimensions
+    * ``w``: radiation wavelength
+    * ``mu``: scattering angle cosine
+    * ``i``: scattering phase matrix row index
+    * ``j``: scattering phase matrix column index
+
+Coordinates
+    *All dimension coordinates; \
+    when relevant, units are required and specified in the "units" metadata field.*
+
+    * ``w(w)`` float [length]: wavelength
+    * ``mu(mu)`` float [—]: scattering angle cosine
+    * ``i(i)``, ``j(j)`` int [—]: phase matrix row and column indices
+
+Data variables
+    *When relevant, units are required and specified in the "units" metadata field.*
+
+    * ``sigma_t(w)`` float [1 / length]: volume extinction coefficient
+    * ``albedo(w)`` float [—]: single-scattering albedo
+    * ``phase(w, mu, i, j)`` float [1 / solid angle]: scattering phase matrix
+
+Conventions
+    * Phase matrix components use C-style indexing (from 0).
+
+Conversion
+----------
+
+The following conversion components are provided:
+
+.. list-table:: List of scattering particle property converters
+    :header-rows: 1
+
+    - * Function
+      * Source format
+      * Target format
+    - * :func:`.aer_v1_to_aer_core_v2`
+      * Aer v1
+      * Aer-Core v2
+    - * :func:`.libradtran_to_aer_core_v2`
+      * libRadtran / MOPSMAP
+      * Aer-Core v2
+    - * :func:`.libradtran_to_aer_v1`
+      * libRadtran / MOPSMAP
+      * Aer v1
