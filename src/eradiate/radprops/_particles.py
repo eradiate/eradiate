@@ -116,6 +116,8 @@ class ParticleProperties:
     interpolation routines to produce kernel-level input data.
     """
 
+    # TODO: Validate data format
+    # TODO: Load files from a path-like or a string (converter)
     data: xr.Dataset = documented(
         attrs.field(validator=attrs.validators.instance_of(xr.Dataset)),
         doc="Single-scattering property dataset.",
