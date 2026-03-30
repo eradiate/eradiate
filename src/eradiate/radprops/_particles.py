@@ -336,6 +336,13 @@ class ParticleProperties:
         """
         w_m = np.atleast_1d(w.to(ucc.get("wavelength")).m)
         w_arr = self.w.m
+
+        if len(w_arr) == 1:
+            # Single spectral point: nearest-neighbour, no interpolation
+            nw = w_m.size
+            zero = np.zeros(nw, dtype=int)
+            return zero, zero, np.zeros(nw)
+
         idx_r = np.clip(np.searchsorted(w_arr, w_m, side="right"), 1, len(w_arr) - 1)
         idx_l = idx_r - 1
         w_l, w_r = w_arr[idx_l], w_arr[idx_r]

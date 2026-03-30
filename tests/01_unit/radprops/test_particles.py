@@ -7,6 +7,7 @@ import pytest
 import xarray as xr
 
 from eradiate import unit_registry as ureg
+from eradiate.data.convert import make_aer_core_v2
 from eradiate.radprops._particles import ParticleProperties, _rdp1d_log
 
 # ---------------------------------------------------------------------------
@@ -17,6 +18,9 @@ W_NM = np.array([400.0, 550.0, 700.0])
 MU_1D = np.array([-1.0, 0.0, 1.0])
 EXT = np.array([0.5, 1.0, 0.8])  # km^-1
 SSA = np.array([0.9, 0.8, 0.7])
+W_NM_SINGLE = np.array([550.0])
+EXT_SINGLE = np.array([1.0])  # km^-1
+SSA_SINGLE = np.array([0.8])
 
 # Phase: (phamat=1, iangle=3, w=3), positive values
 _PHASE_DATA = np.array([[[1.2, 0.8, 1.5], [0.5, 0.4, 0.6], [2.0, 1.8, 2.2]]])
@@ -82,6 +86,35 @@ def make_dataset(
         data_vars["nangles"] = ("w", np.full(n_w, n_iangle, dtype=float))
 
     return xr.Dataset(data_vars=data_vars, coords=coords)
+
+
+def make_single_w_dataset() -> xr.Dataset:
+    """Build a minimal single-wavelength dataset in Aer-Core v2 format."""
+    # mu shape: (nw=1, nangle=3)
+    mu_vals = np.array([MU_1D])
+    mu = mu_vals * ureg.dimensionless
+    theta = (np.arccos(mu_vals) * ureg.rad).to("deg")
+
+    # phase shape: (nphamat=1, nw=1, nangle=3)
+    phase_vals = np.array([[[1.5, 0.4, 2.1]]])
+    phase = phase_vals * ureg("1/sr")
+
+    # pmom shape: (phamat=1, w=1, imom=5)
+    pmom = np.zeros((1, 1, 5))
+    pmom[0, 0, 0] = 1.0
+    pmom[0, 0, 1] = 0.6
+    pmom[0, 0, 2] = 0.15
+
+    return make_aer_core_v2(
+        w=W_NM_SINGLE * ureg.nm,
+        phamat=["11"],
+        mu=mu,
+        theta=theta,
+        ext=EXT_SINGLE * ureg("km^-1"),
+        ssa=SSA_SINGLE * ureg.dimensionless,
+        phase=phase,
+        pmom=pmom,
+    )
 
 
 @pytest.fixture
@@ -396,3 +429,55 @@ class TestParticleProperties:
             values, nleg = pp.eval_pmom(w)
             np.testing.assert_array_equal(values[:, :, 0], 0.0)
             assert nleg == 0 or values[:, :, 0].sum() == 0.0
+
+
+class TestSingleWavelength:
+    """
+    Regression tests for the single-spectral-point edge case in
+    ParticleProperties.  With only one wavelength, _locate used to produce
+    idx_l = -1 (out-of-bounds) due to np.clip(1, 1, 0) returning 1.
+    """
+
+    @pytest.fixture
+    def pp_single(self) -> ParticleProperties:
+        return ParticleProperties(data=make_single_w_dataset())
+
+    @pytest.mark.parametrize("w_nm", [300.0, 550.0, 800.0])
+    def test_locate_returns_zero_indices(self, pp_single, w_nm):
+        """_locate returns idx_l=0, idx_r=0, t=0 for any query wavelength."""
+        idx_l, idx_r, t = pp_single._locate(w_nm * ureg.nm)
+        assert idx_l[0] == 0
+        assert idx_r[0] == 0
+        np.testing.assert_allclose(t[0], 0.0, atol=1e-15)
+
+    def test_eval_ssa_off_grid(self, pp_single):
+        """eval_ssa returns the single tabulated value for an off-grid wavelength."""
+        result = pp_single.eval_ssa(300.0 * ureg.nm)
+        np.testing.assert_allclose(result.m, SSA_SINGLE[0], rtol=1e-12)
+
+    def test_eval_phase_values_match_data(self, pp_single):
+        """eval_phase reproduces stored values and works off-grid."""
+        ds = make_single_w_dataset()
+        mu_out, phase_out = pp_single.eval_phase(300.0 * ureg.nm)
+        assert phase_out.shape == (1, mu_out.shape[0])
+        # phase dims in Aer-Core v2: (phamat, w, iangle)
+        stored_phase = ds["phase"].values[0, 0, :]
+        np.testing.assert_allclose(phase_out[0], stored_phase, rtol=1e-12)
+
+    def test_eval_pmom_values_match_data(self, pp_single):
+        """eval_pmom reproduces stored moments and works off-grid."""
+        ds = make_single_w_dataset()
+        values, nleg = pp_single.eval_pmom(300.0 * ureg.nm)
+        assert values.shape == (5, 1, 1)
+        assert nleg > 0
+        # pmom dims in Aer-Core v2: (phamat, w, imom)
+        stored = ds["pmom"].transpose("imom", "phamat", "w").values
+        np.testing.assert_allclose(values, stored, rtol=1e-12)
+
+    def test_eval_pmom_clip(self, pp_single):
+        """clip=True works correctly with a single spectral point."""
+        values_full, nleg = pp_single.eval_pmom(550.0 * ureg.nm, clip=False)
+        values_clip, nleg_clip = pp_single.eval_pmom(550.0 * ureg.nm, clip=True)
+        assert nleg == nleg_clip
+        assert values_clip.shape[0] == nleg_clip
+        np.testing.assert_array_equal(values_clip, values_full[:nleg_clip])
