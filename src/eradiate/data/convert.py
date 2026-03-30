@@ -6,6 +6,7 @@ import numpy as np
 import pint
 import xarray as xr
 from axsdb.math import interp1d
+from numpy.typing import DTypeLike
 
 from ..units import symbol, to_quantity
 from ..units import unit_registry as ureg
@@ -178,7 +179,12 @@ def make_aer_core_v2(
     return xr.Dataset(data_vars=data_vars, coords=coords, attrs=attrs or {})
 
 
-def aer_v1_to_aer_core_v2(ds: xr.Dataset, phase_scale: float = 1.0) -> xr.Dataset:
+def aer_v1_to_aer_core_v2(
+    ds: xr.Dataset,
+    phase_scale: float = 1.0,
+    dtype: DTypeLike | None = None,
+    update_history: bool = True,
+) -> xr.Dataset:
     """
     Convert a dataset in the :ref:`Aer v1 <sec-data-formats-aer_v1>`
     format to :ref:`Aer-Core v2 <sec-data-formats-aer_core_v2>`.
@@ -191,6 +197,14 @@ def aer_v1_to_aer_core_v2(ds: xr.Dataset, phase_scale: float = 1.0) -> xr.Datase
     phase_scale : float, default: 1.0
         A scaling factor that is applied to change the normalization of phase
         function values.
+
+    dtype : dtype-like, optional
+        Dtype of floating-point variables. If unset, the origin dtype is
+        preserved.
+
+    update_history : bool, default: True
+        If ``True``, update the ``history`` attribute of the dataset with a new
+        entry mentioning the conversion timestamp.
 
     Returns
     -------
@@ -211,14 +225,26 @@ def aer_v1_to_aer_core_v2(ds: xr.Dataset, phase_scale: float = 1.0) -> xr.Datase
         ("44", (3, 3)),
     ]
 
-    w = to_quantity(ds["w"]).astype("float32")
-    ext = to_quantity(ds["sigma_t"]).astype("float32")
-    ssa = to_quantity(ds["albedo"]).astype("float32")
+    w = to_quantity(ds["w"])
+    if dtype:
+        w = w.asdtype(dtype)
+
+    ext = to_quantity(ds["sigma_t"]).astype(dtype)
+    if dtype:
+        ext = ext.asdtype(dtype)
+
+    ssa = to_quantity(ds["albedo"]).astype(dtype)
+    if dtype:
+        ssa = ssa.asdtype(dtype)
+
     nangles = ds.sizes["mu"]
     nw = ds.sizes["w"]
-    mu = np.broadcast_to(ds["mu"].values.astype("float32"), (nw, nangles))
+    mu = np.broadcast_to(ds["mu"].values, (nw, nangles))
+    if dtype:
+        mu = mu.asdtype(dtype)
+
     mu = mu * ureg("dimensionless")
-    theta = (np.acos(mu) * ureg("rad")).to("deg").astype("float32")
+    theta = (np.acos(mu) * ureg("rad")).to("deg")
 
     _phase_datasets = {}
     for ij, (i, j) in PHAMAT_TO_IDX:
@@ -240,13 +266,19 @@ def aer_v1_to_aer_core_v2(ds: xr.Dataset, phase_scale: float = 1.0) -> xr.Datase
             xr.concat(_phase_datasets.values(), dim="phamat").transpose(
                 "phamat", "w", "mu"
             )
-        ).astype("float32")
+        ).astype(dtype)
         * phase_scale
     )
+    if dtype:
+        phase = phase.asdtype(dtype)
 
     attrs = ds.attrs.copy()
-    utcnow = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    attrs["history"] += f"\n{utcnow} - Conversion from Aer v1 to Aer-Core v2"
+    attrs["format"] = "Aer-Core v2"
+    if update_history:
+        utcnow = datetime.datetime.now(datetime.timezone.utc).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+        attrs["history"] += f"\n{utcnow} - Conversion from Aer v1 to Aer-Core v2"
 
     if len(_phase_datasets) == 1 or len(_phase_datasets) == 4:
         attrs["particle_shape"] = "sphere"

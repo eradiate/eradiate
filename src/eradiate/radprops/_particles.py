@@ -14,6 +14,11 @@ from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
+KNOWN_DATASETS = {
+    "rami4atm-desert": "rami4atm-desert-aer_core_v2.nc",
+    "rami4atm-continental": "rami4atm-continental-aer_core_v2.nc",
+}
+
 
 # TODO: If _rdp1d_log becomes a performance bottleneck (e.g. with grids up to
 #   10k points called frequently), consider rewriting the heap loop with Numba
