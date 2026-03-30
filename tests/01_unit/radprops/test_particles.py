@@ -29,15 +29,15 @@ _PMOM_DATA[2] = [[0.1, 0.15, 0.05]]
 
 
 def make_dataset(
-    *, with_nangle: bool = False, mu_2d: bool = False, zero_scat_idx: int | None = None
+    *, with_nangles: bool = False, mu_2d: bool = False, zero_scat_idx: int | None = None
 ) -> xr.Dataset:
     """
     Build a minimal dataset for ``ParticleProperties``.
 
     Parameters
     ----------
-    with_nangle
-        If ``True``, add an ``nangle(w)`` variable (NaN-padded iangle variant).
+    with_nangles
+        If ``True``, add an ``nangles(w)`` variable (NaN-padded iangle variant).
 
     mu_2d
         If ``True``, make ``mu`` have dims ``(w, iangle)`` instead of ``(iangle,)``.
@@ -77,9 +77,9 @@ def make_dataset(
         "pmom": (("imom", "phamat", "w"), pmom),
     }
 
-    if with_nangle:
+    if with_nangles:
         # All wavelengths use all iangle points (no actual padding here)
-        data_vars["nangle"] = ("w", np.full(n_w, n_iangle, dtype=float))
+        data_vars["nangles"] = ("w", np.full(n_w, n_iangle, dtype=float))
 
     return xr.Dataset(data_vars=data_vars, coords=coords)
 
@@ -208,12 +208,12 @@ class TestParticleProperties:
                 assert mu.shape == (3,)
                 assert phase.shape == (1, 3)
 
-        def test_with_nangle(self):
-            """nangle strips NaN-padded trailing values."""
-            ds = make_dataset(with_nangle=True)
-            # Override nangle so wl index 1 uses only 2 points
-            nangle_vals = np.array([3.0, 2.0, 3.0])
-            ds["nangle"] = xr.DataArray(nangle_vals, dims="w")
+        def test_with_nangles(self):
+            """nangles strips NaN-padded trailing values."""
+            ds = make_dataset(with_nangles=True)
+            # Override nangles so wl index 1 uses only 2 points
+            nangles = np.array([3.0, 2.0, 3.0])
+            ds["nangles"] = xr.DataArray(nangles, dims="w")
             pp = ParticleProperties(data=ds)
 
             mu1, phase1 = pp._get_mu_phase(1)
@@ -343,10 +343,10 @@ class TestParticleProperties:
             assert np.all(phase_out > 0)
 
         def test_different_grids(self):
-            """Different mu grids → union used; output nangle <= iangle_size."""
-            ds = make_dataset(with_nangle=True)
-            ds["nangle"].values[0] = 2.0
-            ds["nangle"].values[1] = 3.0
+            """Different mu grids → union used; output nangles <= iangle_size."""
+            ds = make_dataset(with_nangles=True)
+            ds["nangles"].values[0] = 2.0
+            ds["nangles"].values[1] = 3.0
             pp = ParticleProperties(data=ds)
             w = 475.0 * ureg.nm
             mu_out, phase_out = pp.eval_phase(w)

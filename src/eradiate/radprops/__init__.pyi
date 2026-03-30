@@ -5,3 +5,4 @@ from ._array import ArrayRadProfile as ArrayRadProfile
 from ._atmosphere import AtmosphereRadProfile as AtmosphereRadProfile
 from ._core import RadProfile as RadProfile
 from ._core import ZGrid as ZGrid
+from ._particles import ParticleProperties as ParticleProperties

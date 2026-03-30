@@ -109,21 +109,43 @@ def _rdp1d_log(mu: np.ndarray, values: np.ndarray, n_out: int) -> np.ndarray:
 
 @define
 class ParticleProperties:
-    data: xr.Dataset = documented(attrs.field())
+    """
+    An interface to scattering particle radiative properties.
+
+    This class manages scattering particle radiative properties and implements
+    interpolation routines to produce kernel-level input data.
+    """
+
+    data: xr.Dataset = documented(
+        attrs.field(validator=attrs.validators.instance_of(xr.Dataset)),
+        doc="Single-scattering property dataset.",
+        type="xarray.Dataset",
+        init_type="xarray.Dataset",
+    )
+
+    # The following fields are used to cache properties
+    # -- Wavelength
     _w: pint.Quantity | None = pinttrs.field(
         default=None, units=ucc.deferred("wavelength"), init=False, repr=False
     )
+    # -- Phase function
     _phase: xr.DataArray | None = attrs.field(default=None, init=False, repr=False)
+    # -- Extinction coefficient
     _ext: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
+    # -- Single-scattering albedo
     _ssa: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
+    # -- Scattering coefficient
     _scat: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
+    # -- Legendre polynomial expansion coefficients
     _pmom: xr.DataArray | None = attrs.field(default=None, init=False, repr=False)
 
     @property
     def w(self) -> pint.Quantity:
         """
-        Return the wavelength array as a quantity.
-        The array is cached to minimize overhead.
+        Returns
+        -------
+        pint.Quantity
+            Wavelength array, cached to minimize overhead.
         """
         if self._w is None:
             self._w = to_quantity(self.data["w"]).to(ucc.get("wavelength"))
@@ -132,8 +154,10 @@ class ParticleProperties:
     @property
     def ext(self) -> pint.Quantity:
         """
-        Return the extinction coefficient array as a quantity.
-        The array is cached to minimize overhead.
+        Returns
+        -------
+        pint.Quantity
+            Extinction coefficient array, cached to minimize overhead.
         """
         if self._ext is None:
             self._ext = to_quantity(self.data["ext"])
@@ -142,8 +166,10 @@ class ParticleProperties:
     @property
     def ssa(self) -> pint.Quantity:
         """
-        Return the single-scattering albedo array as a quantity.
-        The array is cached to minimize overhead.
+        Returns
+        -------
+        pint.Quantity
+            Single-scattering albedo array, cached to minimize overhead.
         """
         if self._ssa is None:
             self._ssa = self.data["ssa"].values * ureg.dimensionless
@@ -152,8 +178,10 @@ class ParticleProperties:
     @property
     def scat(self) -> pint.Quantity:
         """
-        Return the scattering coefficient array as a quantity.
-        The array is cached to minimize overhead.
+        Returns
+        -------
+        pint.Quantity
+            Scattering coefficient array, cached to minimize overhead.
         """
         if self._scat is None:
             self._scat = self.ext * self.ssa
@@ -162,9 +190,11 @@ class ParticleProperties:
     @property
     def phase(self) -> xr.DataArray:
         """
-        Return the ``phase`` variable of ``data`` transposed to ensure a correct
-        layout during interpolation.
-        The DataArray is cached to minimize overhead.
+        Returns
+        -------
+        xarray.DataArray
+            The ``phase`` variable of ``data``, transposed to ensure a correct
+            layout during interpolation, cached to minimize overhead.
         """
         if self._phase is None:
             self._phase = self.data["phase"].transpose("phamat", "iangle", "w")
@@ -173,8 +203,10 @@ class ParticleProperties:
     @property
     def pmom(self) -> xr.DataArray:
         """
-        Return the ``pmom`` variable of ``data``.
-        The DataArray is cached to minimize overhead.
+        Returns
+        -------
+        xarray.DataArray
+            The ``pmom`` variable of ``data``, cached to minimize overhead.
         """
         if self._pmom is None:
             self._pmom = self.data["pmom"].transpose("imom", "phamat", "w")
