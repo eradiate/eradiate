@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import singledispatchmethod
+from typing import Any
 
 import attrs
 import numpy as np
@@ -49,6 +50,7 @@ class ParticlePhaseFunction(PhaseFunction):
             self.particle_properties.has_polarization or self.force_polarized
         )
 
+    @singledispatchmethod
     def eval_mu(self, si: SpectralIndex) -> np.ndarray:
         """
         Evaluate the scattering angle cosine grid at a given spectral index.
@@ -61,82 +63,80 @@ class ParticlePhaseFunction(PhaseFunction):
         Returns
         -------
         ndarray
-            Evaluated scattering angle cosine grid.
-        """
-        return self.eval(si)[0]
-
-    def eval_phase(self, si: SpectralIndex, component: int) -> np.ndarray:
-        """
-        Evaluate the phase function at a given spectral index, for a specific
-        phase matrix component.
-
-        Parameters
-        ----------
-        si : .SpectralIndex
-            Spectral index.
-
-        component : int
-            Component index along the ``phamat`` dimension.
-
-        Returns
-        -------
-        ndarray
-            Evaluated phase function as a 1D array.
-
-        Notes
-        -----
-        Component indices map to phase matrix components as follows:
-
-        * 0 → m11
-        * 1 → m12
-        * 2 → m33
-        * 3 → m34
-        * 4 → m22
-        * 5 → m44
-        """
-        return self.eval(si)[1][component, :]
-
-    @singledispatchmethod
-    def eval(self, si: SpectralIndex) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Evaluate phase function at a given spectral index.
-
-        Parameters
-        ----------
-        si : .SpectralIndex
-            Spectral index.
-
-        Returns
-        -------
-        mu : ndarray
-            Phase angle cosine grid, in ascending order, shape ``(nangles,)``.
-
-        phase : ndarray
-            Phase function values for all available phase matrix components,
-            shape ``(nphamat, nangles)``.
+            Scattering angle cosine grid at the requested spectral index.
 
         Notes
         -----
         * This method dispatches evaluation to specialized methods depending on
-          the spectral index type.
-
-        * The default implementation raises an exception.
+          the spectral index type. The default implementation raises an exception.
         """
         raise NotImplementedError
 
-    @cache_by_id
-    @eval.register(MonoSpectralIndex)
-    def _(self, si) -> tuple[np.ndarray, np.ndarray]:
-        return self.eval_mono(w=si.w)
+    @eval_mu.register(MonoSpectralIndex)
+    def _(self, si) -> np.ndarray:
+        result, _ = self._eval_impl(si.w)
+        return result
 
-    @cache_by_id
-    @eval.register(CKDSpectralIndex)
-    def _(self, si) -> tuple[np.ndarray, np.ndarray]:
-        return self.eval_ckd(w=si.w, g=si.g)
+    @eval_mu.register(CKDSpectralIndex)
+    def _(self, si) -> np.ndarray:
+        result, _ = self._eval_impl(si.w)
+        return result
 
-    def eval_mono(self, w: pint.Quantity) -> tuple[np.ndarray, np.ndarray]:
+    @singledispatchmethod
+    def eval_phase(self, si: SpectralIndex, phamat: int | None = None) -> np.ndarray:
         """
-        Evaluate phase function in monochromatic modes.
+        Evaluate phase function at a given spectral index, for a given phase
+        matrix component.
+
+        Parameters
+        ----------
+        si : .SpectralIndex
+            Spectral index.
+
+        phamat : int, optional
+            Index of the requested phase matrix coefficient. If unset, all
+            coefficients are returned.
+
+        Returns
+        -------
+        phase : ndarray
+            Phase function values for all available phase matrix components,
+            shape ``(nphamat,)``.
+
+        Notes
+        -----
+        * This method dispatches evaluation to specialized methods depending on
+          the spectral index type. The default implementation raises an exception.
+
+        * Coefficient indices map to phase matrix components as follows:
+
+          * 0 → m11
+          * 1 → m12
+          * 2 → m33
+          * 3 → m34
+          * 4 → m22
+          * 5 → m44
+        """
+        raise NotImplementedError
+
+    @eval_phase.register(MonoSpectralIndex)
+    def _(self, si, phamat: int | None = None) -> np.ndarray:
+        _, result = self._eval_impl(si.w)
+        if phamat is not None:
+            result = result[phamat, :]
+        return result
+
+    @eval_phase.register(CKDSpectralIndex)
+    def _(self, si, phamat: int | None = None) -> np.ndarray:
+        _, result = self._eval_impl(si.w)
+        if phamat is not None:
+            result = result[phamat, :]
+        return result
+
+    @cache_by_id
+    def _eval_impl(self, w: pint.Quantity) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Evaluate the phase function at a given wavelength.
 
         Parameters
         ----------
@@ -146,105 +146,57 @@ class ParticlePhaseFunction(PhaseFunction):
         Returns
         -------
         mu : ndarray
-            Phase angle cosine grid, in ascending order, shape ``(nangles,)``.
+            Scattering angle cosine grid for the requested wavelength, shape
+            ``(nangles,)``.
 
         phase : ndarray
-            Phase function values for all available phase matrix components,
-            shape ``(nphamat, nangles)``.
+            Evaluated phase function as a 1D array, shape
+            ``(nphamat, nangles,)``.
         """
         return self.particle_properties.eval_phase(w=w)
 
-    def eval_ckd(self, w: pint.Quantity, g: float) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Evaluate phase function in ckd modes.
+    def _param_to_phamat(self) -> dict[str, int]:
+        result = {"m11" if self.is_polarized else "values": 0}
 
-        Parameters
-        ----------
-        w : quantity
-            Spectral bin central wavelength (must be scalar).
+        if self.is_polarized:
+            if self.particle_properties.has_polarization:
+                result.update({"m12": 1, "m33": 2, "m34": 3})
 
-        g : float
-            Absorption coefficient cumulative probability.
+                if self.particle_properties.particle_shape == "spheroidal":
+                    result.update({"m22": 4, "m44": 6})
+                elif self.particle_properties.particle_shape == "spherical":
+                    result.update({"m22": 0, "m44": 2})
 
-        Returns
-        -------
-        mu : ndarray
-            Phase angle cosine grid, in ascending order, shape ``(nangles,)``.
+            else:  # not self.particle_properties.has_polarization
+                # Case: no polarized data but forced polarized. Initialize the
+                # diagonal to have the same behaviour as with tabphase in
+                # polarized mode.
+                result.update({"m22": 0, "m33": 0, "m44": 0})
 
-        phase : ndarray
-            Phase function values for all available phase matrix components,
-            shape ``(nphamat, nangles)``.
-        """
-        return self.eval_mono(w=w)
+        return result
 
     @property
     def template(self):
         # Inherit docstring
-        phase_function = "tabphase_irregular"
-        values_name = "values"
 
-        if self.is_polarized:
-            phase_function = "tabphase_polarized"
-            values_name = "m11"
+        plugin = "tabphase_polarized" if self.is_polarized else "tabphase_irregular"
+        params_to_phamat = self._param_to_phamat()
 
-        result = {
-            "type": phase_function,
-            values_name: DictParameter(
-                lambda ctx: ",".join(map(str, self.eval(ctx.si, "11"))),
-            ),
-        }
-
-        if self.is_polarized:
-            if self.particle_properties.has_polarization:
-                result["m12"] = DictParameter(
-                    lambda ctx: ",".join(map(str, self.eval(ctx.si, "12"))),
+        result: dict[str, Any] = {"type": plugin}
+        result.update(
+            {
+                k: DictParameter(
+                    # Bind v as a default argument to force immediate capture of
+                    # current iteration value and avoid a classic Python
+                    # closure-in-loop bug
+                    lambda ctx, v=v: ",".join(map(str, self.eval_phase(ctx.si, v)))
                 )
-                result["m33"] = DictParameter(
-                    lambda ctx: ",".join(map(str, self.eval(ctx.si, "33"))),
-                )
-                result["m34"] = DictParameter(
-                    lambda ctx: ",".join(map(str, self.eval(ctx.si, "34"))),
-                )
-
-                if self.particle_properties.particle_shape == "spheroidal":
-                    result["m22"] = DictParameter(
-                        lambda ctx: ",".join(map(str, self.eval(ctx.si, "22"))),
-                    )
-
-                    result["m44"] = DictParameter(
-                        lambda ctx: ",".join(map(str, self.eval(ctx.si, "44"))),
-                    )
-
-                elif self.particle_properties.particle_shape == "spherical":
-                    result["m22"] = DictParameter(
-                        lambda ctx: ",".join(map(str, self.eval(ctx.si, "11"))),
-                    )
-
-                    result["m44"] = DictParameter(
-                        lambda ctx: ",".join(map(str, self.eval(ctx.si, "33"))),
-                    )
-
-                else:
-                    raise NotImplementedError
-
-            else:
-                # case: no polarized data but forced polarized. Initialize the
-                # diagonal to have the same behaviour as with tabphase in
-                # polarized mode.
-                result["m22"] = DictParameter(
-                    lambda ctx: ",".join(map(str, self.eval(ctx.si, "11"))),
-                )
-
-                result["m33"] = DictParameter(
-                    lambda ctx: ",".join(map(str, self.eval(ctx.si, "11"))),
-                )
-
-                result["m44"] = DictParameter(
-                    lambda ctx: ",".join(map(str, self.eval(ctx.si, "11"))),
-                )
+                for k, v in params_to_phamat.items()
+            }
+        )
 
         result["nodes"] = DictParameter(
-            lambda ctx: ",".join(map(str, self.eval(ctx.si, "11")))
+            lambda ctx: ",".join(map(str, self.eval_mu(ctx.si)))
         )
 
         return result
@@ -252,73 +204,22 @@ class ParticlePhaseFunction(PhaseFunction):
     @property
     def params(self) -> dict[str, SceneParameter]:
         # Inherit docstring
-        values_name = "values"
 
-        if self.is_polarized:
-            values_name = "m11"
-
-        result = {
-            values_name: SceneParameter(
-                lambda ctx: self.eval(ctx.si, "11"),
+        params_to_phamat = self._param_to_phamat()
+        result: dict[str, SceneParameter] = {
+            k: SceneParameter(
+                # Bind v as a default argument to force immediate capture of
+                # current iteration value and avoid a classic Python
+                # closure-in-loop bug
+                lambda ctx, v=v: self.eval_phase(ctx.si, v),
                 KernelSceneParameterFlags.SPECTRAL,
             )
+            for k, v in params_to_phamat.items()
         }
 
-        if self.is_polarized:
-            if self.particle_properties.has_polarization:
-                result["m12"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, "12"),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
-                result["m33"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, "33"),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
-                result["m34"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, "34"),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
-
-                if self.particle_properties.particle_shape == "spheroidal":
-                    result["m22"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, "22"),
-                        KernelSceneParameterFlags.SPECTRAL,
-                    )
-                    result["m44"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, "44"),
-                        KernelSceneParameterFlags.SPECTRAL,
-                    )
-
-                elif self.particle_properties.particle_shape == "spherical":
-                    result["m22"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, "11"),
-                        KernelSceneParameterFlags.SPECTRAL,
-                    )
-                    result["m44"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, "33"),
-                        KernelSceneParameterFlags.SPECTRAL,
-                    )
-
-                else:
-                    raise NotImplementedError
-
-            else:
-                # case: no polarized data but forced polarized. Initialize the
-                # diagonal to have the same behaviour as with tabphase in
-                # polarized mode.
-                result["m22"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, "11"),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
-
-                result["m33"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, "11"),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
-
-                result["m44"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, "11"),
-                    KernelSceneParameterFlags.SPECTRAL,
-                )
+        result["nodes"] = SceneParameter(
+            lambda ctx: self.eval_mu(ctx.si),
+            KernelSceneParameterFlags.SPECTRAL,
+        )
 
         return result
