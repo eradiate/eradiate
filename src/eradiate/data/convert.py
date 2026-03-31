@@ -281,9 +281,9 @@ def aer_v1_to_aer_core_v2(
         attrs["history"] += f"\n{utcnow} - Conversion from Aer v1 to Aer-Core v2"
 
     if len(_phase_datasets) == 1 or len(_phase_datasets) == 4:
-        attrs["particle_shape"] = "sphere"
+        attrs["particle_shape"] = "spherical"
     elif len(_phase_datasets) == 6:
-        attrs["particle_shape"] = "spheroid"
+        attrs["particle_shape"] = "spheroidal"
     else:
         raise ValueError("could not determine particle shape")
 

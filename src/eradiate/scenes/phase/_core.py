@@ -34,7 +34,7 @@ phase_function_factory.register_lazy_batch(
         (
             "_tabulated.TabulatedPhaseFunction",
             "tab_phase",
-            {},
+            {"aliases": ["tabphase"]},
         ),
     ],
     cls_prefix="eradiate.scenes.phase",

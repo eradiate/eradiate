@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import heapq
+from typing import Any
 
 import attrs
 import numpy as np
@@ -18,6 +19,15 @@ KNOWN_DATASETS = {
     "rami4atm-desert": "rami4atm-desert-aer_core_v2.nc",
     "rami4atm-continental": "rami4atm-continental-aer_core_v2.nc",
 }
+
+
+def _validate_shape(value: Any) -> str:
+    valid = {"spherical", "spheroidal"}
+    if value not in valid:
+        raise ValueError(
+            f"Unrecognized particle shape {value!r} (valid values are {valid})."
+        )
+    return value
 
 
 # TODO: If _rdp1d_log becomes a performance bottleneck (e.g. with grids up to
@@ -145,6 +155,13 @@ class ParticleProperties:
     _scat: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
     # -- Legendre polynomial expansion coefficients
     _pmom: xr.DataArray | None = attrs.field(default=None, init=False, repr=False)
+    # -- Shape metadata
+    _particle_shape: str | None = attrs.field(default=None, init=False, repr=True)
+
+    def __attrs_post_init__(self):
+        # Resolve all cached attributes
+        for attr in ["w", "phase", "ext", "ssa", "pmom", "particle_shape"]:
+            getattr(self, attr)
 
     @property
     def w(self) -> pint.Quantity:
@@ -208,7 +225,7 @@ class ParticleProperties:
         return self._phase
 
     @property
-    def pmom(self) -> xr.DataArray:
+    def pmom(self) -> xr.DataArray | None:
         """
         Returns
         -------
@@ -216,8 +233,41 @@ class ParticleProperties:
             The ``pmom`` variable of ``data``, cached to minimize overhead.
         """
         if self._pmom is None:
-            self._pmom = self.data["pmom"].transpose("imom", "phamat", "w")
+            if "pmom" not in self.data:
+                return None
+            else:
+                self._pmom = self.data["pmom"].transpose("imom", "phamat", "w")
+
         return self._pmom
+
+    @property
+    def particle_shape(self) -> str:
+        """
+        Returns
+        -------
+        str
+            Particle shape, described as a string, inferred from dataset contents
+            and cached to minimize overhead.
+        """
+        if self._particle_shape is None:
+            if self.data.sizes["phamat"] in {1, 4}:
+                self._particle_shape = "spherical"
+            elif self.data.sizes["phamat"] == 6:
+                self._particle_shape = "spheroidal"
+            else:
+                raise ValueError("could not guess shape from data")
+
+        return self._particle_shape
+
+    @property
+    def has_polarization(self) -> bool:
+        """
+        Returns
+        -------
+        bool
+            ``True`` iff the phase matrix has more than one coefficient.
+        """
+        return self.data.sizes["phamat"] > 1
 
     def eval_ext(self, w: pint.Quantity) -> pint.Quantity:
         """

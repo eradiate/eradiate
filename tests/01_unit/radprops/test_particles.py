@@ -10,10 +10,6 @@ from eradiate import unit_registry as ureg
 from eradiate.data.convert import make_aer_core_v2
 from eradiate.radprops._particles import ParticleProperties, _rdp1d_log
 
-# ---------------------------------------------------------------------------
-# Dataset factory helpers
-# ---------------------------------------------------------------------------
-
 W_NM = np.array([400.0, 550.0, 700.0])
 MU_1D = np.array([-1.0, 0.0, 1.0])
 EXT = np.array([0.5, 1.0, 0.8])  # km^-1
@@ -182,6 +178,12 @@ class TestParticleProperties:
         ds = make_dataset()
         pp = ParticleProperties(data=ds)
         assert pp.data is ds
+
+    def test_shape(self, pp):
+        assert pp.particle_shape == "spherical"
+
+    def test_has_polarization(self, pp):
+        assert pp.has_polarization is False
 
     class TestLocate:
         @pytest.mark.parametrize(

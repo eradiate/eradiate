@@ -6,13 +6,11 @@ from __future__ import annotations
 
 import warnings
 from functools import singledispatchmethod
-from typing import Literal
 
 import attrs
 import numpy as np
 import pint
 import pinttrs
-import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ._particle_dist import ParticleDistribution, particle_distribution_factory
@@ -22,7 +20,7 @@ from ... import converters
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel import SceneParameter
-from ...radprops import ZGrid
+from ...radprops import ParticleProperties, ZGrid
 from ...spectral.index import (
     CKDSpectralIndex,
     MonoSpectralIndex,
@@ -31,7 +29,7 @@ from ...spectral.index import (
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
-from ...util.misc import cache_by_id, summary_repr
+from ...util.misc import cache_by_id
 from ...validators import is_positive
 
 
@@ -147,8 +145,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     @w_ref.validator
     def _w_ref_validator(self, attribute, value):
-        w_units = self.dataset["w"].attrs["units"]
-        if not np.any(np.isclose(value.m_as(w_units), self.dataset["w"].values)):
+        w_units = self.dataset.w.u
+        if not np.any(np.isclose(value.m_as(w_units), self.dataset.w.m)):
             warnings.warn(
                 "While initializing ParticleLayer: the provided aerosol "
                 "single-scattering property dataset does not contain the selected "
@@ -169,28 +167,21 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="0.2",
     )
 
-    dataset: xr.Dataset = documented(
+    particle_properties: ParticleProperties = documented(
         attrs.field(
             default="govaerts_2021-continental",
-            converter=converters.passthrough_type(xr.Dataset)(
+            converter=converters.passthrough_type(ParticleProperties)(
                 attrs.converters.pipe(
                     converters.resolve_keyword(lambda x: f"aerosol/{x}.nc"),
                     converters.resolve_path,
-                    converters.load_dataset,
+                    converters.open_dataset,
+                    ParticleProperties,
                 )
             ),
-            validator=attrs.validators.instance_of(xr.Dataset),
-            repr=summary_repr,
         ),
-        doc="Particle radiative property data set. "
-        "If an xarray dataset is passed, the dataset is used as is "
-        "(refer to the data guide for the format requirements of this dataset). "
-        "If a path is passed, the converter looks it up on the hard drive, using "
-        "the file resolver. "
-        "If a string is passed, it is interpreted as a particle radiative "
-        "property dataset identifier.",
-        type="Dataset",
-        init_type="Dataset or path-like or str",
+        doc="Particle single-scattering properties.",
+        type="ParticleProperties",
+        init_type="ParticleProperties or Dataset or path-like or str",
         default='"govaerts_2021-continental"',
     )
 
@@ -229,24 +220,18 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         default="False",
     )
 
-    particle_shape: Literal["spherical", "spheroidal"] = documented(
-        attrs.field(default="spherical", kw_only=True),
-        doc="Defines the shape of the particle. Only used in polarized mode.\n\n"
-        '* ``"spherical"``: 4 coefficients considered [m11, m12, m33, m34].\n'
-        '* ``"spheroidal"``: 6 coefficients considered [m11, m12, m22, m33, m34, m44].',
-        type="str",
-        init_type='{"spherical", "spheroidal"}',
-        default='"spherical"',
-    )
-
     _phase: TabulatedPhaseFunction | None = attrs.field(default=None, init=False)
+
+    @property
+    def particle_shape(self) -> str:
+        return self.dataset.particle_shape
 
     def update(self) -> None:
         self._phase = TabulatedPhaseFunction(
             id=self.phase_id,
             data=self.dataset.phase,
             force_polarized_phase=self.force_polarized_phase,
-            particle_shape=self.particle_shape,
+            particle_shape=self.dataset.particle_shape,
         )
 
     # --------------------------------------------------------------------------

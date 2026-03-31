@@ -181,6 +181,28 @@ def load_dataset(value: PathLike) -> xr.Dataset:
         raise DataError(f"could not load dataset '{value}'") from e
 
 
+def open_dataset(value: PathLike) -> xr.Dataset:
+    """
+    Attempt opening a dataset given a path. If the path is relative, it is
+    resolved by the file resolver first.
+
+    Parameters
+    ----------
+    value
+        Path to the targeted dataset.
+
+    Raises
+    ------
+    DataError
+        If the file could not be loaded.
+    """
+    path = resolve_path(value)
+    try:
+        return xr.open_dataset(path)
+    except Exception as e:
+        raise DataError(f"could not open dataset '{value}'") from e
+
+
 def to_mi_scalar_transform(value: Any):
     """
     Convert an array-like value to a :class:`mitsuba.ScalarTransform4f`.

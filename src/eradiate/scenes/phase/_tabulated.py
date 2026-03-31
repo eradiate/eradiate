@@ -51,7 +51,7 @@ def _validate_data(instance, attribute, value):
 @define(eq=False, slots=False)
 class TabulatedPhaseFunction(PhaseFunction):
     r"""
-    Tabulated phase function [``tab_phase``].
+    Tabulated phase function [``tabphase``, ``tab_phase``].
 
     A lookup table-based phase function. The ``data`` field is a
     :class:`~xarray.DataArray` with wavelength and angular dimensions.
@@ -74,9 +74,9 @@ class TabulatedPhaseFunction(PhaseFunction):
             repr=summary_repr,
         ),
         type="DataArray",
-        doc="Value table as a data array with wavelength (``w``), scattering "
-        "angle cosine (``mu``), and scattering phase matrix row "
-        "(``i``) and column (``j``) indices (integer) as coordinates. "
+        doc="Value table as a data array with wavelength (``w``), angular "
+        "sample (``iangle``), and scattering phase matrix component "
+        "(``phamat``) dimensions. "
         "This parameter has no default.",
     )
 
@@ -102,7 +102,7 @@ class TabulatedPhaseFunction(PhaseFunction):
 
     @property
     def has_polarized_data(self) -> bool:
-        return self.data.i.shape[0] == 4 or self.data.j.shape[0] == 4
+        return self.data.sizes["phamat"] > 1
 
     @property
     def is_polarized(self) -> bool:
@@ -118,7 +118,7 @@ class TabulatedPhaseFunction(PhaseFunction):
         self._is_irregular = not np.allclose(dmu, dmu[0]) or self.is_polarized
 
     @singledispatchmethod
-    def eval(self, si: SpectralIndex, i: int, j: int) -> np.ndarray:
+    def eval(self, si: SpectralIndex, phamat: str | int) -> np.ndarray:
         """
         Evaluate phase function at a given spectral index.
 
@@ -126,6 +126,9 @@ class TabulatedPhaseFunction(PhaseFunction):
         ----------
         si : :class:`.SpectralIndex`
             Spectral index.
+
+        phamat : str or int
+            Phase matrix component that is evaluated.
 
         Returns
         -------
