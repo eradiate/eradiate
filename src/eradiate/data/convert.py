@@ -225,6 +225,8 @@ def aer_v1_to_aer_core_v2(
         ("44", (3, 3)),
     ]
 
+    ds = ds.sortby("mu")
+
     w = to_quantity(ds["w"])
     if dtype:
         w = w.asdtype(dtype)
