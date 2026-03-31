@@ -19,13 +19,20 @@ from ...util.misc import cache_by_id
 @define(eq=False, slots=False)
 class ParticlePhaseFunction(PhaseFunction):
     """
-    Scattering particle phase function [``particlephase``]
+    Scattering particle phase function [``particlephase``].
+
+    This class provides an interface to generate kernel dictionaries and define
+    scene parameter updates for the phase function associated with scattering
+    particles described by the :class:`.ParticleProperties` class.
     """
 
     particle_properties: ParticleProperties = documented(
         attrs.field(
             validator=attrs.validators.instance_of(ParticleProperties), kw_only=True
-        )
+        ),
+        doc="Scattering property dataset.",
+        type="ParticleProperties",
+        init_type="ParticleProperties",
     )
 
     force_polarized: bool = documented(
@@ -43,20 +50,33 @@ class ParticlePhaseFunction(PhaseFunction):
         )
 
     def eval_mu(self, si: SpectralIndex) -> np.ndarray:
-        return self.eval(si)[0]
-
-    def eval_phase(self, si: SpectralIndex) -> np.ndarray:
-        return self.eval(si)[1]
-
-    @singledispatchmethod
-    def eval(self, si: SpectralIndex) -> tuple[np.ndarray, np.ndarray]:
         """
-        Evaluate phase function at a given spectral index.
+        Evaluate the scattering angle cosine grid at a given spectral index.
 
         Parameters
         ----------
-        si : :class:`.SpectralIndex`
+        si : .SpectralIndex
             Spectral index.
+
+        Returns
+        -------
+        ndarray
+            Evaluated scattering angle cosine grid.
+        """
+        return self.eval(si)[0]
+
+    def eval_phase(self, si: SpectralIndex, component: int) -> np.ndarray:
+        """
+        Evaluate the phase function at a given spectral index, for a specific
+        phase matrix component.
+
+        Parameters
+        ----------
+        si : .SpectralIndex
+            Spectral index.
+
+        component : int
+            Component index along the ``phamat`` dimension.
 
         Returns
         -------
@@ -65,8 +85,42 @@ class ParticlePhaseFunction(PhaseFunction):
 
         Notes
         -----
-        This method dispatches evaluation to specialized methods depending on
-        the spectral index type.
+        Component indices map to phase matrix components as follows:
+
+        * 0 → m11
+        * 1 → m12
+        * 2 → m33
+        * 3 → m34
+        * 4 → m22
+        * 5 → m44
+        """
+        return self.eval(si)[1][component, :]
+
+    @singledispatchmethod
+    def eval(self, si: SpectralIndex) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Evaluate phase function at a given spectral index.
+
+        Parameters
+        ----------
+        si : .SpectralIndex
+            Spectral index.
+
+        Returns
+        -------
+        mu : ndarray
+            Phase angle cosine grid, in ascending order, shape ``(nangles,)``.
+
+        phase : ndarray
+            Phase function values for all available phase matrix components,
+            shape ``(nphamat, nangles)``.
+
+        Notes
+        -----
+        * This method dispatches evaluation to specialized methods depending on
+          the spectral index type.
+
+        * The default implementation raises an exception.
         """
         raise NotImplementedError
 
@@ -86,14 +140,17 @@ class ParticlePhaseFunction(PhaseFunction):
 
         Parameters
         ----------
-        w : :class:`pint.Quantity`
-            Wavelength.
+        w : quantity
+            Wavelength (must be scalar).
 
         Returns
         -------
-        ndarray
-            Evaluated phase function as a 1D or 2D array depending on the shape
-            of `w` (angle dimension comes last).
+        mu : ndarray
+            Phase angle cosine grid, in ascending order, shape ``(nangles,)``.
+
+        phase : ndarray
+            Phase function values for all available phase matrix components,
+            shape ``(nphamat, nangles)``.
         """
         return self.particle_properties.eval_phase(w=w)
 
@@ -103,22 +160,26 @@ class ParticlePhaseFunction(PhaseFunction):
 
         Parameters
         ----------
-        w : :class:`pint.Quantity`
-            Spectral bin central wavelength.
+        w : quantity
+            Spectral bin central wavelength (must be scalar).
 
         g : float
             Absorption coefficient cumulative probability.
 
         Returns
         -------
-        ndarray
-            Evaluated phase function as a 1D or 2D array depending on the shape
-            of `w` (angle dimension comes last).
+        mu : ndarray
+            Phase angle cosine grid, in ascending order, shape ``(nangles,)``.
+
+        phase : ndarray
+            Phase function values for all available phase matrix components,
+            shape ``(nphamat, nangles)``.
         """
         return self.eval_mono(w=w)
 
     @property
     def template(self):
+        # Inherit docstring
         phase_function = "tabphase_irregular"
         values_name = "values"
 
@@ -190,6 +251,7 @@ class ParticlePhaseFunction(PhaseFunction):
 
     @property
     def params(self) -> dict[str, SceneParameter]:
+        # Inherit docstring
         values_name = "values"
 
         if self.is_polarized:
@@ -197,43 +259,43 @@ class ParticlePhaseFunction(PhaseFunction):
 
         result = {
             values_name: SceneParameter(
-                lambda ctx: self.eval(ctx.si, 0, 0),
+                lambda ctx: self.eval(ctx.si, "11"),
                 KernelSceneParameterFlags.SPECTRAL,
             )
         }
 
         if self.is_polarized:
-            if self.particle_properties.has_polarized_data:
+            if self.particle_properties.has_polarization:
                 result["m12"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 0, 1),
+                    lambda ctx: self.eval(ctx.si, "12"),
                     KernelSceneParameterFlags.SPECTRAL,
                 )
                 result["m33"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 2, 2),
+                    lambda ctx: self.eval(ctx.si, "33"),
                     KernelSceneParameterFlags.SPECTRAL,
                 )
                 result["m34"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 2, 3),
+                    lambda ctx: self.eval(ctx.si, "34"),
                     KernelSceneParameterFlags.SPECTRAL,
                 )
 
                 if self.particle_properties.particle_shape == "spheroidal":
                     result["m22"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, 1, 1),
+                        lambda ctx: self.eval(ctx.si, "22"),
                         KernelSceneParameterFlags.SPECTRAL,
                     )
                     result["m44"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, 3, 3),
+                        lambda ctx: self.eval(ctx.si, "44"),
                         KernelSceneParameterFlags.SPECTRAL,
                     )
 
                 elif self.particle_properties.particle_shape == "spherical":
                     result["m22"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, 0, 0),
+                        lambda ctx: self.eval(ctx.si, "11"),
                         KernelSceneParameterFlags.SPECTRAL,
                     )
                     result["m44"] = SceneParameter(
-                        lambda ctx: self.eval(ctx.si, 2, 2),
+                        lambda ctx: self.eval(ctx.si, "33"),
                         KernelSceneParameterFlags.SPECTRAL,
                     )
 
@@ -245,17 +307,17 @@ class ParticlePhaseFunction(PhaseFunction):
                 # diagonal to have the same behaviour as with tabphase in
                 # polarized mode.
                 result["m22"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 0, 0),
+                    lambda ctx: self.eval(ctx.si, "11"),
                     KernelSceneParameterFlags.SPECTRAL,
                 )
 
                 result["m33"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 0, 0),
+                    lambda ctx: self.eval(ctx.si, "11"),
                     KernelSceneParameterFlags.SPECTRAL,
                 )
 
                 result["m44"] = SceneParameter(
-                    lambda ctx: self.eval(ctx.si, 0, 0),
+                    lambda ctx: self.eval(ctx.si, "11"),
                     KernelSceneParameterFlags.SPECTRAL,
                 )
 

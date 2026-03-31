@@ -480,8 +480,8 @@ class ParticleProperties:
         decimated back to a grid of optimal size using a greedy log-space RDP
         algorithm.
         """
-        if np.atleast_1d(w.to(ucc.get("wavelength")).m).size > 1:
-            raise ValueError("eval_phase only accepts a scalar wavelength")
+        if not np.isscalar(w.m):
+            raise ValueError("eval_phase() only accepts a scalar wavelength")
 
         iangle_size = self.data.sizes["iangle"]
 
