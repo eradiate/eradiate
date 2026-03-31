@@ -31,8 +31,7 @@ Dimensions
     * ``imom``: Legendre coefficients
 
 Coordinates
-    *All dimension coordinates; \
-    when relevant, units are required and specified in the "units" metadata field.*
+    *When relevant, units are required and specified in the "units" metadata field.*
 
     * ``w(w)`` float [length]: wavelength
     * ``phamat(phamat)`` str [—]: row and column indices of the phase matrix coefficient
@@ -50,6 +49,17 @@ Data variables
     * ``nmom(w)`` int [—], optional: number of nonzero Legendre coefficients
       (all values in ``pmom`` beyond this index are nan)
     * ``pmom(phamat, w, imom)`` float [—], optional: values of Legendre coefficient
+
+.. note::
+
+    * Data are sorted in ascending order of ``w`` and ``mu``
+    * Valid ``phamat`` values are (in that order):
+      ``["11", "12", "33", "34", "22", "44"]``
+    * The number of ``phamat`` values implicitly defines whether the data
+      describes light polarization: 1 means without polarization, 2+ means with
+      polarization
+    * The number of ``phamat`` values implicitly defines the scattering particle
+      shape: 1 or 4 means spherical particles, 6 means spheroidal particles
 
 .. list-table:: Mapping of dimensions in the Aer-Core v2 format to the libRadtran equivalent.
     :header-rows: 1
