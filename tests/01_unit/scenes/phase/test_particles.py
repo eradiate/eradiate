@@ -1,4 +1,5 @@
 import mitsuba as mi
+import numpy as np
 import pytest
 
 import eradiate
@@ -7,6 +8,7 @@ from eradiate.radprops import ParticleProperties
 from eradiate.scenes.phase import ParticlePhaseFunction
 from eradiate.spectral import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
+from eradiate.units import unit_registry as ureg
 
 DS_ID_TO_FNAME = {
     "unpolarized_data": "govaerts_2021-desert-aer_core_v2",
@@ -46,12 +48,20 @@ class TestParticlePhaseFunction:
         check_scene_element(ppf, mi.PhaseFunction)
 
     def test_eval_impl(self, modes_all_double, pphase):
-        # Repeated evaluations with the same wavelength value do not trigger a
-        # recomputation
-        si = SpectralIndex.new()
-        a = pphase._eval_impl(si.w)
-        b = pphase._eval_impl(si.w)
+        # Repeated evaluations with the same wavelength variable do not trigger
+        # a recomputation
+        w = 550.0 * ureg.nm
+        a = pphase._eval_impl(w)
+        b = pphase._eval_impl(w)
         assert a is b
+        np.testing.assert_array_equal(a[0], b[0])
+        np.testing.assert_array_equal(a[1], b[1])
+
+        # Evaluation with a different variables does trigger a recomputation
+        c = pphase._eval_impl(550.0 * ureg.nm)
+        assert a is not c
+        np.testing.assert_array_equal(a[0], c[0])
+        np.testing.assert_array_equal(a[1], c[1])
 
     def test_eval_mu(self, modes_all_double, pphase):
         si = SpectralIndex.new()

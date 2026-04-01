@@ -69,6 +69,10 @@ class ParticlePhaseFunction(PhaseFunction):
         -----
         * This method dispatches evaluation to specialized methods depending on
           the spectral index type. The default implementation raises an exception.
+
+        * The underlying implementation caches the output based on the object ID
+          of the ``si.w`` argument: this avoids recomputations when calling this
+          method repeatedly during a spectral loop iteration.
         """
         raise NotImplementedError
 
@@ -107,6 +111,10 @@ class ParticlePhaseFunction(PhaseFunction):
         -----
         * This method dispatches evaluation to specialized methods depending on
           the spectral index type. The default implementation raises an exception.
+
+        * The underlying implementation caches the output based on the object ID
+          of the ``si.w`` argument: this avoids recomputations when calling this
+          method repeatedly during a spectral loop iteration.
 
         * Coefficient indices map to phase matrix components as follows:
 
