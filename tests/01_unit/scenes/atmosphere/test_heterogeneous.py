@@ -335,7 +335,7 @@ def test_heterogeneous_blend_switches(
 
 @pytest.mark.parametrize(
     "particle_radprops",
-    ["particle_dataset_absorbing_only", "particle_dataset_scattering_only"],
+    ["particle_properties_absorbing_only", "particle_properties_scattering_only"],
 )
 def test_heterogeneous_absorbing_mol_atm(
     mode_ckd, particle_radprops, request, atmosphere_us_standard_ckd
@@ -351,7 +351,7 @@ def test_heterogeneous_absorbing_mol_atm(
     pl_bottom = 1.0 * ureg.km  # arbitrary
     pl_top = 4.0 * ureg.km  # arbitrary
     particle_layer = ParticleLayer(
-        bottom=pl_bottom, top=pl_top, dataset=_particle_radprops
+        bottom=pl_bottom, top=pl_top, particle_properties=_particle_radprops
     )
     atmosphere = HeterogeneousAtmosphere(
         molecular_atmosphere=atmosphere_us_standard_ckd,

@@ -78,7 +78,7 @@ def _particle_layer_distribution_converter(value):
     return particle_distribution_factory.convert(value)
 
 
-@define(eq=False, slots=False)
+@define(eq=False, slots=False, init=False)
 class ParticleLayer(AbstractHeterogeneousAtmosphere):
     """
     Particle layer scene element [``particle_layer``].
@@ -247,6 +247,16 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     )
 
     _phase: ParticlePhaseFunction | None = attrs.field(default=None, init=False)
+
+    def __init__(self, *args, dataset=None, **kwargs):
+        if dataset is not None:
+            warnings.warn(
+                "The 'dataset' argument is deprecated; use 'particle_properties' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            kwargs.setdefault("particle_properties", dataset)
+        self.__attrs_init__(*args, **kwargs)
 
     def update(self) -> None:
         self._phase = ParticlePhaseFunction(

@@ -73,7 +73,7 @@ def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_conf
                 "bottom": 1 * ureg.km,
                 "top": 2 * ureg.km,
                 "tau_ref": 0.5,
-                "dataset": "govaerts_2021-continental",
+                "particle_properties": "govaerts_2021-continental",
             },
         },
         integrator={"type": "piecewise_volpath", "moment": True},

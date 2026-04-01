@@ -66,7 +66,8 @@ class TestParticleLayer:
 
     def test_construct_noargs(self):
         """Construction succeeds with basic parameters"""
-        assert ParticleLayer()
+
+        assert ParticleLayer()  # should pick up the default dataset from shipped assets
 
     def test_construct_attrs(self, particle_properties_test):
         """Assigns parameters to expected values."""
