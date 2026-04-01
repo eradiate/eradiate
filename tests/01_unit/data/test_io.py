@@ -39,7 +39,7 @@ def test_load_aerosol_libradtran(mode_mono, fname, kwargs, loading_exception):
         ds = load_aerosol_libradtran(fname, **kwargs)
         # Check that the produced dataset validates against the aerosol format schema
         v = DatasetValidator()
-        v.validate(ds, schema="particle_dataset_v1")
+        v.validate(ds, schema="aer_v1")
         assert not v.errors, f"Dataset validation errors\n{pprint.pformat(v.errors)}"
 
     else:
