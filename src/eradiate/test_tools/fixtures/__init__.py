@@ -13,6 +13,7 @@ from ..data import make_particle_dataset
 from ..util import check_plugin
 from ... import fresolver
 from ... import unit_registry as ureg
+from ...data.convert import make_aer_core_v2
 
 
 @pytest.fixture
@@ -128,35 +129,51 @@ def ert_seed_state():
 
 
 @pytest.fixture
-def particle_dataset_absorbing_only():
-    """Absorbing only particle radiative property data set fixture."""
-    mu = np.linspace(-1.0, 1.0) * ureg.dimensionless
+def particle_properties_absorbing_only():
+    """Absorbing-only particle radiative property data set fixture."""
+    from ...radprops._particles import ParticleProperties
+
     w = np.arange(220.0, 2500.0, 110.0) * ureg.nm
-    arrays = [np.ones_like(mu) / ureg.steradian for _ in w]
-    phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
-    albedo = np.zeros_like(w) * ureg.dimensionless
-    sigma_t = np.ones_like(w) / ureg.km
-    return make_particle_dataset(
-        albedo=albedo, sigma_t=sigma_t, phase=phase, mu=mu, w=w
+    nw = w.size
+
+    nangles = 51
+    mu = np.linspace(-1.0, 1.0, nangles) * ureg.dimensionless * np.ones((nw, nangles))
+    theta = np.rad2deg(np.arccos(mu.m)) * ureg.deg
+
+    ext = np.ones_like(w) / ureg.km
+    ssa = np.zeros_like(w) * ureg.dimensionless
+
+    phase = np.ones_like(mu).reshape(1, nw, nangles) / ureg.steradian
+    ds = make_aer_core_v2(
+        w=w, phamat=["11"], mu=mu, theta=theta, ext=ext, ssa=ssa, phase=phase
     )
+    yield ParticleProperties(ds)
 
 
 @pytest.fixture
-def particle_dataset_scattering_only():
-    """Scattering only particle radiative property data set fixture."""
-    mu = np.linspace(-1.0, 1.0) * ureg.dimensionless
+def particle_properties_scattering_only():
+    """Scattering-only particle radiative property data set fixture."""
+    from ...radprops._particles import ParticleProperties
+
     w = np.arange(220.0, 2500.0, 110.0) * ureg.nm
-    arrays = [np.ones_like(mu) / ureg.steradian for _ in w]
-    phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
-    albedo = np.ones_like(w) * ureg.dimensionless
-    sigma_t = np.ones_like(w) / ureg.km
-    return make_particle_dataset(
-        albedo=albedo, sigma_t=sigma_t, phase=phase, mu=mu, w=w
+    nw = w.size
+
+    nangles = 51
+    mu = np.linspace(-1.0, 1.0, nangles) * ureg.dimensionless * np.ones((nw, nangles))
+    theta = np.rad2deg(np.arccos(mu.m)) * ureg.deg
+
+    ext = np.ones_like(w) / ureg.km
+    ssa = np.ones_like(w) * ureg.dimensionless
+
+    phase = np.ones_like(mu).reshape(1, nw, nangles) / ureg.steradian
+    ds = make_aer_core_v2(
+        w=w, phamat=["11"], mu=mu, theta=theta, ext=ext, ssa=ssa, phase=phase
     )
+    yield ParticleProperties(ds)
 
 
 @pytest.fixture
-def particle_dataset_test():
+def particle_properties_test():
     """
     Particle radiative property dataset fixture.
 
@@ -166,15 +183,24 @@ def particle_dataset_test():
         * the extinction coefficient is 1 / km
         * the albedo is 0.8
     """
-    mu = np.linspace(-1.0, 1.0) * ureg.dimensionless
+
+    from ...radprops._particles import ParticleProperties
+
     w = np.arange(220.0, 2500.0, 110.0) * ureg.nm
-    arrays = [np.ones_like(mu) / ureg.steradian for _ in w]
-    phase = np.stack(arrays, axis=0).reshape(w.size, mu.size, 1, 1)
-    albedo = 0.8 * np.ones_like(w) * ureg.dimensionless
-    sigma_t = np.ones_like(w) / ureg.km
-    return make_particle_dataset(
-        albedo=albedo, sigma_t=sigma_t, phase=phase, mu=mu, w=w
+    nw = w.size
+
+    nangles = 51
+    mu = np.linspace(-1.0, 1.0, nangles) * ureg.dimensionless * np.ones((nw, nangles))
+    theta = np.rad2deg(np.arccos(mu.m)) * ureg.deg
+
+    ext = np.ones_like(w) / ureg.km
+    ssa = np.ones_like(w) * 0.8 * ureg.dimensionless
+
+    phase = np.ones_like(mu).reshape(1, nw, nangles) / ureg.steradian
+    ds = make_aer_core_v2(
+        w=w, phamat=["11"], mu=mu, theta=theta, ext=ext, ssa=ssa, phase=phase
     )
+    yield ParticleProperties(ds)
 
 
 @pytest.fixture(scope="session")

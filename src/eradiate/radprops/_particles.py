@@ -153,6 +153,8 @@ class ParticleProperties:
     _ssa: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
     # -- Scattering coefficient
     _scat: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
+    # -- Absorption coefficient
+    _abs: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
     # -- Legendre polynomial expansion coefficients
     _pmom: xr.DataArray | None = attrs.field(default=None, init=False, repr=False)
     # -- Shape metadata
@@ -160,7 +162,16 @@ class ParticleProperties:
 
     def __attrs_post_init__(self):
         # Resolve all cached attributes
-        for attr in ["w", "phase", "ext", "ssa", "pmom", "particle_shape"]:
+        for attr in [
+            "w",
+            "phase",
+            "ext",
+            "ssa",
+            "scat",
+            "abs",
+            "pmom",
+            "particle_shape",
+        ]:
             getattr(self, attr)
 
     @property
@@ -176,6 +187,18 @@ class ParticleProperties:
         return self._w
 
     @property
+    def abs(self) -> pint.Quantity:
+        """
+        Returns
+        -------
+        pint.Quantity
+            Absorption coefficient array, cached to minimize overhead.
+        """
+        if self._abs is None:
+            self._abs = self.ext * (1.0 - self.ssa)
+        return self._abs
+
+    @property
     def ext(self) -> pint.Quantity:
         """
         Returns
@@ -188,18 +211,6 @@ class ParticleProperties:
         return self._ext
 
     @property
-    def ssa(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        pint.Quantity
-            Single-scattering albedo array, cached to minimize overhead.
-        """
-        if self._ssa is None:
-            self._ssa = self.data["ssa"].values * ureg.dimensionless
-        return self._ssa
-
-    @property
     def scat(self) -> pint.Quantity:
         """
         Returns
@@ -210,6 +221,18 @@ class ParticleProperties:
         if self._scat is None:
             self._scat = self.ext * self.ssa
         return self._scat
+
+    @property
+    def ssa(self) -> pint.Quantity:
+        """
+        Returns
+        -------
+        pint.Quantity
+            Single-scattering albedo array, cached to minimize overhead.
+        """
+        if self._ssa is None:
+            self._ssa = self.data["ssa"].values * ureg.dimensionless
+        return self._ssa
 
     @property
     def phase(self) -> xr.DataArray:
