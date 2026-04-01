@@ -147,7 +147,14 @@ variant_groups = {
     ],
     "all_single": [x for x in variants if "single" in x],
     "all_double": [x for x in variants if "double" in x],
+    "all_unpolarized": [x for x in variants if "polarized" not in x],
+    "all_unpolarized_double": [
+        x for x in variants if ("polarized" not in x and "double" in x)
+    ],
     "all_polarized": [x for x in variants if "polarized" in x],
+    "all_polarized_double": [
+        x for x in variants if ("polarized" in x and "double" in x)
+    ],
     "all": variants,
 }
 
