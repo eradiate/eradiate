@@ -8,7 +8,7 @@ alabaster==1.0.0
     # via sphinx
 annotated-doc==0.0.4
     # via typer
-anyio==4.12.1
+anyio==4.13.0
     # via
     #   httpx
     #   jupyter-server
@@ -60,7 +60,7 @@ cffi==2.0.0
     # via argon2-cffi-bindings
 cftime==1.6.5
     # via netcdf4
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
 click==8.3.1
     # via
@@ -135,7 +135,7 @@ iniconfig==2.3.0
     # via pytest
 ipykernel==7.2.0
     # via jupyterlab
-ipython==8.38.0
+ipython==8.39.0
     # via
     #   eradiate (pyproject.toml)
     #   eradiate (pyproject.toml:docs)
@@ -160,7 +160,7 @@ joseki==2.6.1
     # via eradiate (pyproject.toml)
 jplephem==2.24
     # via skyfield
-json5==0.13.0
+json5==0.14.0
     # via jupyterlab-server
 jsonpointer==3.1.1
     # via jsonschema
@@ -187,7 +187,7 @@ jupyter-core==5.9.1
     #   nbformat
 jupyter-events==0.12.0
     # via jupyter-server
-jupyter-lsp==2.3.0
+jupyter-lsp==2.3.1
     # via jupyterlab
 jupyter-server==2.17.0
     # via
@@ -213,7 +213,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.5
     # via eradiate (pyproject.toml)
-llvmlite==0.46.0
+llvmlite==0.47.0
     # via numba
 markdown-it-py==3.0.0
     # via
@@ -266,7 +266,7 @@ networkx==3.4.2
     # via eradiate (pyproject.toml)
 notebook-shim==0.2.4
     # via jupyterlab
-numba==0.64.0
+numba==0.65.0
     # via axsdb
 numpy==2.2.6
     # via
@@ -311,7 +311,7 @@ parso==0.8.6
     # via jedi
 pexpect==4.9.0
     # via ipython
-pillow==12.1.1
+pillow==12.2.0
     # via matplotlib
 pint==0.24.4
     # via
@@ -342,7 +342,7 @@ ptyprocess==0.7.0
     #   terminado
 pure-eval==0.2.3
     # via stack-data
-pybtex==0.25.1
+pybtex==0.26.0
     # via
     #   pybtex-docutils
     #   sphinxcontrib-bibtex
@@ -352,7 +352,7 @@ pycparser==3.0
     # via cffi
 pydot==4.0.1
     # via eradiate (pyproject.toml)
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   ipython
     #   nbconvert
@@ -375,7 +375,7 @@ python-dateutil==2.9.0.post0
     #   jupyter-client
     #   matplotlib
     #   pandas
-python-json-logger==4.0.0
+python-json-logger==4.1.0
     # via jupyter-events
 pytz==2026.1.post1
     # via pandas
@@ -394,7 +394,7 @@ referencing==0.37.0
     #   jsonschema
     #   jsonschema-specifications
     #   jupyter-events
-requests==2.32.5
+requests==2.33.1
     # via
     #   jupyterlab-server
     #   pooch
@@ -496,7 +496,7 @@ terminado==0.18.1
     #   jupyter-server-terminals
 tinycss2==1.4.0
     # via bleach
-tomli==2.4.0
+tomli==2.4.1
     # via
     #   jupyterlab
     #   pytest
