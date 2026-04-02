@@ -339,7 +339,11 @@ def aer_v1_to_aer_core_v2(
         utcnow = datetime.datetime.now(datetime.timezone.utc).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
-        attrs["history"] += f"\n{utcnow} - Conversion from Aer v1 to Aer-Core v2"
+        history = []
+        if "history" in attrs:
+            history.extend(attrs["history"].split("\n"))
+        history.append(f"{utcnow} - Conversion from Aer v1 to Aer-Core v2")
+        attrs["history"] = "\n".join(history)
 
     if len(_phase_datasets) == 1 or len(_phase_datasets) == 4:
         attrs["particle_shape"] = "spherical"

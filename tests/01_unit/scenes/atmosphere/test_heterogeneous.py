@@ -377,9 +377,9 @@ def test_heterogeneous_absorbing_mol_atm(
     # Within the particle layer, the phase function weight should be:
     #   - zero, if the particle layer is not scattering (i.e., absorbing-only)
     #   - larger than zero, if the particle layer is scattering
-    if particle_radprops == "particle_dataset_absorbing_only":
+    if particle_radprops == "particle_properties_absorbing_only":
         assert np.all(weights[inside_particle_layer] == 0.0)
-    elif particle_radprops == "particle_dataset_scattering_only":
+    elif particle_radprops == "particle_properties_scattering_only":
         assert np.all(weights[inside_particle_layer] > 0.0)
     else:
         raise ValueError(
