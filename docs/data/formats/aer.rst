@@ -3,8 +3,8 @@ Aerosol / particles (Aer)
 
 .. _sec-data-formats-aer_core_v2:
 
-Aer-Core v2
------------
+Aer-Core v2 [``aer_core_v2``]
+-----------------------------
 
 This data format is derived from libRadtran's aerosol data format. It features
 an adaptive scattering angle (θ) grid that allows for an optimal positioning of
@@ -82,14 +82,14 @@ Data variables
 
 .. _sec-data-formats-aer_v1:
 
-Aer v1 (legacy)
----------------
+Aer v1 (legacy) [``aer_v1``]
+----------------------------
 
-The original aerosol / particle single-scattering radiative property format,
-used until Eradiate v1.2.0. This format uses dense phase matrix storage and a
-fixed ``mu`` grid. I was replaced by the more storage-efficient Aer-Core v2
-format. Data provided in this format must be converted to the Aer-Core v2 format
-using the :func:`aer_v1_to_aer_core_v2` function.
+The original aerosol / particle single-scattering radiative property format.
+This format uses dense phase matrix storage and a fixed ``mu`` grid. I was
+replaced by the more storage-efficient Aer-Core v2 format. Data provided in this
+format can be converted to the Aer-Core v2 format using the
+:func:`aer_v1_to_aer_core_v2` function.
 
 Format
     ``xarray.Dataset`` (in-memory), NetCDF (storage)
@@ -116,7 +116,7 @@ Data variables
     * ``phase(w, mu, i, j)`` float [1 / solid angle]: scattering phase matrix
 
 Conventions
-    * Phase matrix components use C-style indexing (from 0).
+    * Phase matrix coefficients use C-style indexing (from 0).
 
 Conversion
 ----------
