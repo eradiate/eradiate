@@ -276,4 +276,11 @@ def convert_absdb(value: Any) -> AbsorptionDatabase:
     else:
         raise UnsupportedModeError(supported=["mono", "ckd"])
 
-    return AbsorptionDatabase.convert(value, mode)
+    try:
+        return AbsorptionDatabase.convert(value, mode)
+    except NotADirectoryError as e:
+        raise DataError(
+            f"Could not load molecular absorption database '{value}'. This is usually "
+            "caused by an incorrect path or identifier, or a missing data file. "
+            "Do not forget to install the shipped molecular absorption data."
+        ) from e

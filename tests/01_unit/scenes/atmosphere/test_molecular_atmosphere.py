@@ -9,6 +9,7 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
+from eradiate.exceptions import DataError
 from eradiate.scenes.atmosphere import MolecularAtmosphere
 from eradiate.scenes.core import Scene, traverse
 from eradiate.spectral import CKDSpectralIndex, SpectralIndex
@@ -20,7 +21,7 @@ def _find_nearest(array, value):
     return array[idx]
 
 
-def default_spectral_index(atmosphere):
+def _default_spectral_index(atmosphere):
     # This is a bit fragile (API stability is not guaranteed and units are not
     # checked) but it works well in both mono and ckd modes
     wavelengths = atmosphere.absorption_data._spectral_coverage.index.get_level_values(
@@ -28,23 +29,25 @@ def default_spectral_index(atmosphere):
     ).values
     w = _find_nearest(wavelengths, 550.0)
     kwargs = {"w": w * ureg.nm}
-    if eradiate.mode().is_ckd:
+    if eradiate.get_mode().is_ckd:
         kwargs["g"] = 0.5
     return SpectralIndex.new(**kwargs)
 
 
-def test_molecular_atmosphere_default_mono(mode_mono):
+def test_molecular_atmosphere_default_mono(modes_all_unpolarized_double):
     atmosphere = MolecularAtmosphere()
-    si = default_spectral_index(atmosphere)
+    si = _default_spectral_index(atmosphere)
     template, _ = traverse(atmosphere)
     assert template.render(KernelContext(si=si))
 
 
-def test_molecular_atmosphere_default_ckd(mode_ckd):
-    atmosphere = MolecularAtmosphere()
-    si = default_spectral_index(atmosphere)
-    template, _ = traverse(atmosphere)
-    assert template.render(KernelContext(si=si))
+def test_molecular_atmosphere_absorption_data_param_error(modes_all_unpolarized_double):
+    # Must not raise
+    MolecularAtmosphere()
+
+    # Must raise with a comprehensive message
+    with pytest.raises(DataError, match="Could not load molecular absorption database"):
+        MolecularAtmosphere(absorption_data="doesnt_exist")
 
 
 def test_molecular_atmosphere_scale(
@@ -61,7 +64,7 @@ def test_molecular_atmosphere_scale(
         scale=2.0,
     )
     template, _ = traverse(atmosphere)
-    si = default_spectral_index(atmosphere)
+    si = _default_spectral_index(atmosphere)
     kernel_dict = template.render(KernelContext(si=si))
     assert kernel_dict["medium_atmosphere"]["scale"] == 2.0
 
@@ -126,7 +129,7 @@ def test_molecular_atmosphere_switches(
         error_handler_config=absorption_database_error_handler_config,
     )
 
-    si = default_spectral_index(atmosphere)
+    si = _default_spectral_index(atmosphere)
     radprops = atmosphere.eval_radprops(si, optional_fields=True)
     npt.assert_allclose(radprops.sigma_s, 0.0)
 
@@ -142,7 +145,7 @@ def test_molecular_atmosphere_switches(
 
 def test_molecular_atmosphere_depolarization(mode_ckd):
     atmosphere = MolecularAtmosphere(rayleigh_depolarization=0.5)
-    si = default_spectral_index(atmosphere)
+    si = _default_spectral_index(atmosphere)
     depol = atmosphere.eval_depolarization_factor(si)
     template, _ = traverse(atmosphere)
     assert template.render(KernelContext(si=si))
@@ -150,7 +153,7 @@ def test_molecular_atmosphere_depolarization(mode_ckd):
     assert len(depol) == 1
 
     atmosphere = MolecularAtmosphere(rayleigh_depolarization=[0.1, 0.3, 0.6])
-    si = default_spectral_index(atmosphere)
+    si = _default_spectral_index(atmosphere)
     depol = atmosphere.eval_depolarization_factor(si)
     template, _ = traverse(atmosphere)
     assert template.render(KernelContext(si=si))
@@ -158,7 +161,7 @@ def test_molecular_atmosphere_depolarization(mode_ckd):
     assert len(depol) == 3
 
     atmosphere = MolecularAtmosphere(rayleigh_depolarization="bates")
-    si = default_spectral_index(atmosphere)
+    si = _default_spectral_index(atmosphere)
     depol = atmosphere.eval_depolarization_factor(si)
     template, _ = traverse(atmosphere)
     assert template.render(KernelContext(si=si))
@@ -166,7 +169,7 @@ def test_molecular_atmosphere_depolarization(mode_ckd):
     assert len(depol) == 1
 
     atmosphere = MolecularAtmosphere(rayleigh_depolarization="bodhaine")
-    si = default_spectral_index(atmosphere)
+    si = _default_spectral_index(atmosphere)
     depol = atmosphere.eval_depolarization_factor(si)
     template, _ = traverse(atmosphere)
     assert template.render(KernelContext(si=si))

@@ -1,6 +1,7 @@
 import pytest
 
 import eradiate.converters as converters
+from eradiate.exceptions import DataError
 
 
 def test_passthrough():
@@ -31,5 +32,8 @@ class TestConvertAbsDB:
         assert converters.convert_absdb("absorption_ckd/monotropa") is not None
 
     def test_convert_path_doesnt_exist(self, mode_mono):
-        with pytest.raises(NotADirectoryError, match="doesnt_exist"):
+        with pytest.raises(
+            DataError,
+            match="Could not load molecular absorption database 'doesnt_exist'",
+        ):
             converters.convert_absdb("doesnt_exist")
