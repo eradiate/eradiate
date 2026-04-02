@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+from typing import Literal
 
 import numpy as np
 import pint
@@ -45,6 +46,7 @@ def make_aer_core_v2(
     pmom: np.ndarray | None = None,
     nmom: np.ndarray | None = None,
     attrs: dict | None = None,
+    check: Literal["none", "fast", "full"] | None = None,
 ) -> xr.Dataset:
     """
     Create a new dataset in the Aer-Core v2 format.
@@ -82,10 +84,46 @@ def make_aer_core_v2(
     attrs : dict
         Dataset attributes.
 
+    check : {"none", "fast", "full"}, optional
+        Controls validation of the ``mu`` angular grid sort order.
+
+        * ``None`` or ``"none"`` — no check (default).
+        * ``"fast"`` — sampling-based check: validates a random 10 % of
+          wavelengths (at least one). Intended as a cheap guard during bulk
+          production runs.
+        * ``"full"`` — validates every wavelength.
+
+        A ``ValueError`` is raised if any sampled row is not strictly
+        monotonically increasing in μ.
+
     Returns
     -------
     Dataset
+
+    Raises
+    ------
+    ValueError
+        If a value check fails.
     """
+    if check is not None and check != "none":
+        mu_vals = mu.m  # (nw, nangle)
+        nw_check = mu_vals.shape[0]
+
+        if check == "fast":
+            rng = np.random.default_rng(seed=0)
+            n_sample = max(1, nw_check // 10)
+            iw_check = rng.choice(nw_check, size=n_sample, replace=False)
+        else:  # "full"
+            iw_check = np.arange(nw_check)
+
+        for iw in iw_check:
+            if not np.all(np.diff(mu_vals[iw]) > 0):
+                raise ValueError(
+                    f"make_aer_core_v2(): mu is not strictly ascending at "
+                    f"wavelength index {iw}. Sort the angular grid in ascending "
+                    "mu order before calling this function."
+                )
+
     data_vars = {
         "ext": (
             "w",
@@ -184,6 +222,8 @@ def aer_v1_to_aer_core_v2(
     phase_scale: float = 1.0,
     dtype: DTypeLike | None = None,
     update_history: bool = True,
+    interp_space: Literal["mu", "theta"] = "mu",
+    check: Literal["none", "fast", "full"] = "full",
 ) -> xr.Dataset:
     """
     Convert a dataset in the :ref:`Aer v1 <sec-data-formats-aer_v1>`
@@ -206,6 +246,18 @@ def aer_v1_to_aer_core_v2(
         If ``True``, update the ``history`` attribute of the dataset with a new
         entry mentioning the conversion timestamp.
 
+    interp_space : {"mu", "theta"}, default: "mu"
+        Coordinate space used for angular interpolation of the phase function.
+        The output angular grid is always sorted in ascending μ order.
+
+        * ``"mu"`` — interpolation in μ space (default). This is the
+          physically correct choice for Mitsuba's tabulated-phase-function
+          plugins, whose linear table look-up is performed in μ.
+        * ``"theta"`` — interpolation in θ space.
+
+    check : {"none", "fast", "full"}, default: "full"
+        Apply validation checks to the output.
+
     Returns
     -------
     Dataset
@@ -225,8 +277,6 @@ def aer_v1_to_aer_core_v2(
         ("44", (3, 3)),
     ]
 
-    ds = ds.sortby("mu")
-
     w = to_quantity(ds["w"])
     if dtype:
         w = w.asdtype(dtype)
@@ -241,12 +291,18 @@ def aer_v1_to_aer_core_v2(
 
     nangles = ds.sizes["mu"]
     nw = ds.sizes["w"]
-    mu = np.broadcast_to(ds["mu"].values, (nw, nangles))
-    if dtype:
-        mu = mu.asdtype(dtype)
 
+    # Output is always in ascending mu order (-1 → +1).
+    # interp_space controls the interpolation coordinate (reserved for future
+    # grid-refinement steps).
+    mu_1d = ds["mu"].values
+    sort_idx = np.argsort(mu_1d)
+
+    mu = np.broadcast_to(mu_1d[sort_idx], (nw, nangles)).copy()
+    if dtype:
+        mu = mu.astype(dtype)
     mu = mu * ureg("dimensionless")
-    theta = (np.acos(mu) * ureg("rad")).to("deg")
+    theta = (np.arccos(mu.m) * ureg("rad")).to("deg")
 
     _phase_datasets = {}
     for ij, (i, j) in PHAMAT_TO_IDX:
@@ -274,6 +330,9 @@ def aer_v1_to_aer_core_v2(
     if dtype:
         phase = phase.asdtype(dtype)
 
+    # Reorder angle dimension to ascending mu
+    phase = phase[:, :, sort_idx]
+
     attrs = ds.attrs.copy()
     attrs["format"] = "Aer-Core v2"
     if update_history:
@@ -298,6 +357,7 @@ def aer_v1_to_aer_core_v2(
         ssa=ssa,
         phase=phase,
         attrs=attrs,
+        check=check,
     )
 
 
@@ -305,6 +365,7 @@ def libradtran_to_aer_core_v2(
     ds: xr.Dataset,
     attrs: dict | None = None,
     fallback_units: dict[str, str] | None = None,
+    check: Literal["none", "fast", "full"] = "full",
 ) -> xr.Dataset:
     """
     Convert a dataset in the libRadtran scattering particle property format to
@@ -322,6 +383,9 @@ def libradtran_to_aer_core_v2(
     fallback_units : dict, optional
         A mapping that specifies units to apply to variables that are missing
         them.
+
+    check : {"none", "fast", "full"}, default: "full"
+        Apply validation checks to the output.
 
     Returns
     -------
@@ -422,4 +486,5 @@ def libradtran_to_aer_core_v2(
         nmom=nmom,
         pmom=pmom,
         attrs=attrs,
+        check=check,
     )
