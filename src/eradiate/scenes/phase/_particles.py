@@ -230,9 +230,10 @@ class ParticlePhaseFunction(PhaseFunction):
         Returns
         -------
         values : ndarray
-            Legendre moment array, shape ``(nleg, nphamat)``.
+            Legendre moment array, shape ``(nphamat, nleg)``.
         """
-        return self.particle_properties.eval_pmom(w=w, clip=True)
+        values, _ = self.particle_properties.eval_pmom(w=w, clip=False)
+        return values[:, 0, :]  # (phamat, imom); squeeze scalar-w axis
 
     def _param_to_phamat(self) -> dict[str, int]:
         result = {"m11" if self.is_polarized else "values": 0}

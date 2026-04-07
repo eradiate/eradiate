@@ -259,7 +259,7 @@ class ParticleProperties:
             if "pmom" not in self.data:
                 return None
             else:
-                self._pmom = self.data["pmom"].transpose("imom", "phamat", "w")
+                self._pmom = self.data["pmom"].transpose("phamat", "w", "imom")
 
         return self._pmom
 
@@ -574,19 +574,24 @@ class ParticleProperties:
         """
         idx_l, idx_r, w0, w1, scat_denom = self._bracket_and_weights(w)
 
-        pmom = self.pmom  # (nmom, nphamat, nw_data)
-        v_l = np.nan_to_num(pmom.values[:, :, idx_l])  # (nmom, nphamat, nw)
-        v_r = np.nan_to_num(pmom.values[:, :, idx_r])
+        pmom = self.pmom  # (phamat, w_data, imom)
+        if pmom is None:
+            raise ValueError(
+                "ParticleProperties.eval_pmom(): No Legendre moments found in loaded data"
+            )
+
+        v_l = np.nan_to_num(pmom.values[:, idx_l, :])  # (phamat, nw, imom)
+        v_r = np.nan_to_num(pmom.values[:, idx_r, :])
 
         values = (
-            w0[np.newaxis, np.newaxis, :] * v_l + w1[np.newaxis, np.newaxis, :] * v_r
-        )  # (nmom, nphamat, nw)
+            w0[np.newaxis, :, np.newaxis] * v_l + w1[np.newaxis, :, np.newaxis] * v_r
+        )  # (phamat, nw, imom)
 
         # zero out wavelengths with no scattering
-        values = np.where((scat_denom == 0.0)[np.newaxis, np.newaxis, :], 0.0, values)
+        values = np.where((scat_denom == 0.0)[np.newaxis, :, np.newaxis], 0.0, values)
 
         # Index of last nonzero moment (across all wavelengths and phamat) + 1
-        nonzero_rows = np.any(values != 0.0, axis=(1, 2))  # (nmom,)
+        nonzero_rows = np.any(values != 0.0, axis=(0, 1))  # (imom,)
         nleg = int(np.flatnonzero(nonzero_rows)[-1] + 1) if nonzero_rows.any() else 0
 
-        return values[:nleg] if clip else values, nleg
+        return values[:, :, :nleg] if clip else values, nleg

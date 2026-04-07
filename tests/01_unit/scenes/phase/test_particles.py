@@ -13,6 +13,7 @@ from eradiate.units import unit_registry as ureg
 DS_ID_TO_FNAME = {
     "unpolarized_data": "govaerts_2021-desert-aer_core_v2",
     "polarized_data": "aeronet_sahara_spherical_RAMIA_GENERIC_extrapolated-aer_core_v2",
+    "pmom_data": "soot.mie-aer_core_v2",
 }
 
 
@@ -83,3 +84,15 @@ class TestParticlePhaseFunction:
         # Repeated evaluations with the same wavelength value do not trigger a
         # recomputation
         assert pphase.eval_phase(si) is result
+
+    def test_eval_pmom(self, modes_all_double, pphase):
+        si = SpectralIndex.new()
+        if pphase.particle_properties.pmom is None:
+            with pytest.raises(ValueError, match="No Legendre moments"):
+                pphase.eval_pmom(si)
+        else:
+            result = pphase.eval_pmom(si)
+            assert result.shape == (
+                pphase.particle_properties.data.sizes["phamat"],
+                pphase.particle_properties.data.sizes["imom"],
+            )
