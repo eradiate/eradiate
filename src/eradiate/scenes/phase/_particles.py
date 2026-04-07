@@ -158,10 +158,81 @@ class ParticlePhaseFunction(PhaseFunction):
             ``(nangles,)``.
 
         phase : ndarray
-            Evaluated phase function as a 1D array, shape
-            ``(nphamat, nangles,)``.
+            Evaluated phase function as a 2D array, shape ``(nphamat, nangles)``.
         """
         return self.particle_properties.eval_phase(w=w)
+
+    @singledispatchmethod
+    def eval_pmom(self, si: SpectralIndex, phamat: int | None = None) -> np.ndarray:
+        """
+        Evaluate phase function at a given spectral index, for a given phase
+        matrix component.
+
+        Parameters
+        ----------
+        si : .SpectralIndex
+            Spectral index.
+
+        phamat : int, optional
+            Index of the requested phase matrix coefficient. If unset, all
+            coefficients are returned.
+
+        Returns
+        -------
+        pmom : ndarray
+            Legendre moments for all available phase matrix components, shape
+            ``(nleg, nphamat)``.
+
+        Notes
+        -----
+        * This method dispatches evaluation to specialized methods depending on
+          the spectral index type. The default implementation raises an exception.
+
+        * The underlying implementation caches the output based on the object ID
+          of the ``si.w`` argument: this avoids recomputations when calling this
+          method repeatedly during a spectral loop iteration.
+
+        * Coefficient indices map to phase matrix components as follows:
+
+          * 0 → m11
+          * 1 → m12
+          * 2 → m33
+          * 3 → m34
+          * 4 → m22
+          * 5 → m44
+        """
+        raise NotImplementedError
+
+    @eval_pmom.register(MonoSpectralIndex)
+    def _(self, si, phamat: int | None = None) -> np.ndarray:
+        result = self._eval_pmom_impl(si.w)
+        if phamat is not None:
+            result = result[phamat, :]
+        return result
+
+    @eval_pmom.register(CKDSpectralIndex)
+    def _(self, si, phamat: int | None = None) -> np.ndarray:
+        result = self._eval_pmom_impl(si.w)
+        if phamat is not None:
+            result = result[phamat, :]
+        return result
+
+    @cache_by_id
+    def _eval_pmom_impl(self, w: pint.Quantity) -> np.ndarray:
+        """
+        Evaluate the Legendre moments at a given wavelength.
+
+        Parameters
+        ----------
+        w : quantity
+            Wavelength (must be scalar).
+
+        Returns
+        -------
+        values : ndarray
+            Legendre moment array, shape ``(nleg, nphamat)``.
+        """
+        return self.particle_properties.eval_pmom(w=w, clip=True)
 
     def _param_to_phamat(self) -> dict[str, int]:
         result = {"m11" if self.is_polarized else "values": 0}
