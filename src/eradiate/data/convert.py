@@ -76,7 +76,7 @@ def make_aer_core_v2(
         Integral normalized to 2 (*i.e.* ∫ p(μ) dμ = 2).
 
     pmom : ndarray, optional
-        Legendre polynomials, shape (nw, nimom).
+        Legendre polynomials, shape (nphamat, nw, nimom).
 
     nmom : ndarray, optional
         Number of Legendre polynomials, shape (nw,).
@@ -460,6 +460,11 @@ def libradtran_to_aer_core_v2(
 
         # Resample phase function using high-performance 1D interpolator with spectator dims support
         phase_refined = interp1d(theta_, phase_, theta_refined)
+
+        # Sort output to ascending mu (= descending theta) per Aer-Core v2 spec
+        sort_mu = np.argsort(np.cos(np.deg2rad(theta_refined)))
+        theta_refined = theta_refined[sort_mu]
+        phase_refined = phase_refined[:, sort_mu]
 
         # Store resampled angular grid and phase function
         theta[iw, :] = theta_refined
