@@ -71,8 +71,8 @@ class cache_by_id:
         index = tuple(id(arg) for arg in args)
 
         if index != self._cached_index:
+            self._cached_value = self.func(*args)  # update cache only on success
             self._cached_index = index
-            self._cached_value = self.func(*args)
 
         return self._cached_value
 
