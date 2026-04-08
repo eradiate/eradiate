@@ -590,8 +590,11 @@ class ParticleProperties:
         # zero out wavelengths with no scattering
         values = np.where((scat_denom == 0.0)[np.newaxis, :, np.newaxis], 0.0, values)
 
+        # Transpose to (imom, phamat, nw)
+        values = values.transpose(2, 0, 1)
+
         # Index of last nonzero moment (across all wavelengths and phamat) + 1
-        nonzero_rows = np.any(values != 0.0, axis=(0, 1))  # (imom,)
+        nonzero_rows = np.any(values != 0.0, axis=(1, 2))  # (imom,)
         nleg = int(np.flatnonzero(nonzero_rows)[-1] + 1) if nonzero_rows.any() else 0
 
-        return values[:, :, :nleg] if clip else values, nleg
+        return values[:nleg] if clip else values, nleg

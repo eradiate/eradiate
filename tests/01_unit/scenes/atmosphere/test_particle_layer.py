@@ -13,7 +13,7 @@ from eradiate.test_tools.types import check_scene_element
 from eradiate.units import to_quantity
 
 # ------------------------------------------------------------------------------
-#                              Fixtures
+#                                   Fixtures
 # ------------------------------------------------------------------------------
 
 DS_ID_TO_FNAME = {
