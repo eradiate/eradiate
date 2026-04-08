@@ -259,7 +259,7 @@ class ParticleProperties:
             if "pmom" not in self.data:
                 return None
             else:
-                self._pmom = self.data["pmom"].transpose("phamat", "w", "imom")
+                self._pmom = self.data["pmom"].transpose("phamat", "imom", "w")
 
         return self._pmom
 
@@ -559,14 +559,14 @@ class ParticleProperties:
             Query wavelength(s); scalar or array.
 
         clip : bool, optional
-            If ``True``, trailing all-zero rows are removed from ``values``,
-            so ``values.shape[0] == nleg``.
+            If ``True``, trailing all-zero slices are removed along the ``imom``
+            axis, so ``values.shape[1] == nleg``.
 
         Returns
         -------
         values : ndarray
-            Legendre moment array, shape ``(nmom, nphamat, nw)`` or
-            ``(nleg, nphamat, nw)`` when ``clip=True``.
+            Legendre moment array, shape ``(nphamat, nmom, nw)`` or
+            ``(nphamat, nleg, nw)`` when ``clip=True``.
 
         nleg : int
             Index of the last nonzero moment (+ 1) across all queried
@@ -574,27 +574,24 @@ class ParticleProperties:
         """
         idx_l, idx_r, w0, w1, scat_denom = self._bracket_and_weights(w)
 
-        pmom = self.pmom  # (phamat, w_data, imom)
+        pmom = self.pmom  # (phamat, imom, w_data)
         if pmom is None:
             raise ValueError(
                 "ParticleProperties.eval_pmom(): No Legendre moments found in loaded data"
             )
 
-        v_l = np.nan_to_num(pmom.values[:, idx_l, :])  # (phamat, nw, imom)
-        v_r = np.nan_to_num(pmom.values[:, idx_r, :])
+        v_l = np.nan_to_num(pmom.values[:, :, idx_l])  # (phamat, imom, nw)
+        v_r = np.nan_to_num(pmom.values[:, :, idx_r])
 
         values = (
-            w0[np.newaxis, :, np.newaxis] * v_l + w1[np.newaxis, :, np.newaxis] * v_r
-        )  # (phamat, nw, imom)
+            w0[np.newaxis, np.newaxis, :] * v_l + w1[np.newaxis, np.newaxis, :] * v_r
+        )  # (phamat, imom, nw)
 
         # zero out wavelengths with no scattering
-        values = np.where((scat_denom == 0.0)[np.newaxis, :, np.newaxis], 0.0, values)
-
-        # Transpose to (imom, phamat, nw)
-        values = values.transpose(2, 0, 1)
+        values = np.where((scat_denom == 0.0)[np.newaxis, np.newaxis, :], 0.0, values)
 
         # Index of last nonzero moment (across all wavelengths and phamat) + 1
-        nonzero_rows = np.any(values != 0.0, axis=(1, 2))  # (imom,)
+        nonzero_rows = np.any(values != 0.0, axis=(0, 2))  # (imom,)
         nleg = int(np.flatnonzero(nonzero_rows)[-1] + 1) if nonzero_rows.any() else 0
 
-        return values[:nleg] if clip else values, nleg
+        return values[:, :nleg, :] if clip else values, nleg

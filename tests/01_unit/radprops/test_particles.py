@@ -395,20 +395,20 @@ class TestParticleProperties:
             [400.0 * ureg.nm, np.array([400.0, 550.0]) * ureg.nm],
         )
         def test_shape(self, pp, w_input):
-            """Output shape is (nmom, nphamat, nw) for scalar and array w."""
+            """Output shape is (nphamat, nmom, nw) for scalar and array w."""
             values, nleg = pp.eval_pmom(w_input)
             nw = np.atleast_1d(w_input.m).size
-            assert values.shape == (5, 1, nw)
+            assert values.shape == (1, 5, nw)
             assert isinstance(nleg, int)
 
         def test_clip(self, pp):
-            """clip=True removes trailing all-zero rows; nleg == last nonzero + 1."""
+            """clip=True removes trailing all-zero slices along imom; nleg == last nonzero + 1."""
             w = np.array([400.0, 550.0, 700.0]) * ureg.nm
             values_full, nleg_full = pp.eval_pmom(w, clip=False)
             values_clip, nleg_clip = pp.eval_pmom(w, clip=True)
             assert nleg_full == nleg_clip
-            assert values_clip.shape[0] == nleg_clip
-            np.testing.assert_array_equal(values_clip, values_full[:nleg_clip])
+            assert values_clip.shape[1] == nleg_clip
+            np.testing.assert_array_equal(values_clip, values_full[:, :nleg_clip, :])
 
         def test_nan_as_zero(self):
             """NaN in pmom data is treated as 0 in the result."""
@@ -432,54 +432,53 @@ class TestParticleProperties:
             np.testing.assert_array_equal(values[:, :, 0], 0.0)
             assert nleg == 0 or values[:, :, 0].sum() == 0.0
 
+    class TestSingleWavelength:
+        """
+        Regression tests for the single-spectral-point edge case in
+        ParticleProperties.  With only one wavelength, _locate used to produce
+        idx_l = -1 (out-of-bounds) due to np.clip(1, 1, 0) returning 1.
+        """
 
-class TestSingleWavelength:
-    """
-    Regression tests for the single-spectral-point edge case in
-    ParticleProperties.  With only one wavelength, _locate used to produce
-    idx_l = -1 (out-of-bounds) due to np.clip(1, 1, 0) returning 1.
-    """
+        @pytest.fixture
+        def pp_single(self) -> ParticleProperties:
+            return ParticleProperties(data=make_single_w_dataset())
 
-    @pytest.fixture
-    def pp_single(self) -> ParticleProperties:
-        return ParticleProperties(data=make_single_w_dataset())
+        @pytest.mark.parametrize("w_nm", [300.0, 550.0, 800.0])
+        def test_locate_returns_zero_indices(self, pp_single, w_nm):
+            """_locate returns idx_l=0, idx_r=0, t=0 for any query wavelength."""
+            idx_l, idx_r, t = pp_single._locate(w_nm * ureg.nm)
+            assert idx_l[0] == 0
+            assert idx_r[0] == 0
+            np.testing.assert_allclose(t[0], 0.0, atol=1e-15)
 
-    @pytest.mark.parametrize("w_nm", [300.0, 550.0, 800.0])
-    def test_locate_returns_zero_indices(self, pp_single, w_nm):
-        """_locate returns idx_l=0, idx_r=0, t=0 for any query wavelength."""
-        idx_l, idx_r, t = pp_single._locate(w_nm * ureg.nm)
-        assert idx_l[0] == 0
-        assert idx_r[0] == 0
-        np.testing.assert_allclose(t[0], 0.0, atol=1e-15)
+        def test_eval_ssa_off_grid(self, pp_single):
+            """eval_ssa returns the single tabulated value for an off-grid wavelength."""
+            result = pp_single.eval_ssa(300.0 * ureg.nm)
+            np.testing.assert_allclose(result.m, SSA_SINGLE[0], rtol=1e-12)
 
-    def test_eval_ssa_off_grid(self, pp_single):
-        """eval_ssa returns the single tabulated value for an off-grid wavelength."""
-        result = pp_single.eval_ssa(300.0 * ureg.nm)
-        np.testing.assert_allclose(result.m, SSA_SINGLE[0], rtol=1e-12)
+        def test_eval_phase_values_match_data(self, pp_single):
+            """eval_phase reproduces stored values and works off-grid."""
+            ds = make_single_w_dataset()
+            mu_out, phase_out = pp_single.eval_phase(300.0 * ureg.nm)
+            assert phase_out.shape == (1, mu_out.shape[0])
+            # phase dims in Aer-Core v2: (phamat, w, iangle)
+            stored_phase = ds["phase"].values[0, 0, :]
+            np.testing.assert_allclose(phase_out[0], stored_phase, rtol=1e-12)
 
-    def test_eval_phase_values_match_data(self, pp_single):
-        """eval_phase reproduces stored values and works off-grid."""
-        ds = make_single_w_dataset()
-        mu_out, phase_out = pp_single.eval_phase(300.0 * ureg.nm)
-        assert phase_out.shape == (1, mu_out.shape[0])
-        # phase dims in Aer-Core v2: (phamat, w, iangle)
-        stored_phase = ds["phase"].values[0, 0, :]
-        np.testing.assert_allclose(phase_out[0], stored_phase, rtol=1e-12)
+        def test_eval_pmom_values_match_data(self, pp_single):
+            """eval_pmom reproduces stored moments and works off-grid."""
+            ds = make_single_w_dataset()
+            values, nleg = pp_single.eval_pmom(300.0 * ureg.nm)
+            assert values.shape == (1, 5, 1)
+            assert nleg > 0
+            # pmom dims in Aer-Core v2: (phamat, w, imom)
+            stored = ds["pmom"].transpose("phamat", "imom", "w").values
+            np.testing.assert_allclose(values, stored, rtol=1e-12)
 
-    def test_eval_pmom_values_match_data(self, pp_single):
-        """eval_pmom reproduces stored moments and works off-grid."""
-        ds = make_single_w_dataset()
-        values, nleg = pp_single.eval_pmom(300.0 * ureg.nm)
-        assert values.shape == (5, 1, 1)
-        assert nleg > 0
-        # pmom dims in Aer-Core v2: (phamat, w, imom)
-        stored = ds["pmom"].transpose("imom", "phamat", "w").values
-        np.testing.assert_allclose(values, stored, rtol=1e-12)
-
-    def test_eval_pmom_clip(self, pp_single):
-        """clip=True works correctly with a single spectral point."""
-        values_full, nleg = pp_single.eval_pmom(550.0 * ureg.nm, clip=False)
-        values_clip, nleg_clip = pp_single.eval_pmom(550.0 * ureg.nm, clip=True)
-        assert nleg == nleg_clip
-        assert values_clip.shape[0] == nleg_clip
-        np.testing.assert_array_equal(values_clip, values_full[:nleg_clip])
+        def test_eval_pmom_clip(self, pp_single):
+            """clip=True works correctly with a single spectral point."""
+            values_full, nleg = pp_single.eval_pmom(550.0 * ureg.nm, clip=False)
+            values_clip, nleg_clip = pp_single.eval_pmom(550.0 * ureg.nm, clip=True)
+            assert nleg == nleg_clip
+            assert values_clip.shape[1] == nleg_clip
+            np.testing.assert_array_equal(values_clip, values_full[:, :nleg_clip, :])
