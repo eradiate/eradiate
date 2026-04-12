@@ -14,6 +14,7 @@ from ..attrs import define, documented
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
+from ..util.misc import summary_repr
 
 KNOWN_DATASETS = {
     "rami4atm-desert": "rami4atm-desert-aer_core_v2.nc",
@@ -134,7 +135,9 @@ class ParticleProperties:
     # TODO: Validate data format
     # TODO: Load files from a path-like or a string (converter)
     data: xr.Dataset = documented(
-        attrs.field(validator=attrs.validators.instance_of(xr.Dataset)),
+        attrs.field(
+            validator=attrs.validators.instance_of(xr.Dataset), repr=summary_repr
+        ),
         doc="Single-scattering property dataset.",
         type="xarray.Dataset",
         init_type="xarray.Dataset",
