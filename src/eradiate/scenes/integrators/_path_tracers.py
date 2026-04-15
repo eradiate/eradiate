@@ -126,7 +126,7 @@ class VolPathIntegrator(MonteCarloIntegrator):
 @define(eq=False, slots=False)
 class EOVolPathIntegrator(MonteCarloIntegrator):
     """
-    A thin interface to the EO volumetric path tracer kernel plugin [``volpath``].
+    A thin interface to the EO volumetric path tracer kernel plugin [``eovolpath``].
 
     This integrator samples paths using random walks starting from the sensor.
     It supports multiple scattering, accounts for volume interactions, and
@@ -152,7 +152,7 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
     ddis_threshold = documented(
         attrs.field(default=0.1, converter=attrs.converters.optional(float)),
         doc="Specifies the probability to importance sample the phase using the "
-        "emitter as incident direction.",
+        "emitter as incident direction. Set to <0. to deactivate.",
         type="float",
         init_type="float",
     )
