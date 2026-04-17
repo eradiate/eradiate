@@ -28,13 +28,11 @@ class MonteCarloIntegrator(Integrator):
         init_type="int, optional",
     )
 
-    rr_depth: int | None = documented(
-        attrs.field(default=None, converter=attrs.converters.optional(int)),
+    rr_depth: int = documented(
+        attrs.field(default=5, converter=int),
         doc="Minimum path depth after which the implementation starts applying "
-        "the Russian roulette path termination criterion. If unset, the kernel "
-        "default value (5) is used.",
-        type="int or None",
-        init_type="int, optional",
+        "the Russian roulette path termination criterion.",
+        type="int",
     )
 
     hide_emitters: bool | None = documented(
@@ -56,14 +54,15 @@ class MonteCarloIntegrator(Integrator):
         Override this method in subclasses to add integrator-specific parameters.
         The base implementation handles common Monte Carlo integrator parameters.
         """
-        result = {"type": self.kernel_type}
+        result = {
+            "type": self.kernel_type,
+            "rr_depth": self.rr_depth,
+        }
 
         if self.timeout is not None:
             result["timeout"] = self.timeout
         if self.max_depth is not None:
             result["max_depth"] = self.max_depth
-        if self.rr_depth is not None:
-            result["rr_depth"] = self.rr_depth
         if self.hide_emitters is not None:
             result["hide_emitters"] = self.hide_emitters
 
@@ -130,31 +129,41 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
 
     This integrator samples paths using random walks starting from the sensor.
     It supports multiple scattering, accounts for volume interactions, and
-    implements the DDIS variance reduction method.
+    implements the DDIS variance reduction method as described in
+    :cite:t:`Buras2011EfficientUnbiasedVariance`.
     """
 
-    rr_depth: int | None = documented(
-        attrs.field(default=1000, converter=attrs.converters.optional(int)),
+    rr_depth: int = documented(
+        attrs.field(
+            default=1000,
+            converter=int,
+            validator=attrs.validators.instance_of(int),
+        ),
         doc="Minimum path depth after which the implementation starts applying "
         "the Russian roulette path termination criterion.",
-        type="int or None",
-        init_type="int, optional",
+        type="int",
     )
 
     rr_factor = documented(
-        attrs.field(default=0.97, converter=attrs.converters.optional(float)),
+        attrs.field(
+            default=0.97,
+            converter=float,
+            validator=attrs.validators.instance_of(float),
+        ),
         doc="Specifies the maximum probability to keep a path when Russian "
         "Roulette is evaluated.",
         type="float",
-        init_type="float",
     )
 
     ddis_threshold = documented(
-        attrs.field(default=0.1, converter=attrs.converters.optional(float)),
+        attrs.field(
+            default=0.1,
+            converter=attrs.converters.optional(float),
+            validator=attrs.validators.instance_of(float),
+        ),
         doc="Specifies the probability to importance sample the phase using the "
         "emitter as incident direction. Set to <0. to deactivate.",
         type="float",
-        init_type="float",
     )
 
     @property
