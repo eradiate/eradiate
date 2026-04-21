@@ -129,7 +129,7 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
 
     This integrator samples paths using random walks starting from the sensor.
     It supports multiple scattering, accounts for volume interactions, and
-    implements the DDIS variance reduction method as described in
+    implements the DDIS variance reduction method as described by
     :cite:t:`Buras2011EfficientUnbiasedVariance`.
     """
 

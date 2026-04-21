@@ -509,6 +509,7 @@ Quick access
    :toctree: generated/autosummary/
 
    PathIntegrator
+   EOVolPathIntegrator
    PiecewiseVolPathIntegrator
    VolPathIntegrator
    VolPathMISIntegrator
