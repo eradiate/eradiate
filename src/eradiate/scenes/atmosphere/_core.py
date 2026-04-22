@@ -103,23 +103,18 @@ class Atmosphere(CompositeSceneElement, ABC):
         default='"plane_parallel"',
     )
 
-    extremum_resolution: tuple[int, int, int] = documented(
+    use_residual_ratio_tracking: bool = documented(
         attrs.field(
-            default=(1, 1, 1),
-            validator=validators.is_vector3,
+            default=True,
+            kw_only=True,
+            converter=bool,
+            validator=attrs.validators.instance_of(bool),
         ),
-        doc="[EXPERIMENTAL] Resolution of the extremum structure. Applies to "
-        "both plane parallel and spherical shell geometries but the latter only "
-        "accepts a resolution greater than one along its radial dimension "
-        "(first dimension). Also note than in plane parallel the dimensions are "
-        "[x, y, z] and in spherical shell [r, theta, phi]. "
-        "The default value (1, 1, 1) falls back to a global majorant. In plane "
-        "parallel, set to (0,0,0) to trigger an adaptive search of the optimal"
-        "resolution. Note that this is an expensive search that triggers at "
-        "spectral update.",
-        type="tuple[int, int, int]",
-        init_type="tuple[int, int, int]",
-        default="(1,1,1)",
+        doc="If set to true, uses residual ratio tracking to estimate transmittance "
+        "for non-analytical media. Otherwise, falls back to ratio tracking. "
+        "Residual ratio tracking generally reduces variance and can improve "
+        "performance for high optical thickness.",
+        type="bool",
     )
 
     # --------------------------------------------------------------------------
@@ -809,6 +804,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         if extremum is not None:
             result["extremum"] = extremum
+
+        if medium == "heterogeneous":
+            result["use_rrt"] = self.use_residual_ratio_tracking
 
         return result
 
