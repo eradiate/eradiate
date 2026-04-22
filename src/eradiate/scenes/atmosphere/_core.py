@@ -379,6 +379,25 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         init_type="bool, optional",
     )
 
+    extremum_resolution: tuple[int, int, int] = documented(
+        attrs.field(
+            default=(1, 1, 1),
+            validator=validators.is_vector3,
+        ),
+        doc="[EXPERIMENTAL] Resolution of the extremum structure. Applies to "
+        "both plane parallel and spherical shell geometries but the latter only "
+        "accepts a resolution greater than one along its radial dimension "
+        "(first dimension). Also note than in plane parallel the dimensions are "
+        "[x, y, z] and in spherical shell [r, theta, phi]. "
+        "The default value (1, 1, 1) falls back to a global majorant. In plane "
+        "parallel, set to (0,0,0) to trigger an adaptive search of the optimal"
+        "resolution. Note that this is an expensive search that triggers at "
+        "spectral update.",
+        type="tuple[int, int, int]",
+        init_type="tuple[int, int, int]",
+        default="(1,1,1)",
+    )
+
     def update(self) -> None:
         """
         Update internal state.
@@ -701,7 +720,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     ),
                     "to_world": to_world,
                     "filter_type": "nearest",
-                    "accel": False,
                 },
             }
 
@@ -753,7 +771,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                             ),
                         ),
                         "filter_type": "nearest",
-                        "accel": False,
                     },
                     "to_world": to_world,
                     "rmin": volume_rmin,
@@ -778,6 +795,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         result = {
             "type": medium,
             "has_spectral_extinction": (
+                # piecewise volpath currently only works with spectral extinction true
+                # hack fix by setting to True when we have a piecewise medium
                 (not get_mode().check(mi_color_mode="mono")) or (medium == "piecewise")
             ),
             **volumes,
