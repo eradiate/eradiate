@@ -50,7 +50,6 @@ extensions = [
     "sphinx.ext.intersphinx",  # Inter-project links
     "sphinx.ext.mathjax",  # Equation support
     "sphinx.ext.napoleon",  # Better docstrings
-    "sphinx.ext.viewcode",  # Add links to highlighted source code
     # Third-party
     "myst_parser",  # Markdown support
     "nbsphinx",  # Display notebooks
@@ -108,7 +107,6 @@ intersphinx_mapping = {
     "cachetools": ("https://cachetools.readthedocs.io/en/stable/", None),
     "dateutil": ("https://dateutil.readthedocs.io/en/stable/", None),
     "dessinemoi": ("https://dessinemoi.readthedocs.io/en/stable/", None),
-    "hamilton": ("https://hamilton.dagworks.io/en/latest/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "mitsuba": ("https://mitsuba.readthedocs.io/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),

@@ -12,7 +12,7 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help serve html-plot clean clean_generated Makefile
+.PHONY: help serve html-plot clean clean-all clean-generated Makefile
 
 serve:
 	sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
@@ -22,10 +22,14 @@ html-plot:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-clean: clean_generated
+# Full clean including generated stubs (forces autosummary regeneration on next build)
+clean: clean-generated clean-build
+
+# Remove build output only; preserves generated stubs so the next build skips autosummary
+clean-build:
 	rm -rf _build/*
 
-clean_generated:
+clean-generated:
 	rm -rf reference_api/generated/*
 	rm -rf reference_plugins/generated/*
 
