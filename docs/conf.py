@@ -50,6 +50,7 @@ extensions = [
     "sphinx.ext.intersphinx",  # Inter-project links
     "sphinx.ext.mathjax",  # Equation support
     "sphinx.ext.napoleon",  # Better docstrings
+    "sphinx.ext.imgconverter",  # Convert SVG to PNG for non-HTML builders
     # Third-party
     "myst_parser",  # Markdown support
     "nbsphinx",  # Display notebooks
@@ -323,3 +324,13 @@ def custom_step(app):
 
 def setup(app):
     app.connect("builder-inited", custom_step)
+
+    # sphinx_iconify only registers HTML visitors; register no-op LaTeX
+    # visitors so PDF builds don't fail on iconify_icon nodes.
+    from sphinx_iconify.roles import iconify_icon
+
+    app.add_node(
+        iconify_icon,
+        override=True,
+        latex=(lambda self, node: None, lambda self, node: None),
+    )
