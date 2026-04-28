@@ -50,6 +50,7 @@ extensions = [
     "sphinx.ext.intersphinx",  # Inter-project links
     "sphinx.ext.mathjax",  # Equation support
     "sphinx.ext.napoleon",  # Better docstrings
+    "sphinx.ext.imgconverter",  # Convert SVG to PNG for non-HTML builders
     # Third-party
     "myst_parser",  # Markdown support
     "nbsphinx",  # Display notebooks
