@@ -44,6 +44,16 @@ class MonteCarloIntegrator(Integrator):
     )
 
     @property
+    def extremum_compatible(self):
+        """
+        Returns
+        -------
+        bool
+            Flags whether the integrator can consume extremum structures.
+        """
+        return False
+
+    @property
     def kernel_type(self) -> str:
         raise NotImplementedError
 
@@ -131,6 +141,12 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
     It supports multiple scattering, accounts for volume interactions, and
     implements the DDIS variance reduction method as described by
     :cite:t:`Buras2011EfficientUnbiasedVariance`.
+
+    It also supports the use of extremum structures and the estimation of
+    transmittance through residual ratio tracking :cite:`Novak2014Residual`.
+    The former can improve performance in heterogeneous atmosphere, and the
+    latter improves variance (and sometimes performance) induced from
+    transmittance estimation.
     """
 
     rr_depth: int = documented(
@@ -165,6 +181,10 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
         "emitter as incident direction. Set to <0. to deactivate.",
         type="float",
     )
+
+    @property
+    def extremum_compatible(self):
+        return True
 
     @property
     def kernel_type(self) -> str:

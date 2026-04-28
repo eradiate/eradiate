@@ -103,15 +103,16 @@ class Atmosphere(CompositeSceneElement, ABC):
         default='"plane_parallel"',
     )
 
-    use_residual_ratio_tracking: bool = documented(
+    use_rrt: bool = documented(
         attrs.field(
             default=True,
             kw_only=True,
             converter=bool,
             validator=attrs.validators.instance_of(bool),
         ),
-        doc="If set to true, uses residual ratio tracking to estimate transmittance "
-        "for non-analytical media. Otherwise, falls back to ratio tracking. "
+        doc="If set to true, prescribe the use of residual ratio tracking to "
+        "estimate transmittance for integrators that allow it. "
+        "Otherwise, falls back to ratio tracking. "
         "Residual ratio tracking generally reduces variance and can improve "
         "performance for high optical thickness.",
         type="bool",
@@ -806,7 +807,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             result["extremum"] = extremum
 
         if medium == "heterogeneous":
-            result["use_rrt"] = self.use_residual_ratio_tracking
+            result["use_rrt"] = self.use_rrt
 
         return result
 
