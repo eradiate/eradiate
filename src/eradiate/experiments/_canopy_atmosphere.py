@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import typing as t
+import warnings
 
 import attrs
 
@@ -16,6 +17,7 @@ from ._helpers import (
 from .. import validators
 from ..attrs import AUTO, define, documented
 from ..scenes.atmosphere import (
+    AbstractHeterogeneousAtmosphere,
     Atmosphere,
     HeterogeneousAtmosphere,
     HomogeneousAtmosphere,
@@ -213,6 +215,18 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         """
         Ensures that the integrator is compatible with the atmosphere and geometry.
         """
+        if isinstance(self.atmosphere, AbstractHeterogeneousAtmosphere):
+            if (
+                self.atmosphere.extremum_resolution != (1, 1, 1)
+                and not self.integrator.extremum_compatible
+            ):
+                warnings.warn(
+                    UserWarning(
+                        "Extremum structures are not compatible with "
+                        f"{type(self.integrator).__name__} and will be ignored."
+                    )
+                )
+
         piecewise_compatible, pw_msg = check_piecewise_compatible(
             self.geometry, self.atmosphere
         )
