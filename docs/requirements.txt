@@ -8,7 +8,7 @@ alabaster==1.0.0
     # via sphinx
 annotated-doc==0.0.4
     # via typer
-anyio==4.12.1
+anyio==4.13.0
     # via
     #   httpx
     #   jupyter-server
@@ -43,13 +43,13 @@ beautifulsoup4==4.14.3
     # via nbconvert
 bleach==6.3.0
     # via nbconvert
-cachetools==7.0.5
+cachetools==7.0.6
     # via
     #   eradiate (pyproject.toml)
     #   axsdb
 cerberus==1.3.8
     # via eradiate (pyproject.toml)
-certifi==2026.2.25
+certifi==2026.4.22
     # via
     #   httpcore
     #   httpx
@@ -60,9 +60,9 @@ cffi==2.0.0
     # via argon2-cffi-bindings
 cftime==1.6.5
     # via netcdf4
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
-click==8.3.1
+click==8.3.3
     # via
     #   eradiate (pyproject.toml)
     #   joseki
@@ -121,7 +121,7 @@ httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via jupyterlab
-idna==3.11
+idna==3.13
     # via
     #   anyio
     #   httpx
@@ -129,13 +129,13 @@ idna==3.11
     #   requests
 imagesize==2.0.0
     # via sphinx
-importlib-resources==6.5.2
+importlib-resources==7.1.0
     # via joseki
 iniconfig==2.3.0
     # via pytest
 ipykernel==7.2.0
     # via jupyterlab
-ipython==8.38.0
+ipython==8.39.0
     # via
     #   eradiate (pyproject.toml)
     #   eradiate (pyproject.toml:docs)
@@ -160,7 +160,7 @@ joseki==2.6.1
     # via eradiate (pyproject.toml)
 jplephem==2.24
     # via skyfield
-json5==0.13.0
+json5==0.14.0
     # via jupyterlab-server
 jsonpointer==3.1.1
     # via jsonschema
@@ -185,9 +185,9 @@ jupyter-core==5.9.1
     #   nbclient
     #   nbconvert
     #   nbformat
-jupyter-events==0.12.0
+jupyter-events==0.12.1
     # via jupyter-server
-jupyter-lsp==2.3.0
+jupyter-lsp==2.3.1
     # via jupyterlab
 jupyter-server==2.17.0
     # via
@@ -197,7 +197,7 @@ jupyter-server==2.17.0
     #   notebook-shim
 jupyter-server-terminals==0.5.4
     # via jupyter-server
-jupyterlab==4.5.6
+jupyterlab==4.5.7
     # via eradiate (pyproject.toml)
 jupyterlab-pygments==0.3.0
     # via nbconvert
@@ -213,7 +213,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.5
     # via eradiate (pyproject.toml)
-llvmlite==0.46.0
+llvmlite==0.47.0
     # via numba
 markdown-it-py==3.0.0
     # via
@@ -224,7 +224,7 @@ markupsafe==3.0.3
     # via
     #   jinja2
     #   nbconvert
-matplotlib==3.10.8
+matplotlib==3.10.9
     # via
     #   eradiate (pyproject.toml)
     #   seaborn
@@ -242,7 +242,7 @@ myst-parser==4.0.1
     # via eradiate (pyproject.toml:docs)
 nbclient==0.10.4
     # via nbconvert
-nbconvert==7.17.0
+nbconvert==7.17.1
     # via
     #   jupyter-server
     #   nbsphinx
@@ -266,7 +266,7 @@ networkx==3.4.2
     # via eradiate (pyproject.toml)
 notebook-shim==0.2.4
     # via jupyterlab
-numba==0.64.0
+numba==0.65.1
     # via axsdb
 numpy==2.2.6
     # via
@@ -286,7 +286,7 @@ numpy==2.2.6
     #   xarray
 overrides==7.7.0
     # via jupyter-server
-packaging==26.0
+packaging==26.2
     # via
     #   ipykernel
     #   jupyter-events
@@ -311,7 +311,7 @@ parso==0.8.6
     # via jedi
 pexpect==4.9.0
     # via ipython
-pillow==12.1.1
+pillow==12.2.0
     # via matplotlib
 pint==0.24.4
     # via
@@ -321,7 +321,7 @@ pint==0.24.4
     #   pinttrs
 pinttrs==26.1.0
     # via eradiate (pyproject.toml)
-platformdirs==4.9.4
+platformdirs==4.9.6
     # via
     #   jupyter-core
     #   pint
@@ -330,7 +330,7 @@ pluggy==1.6.0
     # via pytest
 pooch==1.9.0
     # via eradiate (pyproject.toml)
-prometheus-client==0.24.1
+prometheus-client==0.25.0
     # via jupyter-server
 prompt-toolkit==3.0.52
     # via ipython
@@ -342,7 +342,7 @@ ptyprocess==0.7.0
     #   terminado
 pure-eval==0.2.3
     # via stack-data
-pybtex==0.25.1
+pybtex==0.26.1
     # via
     #   pybtex-docutils
     #   sphinxcontrib-bibtex
@@ -352,7 +352,7 @@ pycparser==3.0
     # via cffi
 pydot==4.0.1
     # via eradiate (pyproject.toml)
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   ipython
     #   nbconvert
@@ -366,7 +366,7 @@ pyparsing==3.3.2
     # via
     #   matplotlib
     #   pydot
-pytest==9.0.2
+pytest==9.0.3
     # via eradiate (pyproject.toml:docs)
 python-dateutil==2.9.0.post0
     # via
@@ -375,7 +375,7 @@ python-dateutil==2.9.0.post0
     #   jupyter-client
     #   matplotlib
     #   pandas
-python-json-logger==4.0.0
+python-json-logger==4.1.0
     # via jupyter-events
 pytz==2026.1.post1
     # via pandas
@@ -394,7 +394,7 @@ referencing==0.37.0
     #   jsonschema
     #   jsonschema-specifications
     #   jupyter-events
-requests==2.32.5
+requests==2.33.1
     # via
     #   jupyterlab-server
     #   pooch
@@ -409,7 +409,7 @@ rfc3986-validator==0.1.1
     #   jupyter-events
 rfc3987-syntax==1.1.0
     # via jsonschema
-rich==14.3.3
+rich==15.0.0
     # via
     #   eradiate (pyproject.toml)
     #   typer
@@ -496,7 +496,7 @@ terminado==0.18.1
     #   jupyter-server-terminals
 tinycss2==1.4.0
     # via bleach
-tomli==2.4.0
+tomli==2.4.1
     # via
     #   jupyterlab
     #   pytest
@@ -525,7 +525,7 @@ traitlets==5.14.3
     #   nbconvert
     #   nbformat
     #   nbsphinx
-typer==0.24.1
+typer==0.25.0
     # via
     #   eradiate (pyproject.toml)
     #   axsdb
@@ -543,7 +543,7 @@ typing-extensions==4.15.0
     #   referencing
     #   starlette
     #   uvicorn
-tzdata==2025.3
+tzdata==2026.2
     # via
     #   arrow
     #   pandas
@@ -553,7 +553,7 @@ urllib3==2.6.3
     # via requests
 ussa1976==0.3.4
     # via joseki
-uvicorn==0.42.0
+uvicorn==0.46.0
     # via sphinx-autobuild
 watchfiles==1.1.1
     # via sphinx-autobuild
