@@ -30,7 +30,9 @@ def unstack_mdistant_grid(obj: XarrayObj) -> XarrayObj:
 
     # Build new index
     midx_values = (obj.vza.values.flatten(), obj.vaa.values.flatten())
-    result = obj.drop_vars(
+    # Squeeze size-1 y_index so vza/vaa become 1D (required by set_xindex)
+    result = obj.squeeze("y_index", drop=True)
+    result = result.drop_vars(
         ["x_index", "x"]
     )  # Remove the x film coordinate (irrelevant after unstacking)
     result = result.set_xindex(
