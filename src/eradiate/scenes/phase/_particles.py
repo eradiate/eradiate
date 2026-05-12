@@ -233,7 +233,14 @@ class ParticlePhaseFunction(PhaseFunction):
             Legendre moment array, shape ``(nphamat, nleg)``.
         """
         values, _ = self.particle_properties.eval_pmom(w=w, clip=False)
-        return values[:, :, 0]  # (phamat, imom); squeeze scalar-w axis
+        result = values[:, :, 0]  # (phamat, imom); squeeze scalar-w axis
+
+        # Enforce exact normalization: f_0 = 1 for the m11 component.
+        # Particle datasets occasionally store 1 + epsilon due to floating-point
+        # representation, which strict range checks in downstream solvers reject.
+        result[0, 0] = 1.0
+
+        return result
 
     def _param_to_phamat(self) -> dict[str, int]:
         result = {"m11" if self.is_polarized else "values": 0}
