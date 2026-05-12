@@ -1,6 +1,7 @@
 import mitsuba as mi
 import numpy as np
 import pytest
+import datetime
 
 import eradiate
 from eradiate import unit_registry as ureg
@@ -43,6 +44,13 @@ def test_solar_irradiance_construct(mode_mono, tested, expected):
 
     else:
         raise RuntimeError
+
+def test_solar_irradiance_datetime():
+    dt = datetime.datetime(2011, 11, 11, 11, 11, 11)
+    s = SolarIrradianceSpectrum(datetime=dt) # init with datetime object 
+    assert s.datetime == dt, "Cannot initialize SolarIrradianceSpectrum with a datetime object"
+    s = SolarIrradianceSpectrum(datetime="2011-11-11 11:11:11") # init with string
+    assert s.datetime == dt, "Cannot initialize SolarIrradianceSpectrum with a datetime string"
 
 
 @pytest.mark.parametrize(
