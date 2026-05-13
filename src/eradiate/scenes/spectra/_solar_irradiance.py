@@ -50,7 +50,7 @@ def _datetime_converter(x: Any):
             raise
         if isinstance(x, datetime.datetime):
             return x
-            
+
         return dateutil.parser.parse(x)
 
 
