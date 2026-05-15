@@ -714,7 +714,7 @@ class EarthObservationExperiment(Experiment, ABC):
         # Map bitmap names to result names
         mapping = {}
         if self.integrator.stokes:
-            stokes = ["S0", "S1", "S2", "S3"]
+            stokes = ["nested.S0", "nested.S1", "nested.S2", "nested.S3"]
             iquv = ["I", "Q", "U", "V"]
 
             for s, i in zip(stokes, iquv):

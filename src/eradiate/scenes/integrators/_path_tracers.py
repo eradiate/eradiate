@@ -87,16 +87,12 @@ class MonteCarloIntegrator(Integrator):
         # Build the kernel dict (children can override _build_kernel_dict)
         result = self._build_kernel_dict()
 
-        # Apply wrapping layers
-        if self.moment:
-            result = {"type": "moment", "nested": result}
-
-        # Important: the 'stokes' integrator has to come last because it needs
-        # sensor information
-        if self.stokes:
+        if self.stokes or self.moment:
             result = {
-                "type": "stokes",
-                "integrator": result,
+                "type": "stokes_moment",
+                "nested": result,
+                "use_stokes": self.stokes,
+                "use_moment": self.moment,
                 "meridian_align": self.meridian_align,
             }
 

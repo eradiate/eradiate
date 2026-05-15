@@ -715,7 +715,7 @@ def gather_bitmaps(
             coords = (
                 spectral_coords
                 if not calculate_stokes
-                else {**spectral_coords, "stokes": ["I"]}
+                else {**spectral_coords, "stokes": ["I", "Q", "U", "V"]}
             )
             sensor_data[f"{var_name}_m2_raw"].append(da_m2.expand_dims(dim=coords))
 
@@ -934,17 +934,7 @@ def moment2_to_variance(
     -----
     This function calculates the Monte-Carlo variance, which aggregates the variance
     of each sample. It thus needs to be divided by the spp.
-
-    In polarized mode (``calculate_stokes=True``), the m2 array only contains
-    the 'I' (intensity) component, while the expectation may contain the full
-    Stokes vector. The function automatically selects the 'I' component from
-    expectation when needed.
     """
-
-    # In polarized mode, m2 only contains the 'I' component
-    # Select it from expectation if it has a 'stokes' dimension
-    if calculate_stokes and "stokes" in expectation.dims:
-        expectation = expectation.sel(stokes=["I"])
 
     dims_m2 = set(m2.dims)
     dims_expectation = set(expectation.dims)
