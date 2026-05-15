@@ -222,15 +222,12 @@ def test_01_gather_bitmaps(mode, experiment, gather_bitmaps):
     solar_angle_sizes = {"sza": 1, "saa": 1}
     film_sizes = {"y_index": 32, "x_index": 32}
     all_sizes = {**spectral_sizes, **film_sizes, **solar_angle_sizes}
+    all_sizes_pol = {**all_sizes, "stokes": 4}
 
     expected_sizes = {
         "spp": spectral_sizes,
-        "radiance_raw": all_sizes
-        if not mode.is_polarized
-        else {**all_sizes, "stokes": 4},
-        "radiance_m2_raw": all_sizes
-        if not mode.is_polarized
-        else {**all_sizes, "stokes": 1},
+        "radiance_raw": all_sizes if not mode.is_polarized else all_sizes_pol,
+        "radiance_m2_raw": all_sizes if not mode.is_polarized else all_sizes_pol,
     }
 
     for var, da in gather_bitmaps.items():  # noqa: F402
