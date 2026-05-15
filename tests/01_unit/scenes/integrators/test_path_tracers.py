@@ -165,10 +165,10 @@ def test_stokes_construct(mode_mono_polarized_single, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
     mi_wrapper = check_scene_element(integrator, mi.SamplingIntegrator)
     assert (
-        "S0.R" in mi_wrapper.obj.aov_names()
-        and "S1.R" in mi_wrapper.obj.aov_names()
-        and "S2.R" in mi_wrapper.obj.aov_names()
-        and "S3.R" in mi_wrapper.obj.aov_names()
+        "nested.S0.R" in mi_wrapper.obj.aov_names()
+        and "nested.S1.R" in mi_wrapper.obj.aov_names()
+        and "nested.S2.R" in mi_wrapper.obj.aov_names()
+        and "nested.S3.R" in mi_wrapper.obj.aov_names()
     )
 
 
@@ -233,5 +233,4 @@ def test_stokes_moment_construct(mode_mono_polarized_single, integrator_cls, kwa
     check_scene_element(integrator, mi.SamplingIntegrator)
 
     kdict_template, _ = traverse(integrator)
-    assert kdict_template.data["type"] == "stokes"
-    assert kdict_template.data["integrator.type"] == "moment"
+    assert kdict_template.data["type"] == "stokes_moment"
