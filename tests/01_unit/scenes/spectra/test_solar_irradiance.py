@@ -1,5 +1,8 @@
+import datetime
+
 import mitsuba as mi
 import numpy as np
+import pandas as pd
 import pytest
 
 import eradiate
@@ -95,14 +98,19 @@ class TestSolarIrradianceSpectrum:
             == s.eval_mono(550.0 * ureg.nm) * 10.0
         )
 
-    def test_datetime(self, mode_mono):
-        s = SolarIrradianceSpectrum(dataset="thuillier_2003")
+    @pytest.mark.parametrize(
+        "dt",
+        [
+            "2021-11-18",
+            datetime.datetime(2021, 11, 18),
+            pd.Timestamp("2021-11-18"),
+            np.datetime64("2021-11-18"),
+        ],
+        ids=["str", "datetime", "pandas_timestamp", "numpy_datetime64"],
+    )
+    def test_datetime(self, mode_mono, dt):
+        """Various datetime-like objects can be used to scale the spectrum."""
+        s = SolarIrradianceSpectrum(dataset="thuillier_2003", datetime=dt)
 
-        # We can also use a datetime to scale the spectrum
-        s_scaled_datetime = SolarIrradianceSpectrum(
-            dataset="thuillier_2003", datetime="2021-11-18"
-        )
-        assert np.isclose(
-            s_scaled_datetime.eval_mono(550.0 * ureg.nm),
-            s.eval_mono(550.0 * ureg.nm) / 0.98854537**2,
-        )
+        assert isinstance(s.datetime, datetime.datetime)
+        assert np.isclose(s._scale_total(), 1.0 / 0.98854537**2)
