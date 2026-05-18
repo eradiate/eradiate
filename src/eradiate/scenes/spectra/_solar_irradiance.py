@@ -8,6 +8,7 @@ from typing import Any
 
 import attrs
 import numpy as np
+import pandas as pd
 import pint
 import xarray as xr
 
@@ -49,6 +50,19 @@ def _datetime_converter(x: Any):
             )
             raise
 
+        # datetime instances pass through
+        if isinstance(x, datetime.datetime):
+            return x
+
+        # Pandas: convert to datetime
+        if isinstance(x, pd.Timestamp):
+            return x.to_pydatetime()
+
+        # Numpy: convert to datetime
+        if isinstance(x, np.datetime64):
+            return pd.Timestamp(x).to_pydatetime()
+
+        # Fallback: try to parse a string
         return dateutil.parser.parse(x)
 
 
@@ -149,24 +163,21 @@ class SolarIrradianceSpectrum(Spectrum):
         doc="Arbitrary scaling factor. This scaling factor is applied in "
         "addition to the datetime-based scaling controlled by the *datetime* "
         "parameter.",
-        type="float or datetime",
-        init_type="float or datetime or str",
+        type="float",
+        init_type="float",
         default="1.0",
     )
 
     datetime: datetime.datetime | None = documented(
-        attrs.field(
-            default=None,
-            converter=_datetime_converter,
-        ),
+        attrs.field(default=None, converter=_datetime_converter),
         type="datetime or None",
-        init_type="datetime or str, optional",
+        init_type="pandas.Timestamp or numpy.datetime64 or datetime or str, optional",
         doc="Date for which the spectrum is to be evaluated. An ISO "
         "string can be passed and will be interpreted by "
         ":meth:`dateutil.parser.parse`. This parameter scales the irradiance "
         "spectrum to account for the seasonal variation of the Earth-Sun "
         "distance. This scaling is applied in addition to the arbitrary "
-        "scaling controlled by the *scale* parameter.",
+        "scaling controlled by the ``scale`` parameter.",
     )
 
     def _scale_earth_sun_distance(self) -> float:
@@ -235,6 +246,13 @@ class SolarIrradianceSpectrum(Spectrum):
             # Solar irradiance spectra in Eradiate).
             return (1.0 / distance_au) ** 2
 
+    def _scale_total(self) -> float:
+        """
+        Return the full scaling value, factoring in both manual and
+        datetime-based scaling.
+        """
+        return self.scale * self._scale_earth_sun_distance()
+
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         # Inherit docstring
 
@@ -247,7 +265,7 @@ class SolarIrradianceSpectrum(Spectrum):
         if np.any(np.isnan(irradiance.magnitude)):
             raise ValueError("interpolation of solar irradiance dataset returned nan")
 
-        result = irradiance * self.scale * self._scale_earth_sun_distance()
+        result = irradiance * self._scale_total()
 
         # Squeeze result if input was scalar
         return result.squeeze() if np.isscalar(w.magnitude) else result
