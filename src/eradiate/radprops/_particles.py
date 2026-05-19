@@ -491,10 +491,10 @@ class ParticleProperties:
         Returns
         -------
         mu : ndarray
-            Scattering angle cosines of the output grid, shape ``(nangles,)``.
+            Scattering angle cosines of the output grid, shape ``(iangle_size,)``.
 
         phase : ndarray
-            Phase function values in sr⁻¹, shape ``(nphamat, nangles)``.
+            Phase function values in sr⁻¹, shape ``(nphamat, iangle_size)``.
 
         Notes
         -----
@@ -502,9 +502,12 @@ class ParticleProperties:
         bracketing wavelengths by their scattering coefficient.
 
         When the two bracketing wavelengths have different mu grids, the phase
-        function is resampled onto their union grid before interpolation, then
-        decimated back to a grid of optimal size using a greedy log-space RDP
-        algorithm.
+        function is resampled onto their union grid before interpolation. The
+        result is then brought to exactly ``iangle_size`` points: decimated with
+        a greedy log-space RDP algorithm when the union is larger, or upsampled
+        with linear interpolation in μ when it is smaller. Upsampling via linear
+        interpolation preserves the piecewise-linear shape that Mitsuba uses
+        during tabulated phase-function look-up, so no distortion is introduced.
         """
         if not np.isscalar(w.m):
             raise ValueError("eval_phase() only accepts a scalar wavelength")
@@ -532,14 +535,19 @@ class ParticleProperties:
         # --- Step 4: scattering-weighted spectral interpolation ---
         phase_union = w0 * phase1_union + w1 * phase2_union
 
-        # --- Step 5: decimate to optimized grid ---
-        n_out = min(len(mu_union), iangle_size)
-        if n_out < len(mu_union):
-            # Use the m11 component (index 0) as the representative curve;
-            # _rdp1d_log accepts multiple rows and takes the max error across them
-            keep = _rdp1d_log(mu_union, phase_union, n_out)
+        # --- Step 5: bring to exactly iangle_size points ---
+        n_union = len(mu_union)
+        if n_union > iangle_size:
+            # Decimate: keep the most informative points in log space
+            keep = _rdp1d_log(mu_union, phase_union, iangle_size)
             mu_out = mu_union[keep]
             phase_out = phase_union[:, keep]
+        elif n_union < iangle_size:
+            # Upsample: add linearly interpolated points in μ space.
+            # Linear interpolation in μ matches Mitsuba's look-up scheme, so
+            # the added points introduce no distortion.
+            mu_out = np.linspace(mu_union[0], mu_union[-1], iangle_size)
+            phase_out = interp1d(mu_union, phase_union, mu_out, bounds="clamp")
         else:
             mu_out = mu_union
             phase_out = phase_union

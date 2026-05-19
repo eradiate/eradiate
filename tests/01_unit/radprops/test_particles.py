@@ -362,23 +362,25 @@ class TestParticleProperties:
 
         @pytest.mark.parametrize("idx", [0, 1, 2])
         def test_at_node(self, pp, idx):
-            """At exact tabulated wavelength, shapes are correct and phase is positive."""
+            """At exact tabulated wavelength, output has exactly iangle_size points."""
             w = W_NM[idx] * ureg.nm
             mu_out, phase_out = pp.eval_phase(w)
-            assert mu_out.shape[0] <= len(MU_1D)
-            assert phase_out.shape == (1, mu_out.shape[0])
+            iangle_size = pp.data.sizes["iangle"]
+            assert mu_out.shape[0] == iangle_size
+            assert phase_out.shape == (1, iangle_size)
             assert np.all(phase_out > 0)
 
         def test_same_grid(self, pp):
-            """Same mu at both brackets → union is same grid, weighted mix."""
+            """Same mu at both brackets → union equals iangle_size, no resize needed."""
             w = 475.0 * ureg.nm
             mu_out, phase_out = pp.eval_phase(w)
-            assert mu_out.shape[0] <= len(MU_1D)
-            assert phase_out.shape[1] == mu_out.shape[0]
+            iangle_size = pp.data.sizes["iangle"]
+            assert mu_out.shape[0] == iangle_size
+            assert phase_out.shape[1] == iangle_size
             assert np.all(phase_out > 0)
 
         def test_different_grids(self):
-            """Different mu grids → union used; output nangles <= iangle_size."""
+            """Different mu grids → union used; output is exactly iangle_size points."""
             ds = make_dataset(with_nangles=True)
             ds["nangles"].values[0] = 2.0
             ds["nangles"].values[1] = 3.0
@@ -386,8 +388,50 @@ class TestParticleProperties:
             w = 475.0 * ureg.nm
             mu_out, phase_out = pp.eval_phase(w)
             iangle_size = ds.sizes["iangle"]
-            assert mu_out.shape[0] <= iangle_size
-            assert phase_out.shape[1] == mu_out.shape[0]
+            assert mu_out.shape[0] == iangle_size
+            assert phase_out.shape[1] == iangle_size
+
+        def test_upsample_when_union_smaller_than_iangle(self):
+            """When the union grid is smaller than iangle_size, output is upsampled."""
+            # Build a dataset with iangle_size=10 but only a few valid points per w.
+            # Union of the two bracketing grids will be < 10, triggering upsampling.
+            nw = 2
+            iangle_max = 10
+
+            mu_vals = np.full((nw, iangle_max), np.nan)
+            theta_vals = np.full((nw, iangle_max), np.nan)
+            phase_vals = np.full((1, nw, iangle_max), np.nan)
+
+            # w=0: 3 valid points
+            mu_w0 = np.array([-1.0, 0.0, 1.0])
+            mu_vals[0, :3] = mu_w0
+            theta_vals[0, :3] = np.degrees(np.arccos(mu_w0))
+            phase_vals[0, 0, :3] = 1.0 / (4.0 * np.pi)
+
+            # w=1: 4 valid points (same range, different grid → union has 5 points)
+            mu_w1 = np.array([-1.0, -0.5, 0.5, 1.0])
+            mu_vals[1, :4] = mu_w1
+            theta_vals[1, :4] = np.degrees(np.arccos(mu_w1))
+            phase_vals[0, 1, :4] = 1.0 / (4.0 * np.pi)
+
+            nangles = np.array([3, 4], dtype=np.int32)
+            ds = make_aer_core_v2(
+                w=np.array([400.0, 700.0]) * ureg.nm,
+                phamat=["11"],
+                mu=mu_vals * ureg.dimensionless,
+                theta=theta_vals * ureg.deg,
+                ext=np.ones(nw) * ureg("1/km"),
+                ssa=0.9 * np.ones(nw) * ureg.dimensionless,
+                phase=phase_vals * ureg("1/sr"),
+                nangles=nangles,
+                check="full",
+            )
+            pp = ParticleProperties(data=ds)
+            mu_out, phase_out = pp.eval_phase(550.0 * ureg.nm)
+            assert mu_out.shape[0] == iangle_max
+            assert phase_out.shape == (1, iangle_max)
+            assert np.all(np.isfinite(phase_out))
+            assert np.all(np.diff(mu_out) > 0)
 
     class TestEvalPmom:
         @pytest.mark.parametrize(

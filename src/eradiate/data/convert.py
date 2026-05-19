@@ -6,7 +6,6 @@ from typing import Literal
 import numpy as np
 import pint
 import xarray as xr
-from axsdb.math import interp1d
 from numpy.typing import DTypeLike
 
 from ..units import symbol, to_quantity
@@ -45,6 +44,7 @@ def make_aer_core_v2(
     phase: np.ndarray,
     pmom: np.ndarray | None = None,
     nmom: np.ndarray | None = None,
+    nangles: np.ndarray | None = None,
     attrs: dict | None = None,
     check: Literal["none", "fast", "full"] | None = None,
 ) -> xr.Dataset:
@@ -81,6 +81,11 @@ def make_aer_core_v2(
     nmom : ndarray, optional
         Number of Legendre polynomials, shape (nw,).
 
+    nangles : ndarray, optional
+        Number of valid angular samples per wavelength, shape (nw,), dtype int.
+        When provided, entries at indices ``>= nangles[iw]`` in ``mu``,
+        ``theta``, and ``phase`` must be NaN-padded.
+
     attrs : dict
         Dataset attributes.
 
@@ -94,7 +99,8 @@ def make_aer_core_v2(
         * ``"full"`` — validates every wavelength.
 
         A ``ValueError`` is raised if any sampled row is not strictly
-        monotonically increasing in μ.
+        monotonically increasing in μ. Only the valid (non-NaN) portion of
+        each row is checked when ``nangles`` is provided.
 
     Returns
     -------
@@ -117,7 +123,9 @@ def make_aer_core_v2(
             iw_check = np.arange(nw_check)
 
         for iw in iw_check:
-            if not np.all(np.diff(mu_vals[iw]) > 0):
+            n = int(nangles[iw]) if nangles is not None else mu_vals.shape[1]
+            row = mu_vals[iw, :n]
+            if not np.all(np.diff(row) > 0):
                 raise ValueError(
                     f"make_aer_core_v2(): mu is not strictly ascending at "
                     f"wavelength index {iw}. Sort the angular grid in ascending "
@@ -154,6 +162,16 @@ def make_aer_core_v2(
             },
         ),
     }
+
+    if nangles is not None:
+        data_vars["nangles"] = (
+            "w",
+            nangles,
+            {
+                "standard_name": "n_angular_samples",
+                "long_name": "number of angular samples",
+            },
+        )
 
     if nmom is not None:
         data_vars["nmom"] = (
@@ -395,12 +413,6 @@ def libradtran_to_aer_core_v2(
     -------
     xr.Dataset
 
-    Notes
-    -----
-    The adaptive angular grid is preserved and refined to feature a constant
-    grid point count. This does not change the size of the data in memory, but
-    can change the size of the stored data on disk depending on the chosen
-    compression method.
     """
     PHAMAT_TO_IDX = [
         # Coefficients for spherical particles
@@ -427,48 +439,34 @@ def libradtran_to_aer_core_v2(
     ssa = ds["ssa"].values * units
 
     # Process phase function entries
-    nangles = ds.sizes["nthetamax"]
+    nthetamax = ds.sizes["nthetamax"]
     nphamat = ds.sizes["nphamat"]
     phamat = [x for x, _ in PHAMAT_TO_IDX[:nphamat]]
 
-    # --- Allocate result arrays ---
-    phase = np.full((nphamat, nw, nangles), np.nan)
-    theta = np.full((nw, nangles), np.nan)
+    # --- Allocate result arrays (NaN-padded; valid range per wavelength set by nangles_out) ---
+    phase = np.full((nphamat, nw, nthetamax), np.nan)
+    theta = np.full((nw, nthetamax), np.nan)
+    nangles_out = np.empty(nw, dtype=np.int32)
 
-    # --- For each wavelength, refine the scattering angle grid
-    #     and interpolate the phase function on it ---
+    # --- For each wavelength, copy the source angles directly (no refinement) ---
     for iw in range(nw):
-        # Refine scattering angle grid, interpolating nans linearly
         ntheta_ = int(ds["ntheta"].isel(nlam=iw, nphamat=0).values)
-        theta_ = (
-            ds["theta"].isel(nlam=iw, nphamat=0).values[:ntheta_]
-        )  # keep only mesh for (1,1) component
-        theta_refined = np.full((nangles,), np.nan)
-        idx_dst = np.linspace(0, nangles - 1, ntheta_, dtype="int32")
-        theta_refined[idx_dst] = theta_
-
-        for i, j in zip(idx_dst[:-1], idx_dst[1:]):
-            interpolated = np.linspace(
-                theta_refined[i], theta_refined[j], j - i + 1, dtype=theta_refined.dtype
-            )[1:-1]
-            theta_refined[i + 1 : j] = interpolated
+        theta_ = ds["theta"].isel(nlam=iw, nphamat=0).values[:ntheta_]
 
         # Sort input angles in ascending order
         idx_sort = np.argsort(theta_)
         phase_ = ds["phase"].isel(nlam=iw).values[:, idx_sort]
         theta_ = theta_[idx_sort]
 
-        # Resample phase function using high-performance 1D interpolator with spectator dims support
-        phase_refined = interp1d(theta_, phase_, theta_refined)
+        # Sort to ascending mu (= descending theta) per Aer-Core v2 spec
+        sort_mu = np.argsort(np.cos(np.deg2rad(theta_)))
+        theta_ = theta_[sort_mu]
+        phase_ = phase_[:, sort_mu]
 
-        # Sort output to ascending mu (= descending theta) per Aer-Core v2 spec
-        sort_mu = np.argsort(np.cos(np.deg2rad(theta_refined)))
-        theta_refined = theta_refined[sort_mu]
-        phase_refined = phase_refined[:, sort_mu]
-
-        # Store resampled angular grid and phase function
-        theta[iw, :] = theta_refined
-        phase[:, iw, :] = phase_refined
+        # Store in the first ntheta_ slots; the rest remain NaN
+        theta[iw, :ntheta_] = theta_
+        phase[:, iw, :ntheta_] = phase_
+        nangles_out[iw] = ntheta_
 
     # TODO: Check if interpolation in mu space wouldn't be better
     mu = np.cos(np.deg2rad(theta)) * ureg("dimensionless")
@@ -494,6 +492,7 @@ def libradtran_to_aer_core_v2(
         phase=phase,
         nmom=nmom,
         pmom=pmom,
+        nangles=nangles_out,
         attrs=attrs,
         check=check,
     )

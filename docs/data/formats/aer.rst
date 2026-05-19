@@ -10,16 +10,10 @@ This data format is derived from libRadtran's aerosol data format. It features
 an adaptive scattering angle (θ) grid that allows for an optimal positioning of
 samples depending on the wavelength.
 
-A key difference with the libRadtran format is that the number of angular samples
-is independent of the wavelength. When converting libRadtran datasets, the
-number of cos θ values is the maximum value found in the ``nangle`` variable.
-This does not increase the in-memory size of the dataset.
-
-.. note::
-    The reason why the number of θ points is kept constant is that updating the
-    number of angular samples during the simulation is inefficient.
-    Should this feature be reintroduced, all that would be required would be to
-    add an ``nangles`` variable indexed by the ``w`` dimension.
+The number of angular samples can vary across wavelengths up to a maximum equal
+to the size of the ``iangle`` dimension. The per-wavelength count is stored in
+the ``nangles`` data variable. Entries beyond ``nangles[iw]`` in ``theta``,
+``mu``, and ``phase`` are NaN-padded.
 
 Format
     ``xarray.Dataset`` (in-memory), NetCDF (storage)
@@ -46,6 +40,8 @@ Data variables
     * ``ssa(w)`` float [—]: single-scattering albedo
     * ``phase(phamat, w, iangle)`` float [1 / solid angle]: value of the phase
       function (integral normalized to 2)
+    * ``nangles(w)`` int [—], optional: number of valid angular samples per
+      wavelength; when absent, all ``iangle`` entries are valid
     * ``nmom(w)`` int [—], optional: number of nonzero Legendre coefficients
       (all values in ``pmom`` beyond this index are nan)
     * ``pmom(phamat, w, imom)`` float [—], optional: values of Legendre coefficient
@@ -73,9 +69,12 @@ Data variables
     - * Phase matrix coefficients
       * ``phamat``
       * ``phamat``
-    - * Angular data points
+    - * Angular data points (maximum)
       * ``iangle``
       * ``nthetamax``
+    - * Angular data points (per wavelength)
+      * ``nangles``
+      * ``ntheta``
     - * Legendre coefficients
       * ``imom``
       * ``nmommax``
