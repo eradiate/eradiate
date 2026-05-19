@@ -226,8 +226,8 @@ def test_01_gather_bitmaps(mode, experiment, gather_bitmaps):
 
     expected_sizes = {
         "spp": spectral_sizes,
-        "radiance_raw": all_sizes if not mode.is_polarized else all_sizes_pol,
-        "radiance_m2_raw": all_sizes if not mode.is_polarized else all_sizes_pol,
+        "radiance_raw": all_sizes_pol if mode.is_polarized else all_sizes,
+        "radiance_m2_raw": all_sizes_pol if mode.is_polarized else all_sizes,
     }
 
     for var, da in gather_bitmaps.items():  # noqa: F402
