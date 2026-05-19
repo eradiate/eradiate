@@ -5,4 +5,3 @@ from ._hg import HenyeyGreensteinPhaseFunction as HenyeyGreensteinPhaseFunction
 from ._isotropic import IsotropicPhaseFunction as IsotropicPhaseFunction
 from ._particles import ParticlePhaseFunction as ParticlePhaseFunction
 from ._rayleigh import RayleighPhaseFunction as RayleighPhaseFunction
-from ._tabulated import TabulatedPhaseFunction as TabulatedPhaseFunction

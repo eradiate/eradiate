@@ -481,7 +481,6 @@ Quick access
    RayleighPhaseFunction
    HenyeyGreensteinPhaseFunction
    BlendPhaseFunction
-   TabulatedPhaseFunction
 
 .. _module-eradiate.scenes.integrators:
 
