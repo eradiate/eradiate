@@ -53,6 +53,7 @@ def _create_integrator_surface(
                 "tau_ref": 0.2,
                 "particle_properties": "govaerts_2021-continental",
             },
+            "ddis_threshold": 0.1,
         },
         integrator=integrator_dict,
     )
@@ -119,6 +120,7 @@ def create_integrator_canopy(absorption_database_error_handler_config, integrato
                 "tau_ref": 0.2,
                 "particle_properties": "govaerts_2021-continental",
             },
+            "ddis_threshold": 0.1,
         },
         canopy={
             "type": "discrete_canopy",
@@ -144,7 +146,7 @@ def create_eovolpath_surface(absorption_database_error_handler_config):
 
     """
 
-    integrator = {"type": "eovolpath", "ddis_threshold": 0.1, "moment": True}
+    integrator = {"type": "eovolpath", "vroom_enable": True, "moment": True}
 
     return _create_integrator_surface(
         absorption_database_error_handler_config, integrator
@@ -172,7 +174,7 @@ def create_eovolpath_canopy(absorption_database_error_handler_config):
 
     """
 
-    integrator = {"type": "eovolpath", "ddis_threshold": 0.1, "moment": True}
+    integrator = {"type": "eovolpath", "vroom_enable": True, "moment": True}
 
     return create_integrator_canopy(
         absorption_database_error_handler_config, integrator

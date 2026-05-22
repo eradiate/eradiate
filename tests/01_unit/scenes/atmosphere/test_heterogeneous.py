@@ -402,11 +402,11 @@ def test_heterogeneous_medium_type(
 
     if geometry == "plane_parallel":
         if force_majorant:
-            assert template["type"] == "heterogeneous"
+            assert template["type"] == "eoheterogeneous"
         else:
             assert template["type"] == "piecewise"
     elif geometry == "spherical_shell":
-        assert template["type"] == "heterogeneous"
+        assert template["type"] == "eoheterogeneous"
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])

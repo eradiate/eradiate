@@ -118,6 +118,17 @@ class Atmosphere(CompositeSceneElement, ABC):
         type="bool",
     )
 
+    ddis_threshold: float = documented(
+        attrs.field(
+            default=0.0,
+            kw_only=True,
+            converter=float,
+            validator=attrs.validators.instance_of(float),
+        ),
+        doc="Specifies the probability to importance sample the phase using the "
+        "emitter as incident direction. Set negative to deactivate.",
+        type="float",
+    )
     # --------------------------------------------------------------------------
     #                               Properties
     # --------------------------------------------------------------------------
@@ -686,7 +697,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         if isinstance(self.geometry, PlaneParallelGeometry):
             to_world = self.geometry.atmosphere_volume_to_world
 
-            medium = "heterogeneous" if self.force_majorant else "piecewise"
+            medium = "eoheterogeneous" if self.force_majorant else "piecewise"
             volumes = {
                 "albedo": {
                     "type": "gridvolume",
@@ -719,7 +730,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 },
             }
 
-            if medium == "heterogeneous":
+            if medium == "eoheterogeneous":
                 if self.extremum_resolution != (1, 1, 1):
                     extremum = {
                         "type": "extremum_grid",
@@ -732,7 +743,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             volume_rmin = self.geometry.atmosphere_volume_rmin
             to_world = self.geometry.atmosphere_volume_to_world
 
-            medium = "heterogeneous"
+            medium = "eoheterogeneous"
             volumes = {
                 "albedo": {
                     "type": "sphericalcoordsvolume",
@@ -790,11 +801,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         # Create medium dictionary
         result = {
             "type": medium,
-            "has_spectral_extinction": (
-                # piecewise volpath currently only works with spectral extinction true
-                # hack fix by setting to True when we have a piecewise medium
-                (not get_mode().check(mi_color_mode="mono")) or (medium == "piecewise")
-            ),
+            "has_spectral_extinction": (not get_mode().check(mi_color_mode="mono")),
             **volumes,
             # Note: "phase" is deliberately unset, this is left to the
             # Atmosphere.template property
@@ -806,8 +813,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         if extremum is not None:
             result["extremum"] = extremum
 
-        if medium == "heterogeneous":
+        if medium == "eoheterogeneous":
             result["use_rrt"] = self.use_rrt
+
+        result["ddis_threshold"] = self.ddis_threshold
 
         return result
 
