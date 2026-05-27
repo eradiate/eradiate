@@ -432,7 +432,7 @@ def mi_render(
     ) as pbar:
         for ctx in ctxs:
             pbar.set_description(
-                f"Eradiate [{ctx.index_formatted}]",
+                f"Spectral loop — Mitsuba [{ctx.index_formatted}]",
                 refresh=True,
             )
 
