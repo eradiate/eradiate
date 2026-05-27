@@ -126,6 +126,9 @@ scripts = ["setpath.bat"]
 # constrain specifically numba for this platform.
 numba = "<0.63"
 
+[tool.pixi.target.osx-arm64.dependencies]
+netcdf4 = "*"
+
 [tool.pixi.feature]
 # All supported Python versions are listed
 py39 = { dependencies = { python = "3.9.*" } }
