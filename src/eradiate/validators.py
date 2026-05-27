@@ -64,7 +64,7 @@ def is_positive(_, attribute, value):
         If the value is not positive or zero.
     """
     if value < 0.0:
-        raise ValueError(f"{attribute} must be positive or zero, got {value}")
+        raise ValueError(f"{attribute.name} must be positive or zero, got {value}")
 
 
 def all_positive(_, attribute, value):
