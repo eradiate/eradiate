@@ -106,7 +106,10 @@ pandoc = "*"
 scripts = ["setpath.sh"]
 
 [tool.pixi.tasks]
-kernel-configure = { cmd = "cmake -S ext/mitsuba -B ext/mitsuba/build -DCMAKE_BUILD_TYPE=Release -GNinja --preset eradiate" }
+kernel-configure = { cmd = """
+  cmake -S ext/mitsuba -B ext/mitsuba/build -DCMAKE_BUILD_TYPE=Release \
+    -GNinja --preset eradiate
+""" }
 kernel-build = { cmd = "cmake --build ext/mitsuba/build", depends-on = [
   "kernel-configure",
 ] }
@@ -142,50 +145,50 @@ doctest = { cmd = "make -C docs doctest" }
 test = { cmd = "pytest" }
 test-quick = { cmd = "pytest -m \"not slow and not regression\"" }
 test-cov = { cmd = """
-  pytest
-    --cov=src/eradiate
-    --cov-report=html
-    --cov-report=json
+  pytest \
+    --cov=src/eradiate \
+    --cov-report=html \
+    --cov-report=json \
     --cov-report=term-missing
 """ }
 test-cov-quick = { cmd = """
-  pytest -m \"not slow and not regression\"
-    --cov=src/eradiate
-    --cov-report=html
-    --cov-report=json
+  pytest -m \"not slow and not regression\" \
+    --cov=src/eradiate \
+    --cov-report=html \
+    --cov-report=json \
     --cov-report=term-missing
 """ }
 test-report = { cmd = """
-  pytest -p robotframework
-    --robot-tagstatinclude unit
-    --robot-tagstatinclude system
-    --robot-tagstatinclude regression
-    --robot-tagstatinclude slow
+  pytest -p robotframework \
+    --robot-tagstatinclude unit \
+    --robot-tagstatinclude system \
+    --robot-tagstatinclude regression \
+    --robot-tagstatinclude slow \
     --plot
 """ }
 test-unit-report = { cmd = """
-  pytest -p robotframework
-    --robot-tagstatinclude unit
-    --robot-tagstatinclude slow -m unit
+  pytest -p robotframework \
+    --robot-tagstatinclude unit \
+    --robot-tagstatinclude slow -m unit \
     --plot""" }
 test-system-report = { cmd = """
-  pytest -p robotframework
-    --robot-tagstatinclude system
-    --robot-tagstatinclude slow -m system
+  pytest -p robotframework \
+    --robot-tagstatinclude system \
+    --robot-tagstatinclude slow -m system \
     --plot
 """ }
 test-regression-report = { cmd = """
-  pytest -p robotframework
-    --robot-tagstatinclude regression
-    --robot-tagstatinclude slow -m regression
+  pytest -p robotframework \
+    --robot-tagstatinclude regression \
+    --robot-tagstatinclude slow -m regression \
     --plot
 """ }
 test-slow-report = { cmd = """
-  pytest -p robotframework
-    --robot-tagstatinclude unit
-    --robot-tagstatinclude system
-    --robot-tagstatinclude regression
-    --robot-tagstatinclude slow -m slow
+  pytest -p robotframework \
+    --robot-tagstatinclude unit \
+    --robot-tagstatinclude system \
+    --robot-tagstatinclude regression \
+    --robot-tagstatinclude slow -m slow \
     --plot
 """ }
 
@@ -210,8 +213,8 @@ docs-render-tutorials = { cmd = "python tutorials/run.py run" }
 # -- Important: If the Python version changes, do not forget to sync it with the
 #    'build.tools.python' entry in .readthedocs.yml
 docs-lock = { cmd = """
-  uv pip compile --upgrade --quiet --no-progress
-    --python-version 3.10 --group docs --extra recommended
+  uv pip compile --upgrade --quiet --no-progress \
+    --python-version 3.10 --group docs --extra recommended \
     --output-file docs/requirements.txt pyproject.toml
 """ }
 
