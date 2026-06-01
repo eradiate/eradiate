@@ -217,6 +217,9 @@ docs-lock = { cmd = """
     --python-version 3.10 --group docs --extra recommended \
     --output-file docs/requirements.txt pyproject.toml
 """ }
+# Linting
+lint = { cmd = """ruff check""" }
+lint-ext = { cmd = """ruff check --extend-select B,C4,SIM,PIE,UP,PERF,NPY,RUF""" }
 
 [tool.pixi.environments]
 default = { solve-group = "dev" }
