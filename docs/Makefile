@@ -31,7 +31,6 @@ clean-build:
 
 clean-generated:
 	rm -rf reference_api/generated/*
-	rm -rf reference_plugins/generated/*
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

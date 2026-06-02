@@ -3,12 +3,20 @@
 API reference
 =============
 
-.. button-ref:: /reference_plugins/index
-   :ref-type: doc
-   :color: primary
-   :expand:
+.. grid:: 1 2 auto auto
+    :gutter: 3
 
-   Looking for the plugin reference? Click here!
+    .. grid-item-card:: :iconify:`mdi:puzzle height=1.5em` Kernel plugins
+        :link: https://eradiate.readthedocs.io/projects/mitsuba/latest/plugin_reference/index.html
+        :link-alt: Eradiate Kernel Plugins
+
+        Looking for the radiometric kernel plugin reference? Click here!
+
+    .. grid-item-card:: :iconify:`mdi:code height=1.5em` Kernel API
+        :link: https://eradiate.readthedocs.io/projects/mitsuba/latest/api_reference/index.html
+        :link-alt: Eradiate Kernel API
+
+        Looking for the radiometric kernel API reference? Click here!
 
 Eradiate's API reference documentation is generated automatically using Sphinx's
 ``autodoc`` and ``autosummary`` extensions.

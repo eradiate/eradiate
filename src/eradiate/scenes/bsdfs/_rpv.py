@@ -24,7 +24,7 @@ class RPVBSDF(BSDF):
 
     See Also
     --------
-    :ref:`plugin-bsdf-rpv`
+    :plugin:`Mitsuba plugin reference <bsdf-rpv>`
 
     Notes
     -----

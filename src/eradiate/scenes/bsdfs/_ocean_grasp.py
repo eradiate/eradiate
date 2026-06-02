@@ -27,7 +27,7 @@ class OceanGraspBSDF(BSDF):
 
     See Also
     --------
-    :ref:`plugin-bsdf-ocean_mishchenko`
+    :plugin:`Mitsuba plugin reference <bsdf-ocean_mishchenko>`
     """
 
     wind_speed: pint.Quantity = documented(

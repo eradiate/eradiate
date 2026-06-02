@@ -31,7 +31,7 @@ class HapkeBSDF(BSDF):
 
     See Also
     --------
-    :ref:`plugin-bsdf-hapke`
+    :plugin:`Mitsuba plugin reference <bsdf-hapke>`
     """
 
     w: Spectrum = documented(

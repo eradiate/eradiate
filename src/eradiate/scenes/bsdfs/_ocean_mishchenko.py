@@ -27,7 +27,7 @@ class OceanMishchenkoBSDF(BSDF):
 
     See Also
     --------
-    :ref:`plugin-bsdf-ocean_legacy`
+    :plugin:`Mitsuba plugin reference <bsdf-ocean_mishchenko>`
     """
 
     wind_speed: pint.Quantity = documented(
