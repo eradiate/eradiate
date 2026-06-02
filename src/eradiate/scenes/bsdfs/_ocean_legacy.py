@@ -26,7 +26,7 @@ class OceanLegacyBSDF(BSDF):
 
     See Also
     --------
-    :ref:`plugin-bsdf-ocean_legacy`
+    :plugin:`Mitsuba plugin reference <bsdf-ocean_legacy>`
 
     Notes
     -----

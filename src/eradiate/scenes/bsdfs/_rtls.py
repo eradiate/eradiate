@@ -24,7 +24,7 @@ class RTLSBSDF(BSDF):
 
     See Also
     --------
-    :ref:`plugin-bsdf-rtls`
+    :plugin:`Mitsuba plugin reference <bsdf-rtls>`
     """
 
     f_iso: Spectrum = documented(

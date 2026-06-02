@@ -59,7 +59,7 @@ extensions = [
     "sphinxcontrib.bibtex",  # BibTeX bibliography
     "sphinx_iconify",  # More icons (integration in Shibuya theme is automatic)
     # Custom extensions
-    "pluginparameters",  # Directives and roles to document Mitsuba plugins
+    "pluginref",  # :plugin: role for cross-referencing Mitsuba plugin docs
     "autodocsumm",  # Possibly add autosummary table to autodoc (external, vendored)
 ]
 
@@ -104,6 +104,10 @@ nbsphinx_prolog = """
 
 intersphinx_mapping = {
     "attrs": ("https://www.attrs.org/en/stable/", None),
+    "eradiatemitsuba": (
+        "https://eradiate.readthedocs.io/projects/mitsuba/latest/",
+        None,
+    ),
     "axsdb": ("https://axsdb.readthedocs.io/en/latest/", None),
     "cachetools": ("https://cachetools.readthedocs.io/en/stable/", None),
     "dateutil": ("https://dateutil.readthedocs.io/en/stable/", None),
@@ -197,7 +201,7 @@ napoleon_type_aliases = {
     "AUTO": ":data:`~eradiate.attrs.AUTO`",
 }
 
-# -- Extra roles (requires the 'pluginparameters' extension) -------------------
+# -- Extra roles ---------------------------------------------------------------
 
 rst_prolog = r"""
 .. role:: bolditalic
@@ -214,26 +218,6 @@ rst_prolog = r"""
 
 .. role:: paramtype
    :class: text-monospace
-
-.. |spectrum| replace:: :paramtype:`spectrum`
-.. |texture| replace:: :paramtype:`texture`
-.. |float| replace:: :paramtype:`float`
-.. |bool| replace:: :paramtype:`boolean`
-.. |int| replace:: :paramtype:`integer`
-.. |false| replace:: :monosp:`false`
-.. |true| replace:: :monosp:`true`
-.. |string| replace:: :paramtype:`string`
-.. |bsdf| replace:: :paramtype:`bsdf`
-.. |phase| replace:: :paramtype:`phase`
-.. |point| replace:: :paramtype:`point`
-.. |vector| replace:: :paramtype:`vector`
-.. |transform| replace:: :paramtype:`transform`
-.. |volume| replace:: :paramtype:`volume`
-.. |tensor| replace:: :paramtype:`tensor`
-
-.. |exposed| replace:: :abbr:`P (This parameters will be exposed as a scene parameter)`
-.. |differentiable| replace:: :abbr:`∂ (This parameter is differentiable)`
-.. |discontinuous| replace:: :abbr:`D (This parameter might introduce discontinuities. Therefore it requires special handling during differentiation to prevent bias (e.g. prb-reparam)))`
 """
 
 # -- HTML output customization -------------------------------------------------
@@ -258,7 +242,11 @@ html_theme_options = {
             "title": "Reference",
             "children": [
                 {"title": "API", "url": "reference_api/index"},
-                {"title": "Plugin reference", "url": "reference_plugins/index"},
+                {
+                    "title": "Plugin reference",
+                    "url": "https://eradiate.readthedocs.io/projects/mitsuba/latest/plugin_reference/index.html",
+                    "external": True,
+                },
                 {"title": "Command-line interface", "url": "reference_cli"},
             ],
         },
@@ -311,10 +299,9 @@ latex_documents = [
 
 def custom_step(app):
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    from _generate import data, factories, md_cli, rst_plugins
+    from _generate import data, factories, md_cli
 
     md_cli.generate()  # CLI reference
-    rst_plugins.generate()  # Plugins
     factories.generate()  # Factories
     data.absorption_databases.generate_summary()
     data.aerosols_particles.generate_summary()
