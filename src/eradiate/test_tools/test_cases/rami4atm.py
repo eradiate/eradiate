@@ -24,6 +24,10 @@ def create_rami4atm_toa(
     spp : int
         Default measure sample count.
 
+    padding : int, default: 5
+        Instance padding radius (total number of instances is equal to
+        ``(padding × 2 + 1)²``).
+
     Returns
     -------
     tuple
@@ -386,7 +390,6 @@ def postprocess_boa_cases(results: list[xr.Dataset], srf: xr.Dataset) -> xr.Data
 
 #: Mapping of test case to a generation function for all RAMI4ATM test cases
 #: available in the Eradiate regression test suite.
-
 registry = {
     case: {
         "constructor": functools.partial(create_rami4atm_toa, case=case),
