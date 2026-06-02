@@ -133,7 +133,8 @@ def load_aerosol_libradtran(
 
     for kwarg in ["hum", "reff"]:
         var = kwarg
-        if var not in data.dims:  # skip if dimension is missing
+        dim = VARS_TO_DIMS[var]
+        if dim not in data.dims:  # skip if dimension is missing
             continue
 
         units = _get_units(data, var, fallback_units)
