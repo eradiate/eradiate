@@ -63,11 +63,21 @@ class ProgressLevel(enum.IntEnum):
 
 def _validate_source_dir(value: Path | None) -> bool:
     if value is None:
-        # Import must be local and not use the lazy loader to avoid circular imports
-        from ..kernel._versions import kernel_installed
+        # Although ``eradiate.kernel._version`` provides
+        # :func:`kernel_installed`, we don't use it
+        # here: doing so would run ``kernel/__init__.py``, which under
+        # ``EAGER_IMPORT=1`` eagerly loads the whole kernel subtree
+        # and closes a circular import (kernel -> converters -> data ->
+        # _file_resolver -> config). Since kernel detection only relies on
+        # package metadata, we inline the lookup performed by
+        # :func:`eradiate.kernel._versions.kernel_installed`.
+        from importlib.metadata import PackageNotFoundError, version
 
-        # Detect whether kernel is installed
-        kernel_is_installed, _ = kernel_installed()
+        try:
+            version("eradiate-mitsuba")
+            kernel_is_installed = True
+        except PackageNotFoundError:
+            kernel_is_installed = False
 
         # Detect Read the Docs build
         rtd = os.environ.get("READTHEDOCS", "") == "True"
