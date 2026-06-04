@@ -405,6 +405,17 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         default="(1,1,1)",
     )
 
+    wrap_mode: str = documented(
+        attrs.field(
+            default="clamp",
+            converter=str,
+            validator=attrs.validators.in_({"clamp", "repeat", "mirror"}),
+        ),
+        doc="[EXPERIMENTAL] Boundary condition applied to the extremum structure.",
+        type="str",
+        default="clamp",
+    )
+
     def update(self) -> None:
         """
         Update internal state.
@@ -737,6 +748,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         "volume": {"type": "ref", "id": sigma_t_id},
                         "resolution": self.extremum_resolution,
                         "to_world": to_world,
+                        "wrap_mode": self.wrap_mode,
                     }
 
         elif isinstance(self.geometry, SphericalShellGeometry):
