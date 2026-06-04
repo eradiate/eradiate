@@ -9,13 +9,16 @@ import enum
 import typing as t
 from collections import UserDict
 from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 import attrs
 import mitsuba as mi
 
 from ..attrs import define, documented
-from ..contexts import KernelContext
 from ..util.misc import flatten, nest
+
+if TYPE_CHECKING:
+    from ..contexts import KernelContext
 
 
 @define
