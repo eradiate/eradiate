@@ -1,11 +1,11 @@
-:layout: simple
+:hide-toc:
+:layout: landing
 
-Eradiate Documentation
-======================
+Eradiate
+========
 
 **Date**: |today| |
-**Version**: |version| |
-:doc:`/release_notes/index`
+**Version**: |version|
 
 **Useful links**:
 `Home <https://www.eradiate.eu>`__ |
@@ -22,10 +22,11 @@ Python and C++17. It relies on a radiometric kernel based on the
 `Mitsuba 3 <https://github.com/mitsuba-renderer/mitsuba3>`__ rendering system
 :cite:`Jakob2022DrJit,Jakob2022Mitsuba3`.
 
-.. grid:: 1 2 auto auto
-   :gutter: 3
+.. grid:: 1 1 2 3
+   :gutter: 2
+   :padding: 0
 
-   .. grid-item-card:: :iconify:`material-symbols:download-2 height=1.5em` User Guide
+   .. grid-item-card:: :iconify:`material-symbols:book-2 height=1.5em` User Guide
       :link: sec-user_guide
       :link-type: ref
 
@@ -43,11 +44,29 @@ Python and C++17. It relies on a radiometric kernel based on the
 
       Information about data formats and shipped datasets.
 
-   .. grid-item-card:: :iconify:`material-symbols:description height=1.5em` Reference
+   .. grid-item-card:: :iconify:`material-symbols:description height=1.5em` API reference
       :link: sec-reference_api
       :link-type: ref
 
-      The complete reference.
+      Browse the API reference.
+
+   .. grid-item-card:: :iconify:`material-symbols:terminal height=1.5em` CLI reference
+      :link: sec-reference_cli
+      :link-type: ref
+
+      Browse the command-line interface reference.
+
+   .. grid-item-card:: :iconify:`material-symbols:code height=1.5em` Developer guide
+      :link: sec-contributing
+      :link-type: ref
+
+      Contribute to and maintain Eradiate.
+
+   .. grid-item-card:: :iconify:`mdi:clock height=1.5em` Release notes
+      :link: /release_notes/index
+      :link-type: doc
+
+      Release history and migration notes.
 
 .. toctree::
    :maxdepth: 3
@@ -65,8 +84,8 @@ Python and C++17. It relies on a radiometric kernel based on the
    :caption: Reference
 
    reference_api/index
-   reference_plugins/index
    reference_cli.md
+   reference_plugins/index
    release_notes/index.md
    bibliography
 

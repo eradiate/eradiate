@@ -242,16 +242,29 @@ html_theme_options = {
             "title": "Reference",
             "children": [
                 {"title": "API", "url": "reference_api/index"},
-                {
-                    "title": "Plugin reference",
-                    "url": "https://eradiate.readthedocs.io/projects/mitsuba/latest/plugin_reference/index.html",
-                    "external": True,
-                },
                 {"title": "Command-line interface", "url": "reference_cli"},
             ],
         },
+        {
+            "title": "Backends",
+            "children": [
+                {
+                    "title": "Mitsuba",
+                    "url": "https://eradiate.readthedocs.io/projects/mitsuba/",
+                    "external": True,
+                    "summary": "Eradiate's main radiometric kernel, based on the "
+                    "Mitsuba 3 renderer",
+                },
+                {
+                    "title": "DISORT",
+                    "url": "https://eradiate.readthedocs.io/projects/disort/",
+                    "external": True,
+                    "summary": "An optional, fast alternative for 1D "
+                    "plane-parallel geometries",
+                },
+            ],
+        },
         {"title": "Contributing", "url": "contributing"},
-        {"title": "Release notes", "url": "release_notes/index"},
     ],
 }
 
