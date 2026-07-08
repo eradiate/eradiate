@@ -1,6 +1,6 @@
 """A series of test cases the assert the plausibility of Eradiate's computation."""
 
-import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,11 +9,6 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.plot import remove_xylabels
-
-
-def ensure_dir(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
 
 
 @pytest.mark.parametrize("atmosphere", ["none", "homogeneous"])
@@ -113,22 +108,30 @@ def test_symmetry_zenith(
 
     # Plot results
     if plot_figures:
-        fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(5, 2.5))
+        fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(6, 3), layout="constrained")
         results["radiance"].plot(ax=ax1, x="vza", marker=".", ls="--")
         results["radiance_reversed"].plot(ax=ax1, x="vza", marker=".", ls="--")
-        results["diff"].plot(ax=ax2, x="vza", marker=".", ls="--")
+
+        # Scale the difference by its leading power of ten and carry the
+        # exponent in the axis label
+        diff_max = np.nanmax(np.abs(results["diff"].values))
+        exp = np.ceil(np.log10(diff_max)) if diff_max > 0 else 0.0
+        (results["diff"] / 10**exp).plot(ax=ax2, x="vza", marker=".", ls="--")
+
         remove_xylabels(from_=[ax1, ax2])
         ax2.yaxis.tick_right()
+        ax2.yaxis.set_label_position("right")
+        ax2.set_ylabel(f"×$10^{{{int(exp)}}}$")
         ax1.set_title("")
         ax2.set_title("")
-        plt.suptitle(f"Surface: {surface}, Atmosphere: {str(atmosphere)}")
-        plt.tight_layout()
+        fig.suptitle(f"Surface: {surface}, Atmosphere: {str(atmosphere)}")
 
         filename = f"test_symmetry_zenith_{surface}_{str(atmosphere)}.png"
-        ensure_dir(os.path.join(artefact_dir, "plots"))
-        fname_plot = os.path.join(artefact_dir, "plots", filename)
+        outdir = Path(artefact_dir) / "plots"
+        outdir.mkdir(parents=True, exist_ok=True)
+        fname_plot = outdir / filename
 
-        fig.savefig(fname_plot, dpi=200)
+        fig.savefig(fname_plot, dpi=200, bbox_inches="tight")
         plt.close()
 
     # Check symmetry

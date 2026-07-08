@@ -1,6 +1,6 @@
 """Test cases with OneDimSolverApp and a Lambertian surface."""
 
-import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -83,30 +83,28 @@ def test_onedim_lambertian_brf(mode_mono_double, artefact_dir, plot_figures):
     # Plot result
     if plot_figures:
         for illumination_zenith in illumination_zenith_values:
-            fig = plt.figure(figsize=(6, 3))
-            ax1 = plt.gca()
+            fig, ax1 = plt.subplots(figsize=(6, 3), layout="constrained")
 
             with plt.rc_context({"lines.linestyle": ":", "lines.marker": "."}):
                 for reflectance in reflectance_values:
                     results[illumination_zenith][reflectance].brf.plot(ax=ax1, x="vza")
 
-            plt.xlabel("Signed viewing zenith angle [°]")
-            plt.xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
-            plt.ylabel("BRF [dimensionless]")
-            plt.title(rf"$\theta$ = {illumination_zenith}°")
-            plt.legend(
+            ax1.set_xlabel("Signed viewing zenith angle [°]")
+            ax1.set_xticks([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
+            ax1.set_ylabel("BRF [dimensionless]")
+            ax1.set_title(rf"$\theta$ = {illumination_zenith}°")
+            ax1.legend(
                 [f"{reflectance}" for reflectance in reflectance_values],
                 title=r"$\rho$",
                 loc="center left",
                 bbox_to_anchor=(1, 0.5),
             )
-            plt.tight_layout()
 
-            outdir = os.path.join(artefact_dir, "plots")
-            os.makedirs(outdir, exist_ok=True)
+            outdir = Path(artefact_dir) / "plots"
+            outdir.mkdir(parents=True, exist_ok=True)
             filename = f"test_onedim_lambertian_brf_{illumination_zenith}.png"
-            fname_plot = os.path.join(outdir, filename)
-            fig.savefig(fname_plot, dpi=200)
+            fname_plot = outdir / filename
+            fig.savefig(fname_plot, dpi=200, bbox_inches="tight")
 
             plt.close()
 
