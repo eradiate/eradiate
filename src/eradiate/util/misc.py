@@ -4,10 +4,12 @@ A collection of tools which don't really fit anywhere else.
 
 from __future__ import annotations
 
+import datetime
 import functools
 import inspect
 import os
 import re
+import sys
 import typing as t
 from collections import OrderedDict
 from numbers import Number
@@ -674,3 +676,16 @@ def dirsize(path: PathLike) -> int:
                 continue
 
     return total_size
+
+
+# TODO: Remove when Python <3.11 is dropped
+# Helper function to get the utcnow datetime
+if sys.version_info >= (3, 11):
+
+    def get_utcnow():
+        return datetime.datetime.now(datetime.UTC)
+
+else:
+
+    def get_utcnow():
+        return datetime.datetime.utcnow()

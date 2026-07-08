@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import datetime
 import warnings
 from pathlib import Path
 from typing import Literal
@@ -24,6 +23,7 @@ from .typing import PathLike
 from .units import to_quantity
 from .units import unit_registry as ureg
 from .util.deprecation import deprecated
+from .util.misc import get_utcnow
 
 _trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz
 
@@ -63,7 +63,7 @@ def update_attrs(srf: xr.Dataset, filter_name: str, filter_attr: str) -> None:
 
     # history attribute
     previous_history = srf.attrs["history"] + "\n"
-    utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    utcnow = get_utcnow().strftime("%Y-%m-%d %H:%M:%S")
     author = f"eradiate {__version__}"
     history_attr = f"{utcnow} - data set filtering ({filter_name}) - {author}"
 
@@ -286,7 +286,7 @@ def trim(srf: PathLike | xr.Dataset) -> xr.Dataset:
 
     # update history attribute
     previous_history = ds.attrs["history"] + "\n"
-    utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    utcnow = get_utcnow().strftime("%Y-%m-%d %H:%M:%S")
     author = f"eradiate, version {__version__}"
     history_attr = f"{utcnow} - trimmed data set - {author}"
     trimmed.attrs.update({"history": f"{previous_history}{history_attr}"})
