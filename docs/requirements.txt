@@ -8,7 +8,7 @@ alabaster==1.0.0
     # via sphinx
 annotated-doc==0.0.4
     # via typer
-anyio==4.13.0
+anyio==4.14.1
     # via
     #   httpx
     #   jupyter-server
@@ -49,24 +49,23 @@ cachetools==7.1.4
     #   axsdb
 cerberus==1.3.8
     # via eradiate (pyproject.toml)
-certifi==2026.5.20
+certifi==2026.6.17
     # via
     #   httpcore
     #   httpx
     #   netcdf4
     #   requests
     #   skyfield
-cffi==2.0.0
+cffi==2.1.0
     # via argon2-cffi-bindings
 cftime==1.6.5
     # via netcdf4
-charset-normalizer==3.4.7
+charset-normalizer==3.4.9
     # via requests
-click==8.4.1
+click==8.4.2
     # via
     #   eradiate (pyproject.toml)
     #   joseki
-    #   ussa1976
     #   uvicorn
 colorama==0.4.6
     # via sphinx-autobuild
@@ -93,7 +92,7 @@ docutils==0.21.2
     #   pybtex-docutils
     #   sphinx
     #   sphinxcontrib-bibtex
-dynaconf==3.2.13
+dynaconf==3.3.2
     # via eradiate (pyproject.toml)
 exceptiongroup==1.3.1
     # via
@@ -132,7 +131,7 @@ importlib-resources==7.1.0
     # via joseki
 iniconfig==2.3.0
     # via pytest
-ipykernel==7.2.0
+ipykernel==7.3.0
     # via jupyterlab
 ipython==8.39.0
     # via
@@ -155,11 +154,11 @@ jinja2==3.1.6
     #   nbconvert
     #   nbsphinx
     #   sphinx
-joseki==2.6.1
+joseki==2.7.0
     # via eradiate (pyproject.toml)
 jplephem==2.24
     # via skyfield
-json5==0.14.0
+json5==0.15.0
     # via jupyterlab-server
 jsonpointer==3.1.1
     # via jsonschema
@@ -170,6 +169,8 @@ jsonschema==4.26.0
     #   nbformat
 jsonschema-specifications==2025.9.1
     # via jsonschema
+jupyter-builder==1.0.2
+    # via jupyterlab
 jupyter-client==8.9.1
     # via
     #   ipykernel
@@ -178,6 +179,7 @@ jupyter-client==8.9.1
 jupyter-core==5.9.1
     # via
     #   ipykernel
+    #   jupyter-builder
     #   jupyter-client
     #   jupyter-server
     #   jupyterlab
@@ -188,7 +190,7 @@ jupyter-events==0.12.1
     # via jupyter-server
 jupyter-lsp==2.3.1
     # via jupyterlab
-jupyter-server==2.19.0
+jupyter-server==2.20.0
     # via
     #   jupyter-lsp
     #   jupyterlab
@@ -196,7 +198,7 @@ jupyter-server==2.19.0
     #   notebook-shim
 jupyter-server-terminals==0.5.4
     # via jupyter-server
-jupyterlab==4.5.8
+jupyterlab==4.6.1
     # via eradiate (pyproject.toml)
 jupyterlab-pygments==0.3.0
     # via nbconvert
@@ -212,7 +214,7 @@ latexcodec==3.0.1
     # via pybtex
 lazy-loader==0.5
     # via eradiate (pyproject.toml)
-llvmlite==0.47.0
+llvmlite==0.48.0
     # via numba
 markdown-it-py==3.0.0
     # via
@@ -235,7 +237,7 @@ mdit-py-plugins==0.6.1
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-mistune==3.2.1
+mistune==3.3.2
     # via nbconvert
 myst-parser==4.0.1
     # via eradiate (pyproject.toml:docs)
@@ -253,19 +255,18 @@ nbformat==5.10.4
     #   nbsphinx
 nbsphinx==0.9.8
     # via eradiate (pyproject.toml:docs)
-nest-asyncio==1.6.0
+nest-asyncio2==1.7.2
     # via ipykernel
 netcdf4==1.7.4
     # via
     #   eradiate (pyproject.toml)
     #   axsdb
     #   joseki
-    #   ussa1976
 networkx==3.4.2
     # via eradiate (pyproject.toml)
 notebook-shim==0.2.4
     # via jupyterlab
-numba==0.65.1
+numba==0.66.0
     # via axsdb
 numpy==2.2.6
     # via
@@ -281,7 +282,6 @@ numpy==2.2.6
     #   scipy
     #   seaborn
     #   skyfield
-    #   ussa1976
     #   xarray
 overrides==7.7.0
     # via jupyter-server
@@ -310,7 +310,7 @@ parso==0.8.7
     # via jedi
 pexpect==4.9.0
     # via ipython
-pillow==12.2.0
+pillow==12.3.0
     # via matplotlib
 pint==0.24.4
     # via
@@ -365,7 +365,7 @@ pyparsing==3.3.2
     # via
     #   matplotlib
     #   pydot
-pytest==9.0.3
+pytest==9.1.1
     # via eradiate (pyproject.toml:docs)
 python-dateutil==2.9.0.post0
     # via
@@ -425,16 +425,13 @@ scipy==1.15.3
     #   eradiate (pyproject.toml)
     #   axsdb
     #   joseki
-    #   ussa1976
 seaborn==0.13.2
     # via
     #   eradiate (pyproject.toml)
     #   eradiate (pyproject.toml:docs)
 send2trash==2.1.0
     # via jupyter-server
-setuptools==82.0.1
-    # via jupyterlab
-sgp4==2.25
+sgp4==2.27
     # via skyfield
 shellingham==1.5.4
     # via
@@ -487,7 +484,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 stack-data==0.6.3
     # via ipython
-starlette==1.2.1
+starlette==1.3.1
     # via sphinx-autobuild
 terminado==0.18.1
     # via
@@ -497,6 +494,7 @@ tinycss2==1.5.1
     # via bleach
 tomli==2.4.1
     # via
+    #   jupyter-builder
     #   jupyterlab
     #   pytest
     #   sphinx
@@ -507,13 +505,14 @@ tornado==6.5.7
     #   jupyter-server
     #   jupyterlab
     #   terminado
-tqdm==4.68.2
+tqdm==4.68.4
     # via eradiate (pyproject.toml)
 traitlets==5.15.1
     # via
     #   ipykernel
     #   ipython
     #   ipywidgets
+    #   jupyter-builder
     #   jupyter-client
     #   jupyter-core
     #   jupyter-events
@@ -524,11 +523,11 @@ traitlets==5.15.1
     #   nbconvert
     #   nbformat
     #   nbsphinx
-typer==0.26.7
+typer==0.26.8
     # via
     #   eradiate (pyproject.toml)
     #   axsdb
-typing-extensions==4.15.0
+typing-extensions==4.16.0
     # via
     #   anyio
     #   async-lru
@@ -551,13 +550,11 @@ uri-template==1.3.0
     # via jsonschema
 urllib3==2.7.0
     # via requests
-ussa1976==0.3.4
-    # via joseki
-uvicorn==0.49.0
+uvicorn==0.51.0
     # via sphinx-autobuild
 watchfiles==1.2.0
     # via sphinx-autobuild
-wcwidth==0.8.1
+wcwidth==0.8.2
     # via prompt-toolkit
 webcolors==25.10.0
     # via jsonschema
@@ -576,4 +573,3 @@ xarray==2025.6.1
     #   eradiate (pyproject.toml)
     #   axsdb
     #   joseki
-    #   ussa1976
