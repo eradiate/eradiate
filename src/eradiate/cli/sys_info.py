@@ -66,7 +66,13 @@ def main():
         var_repr = str(value)
         table.add_row(f"ERADIATE_{var.upper()}", var_repr)
 
-    loaded_settings_files = list(eradiate.config.settings._loaded_files)
+    settings = eradiate.config.settings
+
+    if hasattr(settings, "__core__"):  # dynaconf >=3.3
+        loaded_settings_files = list(settings.__core__.config.loaded_files)
+    else:  # dynaconf <3.3
+        loaded_settings_files = list(settings._loaded_files)
+
     if loaded_settings_files:
         item = "Loaded settings files"
         for fname in loaded_settings_files:
