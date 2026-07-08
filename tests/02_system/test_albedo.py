@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -163,7 +163,7 @@ def test_albedo(mode_mono, artefact_dir, plot_figures):
 
         # Plot results
         if plot_figures:
-            fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 5))
+            fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 5), layout="constrained")
 
             ax1.plot(wavelengths, albedos, linestyle="--", marker="o")
             ax1.set_title("Albedo")
@@ -175,30 +175,27 @@ def test_albedo(mode_mono, artefact_dir, plot_figures):
                 where=expected != 0.0,
                 out=np.zeros_like(expected),
             )
-            ax2.plot(wavelengths, rdiffs, linestyle="--", marker="o")
+            rdiffs_max = np.max(np.abs(rdiffs[~np.isnan(rdiffs)]))
+            # Scale the data by the leading power of ten and carry the exponent
+            # in the axis label
+            exp = np.ceil(np.log10(rdiffs_max)) if rdiffs_max > 0 else 0.0
+            ax2.plot(wavelengths, rdiffs / 10**exp, linestyle="--", marker="o")
             ax2.set_title("Relative difference")
             ax2.set_xlabel("Wavelength [nm]")
-            rdiffs_max = np.max(np.abs(rdiffs[~np.isnan(rdiffs)]))
-            exp = np.ceil(np.log10(rdiffs_max))
             ax2.set_xlim(ax1.get_xlim())
-            ax2.set_ylim([-(10**exp), 10**exp])
+            ax2.set_ylim([-1.0, 1.0])
             ax2.yaxis.set_label_position("right")
             ax2.yaxis.tick_right()
-            ax2.ticklabel_format(axis="y", style="sci", scilimits=[-3, 3])
-            # Hide offset label and add it as axis label
-            if abs(exp) >= 3:
-                ax2.yaxis.offsetText.set_visible(False)
-                ax2.yaxis.set_label_text(f"×$10^{{{int(exp)}}}$")
+            ax2.set_ylabel(f"×$10^{{{int(exp)}}}$")
 
             plt.suptitle(f"Case: {exp_name}")
-            plt.tight_layout()
 
             filename = f"test_albedo_{exp_name}.png"
-            outdir = os.path.join(artefact_dir, "plots")
-            os.makedirs(outdir, exist_ok=True)
-            fname_plot = os.path.join(outdir, filename)
+            outdir = Path(artefact_dir) / "plots"
+            outdir.mkdir(exist_ok=True, parents=True)
+            fname_plot = outdir / filename
 
-            fig.savefig(fname_plot, dpi=200)
+            fig.savefig(fname_plot, dpi=200, bbox_inches="tight")
             plt.close()
 
         # Check results

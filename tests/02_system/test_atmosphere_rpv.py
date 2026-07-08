@@ -1,6 +1,6 @@
 """Test cases with AtmosphereExperiment and an RPV surface."""
 
-import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -162,41 +162,39 @@ def test_film_to_angular_coord_conversion_multi_distant(
 
         desc = orientation.title()
 
-        fig = plt.figure(figsize=(8, 3))
-        plt.suptitle(
+        fig, axes = plt.subplots(1, 2, figsize=(8, 3), layout="constrained")
+        fig.suptitle(
             f"{desc} scattering RPV surface (g={g}), "
             f"illumination azimuth = {illumination_azimuth}°"
         )
 
         with plt.rc_context({"lines.linestyle": ":", "lines.marker": "."}):
-            for orientation, brf, sub, ticks, xtext in zip(
+            for ax, orientation, brf, ticks, xtext in zip(
+                axes,
                 ["forward", "backward"],
                 [brf_forward, brf_backward],
-                [(1, 2, 1), (1, 2, 2)],
                 [[-90, -60, -30, 0], [0, 30, 60, 90]],
                 [-45, 45],
             ):
-                plt.subplot(*sub)
-                ax = plt.gca()
                 ax.set_xticks(ticks)
                 ax.set_xticklabels(list(map(str, ticks)))
-                brf.plot(x="vza", xlim=[-95, 0], ylim=ylim)
+                brf.plot(x="vza", ylim=ylim, ax=ax)
                 mean = float(brf.mean().values)
-                plt.text(
+                ax.text(
                     s=f"mean = {mean:.2e}",
                     x=xtext,
                     y=(brf_max + brf_min) / 2.0,
                     ha="center",
                     color="red",
                 )
-                plt.title(f"{orientation} BRF")
+                ax.set_title(f"{orientation} BRF")
 
         filename = f"test_ftacc_multi_distant_{desc.lower()}_{illumination_azimuth}.png"
-        outdir = os.path.join(artefact_dir, "plots")
-        os.makedirs(outdir, exist_ok=True)
-        fname_plot = os.path.join(outdir, filename)
-        plt.tight_layout()
-        fig.savefig(fname_plot, dpi=200)
+        outdir = Path(artefact_dir) / "plots"
+        outdir.mkdir(parents=True, exist_ok=True)
+        fname_plot = outdir / filename
+
+        fig.savefig(fname_plot, dpi=200, bbox_inches="tight")
         plt.close()
 
     for orientation, result in results.items():
@@ -294,45 +292,28 @@ def make_figure(
     res: int,
     artefact_dir,
 ):
-    fig = plt.figure(figsize=(8, 3))
+    fig, axes = plt.subplots(1, 2, figsize=(8, 3), layout="constrained")
 
     desc = "Forward" if forward else "Backward"
-    plt.suptitle(
+    fig.suptitle(
         f"{desc} scattering RPV surface (g={g}), "
         f"illumination azimuth = {illumination_azimuth}°"
     )
 
-    for orientation, sub in zip(
-        ["forward", "backward"],
-        [(1, 2, 1), (1, 2, 2)],
-    ):
-        plt.subplot(*sub)
-        ax = plt.gca()
+    for ax, orientation in zip(axes, ["forward", "backward"]):
         ax.set_aspect("equal")
-        da = select_orientation(
-            results[name],
-            name,
-            illumination_azimuth,
-            "forward",
-        )
-        da.plot()
+        da = select_orientation(results[name], name, illumination_azimuth, "forward")
+        da.plot(ax=ax)
 
         mean = float(da.mean().values)
-        plt.text(
-            s=f"mean = {mean:.2e}",
-            x=res / 2,
-            y=res / 2,
-            ha="center",
-            color="red",
-        )
-        plt.title(f"{orientation} {name}")
+        ax.text(s=f"mean = {mean:.2e}", x=res / 2, y=res / 2, ha="center", color="red")
+        ax.set_title(f"{orientation} {name}")
 
     filename = f"test_ftacc_{measure}_{desc.lower()}_{illumination_azimuth}.png"
-    outdir = os.path.join(artefact_dir, "plots")
-    os.makedirs(outdir, exist_ok=True)
-    fname_plot = os.path.join(outdir, filename)
-    plt.tight_layout()
-    fig.savefig(fname_plot, dpi=200)
+    outdir = Path(artefact_dir) / "plots"
+    outdir.mkdir(parents=True, exist_ok=True)
+    fname_plot = outdir / filename
+    fig.savefig(fname_plot, dpi=200, bbox_inches="tight")
     plt.close()
 
 
@@ -678,13 +659,13 @@ def test_rpv_vs_lambertian(
         if not plot_figures:
             return
 
-        fig = plt.figure(figsize=(8, 3))
+        fig, ax = plt.subplots(figsize=(8, 3), layout="constrained")
         results_lambertian = results["lambertian"]
         results_rpv = results["rpv"]
 
         with plt.rc_context({"lines.linestyle": "dashed"}):
-            results_lambertian.brf.plot(x="vza", marker="o", label="lambertian")
-            results_rpv.brf.plot(x="vza", marker="^", label="rpv")
+            results_lambertian.brf.plot(x="vza", marker="o", label="lambertian", ax=ax)
+            results_rpv.brf.plot(x="vza", marker="^", label="rpv", ax=ax)
 
         bias = np.zeros_like(results_lambertian.brf.values)
         np.divide(
@@ -694,17 +675,16 @@ def test_rpv_vs_lambertian(
             out=bias,
         )
         mean_bias = np.mean(np.abs(bias))
-        plt.annotate(
+        ax.annotate(
             text=f"Mean bias: {round(100 * mean_bias, 2)} %",
             xy=(0.5, 0.5),
             horizontalalignment="center",
             xycoords="axes fraction",
         )
-        plt.title(title)
-        plt.tight_layout()
+        ax.set_title(title)
 
         logger.info(f"Saving figure to {fname_plot}", also_console=True)
-        fig.savefig(fname_plot, dpi=200)
+        fig.savefig(fname_plot, dpi=200, bbox_inches="tight")
         plt.close()
 
     bsdfs = {
@@ -744,9 +724,9 @@ def test_rpv_vs_lambertian(
 
     # Make figure
     filename = f"{request.node.originalname}-{'none' if atmosphere is None else 'homogeneous'}-{reflectance}.png"
-    outdir = os.path.join(artefact_dir, "plots")
-    os.makedirs(outdir, exist_ok=True)
-    fname_plot = os.path.join(outdir, filename)
+    outdir = Path(artefact_dir) / "plots"
+    outdir.mkdir(parents=True, exist_ok=True)
+    fname_plot = outdir / filename
     title = (
         f"{reflectance=}, no atmosphere"
         if atmosphere is None
