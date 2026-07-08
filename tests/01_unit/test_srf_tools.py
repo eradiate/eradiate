@@ -1,13 +1,12 @@
 """Test cases for the srf_filter module."""
 
-import datetime
-
 import numpy as np
 import pytest
 import xarray as xr
 
 from eradiate.srf_tools import integral_filter, spectral_filter, threshold_filter, trim
 from eradiate.units import unit_registry as ureg
+from eradiate.util.misc import get_utcnow
 
 SRF_VALUES_RELEVANT = np.array([0.0, 0.5, 1.0, 0.5, 0.0])
 
@@ -54,7 +53,7 @@ def srf_values_leading_zeros() -> np.ndarray:
 def test_trim(request, srf_values) -> None:
     """Trim all leading zeros except last and all trailing zeros except first."""
     srf_values = request.getfixturevalue(srf_values)
-    utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    utcnow = get_utcnow().strftime("%Y-%m-%d %H:%M:%S")
     ds = xr.Dataset(
         {"srf": ("w", srf_values, {"units": "dimensionless"})},
         coords={"w": ("w", np.linspace(300, 800, srf_values.size), {"units": "nm"})},
@@ -69,7 +68,7 @@ def test_threshold_filter() -> None:
     Drop data points where response is smaller or equal than a threshold value.
     """
     srf_values = np.array([1e-6, 1e-3, 1e-2, 1e0, 1e-1, 1e-2, 1e-2, 1e-5])
-    utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    utcnow = get_utcnow().strftime("%Y-%m-%d %H:%M:%S")
     srf = xr.Dataset(
         {"srf": ("w", srf_values, {"units": "dimensionless"})},
         coords={"w": ("w", np.linspace(300, 800, srf_values.size), {"units": "nm"})},
@@ -98,7 +97,7 @@ def test_spectral_filter(wrange) -> None:
 
     w = np.linspace(400, 800)
     srf_values = np.random.random(w.size)
-    utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    utcnow = get_utcnow().strftime("%Y-%m-%d %H:%M:%S")
     srf = xr.Dataset(
         {"srf": ("w", srf_values, {"units": "dimensionless"})},
         coords={"w": ("w", w, {"units": "nm"})},
@@ -117,7 +116,7 @@ def test_spectral_filter(wrange) -> None:
 
 
 @pytest.mark.parametrize("percentage", [50.0, 90.0, 95.0, 99.0])
-@pytest.mark.parametrize("method, ", ["walk", "symmetry"])
+@pytest.mark.parametrize("method", ["walk", "symmetry"])
 def test_integral_filter(percentage, method) -> None:
     """
     Keep only data that contribute to the integrated spectral response value
@@ -127,7 +126,7 @@ def test_integral_filter(percentage, method) -> None:
     srf_values = np.ones(100000)
     w_values = np.linspace(300, 800, srf_values.size)
 
-    utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    utcnow = get_utcnow().strftime("%Y-%m-%d %H:%M:%S")
     srf = xr.Dataset(
         {"srf": ("w", srf_values, {"units": "dimensionless"})},
         coords={"w": ("w", w_values, {"units": "nm"})},

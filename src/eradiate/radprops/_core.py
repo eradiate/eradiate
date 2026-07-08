@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 from abc import ABC, abstractmethod
 from functools import singledispatchmethod
 
@@ -17,6 +16,7 @@ from ..attrs import documented, frozen
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
+from ..util.misc import get_utcnow
 
 
 @ureg.wraps(
@@ -153,7 +153,7 @@ def make_dataset(
         attrs={
             "convention": "CF-1.8",
             "title": "Atmospheric monochromatic radiative properties",
-            "history": f"{datetime.datetime.utcnow().replace(microsecond=0)} - "
+            "history": f"{get_utcnow().replace(microsecond=0)} - "
             f"data set creation - "
             f"{__name__}.make_dataset",
             "source": f"eradiate, version {eradiate.__version__}",
