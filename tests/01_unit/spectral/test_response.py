@@ -20,7 +20,8 @@ class TestUniformSRF:
 
 class TestDeltaSRF:
     @pytest.fixture(scope="class")
-    def srf(self):
+    @classmethod
+    def srf(cls):
         yield DeltaSRF([440.0, 550.0, 660.0])
 
     def test_construct_from_float(self):
@@ -52,7 +53,8 @@ class TestDeltaSRF:
 
 class TestBandSRF:
     @pytest.fixture(scope="class")
-    def srf(self):
+    @classmethod
+    def srf(cls):
         yield BandSRF(wavelengths=[500, 550, 600], values=[0, 1, 0])
 
     def test_construct(self):

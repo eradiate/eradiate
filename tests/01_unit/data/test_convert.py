@@ -159,11 +159,13 @@ class TestMakeAerCoreV2:
         """Tests for the mu sort-order check in make_aer_core_v2()."""
 
         @pytest.fixture(scope="class")
-        def mu_desc(self):
+        @classmethod
+        def mu_desc(cls):
             return np.linspace(1, -1, 11)
 
         @pytest.fixture(scope="class")
-        def mu_asc(self):
+        @classmethod
+        def mu_asc(cls):
             return np.linspace(-1, 1, 11)
 
         def test_no_check(self, mu_desc):
@@ -189,7 +191,8 @@ class TestMakeAerCoreV2:
         """Tests for the nangles parameter in make_aer_core_v2()."""
 
         @pytest.fixture(scope="class")
-        def nangles_vals(self):
+        @classmethod
+        def nangles_vals(cls):
             return np.array([3, 7, 10], dtype=np.int32)
 
         def test_nangles_written(self, nangles_vals):
@@ -221,7 +224,8 @@ class TestMakeAerCoreV2:
         """Tests for automatic Legendre coefficient computation in make_aer_core_v2()."""
 
         @pytest.fixture(scope="class")
-        def base_args(self):
+        @classmethod
+        def base_args(cls):
             return _isotropic_args(nw=3, nangle=37)
 
         def test_default_129_moments(self, base_args):
@@ -337,11 +341,13 @@ class TestAerV1ToAerCoreV2:
         """Tests for mu sort order in aer_v1_to_aer_core_v2()."""
 
         @pytest.fixture(scope="class")
-        def ds_descending(self):
+        @classmethod
+        def ds_descending(cls):
             return _make_aer_v1(np.linspace(1.0, -1.0, 37))
 
         @pytest.fixture(scope="class")
-        def ds_ascending(self):
+        @classmethod
+        def ds_ascending(cls):
             return _make_aer_v1(np.linspace(-1.0, 1.0, 37))
 
         def test_output_mu_ascending(self, ds_descending, ds_ascending):
@@ -382,7 +388,8 @@ class TestAerV1ToAerCoreV2:
         """Integration tests against the real govaerts_2021-desert Aer v1 file."""
 
         @pytest.fixture(scope="class")
-        def ds_input(self):
+        @classmethod
+        def ds_input(cls):
             from eradiate.data import fresolver
 
             return fresolver.load_dataset(
@@ -390,7 +397,8 @@ class TestAerV1ToAerCoreV2:
             )
 
         @pytest.fixture(scope="class")
-        def ds_result(self, ds_input):
+        @classmethod
+        def ds_result(cls, ds_input):
             return aer_v1_to_aer_core_v2(ds_input)
 
         def test_mu_ascending(self, ds_result):
@@ -413,15 +421,18 @@ class TestLibradtranToAerCoreV2:
     """Tests for libradtran_to_aer_core_v2()."""
 
     @pytest.fixture(scope="class")
-    def ntheta_per_w(self):
+    @classmethod
+    def ntheta_per_w(cls):
         return [3, 5, 4]
 
     @pytest.fixture(scope="class")
-    def ds_input(self, ntheta_per_w):
+    @classmethod
+    def ds_input(cls, ntheta_per_w):
         return _make_libradtran_ds(ntheta_per_w)
 
     @pytest.fixture(scope="class")
-    def ds_result(self, ds_input):
+    @classmethod
+    def ds_result(cls, ds_input):
         return libradtran_to_aer_core_v2(ds_input, check="full")
 
     def test_nangles_match_ntheta(self, ds_result, ntheta_per_w):
@@ -452,7 +463,8 @@ class TestLibradtranToAerCoreV2:
         """Tests that the union angular grid across phase-matrix components is used."""
 
         @pytest.fixture(scope="class")
-        def ds_input(self):
+        @classmethod
+        def ds_input(cls):
             # Component 0: [0, 90, 180]°; Component 1: [45, 135]° — fully disjoint
             nw, nphamat, nthetamax = 2, 2, 3
             theta_arr = np.full((nw, nphamat, nthetamax), np.nan)
@@ -479,7 +491,8 @@ class TestLibradtranToAerCoreV2:
             )
 
         @pytest.fixture(scope="class")
-        def ds_result(self, ds_input):
+        @classmethod
+        def ds_result(cls, ds_input):
             return libradtran_to_aer_core_v2(ds_input, check="full")
 
         def test_nangles_is_union_size(self, ds_result):

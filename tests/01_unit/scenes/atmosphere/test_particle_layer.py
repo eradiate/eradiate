@@ -120,7 +120,7 @@ class TestParticleLayer:
                 tau_ref=-0.1 * ureg.dimensionless,
             )
 
-    @pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
+    @pytest.mark.parametrize("w", list([280.0, 550.0, 1600.0, 2400.0] * ureg.nm))
     def test_eval_absorbing_only(
         self, modes_all_unpolarized_double, particle_properties_absorbing_only, w
     ):
@@ -150,7 +150,7 @@ class TestParticleLayer:
         ctx = KernelContext(si=si)
         assert layer.eval_mfp(ctx).magnitude == np.inf
 
-    @pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
+    @pytest.mark.parametrize("w", list([280.0, 550.0, 1600.0, 2400.0] * ureg.nm))
     def test_eval_mono_scattering_only(
         self, modes_all_unpolarized_double, particle_properties_scattering_only, w
     ):
@@ -180,7 +180,7 @@ class TestParticleLayer:
         ctx = KernelContext(si=si)
         assert np.isclose(layer.eval_mfp(ctx), 5.0 * ureg.km)
 
-    @pytest.mark.parametrize("w", [280.0, 550.0, 1600.0, 2400.0] * ureg.nm)
+    @pytest.mark.parametrize("w", list([280.0, 550.0, 1600.0, 2400.0] * ureg.nm))
     def test_eval_general(
         self, modes_all_unpolarized_double, particle_properties_test, w
     ):
@@ -232,7 +232,9 @@ class TestParticleLayer:
             [var in ds.data_vars for var in expected_data_vars]
         )
 
-    @pytest.mark.parametrize("tau_ref", np.array([0.6, 1.0, 2.5]) * ureg.dimensionless)
+    @pytest.mark.parametrize(
+        "tau_ref", list(np.array([0.6, 1.0, 2.5]) * ureg.dimensionless)
+    )
     def test_eval_radprops(self, mode_mono, particle_dataset_path, tau_ref):
         layer = ParticleLayer(
             particle_properties=particle_dataset_path,
@@ -255,7 +257,7 @@ class TestParticleLayer:
 
     @pytest.mark.parametrize("distribution", ["uniform", "gaussian", "exponential"])
     @pytest.mark.parametrize(
-        "tau_ref", np.array([0.1, 0.5, 1.0, 2.0, 5.0]) * ureg.dimensionless
+        "tau_ref", list([0.1, 0.5, 1.0, 2.0, 5.0] * ureg.dimensionless)
     )
     @pytest.mark.parametrize(
         "singlewavelength", [True, False], ids=["singlewavelength", "multiwavelength"]
