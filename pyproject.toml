@@ -241,7 +241,7 @@ py312 = { features = ["py312", "kernel", "recommended"] }
 py313 = { features = ["py313", "kernel", "recommended"] }
 
 [tool.pytest.ini_options]
-addopts = "-p no:robotframework --tb=short"
+addopts = "-p no:robotframework --tb=short -vv -ra"
 filterwarnings = [
   "error",
   # Remove the following when environment issues are solved
