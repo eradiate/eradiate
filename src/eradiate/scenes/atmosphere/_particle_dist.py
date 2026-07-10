@@ -231,10 +231,8 @@ class ArrayParticleDistribution(ParticleDistribution):
     coords: np.ndarray = documented(
         attrs.field(
             default=attrs.Factory(
-                lambda x: np.arange(
-                    0.5 / len(x.values),
-                    1,
-                    1 / len(x.values),
+                lambda x: (lambda edges: (edges[:-1] + edges[1:]) / 2)(
+                    np.linspace(0, 1, len(x.values) + 1)
                 ),
                 takes_self=True,
             ),
