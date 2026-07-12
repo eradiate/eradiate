@@ -1,8 +1,8 @@
 import pytest
-from robot.api import logger
 
 import eradiate
 from eradiate.test_tools.regression import ZTest
+from eradiate.test_tools.report import report_logger
 from eradiate.test_tools.test_cases.romc import create_het06_brfpp
 from eradiate.test_tools.util import append_doc
 
@@ -26,7 +26,7 @@ def test_het06_brfpp(
     """
     result = eradiate.run(exp)
 
-    logger.info(result._repr_html_(), html=True)
+    report_logger.html(result._repr_html_())
 
     test = ZTest(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-het06.nc",

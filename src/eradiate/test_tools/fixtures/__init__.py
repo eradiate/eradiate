@@ -32,15 +32,6 @@ def plugin_checker(request):
 
 
 @pytest.fixture
-def has_robot(plugin_checker):
-    """
-    Fixture that returns ``True`` iff the robotframework plugin is loaded and
-    enabled in the current session.
-    """
-    return plugin_checker("robotframework")
-
-
-@pytest.fixture
 def absorption_database_error_handler_config():
     """
     Error handler configuration for absorption coefficient interpolation.
