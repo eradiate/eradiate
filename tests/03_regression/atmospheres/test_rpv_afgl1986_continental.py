@@ -1,8 +1,8 @@
 import pytest
-from robot.api import logger
 
 import eradiate
 from eradiate.test_tools.regression import ZTest
+from eradiate.test_tools.report import report_logger
 from eradiate.test_tools.test_cases.atmospheres import (
     create_rpv_afgl1986_continental_brfpp,
 )
@@ -28,7 +28,7 @@ def test_rpv_afgl1986_continental_brfpp(
     0.05.
     """
     result = eradiate.run(exp, spp=10000)
-    logger.info(result._repr_html_(), html=True)
+    report_logger.html(result._repr_html_())
 
     test = ZTest(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986_continental.nc",
