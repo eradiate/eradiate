@@ -72,7 +72,6 @@ docs = [
   "nbsphinx>=0.9.0",
   "ipython", # Required for syntax highlighting in notebooks
   "pytest", # Required for pytest-related function docs
-  "robotframework", # Required for robot-related function docs
   "seaborn",
   "sphinx>=9.0",
   "sphinxcontrib-bibtex>=2.0",
@@ -177,39 +176,13 @@ test-cov-quick = { cmd = """
     --cov-report=json \
     --cov-report=term-missing
 """ }
-test-report = { cmd = """
-  pytest -p robotframework \
-    --robot-tagstatinclude unit \
-    --robot-tagstatinclude system \
-    --robot-tagstatinclude regression \
-    --robot-tagstatinclude slow \
-    --plot
-""" }
-test-unit-report = { cmd = """
-  pytest -p robotframework \
-    --robot-tagstatinclude unit \
-    --robot-tagstatinclude slow -m unit \
-    --plot""" }
-test-system-report = { cmd = """
-  pytest -p robotframework \
-    --robot-tagstatinclude system \
-    --robot-tagstatinclude slow -m system \
-    --plot
-""" }
-test-regression-report = { cmd = """
-  pytest -p robotframework \
-    --robot-tagstatinclude regression \
-    --robot-tagstatinclude slow -m regression \
-    --plot
-""" }
-test-slow-report = { cmd = """
-  pytest -p robotframework \
-    --robot-tagstatinclude unit \
-    --robot-tagstatinclude system \
-    --robot-tagstatinclude regression \
-    --robot-tagstatinclude slow -m slow \
-    --plot
-""" }
+# Default Robot Framework options (output directory, tag statistics) are set
+# by the pytest_robot_modify_options hook in tests/conftest.py
+test-report = { cmd = "pytest -p robotframework --plot" }
+test-unit-report = { cmd = "pytest -p robotframework -m unit --plot" }
+test-system-report = { cmd = "pytest -p robotframework -m system --plot" }
+test-regression-report = { cmd = "pytest -p robotframework -m regression --plot" }
+test-slow-report = { cmd = "pytest -p robotframework -m slow --plot" }
 
 [tool.pixi.feature.docs.tasks]
 # Docs build

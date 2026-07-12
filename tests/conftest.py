@@ -99,6 +99,21 @@ def pytest_configure(config):
     logging.getLogger("joseki").setLevel(logging.WARNING)
 
 
+# The robotframework plugin is disabled by default (see addopts); optionalhook
+# avoids a validation error when the hook spec is not registered
+@pytest.hookimpl(optionalhook=True)
+def pytest_robot_modify_options(options, session):
+    """
+    Project defaults for Robot Framework report generation. Explicit
+    ``--robot-*`` command-line options take precedence.
+    """
+    if options.get("outputdir", ".") == ".":
+        options["outputdir"] = "reports"
+
+    if not options.get("tagstatinclude"):
+        options["tagstatinclude"] = ["unit", "system", "regression", "slow"]
+
+
 # ------------------------------------------------------------------------------
 #                            Pre-process helpers
 # ------------------------------------------------------------------------------

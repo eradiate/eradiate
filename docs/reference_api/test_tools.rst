@@ -15,7 +15,6 @@
 
    sample_eval_pdf_bsdf
 
-
 ``eradiate.test_tools.regression``
 ----------------------------------
 
@@ -34,6 +33,19 @@
    PairedStudentTTest
    ZTest
    SidakTTest
+
+``eradiate.test_tools.report``
+------------------------------
+
+.. automodule:: eradiate.test_tools.report
+
+.. currentmodule:: eradiate.test_tools.report
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   figure_to_html
+   ReportLogger
 
 ``eradiate.test_tools.test_cases``
 ----------------------------------

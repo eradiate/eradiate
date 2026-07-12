@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import xarray as xr
-from robot.api import logger
 
 import eradiate
 from eradiate import unit_registry as ureg
+from eradiate.test_tools.report import report_logger
 
 
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])
@@ -683,7 +683,7 @@ def test_rpv_vs_lambertian(
         )
         ax.set_title(title)
 
-        logger.info(f"Saving figure to {fname_plot}", also_console=True)
+        report_logger.info(f"Saving figure to {fname_plot}")
         fig.savefig(fname_plot, dpi=200, bbox_inches="tight")
         plt.close()
 

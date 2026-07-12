@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from abc import ABC, abstractmethod
-from io import StringIO
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
@@ -13,8 +12,8 @@ import numpy as np
 import scipy.stats as spstats
 import xarray as xr
 from numpy.typing import ArrayLike
-from robot.api import logger
 
+from .report import ReportLogger, figure_to_html, report_logger
 from ..attrs import define, documented
 from ..typing import PathLike
 from ..util.misc import summary_repr
@@ -117,49 +116,6 @@ def regression_test_plots(
     return fig, axes
 
 
-def figure_to_html(fig: plt.Figure) -> str:
-    """
-    Render a figure in HTML format
-
-    Returns a string containing the rendered HTML. The root tag is a <svg> one.
-
-    Parameters
-    ----------
-    fig : plt.Figure
-        Matplotlib figure to render in HTML.
-
-    Returns
-    -------
-    str
-        Rendered HTML <svg> tag with styling.
-    """
-
-    str_i = StringIO()
-    fig.savefig(str_i, format="svg", transparent=True, bbox_inches="tight")
-    fig.canvas.draw_idle()
-    svg = str_i.getvalue()
-
-    # Include some CSS in the SVG to render nicely in Robot report's dark and
-    # light modes
-    return "\n".join(
-        [
-            "<svg",
-            'version="1.1"',
-            'baseProfile="full"',
-            'width="810" height="540" viewBox="0 0 810 540"'
-            'xmlns="http://www.w3.org/2000/svg">',
-            "<style>",
-            "    path {",
-            "        fill: var(--text-color);",
-            "        stroke: var(--text-color);",
-            "    }",
-            "</style>",
-            svg,
-            "</svg>",
-        ]
-    )
-
-
 def reference_converter(value: PathLike | xr.Dataset | None) -> xr.Dataset | None:
     """
     A converter for handling the reference data attribute.
@@ -198,11 +154,11 @@ def reference_converter(value: PathLike | xr.Dataset | None) -> xr.Dataset | Non
         return value
 
     if isinstance(value, (str, os.PathLike, bytes)):
-        logger.info(f'Looking up "{str(value)}" on disk', also_console=True)
+        report_logger.info(f'Looking up "{str(value)}" on disk')
         from .. import fresolver
 
         fname = fresolver.resolve(value)
-        logger.info(f"Resolved path: {fname}", also_console=True)
+        report_logger.info(f"Resolved path: {fname}")
 
         if not fname.exists():
             return None
@@ -287,14 +243,24 @@ class RegressionTest(ABC):
         init_type="bool",
     )
 
+    logger: ReportLogger = documented(
+        attrs.field(kw_only=True, default=report_logger, repr=False, eq=False),
+        doc="Logger used to send messages and HTML fragments to the test report. "
+        "Note that the ``reference`` field converter always reports through "
+        "the default logger, since it runs before the instance exists.",
+        type=":class:`.ReportLogger`",
+        init_type=":class:`.ReportLogger`, optional",
+        default=":data:`.report_logger`",
+    )
+
     def __attrs_pre_init__(self):
         if self.METRIC_NAME is None:
             raise TypeError(f"Unsupported test type {type(self).__name__}")
 
     def __attrs_post_init__(self):
         if self.plot:
-            if (
-                "w" in self.reference[self.variable]
+            if self.reference is not None and (
+                "w" in self.reference[self.variable].dims
                 and self.reference[self.variable].w.size > 1
             ):
                 raise ValueError(
@@ -303,7 +269,7 @@ class RegressionTest(ABC):
                     "Please disable the 'plot' option."
                 )
             if (
-                "w" in self.value[self.variable]
+                "w" in self.value[self.variable].dims
                 and self.value[self.variable].w.size > 1
             ):
                 raise ValueError(
@@ -326,7 +292,7 @@ class RegressionTest(ABC):
             Result of the test criterion comparison.
         """
 
-        logger.info(f"Regression test {self.name} results:", also_console=True)
+        self.logger.info(f"Regression test {self.name} results:")
 
         fname = self.name
         ext = ".nc"
@@ -338,10 +304,9 @@ class RegressionTest(ABC):
         # if no valid reference is found, store the results as new ref and fail
         # the test
         if not self.reference:
-            logger.info(
+            self.logger.info(
                 "No reference data found. Storing test results to "
-                f"{fname_reference}. This can be the new reference.",
-                also_console=True,
+                f"{fname_reference}. This can be the new reference."
             )
             self._archive(self.value, fname_reference)
             self._plot(metric_value=None, noref=True)
@@ -358,23 +323,17 @@ class RegressionTest(ABC):
                     f"Variable: {self.variable}",
                 ]
             )
-            logger.info(msg, also_console=True)
+            self.logger.info(msg)
 
         except Exception as e:
-            logger.info(
-                "An exception occurred during test evaluation!", also_console=True
-            )
+            self.logger.info("An exception occurred during test evaluation!")
             self._plot(noref=False, metric_value=None)
             raise e
 
         # we got a metric: report the results in the archive directory
-        logger.info(
-            f"Saving current output dataset to {fname_result}", also_console=True
-        )
+        self.logger.info(f"Saving current output dataset to {fname_result}")
         self._archive(self.value, fname_result)
-        logger.info(
-            f"Saving reference dataset locally to {fname_reference}", also_console=True
-        )
+        self.logger.info(f"Saving reference dataset locally to {fname_reference}")
         self._archive(self.reference, fname_reference)
         self._plot(noref=False, metric_value=metric_value)
 
@@ -441,8 +400,8 @@ class RegressionTest(ABC):
             figure, _ = self._plot_ref(metric_value)
 
         html_svg = figure_to_html(figure)
-        logger.info(html_svg, html=True, also_console=False)
-        logger.info(f"Saving PNG report chart to {fname_plot}", also_console=True)
+        self.logger.html(html_svg)
+        self.logger.info(f"Saving PNG report chart to {fname_plot}")
 
         plt.savefig(fname_plot)
         plt.close()
@@ -492,7 +451,7 @@ class RegressionTest(ABC):
         Create an additional plot to display more technical information about
         the test metrics and decision process. The diagnostic plot can help the
         user debug a failing test, or to assess the test power and significance.
-        This plot is output directly to the robotframework report.
+        This plot is output directly to the test report.
 
         Parameters:
         -----------
@@ -628,7 +587,7 @@ class AbstractStudentTTest(RegressionTest):
         chart = figure_to_html(fig)
         plt.close(fig)
 
-        logger.info(chart, html=True)
+        self.logger.html(chart)
 
 
 @define
@@ -701,12 +660,12 @@ class IndependentStudentTTest(AbstractStudentTTest):
         if diagnostic_chart:
             self._plot_diagnostic(dof=dof, t_prim=t_prim)
 
-        logger.info(f"bias    = {bias_mean}", also_console=True)
-        logger.info(f"s_p     = {s_p}", also_console=True)
-        logger.info(f"t'      = {t_prim}", also_console=True)
-        logger.info(f"dof     = {dof}", also_console=True)
-        logger.info(f"p-value = {p_value}", also_console=True)
-        logger.info(f"alpha   = {self.threshold}", also_console=True)
+        self.logger.info(f"bias    = {bias_mean}")
+        self.logger.info(f"s_p     = {s_p}")
+        self.logger.info(f"t'      = {t_prim}")
+        self.logger.info(f"dof     = {dof}")
+        self.logger.info(f"p-value = {p_value}")
+        self.logger.info(f"alpha   = {self.threshold}")
 
         return passed, p_value
 
@@ -787,12 +746,12 @@ class PairedStudentTTest(AbstractStudentTTest):
         if diagnostic_chart:
             self._plot_diagnostic(dof=dof, t_prim=t_prim)
 
-        logger.info(f"bias     = {D_mean}", also_console=True)
-        logger.info(f"var mean = {var_D_mean}", also_console=True)
-        logger.info(f"t'       = {t_prim}", also_console=True)
-        logger.info(f"dof      = {dof}", also_console=True)
-        logger.info(f"p-value  = {p_value}", also_console=True)
-        logger.info(f"alpha    = {self.threshold}", also_console=True)
+        self.logger.info(f"bias     = {D_mean}")
+        self.logger.info(f"var mean = {var_D_mean}")
+        self.logger.info(f"t'       = {t_prim}")
+        self.logger.info(f"dof      = {dof}")
+        self.logger.info(f"p-value  = {p_value}")
+        self.logger.info(f"alpha    = {self.threshold}")
 
         return passed, p_value
 
@@ -847,7 +806,7 @@ class ZTest(RegressionTest):
         chart = figure_to_html(fig)
         plt.close(fig)
 
-        logger.info(chart, html=True)
+        self.logger.html(chart)
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
         variable_var = self.variable + "_var"
@@ -881,14 +840,13 @@ class ZTest(RegressionTest):
         if diagnostic_chart:
             self._plot_diagnostic(z=z)
 
-        logger.info(f"min p-value = {min(p_values)}", also_console=True)
-        logger.info(f"max p-value = {max(p_values)}", also_console=True)
-        logger.info(
-            f"n passed    = {np.count_nonzero(accept_null)}/{int(0.9975 * result_np.size)}",
-            also_console=True,
+        self.logger.info(f"min p-value = {min(p_values)}")
+        self.logger.info(f"max p-value = {max(p_values)}")
+        self.logger.info(
+            f"n passed    = {np.count_nonzero(accept_null)}/{int(0.9975 * result_np.size)}"
         )
-        logger.info(f"alpha_1     = {self.threshold}", also_console=True)
-        logger.info(f"alpha_0     = {alpha_0}", also_console=True)
+        self.logger.info(f"alpha_1     = {self.threshold}")
+        self.logger.info(f"alpha_0     = {alpha_0}")
 
         return passed, min(p_values)
 
@@ -939,6 +897,9 @@ class SidakTTest(RegressionTest):
             T-statistic for each pair of measurements
         """
 
+        if not self.plot:
+            return
+
         fig, ax = plt.subplots()
         ax.grid()
         ax2 = ax.twinx()
@@ -959,7 +920,7 @@ class SidakTTest(RegressionTest):
         chart = figure_to_html(fig)
         plt.close(fig)
 
-        logger.info(chart, html=True)
+        self.logger.html(chart)
 
     def _evaluate(self, diagnostic_chart=False) -> tuple[bool, float]:
         variable_var = self.variable + "_var"
@@ -999,13 +960,12 @@ class SidakTTest(RegressionTest):
         if diagnostic_chart:
             self._plot_diagnostic(t_prim=t_prim)
 
-        logger.info(f"min p-value = {min(p_values)}", also_console=True)
-        logger.info(f"max p-value = {max(p_values)}", also_console=True)
-        logger.info(
-            f"n passed    = {np.count_nonzero(accept_null)}/{int(0.9975 * result_np.size)}",
-            also_console=True,
+        self.logger.info(f"min p-value = {min(p_values)}")
+        self.logger.info(f"max p-value = {max(p_values)}")
+        self.logger.info(
+            f"n passed    = {np.count_nonzero(accept_null)}/{int(0.9975 * result_np.size)}"
         )
-        logger.info(f"alpha_1     = {self.threshold}", also_console=True)
-        logger.info(f"alpha_0     = {alpha_0}", also_console=True)
+        self.logger.info(f"alpha_1     = {self.threshold}")
+        self.logger.info(f"alpha_0     = {alpha_0}")
 
         return passed, min(p_values)

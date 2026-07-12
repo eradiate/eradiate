@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
-from robot.api import logger
 
 import eradiate
 from eradiate import fresolver
 from eradiate.test_tools.regression import SidakTTest
+from eradiate.test_tools.report import report_logger
 from eradiate.test_tools.test_cases import rami4atm
 
 cases = [c for c in rami4atm.registry if c != "hom00_bla_a00s_m04_z30a000_brfpp"]
@@ -30,7 +30,7 @@ def test_rami4atm_hom00_bla_a00s_m04_z30a000_brfpp(mode_ckd_double, artefact_dir
     _, (exp,) = rami4atm.create_rami4atm_toa("hom00_bla_a00s_m04_z30a000_brfpp", 1000)
 
     result = eradiate.run(exp)
-    logger.info(result._repr_html_(), html=True)
+    report_logger.html(result._repr_html_())
     assert np.allclose(result.brf_srf, 0.0)
 
 
@@ -54,15 +54,15 @@ def test_rami4atm(mode_ckd_double, case, artefact_dir):
     raw_results = [eradiate.run(exp) for exp in exps]
 
     result = postprocess(raw_results, srf)
-    logger.info(result._repr_html_(), html=True)
+    report_logger.html(result._repr_html_())
 
     reference = fresolver.load_dataset(
         f"tests/regression_test_references/rami4atm/{case}-ref.nc"
     )
-    logger.info(reference._repr_html_(), html=True)
+    report_logger.html(reference._repr_html_())
 
     for variable in variables:
-        logger.info(f"Testing {variable}")
+        report_logger.info(f"Testing {variable}")
 
         test = test_ctor(
             name=case,

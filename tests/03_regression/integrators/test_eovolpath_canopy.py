@@ -1,7 +1,6 @@
-from robot.api import logger
-
 import eradiate
 from eradiate.test_tools.regression import ZTest, reference_converter
+from eradiate.test_tools.report import report_logger
 from eradiate.test_tools.test_cases.integrators import (
     create_eovolpath_canopy,
     create_volpath_canopy,
@@ -38,7 +37,7 @@ def test_eovolpath_canopy(
         spp = int(1e4)
 
     result = eradiate.run(exp, spp=spp)
-    logger.info(result._repr_html_(), html=True)
+    report_logger.html(result._repr_html_())
 
     test = ZTest(
         name=f"{session_timestamp:%Y%m%d-%H%M%S}-eovolpath_canopy.nc",
