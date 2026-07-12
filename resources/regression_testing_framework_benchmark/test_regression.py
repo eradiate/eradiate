@@ -2,21 +2,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import xarray as xr
-from robot.api import logger
 
 import eradiate
-import eradiate.test_tools.regression as tt
+from eradiate.test_tools.regression import (
+    Chi2Test,
+    IndependentStudentTTest,
+    PairedStudentTTest,
+    SidakTTest,
+    ZTest,
+)
+from eradiate.test_tools.report import figure_to_html, report_logger
 from eradiate.test_tools.test_cases.rami4atm import (
     create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp,
 )
 from eradiate.test_tools.util import append_doc
 
 test_types = {
-    "t_test": tt.IndependentStudentTTest,
-    "paired_t_test": tt.PairedStudentTTest,
-    "z_test": tt.ZTest,
-    "chi2": tt.Chi2Test,
-    "sidak_t_test": tt.SidakTTest,
+    "t_test": IndependentStudentTTest,
+    "paired_t_test": PairedStudentTTest,
+    "z_test": ZTest,
+    "chi2": Chi2Test,
+    "sidak_t_test": SidakTTest,
 }
 
 
@@ -116,9 +122,9 @@ def test_t_test_static_var(
 
     passed, p_value = test._evaluate(diagnostic_chart=True)
 
-    logger.info(f"p-value: {p_value}; threshold: {threshold}")
-    logger.info(f"mean_ref: {mean_ref}; mean_obs: {mean_obs}")
-    logger.info(f"std_ref: {std_ref}; std_obs: {std_obs}")
+    report_logger.info(f"p-value: {p_value}; threshold: {threshold}")
+    report_logger.info(f"mean_ref: {mean_ref}; mean_obs: {mean_obs}")
+    report_logger.info(f"std_ref: {std_ref}; std_obs: {std_obs}")
 
     assert passed == accept
 
@@ -189,7 +195,7 @@ def test_z_test_static_var(
         ),
     )
 
-    test = tt.ZTest(
+    test = ZTest(
         name="z-test",
         reference=ref_ds,
         value=obs_ds,
@@ -198,12 +204,12 @@ def test_z_test_static_var(
         threshold=threshold,
     )
 
-    logger.info(f"Expecting Z-test to pass: {accept}", also_console=True)
+    report_logger.info(f"Expecting Z-test to pass: {accept}")
     passed, p_value = test._evaluate(diagnostic_chart=True)
-    logger.info(f"Z-test did pass: {passed}", also_console=True)
-    logger.info(f"min p-value: {p_value}; threshold: {threshold}", also_console=True)
-    logger.info(f"mean_ref: {mean_ref}; mean_obs: {mean_obs}", also_console=True)
-    logger.info(f"std_obs: {std_obs}", also_console=True)
+    report_logger.info(f"Z-test did pass: {passed}")
+    report_logger.info(f"min p-value: {p_value}; threshold: {threshold}")
+    report_logger.info(f"mean_ref: {mean_ref}; mean_obs: {mean_obs}")
+    report_logger.info(f"std_obs: {std_obs}")
 
     if passed != accept:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
@@ -220,9 +226,9 @@ def test_z_test_static_var(
 
         plt.legend()
 
-        chart = tt.figure_to_html(plt.gcf())
+        chart = figure_to_html(plt.gcf())
         plt.close()
-        logger.info(chart, html=True)
+        report_logger.html(chart)
 
     assert passed == accept
 
@@ -263,8 +269,8 @@ def test_stats_same_simulation(mode_ckd_double, test_type, spp):
     exp1.integrator.moment = True
     result = eradiate.run(exp1, spp=spp)
 
-    logger.info("Displaying test dataset")
-    logger.info(result._repr_html_(), html=True)
+    report_logger.info("Displaying test dataset")
+    report_logger.html(result._repr_html_())
 
     r1np = result.radiance.sum(dim="w").squeeze().values
     s1np = np.sqrt(result.radiance_var.sum(dim="w").squeeze().values)
@@ -275,11 +281,13 @@ def test_stats_same_simulation(mode_ckd_double, test_type, spp):
     plt.xlabel("vza [degree]")
     plt.ylabel(f"radiance [{result.radiance_srf.attrs['units']}]")
     plt.legend()
-    chart = tt.figure_to_html(plt.gcf())
+    chart = figure_to_html(plt.gcf())
     plt.close()
-    logger.info(chart, html=True)
+    report_logger.html(chart)
 
-    logger.info("The test should pass, even considering a large significance level")
+    report_logger.info(
+        "The test should pass, even considering a large significance level"
+    )
 
     test = test_types[test_type](
         name="type_I_error_test",
@@ -291,8 +299,8 @@ def test_stats_same_simulation(mode_ckd_double, test_type, spp):
     )
 
     passed, p_value = test._evaluate()
-    logger.info(f"Test passed: {passed}")
-    logger.info(f"P-value: {p_value}")
+    report_logger.info(f"Test passed: {passed}")
+    report_logger.info(f"P-value: {p_value}")
 
     assert passed
 
@@ -338,15 +346,15 @@ def test_stats_same_setup(mode_ckd_double, test_type, spp1, spp2):
     exp1.integrator.moment = True
     result1 = eradiate.run(exp1, spp=spp1)
 
-    logger.info("Displaying test values dataset")
-    logger.info(result1._repr_html_(), html=True)
+    report_logger.info("Displaying test values dataset")
+    report_logger.html(result1._repr_html_())
 
     exp2 = create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp()
     exp2.integrator.moment = True
     result2 = eradiate.run(exp2, spp=spp2)
 
-    logger.info("Displaying test reference dataset")
-    logger.info(result2._repr_html_(), html=True)
+    report_logger.info("Displaying test reference dataset")
+    report_logger.html(result2._repr_html_())
 
     r1np = result1.radiance.sum(dim="w").squeeze().values
     r2np = result2.radiance.sum(dim="w").squeeze().values
@@ -360,11 +368,13 @@ def test_stats_same_setup(mode_ckd_double, test_type, spp1, spp2):
     plt.xlabel("vza [degree]")
     plt.ylabel(f"radiance [{result1.radiance_srf.attrs['units']}]")
     plt.legend()
-    chart = tt.figure_to_html(plt.gcf())
+    chart = figure_to_html(plt.gcf())
     plt.close()
-    logger.info(chart, html=True)
+    report_logger.html(chart)
 
-    logger.info("The test should pass, even considering a large significance level")
+    report_logger.info(
+        "The test should pass, even considering a large significance level"
+    )
 
     test = test_types[test_type](
         name="type_I_error_test",
@@ -376,7 +386,7 @@ def test_stats_same_setup(mode_ckd_double, test_type, spp1, spp2):
     )
 
     passed, p_value = test._evaluate(diagnostic_chart=True)
-    logger.info(f"Test passed: {passed}")
+    report_logger.info(f"Test passed: {passed}")
 
     assert passed
 
