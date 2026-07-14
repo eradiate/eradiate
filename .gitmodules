@@ -6,6 +6,6 @@
 	path = ext/mitsuba
 	url = https://github.com/eradiate/mitsuba3.git
 [submodule "tutorials"]
-	path = tutorials
+	path = docs/tutorials
 	url = https://github.com/eradiate/eradiate-tutorials.git
 	shallow = true

@@ -59,7 +59,7 @@ docs = [
   "pytest", # Required for pytest-related function docs
   "robotframework", # Required for robot-related function docs
   "seaborn",
-  "sphinx",
+  "sphinx>=9.0",
   "sphinxcontrib-bibtex>=2.0",
   "sphinx-autobuild>=2024", # Capped because v2024+ raises
   "sphinx-copybutton",
@@ -203,7 +203,7 @@ docs-clean-generated = { cmd = "make -C docs clean-generated" }
 docs-pdf = { cmd = "make -C docs latexpdf && echo \"Documentation PDF at docs/_build/latex/eradiate.pdf\"" }
 docs-serve = { cmd = "make -C docs serve" }
 docs-linkcheck = { cmd = "make -C docs linkcheck" }
-docs-render-tutorials = { cmd = "python tutorials/run.py run" }
+docs-render-tutorials = { cmd = "python docs/tutorials/run.py --root-dir docs/tutorials run" }
 # -- Important: If the Python version changes, do not forget to sync it with the
 #    'build.tools.python' entry in .readthedocs.yml
 docs-lock = { cmd = """

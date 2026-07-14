@@ -28,7 +28,8 @@ limitations under the License.
 
 __author__ = "Philipp S. Sommer"
 __copyright__ = (
-    "2016 - 2019, Philipp S. Sommer\n" "2020 - 2021, Helmholtz-Zentrum Hereon"
+    "2016 - 2019, Philipp S. Sommer\n"
+    "2020 - 2021, Helmholtz-Zentrum Hereon"
 )
 __credits__ = ["Philipp S. Sommer"]
 __license__ = "Apache-2.0"
@@ -39,6 +40,7 @@ __email__ = "philipp.sommer@hereon.de"
 __status__ = "Production"
 
 from itertools import chain
+from typing import TYPE_CHECKING
 
 from sphinx.util import logging
 import re
@@ -47,28 +49,27 @@ from docutils import nodes
 
 import sphinx
 
-from sphinx.util.docutils import SphinxDirective
-
+from sphinx.errors import PycodeError
 from sphinx.ext.autodoc import (
-    ClassDocumenter,
-    ModuleDocumenter,
     ALL,
-    PycodeError,
-    ModuleAnalyzer,
     AttributeDocumenter,
+    ClassDocumenter,
     DataDocumenter,
+    Documenter,
+    ExceptionDocumenter,
+    ModuleDocumenter,
     Options,
-    prepare_docstring,
 )
+from sphinx.pycode import ModuleAnalyzer
+from sphinx.util.docstrings import prepare_docstring
+from sphinx.util.docutils import SphinxDirective
 import sphinx.ext.autodoc as ad
 
 signature = Signature = None
 
 from sphinx.ext.autodoc.directive import (
-    AutodocDirective,
-    AUTODOC_DEFAULT_OPTIONS,
-    process_documenter_options,
-    DocumenterBridge,
+    AutodocDirective, AUTODOC_DEFAULT_OPTIONS, process_documenter_options,
+    DocumenterBridge
 )
 
 try:
@@ -76,7 +77,7 @@ try:
 except ImportError:
     from sphinx.ext.autodoc import Signature
 
-sphinx_version = list(map(float, re.findall(r"\d+", sphinx.__version__)[:3]))
+sphinx_version = list(map(float, re.findall(r'\d+', sphinx.__version__)[:3]))
 
 try:
     from sphinx.util import force_decode
@@ -86,7 +87,13 @@ except ImportError:
         return string
 
 
-__version__ = "0.2.12"  # Modified from original to avoid including the _version module
+__version__ = '0.2.15'  # Modified from original to avoid including the _version module
+
+
+if TYPE_CHECKING:  # pragma: no cover
+    DOCUMENTER_MIXIN_BASE = Documenter
+else:
+    DOCUMENTER_MIXIN_BASE = object
 
 
 logger = logging.getLogger(__name__)
@@ -94,32 +101,23 @@ logger = logging.getLogger(__name__)
 #: Options of the :class:`sphinx.ext.autodoc.ModuleDocumenter` that have an
 #: effect on the selection of members for the documentation
 member_options = {
-    "members",
-    "undoc-members",
-    "inherited-members",
-    "exclude-members",
-    "private-members",
-    "special-members",
-    "imported-members",
-    "ignore-module-all",
-}
+    'members', 'undoc-members', 'inherited-members', 'exclude-members',
+    'private-members', 'special-members', 'imported-members',
+    'ignore-module-all'}
 
 
 if signature is not None:  # sphinx >= 2.4.0
-
     def process_signature(obj):
         sig = signature(obj)
         return stringify_signature(sig)
-
 elif Signature is not None:  # sphinx >= 1.7
-
     def process_signature(obj):
         try:
             args = Signature(obj).format_args()
         except TypeError:
             return None
         else:
-            args = args.replace("\\", "\\\\")
+            args = args.replace('\\', '\\\\')
             return args
 
 
@@ -141,7 +139,7 @@ def _get_arg(param, pos, default, *args, **kwargs):
         return default
 
 
-class AutosummaryDocumenter(object):
+class AutosummaryDocumenter(DOCUMENTER_MIXIN_BASE):
     """Abstract class for for extending Documenter methods
 
     This classed is used as a base class for Documenters in order to provide
@@ -152,6 +150,8 @@ class AutosummaryDocumenter(object):
 
     #: Grouper functions
     grouper_funcs = []
+
+    member_sections: dict
 
     def __init__(self):
         raise NotImplementedError
@@ -201,22 +201,22 @@ class AutosummaryDocumenter(object):
             # be cached anyway)
             self.analyzer.find_attr_docs()
         except PycodeError as err:
-            logger.debug("[autodocsumm] module analyzer failed: %s", err)
+            logger.debug('[autodocsumm] module analyzer failed: %s', err)
             # no source file -- e.g. for builtin and C modules
             self.analyzer = None
             # at least add the module.__file__ as a dependency
-            if hasattr(self.module, "__file__") and self.module.__file__:
+            if hasattr(self.module, '__file__') and self.module.__file__:
                 record_dependencies.add(self.module.__file__)
         else:
             record_dependencies.add(self.analyzer.srcname)
 
-        self.env.temp_data["autodoc:module"] = self.modname
+        self.env.temp_data['autodoc:module'] = self.modname
         if self.objpath:
-            self.env.temp_data["autodoc:class"] = self.objpath[0]
+            self.env.temp_data['autodoc:class'] = self.objpath[0]
 
         if not self.options.autosummary_force_inline:
             docstring = self.get_doc() or []
-            autodocsumm_directive = ".. auto%ssumm::" % self.objtype
+            autodocsumm_directive = '.. auto%ssumm::' % self.objtype
             for s in chain.from_iterable(docstring):
                 if autodocsumm_directive in s:
                     return {}
@@ -224,35 +224,36 @@ class AutosummaryDocumenter(object):
         # set the members from the autosummary member options
         options_save = {}
         for option in member_options.intersection(self.option_spec):
-            autopt = "autosummary-" + option
+            autopt = 'autosummary-' + option
             if getattr(self.options, autopt):
                 options_save[option] = getattr(self.options, option)
                 self.options[option] = getattr(self.options, autopt)
 
-        want_all = (
-            all_members or self.options.inherited_members or self.options.members is ALL
-        )
+        want_all = all_members or self.options.inherited_members or \
+            self.options.members is ALL
         # find out which members are documentable
         members_check_module, members = self.get_object_members(want_all)
 
         # remove members given by exclude-members
         if self.options.exclude_members:
-            members = [
-                (membername, member)
-                for (membername, member) in members
-                if membername not in self.options.exclude_members
-            ]
+            try:
+                members = [
+                    member for member in members
+                    if member.__name__ not in self.options.exclude_members
+                ]
+            except AttributeError:  # Sphinx<3.4.0
+                members = [
+                    (membername, member) for (membername, member) in members
+                    if membername not in self.options.exclude_members
+                ]
 
         # document non-skipped members
         memberdocumenters = []
         registry = self.env.app.registry.documenters
 
-        for mname, member, isattr in self.filter_members(members, want_all):
-            classes = [
-                cls
-                for cls in registry.values()
-                if cls.can_document_member(member, mname, isattr, self)
-            ]
+        for (mname, member, isattr) in self.filter_members(members, want_all):
+            classes = [cls for cls in registry.values()
+                       if cls.can_document_member(member, mname, isattr, self)]
             if not classes:
                 # don't know how to document this member
                 continue
@@ -260,33 +261,35 @@ class AutosummaryDocumenter(object):
             classes.sort(key=lambda cls: cls.priority)
             # give explicitly separated module name, so that members
             # of inner classes can be documented
-            full_mname = self.modname + "::" + ".".join(self.objpath + [mname])
+            full_mname = self.modname + '::' + \
+                '.'.join(self.objpath + [mname])
 
             documenter = classes[-1](self.directive, full_mname, self.indent)
-            memberdocumenters.append((documenter, members_check_module and not isattr))
+            memberdocumenters.append((documenter,
+                                      members_check_module and not isattr))
 
-        member_order = self.options.member_order or self.env.config.autodoc_member_order
+        member_order = (
+            self.options.member_order or self.env.config.autodoc_member_order
+        )
         try:
-            memberdocumenters = self.sort_members(memberdocumenters, member_order)
+            memberdocumenters = self.sort_members(
+                memberdocumenters, member_order
+            )
         except AttributeError:  # sphinx<3.0
             pass
 
         documenters = {}
         for e in memberdocumenters:
-            section = self.member_sections.get(e[0].member_order, "Miscellaneous")
+            section = self.member_sections.get(
+                e[0].member_order, 'Miscellaneous')
             if self.env.app:
                 e[0].parse_name()
                 e[0].import_object()
                 if members_check_module and not e[0].check_module():
                     continue
                 user_section = self.env.app.emit_firstresult(
-                    "autodocsumm-grouper",
-                    self.objtype,
-                    e[0].object_name,
-                    e[0].object,
-                    section,
-                    self.object,
-                )
+                    'autodocsumm-grouper', self.objtype, e[0].object_name,
+                    e[0].object, section, self.object)
                 section = user_section or section
             if not use_sections or section in use_sections:
                 documenters.setdefault(section, []).append(e)
@@ -309,7 +312,10 @@ class AutosummaryDocumenter(object):
             Use paths relative to the current module instead of
             absolute import paths for each object
         """
-        if self.options.get("autosummary") and not self.options.get("no-autosummary"):
+        if (
+            self.options.get("autosummary")
+            and not self.options.get("no-autosummary")
+        ):
 
             grouped_documenters = self.get_grouped_documenters()
 
@@ -317,26 +323,26 @@ class AutosummaryDocumenter(object):
 
             for section, documenters in grouped_documenters.items():
                 if not self.options.autosummary_no_titles:
-                    self.add_line("**%s:**" % section, sourcename)
+                    self.add_line('**%s:**' % section, sourcename)
 
-                self.add_line("", sourcename)
+                self.add_line('', sourcename)
 
-                self.add_line(".. autosummary::", sourcename)
+                self.add_line('.. autosummary::', sourcename)
                 if self.options.autosummary_nosignatures:
-                    self.add_line("    :nosignatures:", sourcename)
-                self.add_line("", sourcename)
-                indent = "    "
+                    self.add_line('    :nosignatures:', sourcename)
+                self.add_line('', sourcename)
+                indent = '    '
 
-                for documenter, _ in documenters:
+                for (documenter, _) in documenters:
                     obj_ref_path = documenter.fullname
                     if relative_ref_paths:
                         modname = self.modname + "."
                         if documenter.fullname.startswith(modname):
-                            obj_ref_path = documenter.fullname[len(modname) :]
+                            obj_ref_path = documenter.fullname[len(modname):]
 
-                    self.add_line(indent + "~" + obj_ref_path, sourcename)
+                    self.add_line(indent + '~' + obj_ref_path, sourcename)
 
-                self.add_line("", sourcename)
+                self.add_line('', sourcename)
 
 
 class AutoSummModuleDocumenter(ModuleDocumenter, AutosummaryDocumenter):
@@ -350,28 +356,28 @@ class AutoSummModuleDocumenter(ModuleDocumenter, AutosummaryDocumenter):
 
     #: slightly higher priority than
     #: :class:`sphinx.ext.autodoc.ModuleDocumenter`
-    priority = ModuleDocumenter.priority + 0.1
+    priority = ModuleDocumenter.priority + 0.1  # type: ignore[assignment]
 
     #: original option_spec from :class:`sphinx.ext.autodoc.ModuleDocumenter`
     #: but with additional autosummary boolean option
     option_spec = ModuleDocumenter.option_spec.copy()
-    option_spec["autosummary"] = bool_option
-    option_spec["autosummary-no-nesting"] = bool_option
-    option_spec["autosummary-sections"] = list_option
-    option_spec["autosummary-no-titles"] = bool_option
-    option_spec["autosummary-force-inline"] = bool_option
-    option_spec["autosummary-nosignatures"] = bool_option
+    option_spec['autosummary'] = bool_option
+    option_spec['autosummary-no-nesting'] = bool_option
+    option_spec['autosummary-sections'] = list_option
+    option_spec['autosummary-no-titles'] = bool_option
+    option_spec['autosummary-force-inline'] = bool_option
+    option_spec['autosummary-nosignatures'] = bool_option
 
     #: Add options for members for the autosummary
     for _option in member_options.intersection(option_spec):
-        option_spec["autosummary-" + _option] = option_spec[_option]
+        option_spec['autosummary-' + _option] = option_spec[_option]
     del _option
 
     member_sections = {
-        ad.ClassDocumenter.member_order: "Classes",
-        ad.ExceptionDocumenter.member_order: "Exceptions",
-        ad.FunctionDocumenter.member_order: "Functions",
-        ad.DataDocumenter.member_order: "Data",
+        ad.ClassDocumenter.member_order: 'Classes',
+        ad.ExceptionDocumenter.member_order: 'Exceptions',
+        ad.FunctionDocumenter.member_order: 'Functions',
+        ad.DataDocumenter.member_order: 'Data',
     }
     """:class:`dict` that includes the autosummary sections
 
@@ -400,27 +406,27 @@ class AutoSummClassDocumenter(ClassDocumenter, AutosummaryDocumenter):
 
     #: slightly higher priority than
     #: :class:`sphinx.ext.autodoc.ClassDocumenter`
-    priority = ClassDocumenter.priority + 0.1
+    priority = ClassDocumenter.priority + 0.1  # type: ignore[assignment]
 
     #: original option_spec from :class:`sphinx.ext.autodoc.ClassDocumenter`
     #: but with additional autosummary boolean option
     option_spec = ClassDocumenter.option_spec.copy()
-    option_spec["autosummary"] = bool_option
-    option_spec["autosummary-no-nesting"] = bool_option
-    option_spec["autosummary-sections"] = list_option
-    option_spec["autosummary-no-titles"] = bool_option
-    option_spec["autosummary-force-inline"] = bool_option
-    option_spec["autosummary-nosignatures"] = bool_option
+    option_spec['autosummary'] = bool_option
+    option_spec['autosummary-no-nesting'] = bool_option
+    option_spec['autosummary-sections'] = list_option
+    option_spec['autosummary-no-titles'] = bool_option
+    option_spec['autosummary-force-inline'] = bool_option
+    option_spec['autosummary-nosignatures'] = bool_option
 
     #: Add options for members for the autosummary
     for _option in member_options.intersection(option_spec):
-        option_spec["autosummary-" + _option] = option_spec[_option]
+        option_spec['autosummary-' + _option] = option_spec[_option]
     del _option
 
     member_sections = {
-        ad.ClassDocumenter.member_order: "Classes",
-        ad.MethodDocumenter.member_order: "Methods",
-        ad.AttributeDocumenter.member_order: "Attributes",
+        ad.ClassDocumenter.member_order: 'Classes',
+        ad.MethodDocumenter.member_order: 'Methods',
+        ad.AttributeDocumenter.member_order: 'Attributes',
     }
     """:class:`dict` that includes the autosummary sections
 
@@ -431,17 +437,75 @@ class AutoSummClassDocumenter(ClassDocumenter, AutosummaryDocumenter):
     def add_content(self, *args, **kwargs):
         super().add_content(*args, **kwargs)
 
-        self.add_autosummary(relative_ref_paths=True)
+        # If the class is already documented under another name, Sphinx
+        # documents it as data/attribute. In this case, we do not want to
+        # generate an autosummary of the class for the attribute (see #69).
+        if not self.doc_as_attr:
+            self.add_autosummary(relative_ref_paths=True)
+
+
+class AutoSummExceptionDocumenter(ExceptionDocumenter, AutosummaryDocumenter):
+    """Exception Documenter with autosummary tables for its members.
+
+    This class has the same functionality as the base
+    :class:`sphinx.ext.autodoc.ExceptionDocumenter` class but with an
+    additional `autosummary` option to provide the ability to provide a summary
+    of all methods and attributes.
+    It's priority is slightly higher than the one of the ExceptionDocumenter
+    """
+
+    #: slightly higher priority than
+    #: :class:`sphinx.ext.autodoc.ExceptionDocumenter`
+    priority = ExceptionDocumenter.priority + 0.1  # type: ignore[assignment]
+
+    #: original option_spec from
+    #: :class:`sphinx.ext.autodoc.ExceptionDocumenter` but with additional
+    #: autosummary boolean option
+    option_spec = ExceptionDocumenter.option_spec.copy()
+    option_spec['autosummary'] = bool_option
+    option_spec['autosummary-no-nesting'] = bool_option
+    option_spec['autosummary-sections'] = list_option
+    option_spec['autosummary-no-titles'] = bool_option
+    option_spec['autosummary-force-inline'] = bool_option
+    option_spec['autosummary-nosignatures'] = bool_option
+
+    #: Add options for members for the autosummary
+    for _option in member_options.intersection(option_spec):
+        option_spec['autosummary-' + _option] = option_spec[_option]
+    del _option
+
+    member_sections = {
+        ad.ExceptionDocumenter.member_order: 'Classes',
+        ad.MethodDocumenter.member_order: 'Methods',
+        ad.AttributeDocumenter.member_order: 'Attributes',
+    }
+    """:class:`dict` that includes the autosummary sections
+
+    This dictionary defines the sections for the autosummmary option. The
+    values correspond to the :attr:`sphinx.ext.autodoc.Documenter.member_order`
+    attribute that shall be used for each section."""
+
+    def add_content(self, *args, **kwargs):
+        super().add_content(*args, **kwargs)
+
+        # If the class is already documented under another name, Sphinx
+        # documents it as data/attribute. In this case, we do not want to
+        # generate an autosummary of the class for the attribute (see #69).
+        if not self.doc_as_attr:
+            self.add_autosummary(relative_ref_paths=True)
 
 
 class CallableDataDocumenter(DataDocumenter):
-    """:class:`sphinx.ext.autodoc.DataDocumenter` that uses the __call__ attr"""
+    """:class:`sphinx.ext.autodoc.DataDocumenter` that uses the __call__ attr
+    """
 
-    priority = DataDocumenter.priority + 0.1
+    #: slightly higher priority than
+    #: :class:`sphinx.ext.autodoc.DataDocumenter`
+    priority = DataDocumenter.priority + 0.1  # type: ignore[assignment]
 
     def format_args(self):
         # for classes, the relevant signature is the __init__ method's
-        callmeth = self.get_attr(self.object, "__call__", None)
+        callmeth = self.get_attr(self.object, '__call__', None)
         if callmeth is None:
             return None
         return process_signature(callmeth)
@@ -449,27 +513,29 @@ class CallableDataDocumenter(DataDocumenter):
     def get_doc(self, *args, **kwargs):
         """Reimplemented  to include data from the call method"""
         content = self.env.config.autodata_content
-        if content not in ("both", "call") or not self.get_attr(
-            self.get_attr(self.object, "__call__", None), "__doc__"
-        ):
-            return super(CallableDataDocumenter, self).get_doc(*args, **kwargs)
+        if content not in ('both', 'call') or not self.get_attr(
+                self.get_attr(self.object, '__call__', None), '__doc__'):
+            return super(CallableDataDocumenter, self).get_doc(
+                *args, **kwargs
+            )
 
         # for classes, what the "docstring" is can be controlled via a
         # config value; the default is both docstrings
         docstrings = []
-        if content != "call":
-            docstring = self.get_attr(self.object, "__doc__", None)
-            docstrings = [docstring + "\n"] if docstring else []
+        if content != 'call':
+            docstring = self.get_attr(self.object, '__doc__', None)
+            docstrings = [docstring + '\n'] if docstring else []
         calldocstring = self.get_attr(
-            self.get_attr(self.object, "__call__", None), "__doc__"
-        )
+            self.get_attr(self.object, '__call__', None), '__doc__')
         if docstrings:
             docstrings[0] += calldocstring
         else:
-            docstrings.append(calldocstring + "\n")
+            docstrings.append(calldocstring + '\n')
 
         doc = []
         for docstring in docstrings:
+            encoding = _get_arg("encoding", 0, None, *args, **kwargs)
+            ignore = _get_arg("ignore", 1, 1, *args, **kwargs)
             if not isinstance(docstring, str):
                 docstring = force_decode(docstring, encoding)
             doc.append(prepare_docstring(docstring, ignore))
@@ -482,11 +548,13 @@ class CallableAttributeDocumenter(AttributeDocumenter):
     attr
     """
 
-    priority = AttributeDocumenter.priority + 0.1
+    #: slightly higher priority than
+    #: :class:`sphinx.ext.autodoc.AttributeDocumenter`
+    priority = AttributeDocumenter.priority + 0.1  # type: ignore[assignment]
 
     def format_args(self):
         # for classes, the relevant signature is the __init__ method's
-        callmeth = self.get_attr(self.object, "__call__", None)
+        callmeth = self.get_attr(self.object, '__call__', None)
         if callmeth is None:
             return None
         return process_signature(callmeth)
@@ -494,24 +562,24 @@ class CallableAttributeDocumenter(AttributeDocumenter):
     def get_doc(self, *args, **kwargs):
         """Reimplemented  to include data from the call method"""
         content = self.env.config.autodata_content
-        if content not in ("both", "call") or not self.get_attr(
-            self.get_attr(self.object, "__call__", None), "__doc__"
-        ):
-            return super(CallableAttributeDocumenter, self).get_doc(*args, **kwargs)
+        if content not in ('both', 'call') or not self.get_attr(
+                self.get_attr(self.object, '__call__', None), '__doc__'):
+            return super(CallableAttributeDocumenter, self).get_doc(
+                *args, **kwargs
+            )
 
         # for classes, what the "docstring" is can be controlled via a
         # config value; the default is both docstrings
         docstrings = []
-        if content != "call":
-            docstring = self.get_attr(self.object, "__doc__", None)
-            docstrings = [docstring + "\n"] if docstring else []
+        if content != 'call':
+            docstring = self.get_attr(self.object, '__doc__', None)
+            docstrings = [docstring + '\n'] if docstring else []
         calldocstring = self.get_attr(
-            self.get_attr(self.object, "__call__", None), "__doc__"
-        )
+            self.get_attr(self.object, '__call__', None), '__doc__')
         if docstrings:
             docstrings[0] += calldocstring
         else:
-            docstrings.append(calldocstring + "\n")
+            docstrings.append(calldocstring + '\n')
 
         doc = []
         if sphinx_version < [4, 0]:
@@ -543,52 +611,48 @@ def dont_document_data(config, fullname):
     bool
         Whether the data of `fullname` should be excluded or not"""
     if config.document_data is True:
-        document_data = [re.compile(".*")]
+        document_data = [re.compile('.*')]
     else:
         document_data = config.document_data
     if config.not_document_data is True:
-        not_document_data = [re.compile(".*")]
+        not_document_data = [re.compile('.*')]
     else:
         not_document_data = config.not_document_data
     return (
-        # data should not be documented
-        (any(re.match(p, fullname) for p in not_document_data))
-        or
-        # or data is not included in what should be documented
-        (not any(re.match(p, fullname) for p in document_data))
-    )
+            # data should not be documented
+            (any(re.match(p, fullname) for p in not_document_data)) or
+            # or data is not included in what should be documented
+            (not any(re.match(p, fullname) for p in document_data)))
 
 
 class NoDataDataDocumenter(CallableDataDocumenter):
     """DataDocumenter that prevents the displaying of large data"""
 
     #: slightly higher priority as the one of the CallableDataDocumenter
-    priority = CallableDataDocumenter.priority + 0.1
+    priority = CallableDataDocumenter.priority + 0.1  # type: ignore[assignment]
 
     def __init__(self, *args, **kwargs):
         super(NoDataDataDocumenter, self).__init__(*args, **kwargs)
-        fullname = ".".join(self.name.rsplit("::", 1))
-        if hasattr(self.env, "config") and dont_document_data(
-            self.env.config, fullname
-        ):
+        fullname = '.'.join(self.name.rsplit('::', 1))
+        if hasattr(self.env, 'config') and dont_document_data(
+                self.env.config, fullname):
             self.options = Options(self.options)
-            self.options.annotation = " "
+            self.options.annotation = ' '
 
 
 class NoDataAttributeDocumenter(CallableAttributeDocumenter):
     """AttributeDocumenter that prevents the displaying of large data"""
 
     #: slightly higher priority as the one of the CallableAttributeDocumenter
-    priority = CallableAttributeDocumenter.priority + 0.1
+    priority = CallableAttributeDocumenter.priority + 0.1  # type: ignore[assignment]
 
     def __init__(self, *args, **kwargs):
         super(NoDataAttributeDocumenter, self).__init__(*args, **kwargs)
-        fullname = ".".join(self.name.rsplit("::", 1))
-        if hasattr(self.env, "config") and dont_document_data(
-            self.env.config, fullname
-        ):
+        fullname = '.'.join(self.name.rsplit('::', 1))
+        if hasattr(self.env, 'config') and dont_document_data(
+                self.env.config, fullname):
             self.options = Options(self.options)
-            self.options.annotation = " "
+            self.options.annotation = ' '
 
 
 class AutoDocSummDirective(SphinxDirective):
@@ -596,13 +660,15 @@ class AutoDocSummDirective(SphinxDirective):
 
     Usage::
 
-        .. autoclasssum:: <Class>
+        .. autoclasssumm:: <Class>
 
-        .. automodsum:: <module>
+        .. automodsumm:: <module>
 
-    The directive additionally supports all options of the ``autoclass`` or
-    ``automod`` directive respectively. Sections can be a list of section titles
-    to be included. If ommitted, all sections are used.
+        .. autoexceptionsumm:: <ExceptionClass>
+
+    The directive additionally supports all options of the ``autoclass``,
+    ``automod``, or ``autoexception`` directive respectively. Sections can be a
+    list of section titles to be included. If ommitted, all sections are used.
     """
 
     has_content = False
@@ -616,38 +682,34 @@ class AutoDocSummDirective(SphinxDirective):
         reporter = self.state.document.reporter
 
         try:
-            source, lineno = reporter.get_source_and_line(self.lineno)
+            _, lineno = reporter.get_source_and_line(self.lineno)
         except AttributeError:
-            source, lineno = (None, None)
+            _, lineno = (None, None)
 
         # look up target Documenter
         objtype = self.name[4:-4]  # strip prefix (auto-) and suffix (-summ).
         doccls = self.env.app.registry.documenters[objtype]
 
-        self.options["autosummary-force-inline"] = "True"
-        self.options["autosummary"] = "True"
-        if "no-members" not in self.options:
-            self.options["members"] = ""
+        self.options['autosummary-force-inline'] = "True"
+        self.options['autosummary'] = "True"
+        if 'no-members' not in self.options:
+            self.options['members'] = ""
 
         # process the options with the selected documenter's option_spec
         try:
-            documenter_options = process_documenter_options(
-                doccls, self.config, self.options
-            )
+            documenter_options = process_documenter_options(doccls, self.config,
+                                                            self.options)
         except (KeyError, ValueError, TypeError) as exc:
             # an option is either unknown or has a wrong type
             logger.error(
-                "An option to %s is either unknown or has an invalid " "value: %s",
-                self.name,
-                exc,
-                location=(self.env.docname, lineno),
-            )
+                'An option to %s is either unknown or has an invalid '
+                'value: %s', self.name, exc,
+                location=(self.env.docname, lineno))
             return []
 
         # generate the output
-        params = DocumenterBridge(
-            self.env, reporter, documenter_options, lineno, self.state
-        )
+        params = DocumenterBridge(self.env, reporter, documenter_options,
+                                  lineno, self.state)
         documenter = doccls(params, self.arguments[0])
         documenter.add_autosummary()
 
@@ -658,47 +720,49 @@ class AutoDocSummDirective(SphinxDirective):
         return node.children
 
 
-def setup(app):
-    """setup function for using this module as a sphinx extension"""
-    app.setup_extension("sphinx.ext.autosummary")
-    app.setup_extension("sphinx.ext.autodoc")
-    app.add_directive("autoclasssumm", AutoDocSummDirective)
-    app.add_directive("automodulesumm", AutoDocSummDirective)
+def _before_config_inited(app, config):
+    # Enable the legacy (``Documenter``) autodoc implementation
+    # for all users of the extension.
+    config.autodoc_use_legacy_class_based = True
 
-    AUTODOC_DEFAULT_OPTIONS.extend(
-        [
-            option
-            for option in AutoSummModuleDocumenter.option_spec
-            if option not in AUTODOC_DEFAULT_OPTIONS
-        ]
-    )
 
-    AUTODOC_DEFAULT_OPTIONS.extend(
-        [
-            option
-            for option in AutoSummClassDocumenter.option_spec
-            if option not in AUTODOC_DEFAULT_OPTIONS
-        ]
-    )
-
+def _after_config_inited(app, config):
     # make sure to allow inheritance when registering new documenters
     registry = app.registry.documenters
-    for cls in [
-        AutoSummClassDocumenter,
-        AutoSummModuleDocumenter,
-        CallableAttributeDocumenter,
-        NoDataDataDocumenter,
-        NoDataAttributeDocumenter,
-    ]:
+    for cls in [AutoSummClassDocumenter, AutoSummModuleDocumenter,
+                CallableAttributeDocumenter, NoDataDataDocumenter,
+                NoDataAttributeDocumenter, AutoSummExceptionDocumenter]:
         if not issubclass(registry.get(cls.objtype), cls):
             app.add_autodocumenter(cls, override=True)
 
+
+def setup(app):
+    """setup function for using this module as a sphinx extension"""
+    # Run before sphinx.ext.autodoc._register_directives().
+    app.connect("config-inited", _before_config_inited, priority=400)
+    # Run after sphinx.ext.autodoc._register_directives().
+    app.connect("config-inited", _after_config_inited, priority=600)
+
+    app.setup_extension('sphinx.ext.autosummary')
+    app.setup_extension('sphinx.ext.autodoc')
+    app.add_directive('autoclasssumm', AutoDocSummDirective)
+    app.add_directive('autoexceptionsumm', AutoDocSummDirective)
+    app.add_directive('automodulesumm', AutoDocSummDirective)
+
+    AUTODOC_DEFAULT_OPTIONS.extend(
+        [option for option in AutoSummModuleDocumenter.option_spec
+         if option not in AUTODOC_DEFAULT_OPTIONS])
+
+    AUTODOC_DEFAULT_OPTIONS.extend(
+        [option for option in AutoSummClassDocumenter.option_spec
+         if option not in AUTODOC_DEFAULT_OPTIONS])
+
     # group event
-    app.add_event("autodocsumm-grouper")
+    app.add_event('autodocsumm-grouper')
 
     # config value
-    app.add_config_value("autodata_content", "class", True)
-    app.add_config_value("document_data", True, True)
-    app.add_config_value("not_document_data", [], True)
-    app.add_config_value("autodocsumm_section_sorter", None, True)
-    return {"version": sphinx.__display_version__, "parallel_read_safe": True}
+    app.add_config_value('autodata_content', 'class', True)
+    app.add_config_value('document_data', True, True)
+    app.add_config_value('not_document_data', [], True)
+    app.add_config_value('autodocsumm_section_sorter', None, True)
+    return {'version': sphinx.__display_version__, 'parallel_read_safe': True}
