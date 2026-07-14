@@ -223,10 +223,8 @@ lint = { cmd = """ruff check""" }
 lint-ext = { cmd = """ruff check --extend-select B,C4,SIM,PIE,UP,PERF,NPY,RUF""" }
 
 [tool.pixi.environments]
-default = { solve-group = "dev" }
-prod = { features = ["py310", "kernel", "recommended"], solve-group = "dev" }
+default = { features = ["py310", "recommended", "test", "dev"], solve-group = "dev" }
 test = { features = ["py310", "recommended", "test"], solve-group = "dev" }
-dev = { features = ["py310", "recommended", "test", "dev"], solve-group = "dev" }
 docs = { features = ["py311", "recommended", "docs"] }
 # The following environments exist only to ensure that a production environment
 # can be resolved
@@ -235,6 +233,8 @@ py310 = { features = ["py310", "kernel", "recommended"] }
 py311 = { features = ["py311", "kernel", "recommended"] }
 py312 = { features = ["py312", "kernel", "recommended"] }
 py313 = { features = ["py313", "kernel", "recommended"] }
+# Deprecated
+dev = { features = ["py310", "recommended", "test", "dev"], solve-group = "dev" }
 
 [tool.setuptools]
 include-package-data = true # Required because of package data

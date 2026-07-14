@@ -389,7 +389,7 @@ To run the test suite, invoke ``pytest`` with the following command:
 
 .. code:: shell
 
-   pixi run -e dev pytest
+   pixi run pytest
 
 Testing guidelines
 ******************
