@@ -69,6 +69,7 @@ docs = [
 ]
 test = [
   "pytest",
+  "coverage>=7.13",
   "pytest-cov",
   "pytest-json-report",
   "asv==0.6.*",
@@ -239,51 +240,6 @@ py310 = { features = ["py310", "kernel", "recommended"] }
 py311 = { features = ["py311", "kernel", "recommended"] }
 py312 = { features = ["py312", "kernel", "recommended"] }
 py313 = { features = ["py313", "kernel", "recommended"] }
-
-[tool.pytest.ini_options]
-addopts = "-p no:robotframework --tb=short -vv -ra"
-filterwarnings = [
-  "error",
-  # Remove the following when environment issues are solved
-  "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning",
-  # Ignore pyparsing deprecation warnings from matplotlib (remove when matplotlib is updated)
-  "ignore:.*deprecated - use.*:DeprecationWarning:matplotlib.*",
-  "ignore:.*argument is deprecated.*:DeprecationWarning:matplotlib.*",
-  "ignore:.*argument is deprecated.*:DeprecationWarning:pyparsing.*",
-  # Remove the warnings coming from deprecated usage of utcnow in Joseki
-  "ignore:.*utcnow.*:DeprecationWarning",
-  # Ignore Skyfield ephemeris file handle warnings (expected behaviour)
-  "ignore:.*de421.bsp.*:ResourceWarning",
-]
-markers = ["unit", "system", "regression"]
-testpaths = "tests"
-
-[tool.coverage.html]
-directory = "./reports/coverage/html"
-
-[tool.coverage.json]
-output = "./reports/coverage/coverage.json"
-
-[tool.coverage.report]
-omit = ["src/*/__init__.py", "src/*/_version.py"]
-precision = 2
-show_missing = true
-skip_covered = true
-
-[tool.coverage.run]
-branch = true
-parallel = true
-source = ["src/"]
-
-[tool.ruff]
-exclude = ["docs/_ext/autodocsumm.py", "src/eradiate/test_tools/benchmark/asvdb.py"]
-include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
-
-[tool.ruff.lint]
-ignore = ["E501", "F821"]
-isort = { relative-imports-order = "closest-to-furthest" }
-per-file-ignores = { "*.ipynb" = ["E402"] }
-select = ["I", "F", "E"]
 
 [tool.setuptools]
 include-package-data = true # Required because of package data

@@ -1,0 +1,16 @@
+[html]
+directory = "./reports/coverage/html"
+
+[json]
+output = "./reports/coverage/coverage.json"
+
+[report]
+omit = ["src/*/__init__.py", "src/*/_version.py"]
+precision = 2
+show_missing = true
+skip_covered = true
+
+[run]
+branch = true
+parallel = true
+source = ["src/"]
