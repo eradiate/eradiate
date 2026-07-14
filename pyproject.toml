@@ -137,7 +137,7 @@ netcdf4 = "*"
 # All supported Python versions are listed
 py39 = { dependencies = { python = "3.9.*" } }
 py310 = { dependencies = { python = "3.10.*" } } # Current dev version
-py311 = { dependencies = { python = "3.11.*" } }
+py311 = { dependencies = { python = "3.11.*" } } # Current docs version
 py312 = { dependencies = { python = "3.12.*" } }
 py313 = { dependencies = { python = "3.13.*" } }
 
@@ -194,20 +194,13 @@ test-slow-report = { cmd = """
 """ }
 
 [tool.pixi.feature.docs.tasks]
+# Docs build
 docs = { cmd = "make -C docs html && echo \"Documentation index at docs/_build/html/index.html\"" }
 docs-build = { depends-on = ["docs"] }
 docs-clean = { cmd = "make -C docs clean" }
 docs-clean-build = { cmd = "make -C docs clean-build" }
 docs-clean-generated = { cmd = "make -C docs clean-generated" }
 docs-pdf = { cmd = "make -C docs latexpdf && echo \"Documentation PDF at docs/_build/latex/eradiate.pdf\"" }
-
-[tool.pixi.feature.dev.tasks]
-release = { cmd = "python resources/release.py" }
-# Version bump
-bump = { cmd = "bump-my-version bump --new-version $RELEASE_VERSION" }
-bump-show = { cmd = "bump-my-version show-bump" }
-bump-dry = { cmd = "bump-my-version bump --new-version $RELEASE_VERSION --dry-run --verbose" }
-# Docs build
 docs-serve = { cmd = "make -C docs serve" }
 docs-linkcheck = { cmd = "make -C docs linkcheck" }
 docs-render-tutorials = { cmd = "python tutorials/run.py run" }
@@ -215,9 +208,16 @@ docs-render-tutorials = { cmd = "python tutorials/run.py run" }
 #    'build.tools.python' entry in .readthedocs.yml
 docs-lock = { cmd = """
   uv pip compile --upgrade --quiet --no-progress \
-    --python-version 3.10 --group docs --extra recommended \
+    --python-version 3.11 --group docs --extra recommended \
     --output-file docs/requirements.txt pyproject.toml
 """ }
+
+[tool.pixi.feature.dev.tasks]
+release = { cmd = "python resources/release.py" }
+# Version bump
+bump = { cmd = "bump-my-version bump --new-version $RELEASE_VERSION" }
+bump-show = { cmd = "bump-my-version show-bump" }
+bump-dry = { cmd = "bump-my-version bump --new-version $RELEASE_VERSION --dry-run --verbose" }
 # Linting
 lint = { cmd = """ruff check""" }
 lint-ext = { cmd = """ruff check --extend-select B,C4,SIM,PIE,UP,PERF,NPY,RUF""" }
@@ -226,13 +226,8 @@ lint-ext = { cmd = """ruff check --extend-select B,C4,SIM,PIE,UP,PERF,NPY,RUF"""
 default = { solve-group = "dev" }
 prod = { features = ["py310", "kernel", "recommended"], solve-group = "dev" }
 test = { features = ["py310", "recommended", "test"], solve-group = "dev" }
-dev = { features = [
-  "py310",
-  "recommended",
-  "test",
-  "docs",
-  "dev",
-], solve-group = "dev" }
+dev = { features = ["py310", "recommended", "test", "dev"], solve-group = "dev" }
+docs = { features = ["py311", "recommended", "docs"] }
 # The following environments exist only to ensure that a production environment
 # can be resolved
 py39 = { features = ["py39", "kernel", "recommended"] }

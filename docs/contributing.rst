@@ -22,7 +22,7 @@ command:
 
 .. code:: shell
 
-    pixi run -e dev docs-build
+    pixi run -e docs docs-build
 
 After the build is completed, the html document is located in
 :code:`$ERADIATE_SOURCE_DIR/docs/_build/html`.
@@ -31,7 +31,7 @@ Alternatively, an automatically refreshed server can be started:
 
 .. code:: shell
 
-    pixi run -e dev docs-serve
+    pixi run -e docs docs-serve
 
 Editing the data documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -221,7 +221,7 @@ The recommended way to edit tutorials is as follows:
 
    .. code:: shell
 
-      pixi run -e dev docs-serve
+      pixi run -e docs docs-serve
 
 3. Browse to the tutorial you want to edit or create a new one using the
    tutorial template. You can now edit the content and see how it renders
