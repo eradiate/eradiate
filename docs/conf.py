@@ -53,7 +53,12 @@ html_theme = "shibuya"
 html_title = ""
 
 templates_path = ["_templates"]  # Path to templates, relative to this directory.
-exclude_patterns = ["_build", "tutorials/README.md", "_generate"]
+exclude_patterns = [
+    "_build",
+    "tutorials/README.md",
+    "tutorials/_tutorial_template.ipynb",
+    "_generate",
+]
 html_static_path = ["_static"]
 
 extensions = [
@@ -99,8 +104,6 @@ bibtex_reference_style = "author_year"
 # -- Tutorials -----------------------------------------------------------------
 # https://nbsphinx.readthedocs.io/
 
-if not os.path.exists("tutorials"):
-    os.symlink("../tutorials", "tutorials", target_is_directory=True)
 nbsphinx_execute = "never"
 nbsphinx_prolog = """
 {% if env.doc2path(env.docname, base=None).startswith("tutorials/") %}

@@ -25,6 +25,6 @@ sphinx:
 submodules:
   include:
     - resources/data
-    - tutorials
+    - docs/tutorials
     - ext/mitsuba
   recursive: true
