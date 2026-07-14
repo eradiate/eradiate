@@ -200,21 +200,21 @@ root of the cloned repository and install it:
 
 .. code:: shell
 
-   pixi install -e dev
+   pixi install
 
 Once installed, we **strongly recommend** to activate the Pixi environment in a
 shell, either by spawning a Pixi shell
 
 .. code:: shell
 
-   pixi shell -e dev
+   pixi shell
 
 or by activating the shell hook (discouraged by the Pixi documentation but
 useful in specific cases)
 
 .. code:: shell
 
-   eval "$(pixi shell-hook -e dev)"
+   eval "$(pixi shell-hook)"
 
 The `Pixi documentation <https://pixi.sh/latest/features/environment/#activation>`__
 provides more detail about activation modes and their respective trade-offs. The
@@ -235,7 +235,7 @@ setup.
 
    .. code:: shell
 
-      pixi shell --manifest-path /some/directory/pyproject.toml -e dev
+      pixi shell --manifest-path /some/directory/pyproject.toml
 
    See the `Pixi CLI documentation <https://pixi.sh/latest/reference/cli/#shell>`__
    for details.

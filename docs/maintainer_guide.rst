@@ -57,7 +57,7 @@ Making a release of Eradiate
 
       .. code:: shell
 
-         pixi shell -e dev
+         pixi shell
 
    3. In your shell, set the variable ``RELEASE_VERSION`` to the target version
       value:
