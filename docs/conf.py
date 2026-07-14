@@ -12,8 +12,23 @@ if RTD:
         html_context = {}
     html_context["READTHEDOCS"] = True
 
-    # Mock Mitsuba modules (required to render on RTD)
-    MOCK_MODULES = ["mitsuba", "mitsuba.python.util", "mitsuba.scalar_rgb", "drjit"]
+# -- Kernel mocking ------------------------------------------------------------
+
+# The rendering kernel is not always importable: RTD installs no kernel wheel,
+# and a local source build may target a different Python version than the docs
+# environment. Mock it when it is missing; autodoc only needs the namespace.
+MOCK_MODULES = ["mitsuba", "mitsuba.python.util", "mitsuba.scalar_rgb", "drjit"]
+
+try:
+    import drjit  # noqa: F401
+    import mitsuba  # noqa: F401
+except ImportError:
+    # A failed import leaves partially initialized modules behind, which would
+    # shadow the mocks
+    for mod_name in list(sys.modules):
+        if mod_name.startswith(("drjit", "mitsuba")):
+            del sys.modules[mod_name]
+
     for mod_name in MOCK_MODULES:
         sys.modules[mod_name] = mock.Mock()
 

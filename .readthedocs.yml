@@ -5,11 +5,11 @@
 version: 2
 
 build:
-  os: ubuntu-22.04
+  os: ubuntu-24.04
   tools:
     # Important: If the version changes, do not forget to sync it with the
     # 'docs-lock' Pixi task in pyproject.toml
-    python: "3.10"
+    python: "3.11"
 
 python:
   # Install Eradiate package in environment
