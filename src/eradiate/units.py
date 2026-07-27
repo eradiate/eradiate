@@ -152,26 +152,32 @@ def _make_unit_context():
     uctx.register(
         PhysicalQuantity.INTENSITY,
         pinttrs.UnitGenerator(
-            lambda: unit_registry.watt
-            / unit_registry.steradian
-            / uctx.get(PhysicalQuantity.WAVELENGTH)
+            lambda: (
+                unit_registry.watt
+                / unit_registry.steradian
+                / uctx.get(PhysicalQuantity.WAVELENGTH)
+            )
         ),
     )
     uctx.register(
         PhysicalQuantity.IRRADIANCE,
         pinttrs.UnitGenerator(
-            lambda: unit_registry.watt
-            / uctx.get(PhysicalQuantity.LENGTH) ** 2
-            / uctx.get(PhysicalQuantity.WAVELENGTH)
+            lambda: (
+                unit_registry.watt
+                / uctx.get(PhysicalQuantity.LENGTH) ** 2
+                / uctx.get(PhysicalQuantity.WAVELENGTH)
+            )
         ),
     )
     uctx.register(
         PhysicalQuantity.RADIANCE,
         pinttrs.UnitGenerator(
-            lambda: unit_registry.watt
-            / uctx.get(PhysicalQuantity.LENGTH) ** 2
-            / unit_registry.steradian
-            / uctx.get(PhysicalQuantity.WAVELENGTH)
+            lambda: (
+                unit_registry.watt
+                / uctx.get(PhysicalQuantity.LENGTH) ** 2
+                / unit_registry.steradian
+                / uctx.get(PhysicalQuantity.WAVELENGTH)
+            )
         ),
     )
 

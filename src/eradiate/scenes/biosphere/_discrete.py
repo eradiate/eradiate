@@ -52,12 +52,14 @@ class DiscreteCanopy(Canopy):
     instanced_canopy_elements: list[InstancedCanopyElement] = documented(
         attrs.field(
             factory=list,
-            converter=lambda value: [
-                _instanced_canopy_elements_converter(x)
-                for x in pinttrs.util.always_iterable(value)
-            ]
-            if not isinstance(value, MutableMapping)
-            else [_instanced_canopy_elements_converter(value)],
+            converter=lambda value: (
+                [
+                    _instanced_canopy_elements_converter(x)
+                    for x in pinttrs.util.always_iterable(value)
+                ]
+                if not isinstance(value, MutableMapping)
+                else [_instanced_canopy_elements_converter(value)]
+            ),
             validator=attrs.validators.deep_iterable(
                 member_validator=attrs.validators.instance_of(InstancedCanopyElement)
             ),
