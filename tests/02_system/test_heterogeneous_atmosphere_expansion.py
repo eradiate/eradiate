@@ -6,7 +6,7 @@ from eradiate import unit_registry as ureg
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("bottom", [0.0, 1.0, 1.0])
+@pytest.mark.parametrize("bottom", [0.0, 1.0, 10.0])
 @pytest.mark.parametrize("tau_ref", [0.1, 1.0, 10.0])
 def test_heterogeneous_atmosphere_expansion_particle_layer(
     mode_ckd_double, bottom, tau_ref, ert_seed_state

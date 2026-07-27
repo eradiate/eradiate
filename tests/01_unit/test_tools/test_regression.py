@@ -10,11 +10,11 @@ import eradiate.test_tools.regression as tt
     [
         (tt.RMSETest, "rmse"),
         (tt.Chi2Test, "chi2"),
-        (tt.IndependentStudentTTest, "t-test"),
-        (tt.PairedStudentTTest, "t-test"),
+        (tt.IndependentStudentTTest, "independent_t-test"),
+        (tt.PairedStudentTTest, "paired_t-test"),
         (tt.ZTest, "z-test"),
     ],
-    ids=["rmse", "chi2", "t-test", "t-test", "z-test"],
+    ids=["rmse", "chi2", "independent_t-test", "paired_t-test", "z-test"],
 )
 def test_instantiate(cls, name):
     # instantiate the test with reasonable defaults

@@ -83,7 +83,7 @@ docs = [
   "shibuya",
 ]
 test = [
-  "pytest",
+  "pytest>=9.0",
   "coverage>=7.13",
   "pytest-cov",
   "pytest-json-report",
