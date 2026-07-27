@@ -110,7 +110,8 @@ class CKDQuadConfig:
                 warnings.warn(
                     "An advanced spectral quadrature configuration was defined, "
                     "but this feature is currently disabled. Falling back to a "
-                    f"fixed quadrature point policy with {self.ng_max} g-points."
+                    f"fixed quadrature point policy with {self.ng_max} g-points.",
+                    stacklevel=2,
                 )
             ng = self.ng_max
 

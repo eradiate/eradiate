@@ -148,7 +148,8 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             warnings.warn(
                 "While initializing ParticleLayer: the provided aerosol "
                 "single-scattering property dataset does not contain the selected "
-                f"reference wavelength (w_ref = {value})"
+                f"reference wavelength (w_ref = {value})",
+                stacklevel=2,
             )
 
     tau_ref: pint.Quantity = documented(

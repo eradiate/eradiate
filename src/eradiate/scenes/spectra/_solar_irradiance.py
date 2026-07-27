@@ -36,7 +36,8 @@ def _datetime_converter(x: Any):
             warnings.warn(
                 "To use the date-based Solar irradiance scaling feature, you "
                 "must install dateutil.\n"
-                "See instructions on https://dateutil.readthedocs.io/#installation."
+                "See instructions on https://dateutil.readthedocs.io/#installation.",
+                stacklevel=2,
             )
             raise
 
@@ -46,7 +47,8 @@ def _datetime_converter(x: Any):
             warnings.warn(
                 "To use the date-based Solar irradiance scaling feature, you "
                 "must install skyfield.\n"
-                "See instructions on https://rhodesmill.org/skyfield/."
+                "See instructions on https://rhodesmill.org/skyfield/.",
+                stacklevel=2,
             )
             raise
 

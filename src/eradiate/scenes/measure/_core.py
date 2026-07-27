@@ -180,7 +180,8 @@ class Measure(NodeSceneElement, ABC):
             warnings.warn(
                 f"Measure {self.id} is defined with a sample count greater "
                 "than 1e5, but the selected mode is single-precision: results "
-                "may be incorrect."
+                "may be incorrect.",
+                stacklevel=2,
             )
 
     @property

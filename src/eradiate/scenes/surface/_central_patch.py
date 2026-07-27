@@ -88,6 +88,7 @@ class CentralPatchSurface(Surface):
                     f"'{attribute.name}.bsdf' should be set to None; it will "
                     "be overridden upon kernel dictionary generation",
                     OverriddenValueWarning,
+                    stacklevel=2,
                 )
 
     bsdf: BSDF = documented(
@@ -149,7 +150,10 @@ class CentralPatchSurface(Surface):
         # Force BSDF referencing if the shape is defined
         if self.shape is not None:
             if isinstance(self.shape.bsdf, BSDF):
-                warnings.warn("Set BSDF will be overridden by surface BSDF settings.")
+                warnings.warn(
+                    "Set BSDF will be overridden by surface BSDF settings.",
+                    stacklevel=2,
+                )
             self.shape.bsdf = Ref(id=self._bsdf_id)
 
     @property
