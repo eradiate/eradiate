@@ -4,10 +4,10 @@ The Eradiate command-line interface, built with Typer and Rich.
 
 import logging
 from enum import Enum
+from typing import Annotated
 
 import typer
 from rich.logging import RichHandler
-from typing_extensions import Annotated
 
 from . import data, srf, sys_info
 

@@ -232,7 +232,7 @@ class InstancedCanopyElement(CompositeSceneElement):
 
         instance_positions = []
 
-        with open(filename, "r") as f:
+        with open(filename) as f:
             for i_line, line in enumerate(f):
                 try:
                     coords = np.array(line.split(), dtype=float)

@@ -3,13 +3,12 @@ Command-line interface to the :mod:`~eradiate.srf_tools` module.
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import Annotated, Optional
 
 import pint
 import typer
 import xarray as xr
 from rich.console import Console
-from typing_extensions import Annotated
 
 app = typer.Typer()
 console = Console(color_system=None)
