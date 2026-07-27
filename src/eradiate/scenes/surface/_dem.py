@@ -36,7 +36,7 @@ def _middle(a, axis=None):
     return 0.5 * (a_min + a_max)
 
 
-def _apply(transform: "mitsuba.ScalarTransform4f", vertices):
+def _apply(transform: mitsuba.ScalarTransform4f, vertices):
     """
     Apply a Mitsuba transform to a Numpy buffer. This function works also with
     scalar variants of Mitsuba.
@@ -109,7 +109,7 @@ def _transform_vertices_spherical_shell_lonlat(vertices, planet_radius):
 
 def _transform_lonlat_range_to_local(
     lon_center, lat_center
-) -> "mitsuba.ScalarTransform4f":
+) -> mitsuba.ScalarTransform4f:
     """
     Create a transformation matrix to position points placed in ECEF coordinates
     from longitude / latitude information to the local frame in a spherical-shell
@@ -429,7 +429,7 @@ def mesh_from_dem(
                         "lat": ("y", np.rad2deg(lat), {"units": "degree"}),
                     }
                 )
-                .swap_dims(({"x": "lon", "y": "lat"}))
+                .swap_dims({"x": "lon", "y": "lat"})
                 .drop_vars(("x", "y"))
             )
             return mesh_from_dem(
@@ -680,7 +680,7 @@ class DEMSurface(Surface):
                     "SphericalShellGeometry overrides the `planet_radius` argument."
                 )
 
-            def _to_uv(lon_lim, lat_lim) -> "mitsuba.ScalarTransform4f":
+            def _to_uv(lon_lim, lat_lim) -> mitsuba.ScalarTransform4f:
                 """
                 Compute the `to_uv` transformation for the opacity mask bitmap.
                 It moves the central (transparent) part of the bitmap to where

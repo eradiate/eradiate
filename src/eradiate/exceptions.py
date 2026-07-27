@@ -29,7 +29,7 @@ class UnsupportedModeError(ModeError):
     """Raised when a feature is not supported for the currently selected mode."""
 
     def __init__(self, supported=None, unsupported=None, msg=None):
-        super(UnsupportedModeError, self).__init__(msg)
+        super().__init__(msg)
 
         import eradiate
 

@@ -40,7 +40,7 @@ def _parse_definitions(path):
     # Parse a unit definition file (i.e. strip it from line comments and empty
     # lines)
     definitions = []
-    with open(path, "r") as f:
+    with open(path) as f:
         for line in f:
             line = line.strip()
 

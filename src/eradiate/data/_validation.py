@@ -28,7 +28,7 @@ def _load_schemas() -> None:
     yaml = YAML(typ="safe")
     for path in schema_paths:
         name = path.stem
-        with open(path, "r") as f:
+        with open(path) as f:
             schema = yaml.load(f)
         cerberus.schema_registry.add(name, schema)
 

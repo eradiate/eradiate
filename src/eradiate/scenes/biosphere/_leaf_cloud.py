@@ -1105,7 +1105,7 @@ class LeafCloud(CanopyElement):
         radii_ = []
         positions_ = []
         orientations_ = []
-        with open(os.path.abspath(filename), "r") as definition_file:
+        with open(os.path.abspath(filename)) as definition_file:
             for i, line in enumerate(definition_file):
                 values = [float(x) for x in line.split()]
                 radii_.append(values[0])

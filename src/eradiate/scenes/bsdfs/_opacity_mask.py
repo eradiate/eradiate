@@ -32,7 +32,7 @@ class OpacityMaskBSDF(BSDF):
     Opacity Mask BSDF [``opacity_mask``]
     """
 
-    opacity_bitmap: np.typing.ArrayLike | "mi.Bitmap" = documented(
+    opacity_bitmap: np.typing.ArrayLike | mi.Bitmap = documented(
         attrs.field(converter=_to_bitmap, kw_only=True),
         doc="Mitsuba bitmap that specifies the opacity of the nested BSDF "
         "plugin. This parameter has no default and is required.",
@@ -50,7 +50,7 @@ class OpacityMaskBSDF(BSDF):
                     f"found: {type(value)}",
                 )
 
-    uv_trafo: "mi.ScalarTransform4f" = documented(
+    uv_trafo: mi.ScalarTransform4f = documented(
         attrs.field(converter=converters.to_mi_scalar_transform, kw_only=True),
         doc="Transform to scale the opacity mask. This parameter has no "
         "default and is required.",

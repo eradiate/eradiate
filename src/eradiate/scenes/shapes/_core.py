@@ -63,7 +63,7 @@ class Shape:
         init_type=".BSDF or .Ref or dict, optional",
     )
 
-    to_world: "mitsuba.ScalarTransform4f" = documented(
+    to_world: mitsuba.ScalarTransform4f = documented(
         attrs.field(
             converter=converters.to_mi_scalar_transform,
             default=None,

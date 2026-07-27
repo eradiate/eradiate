@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib
 import typing as t
 from abc import ABC, abstractmethod
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 import attrs
 import mitsuba as mi

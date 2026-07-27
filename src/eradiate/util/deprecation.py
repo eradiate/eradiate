@@ -301,9 +301,7 @@ class DeprecatedWarning(DeprecationWarning):
         self.deprecated_in = deprecated_in
         self.removed_in = removed_in
         self.details = details
-        super(DeprecatedWarning, self).__init__(
-            component, deprecated_in, removed_in, details
-        )
+        super().__init__(component, deprecated_in, removed_in, details)
 
     def __str__(self):
         parts = [f"{self.component} is deprecated"]
