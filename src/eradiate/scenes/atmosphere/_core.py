@@ -665,11 +665,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         }
         try:
             sigma = eval_sigma[interaction](si=si)
-        except KeyError:
+        except KeyError as e:
             raise ValueError(
                 f"invalid interaction type '{interaction}', "
                 f"supported: {list(eval_sigma.keys())}"
-            )
+            ) from e
         dz = np.diff(self.geometry.zgrid.levels)
         tau = np.sum((sigma * dz).to("1"))
         return np.exp(-tau)

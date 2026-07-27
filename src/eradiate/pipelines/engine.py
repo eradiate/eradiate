@@ -88,7 +88,7 @@ class Node:
         except ImportError:
             raise ImportError(
                 "rich is required for pretty printing. Install with: pip install rich"
-            )
+            ) from None
 
         pprint(self)
 
@@ -1036,7 +1036,7 @@ class Pipeline:
         except ImportError:
             raise ImportError(
                 "pydot is required for visualization. Install with: pip install pydot"
-            )
+            ) from None
 
         highlight_nodes: set = set(highlight_nodes or [])
 
@@ -1254,7 +1254,7 @@ class Pipeline:
             raise ImportError(
                 "IPython is required for notebook display. "
                 "Install with: pip install ipython"
-            )
+            ) from None
 
         dot_graph = self._to_dot(
             highlight_nodes,

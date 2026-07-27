@@ -138,10 +138,10 @@ def _rng_seed_converter(value: Any):
 
     try:
         value = int(value)
-    except TypeError:
+    except TypeError as e:
         raise ValueError(
             f"While converting RNG_SEED: Cannot convert value ({value!r}) to int"
-        )
+        ) from e
 
     if value < 0:
         raise ValueError(

@@ -84,7 +84,7 @@ class Target:
             try:
                 target_type = d.pop("type")
             except KeyError:
-                raise ValueError("cannot convert dict, missing 'type' entry")
+                raise ValueError("cannot convert dict, missing 'type' entry") from None
 
             return Target.new(target_type, **d)
 

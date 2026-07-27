@@ -44,7 +44,9 @@ def bitmap_to_dataarray(bmp: mi.Bitmap, dtype="float64") -> xr.DataArray:
             }
             channels = pixel_formats[bmp.pixel_format()]
         except KeyError:
-            raise ValueError(f"unsupported bitmap pixel format {bmp.pixel_format()}")
+            raise ValueError(
+                f"unsupported bitmap pixel format {bmp.pixel_format()}"
+            ) from None
 
     else:
         warnings.warn(
