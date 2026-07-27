@@ -83,7 +83,7 @@ class SceneElement(ABC):
         """
         pass
 
-    def update(self) -> None:
+    def update(self) -> None:  # noqa: B027
         """
         Enforce internal state consistency. This method should be called when
         fields are modified. It is automatically called as a post-init step.
@@ -601,7 +601,7 @@ def get_factory(element_type: str) -> Factory:
         raise ValueError(
             f"unknown scene element type '{element_type}' "
             f"(should be one of {set(_FACTORIES.keys())})"
-        )
+        ) from None
 
     mod_path, attr = path.rsplit(".", 1)
     return getattr(importlib.import_module(mod_path), attr)
