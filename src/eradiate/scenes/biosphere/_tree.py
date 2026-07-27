@@ -238,11 +238,14 @@ class MeshTree(Tree):
     mesh_tree_elements: list[MeshTree] = documented(
         attrs.field(
             factory=list,
-            converter=lambda value: [
-                MeshTreeElement.convert(x) for x in pinttrs.util.always_iterable(value)
-            ]
-            if not isinstance(value, dict)
-            else [MeshTreeElement.convert(value)],
+            converter=lambda value: (
+                [
+                    MeshTreeElement.convert(x)
+                    for x in pinttrs.util.always_iterable(value)
+                ]
+                if not isinstance(value, dict)
+                else [MeshTreeElement.convert(value)]
+            ),
         ),
         doc="List of :class:`.CanopyElement` defining the canopy. Can be "
         "initialized with a :class:`.InstancedCanopyElement`, which will be "
