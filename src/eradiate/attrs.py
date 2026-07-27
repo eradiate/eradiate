@@ -371,12 +371,14 @@ def get_doc(
     try:
         key = MetadataKey[field.upper()]
     except ValueError:
-        raise ValueError(f"unsupported attribute doc field {field}")
+        raise ValueError(f"unsupported attribute doc field {field}") from None
 
     try:
         return attrs.fields_dict(cls)[attrib].metadata[key]
     except KeyError:
-        raise ValueError(f"{cls.__name__}.{attrib} has no documented field '{field}'")
+        raise ValueError(
+            f"{cls.__name__}.{attrib} has no documented field '{field}'"
+        ) from None
 
     # This is very unlikely to happen, but just in case, we raise
     raise RuntimeError

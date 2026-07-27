@@ -150,11 +150,11 @@ class ArrayRadProfile(RadProfile):
 
     @property
     def levels(self) -> pint.Quantity:
-        NotImplementedError
+        raise NotImplementedError
 
     @property
     def zgrid(self) -> ZGrid:
-        NotImplementedError
+        raise NotImplementedError
 
     def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
         # Inherit docstring

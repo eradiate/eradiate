@@ -59,7 +59,7 @@ def _get_cpu_info():
         all_info = subprocess.check_output(command, shell=True).decode().strip()
         for line in all_info.split("\n"):
             if "model name" in line:
-                return re.sub(r".*model name.*:", "", line, 1)[1:]
+                return re.sub(r".*model name.*:", "", line, count=1)[1:]
     return None
 
 

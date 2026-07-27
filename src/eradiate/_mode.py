@@ -375,7 +375,7 @@ class Mode:
         try:
             return _mode_registry()[mode_id]
         except KeyError:
-            raise ValueError(f"unknown mode '{mode_id}'")
+            raise ValueError(f"unknown mode '{mode_id}'") from None
 
 
 # Define mode aliases

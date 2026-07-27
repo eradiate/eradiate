@@ -1,8 +1,10 @@
 """Functions to compute Rayleigh scattering in air."""
 
+from __future__ import annotations
+
 import numpy as np
-import numpy.typing as npt
 import pint
+from numpy.typing import ArrayLike
 from scipy.constants import physical_constants
 
 from .. import converters
@@ -38,14 +40,14 @@ class _BATES_1984_DATA(metaclass=Singleton):
             self._load_dataset()
         return self._wavelength
 
-    def interp(self, w: npt.ArrayLike = np.array([0.550])):
+    def interp(self, w: ArrayLike | None = None):
         """
         Interpolate ``king_factor`` over the ``wavelength`` dimension.
 
         Parameters
         ----------
         w : array-like
-            wavelengths (in micron) at wich to interpolate Bates' King factor.
+            wavelengths (in micron) at which to interpolate Bates' King factor.
 
         Returns
         -------
@@ -54,6 +56,7 @@ class _BATES_1984_DATA(metaclass=Singleton):
         """
         left = self.king_factor[0]
         right = self.king_factor[-1]
+        w = np.array([0.550]) if w is None else w
 
         return np.interp(w, self.wavelength, self.king_factor, left=left, right=right)
 
@@ -64,7 +67,7 @@ class _BATES_1984_DATA(metaclass=Singleton):
 
 
 def compute_sigma_s_air(
-    wavelength: pint.Quantity = ureg.Quantity(550.0, "nm"),
+    wavelength: pint.Quantity | None = None,
     number_density: pint.Quantity = _STANDARD_AIR_NUMBER_DENSITY,
 ) -> pint.Quantity:
     r"""
@@ -95,7 +98,7 @@ def compute_sigma_s_air(
 
     Parameters
     ----------
-    wavelength : quantity
+    wavelength : quantity, default: 0.55 μm
         Wavelength [nm].
 
     number_density : quantity
@@ -112,7 +115,7 @@ def compute_sigma_s_air(
     # risk, we convert the wavelength to micron.
     # In addition, the Bates (1984) dataset is indexed by wavelengths in microns
     # as well, meaning that this conversion is anyway necessary.
-    w = wavelength.to("micron")
+    w = wavelength.to("micron") if wavelength is not None else 0.550 * ureg.micron
 
     BATES_1984_DATA = _BATES_1984_DATA()
     king_factor = BATES_1984_DATA.interp(w.m_as("micron"))
@@ -137,7 +140,7 @@ def compute_sigma_s_air(
 
 
 def air_refractive_index(
-    wavelength: pint.Quantity = ureg.Quantity(550.0, "nm"),
+    wavelength: pint.Quantity | None = None,
     number_density: pint.Quantity = _STANDARD_AIR_NUMBER_DENSITY,
 ) -> np.ndarray:
     """
@@ -167,7 +170,8 @@ def air_refractive_index(
     """
 
     # wavenumber in inverse micrometer
-    sigma = 1 / wavelength.m_as("micrometer")
+    w_um = wavelength.m_as("micrometer") if wavelength is not None else 0.550
+    sigma = 1 / w_um
     sigma2 = np.square(sigma)
 
     # refractivity in parts per 1e8
@@ -186,14 +190,14 @@ def air_refractive_index(
     return index
 
 
-def depolarization_bates(wavelength: pint.Quantity = ureg.Quantity(550.0, "nm")):
+def depolarization_bates(wavelength: pint.Quantity | None = None):
     """
     Compute depolarization using Bates' King factor :cite:`Bates1984RayleighScatteringAir`.
     Only parametrized on wavelength.
 
     Parameters
     ----------
-    wavelength : quantity
+    wavelength : quantity, default: 0.55 μm
         Wavelength.
 
     Returns
@@ -203,7 +207,7 @@ def depolarization_bates(wavelength: pint.Quantity = ureg.Quantity(550.0, "nm"))
     """
     # The Bates (1984) dataset is indexed by wavelengths in microns
     # as well, meaning that this conversion is anyway necessary.
-    w = wavelength.m_as("micron")
+    w = wavelength.m_as("micron") if wavelength is not None else 0.550
 
     BATES_1984_DATA = _BATES_1984_DATA()
     king_factor = BATES_1984_DATA.interp(w)
@@ -213,8 +217,7 @@ def depolarization_bates(wavelength: pint.Quantity = ureg.Quantity(550.0, "nm"))
 
 
 def depolarization_bodhaine(
-    wavelength: pint.Quantity = ureg.Quantity(550.0, "nm"),
-    x_CO2: pint.Quantity = ureg.Quantity(0.0004, "dimensionless"),
+    wavelength: pint.Quantity | None = None, x_CO2: pint.Quantity | None = None
 ):
     """
     Compute depolarization using Bodhaine's King factor :cite:p:`Bodhaine1999RayleighOpticalDepth`.
@@ -224,10 +227,10 @@ def depolarization_bodhaine(
 
     Parameters
     ----------
-    wavelength : quantity
+    wavelength : quantity, default: 0.55 μm
         Wavelength.
 
-    x_CO2 : quantity
+    x_CO2 : quantity, default: 0.0004
         Array of CO2 mole fraction in the atmosphere.
 
     Returns
@@ -235,10 +238,10 @@ def depolarization_bodhaine(
     quantity : array of shape (N,)
         Array of depolarization factor for each level [dimensionless]
     """
-    w_um = wavelength.m_as("um")
+    w_um = wavelength.m_as("micron") if wavelength is not None else 0.550
 
     # part per volume by percent
-    C_CO2 = x_CO2.m_as("%")
+    C_CO2 = x_CO2.m_as("%") if x_CO2 is not None else 0.04
     total = 78.084 + 20.946 + 0.934 + C_CO2
 
     # from Bates (1984), wavelength is in micron

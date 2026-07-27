@@ -64,7 +64,7 @@ class RayleighPhaseFunction(PhaseFunction):
         elif self.depolarization is None:
             depolarization = np.zeros((1,))
         else:
-            NotImplementedError
+            raise NotImplementedError
 
         return depolarization
 
