@@ -1,16 +1,31 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 
 [project]
 authors = [{ name = "The Eradiate Team" }]
 description = "A radiative transfer model for the Earth observation community"
-license = { text = "LGPLv3" }
+license = "LGPL-3.0-or-later"
+license-files = ["LICENSE"]
 maintainers = [{ name = "The Eradiate Team" }]
 name = "eradiate"
 readme = "resources/README_PyPI.md"
-requires-python = ">=3.9,<3.14"
+requires-python = ">=3.9"
 version = "1.2.0"
+keywords = ["radiative transfer", "earth observation", "remote sensing"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Atmospheric Science",
+  "Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = [
   "aenum",
   "axsdb>=0.1.2,<0.2",
@@ -87,8 +102,11 @@ dev = [
 eradiate = "eradiate.cli:main"
 
 [project.urls]
-Changelog = "https://github.com/eradiate/eradiate/releases"
+Homepage = "https://www.eradiate.eu"
 Documentation = "https://eradiate.readthedocs.io"
+Repository = "https://github.com/eradiate/eradiate"
+Issues = "https://github.com/eradiate/eradiate/issues"
+Changelog = "https://github.com/eradiate/eradiate/releases"
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
