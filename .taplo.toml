@@ -1,6 +1,13 @@
 # Configuration file for taplo, our TOML formatter
 
-include = ["pyproject.toml", ".taplo.toml"]
+include = [
+  ".bumpversion.toml",
+  ".coveragerc.toml",
+  ".taplo.toml",
+  "pyproject.toml",
+  "pytest.toml",
+  "ruff.toml",
+]
 
 [formatting]
 align_entries = false
