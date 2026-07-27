@@ -356,7 +356,8 @@ class BandSRF(SpectralResponseFunction):
         if not np.all(value.m[[0, -1]] == np.array([0.0, 0.0])):
             warnings.warn(
                 "Initializing a BandSRF instance without a leading and trailing "
-                "zero is not recommended."
+                "zero is not recommended.",
+                stacklevel=2,
             )
 
     @classmethod

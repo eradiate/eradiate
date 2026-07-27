@@ -50,6 +50,7 @@ def bitmap_to_dataarray(bmp: mi.Bitmap, dtype="float64") -> xr.DataArray:
         warnings.warn(
             "Passing an array is deprecated (coordinate detection is limited)",
             DeprecationWarning,
+            stacklevel=2,
         )
         if len(img.shape) < 3:
             channels = ["Y"]

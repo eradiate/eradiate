@@ -198,7 +198,8 @@ class ArrayRadProfile(RadProfile):
     ) -> pint.Quantity:
         warnings.warn(
             "You are using ArrayRadProps in CKD mode, this is not standard "
-            "behaviour and might provide erroneous results."
+            "behaviour and might provide erroneous results.",
+            stacklevel=2,
         )
         return self.eval_sigma_a_mono(w=w, zgrid=zgrid)
 

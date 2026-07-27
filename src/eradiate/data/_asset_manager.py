@@ -272,7 +272,7 @@ class AssetManager:
         resource_dir = self._get_path_unpack(resource_id)
         result = []
 
-        for root, dirs, files in os.walk(str(resource_dir)):
+        for root, _dirs, files in os.walk(str(resource_dir)):
             for filename in files:
                 result.append(Path(root) / filename)
 

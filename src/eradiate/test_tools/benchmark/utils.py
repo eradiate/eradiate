@@ -16,16 +16,14 @@ def get_command_output(cmd):
     str
         Stdout of the process run in shell.
     """
-    result = subprocess.run(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-    )
+    result = subprocess.run(cmd, capture_output=True, shell=True)
     stdout = result.stdout.decode().strip()
     if result.returncode == 0:
         return stdout
 
     stderr = result.stderr.decode().strip()
     raise RuntimeError(
-        "Problem running '%s' (STDOUT: '%s' STDERR: '%s')" % (cmd, stdout, stderr)
+        f"Problem running '{cmd}' (STDOUT: '{stdout}' STDERR: '{stderr}')"
     )
 
 
@@ -56,5 +54,5 @@ def get_commit_info():
         Time of commit.
     """
     commitHash = get_command_output("git rev-parse HEAD")
-    commitTime = get_command_output("git log -n1 --pretty=%%ct %s" % commitHash)
+    commitTime = get_command_output(f"git log -n1 --pretty=%ct {commitHash}")
     return (commitHash, str(int(commitTime) * 1000))

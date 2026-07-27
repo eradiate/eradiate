@@ -86,7 +86,7 @@ class TestSolarIrradianceSpectrum:
             pass
 
         else:
-            assert False
+            raise AssertionError()
 
     def test_scale(self, mode_mono):
         s = SolarIrradianceSpectrum(dataset="thuillier_2003")

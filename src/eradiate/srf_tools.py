@@ -498,7 +498,8 @@ def threshold_filter(srf: PathLike | xr.Dataset, value: float = 1e-3) -> xr.Data
     if not np.all(filter_indices == consecutive):
         warnings.warn(
             f"Filtering this data set with threshold value of {value} would "
-            "disconnect the wavelength space. You probably do not want that."
+            "disconnect the wavelength space. You probably do not want that.",
+            stacklevel=2,
         )
 
     # filter

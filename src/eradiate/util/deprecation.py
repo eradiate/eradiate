@@ -257,6 +257,7 @@ def substitute(subs: dict[str, tuple[type, dict[str, str]]]) -> t.Callable:
                     details=f"Use '{new_type.__name__}' instead.",
                     **kwargs,
                 ),
+                stacklevel=2,
             )
             return new_type
 

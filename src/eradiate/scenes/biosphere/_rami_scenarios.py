@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 from urllib.parse import urljoin
 
 import pooch
@@ -141,8 +141,8 @@ def load_rami_scenario(
     scenario_name: str | RAMICanopies,
     variant: RAMIScenarioVariant = RAMIScenarioVariant.ORIGINAL,
     padding: int = 0,
-    unpack_folder: Optional[Path] = None,
-    spectral_data: Optional[dict] = None,
+    unpack_folder: Path | None = None,
+    spectral_data: dict | None = None,
 ) -> dict:
     """
     Load a scenario based on its name and variant.

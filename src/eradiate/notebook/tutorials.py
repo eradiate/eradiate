@@ -10,5 +10,6 @@ warnings.warn(
     DeprecationWarning(
         "The 'eradiate.notebook.tutorials' module is deprecated: its features "
         "have been moved to 'eradiate.tutorials'."
-    )
+    ),
+    stacklevel=2,
 )
