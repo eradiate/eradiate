@@ -160,7 +160,7 @@ class TargetRectangle(Target):
 
     """
 
-    to_world: "mi.ScalarTransform4f" = attrs.field()
+    to_world: mi.ScalarTransform4f = attrs.field()
 
     _bbox: BoundingBox = attrs.field(repr=False)
 

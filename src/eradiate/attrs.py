@@ -28,7 +28,7 @@ class _Auto:
 
     def __new__(cls):
         if _Auto._singleton is None:
-            _Auto._singleton = super(_Auto, cls).__new__(cls)
+            _Auto._singleton = super().__new__(cls)
         return _Auto._singleton
 
     def __repr__(self):
