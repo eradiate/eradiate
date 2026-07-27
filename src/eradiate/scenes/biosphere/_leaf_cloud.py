@@ -80,7 +80,8 @@ def _leaf_cloud_positions_cuboid_avoid_overlap(
     except ModuleNotFoundError:
         warnings.warn(
             "To use the collision detection feature, you must install AABBTree.\n"
-            "See instructions on https://aabbtree.readthedocs.io/#installation."
+            "See instructions on https://aabbtree.readthedocs.io/#installation.",
+            stacklevel=2,
         )
         raise
 
@@ -92,7 +93,7 @@ def _leaf_cloud_positions_cuboid_avoid_overlap(
     tree = aabbtree.AABBTree()
 
     for i in range(n_leaves):
-        for j in range(n_attempts):
+        for _j in range(n_attempts):
             rand = rng.random(3)
             pos_candidate = [
                 rand[0] * l_horizontal - 0.5 * l_horizontal,
@@ -1106,7 +1107,7 @@ class LeafCloud(CanopyElement):
         positions_ = []
         orientations_ = []
         with open(os.path.abspath(filename)) as definition_file:
-            for i, line in enumerate(definition_file):
+            for _i, line in enumerate(definition_file):
                 values = [float(x) for x in line.split()]
                 radii_.append(values[0])
                 positions_.append(values[1:4])

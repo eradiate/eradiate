@@ -269,7 +269,8 @@ class Experiment(ABC):
             if self._background_spectral_grid is not AUTO:
                 warnings.warn(
                     "User-specified a background spectral grid is overridden by "
-                    "atmosphere spectral grid."
+                    "atmosphere spectral grid.",
+                    stacklevel=2,
                 )
             self._background_spectral_grid = SpectralGrid.from_absorption_database(
                 atmosphere.absorption_data
@@ -287,7 +288,7 @@ class Experiment(ABC):
 
         # Get quadrature rules for all bins
         ckd_quads = {}
-        for i, measure in enumerate(self.measures):
+        for i, _measure in enumerate(self.measures):
             if eradiate.mode().is_ckd:
                 spectral_grid: CKDSpectralGrid = self._spectral_grids[i]
                 ckd_quads[i] = [

@@ -62,7 +62,8 @@ def _azimuth_converter(value):
     if not 0.0 <= value.m_as("deg") < 360.0:
         warnings.warn(
             "Illumination azimuth values should be in the [0°, 360°[ interval. "
-            "Applying modulo operation."
+            "Applying modulo operation.",
+            stacklevel=2,
         )
         return value % (360.0 * ureg.deg)
     else:

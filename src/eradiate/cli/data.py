@@ -1,6 +1,7 @@
+import builtins
 import enum
 import logging
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 import typer
 
@@ -87,7 +88,8 @@ def list(
 @app.command()
 def download(
     resource_ids: Annotated[
-        List[str], typer.Argument(help="One or multiple resource IDs or aliases.")
+        builtins.list[str],
+        typer.Argument(help="One or multiple resource IDs or aliases."),
     ],
     unpack: Annotated[bool, typer.Option(help="Unpack downloaded archives.")] = True,
 ):
@@ -100,7 +102,8 @@ def download(
 @app.command()
 def install(
     resource_ids: Annotated[
-        List[str], typer.Argument(help="One or multiple resource IDs or aliases.")
+        builtins.list[str],
+        typer.Argument(help="One or multiple resource IDs or aliases."),
     ],
 ):
     """
@@ -113,7 +116,8 @@ def install(
 @app.command()
 def remove(
     resource_ids: Annotated[
-        List[str], typer.Argument(help="One or multiple resource IDs or aliases.")
+        builtins.list[str],
+        typer.Argument(help="One or multiple resource IDs or aliases."),
     ],
 ):
     """
@@ -125,7 +129,7 @@ def remove(
 @app.command()
 def clear(
     resource_ids: Annotated[
-        Optional[List[str]],
+        Optional[builtins.list[str]],
         typer.Argument(
             help="Resource(s) for which to clear data. If unset, all data will be wiped."
         ),

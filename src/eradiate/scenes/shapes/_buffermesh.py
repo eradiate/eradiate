@@ -90,7 +90,8 @@ class BufferMeshShape(ShapeInstance):
         if self.to_world is not None:
             warnings.warn(
                 "Setting the 'to_world' field of a BufferMeshShape instance is "
-                "not supported: it will be ignored."
+                "not supported: it will be ignored.",
+                stacklevel=2,
             )
 
         self.update()

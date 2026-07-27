@@ -137,7 +137,8 @@ class MitsubaObjectWrapper:
                             f"Parameter '{name}' has a lookup strategy but the "
                             "associated parameter ID is undefined; was a "
                             "parameter lookup performed during the Mitsuba "
-                            "scene traversal?"
+                            "scene traversal?",
+                            stacklevel=2,
                         )
                 else:
                     keys.append(name)
@@ -361,7 +362,8 @@ def mi_traverse(
     if lookups:
         warnings.warn(
             "There were unsuccessful Mitsuba scene parameter lookups: "
-            f"{list(lookups.keys())}"
+            f"{list(lookups.keys())}",
+            stacklevel=2,
         )
 
     return MitsubaObjectWrapper(

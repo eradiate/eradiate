@@ -330,7 +330,8 @@ def mesh_from_dem(
                 "The ``planet_radius`` argument is set to a user-defined "
                 "value but will be overridden by the value held by the "
                 "SphericalGeometry instance passed as the ``geometry`` "
-                "parameter."
+                "parameter.",
+                stacklevel=2,
             )
 
         # Add default units if quantity is unitless
@@ -628,7 +629,8 @@ class DEMSurface(Surface):
                 warnings.warn(
                     "while calling DEMSurface.from_mesh(): "
                     "both bsdf and bsdf_mesh parameters were specified; "
-                    "bsdf_mesh takes precedence"
+                    "bsdf_mesh takes precedence",
+                    stacklevel=2,
                 )
 
         bsdf_background = (
@@ -677,7 +679,8 @@ class DEMSurface(Surface):
         elif isinstance(geometry, SphericalShellGeometry):
             if planet_radius is not None:
                 warnings.warn(
-                    "SphericalShellGeometry overrides the `planet_radius` argument."
+                    "SphericalShellGeometry overrides the `planet_radius` argument.",
+                    stacklevel=2,
                 )
 
             def _to_uv(lon_lim, lat_lim) -> mitsuba.ScalarTransform4f:

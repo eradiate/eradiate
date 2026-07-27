@@ -216,5 +216,5 @@ class CKDSpectralIndex(SpectralIndex):
         return f"{self.w:g~P}:{self.g:.3f}"
 
     @property
-    def as_hashable(self) -> t.Tuple[float, float]:
+    def as_hashable(self) -> tuple[float, float]:
         return (float(self.w.m_as(ureg.nm)), self.g)

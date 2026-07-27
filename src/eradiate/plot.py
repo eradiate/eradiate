@@ -33,7 +33,8 @@ def set_style(rc=None):
     except ModuleNotFoundError:
         warnings.warn(
             "To use Eradiate's Matplotlib style, you must install Seaborn.\n"
-            "See instructions on https://seaborn.pydata.org/installing.html."
+            "See instructions on https://seaborn.pydata.org/installing.html.",
+            stacklevel=2,
         )
         raise
 
@@ -324,7 +325,7 @@ def absorption_database_spectral_coverage_mono(
 
     color_cycle = cycler(color=sns.color_palette())
 
-    for i, (filename, color) in enumerate(zip(df_index["filename"], color_cycle())):
+    for _i, (filename, color) in enumerate(zip(df_index["filename"], color_cycle())):
         color = color["color"]
         spectral_coverage = db.spectral_coverage.loc[filename]
         w = spectral_coverage.index.values

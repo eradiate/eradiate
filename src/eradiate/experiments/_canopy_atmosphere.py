@@ -224,7 +224,8 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
                     UserWarning(
                         "Extremum structures are not compatible with "
                         f"{type(self.integrator).__name__} and will be ignored."
-                    )
+                    ),
+                    stacklevel=2,
                 )
 
         piecewise_compatible, pw_msg = check_piecewise_compatible(
