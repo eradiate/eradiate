@@ -19,10 +19,7 @@ parse = """(?x)
 regex = false
 replace = "{new_version}"
 search = "{current_version}"
-serialize = [
-  "{major}.{minor}.{patch}-{pre_l}{pre_n}",
-  "{major}.{minor}.{patch}"
-]
+serialize = ["{major}.{minor}.{patch}-{pre_l}{pre_n}", "{major}.{minor}.{patch}"]
 sign_tags = false
 tag = false
 tag_message = "Bump version: {current_version} → {new_version}"
