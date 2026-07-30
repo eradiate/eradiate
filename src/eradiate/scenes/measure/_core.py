@@ -170,6 +170,9 @@ class Measure(NodeSceneElement, ABC):
     spp: int = documented(
         attrs.field(default=1000, converter=int, validator=validators.is_positive),
         doc="Number of samples per pixel. Its meaning depends on the "
+        "``sample_allocation`` setting (environment variable "
+        '``ERADIATE_SAMPLE_ALLOCATION``). With the default ``"weighted"`` '
+        "policy, it also depends on the "
         "spectral response function (SRF) of this measure and, in ckd mode, "
         "on the CKD quadrature rule. With a :class:`.DeltaSRF` or "
         ":class:`.UniformSRF`, it applies in full to every wavelength (mono) "
@@ -182,6 +185,9 @@ class Measure(NodeSceneElement, ABC):
         "regardless of SRF type. Every iteration is guaranteed at least one "
         "sample, which makes the distribution only approximately proportional; "
         "a value too low to honour that minimum raises a :class:`ValueError`. "
+        'With the ``"uniform"`` policy, this value applies in full to every '
+        "spectral loop iteration, g-points included, regardless of SRF type "
+        "(behaviour of Eradiate v1.3 and earlier). "
         "See :func:`.srf_spp_distribution` for details.",
         type="int",
         default="1000",

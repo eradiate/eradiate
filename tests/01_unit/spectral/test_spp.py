@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from eradiate.config import settings
 from eradiate.spectral._spp import _allocate, srf_spp_distribution
 from eradiate.spectral.ckd_quad import CKDQuadConfig
 from eradiate.spectral.grid import CKDSpectralGrid, MonoSpectralGrid
@@ -12,6 +13,29 @@ from eradiate.units import unit_registry as ureg
 def band_srf():
     """A Gaussian band SRF centred on 520 nm, spanning several grid points."""
     return BandSRF.gaussian(wl_center=520.0 * ureg.nm, fwhm=15.0 * ureg.nm, pad=True)
+
+
+@pytest.fixture(scope="module")
+def mono_grid():
+    return MonoSpectralGrid(
+        wavelengths=np.array([500.0, 510.0, 520.0, 530.0, 540.0]) * ureg.nm
+    )
+
+
+@pytest.fixture(scope="module")
+def ckd_grid():
+    return CKDSpectralGrid.arange(
+        start=500.0 * ureg.nm, stop=545.0 * ureg.nm, step=10.0 * ureg.nm
+    )
+
+
+@pytest.fixture(scope="module")
+def ckd_quad_config():
+    return CKDQuadConfig(type="gauss_legendre", ng_max=4, policy="fixed")
+
+
+def _quads_for(grid, quad_config):
+    return [x[1] for x in grid.walk_quads(quad_config)]
 
 
 class TestAllocate:
@@ -113,12 +137,6 @@ class TestAllocate:
 class TestSrfSppDistributionMono:
     """Tests for ``srf_spp_distribution()`` in mono mode."""
 
-    @pytest.fixture(scope="class")
-    def mono_grid(self):
-        return MonoSpectralGrid(
-            wavelengths=np.array([500.0, 510.0, 520.0, 530.0, 540.0]) * ureg.nm
-        )
-
     @pytest.mark.parametrize(
         "srf, expected_wavelengths",
         [
@@ -157,20 +175,6 @@ class TestSrfSppDistributionMono:
 class TestSrfSppDistributionCKD:
     """Tests for ``srf_spp_distribution()`` in ckd mode."""
 
-    @pytest.fixture(scope="class")
-    def ckd_grid(self):
-        return CKDSpectralGrid.arange(
-            start=500.0 * ureg.nm, stop=545.0 * ureg.nm, step=10.0 * ureg.nm
-        )
-
-    @pytest.fixture(scope="class")
-    def ckd_quad_config(self):
-        return CKDQuadConfig(type="gauss_legendre", ng_max=4, policy="fixed")
-
-    @staticmethod
-    def _quads_for(grid, quad_config):
-        return [x[1] for x in grid.walk_quads(quad_config)]
-
     @pytest.mark.parametrize(
         "srf",
         [
@@ -181,7 +185,7 @@ class TestSrfSppDistributionCKD:
     )
     def test_no_split_across_bins(self, mode_ckd, ckd_grid, ckd_quad_config, srf):
         sel = ckd_grid.select(srf)
-        quads = self._quads_for(sel, ckd_quad_config)
+        quads = _quads_for(sel, ckd_quad_config)
         result = srf_spp_distribution(1000, srf, sel, ckd_quads=quads)
 
         # Every selected bin gets the full (unsplit) target...
@@ -199,7 +203,7 @@ class TestSrfSppDistributionCKD:
 
     def test_band_sums_to_target(self, mode_ckd, ckd_grid, ckd_quad_config, band_srf):
         sel = ckd_grid.select(band_srf)
-        quads = self._quads_for(sel, ckd_quad_config)
+        quads = _quads_for(sel, ckd_quad_config)
         target = ckd_quad_config.ng_max * len(sel.wcenters) * 10
         result = srf_spp_distribution(target, band_srf, sel, ckd_quads=quads)
 
@@ -216,14 +220,14 @@ class TestSrfSppDistributionCKD:
         self, mode_ckd, ckd_grid, ckd_quad_config, band_srf
     ):
         sel = ckd_grid.select(band_srf)
-        quads = self._quads_for(sel, ckd_quad_config)
+        quads = _quads_for(sel, ckd_quad_config)
         min_target = ckd_quad_config.ng_max * len(sel.wcenters)
 
         with pytest.raises(ValueError, match="cannot distribute"):
-            srf_spp_distribution(band_srf, sel, min_target - 1, ckd_quads=quads)
+            srf_spp_distribution(min_target - 1, band_srf, sel, ckd_quads=quads)
 
         # But the exact minimum works
-        result = srf_spp_distribution(band_srf, sel, min_target, ckd_quads=quads)
+        result = srf_spp_distribution(min_target, band_srf, sel, ckd_quads=quads)
         assert sum(result.values()) == min_target
 
     def test_requires_quads(self, mode_ckd, ckd_grid):
@@ -233,7 +237,7 @@ class TestSrfSppDistributionCKD:
             srf_spp_distribution(1000, srf, sel)
 
     def test_raises_unsupported_srf(self, mode_ckd, ckd_grid, ckd_quad_config):
-        quads = self._quads_for(ckd_grid, ckd_quad_config)
+        quads = _quads_for(ckd_grid, ckd_quad_config)
         with pytest.raises(TypeError, match="unsupported SRF type"):
             srf_spp_distribution(1000, object(), ckd_grid, ckd_quads=quads)
 
@@ -242,3 +246,51 @@ class TestSrfSppDistributionCKD:
             srf_spp_distribution(
                 1000, DeltaSRF(wavelengths=[500.0] * ureg.nm), object()
             )
+
+
+class TestSampleAllocation:
+    """Tests for the ``allocation`` parameter of ``srf_spp_distribution()``."""
+
+    def test_uniform_mono(self, mode_mono, mono_grid, band_srf):
+        """Every wavelength gets the full target, weights notwithstanding."""
+        sel = mono_grid.select(band_srf)
+        result = srf_spp_distribution(1000, band_srf, sel, allocation="uniform")
+        assert set(result) == set(
+            srf_spp_distribution(1000, band_srf, sel, allocation="weighted")
+        )
+        assert all(v == 1000 for v in result.values())
+
+    def test_uniform_ckd(self, mode_ckd, ckd_grid, ckd_quad_config, band_srf):
+        """Every (bin, g) iteration gets the full target."""
+        sel = ckd_grid.select(band_srf)
+        quads = _quads_for(sel, ckd_quad_config)
+        result = srf_spp_distribution(
+            1000, band_srf, sel, ckd_quads=quads, allocation="uniform"
+        )
+        assert set(result) == set(
+            srf_spp_distribution(
+                1000, band_srf, sel, ckd_quads=quads, allocation="weighted"
+            )
+        )
+        assert all(v == 1000 for v in result.values())
+
+    def test_uniform_ignores_floor(self, mode_mono, mono_grid, band_srf):
+        """A target the weighted policy rejects is fine under the uniform one."""
+        sel = mono_grid.select(band_srf)
+        target = len(sel.wavelengths) - 1
+        result = srf_spp_distribution(target, band_srf, sel, allocation="uniform")
+        assert all(v == target for v in result.values())
+
+    def test_setting(self, mode_mono, mono_grid, band_srf, monkeypatch):
+        """An unset ``allocation`` follows the ``sample_allocation`` setting."""
+        sel = mono_grid.select(band_srf)
+        monkeypatch.setattr(settings, "SAMPLE_ALLOCATION", "uniform")
+        assert all(
+            v == 1000 for v in srf_spp_distribution(1000, band_srf, sel).values()
+        )
+        monkeypatch.setattr(settings, "SAMPLE_ALLOCATION", "weighted")
+        assert sum(srf_spp_distribution(1000, band_srf, sel).values()) == 1000
+
+    def test_raises_unsupported_allocation(self, mode_mono, mono_grid, band_srf):
+        with pytest.raises(ValueError, match="unsupported sample allocation policy"):
+            srf_spp_distribution(1000, band_srf, mono_grid, allocation="foo")

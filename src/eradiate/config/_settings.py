@@ -10,6 +10,11 @@ from dynaconf import Dynaconf, Validator
 from . import _defaults
 from ..frame import AzimuthConvention
 
+#: Valid values for the ``SAMPLE_ALLOCATION`` setting. With ``"weighted"``,
+#: :attr:`.Measure.spp` is a total sample budget, distributed across spectral
+#: loop iterations; with ``"uniform"``, it applies in full to every iteration.
+SAMPLE_ALLOCATION_POLICIES = ("uniform", "weighted")
+
 
 class ProgressLevel(enum.IntEnum):
     """
@@ -203,6 +208,12 @@ settings = Dynaconf(
             "RNG_SEED",
             cast=_rng_seed_converter,
             default=_defaults.rng_seed,
+        ),
+        Validator(
+            "SAMPLE_ALLOCATION",
+            cast=lambda x: str(x).lower(),
+            is_in=SAMPLE_ALLOCATION_POLICIES,
+            default=_defaults.sample_allocation,
         ),
     ],
 )

@@ -115,18 +115,25 @@ def _trapezoidal_weights(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     return 0.5 * dx * y
 
 
+def _check_srf(srf: SpectralResponseFunction) -> None:
+    if not isinstance(srf, (BandSRF, DeltaSRF, UniformSRF)):
+        raise TypeError(f"unsupported SRF type '{type(srf).__name__}'")
+
+
 def _mono_distribution(
-    target: int, srf: SpectralResponseFunction, spectral_grid: MonoSpectralGrid
+    target: int,
+    srf: SpectralResponseFunction,
+    spectral_grid: MonoSpectralGrid,
+    uniform: bool,
 ) -> dict[float, int]:
+    _check_srf(srf)
     w_nm = spectral_grid.wavelengths.m_as(ureg.nm)
 
-    if isinstance(srf, BandSRF):
+    if isinstance(srf, BandSRF) and not uniform:
         weights = _trapezoidal_weights(w_nm, srf.eval(spectral_grid.wavelengths).m)
         spp = _allocate(target, weights)
-    elif isinstance(srf, (DeltaSRF, UniformSRF)):
-        spp = np.full(len(w_nm), target, dtype=int)
     else:
-        raise TypeError(f"unsupported SRF type '{type(srf).__name__}'")
+        spp = np.full(len(w_nm), target, dtype=int)
 
     return {float(w): int(s) for w, s in zip(w_nm, spp)}
 
@@ -136,9 +143,19 @@ def _ckd_distribution(
     srf: SpectralResponseFunction,
     spectral_grid: CKDSpectralGrid,
     ckd_quads: list[Quad],
+    uniform: bool,
 ) -> dict[tuple[float, float], int]:
+    _check_srf(srf)
     w_nm = spectral_grid.wcenters.m_as(ureg.nm)
     n_bins = len(w_nm)
+
+    if uniform:
+        # Every spectral loop iteration, g-points included, gets the full target
+        return {
+            (float(w), float(g)): int(target)
+            for w, quad in zip(w_nm, ckd_quads)
+            for g in quad.eval_nodes([0.0, 1.0])
+        }
 
     if isinstance(srf, BandSRF):
         bin_weights = np.array(
@@ -151,10 +168,8 @@ def _ckd_distribution(
         # quadrature points, since its allocation is split further below.
         ng_per_bin = np.array([len(quad.nodes) for quad in ckd_quads])
         bin_spp = _allocate(target, bin_weights, floor=ng_per_bin)
-    elif isinstance(srf, (DeltaSRF, UniformSRF)):
-        bin_spp = np.full(n_bins, target, dtype=int)
     else:
-        raise TypeError(f"unsupported SRF type '{type(srf).__name__}'")
+        bin_spp = np.full(n_bins, target, dtype=int)
 
     # Within each bin, split its target across quadrature g-points,
     # weighted by quadrature weight, regardless of SRF type.
@@ -173,6 +188,7 @@ def srf_spp_distribution(
     srf: SpectralResponseFunction,
     spectral_grid: SpectralGrid,
     ckd_quads: list[Quad] | None = None,
+    allocation: str | None = None,
 ) -> dict[float, int] | dict[tuple[float, float], int]:
     """
     Distribute a sample count budget across the spectral loop iterations
@@ -181,16 +197,11 @@ def srf_spp_distribution(
     Parameters
     ----------
     target : int
-            Sample count budget.
+        Sample count budget.
 
-                srf : .SpectralResponseFunction
-        Spectral response function driving the distribution policy.
-        :class:`.DeltaSRF` and :class:`.UniformSRF` apply ``target`` in full
-        to every wavelength (mono) or bin (ckd). :class:`.BandSRF`
-        distributes ``target`` across wavelengths (mono) or bins (ckd),
-        weighted by the local SRF integral, so that the total sums exactly
-        to ``target``. Every iteration is guaranteed at least one sample,
-        hence the distribution is only approximately proportional.
+    srf : .SpectralResponseFunction
+        Spectral response function driving the distribution policy (see
+        ``allocation``).
 
     spectral_grid : .SpectralGrid
         Spectral grid driving the spectral loop (already selected against
@@ -199,10 +210,28 @@ def srf_spp_distribution(
     ckd_quads : list of .Quad, optional
         Quadrature rules for each bin in ``spectral_grid``, in the same
         order as ``spectral_grid.wcenters``. Required if ``spectral_grid``
-        is a :class:`.CKDSpectralGrid`. In ckd mode, whatever sample count
-        applies to a bin (see above) is further split across that bin's
-        quadrature g-points, weighted by :attr:`.Quad.weights`, regardless
-        of SRF type.
+        is a :class:`.CKDSpectralGrid`.
+
+    allocation : str, optional
+        Allocation policy, either ``"weighted"`` or ``"uniform"``. If unset
+        (the default), the value of the ``sample_allocation`` setting
+        (environment variable ``ERADIATE_SAMPLE_ALLOCATION``) is used.
+
+        With ``"weighted"``, ``target`` is a total budget and the returned
+        sample counts sum exactly to it. :class:`.DeltaSRF` and
+        :class:`.UniformSRF` apply ``target`` in full to every wavelength
+        (mono) or bin (ckd); :class:`.BandSRF` distributes it across
+        wavelengths (mono) or bins (ckd), weighted by the local SRF integral.
+        In ckd mode, whatever sample count applies to a bin is further split
+        across that bin's quadrature g-points, weighted by
+        :attr:`.Quad.weights`, regardless of SRF type. Every iteration is
+        guaranteed at least one sample, hence the distribution is only
+        approximately proportional.
+
+        With ``"uniform"``, ``target`` applies in full to *every* spectral
+        loop iteration, g-points included, regardless of SRF type: the
+        returned sample counts sum to ``target`` times the number of
+        iterations. This is the behaviour of Eradiate v1.3 and earlier.
 
     Returns
     -------
@@ -212,15 +241,29 @@ def srf_spp_distribution(
         :attr:`.MonoSpectralIndex.as_hashable` /
         :attr:`.CKDSpectralIndex.as_hashable`.
     """
+    # Imported here because eradiate.config triggers source directory validation
+    from ..config import SAMPLE_ALLOCATION_POLICIES, settings
+
+    if allocation is None:
+        # Resolved at call time: the setting may be changed at runtime
+        allocation = settings.SAMPLE_ALLOCATION
+
+    if allocation not in SAMPLE_ALLOCATION_POLICIES:
+        raise ValueError(
+            f"unsupported sample allocation policy '{allocation}' (expected one "
+            f"of {list(SAMPLE_ALLOCATION_POLICIES)})"
+        )
+    uniform = allocation == "uniform"
+
     if isinstance(spectral_grid, MonoSpectralGrid):
-        return _mono_distribution(target, srf, spectral_grid)
+        return _mono_distribution(target, srf, spectral_grid, uniform)
 
     elif isinstance(spectral_grid, CKDSpectralGrid):
         if ckd_quads is None:
             raise ValueError(
                 "ckd_quads must be specified when spectral_grid is a CKDSpectralGrid"
             )
-        return _ckd_distribution(target, srf, spectral_grid, ckd_quads)
+        return _ckd_distribution(target, srf, spectral_grid, ckd_quads, uniform)
 
     else:
         raise TypeError(
