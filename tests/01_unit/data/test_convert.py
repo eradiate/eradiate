@@ -870,7 +870,9 @@ class TestLibradtranToAerCoreV2:
             assert ds_result.sizes["veff"] == 1
 
         def test_reff_values_preserved(self, ds_input, ds_result):
-            np.testing.assert_allclose(ds_result["reff"].values, ds_input["reff"].values)
+            np.testing.assert_allclose(
+                ds_result["reff"].values, ds_input["reff"].values
+            )
 
         def test_default_veff_from_param_alpha(self, ds_result):
             """veff defaults to 1 / (param_alpha + 3) when not given explicitly."""
@@ -883,8 +885,12 @@ class TestLibradtranToAerCoreV2:
 
         def test_ext_ssa_values_at_each_reff(self, ds_input, ds_result):
             """ext/ssa are preserved per (w, reff) point, with a size-1 veff axis appended."""
-            np.testing.assert_allclose(ds_result["ext"].values[:, :, 0], ds_input["ext"].values)
-            np.testing.assert_allclose(ds_result["ssa"].values[:, :, 0], ds_input["ssa"].values)
+            np.testing.assert_allclose(
+                ds_result["ext"].values[:, :, 0], ds_input["ext"].values
+            )
+            np.testing.assert_allclose(
+                ds_result["ssa"].values[:, :, 0], ds_input["ssa"].values
+            )
 
         def test_nangles_matches_ntheta_per_reff(self, ds_input, ds_result):
             np.testing.assert_array_equal(

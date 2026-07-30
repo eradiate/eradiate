@@ -714,8 +714,12 @@ def libradtran_to_aer_core_v2(
     # --- Build union angular grid (across all components), at every
     # (w, reff) point, and interpolate onto it ---
     ntheta_np = ds["ntheta"].values.reshape(nw, nreff, nphamat)  # (nw, nreff, nphamat)
-    theta_np = ds["theta"].values.reshape(nw, nreff, nphamat, -1)  # (nw, nreff, nphamat, nthetamax)
-    phase_np = ds["phase"].values.reshape(nw, nreff, nphamat, -1)  # (nw, nreff, nphamat, nthetamax)
+    theta_np = ds["theta"].values.reshape(
+        nw, nreff, nphamat, -1
+    )  # (nw, nreff, nphamat, nthetamax)
+    phase_np = ds["phase"].values.reshape(
+        nw, nreff, nphamat, -1
+    )  # (nw, nreff, nphamat, nthetamax)
 
     union_mus: list[np.ndarray] = []
     union_phases: list[np.ndarray] = []  # each entry: (nphamat, n_union)
@@ -744,7 +748,9 @@ def libradtran_to_aer_core_v2(
             union_phases.append(phase_pt)
 
     # Build NaN-padded arrays, uniformly shaped (nw, nreff, ...)
-    nangles_out = np.array([len(m) for m in union_mus], dtype=np.int32).reshape(nw, nreff)  # (nw, nreff)
+    nangles_out = np.array([len(m) for m in union_mus], dtype=np.int32).reshape(
+        nw, nreff
+    )  # (nw, nreff)
 
     mu_arr = _pad_ragged(union_mus).reshape(nw, nreff, -1)  # (nw, nreff, nthetamax_out)
     phase_arr = np.stack(
@@ -754,7 +760,9 @@ def libradtran_to_aer_core_v2(
         ],
         axis=0,
     )  # (nphamat, nw, nreff, nthetamax_out)
-    theta_arr = np.rad2deg(np.arccos(mu_arr))  # (nw, nreff, nthetamax_out); NaN propagates
+    theta_arr = np.rad2deg(
+        np.arccos(mu_arr)
+    )  # (nw, nreff, nthetamax_out); NaN propagates
 
     # Copy Legendre coefficients (p_11 only), uniformly shaped (nw, nreff, nmommax)
     dims_order = ("nlam", "nreff", "nmommax") if has_reff else ("nlam", "nmommax")
