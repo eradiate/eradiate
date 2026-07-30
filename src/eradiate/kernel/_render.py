@@ -398,8 +398,11 @@ def mi_render(
         iteration.
 
     spp : int, optional, default: 0
-        Number of samples per pixel. If set to 0 (default), the value set in the
-        original scene definition takes precedence.
+        Number of samples per pixel, applied uniformly to every context and
+        sensor. If set to 0 (default), each context's
+        :attr:`.KernelContext.spp` mapping is consulted for a per-sensor
+        sample count; if that mapping has no entry for a given sensor either,
+        the value set in the original scene definition takes precedence.
 
     seed_state : .SeedState, optional
         Seed state used to generate seeds to initialize Mitsuba's RNG at
@@ -453,12 +456,14 @@ def mi_render(
             for i_sensor, mi_sensor in mi_sensors:
                 # Render sensor
                 seed = int(seed_state.next().squeeze())
+                sensor_spp = spp if spp > 0 else ctx.spp.get(i_sensor, 0)
                 logger.debug(
-                    'Running Mitsuba for sensor "%s" with seed value %s',
+                    'Running Mitsuba for sensor "%s" with seed value %s and spp %s',
                     mi_sensor.id(),
                     seed,
+                    sensor_spp,
                 )
-                mi.render(mi_scene.obj, sensor=i_sensor, seed=seed, spp=spp)
+                mi.render(mi_scene.obj, sensor=i_sensor, seed=seed, spp=sensor_spp)
 
                 # Store result in a new Bitmap object
                 siah = ctx.si.as_hashable
