@@ -350,12 +350,14 @@ class FisheyeCameraMeasure(Measure):
             The keys are ``projection_model``, ``projection_formula``, ``fov``,
             ``fov_units``, ``film_width``, ``film_height``, ``center_x``,
             ``center_y``, ``image_circle_radius`` and ``rho_max``, plus
-            ``lens_coefficients`` for the polynomial model.
+            ``lens_coefficients`` for the polynomial model, in addition to
+            those of :meth:`.Measure.dataset_attrs`.
         """
         width, height = self.film_resolution
         center_x, center_y, radius = self._image_circle
 
         result = {
+            **super().dataset_attrs(),
             "projection_model": self.projection_model,
             "projection_formula": _PROJECTION_FORMULAS[self.projection_model],
             "fov": float(self.fov.m_as(ureg.deg)),

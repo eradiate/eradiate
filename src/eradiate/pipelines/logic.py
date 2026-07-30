@@ -20,9 +20,10 @@ from ..scenes.illumination import (
     Illumination,
 )
 from ..scenes.spectra import Spectrum
-from ..spectral import BandSRF, SpectralResponseFunction, UniformSRF
+from ..spectral import BandSRF, SpectralResponseFunction
+from ..spectral._spp import spectral_response_weights
 from ..spectral.grid import SpectralGrid
-from ..units import symbol, to_quantity
+from ..units import symbol
 from ..units import unit_context_config as ucc
 from ..units import unit_context_kernel as uck
 from ..units import unit_registry as ureg
@@ -181,92 +182,6 @@ def aggregate_ckd_quad(
     result = result.sortby("w")
 
     return result
-
-
-def spectral_response_weights(
-    spectral_data: xr.DataArray, srf: SpectralResponseFunction
-) -> xr.DataArray:
-    r"""
-    Compute the weight each spectral bin carries in the band aggregate produced
-    by :func:`apply_spectral_response`.
-
-    Parameters
-    ----------
-    spectral_data : DataArray
-        Spectral data the weights are computed for. Only its ``w``,
-        ``bin_wmin`` and ``bin_wmax`` coordinates are used.
-
-    srf : .SpectralResponseFunction
-        Spectral response function to apply.
-
-    Returns
-    -------
-    DataArray
-        Weights, indexed against the ``w`` coordinate of `spectral_data`. They
-        sum to 1 when the SRF support is entirely covered by the data.
-
-    Notes
-    -----
-    SRF weighting turns a set of per-bin values :math:`x_i` into a single band
-    value :math:`\sum_i c_i x_i`. This function computes the coefficients
-    :math:`c_i`. They are computed by feeding a unit impulse on each bin (*i.e.*
-    considering the :math:`x_i = 1`, all other values set to zero) through the
-    resampling and integration steps that are to be applied to the actual data.
-    Computed weights are consumed by :func:`apply_spectral_response`, allowing
-    different usage depending on whether the mean or variance of a variable is
-    processed.
-    """
-    if not {"bin_wmin", "bin_wmax"}.issubset(set(spectral_data.coords.keys())):
-        raise ValueError(
-            "input data is missing 'bin_wmin' and/or 'bin_wmax' coordinates"
-        )
-
-    # Evaluate integral of spectral response function within selected interval
-    wmin = to_quantity(spectral_data.coords["bin_wmin"]).min()
-    wmax = to_quantity(spectral_data.coords["bin_wmax"]).max()
-    srf_int = srf.integrate(wmin, wmax)
-
-    if isinstance(srf, BandSRF):
-        srf_w = srf.wavelengths
-    elif isinstance(srf, UniformSRF):
-        srf_w = np.array([wmin.m_as(ureg.nm), wmax.m_as(ureg.nm)]) * ureg.nm
-    else:
-        raise TypeError(f"unhandled SRF type '{srf.__class__.__name__}'")
-
-    data_w = to_quantity(spectral_data.coords["w"])
-
-    # Spectral grid is the finest between data and SRF grids
-    w_units = data_w.units
-    w_m = np.array(sorted(set(data_w.m_as(w_units)) | set(srf_w.m_as(w_units))))
-
-    # One row per spectral bin, each holding a unit impulse on that bin. Only
-    # the spectral coordinate is carried over: the others play no part here and
-    # would only be resampled for nothing.
-    basis = xr.DataArray(
-        np.eye(spectral_data.sizes["w"]),
-        dims=("bin", "w"),
-        coords={"w": spectral_data.coords["w"].values},
-    )
-
-    # If data var has length 1 on spectral dimension, directly select
-    # the value instead of using interpolation (it's a known scipy issue)
-    if spectral_data.sizes["w"] == 1:
-        basis_values = basis.isel(w=0, drop=True).expand_dims(w=w_m, axis=1)
-
-    # Otherwise, use nearest neighbour interpolation (we assume that the
-    # spectral data is constant over each spectral bin)
-    else:
-        basis_values = basis.interp(
-            w=w_m, method="nearest", kwargs={"fill_value": "extrapolate"}
-        )
-
-    srf_values = xr.DataArray(srf.eval(w_m * w_units).magnitude, dims="w")
-    weights = (basis_values * srf_values).integrate("w") / srf_int.m_as(w_units)
-
-    # Rows of the identity are the bins of the input grid, in its own order
-    return xr.DataArray(
-        weights.values, dims="w", coords={"w": spectral_data.coords["w"].values}
-    )
 
 
 def apply_spectral_response(
@@ -1057,7 +972,9 @@ def moment2_to_variance(
             f"{expectation.dims = } and {m2.dims = }"
         )
 
-    variance = (m2 - expectation * expectation) / spp
+    # Clamp at zero: when the per-sample variance is (close to) zero,
+    # cancellation in m2 - E² leaves a round-off residual of either sign
+    variance = (m2 - expectation * expectation).clip(min=0.0) / spp
     variance.name = m2.name.replace("m2", "var")
     return variance
 

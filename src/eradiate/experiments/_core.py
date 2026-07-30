@@ -24,6 +24,7 @@ from ..kernel import (
     KernelDict,
     KernelSceneParameterMap,
     MitsubaObjectWrapper,
+    effective_spp,
     mi_load_dict,
     mi_render,
     mi_traverse,
@@ -45,6 +46,7 @@ from ..scenes.measure import (
     MultiDistantMeasure,
     measure_factory,
 )
+from ..spectral._spp import srf_spp_distribution
 from ..spectral.ckd_quad import CKDQuadConfig
 from ..spectral.grid import CKDSpectralGrid, MonoSpectralGrid, SpectralGrid
 from ..spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
@@ -336,8 +338,11 @@ class Experiment(ABC):
             measures are processed.
 
         spp : int, optional
-            Sample count. If set to 0, the value set in the original scene
-            definition takes precedence.
+            Sample count target, overriding :attr:`.Measure.spp` for every
+            processed measure. If set to 0, each measure's own configured
+            value takes precedence. Either way, the target is distributed
+            across spectral loop iterations as described in
+            :attr:`.Measure.spp`.
 
         seed_state : :class:`.SeedState`, optional
             Seed state used to generate seeds to initialize Mitsuba's RNG at
@@ -383,7 +388,11 @@ class Experiment(ABC):
         """
 
     @abstractmethod
-    def contexts(self, measures: int | list[int] | None = None) -> list[KernelContext]:
+    def contexts(
+        self,
+        measures: int | list[int] | None = None,
+        spp: int = 0,
+    ) -> list[KernelContext]:
         """
         Return a list of contexts used for processing.
 
@@ -392,6 +401,12 @@ class Experiment(ABC):
         measures : int or list of int, optional
             A list of the indexes of the measures to account for when emitting
             kernel contexts. If unset, all measures are accounted for.
+
+        spp : int, optional
+            Sample count target, used in place of :attr:`.Measure.spp` for
+            every selected measure when distributing sample counts across
+            spectral loop iterations. If set to 0, each measure's own
+            :attr:`.Measure.spp` is used.
 
         Returns
         -------
@@ -546,16 +561,14 @@ class EarthObservationExperiment(Experiment, ABC):
 
         elif eradiate.mode().is_ckd:
             spectral_grid: CKDSpectralGrid = self.spectral_grids[measure_index]
-            quad_config = self.ckd_quad_config
-            try:
-                abs_db = self.atmosphere.abs_db
-            except (
-                AttributeError
-            ):  # There is either no atmosphere or no absorption database
-                abs_db = None
+            # Reuse the quadrature rules assembled by _normalize_spectral(), so
+            # that the spectral loop and sample allocation share the same nodes
+            quads = self.ckd_quads[measure_index]
 
             def generator():
-                yield from spectral_grid.walk_indices(quad_config, abs_db)
+                for w, quad in zip(spectral_grid.wcenters, quads):
+                    for g in quad.eval_nodes([0, 1]):
+                        yield CKDSpectralIndex(w=w, g=g)
         else:
             raise UnsupportedModeError(supported=["mono", "ckd"])
 
@@ -572,7 +585,11 @@ class EarthObservationExperiment(Experiment, ABC):
     def _context_kwargs(self) -> dict[str, Any]:
         pass
 
-    def contexts(self, measures: int | list[int] | None = None) -> list[KernelContext]:
+    def contexts(
+        self,
+        measures: int | list[int] | None = None,
+        spp: int = 0,
+    ) -> list[KernelContext]:
         # Inherit docstring
 
         if measures is None:
@@ -594,24 +611,50 @@ class EarthObservationExperiment(Experiment, ABC):
             measure_to_sensor[measure_index] = mi_sensors_ids.index(measure.sensor_id)
 
         # Collect contexts from all measures
-        # Maps spectral index hash to (spectral index, active sensor list)
+        # Maps spectral index hash to (spectral index, {sensor index: spp})
         si_hash_to_si = {}
+        mi_sensors = self.mi_scene.obj.sensors()
 
         for measure_index in measures:
-            sis = list(self.spectral_indices(measure_index))
+            measure = self.measures[measure_index]
             sensor_index = measure_to_sensor[measure_index]
-            for si in sis:
+            sampler = mi_sensors[sensor_index].sampler()
+
+            spp_distribution = srf_spp_distribution(
+                spp if spp > 0 else measure.spp,
+                measure.srf,
+                self.spectral_grids[measure_index],
+                ckd_quads=self.ckd_quads[measure_index],
+                allocation=measure.spp_allocation,
+            )
+
+            # Record the sample counts the sampler actually uses (only a few
+            # distinct values, hence the cache)
+            rounded = {}
+            for si, si_spp in zip(
+                self.spectral_indices(measure_index), spp_distribution, strict=True
+            ):
+                si_spp = int(si_spp)
+                if si_spp not in rounded:
+                    rounded[si_spp] = effective_spp(sampler, si_spp)
+                si_spp = rounded[si_spp]
                 si_hash = si.as_hashable
+
                 if si_hash not in si_hash_to_si:
-                    si_hash_to_si[si_hash] = (si, [sensor_index])
+                    si_hash_to_si[si_hash] = (si, {sensor_index: si_spp})
                 else:
-                    si_hash_to_si[si_hash][1].append(sensor_index)
+                    si_hash_to_si[si_hash][1][sensor_index] = si_spp
 
         # Generate final list of contexts
         kwargs = self._context_kwargs()
         result = [
-            KernelContext(si, active_sensors=active_sensors, kwargs=kwargs)
-            for si, active_sensors in si_hash_to_si.values()
+            KernelContext(
+                si,
+                active_sensors=list(sensor_spp.keys()),
+                spp=sensor_spp,
+                kwargs=kwargs,
+            )
+            for si, sensor_spp in si_hash_to_si.values()
         ]
 
         key = {
@@ -690,16 +733,20 @@ class EarthObservationExperiment(Experiment, ABC):
 
         # Generate kernel contexts
         measure_idxs = [self.measures.get_index(measure.id) for measure in measures]
-        ctxs = self.contexts(measure_idxs)
+        ctxs = self.contexts(measure_idxs, spp=spp)
 
         # Run Mitsuba for each context
         logger.info("Launching simulation")
-        mi_results = mi_render(self.mi_scene, ctxs=ctxs, seed_state=seed_state, spp=spp)
+        mi_results = mi_render(self.mi_scene, ctxs=ctxs, seed_state=seed_state)
 
         # Assign collected results to the appropriate measure
         sensor_to_measure: dict[str, Measure] = {
             measure.sensor_id: measure for measure in measures
         }
+        sensor_id_to_index = {
+            s.id(): i for i, s in enumerate(self.mi_scene.obj.sensors())
+        }
+        ctx_by_index = {ctx.si.as_hashable: ctx for ctx in ctxs}
 
         def convert_to_y_format(img):
             img_np = np.array(img, copy=False)[:, :, [0]]
@@ -719,9 +766,11 @@ class EarthObservationExperiment(Experiment, ABC):
 
         # gather results and info from measures
         for ctx_index, spectral_group_dict in mi_results.items():
+            ctx = ctx_by_index[ctx_index]
             for sensor_id, mi_bitmap in spectral_group_dict.items():
                 measure = sensor_to_measure[sensor_id]
-                result_imgs = {"spp": spp if spp > 0 else measure.spp}
+                sensor_index = sensor_id_to_index[sensor_id]
+                result_imgs = {"spp": ctx.spp[sensor_index]}
 
                 splits = mi_bitmap.split()
                 for split in splits:
@@ -823,9 +872,10 @@ def run(
         are processed.
 
     spp : int, optional, default: 0
-        Optional parameter to override the number of samples per pixel for all
+        Optional parameter to override the sample count target for all
         computed measures. If set to 0, the configured value for each measure
-        takes precedence.
+        takes precedence. Either way, the target is distributed across
+        spectral loop iterations as described in :attr:`.Measure.spp`.
 
     seed_state : :class:`.SeedState`, optional
             Seed state used to generate seeds to initialize Mitsuba's RNG at

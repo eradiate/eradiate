@@ -11,6 +11,32 @@ from . import _defaults
 from ..frame import AzimuthConvention
 
 
+class SampleAllocation(enum.Enum):
+    """
+    Sample count allocation policies across spectral loop iterations. See
+    :func:`.srf_spp_distribution` for details.
+    """
+
+    UNIFORM = "uniform"
+    WEIGHTED = "weighted"
+
+    @staticmethod
+    def convert(value: Any) -> SampleAllocation:
+        if isinstance(value, SampleAllocation):
+            return value
+        elif isinstance(value, str):
+            try:
+                return SampleAllocation(value.lower())
+            except ValueError:
+                raise ValueError(
+                    f"unsupported sample allocation policy {value!r}"
+                ) from None
+        else:
+            raise TypeError(
+                f"Cannot convert a {type(value)} instance to SampleAllocation"
+            )
+
+
 class ProgressLevel(enum.IntEnum):
     """
     An enumeration defining valid progress levels.
@@ -203,6 +229,11 @@ settings = Dynaconf(
             "RNG_SEED",
             cast=_rng_seed_converter,
             default=_defaults.rng_seed,
+        ),
+        Validator(
+            "SAMPLE_ALLOCATION",
+            cast=SampleAllocation.convert,
+            default=_defaults.sample_allocation,
         ),
     ],
 )

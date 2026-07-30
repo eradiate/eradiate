@@ -51,6 +51,10 @@ def rng_seed(settings=None, validator=None) -> int:
     return 0
 
 
+def sample_allocation(settings=None, validator=None) -> str:
+    return "weighted"
+
+
 def source_dir(settings=None, validator=None) -> str | None:
     # This is slightly hacky, but so far the best we've found
     return os.environ.get("ERADIATE_SOURCE_DIR", None)
