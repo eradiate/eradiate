@@ -113,7 +113,7 @@ def atmosphere_experiment():
     ],
 )
 def test_run_function(modes_all_double, atmosphere_experiment, measures, expected_type):
-    result = eradiate.run(atmosphere_experiment, measures=measures, spp=4)
+    result = eradiate.run(atmosphere_experiment, measures=measures, spp=64)
     assert isinstance(result, expected_type)
 
 
