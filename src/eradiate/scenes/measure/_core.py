@@ -169,7 +169,20 @@ class Measure(NodeSceneElement, ABC):
 
     spp: int = documented(
         attrs.field(default=1000, converter=int, validator=validators.is_positive),
-        doc="Number of samples per pixel.",
+        doc="Number of samples per pixel. Its meaning depends on the "
+        "spectral response function (SRF) of this measure and, in ckd mode, "
+        "on the CKD quadrature rule. With a :class:`.DeltaSRF` or "
+        ":class:`.UniformSRF`, it applies in full to every wavelength (mono) "
+        "or spectral bin (ckd). With a :class:`.BandSRF`, it is a total "
+        "budget distributed across wavelengths (mono) or bins (ckd), "
+        "weighted by the local SRF integral, so that the sample counts "
+        "actually used sum to this value. In ckd mode, whatever sample count "
+        "applies to a bin (as described above) is further split across that "
+        "bin's quadrature g-points, weighted by quadrature weight, "
+        "regardless of SRF type. Every iteration is guaranteed at least one "
+        "sample, which makes the distribution only approximately proportional; "
+        "a value too low to honour that minimum raises a :class:`ValueError`. "
+        "See :func:`.srf_spp_distribution` for details.",
         type="int",
         default="1000",
     )
