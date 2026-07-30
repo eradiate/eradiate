@@ -62,10 +62,10 @@ def get_experiment(mode_id, srf, measure):
     if experiment_setup not in EXPERIMENTS:
         if srf == "delta":
             srf_dict = {"type": "delta", "wavelengths": 550.0 * ureg.nm}
-            spp = 256
+            spp = 4096  # distributed among all g-points
         elif srf == "sentinel_2a-msi-3":
             srf_dict = "sentinel_2a-msi-3"
-            spp = 32
+            spp = 4096  # distributed among all g-points
         else:
             raise NotImplementedError(srf)
 
@@ -393,13 +393,23 @@ def test_07_radiosity(mode, gather_bitmaps):
     # Initialize test data
     irradiance = 2.0
     sector_radiosity = gather_bitmaps["sector_radiosity_raw"]
+    spp = gather_bitmaps["spp"]
 
     # Configure and apply step
     result = logic.radiosity(sector_radiosity=sector_radiosity)
     # Check that radiosity dimensions are correct
     assert not {"x_index", "y_index"}.issubset(result.dims)
-    # This setup conserves energy
-    assert np.allclose(irradiance, result, rtol=1e-3)
+
+    # This setup conserves energy: computed radiosity values are expected to be
+    # equal to the spectral irradiance for all spectral points
+    # -- With a BandSRF, sample count allocation is weighted by the SRF response
+    #    so low-weight spectral loop iterations get fewer samples and are
+    #    correspondingly noisier -> scale tolerance by expected Monte Carlo
+    #    standard error (~ 1 / sqrt(spp)) relative to the best-sampled
+    #    iteration
+    rtol = 1e-3 * np.sqrt(spp.max() / spp)
+    error = np.abs(result - irradiance) / irradiance
+    assert np.all(error <= rtol)
 
 
 @pytest.mark.parametrize("mode_id", ["mono"])
