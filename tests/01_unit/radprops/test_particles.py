@@ -503,8 +503,18 @@ class TestParticleProperties:
         @pytest.mark.parametrize(
             "w_nm, exp_idx_l, exp_idx_r, expected_t",
             [
-                (300.0, 0, 1, 0.0),  # below min → boundary segment [0, 1], clamped to t=0
-                (800.0, 1, 2, 1.0),  # above max → boundary segment [1, 2], clamped to t=1
+                (
+                    300.0,
+                    0,
+                    1,
+                    0.0,
+                ),  # below min → boundary segment [0, 1], clamped to t=0
+                (
+                    800.0,
+                    1,
+                    2,
+                    1.0,
+                ),  # above max → boundary segment [1, 2], clamped to t=1
             ],
         )
         def test_out_of_range_clamps(self, pp, w_nm, exp_idx_l, exp_idx_r, expected_t):
