@@ -132,12 +132,12 @@ class TestSrfSppDistributionMono:
     )
     def test_no_split(self, mode_mono, mono_grid, srf, expected_wavelengths):
         """Delta and uniform SRFs apply the full target to every wavelength."""
-        result = srf_spp_distribution(srf, mono_grid.select(srf), 1000)
+        result = srf_spp_distribution(1000, srf, mono_grid.select(srf))
         assert set(result) == expected_wavelengths
         assert all(v == 1000 for v in result.values())
 
     def test_band_sums_to_target(self, mode_mono, mono_grid, band_srf):
-        result = srf_spp_distribution(band_srf, mono_grid.select(band_srf), 1000)
+        result = srf_spp_distribution(1000, band_srf, mono_grid.select(band_srf))
         assert sum(result.values()) == 1000
         # More weight (closer to the band center) should get more samples
         assert result[520.0] > result[510.0]
@@ -147,11 +147,11 @@ class TestSrfSppDistributionMono:
         sel = mono_grid.select(band_srf)
         n = len(sel.wavelengths)
         with pytest.raises(ValueError, match="cannot distribute"):
-            srf_spp_distribution(band_srf, sel, n - 1)
+            srf_spp_distribution(n - 1, band_srf, sel)
 
     def test_raises_unsupported_srf(self, mode_mono, mono_grid):
         with pytest.raises(TypeError, match="unsupported SRF type"):
-            srf_spp_distribution(object(), mono_grid, 1000)
+            srf_spp_distribution(1000, object(), mono_grid)
 
 
 class TestSrfSppDistributionCKD:
@@ -182,7 +182,7 @@ class TestSrfSppDistributionCKD:
     def test_no_split_across_bins(self, mode_ckd, ckd_grid, ckd_quad_config, srf):
         sel = ckd_grid.select(srf)
         quads = self._quads_for(sel, ckd_quad_config)
-        result = srf_spp_distribution(srf, sel, 1000, ckd_quads=quads)
+        result = srf_spp_distribution(1000, srf, sel, ckd_quads=quads)
 
         # Every selected bin gets the full (unsplit) target...
         bins = sorted({w for w, _ in result})
@@ -201,7 +201,7 @@ class TestSrfSppDistributionCKD:
         sel = ckd_grid.select(band_srf)
         quads = self._quads_for(sel, ckd_quad_config)
         target = ckd_quad_config.ng_max * len(sel.wcenters) * 10
-        result = srf_spp_distribution(band_srf, sel, target, ckd_quads=quads)
+        result = srf_spp_distribution(target, band_srf, sel, ckd_quads=quads)
 
         assert sum(result.values()) == target
 
@@ -230,14 +230,15 @@ class TestSrfSppDistributionCKD:
         srf = DeltaSRF(wavelengths=[505.0] * ureg.nm)
         sel = ckd_grid.select(srf)
         with pytest.raises(ValueError, match="ckd_quads must be specified"):
-            srf_spp_distribution(srf, sel, 1000)
+            srf_spp_distribution(1000, srf, sel)
 
     def test_raises_unsupported_srf(self, mode_ckd, ckd_grid, ckd_quad_config):
         quads = self._quads_for(ckd_grid, ckd_quad_config)
         with pytest.raises(TypeError, match="unsupported SRF type"):
-            srf_spp_distribution(object(), ckd_grid, 1000, ckd_quads=quads)
+            srf_spp_distribution(1000, object(), ckd_grid, ckd_quads=quads)
 
-
-def test_raises_unsupported_grid(mode_mono):
-    with pytest.raises(TypeError, match="unsupported spectral grid type"):
-        srf_spp_distribution(DeltaSRF(wavelengths=[500.0] * ureg.nm), object(), 1000)
+    def test_raises_unsupported_grid(self, mode_mono):
+        with pytest.raises(TypeError, match="unsupported spectral grid type"):
+            srf_spp_distribution(
+                1000, DeltaSRF(wavelengths=[500.0] * ureg.nm), object()
+            )

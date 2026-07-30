@@ -169,9 +169,9 @@ def _ckd_distribution(
 
 
 def srf_spp_distribution(
+    target: int,
     srf: SpectralResponseFunction,
     spectral_grid: SpectralGrid,
-    target: int,
     ckd_quads: list[Quad] | None = None,
 ) -> dict[float, int] | dict[tuple[float, float], int]:
     """
@@ -180,19 +180,21 @@ def srf_spp_distribution(
 
     Parameters
     ----------
-    srf : .SpectralResponseFunction
+    target : int
+            Sample count budget.
+
+                srf : .SpectralResponseFunction
         Spectral response function driving the distribution policy.
         :class:`.DeltaSRF` and :class:`.UniformSRF` apply ``target`` in full
-        to every iteration (mono: wavelength; ckd: bin). :class:`.BandSRF`
-        distributes ``target`` across iterations, weighted by spectral
-        response, so that the total sums exactly to ``target``.
+        to every wavelength (mono) or bin (ckd). :class:`.BandSRF`
+        distributes ``target`` across wavelengths (mono) or bins (ckd),
+        weighted by the local SRF integral, so that the total sums exactly
+        to ``target``. Every iteration is guaranteed at least one sample,
+        hence the distribution is only approximately proportional.
 
     spectral_grid : .SpectralGrid
         Spectral grid driving the spectral loop (already selected against
         ``srf``, *e.g.* via :meth:`.SpectralGrid.select`).
-
-    target : int
-        Sample count budget.
 
     ckd_quads : list of .Quad, optional
         Quadrature rules for each bin in ``spectral_grid``, in the same
