@@ -80,6 +80,16 @@ class KernelContext(Context):
         default="{}",
     )
 
+    spp: dict[int, int] = documented(
+        attrs.field(factory=dict),
+        doc="Per-sensor sample count override for this context, mapping a "
+        "sensor index (as found in ``active_sensors``) to a sample count. "
+        "An empty mapping (the default) or a missing sensor index means the "
+        "sample count baked into the Mitsuba scene is used.",
+        type="dict",
+        default="{}",
+    )
+
     @property
     def index_formatted(self) -> str:
         return self.si.formatted_repr
