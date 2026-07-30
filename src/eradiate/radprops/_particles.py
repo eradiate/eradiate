@@ -723,9 +723,7 @@ class ParticleProperties:
 
         return self._max_union_size
 
-    def eval_phase_union(
-        self, w: pint.Quantity
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def eval_phase_union(self, w: pint.Quantity) -> tuple[np.ndarray, np.ndarray]:
         """
         Evaluate the phase function at a single wavelength for every native
         ``(reff, veff)`` grid point, keeping each point's own union of its
@@ -764,9 +762,7 @@ class ParticleProperties:
             w0_grid = w0_arr[0]  # (n_reff, n_veff)
             w1_grid = w1_arr[0]
             points = [
-                (ireff, iveff)
-                for ireff in range(n_reff)
-                for iveff in range(n_veff)
+                (ireff, iveff) for ireff in range(n_reff) for iveff in range(n_veff)
             ]
 
             def weight_at(ireff, iveff):
@@ -800,14 +796,20 @@ class ParticleProperties:
         grid_len = np.array([len(m) for m in mu_list], dtype=np.uint32)
         max_len = int(grid_len.max())
 
-        mu_pad = np.asarray([
-            np.concatenate([m, np.full(max_len - n, np.nan)])
-            for m, n in zip(mu_list, grid_len)
-        ])
-        phase_pad = np.asarray([
-            np.concatenate([ph, np.full((ph.shape[0], max_len - n), np.nan)], axis=1)
-            for ph, n in zip(phase_list, grid_len)
-        ])
+        mu_pad = np.asarray(
+            [
+                np.concatenate([m, np.full(max_len - n, np.nan)])
+                for m, n in zip(mu_list, grid_len)
+            ]
+        )
+        phase_pad = np.asarray(
+            [
+                np.concatenate(
+                    [ph, np.full((ph.shape[0], max_len - n), np.nan)], axis=1
+                )
+                for ph, n in zip(phase_list, grid_len)
+            ]
+        )
 
         return mu_pad, phase_pad
 
@@ -957,9 +959,7 @@ class ParticleProperties:
             phase_union = phase_pad[idx, :, :n]
 
             n_mu_pt = (
-                n_iangle
-                if self._has_fixed_mu_grid_at(ireff, iveff)
-                else 2 * n_iangle
+                n_iangle if self._has_fixed_mu_grid_at(ireff, iveff) else 2 * n_iangle
             )
             n_union = n
 
