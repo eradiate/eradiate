@@ -631,9 +631,9 @@ class EarthObservationExperiment(Experiment, ABC):
                 else measure.spp
             )
             spp_distribution = srf_spp_distribution(
+                target,
                 measure.srf,
                 self.spectral_grids[measure_index],
-                target,
                 ckd_quads=self.ckd_quads[measure_index],
             )
 

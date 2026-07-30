@@ -1,3 +1,4 @@
+from ._spp import srf_spp_distribution as srf_spp_distribution
 from .ckd_quad import CKDQuadConfig as CKDQuadConfig
 from .ckd_quad import CKDQuadPolicy as CKDQuadPolicy
 from .grid import CKDSpectralGrid as CKDSpectralGrid
