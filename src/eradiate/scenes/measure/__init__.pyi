@@ -7,6 +7,7 @@ from ._distant import Target as Target
 from ._distant import TargetPoint as TargetPoint
 from ._distant import TargetRectangle as TargetRectangle
 from ._distant_flux import DistantFluxMeasure as DistantFluxMeasure
+from ._fisheye import FisheyeCameraMeasure as FisheyeCameraMeasure
 from ._hemispherical_distant import (
     HemisphericalDistantMeasure as HemisphericalDistantMeasure,
 )

@@ -429,6 +429,7 @@ Quick access
    RadiancemeterMeasure
    MultiRadiancemeterMeasure
    PerspectiveCameraMeasure
+   FisheyeCameraMeasure
 
 **Distant measure target definition**
 
