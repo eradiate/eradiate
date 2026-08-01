@@ -9,6 +9,7 @@ from numpy.typing import ArrayLike
 
 from .grid import CKDSpectralGrid, MonoSpectralGrid, SpectralGrid
 from .response import BandSRF, DeltaSRF, SpectralResponseFunction, UniformSRF
+from ..config._settings import SampleAllocation
 from ..quad import Quad
 from ..units import unit_registry as ureg
 
@@ -188,7 +189,7 @@ def srf_spp_distribution(
     srf: SpectralResponseFunction,
     spectral_grid: SpectralGrid,
     ckd_quads: list[Quad] | None = None,
-    allocation: str | None = None,
+    allocation: SampleAllocation | None = None,
 ) -> dict[float, int] | dict[tuple[float, float], int]:
     """
     Distribute a sample count budget across the spectral loop iterations
@@ -242,18 +243,14 @@ def srf_spp_distribution(
         :attr:`.CKDSpectralIndex.as_hashable`.
     """
     # Imported here because eradiate.config triggers source directory validation
-    from ..config import SAMPLE_ALLOCATION_POLICIES, settings
+    from ..config import settings
 
     if allocation is None:
         # Resolved at call time: the setting may be changed at runtime
         allocation = settings.SAMPLE_ALLOCATION
 
-    if allocation not in SAMPLE_ALLOCATION_POLICIES:
-        raise ValueError(
-            f"unsupported sample allocation policy '{allocation}' (expected one "
-            f"of {list(SAMPLE_ALLOCATION_POLICIES)})"
-        )
-    uniform = allocation == "uniform"
+    allocation = SampleAllocation.convert(allocation)
+    uniform = allocation is SampleAllocation.UNIFORM
 
     if isinstance(spectral_grid, MonoSpectralGrid):
         return _mono_distribution(target, srf, spectral_grid, uniform)

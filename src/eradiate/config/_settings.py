@@ -10,10 +10,26 @@ from dynaconf import Dynaconf, Validator
 from . import _defaults
 from ..frame import AzimuthConvention
 
-#: Valid values for the ``SAMPLE_ALLOCATION`` setting. With ``"weighted"``,
-#: :attr:`.Measure.spp` is a total sample budget, distributed across spectral
-#: loop iterations; with ``"uniform"``, it applies in full to every iteration.
-SAMPLE_ALLOCATION_POLICIES = ("uniform", "weighted")
+
+class SampleAllocation(enum.Enum):
+    UNIFORM = "uniform"
+    WEIGHTED = "weighted"
+
+    @staticmethod
+    def convert(value: Any) -> SampleAllocation:
+        if isinstance(value, SampleAllocation):
+            return value
+        elif isinstance(value, str):
+            try:
+                return SampleAllocation[value.upper()]
+            except KeyError:
+                raise ValueError(
+                    f"unsupported sample allocation policy {value!r}"
+                ) from None
+        else:
+            raise TypeError(
+                f"Cannot convert a {type(value)} instance to SampleAllocation"
+            )
 
 
 class ProgressLevel(enum.IntEnum):
@@ -211,8 +227,7 @@ settings = Dynaconf(
         ),
         Validator(
             "SAMPLE_ALLOCATION",
-            cast=lambda x: str(x).lower(),
-            is_in=SAMPLE_ALLOCATION_POLICIES,
+            cast=SampleAllocation.convert,
             default=_defaults.sample_allocation,
         ),
     ],
