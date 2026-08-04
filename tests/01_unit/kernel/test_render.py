@@ -195,6 +195,22 @@ def test_mi_traverse_name_id_override(
     assert set(mi_wrapper.parameters.keys()) == expected
 
 
+def test_mi_traverse_multi_parent_update(mode_mono):
+    # "my_bsdf" is referenced by three shapes: updating it must notify all of
+    # them, not just the first one encountered during traversal.
+    mi_scene = mi_load_dict(SCENE_DICTS["referenced_bsdf"])
+    mi_wrapper = mi_traverse(mi_scene)
+
+    out = mi_wrapper.parameters.update({"my_bsdf.reflectance.value": 0.3})
+    updated = {node.id(): keys for node, keys in out if node.id()}
+
+    for shape_id in ("_rectangle_1", "_rectangle_2", "_disk_1"):
+        assert "bsdf" in updated[shape_id]
+
+    # "_disk_2" has its own, unrelated BSDF and must not be notified
+    assert "_disk_2" not in updated
+
+
 class TestMiRender:
     def test_context_loop(self, mode_mono):
         mi_scene = mi_load_dict(
