@@ -233,7 +233,7 @@ class ParticlePhaseFunction(PhaseFunction):
                 result.update({"m12": 1, "m33": 2, "m34": 3})
 
                 if self.particle_properties.particle_shape == "spheroidal":
-                    result.update({"m22": 4, "m44": 6})
+                    result.update({"m22": 4, "m44": 5})
                 elif self.particle_properties.particle_shape == "spherical":
                     result.update({"m22": 0, "m44": 2})
 

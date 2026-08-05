@@ -1,9 +1,11 @@
 import mitsuba as mi
 import numpy as np
 import pytest
+import xarray as xr
 
 import eradiate
 from eradiate import fresolver
+from eradiate.data.convert import make_aer_core_v2
 from eradiate.radprops import ParticleProperties
 from eradiate.scenes.phase import ParticlePhaseFunction
 from eradiate.spectral import SpectralIndex
@@ -15,6 +17,30 @@ DS_ID_TO_FNAME = {
     "polarized_data": "aeronet_sahara_spherical_RAMIA_GENERIC_extrapolated-aer_core_v2",
     "pmom_data": "soot.mie-aer_core_v2",
 }
+
+
+def make_minimal_aer_core_v2(nphamat: int) -> xr.Dataset:
+    """
+    Build a minimal Aer-Core v2 dataset with ``nphamat`` phase matrix components
+    (1: unpolarized, 4: spherical, 6: spheroidal).
+    """
+    # Phase matrix component names, in Aer-Core v2 storage order
+    phamat_names = ["11", "12", "33", "34", "22", "44"]
+
+    w = np.array([400.0, 700.0])
+    mu = np.tile(np.array([-1.0, 0.0, 1.0]), (len(w), 1))
+    phase = np.ones((nphamat, *mu.shape))
+
+    return make_aer_core_v2(
+        w=w * ureg.nm,
+        phamat=phamat_names[:nphamat],
+        mu=mu * ureg.dimensionless,
+        theta=np.degrees(np.arccos(mu)) * ureg.deg,
+        ext=np.ones_like(w) * ureg("km^-1"),
+        ssa=np.ones_like(w) * ureg.dimensionless,
+        phase=phase * ureg("1/sr"),
+        normalize=True,
+    )
 
 
 @pytest.fixture(scope="module", params=list(DS_ID_TO_FNAME.keys()))
@@ -102,6 +128,28 @@ class TestParticlePhaseFunction:
         # Repeated evaluations with the same wavelength value do not trigger a
         # recomputation
         assert pphase.eval_phase(si) is result
+
+    @pytest.mark.parametrize(
+        "nphamat, expected",
+        [
+            (4, {"m11": 0, "m12": 1, "m33": 2, "m34": 3, "m22": 0, "m44": 2}),
+            (6, {"m11": 0, "m12": 1, "m33": 2, "m34": 3, "m22": 4, "m44": 5}),
+        ],
+        ids=["spherical", "spheroidal"],
+    )
+    def test_param_to_phamat(self, mode_ckd_polarized, nphamat, expected):
+        """
+        Phase matrix components map to the storage indices documented in
+        eval_phase(), and those indices are within bounds.
+        """
+        pphase = ParticlePhaseFunction(
+            particle_properties=ParticleProperties(make_minimal_aer_core_v2(nphamat))
+        )
+        assert pphase._param_to_phamat() == expected
+
+        si = SpectralIndex.new()
+        for index in expected.values():
+            assert pphase.eval_phase(si, index).ndim == 1
 
     def test_eval_pmom(self, modes_all_double, pphase):
         si = SpectralIndex.new()
