@@ -234,9 +234,11 @@ def build_pipeline(config: dict) -> Pipeline:
     # ------------------------------------------------------------------
     if is_ckd and apply_srf:
 
-        def _make_srf_node(src_name):
+        def _make_srf_node(src_name, is_variance=False):
             def _srf_func(**kwargs):
-                return logic.apply_spectral_response(kwargs[src_name], kwargs["srf"])
+                return logic.apply_spectral_response(
+                    kwargs[src_name], kwargs["srf"], is_variance
+                )
 
             return _srf_func
 
@@ -247,6 +249,15 @@ def build_pipeline(config: dict) -> Pipeline:
             description=f"Apply SRF → {var_name}_srf",
             metadata=_FINAL_DATA,
         )
+
+        if calc_var:
+            pipeline.add_node(
+                f"{var_name}_srf_var",
+                func=_make_srf_node(f"{var_name}_var", is_variance=True),
+                dependencies=[f"{var_name}_var", "srf"],
+                description=f"Apply SRF → {var_name}_srf_var",
+                metadata=_FINAL_DATA,
+            )
 
         if var_name == "sector_radiosity":
             pipeline.add_node(
