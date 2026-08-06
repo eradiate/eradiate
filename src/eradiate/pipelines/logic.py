@@ -208,26 +208,38 @@ def aggregate_ckd_quad(
     return result
 
 
-def apply_spectral_response(
+def spectral_response_weights(
     spectral_data: xr.DataArray, srf: SpectralResponseFunction
 ) -> xr.DataArray:
-    """
-    Apply SRF weighting (a.k.a. convolution) to spectral data and turn it into
-    a band aggregate.
+    r"""
+    Compute the weight each spectral bin carries in the band aggregate produced
+    by :func:`apply_spectral_response`.
 
     Parameters
     ----------
     spectral_data : DataArray
-        Spectral data to process.
+        Spectral data the weights are computed for. Only its ``w``,
+        ``bin_wmin`` and ``bin_wmax`` coordinates are used.
 
-    srf : SpectralResponseFunction
+    srf : .SpectralResponseFunction
         Spectral response function to apply.
 
     Returns
     -------
-    DataArray or None
-        A data array where the spectral dimension is removed after applying
-        SRF weighting, or ``None`` if the SRF is a :class:`.DeltaSRF`.
+    DataArray
+        Weights, indexed against the ``w`` coordinate of `spectral_data`. They
+        sum to 1 when the SRF support is entirely covered by the data.
+
+    Notes
+    -----
+    SRF weighting turns a set of per-bin values :math:`x_i` into a single band
+    value :math:`\sum_i c_i x_i`. This function computes the coefficients
+    :math:`c_i`. They are computed by feeding a unit impulse on each bin (*i.e.*
+    considering the :math:`x_i = 1`, all other values set to zero) through the
+    resampling and integration steps that are to be applied to the actual data.
+    Computed weights are consumed by :func:`apply_spectral_response`, allowing
+    different usage depending on whether the mean or variance of a variable is
+    processed.
     """
     if not {"bin_wmin", "bin_wmax"}.issubset(set(spectral_data.coords.keys())):
         raise ValueError(
@@ -246,42 +258,80 @@ def apply_spectral_response(
     else:
         raise TypeError(f"unhandled SRF type '{srf.__class__.__name__}'")
 
-    # Evaluate integral of product of variable and SRF within selected interval
     data_w = to_quantity(spectral_data.coords["w"])
 
     # Spectral grid is the finest between data and SRF grids
     w_units = data_w.units
     w_m = np.array(sorted(set(data_w.m_as(w_units)) | set(srf_w.m_as(w_units))))
 
+    # One row per spectral bin, each holding a unit impulse on that bin. Only
+    # the spectral coordinate is carried over: the others play no part here and
+    # would only be resampled for nothing.
+    basis = xr.DataArray(
+        np.eye(spectral_data.sizes["w"]),
+        dims=("bin", "w"),
+        coords={"w": spectral_data.coords["w"].values},
+    )
+
     # If data var has length 1 on spectral dimension, directly select
     # the value instead of using interpolation (it's a known scipy issue)
-    if len(spectral_data.coords["w"]) == 1:
-        # Note: The tricky thing is to recreate and extend the 'w'
-        # dimension with the same axis index as in the original data
-        spectral_values = spectral_data.isel(w=0, drop=True).expand_dims(
-            w=w_m, axis=spectral_data.get_axis_num("w")
-        )
+    if spectral_data.sizes["w"] == 1:
+        basis_values = basis.isel(w=0, drop=True).expand_dims(w=w_m, axis=1)
 
     # Otherwise, use nearest neighbour interpolation (we assume that the
     # spectral data is constant over each spectral bin)
     else:
-        spectral_values = spectral_data.interp(
+        basis_values = basis.interp(
             w=w_m, method="nearest", kwargs={"fill_value": "extrapolate"}
         )
 
-    srf_values = (
-        srf.eval(w_m * w_units)
-        .reshape([-1 if dim == "w" else 1 for dim in spectral_values.dims])
-        .magnitude
+    srf_values = xr.DataArray(srf.eval(w_m * w_units).magnitude, dims="w")
+    weights = (basis_values * srf_values).integrate("w") / srf_int.m_as(w_units)
+
+    # Rows of the identity are the bins of the input grid, in its own order
+    return xr.DataArray(
+        weights.values, dims="w", coords={"w": spectral_data.coords["w"].values}
     )
-    assert isinstance(srf_values, np.ndarray)  # Check for leftover bugs
-    var_srf_int = (spectral_values * srf_values).integrate("w")
+
+
+def apply_spectral_response(
+    spectral_data: xr.DataArray,
+    srf: SpectralResponseFunction,
+    is_variance: bool = False,
+) -> xr.DataArray:
+    """
+    Apply SRF weighting (a.k.a. convolution) to spectral data and turn it into
+    a band aggregate.
+
+    Parameters
+    ----------
+    spectral_data : DataArray
+        Spectral data to process.
+
+    srf : SpectralResponseFunction
+        Spectral response function to apply.
+
+    is_variance : bool, default: False
+        Flag that specifies whether `spectral_data` holds variance values. If
+        ``True``, the weights are squared, which propagates the variance
+        through the SRF weighting instead of averaging it. Per-bin estimates
+        are assumed to be uncorrelated, which holds for the independent Monte
+        Carlo estimates the pipeline produces.
+
+    Returns
+    -------
+    DataArray or None
+        A data array where the spectral dimension is removed after applying
+        SRF weighting, or ``None`` if the SRF is a :class:`.DeltaSRF`.
+    """
+    weights = spectral_response_weights(spectral_data, srf)
 
     # Initialize storage (we want to keep all coordinate variables)
     result = xr.full_like(spectral_data, np.nan).isel(w=0, drop=True)
 
     # Apply SRF to variable and store result
-    result.values = var_srf_int.values / srf_int.m_as(w_units)
+    band_values = (spectral_data * (weights**2 if is_variance else weights)).sum("w")
+    result.values = band_values.transpose(*result.dims).values
 
     if isinstance(srf, BandSRF):
         # Add SRF central wavelength as a scalar coordinate
@@ -301,17 +351,24 @@ def apply_spectral_response(
             }
         )
 
-    # Apply metadata
-    attrs = spectral_values.attrs.copy()
-    if "standard_name" in attrs:
-        attrs["standard_name"] += "_srf"
-    if "long_name" in attrs:
-        attrs["long_name"] += " (SRF-weighted)"
-
     try:
-        name = spectral_data.name + "_srf"
-    except TypeError as e:
+        name = (
+            spectral_data.name.removesuffix("_var") + "_srf_var"
+            if is_variance
+            else spectral_data.name + "_srf"
+        )
+    except (AttributeError, TypeError) as e:
         raise TypeError("expected a DataArray with a name") from e
+
+    # Apply metadata (as in aggregate_ckd_quad, variances carry none)
+    if is_variance:
+        attrs = {}
+    else:
+        attrs = spectral_data.attrs.copy()
+        if "standard_name" in attrs:
+            attrs["standard_name"] += "_srf"
+        if "long_name" in attrs:
+            attrs["long_name"] += " (SRF-weighted)"
 
     result.attrs = attrs
     result.name = name
