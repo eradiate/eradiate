@@ -3,6 +3,7 @@ Tests for the test report logging system.
 """
 
 import logging
+from types import SimpleNamespace
 
 import matplotlib.pyplot as plt
 import pytest
@@ -21,9 +22,13 @@ def test_figure_to_html():
 
     assert html.startswith("<svg")
     assert html.rstrip().endswith("</svg>")
-    assert "var(--text-color)" in html
-    # Attributes of the wrapping <svg> tag must be separated
-    assert 'viewBox="0 0 810 540"\nxmlns="http://www.w3.org/2000/svg">' in html
+    # The XML prolog and DOCTYPE must be stripped: this is embedded in HTML
+    assert "<?xml" not in html
+    assert "<!DOCTYPE" not in html
+    # The style is injected right after the root tag, and must leave the colours
+    # Matplotlib sets itself alone
+    assert "<style>path:not([style]) { fill: var(--text-color); }</style>" in html
+    assert html.index("<style>") < html.index("<metadata>")
 
 
 class TestReportLogger:
@@ -56,18 +61,22 @@ class TestReportLogger:
         assert "hello report" in caplog.text
         assert "<svg></svg>" not in caplog.text
 
-    def test_robot_delegation(self):
+    def test_robot_delegation(self, monkeypatch):
         """
         With the Robot backend, messages and HTML fragments are forwarded to
         the Robot logger with the expected flags.
         """
-        pytest.importorskip("robot")
+        # Importing the submodule also binds it on robot.api, which is what
+        # makes it patchable below
+        pytest.importorskip("robot.api.logger")
 
-        # Exercise the Robot backend selection, then substitute a stub to
-        # capture the forwarded calls
+        # The backend is resolved at call time by importing robot.api.logger:
+        # substitute a stub there to capture the forwarded calls
+        stub = self.RobotLoggerStub()
+        monkeypatch.setattr("robot.api.logger", stub)
+
         logger = ReportLogger(use_robot=True)
-        assert logger._robot is not None
-        logger._robot = stub = self.RobotLoggerStub()
+        assert logger._robot is stub
 
         logger.info("message")
         logger.html("<b>fragment</b>")
@@ -76,6 +85,26 @@ class TestReportLogger:
             ("message", {"also_console": True}),
             ("<b>fragment</b>", {"html": True, "also_console": False}),
         ]
+
+    @pytest.mark.parametrize("active", [False, True])
+    def test_robot_autoselection(self, monkeypatch, active):
+        """
+        With ``use_robot`` unset, the Robot backend is selected only during an
+        active Robot run: outside one, ``robot.api.logger`` falls back to
+        standard logging and would dump HTML fragments into pytest's captured
+        log.
+        """
+        pytest.importorskip("robot")
+
+        # Swap the module-level lookup rather than the real context stack: an
+        # actual Robot run (report tasks) holds its own reference to it and
+        # must keep pushing and popping contexts undisturbed
+        monkeypatch.setattr(
+            "robot.running.context.EXECUTION_CONTEXTS",
+            SimpleNamespace(current=object() if active else None),
+        )
+
+        assert ReportLogger().reporting is active
 
     def test_smoke(self):
         """

@@ -268,7 +268,7 @@ class Experiment(ABC):
         if abs_db is not None:
             if self._background_spectral_grid is not AUTO:
                 warnings.warn(
-                    "User-specified a background spectral grid is overridden by "
+                    "User-specified background spectral grid is overridden by "
                     "atmosphere spectral grid.",
                     stacklevel=2,
                 )

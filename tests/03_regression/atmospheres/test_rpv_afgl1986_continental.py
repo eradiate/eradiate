@@ -17,27 +17,18 @@ def exp(absorption_database_error_handler_config):
 
 
 @append_doc(create_rpv_afgl1986_continental_brfpp, prepend=True)
-def test_rpv_afgl1986_continental_brfpp(
-    mode_ckd_double, artefact_dir, session_timestamp, exp, plot_figures
-):
+def test_rpv_afgl1986_continental_brfpp(mode_ckd_double, exp, dataset_regression):
     """
     *Expected behaviour*
 
     Simulation results are compared to a reference obtained with a prior
-    version. Comparison is done with a chi-squared test with a threshold of
-    0.05.
+    version. Comparison is done with a Z-test with a threshold of 0.05.
     """
     result = eradiate.run(exp, spp=10000)
     report_logger.html(result._repr_html_())
 
-    test = ZTest(
-        name=f"{session_timestamp:%Y%m%d-%H%M%S}-rpv_afgl1986_continental.nc",
-        value=result,
-        reference="tests/regression_test_references/rpv_afgl1986_continental_brfpp_ref.nc",
-        threshold=0.05,
-        archive_dir=artefact_dir,
-        variable="radiance",
-        plot=plot_figures,
+    dataset_regression.check(
+        result,
+        ZTest(0.05, variable="radiance"),
+        basename="rpv_afgl1986_continental_brfpp_ref",
     )
-
-    assert test.run()

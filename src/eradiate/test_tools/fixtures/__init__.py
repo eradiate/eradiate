@@ -9,10 +9,16 @@ import joseki
 import numpy as np
 import pytest
 
+from ._regression import (  # noqa: F401
+    DatasetRegressionFixture,
+    dataset_regression,
+    reference_dir,
+    reference_update_dir,
+)
 from ..util import check_plugin
 from ... import fresolver
-from ... import unit_registry as ureg
 from ...data.convert import make_aer_core_v2
+from ...units import unit_registry as ureg
 
 
 @pytest.fixture
@@ -191,13 +197,6 @@ def particle_properties_test():
         w=w, phamat=["11"], mu=mu, theta=theta, ext=ext, ssa=ssa, phase=phase
     )
     yield ParticleProperties(ds)
-
-
-@pytest.fixture(scope="session")
-def session_timestamp():
-    from datetime import datetime
-
-    return datetime.now()
 
 
 @pytest.fixture(scope="session")

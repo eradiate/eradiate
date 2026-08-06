@@ -72,6 +72,8 @@ docs = [
   "nbsphinx>=0.9.0",
   "ipython", # Required for syntax highlighting in notebooks
   "pytest", # Required for pytest-related function docs
+  "pytest-datadir", # Required for pytest-related function docs
+  "pytest-regressions", # Required for pytest-related function docs
   "seaborn",
   "sphinx>=9.0",
   "sphinxcontrib-bibtex>=2.0",
@@ -83,13 +85,15 @@ docs = [
 ]
 test = [
   "pytest>=9.0",
-  "coverage>=7.13",
+  "colorcet>=3.0",
   "pytest-cov",
   "pytest-json-report",
+  "pytest-regressions>=2.11",
   "asv==0.6.*",
   "robotframework",
   "pytest-robotframework",
   "skyfield-data", # Load skyfield data from PyPI (better for CI)
+  "coverage>=7.13",
 ]
 dev = [
   "bump-my-version>=1.2.0,<1.3.0",
