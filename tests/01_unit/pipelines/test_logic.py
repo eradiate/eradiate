@@ -187,6 +187,14 @@ def apply_spectral_response(mode, measure, experiment, aggregate_ckd_quad):
     return logic.apply_spectral_response(spectral_data, experiment.measures[0].srf)
 
 
+@pytest.fixture
+def apply_spectral_response_var(mode, measure, experiment, aggregate_ckd_quad_var):
+    spectral_data = aggregate_ckd_quad_var
+    return logic.apply_spectral_response(
+        spectral_data, experiment.measures[0].srf, is_variance=True
+    )
+
+
 # ------------------------------------------------------------------------------
 #                                     Tests
 # ------------------------------------------------------------------------------
@@ -325,6 +333,73 @@ def test_04_apply_spectral_response_main(
 
     # The recorded central wavelength is correct
     np.testing.assert_approx_equal(result["w_srf"].values, 559.84824506)
+
+
+@pytest.mark.parametrize("mode_id", ["ckd"])
+@pytest.mark.parametrize("srf", ["sentinel_2a-msi-3"])
+def test_04_apply_spectral_response_var(
+    experiment, aggregate_ckd_quad_var, apply_spectral_response_var
+):
+    """
+    Unit test for :func:`.apply_spectral_response` when used on a variance.
+    """
+    var_name = experiment.measures[0].var[0]
+    raw = aggregate_ckd_quad_var
+    result = apply_spectral_response_var
+
+    # Dimension and coordinate checks, as for the main variable
+    assert set(result.dims) == set(raw.dims) - {"w"}
+    expected_coords = (set(raw.coords) | {"w_srf"}) - {"w", "bin_wmax", "bin_wmin"}
+    assert set(result.coords) == expected_coords
+
+    # The variance is named after the variable it qualifies, so that it pairs
+    # with '<var>_srf', and carries no metadata (as aggregate_ckd_quad does)
+    assert result.name == f"{var_name}_srf_var"
+    assert result.attrs == {}
+    assert np.all(result.values >= 0.0)
+
+
+@pytest.mark.parametrize("mode_id", ["ckd"])
+@pytest.mark.parametrize("srf", ["sentinel_2a-msi-3"])
+def test_04_apply_spectral_response_weights(experiment, aggregate_ckd_quad):
+    """
+    Unit test for :func:`.spectral_response_weights` and the variance
+    propagation built on it.
+
+    SRF weighting is a weighted average, so its weights are non-negative and
+    sum to 1: a spectrally constant variable comes out unchanged. A spectrally
+    constant *variance* does not — averaging uncorrelated estimates shrinks it
+    by the effective number of contributing bins, which lies between 1 and the
+    bin count.
+    """
+    srf = experiment.measures[0].srf
+    n_bins = aggregate_ckd_quad.sizes["w"]
+    assert n_bins > 1  # Otherwise the variance check below is vacuous
+
+    weights = logic.spectral_response_weights(aggregate_ckd_quad, srf)
+    assert np.all(weights.values >= 0.0)
+
+    # The weights sum to 1 only up to discretisation: they integrate the SRF on
+    # the union of the data and SRF grids, while the normalisation term
+    # integrates it on the SRF grid alone, over the slightly wider interval
+    # spanned by the outer bin bounds
+    total = float(weights.sum())
+    np.testing.assert_allclose(total, 1.0, rtol=5e-2)
+
+    constant = xr.ones_like(aggregate_ckd_quad)
+
+    # Weighting a constant field is summing the weights, exactly
+    mean = logic.apply_spectral_response(constant, srf)
+    np.testing.assert_allclose(mean.values, total, rtol=1e-12)
+
+    # ... and propagating a constant variance is summing their squares
+    variance = logic.apply_spectral_response(constant, srf, is_variance=True)
+    np.testing.assert_allclose(variance.values, float((weights**2).sum()), rtol=1e-12)
+
+    # Averaging uncorrelated estimates shrinks the variance, down to the
+    # equal-weight bound total² / n_bins (Cauchy-Schwarz)
+    assert np.all(variance.values < mean.values)
+    assert np.all(variance.values >= total**2 / n_bins)
 
 
 @pytest.mark.parametrize("mode_id", ["ckd"])
