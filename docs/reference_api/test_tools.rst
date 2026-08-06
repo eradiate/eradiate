@@ -15,6 +15,25 @@
 
    sample_eval_pdf_bsdf
 
+``eradiate.test_tools.fixtures``
+--------------------------------
+
+.. automodule:: eradiate.test_tools.fixtures
+
+.. currentmodule:: eradiate.test_tools.fixtures
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   dataset_regression
+
+.. rubric:: Implementation details
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   DatasetRegressionFixture
+
 ``eradiate.test_tools.regression``
 ----------------------------------
 
@@ -26,13 +45,11 @@
    :toctree: generated/autosummary/
 
    RegressionTest
+   RegressionTestFailure
+   RegressionTestOutcome
    RMSETest
-   Chi2Test
-   AbstractStudentTTest
-   IndependentStudentTTest
-   PairedStudentTTest
    ZTest
-   SidakTTest
+   sidak_family_p_value
 
 ``eradiate.test_tools.report``
 ------------------------------

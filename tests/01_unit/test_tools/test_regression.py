@@ -1,337 +1,437 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+import scipy.stats as spstats
 import xarray as xr
 
 from eradiate.test_tools.regression import (
-    Chi2Test,
-    IndependentStudentTTest,
-    PairedStudentTTest,
+    RegressionTest,
     RMSETest,
     ZTest,
+    sidak_family_p_value,
 )
-from eradiate.test_tools.report import ReportLogger
 
 
-class TestRegression:
-    @pytest.mark.parametrize(
-        "cls, name",
-        [
-            (RMSETest, "rmse"),
-            (Chi2Test, "chi2"),
-            (IndependentStudentTTest, "independent_t-test"),
-            (PairedStudentTTest, "paired_t-test"),
-            (ZTest, "z-test"),
-        ],
-        ids=["rmse", "chi2", "independent_t-test", "paired_t-test", "z-test"],
-    )
-    def test_instantiate(self, cls, name):
-        # instantiate the test with reasonable defaults
-        assert cls(
-            name=name,
-            archive_dir="tests/",
-            value=xr.Dataset(),
-            reference=xr.Dataset(),
-            threshold=0.05,
-            plot=False,
-        )
-
-    @pytest.mark.parametrize(
-        "missing",
-        ["none", "name", "archive_dir", "value", "threshold", "plot"],
-    )
-    def test_instantiate_fail(self, missing):
-        # assert all arguments except reference are needed
-        # only one subclass of RegressionTest (Chi2Test) is tested
-        kwargs = {
-            "name": "chi2",
-            "archive_dir": "tests/",
-            "value": xr.Dataset(),
-            "threshold": 0.05,
-            "plot": False,
-        }
-
-        if missing in kwargs:
-            kwargs.pop(missing)
-            with pytest.raises(TypeError):
-                Chi2Test(**kwargs)
-
-        else:
-            Chi2Test(**kwargs)
-
-    def test_reference_converter(self, tmp_path):
-        # test proper handling of missing and unreadable reference
-
-        # file does not exist
-        assert (
-            Chi2Test(
-                name="chi2",
-                archive_dir="tests/",
-                value=xr.Dataset(),
-                threshold=0.05,
-                reference="./this/file/doesnot.exist",
-                plot=False,
-            ).reference
-            is None
-        )
-
-        # wrong file type
-        with pytest.raises(
-            ValueError,
-            match="did not find a match in any of xarray's currently installed IO backends",
-        ):
-            tempfile = tmp_path / "hello.txt"
-            tempfile.write_text("test")
-
-            Chi2Test(
-                name="chi2",
-                archive_dir="tests/",
-                value=xr.Dataset(),
-                threshold=0.05,
-                reference=tempfile,
-                plot=False,
-            )
-
-        # wrong data type
-        with pytest.raises(ValueError, match="Reference must be provided as a Dataset"):
-            Chi2Test(
-                name="chi2",
-                archive_dir="tests/",
-                value=xr.Dataset(),
-                threshold=0.05,
-                reference=np.zeros(25),
-                plot=False,
-            )
-
-
-class TestEvaluate:
-    def test_rmse(self):
-        # test the computation of the RMSE value from given data.
-        # we give the dataset some wrong data fields to ensure the right
-        # data is used
-
-        result = np.random.rand(50)
-        ref = np.random.rand(50)
-
-        result_da = xr.DataArray(result)
-        ref_da = xr.DataArray(ref)
-
-        result_ds = xr.Dataset(
-            data_vars={
-                "brf": result_da,
-                "stuff": result_da * 0.1,
-                "wrong": result_da * 123.0,
-            }
-        )
-        ref_ds = xr.Dataset(
-            data_vars={"brf": ref_da, "stuff": ref_da * 0.2, "wrong": ref_da * 321.0}
-        )
-
-        rmse_ref = np.linalg.norm(result - ref) / np.sqrt(len(ref))
-
-        test = RMSETest(
-            name="rmse",
-            value=result_ds,
-            reference=ref_ds,
-            variable="brf",
-            archive_dir="tests/",
-            threshold=0.05,
-            plot=False,
-        )
-
-        _, rmse = test._evaluate()
-
-        assert rmse == rmse_ref
-
-    def test_chi2(self, mode_mono):
-        # test the computation of the Chi squared value from given data.
-        # we give the dataset some wrong data fields to ensure the right
-        # data is used
-
-        import mitsuba as mi
-
-        result_np = np.random.rand(50)
-        ref_np = np.random.rand(50)
-
-        histo_bins = np.linspace(ref_np.min(), ref_np.max(), 20)
-        histo_ref = np.histogram(ref_np, histo_bins)[0]
-        histo_res = np.histogram(result_np, histo_bins)[0]
-
-        # sorting both histograms following the ascending frequencies in
-        # the reference. Algorithm from:
-        # https://stackoverflow.com/questions/9764298/how-to-sort-two-lists-which-reference-each-other-in-the-exact-same-way
-        histo_ref_sorted, histo_res_sorted = zip(
-            *sorted(zip(histo_ref, histo_res), key=lambda x: x[0])
-        )
-
-        from mitsuba.math_py import rlgamma
-
-        chi2val, dof, pooled_in, pooled_out = mi.math.chi2(
-            histo_res_sorted, histo_ref_sorted, 5
-        )
-        p_value_ref = 1.0 - rlgamma(dof / 2.0, chi2val / 2.0)
-
-        result_da = xr.DataArray(result_np)
-        ref_da = xr.DataArray(ref_np)
-
-        result_ds = xr.Dataset(
-            data_vars={
-                "brf": result_da,
-                "stuff": result_da * 0.1,
-                "wrong": result_da * 123.0,
-            }
-        )
-        ref_ds = xr.Dataset(
-            data_vars={"brf": ref_da, "stuff": ref_da * 0.2, "wrong": ref_da * 321.0}
-        )
-
-        test = Chi2Test(
-            name="chi2",
-            value=result_ds,
-            reference=ref_ds,
-            variable="brf",
-            archive_dir="tests/",
-            threshold=0.05,
-            plot=False,
-        )
-
-        _, p_value = test._evaluate()
-
-        assert p_value == p_value_ref
-
-
-class TestRegressionReport:
+def make_offset_datasets(offsets):
     """
-    These tests check reporting infrastructure integration in the regression
-    testing components.
+    Build a (value, reference) pair over a ``vza`` dimension whose elementwise
+    difference is exactly ``offsets``. Decoy data variables are added to both
+    datasets to catch a test reading the wrong variable.
+    """
+    offsets = np.asarray(offsets, dtype=float)
+    vza = np.linspace(0.0, 60.0, offsets.size)
+    ref_da = xr.DataArray(np.ones(offsets.size), dims="vza", coords={"vza": vza})
+    value_da = ref_da + offsets
+
+    ref = xr.Dataset({"brf": ref_da, "stuff": ref_da * 0.2, "wrong": ref_da * 321.0})
+    value = xr.Dataset(
+        {"brf": value_da, "stuff": value_da * 0.1, "wrong": value_da * 123.0}
+    )
+    return value, ref
+
+
+class TestConstruction:
+    """
+    These tests check constructor argument handling.
     """
 
-    class ReportLoggerSpy(ReportLogger):
-        """
-        Report logger that records messages and HTML fragments for assertions
-        while forwarding them to the active report backend. Content sent
-        through this spy therefore shows up in the generated test report and
-        can be inspected visually.
-        """
+    @pytest.mark.parametrize("cls", [RMSETest, ZTest], ids=["rmse", "z-test"])
+    def test_instantiate(self, cls):
+        # the threshold is the only required argument: a test holds a
+        # criterion, not the data it is applied to
+        test = cls(0.05)
+        assert test.threshold == 0.05
+        assert test.variable == "brf_srf"
+        assert test.dim is None
 
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.messages = []
-            self.fragments = []
+    def test_instantiate_fail(self):
+        with pytest.raises(TypeError):
+            RMSETest()
 
-        def info(self, msg):
-            self.messages.append(msg)
-            super().info(msg)
+    def test_abstract_metric(self):
+        # a subclass that declares no metric cannot be instantiated: the
+        # comparison direction is needed to interpret its threshold
+        class Incomplete(RegressionTest):
+            def _evaluate(self, result, reference):
+                raise NotImplementedError
 
-        def html(self, fragment):
-            self.fragments.append(fragment)
-            super().html(fragment)
+        with pytest.raises(TypeError, match="Unsupported test type"):
+            Incomplete(0.05)
 
-    @pytest.fixture
-    def spy(self):
-        return self.ReportLoggerSpy()
+
+class TestPlot:
+    """
+    These tests check chart generation for data layouts with extra dimensions.
+    """
 
     @staticmethod
-    def make_dataset(values, vza):
-        return xr.Dataset(
-            {"brf": ("vza", values)},
-            coords={"vza": ("vza", vza)},
+    def make_spectral_datasets(n_w=3, n_x=8, offset=0.1):
+        """
+        Build a (value, reference) pair with the layout a measure actually
+        produces: dimensions ``(w, y_index, x_index)`` with ``vza`` a
+        *non-dimension* coordinate over ``(x_index, y_index)``. The elementwise
+        difference is ``offset``.
+        """
+        ref_da = xr.DataArray(
+            np.ones((n_w, 1, n_x)),
+            dims=("w", "y_index", "x_index"),
+            coords={
+                "w": np.linspace(440.0, 660.0, n_w),
+                "vza": (
+                    ("x_index", "y_index"),
+                    np.linspace(0.0, 60.0, n_x)[:, np.newaxis],
+                ),
+            },
         )
 
-    @pytest.fixture
-    def datasets(self):
-        vza = np.linspace(-75.0, 75.0, 11)
-        ref = np.linspace(0.1, 0.2, 11)
-        result = ref + 1e-3
-        return self.make_dataset(result, vza), self.make_dataset(ref, vza)
+        ref = xr.Dataset({"brf": ref_da, "brf_var": ref_da * 0.01})
+        value = xr.Dataset({"brf": ref_da + offset, "brf_var": ref_da * 0.01})
+        return value, ref
 
-    def test_messages(self, tmp_path, datasets, spy):
-        """
-        A regression test sends its diagnostic messages to the injected
-        report logger and archives result and reference datasets.
-        """
-        result, ref = datasets
+    @pytest.mark.parametrize("cls", [RMSETest, ZTest], ids=["rmse", "z-test"])
+    def test_spectral(self, cls):
+        # a dataset with a dimension other than the angular one must be
+        # charted, with that dimension mapped to colour. The datasets use the
+        # production layout, where vza is a coordinate over x_index rather than
+        # a dimension of its own.
+        n_w = 3
+        value, ref = self.make_spectral_datasets(n_w=n_w)
 
-        test = RMSETest(
-            name="rmse-pass",
-            value=result,
-            reference=ref,
-            variable="brf",
-            threshold=1.0,
-            archive_dir=tmp_path,
-            plot=False,
-            logger=spy,
+        test = cls(0.05, variable="brf")
+        figure, axes = test.plot(value, ref, test.evaluate(value, ref))
+
+        try:
+            # one reference line and one result line per wavelength on the
+            # comparison panel, one line per wavelength on each difference panel
+            assert len(axes[0][0].lines) == 2 * n_w
+            assert len(axes[1][0].lines) == n_w
+            assert len(axes[1][1].lines) == n_w
+        finally:
+            plt.close(figure)
+
+    def test_without_outcome(self):
+        # charting is also the way a *broken* comparison is diagnosed, so it
+        # must work with no verdict to report
+        value, ref = self.make_spectral_datasets()
+        test = RMSETest(0.05, variable="brf")
+
+        figure, axes = test.plot(value, ref)
+        try:
+            assert "is not available" in axes[0][1].get_title()
+        finally:
+            plt.close(figure)
+
+    def test_noref(self):
+        # the reference candidate chart: a single panel, one line per slice
+        n_w = 3
+        value, _ = self.make_spectral_datasets(n_w=n_w)
+        test = RMSETest(0.05, variable="brf")
+
+        figure, ax = test.plot_noref(value)
+        try:
+            assert len(ax.lines) == n_w
+        finally:
+            plt.close(figure)
+
+
+class TestSidak:
+    """
+    These tests check the Šidák family-wise aggregation helper.
+    """
+
+    def test_limits(self):
+        assert sidak_family_p_value(1.0, 10) == 1.0
+        assert sidak_family_p_value(0.0, 10) == 0.0
+
+    def test_small_p(self):
+        # the closed form loses all precision for small p; the implementation
+        # must not
+        p_min, n = 1e-17, 1000
+        assert sidak_family_p_value(p_min, n) == pytest.approx(p_min * n, rel=1e-6)
+
+
+class TestZTest:
+    """
+    These tests check the Z-test statistic and its Šidák family-wise
+    aggregation.
+    """
+
+    @staticmethod
+    def make_datasets(
+        n=100, bias_in_sigma=0.0, var_res=0.5, var_ref=0.5, outlier_in_sigma=None
+    ):
+        """
+        Build a (value, reference) pair whose elementwise difference is
+        ``bias_in_sigma`` times the standard error of the difference, i.e.
+        sqrt(var_res + var_ref). If ``outlier_in_sigma`` is set, the last
+        element is shifted by that many standard errors instead.
+        """
+        sigma = np.sqrt(var_res + var_ref)
+        bias = np.full(n, bias_in_sigma * sigma)
+        if outlier_in_sigma is not None:
+            bias[-1] = outlier_in_sigma * sigma
+
+        ref = xr.Dataset(
+            {
+                "brf": xr.DataArray(np.zeros(n), dims="vza"),
+                "brf_var": xr.DataArray(np.full(n, var_ref), dims="vza"),
+            }
+        )
+        value = xr.Dataset(
+            {
+                "brf": xr.DataArray(bias, dims="vza"),
+                "brf_var": xr.DataArray(np.full(n, var_res), dims="vza"),
+            }
+        )
+        return value, ref
+
+    @staticmethod
+    def family_p_value(p_min, n):
+        """Expected reported metric: the Šidák-corrected family-wise p-value."""
+        return 1.0 - (1.0 - p_min) ** n
+
+    @pytest.mark.parametrize(
+        "bias_in_sigma, expected_passed",
+        [(0.0, True), (1.0, True), (5.0, False)],
+        ids=["identical", "1-sigma", "5-sigma"],
+    )
+    def test_sidak_evaluate(self, bias_in_sigma, expected_passed):
+        # known-answer check: a uniform k-sigma shift must yield the two-tailed
+        # normal p-value 2 * sf(k) for every pair. The standard error uses both
+        # variances, so an implementation ignoring the reference variance would
+        # report a p-value for k * sqrt(2) instead. The reported metric
+        # aggregates the paired p-values with the Šidák correction.
+        n = 100
+        value, ref = self.make_datasets(n=n, bias_in_sigma=bias_in_sigma)
+
+        outcome = ZTest(0.05, variable="brf").evaluate(value, ref)
+
+        assert outcome.metric_value == pytest.approx(
+            self.family_p_value(2.0 * spstats.norm.sf(bias_in_sigma), n)
+        )
+        assert outcome.passed is expected_passed
+
+    def test_sidak_no_outlier_quota(self):
+        # a single 5-sigma outlier among n = 100 pairs must fail the test: the
+        # old 99.75% quota tolerated int(0.9975 * 100) = 99 accepted pairs out
+        # of 100, plain Šidák tolerates none
+        n = 100
+        value, ref = self.make_datasets(n=n, outlier_in_sigma=5.0)
+
+        test = ZTest(0.05, variable="brf")
+        outcome = test.evaluate(value, ref)
+
+        assert outcome.passed is False
+        # the reported metric is comparable with the threshold:
+        # passed <=> p > alpha
+        assert outcome.metric_value == pytest.approx(
+            self.family_p_value(2.0 * spstats.norm.sf(5.0), n)
+        )
+        assert outcome.metric_value < test.threshold
+
+    def test_missing_reference_variance(self):
+        # legacy references carry no variance: fall back to the result variance
+        # alone, i.e. the difference is scaled by sqrt(var_res) instead of
+        # sqrt(var_res + var_ref), and say so
+        var_res = var_ref = 0.5
+        value, ref = self.make_datasets(
+            bias_in_sigma=1.0, var_res=var_res, var_ref=var_ref
+        )
+        ref = ref.drop_vars("brf_var")
+
+        outcome = ZTest(0.05, variable="brf").evaluate(value, ref)
+
+        inflated = np.sqrt((var_res + var_ref) / var_res)
+        assert outcome.metric_value == pytest.approx(
+            self.family_p_value(2.0 * spstats.norm.sf(inflated), value.sizes["vza"])
+        )
+        assert any("brf_var" in message for message in outcome.warnings)
+
+    def test_requires_result_variance(self):
+        # the result variance is mandatory: this is malformed data, not a
+        # failed comparison
+        value, ref = self.make_datasets()
+        value = value.drop_vars("brf_var")
+
+        with pytest.raises(ValueError, match="The result data for this Z-test"):
+            ZTest(0.05, variable="brf").evaluate(value, ref)
+
+    def test_details_and_diagnostic(self):
+        # the outcome carries what the report prints and what the diagnostic
+        # panel draws, so that evaluation needs no logger and no instance state
+        value, ref = self.make_datasets(n=100)
+
+        outcome = ZTest(0.05, variable="brf").evaluate(value, ref)
+
+        assert set(outcome.details) == {
+            "min p-value",
+            "max p-value",
+            "n accepted",
+            "alpha_1",
+            "alpha_0",
+        }
+        assert outcome.diagnostic_data["z"].shape == (100,)
+        assert "min p-value" in str(outcome)
+
+
+class TestRMSETest:
+    """
+    These tests check the RMSE metric and its comparison direction.
+    """
+
+    @pytest.mark.parametrize(
+        "offsets, expected_rmse",
+        [
+            (np.zeros(16), 0.0),
+            (np.full(16, 0.25), 0.25),
+            ([3.0, 4.0], 12.5**0.5),
+        ],
+        ids=["identical", "constant-offset", "mixed-offsets"],
+    )
+    def test_evaluate(self, offsets, expected_rmse):
+        # known-answer check: a constant offset d yields an RMSE of exactly
+        # |d|, and [3, 4] over two points yields sqrt((9 + 16) / 2). The
+        # threshold is picked so that the three cases also pin the comparison
+        # direction: RMSETest passes when the metric is *below* the threshold,
+        # the opposite of the p-value-based classes.
+        threshold = 0.25
+        value, ref = make_offset_datasets(offsets)
+
+        outcome = RMSETest(threshold, variable="brf").evaluate(value, ref)
+
+        assert outcome.metric_value == pytest.approx(expected_rmse)
+        assert outcome.passed is (expected_rmse <= threshold)
+
+    def test_shape_mismatch(self):
+        # mismatched shapes are malformed data, not a failed comparison
+        value, ref = make_offset_datasets(np.zeros(8))
+        ref = ref.isel(vza=slice(0, 4))
+
+        with pytest.raises(ValueError, match="do not have the same shape"):
+            RMSETest(0.25, variable="brf").evaluate(value, ref)
+
+
+class TestPerSliceEvaluation:
+    """
+    These tests check the ``dim`` field, which evaluates the criterion
+    independently for each slice of a dimension.
+    """
+
+    @staticmethod
+    def make_datasets(offsets_per_w, n_x=8):
+        """
+        Build a (value, reference) pair over ``(w, vza)`` whose difference is
+        constant within each wavelength and given by ``offsets_per_w``.
+        """
+        offsets = np.asarray(offsets_per_w, dtype=float)
+        ref_da = xr.DataArray(
+            np.ones((offsets.size, n_x)),
+            dims=("w", "vza"),
+            coords={
+                "w": np.linspace(440.0, 660.0, offsets.size),
+                "vza": np.linspace(0.0, 60.0, n_x),
+            },
+        )
+        value_da = ref_da + offsets[:, np.newaxis]
+        return xr.Dataset({"brf": value_da}), xr.Dataset({"brf": ref_da})
+
+    def test_is_stricter_than_flattening(self):
+        # the point of `dim`: one bad slice must fail the test even when the
+        # RMSE of the flattened arrays stays under the threshold, because the
+        # good slices dilute it
+        threshold = 0.25
+        value, ref = self.make_datasets([0.0, 0.5, 0.0])
+
+        flat = RMSETest(threshold, variable="brf").evaluate(value, ref)
+        per_slice = RMSETest(threshold, variable="brf", dim="w").evaluate(value, ref)
+
+        assert flat.metric_value == pytest.approx(0.5 / np.sqrt(3.0))
+        assert per_slice.metric_value == pytest.approx(0.5)
+        assert per_slice.passed is False
+
+    def test_reports_worst_slice(self):
+        # the reported metric and coordinate identify the slice that decided
+        # the verdict
+        value, ref = self.make_datasets([0.1, 0.4, 0.2])
+
+        outcome = RMSETest(1.0, variable="brf", dim="w").evaluate(value, ref)
+
+        assert outcome.passed is True
+        assert outcome.metric_value == pytest.approx(0.4)
+        assert outcome.details["worst w"] == pytest.approx(550.0)
+
+    def test_worst_slice_direction(self):
+        # for a p-value the worst slice is the *smallest* metric, not the
+        # largest: the aggregation must follow the comparison direction
+        n = 50
+        w = np.array([440.0, 550.0])
+        bias = np.array([0.0, 5.0])  # second wavelength is off by 5 sigma
+
+        ref = xr.Dataset(
+            {
+                "brf": xr.DataArray(
+                    np.zeros((2, n)), dims=("w", "vza"), coords={"w": w}
+                ),
+                "brf_var": xr.DataArray(np.full((2, n), 0.5), dims=("w", "vza")),
+            }
+        )
+        value = xr.Dataset(
+            {
+                "brf": xr.DataArray(
+                    np.repeat(bias[:, np.newaxis], n, axis=1),
+                    dims=("w", "vza"),
+                    coords={"w": w},
+                ),
+                "brf_var": xr.DataArray(np.full((2, n), 0.5), dims=("w", "vza")),
+            }
         )
 
-        assert test.run()
-        assert any("Metric value: rmse" in msg for msg in spy.messages)
-        assert not spy.fragments  # No plot requested
-        assert (tmp_path / "rmse-pass-result.nc").exists()
-        assert (tmp_path / "rmse-pass-ref.nc").exists()
+        outcome = ZTest(0.05, variable="brf", dim="w").evaluate(value, ref)
 
-    def test_failure(self, tmp_path, datasets, spy):
-        """
-        A failing regression test reports through the same channel.
-        """
-        result, ref = datasets
+        assert outcome.passed is False
+        assert outcome.details["worst w"] == pytest.approx(550.0)
 
-        test = RMSETest(
-            name="rmse-fail",
-            value=result,
-            reference=ref,
-            variable="brf",
-            threshold=0.0,
-            archive_dir=tmp_path,
-            plot=False,
-            logger=spy,
+    @pytest.mark.parametrize("bias", [0.0, 0.5, 5.0])
+    def test_ztest_matches_flattening(self, bias):
+        # a p-value threshold is a false-positive rate, not a tolerance:
+        # slicing must not make the test stricter, otherwise the rate would
+        # grow with the number of slices
+        n_w, n_vza = 10, 50
+        ref = xr.Dataset(
+            {
+                "brf": xr.DataArray(
+                    np.zeros((n_w, n_vza)),
+                    dims=("w", "vza"),
+                    coords={"w": np.linspace(440.0, 660.0, n_w)},
+                ),
+                "brf_var": xr.DataArray(np.full((n_w, n_vza), 0.5), dims=("w", "vza")),
+            }
         )
+        value = ref.copy(deep=True)
+        value["brf"] = value["brf"] + bias
 
-        assert not test.run()
-        assert any("Test did not pass" in msg for msg in spy.messages)
+        flat = ZTest(0.05, variable="brf").evaluate(value, ref)
+        per_slice = ZTest(0.05, variable="brf", dim="w").evaluate(value, ref)
 
-    def test_plot(self, tmp_path, datasets, spy):
-        """
-        With plotting enabled, the comparison chart is embedded in the report
-        as an SVG fragment and saved to the archive directory as a PNG file
-        """
-        result, ref = datasets
+        assert per_slice.metric_value == pytest.approx(flat.metric_value)
+        assert per_slice.passed is flat.passed
+        assert per_slice.threshold == flat.threshold
 
-        test = RMSETest(
-            name="rmse-plot",
-            value=result,
-            reference=ref,
-            variable="brf",
-            threshold=1.0,
-            archive_dir=tmp_path,
-            plot=True,
-            logger=spy,
-        )
+    def test_collects_warnings(self):
+        # warnings raised by individual slices must all reach the caller
+        value, ref = self.make_datasets([0.0, 0.0])
+        for ds in (value, ref):
+            ds["brf_var"] = xr.full_like(ds["brf"], 1e-4)
+        ref = ref.drop_vars("brf_var")
 
-        assert test.run()
-        assert len(spy.fragments) == 1
-        assert spy.fragments[0].startswith("<svg")
-        assert (tmp_path / "rmse-plot.png").exists()
+        outcome = ZTest(0.05, variable="brf", dim="w").evaluate(value, ref)
 
-    def test_noref(self, tmp_path, datasets, spy):
-        """
-        Without reference data, the test fails, stores the result as a new
-        reference candidate, says so in the report and embeds a plot of the
-        reference candidate
-        """
-        result, _ = datasets
+        assert len(outcome.warnings) == 2
 
-        test = RMSETest(
-            name="rmse-noref",
-            value=result,
-            reference=None,
-            variable="brf",
-            threshold=1.0,
-            archive_dir=tmp_path,
-            plot=True,
-            logger=spy,
-        )
+    def test_empty_dimension(self):
+        value, ref = self.make_datasets([0.1])
+        value = value.isel(w=slice(0, 0))
+        ref = ref.isel(w=slice(0, 0))
 
-        assert not test.run()
-        assert any("No reference data found" in msg for msg in spy.messages)
-        assert (tmp_path / "rmse-noref-ref.nc").exists()
-        assert len(spy.fragments) == 1
-        assert spy.fragments[0].startswith("<svg")
+        with pytest.raises(ValueError, match="is empty"):
+            RMSETest(0.25, variable="brf", dim="w").evaluate(value, ref)
