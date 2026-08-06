@@ -29,11 +29,7 @@ WB_OPEN = [
 ]
 
 
-def ocean_grasp_wavelength():
-    return WAVELENGTH
-
-
-def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmoshphere=False):
+def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmosphere=False):
     """
     Create the reference scene of the 3DREAMS project with ocean surface.
 
@@ -56,7 +52,7 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmoshphere=False
         The atmosphere experiment corresponding to the GRASP scenario.
     """
 
-    if has_atmoshphere:
+    if has_atmosphere:
         UB = fresolver.load_dataset(
             "tests/regression_test_specifications/ocean_grasp/REF_UB.nc"
         )
@@ -137,7 +133,7 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmoshphere=False
         },
         "atmosphere": atmosphere,
         "integrator": {"type": "piecewise_volpath", "moment": True}
-        if has_atmoshphere
+        if has_atmosphere
         else {"type": "volpath", "moment": True},
     }
 
