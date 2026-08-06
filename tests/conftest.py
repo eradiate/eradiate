@@ -28,6 +28,14 @@ def pytest_addoption(parser):
     parser.addoption(
         "--plot", action="store_true", default=False, help="Produce and save plots."
     )
+    parser.addoption(
+        "--reference-dir",
+        action="store",
+        default=None,
+        help="Directory regression test references are read from and written "
+        "to. Defaults to the file resolver's location for reads, and to the "
+        "eradiate-data submodule for writes.",
+    )
 
 
 # See: https://stackoverflow.com/a/55301318/3645374

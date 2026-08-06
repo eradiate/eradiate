@@ -41,28 +41,21 @@ def figure_to_html(fig: plt.Figure) -> str:
 
     str_i = StringIO()
     fig.savefig(str_i, format="svg", transparent=True, bbox_inches="tight")
-    fig.canvas.draw_idle()
     svg = str_i.getvalue()
 
+    # Drop the XML prolog and DOCTYPE: this is embedded in an HTML report. The
+    # root <svg> tag carries the figure's own size, so no wrapper is needed.
+    svg = svg[svg.index("<svg") :]
+    root_end = svg.index(">") + 1
+
     # Include some CSS in the SVG to render nicely in the test report's dark
-    # and light modes
-    return "\n".join(
-        [
-            "<svg",
-            'version="1.1"',
-            'baseProfile="full"',
-            'width="810" height="540" viewBox="0 0 810 540"',
-            'xmlns="http://www.w3.org/2000/svg">',
-            "<style>",
-            "    path {",
-            "        fill: var(--text-color);",
-            "        stroke: var(--text-color);",
-            "    }",
-            "</style>",
-            svg,
-            "</svg>",
-        ]
-    )
+    # and light modes. Scoped to paths carrying no inline style, i.e. the glyph
+    # definitions of text elements: everything Matplotlib colours itself (data
+    # lines, legend swatches, spines, ticks) has a style attribute and must keep
+    # its colour, or a colour-mapped chart would be flattened to a single hue.
+    style = "<style>path:not([style]) { fill: var(--text-color); }</style>"
+
+    return svg[:root_end] + style + svg[root_end:]
 
 
 class ReportLogger:
@@ -74,27 +67,49 @@ class ReportLogger:
     use_robot : bool, optional
         If ``True``, forward messages to the Robot Framework logger; if
         ``False``, fall back to standard :mod:`logging`. If unset, the Robot
-        Framework backend is selected iff the :mod:`robot` package is
-        importable.
+        Framework backend is selected iff a Robot run is currently active.
 
     Notes
     -----
-    The Robot Framework logger is safe to call outside of a Robot run (messages
-    are then simply not recorded), so backend selection only depends on package
-    availability, not on whether report generation is active.
+    Backend selection depends on an *active* Robot run, not merely on the
+    :mod:`robot` package being importable: outside of a run,
+    :mod:`robot.api.logger` forwards everything to a standard library logger,
+    which means HTML fragments (SVG charts, xarray reprs) end up dumped in
+    pytest's captured-log output. Because a run may start after this object is
+    constructed, the backend is resolved at call time.
     """
 
     def __init__(self, use_robot: bool | None = None):
-        if use_robot is None:
-            use_robot = importlib.util.find_spec("robot") is not None
+        self._use_robot = use_robot
 
-        # Any object with a robot.api.logger-compatible info() method works
-        self._robot: Any = None
+    @property
+    def _robot(self) -> Any:
+        """
+        The Robot Framework logger if it must be used, ``None`` otherwise.
+        """
+        if self._use_robot is False:
+            return None
 
-        if use_robot:
-            from robot.api import logger as robot_logger
+        if self._use_robot is None:
+            if importlib.util.find_spec("robot") is None:
+                return None
 
-            self._robot = robot_logger
+            from robot.running.context import EXECUTION_CONTEXTS
+
+            if EXECUTION_CONTEXTS.current is None:
+                return None
+
+        from robot.api import logger as robot_logger
+
+        return robot_logger
+
+    @property
+    def reporting(self) -> bool:
+        """
+        ``True`` if a report backend is active, i.e. if HTML fragments are
+        recorded instead of discarded.
+        """
+        return self._robot is not None
 
     def info(self, msg: str) -> None:
         """
@@ -109,6 +124,20 @@ class ReportLogger:
             self._robot.info(msg, also_console=True)
         else:
             _logger.info(msg)
+
+    def warning(self, msg: str) -> None:
+        """
+        Log a warning message to the test report and the console.
+
+        Parameters
+        ----------
+        msg : str
+            Message to log.
+        """
+        if self._robot is not None:
+            self._robot.warn(msg)
+        else:
+            _logger.warning(msg)
 
     def html(self, fragment: str) -> None:
         """

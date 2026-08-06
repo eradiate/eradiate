@@ -2,17 +2,16 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate import fresolver
 from eradiate import unit_registry as ureg
 from eradiate.constants import EARTH_RADIUS
 from eradiate.experiments import AtmosphereExperiment
-from eradiate.test_tools.regression import SidakTTest
+from eradiate.test_tools.regression import ZTest
 
 
 @pytest.mark.regression
 @pytest.mark.slow
-def test_spherical(mode_ckd_double, artefact_dir, plot_figures):
-    spp = 100
+def test_spherical(mode_ckd_double, dataset_regression):
+    spp = 1000
     config = {
         "geometry": "spherical_shell",
         "surface": {
@@ -54,18 +53,9 @@ def test_spherical(mode_ckd_double, artefact_dir, plot_figures):
 
     exp = AtmosphereExperiment(**config)
     result = eradiate.run(exp)
-    reference = fresolver.load_dataset(
-        "tests/regression_test_references/test_spherical_shell-ref.nc"
-    )
 
-    test = SidakTTest(
-        name="test_spherical_shell",
-        value=result,
-        reference=reference,
-        threshold=0.01,
-        archive_dir=artefact_dir,
-        variable="radiance",
-        plot=False,
+    dataset_regression.check(
+        result,
+        ZTest(0.05, variable="radiance_srf"),
+        basename="test_spherical_shell-ref",
     )
-
-    assert test.run(plot_figures)
