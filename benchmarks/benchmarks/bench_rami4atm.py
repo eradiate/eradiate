@@ -1,15 +1,22 @@
 import eradiate
-from eradiate.test_tools.test_cases.rami4atm import (
-    create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp,
-)
+from eradiate.test_tools.test_cases.rami4atm import CASES, create_toa
 from eradiate.test_tools.util import append_doc
+
+#: Case timed by this benchmark
+CASE_ID = "hom00_bla_sd2s_m03_z30a000_brfpp"
+
+#: Sample count, matching the regression test suite
+SPP = 1000
 
 
 class BenchmarkRami4ATM:
+    experiments = None
+
     def setup(self):
         eradiate.set_mode("ckd")
+        self.experiments = CASES[CASE_ID].make_experiments(spp=SPP)
 
-    @append_doc(create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp)
+    @append_doc(create_toa)
     def time_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp(self):
         r"""
         RAMI4ATM HOM00_BLA_SD2S_M03 benchmark test
@@ -21,5 +28,5 @@ class BenchmarkRami4ATM:
 
         """
 
-        exp = create_rami4atm_hom00_bla_sd2s_m03_z30a000_brfpp()
-        eradiate.run(exp)
+        for exp in self.experiments:
+            eradiate.run(exp)
