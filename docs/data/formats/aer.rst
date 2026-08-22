@@ -176,7 +176,8 @@ Data variables
 .. note::
 
     * Data are sorted in ascending order of ``w``, ``reff``, ``veff`` and ``mu``
-    * ``reff`` and ``veff`` are regularly spaced
+    * ``reff`` and ``veff`` must be strictly increasing, but need not be
+      regularly spaced
     * ``phamat`` conventions (valid values, and their implication for
       polarization and particle shape) are the same as ``aer_core_v2``
 
