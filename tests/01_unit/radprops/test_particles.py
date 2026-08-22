@@ -92,6 +92,67 @@ def make_single_w_dataset() -> xr.Dataset:
     )
 
 
+REFF = np.array([5.0, 15.0])  # micron
+VEFF = np.array([0.05, 0.15])  # dimensionless
+
+
+def make_size_distribution_dataset() -> xr.Dataset:
+    """
+    Build a minimal Prt v1-shaped dataset (``reff``/``veff`` dimensions
+    added to the Aer-Core v2 layout) for ``ParticleProperties``.
+
+    ``ext``/``ssa`` take a distinct value at every ``(w, reff, veff)`` grid
+    point, so index-based selection can be checked against known values. The
+    angular grid is shared across the whole grid: the ragged/union-grid
+    mechanics along ``w`` are already covered by other tests, so this dataset
+    only needs to exercise ``reff``/``veff`` selection.
+    """
+    n_w, n_reff, n_veff = len(W_NM), len(REFF), len(VEFF)
+
+    ext = np.zeros((n_w, n_reff, n_veff))
+    ssa = np.zeros((n_w, n_reff, n_veff))
+    for ireff in range(n_reff):
+        for iveff in range(n_veff):
+            ext[:, ireff, iveff] = EXT * (ireff + 1) * (iveff + 1)
+            ssa[:, ireff, iveff] = SSA * (1.0 - 0.05 * ireff - 0.01 * iveff)
+
+    mu_vals = np.tile(MU_1D, (n_w, n_reff, n_veff, 1))
+    theta_vals = np.degrees(np.arccos(mu_vals))
+    phase = np.tile(
+        _PHASE_DATA[:, :, np.newaxis, np.newaxis, :], (1, 1, n_reff, n_veff, 1)
+    )
+    nangles = np.full((n_w, n_reff, n_veff), len(MU_1D), dtype=np.int32)
+
+    return xr.Dataset(
+        {
+            "ext": (["w", "reff", "veff"], ext, {"units": "km^-1"}),
+            "ssa": (["w", "reff", "veff"], ssa, {"units": "dimensionless"}),
+            "mu": (
+                ["w", "reff", "veff", "iangle"],
+                mu_vals,
+                {"units": "dimensionless"},
+            ),
+            "theta": (
+                ["w", "reff", "veff", "iangle"],
+                theta_vals,
+                {"units": "degree"},
+            ),
+            "phase": (
+                ["phamat", "w", "reff", "veff", "iangle"],
+                phase,
+                {"units": "1/sr"},
+            ),
+            "nangles": (["w", "reff", "veff"], nangles),
+        },
+        coords={
+            "w": ("w", W_NM, {"units": "nm"}),
+            "reff": ("reff", REFF, {"units": "micron"}),
+            "veff": ("veff", VEFF, {"units": "dimensionless"}),
+            "phamat": ("phamat", ["11"]),
+        },
+    )
+
+
 @pytest.fixture
 def pp() -> ParticleProperties:
     return ParticleProperties(data=make_dataset())
@@ -200,6 +261,59 @@ class TestParticleProperties:
 
     def test_has_polarization(self, pp):
         assert pp.has_polarization is False
+
+    def test_has_size_distribution_false_for_aer_core_v2(self, pp):
+        assert pp.has_size_distribution is False
+
+    def test_has_size_distribution_true_for_prt_v1(self):
+        pp = ParticleProperties(data=make_size_distribution_dataset())
+        assert pp.has_size_distribution is True
+
+    class TestResolve:
+        def test_noop_on_aer_core_v2(self, pp):
+            """No 'reff'/'veff' dims and no indices given: returns self."""
+            assert pp._resolve(None, None) is pp
+
+        def test_raises_if_indices_given_on_aer_core_v2(self, pp):
+            with pytest.raises(ValueError, match="no 'reff'/'veff' dimensions"):
+                pp._resolve(0, 0)
+
+        def test_raises_if_indices_missing_on_prt_v1(self):
+            pp = ParticleProperties(data=make_size_distribution_dataset())
+            with pytest.raises(ValueError, match="must both be provided"):
+                pp._resolve(None, None)
+
+        def test_raises_if_only_one_index_given(self):
+            pp = ParticleProperties(data=make_size_distribution_dataset())
+            with pytest.raises(ValueError, match="must both be provided"):
+                pp._resolve(0, None)
+
+        @pytest.mark.parametrize("reff_idx", [0, 1])
+        @pytest.mark.parametrize("veff_idx", [0, 1])
+        def test_selects_correct_point(self, reff_idx, veff_idx):
+            """Resolved ext/ssa match a manual index selection on the source data."""
+            ds = make_size_distribution_dataset()
+            pp = ParticleProperties(data=ds)
+            resolved = pp._resolve(reff_idx, veff_idx)
+
+            assert resolved.has_size_distribution is False
+            np.testing.assert_allclose(
+                resolved.ext.m, ds["ext"].values[:, reff_idx, veff_idx]
+            )
+            np.testing.assert_allclose(
+                resolved.ssa.m, ds["ssa"].values[:, reff_idx, veff_idx]
+            )
+
+        def test_eval_ext_after_resolve(self):
+            """eval_ext on a resolved instance matches the manually selected point."""
+            ds = make_size_distribution_dataset()
+            pp = ParticleProperties(data=ds)
+            resolved = pp._resolve(1, 0)
+
+            w_idx = 1
+            expected = ds["ext"].values[w_idx, 1, 0]
+            result = resolved.eval_ext(W_NM[w_idx] * ureg.nm)
+            np.testing.assert_allclose(result.m, expected, rtol=1e-10)
 
     class TestLocate:
         @pytest.mark.parametrize(
@@ -330,6 +444,17 @@ class TestParticleProperties:
             expected = 0.5 * (EXT[0] + EXT[1])
             np.testing.assert_allclose(result.m, expected, rtol=1e-10)
 
+        def test_preserves_reff_veff_dims(self):
+            """On a Prt v1 dataset, result keeps the 'reff'/'veff' dimensions."""
+            ds = make_size_distribution_dataset()
+            pp = ParticleProperties(data=ds)
+            w = np.array([475.0, 625.0]) * ureg.nm  # midpoints of both segments
+            result = pp.eval_ext(w)
+
+            assert result.shape == (2, len(REFF), len(VEFF))
+            expected = 0.5 * (ds["ext"].values[[0, 1]] + ds["ext"].values[[1, 2]])
+            np.testing.assert_allclose(result.m, expected, rtol=1e-10)
+
     class TestEvalSsa:
         @pytest.mark.parametrize("idx", [0, 1, 2])
         def test_at_nodes(self, pp, idx):
@@ -360,12 +485,40 @@ class TestParticleProperties:
             expected = 0.5 * SSA[0] + 0.5 * SSA[1]
             np.testing.assert_allclose(result.m, expected, rtol=1e-10)
 
+        def test_preserves_reff_veff_dims(self):
+            """On a Prt v1 dataset, result keeps the 'reff'/'veff' dimensions,
+            with the extinction-weighted formula applied independently at
+            each (reff, veff) grid point."""
+            ds = make_size_distribution_dataset()
+            pp = ParticleProperties(data=ds)
+            w = np.array([475.0, 625.0]) * ureg.nm  # midpoints of both segments
+            result = pp.eval_ssa(w)
+
+            assert result.shape == (2, len(REFF), len(VEFF))
+
+            t = 0.5
+            for iw, (il, ir) in enumerate([(0, 1), (1, 2)]):
+                ext_l = ds["ext"].values[il]
+                ext_r = ds["ext"].values[ir]
+                ssa_l = ds["ssa"].values[il]
+                ssa_r = ds["ssa"].values[ir]
+                ext_interp = (1 - t) * ext_l + t * ext_r
+                expected = ((1 - t) * ext_l * ssa_l + t * ext_r * ssa_r) / ext_interp
+                np.testing.assert_allclose(result.m[iw], expected, rtol=1e-10)
+
     class TestEvalPhase:
-        def test_array_raises(self, pp):
-            """Array w input raises ValueError."""
-            w = np.array([400.0, 550.0]) * ureg.nm
-            with pytest.raises(ValueError, match="scalar"):
-                pp.eval_phase(w)
+        def test_array_matches_scalar_calls(self, pp):
+            """Array w input matches independent per-wavelength scalar calls."""
+            w = np.array([400.0, 475.0, 550.0]) * ureg.nm
+            mu_out, phase_out = pp.eval_phase(w)
+            assert mu_out.shape == (3, phase_out.shape[-1])
+            assert phase_out.shape[0] == 1
+            assert phase_out.shape[1] == 3
+
+            for i, w_scalar in enumerate(w):
+                mu_scalar, phase_scalar = pp.eval_phase(w_scalar)
+                np.testing.assert_allclose(mu_out[i], mu_scalar)
+                np.testing.assert_allclose(phase_out[:, i, :], phase_scalar)
 
         @pytest.mark.parametrize("w_nm", [400.0, 475.0, 550.0, 700.0])
         def test_fixed_grid_shape(self, pp, w_nm):

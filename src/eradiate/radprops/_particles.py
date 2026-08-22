@@ -19,15 +19,6 @@ from ..units import unit_registry as ureg
 from ..util.misc import summary_repr
 
 
-def _validate_shape(value: Any) -> str:
-    valid = {"spherical", "spheroidal"}
-    if value not in valid:
-        raise ValueError(
-            f"Unrecognized particle shape {value!r} (valid values are {valid})."
-        )
-    return value
-
-
 # TODO: If _rdp1d_log becomes a performance bottleneck (e.g. with grids up to
 #   10k points called frequently), consider rewriting the heap loop with Numba
 #   (@njit(cache=True)). The algorithm maps well to scalar JIT compilation and
@@ -284,6 +275,52 @@ class ParticleProperties:
         )
 
     @property
+    def has_size_distribution(self) -> bool:
+        """
+        Returns
+        -------
+        bool
+            ``True`` iff ``data`` has ``reff``/``veff`` dimensions (Part-Core
+            v1 format), ``False`` for a plain Aer-Core v2 dataset.
+        """
+        return "reff" in self.data.dims and "veff" in self.data.dims
+
+    def _resolve(
+        self, reff_idx: int | None, veff_idx: int | None
+    ) -> ParticleProperties:
+        """
+        Select a point on the ``reff``/``veff`` dimensions by index, if present.
+
+        Parameters
+        ----------
+        reff_idx, veff_idx : int or None
+            Index along the ``reff``/``veff`` dimensions. Both must be set
+            iff ``data`` has ``reff``/``veff`` dimensions.
+
+        Returns
+        -------
+        ParticleProperties
+            ``self`` if ``data`` has no ``reff``/``veff`` dimensions;
+            otherwise a new instance with those dimensions selected away.
+        """
+        if not self.has_size_distribution:
+            if reff_idx is not None or veff_idx is not None:
+                raise ValueError(
+                    "'reff_idx'/'veff_idx' were provided, but this dataset "
+                    "has no 'reff'/'veff' dimensions"
+                )
+            return self
+
+        if reff_idx is None or veff_idx is None:
+            raise ValueError(
+                "'reff_idx' and 'veff_idx' must both be provided: this "
+                "dataset has 'reff'/'veff' dimensions"
+            )
+
+        ds = self.data.isel(reff=reff_idx, veff=veff_idx, drop=True)
+        return ParticleProperties(ds)
+
+    @property
     def w(self) -> pint.Quantity:
         """
         Returns
@@ -353,7 +390,7 @@ class ParticleProperties:
             layout during interpolation, cached to minimize overhead.
         """
         if self._phase is None:
-            self._phase = self.data["phase"].transpose("phamat", "iangle", "w")
+            self._phase = self.data["phase"].transpose("phamat", "iangle", "w", ...)
         return self._phase
 
     @property
@@ -368,7 +405,7 @@ class ParticleProperties:
             if "pmom" not in self.data:
                 return None
             else:
-                self._pmom = self.data["pmom"].transpose("imom", "w")
+                self._pmom = self.data["pmom"].transpose("imom", "w", ...)
 
         return self._pmom
 
@@ -424,6 +461,16 @@ class ParticleProperties:
 
         return self._has_fixed_mu_grid
 
+    @staticmethod
+    def _broadcast_t(t: np.ndarray, reference: np.ndarray) -> np.ndarray:
+        """
+        Reshape a per-wavelength interpolation weight ``t`` (shape ``(nw,)``)
+        so that it broadcasts against ``reference`` (shape ``(nw, ...)``)
+        along its leading axis, instead of numpy's default trailing-axis
+        alignment.
+        """
+        return t.reshape(t.shape + (1,) * (reference.ndim - t.ndim))
+
     def eval_ext(self, w: pint.Quantity) -> pint.Quantity:
         """
         Evaluate the extinction coefficient at wavelength(s) ``w`` by plain
@@ -437,9 +484,15 @@ class ParticleProperties:
         Returns
         -------
         quantity
-            Extinction coefficient, same shape as ``w``.
+            Extinction coefficient. Shape ``(nw,)`` if ``data`` has no
+            ``reff``/``veff`` dimensions, ``(nw, nreff, nveff)`` otherwise.
         """
-        return np.interp(w, self.w, self.ext)
+        idx_l, idx_r, t = self._locate(w)
+        ext = self.ext.m
+        ext_l, ext_r = ext[idx_l], ext[idx_r]
+        t = self._broadcast_t(t, ext_l)
+        ext_interp = (1.0 - t) * ext_l + t * ext_r
+        return ext_interp * self.ext.units
 
     def eval_ssa(self, w: pint.Quantity) -> pint.Quantity:
         """
@@ -453,7 +506,8 @@ class ParticleProperties:
         Returns
         -------
         quantity
-            Dimensionless SSA, same shape as ``w``.
+            Dimensionless SSA. Shape ``(nw,)`` if ``data`` has no
+            ``reff``/``veff`` dimensions, ``(nw, nreff, nveff)`` otherwise.
 
         Notes
         -----
@@ -472,6 +526,7 @@ class ParticleProperties:
         ssa = self.ssa.m
         ext_l, ext_r = ext[idx_l], ext[idx_r]
         ssa_l, ssa_r = ssa[idx_l], ssa[idx_r]
+        t = self._broadcast_t(t, ext_l)
         ext_interp = (1.0 - t) * ext_l + t * ext_r
         linear = (1.0 - t) * ssa_l + t * ssa_r
         weighted = ((1.0 - t) * ext_l * ssa_l + t * ext_r * ssa_r) / np.where(
@@ -599,13 +654,14 @@ class ParticleProperties:
         self, w: pint.Quantity, n_mu: int | None = None
     ) -> tuple[np.ndarray, np.ndarray]:
         """
-        Evaluate the phase function at wavelength ``w`` by interpolation.
+        Evaluate the phase function at wavelength(s) ``w`` by interpolation.
 
         Parameters
         ----------
         w : quantity
-            Query wavelength (scalar only; array input raises ``ValueError``
-            because each wavelength can have a different angular grid).
+            Query wavelength(s); scalar or array. Each wavelength is
+            interpolated independently, since it may have a different
+            bracketing pair and thus a different union mu grid.
 
         n_mu : int, optional
             Number of output mu points. Defaults to ``2 * n_iangle``, where
@@ -617,10 +673,12 @@ class ParticleProperties:
         Returns
         -------
         mu : ndarray
-            Scattering angle cosines of the output grid, shape ``(n_mu,)``.
+            Scattering angle cosines of the output grid: shape ``(n_mu,)``
+            for a scalar ``w``, ``(nw, n_mu)`` for an array ``w``.
 
         phase : ndarray
-            Phase function values in sr⁻¹, shape ``(n_phamat, n_mu)``.
+            Phase function values in sr⁻¹: shape ``(n_phamat, n_mu)`` for a
+            scalar ``w``, ``(n_phamat, nw, n_mu)`` for an array ``w``.
 
         Notes
         -----
@@ -635,55 +693,58 @@ class ParticleProperties:
         interpolation preserves the piecewise-linear shape that Mitsuba uses
         during tabulated phase-function look-up, so no distortion is introduced.
         """
-        if not np.isscalar(w.m):
-            raise ValueError("eval_phase() only accepts a scalar wavelength")
+        is_scalar = np.isscalar(w.m)
+        w = np.atleast_1d(w)
 
         n_iangle = self.data.sizes["iangle"]
         if n_mu is None:
             n_mu = n_iangle if self.has_fixed_mu_grid else 2 * n_iangle
 
         # --- Step 1: bracket wavelengths and compute mixing weights ---
-        idx_l_arr, idx_r_arr, w0_arr, w1_arr, _ = self._bracket_and_weights(w)
-        idx_l = int(idx_l_arr[0])
-        idx_r = int(idx_r_arr[0])
-        w0 = float(w0_arr[0])
-        w1 = float(w1_arr[0])
+        idx_l, idx_r, w0, w1, _ = self._bracket_and_weights(w)
 
-        mu1, phase1 = self._get_mu_phase(idx_l)
-        mu2, phase2 = self._get_mu_phase(idx_r)
+        n_phamat = self.data.sizes["phamat"]
+        mu = np.empty((len(w), n_mu))
+        phase = np.empty((n_phamat, len(w), n_mu))
 
-        # --- Step 2: union mu grid ---
-        mu_union = np.union1d(mu1, mu2)
+        for i in range(len(w)):
+            mu1, phase1 = self._get_mu_phase(int(idx_l[i]))
+            mu2, phase2 = self._get_mu_phase(int(idx_r[i]))
 
-        # --- Step 3: resample both phase functions onto union grid ---
-        # interp1d expects (..., n) layout; phase is (n_phamat, nangles[w_idx])
-        phase1_union = interp1d(mu1, phase1, mu_union, bounds="clamp")
-        phase2_union = interp1d(mu2, phase2, mu_union, bounds="clamp")
+            # --- Step 2: union mu grid ---
+            mu_union = np.union1d(mu1, mu2)
 
-        # --- Step 4: scattering-weighted spectral interpolation ---
-        phase_union = w0 * phase1_union + w1 * phase2_union
+            # --- Step 3: resample both phase functions onto union grid ---
+            # interp1d expects (..., n) layout; phase is (n_phamat, nangles[w_idx])
+            phase1_union = interp1d(mu1, phase1, mu_union, bounds="clamp")
+            phase2_union = interp1d(mu2, phase2, mu_union, bounds="clamp")
 
-        # --- Step 5: bring to exactly n_mu points ---
-        n_union = len(mu_union)
+            # --- Step 4: scattering-weighted spectral interpolation ---
+            phase_union = w0[i] * phase1_union + w1[i] * phase2_union
 
-        if n_union > n_mu:
-            # Decimate: keep the most informative points in log space
-            keep = _rdp1d_log(mu_union, phase_union, n_mu)
-            mu_out = mu_union[keep]
-            phase_out = phase_union[:, keep]
+            # --- Step 5: bring to exactly n_mu points ---
+            n_union = len(mu_union)
 
-        elif n_union < n_mu:
-            # Upsample: insert midpoints into the largest gaps of the union grid.
-            # All original points are preserved, so the non-uniform  density near
-            # the forward-scattering peak is maintained.
-            mu_out = _upsample_mu(mu_union, n_mu)
-            phase_out = interp1d(mu_union, phase_union, mu_out, bounds="clamp")
+            if n_union > n_mu:
+                # Decimate: keep the most informative points in log space
+                keep = _rdp1d_log(mu_union, phase_union, n_mu)
+                mu[i] = mu_union[keep]
+                phase[:, i, :] = phase_union[:, keep]
 
-        else:
-            mu_out = mu_union
-            phase_out = phase_union
+            elif n_union < n_mu:
+                # Upsample: insert midpoints into the largest gaps of the union
+                # grid. All original points are preserved, so the non-uniform
+                # density near the forward-scattering peak is maintained.
+                mu[i] = _upsample_mu(mu_union, n_mu)
+                phase[:, i, :] = interp1d(mu_union, phase_union, mu[i], bounds="clamp")
 
-        return mu_out, phase_out
+            else:
+                mu[i] = mu_union
+                phase[:, i, :] = phase_union
+
+        if is_scalar:
+            return mu[0], phase[:, 0, :]
+        return mu, phase
 
     def eval_pmom(self, w: pint.Quantity, clip: bool = False) -> tuple[np.ndarray, int]:
         """
