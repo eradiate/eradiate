@@ -15,7 +15,7 @@ from axsdb import AbsorptionDatabase
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular import MolecularAtmosphere
-from ._particle_layer import ParticleLayer
+from ._particle_ensemble import ParticleEnsemble
 from ..core import traverse
 from ..phase import MultiPhaseFunction, PhaseFunction
 from ...attrs import define, documented
@@ -36,21 +36,21 @@ def _molecular_converter(value):
     return atmosphere_factory.convert(value, allowed_cls=MolecularAtmosphere)
 
 
-def _particle_layer_converter(value):
+def _particle_ensemble_converter(value):
     if not value:
         return []
 
     if not isinstance(value, (list, tuple)):
-        return _particle_layer_converter([value])
+        return _particle_ensemble_converter([value])
 
     else:
         result = []
 
         for element in value:
             if isinstance(element, cabc.MutableMapping) and ("type" not in element):
-                element["type"] = "particle_layer"
+                element["type"] = "particle_ensemble"
             result.append(
-                atmosphere_factory.convert(element, allowed_cls=ParticleLayer)
+                atmosphere_factory.convert(element, allowed_cls=ParticleEnsemble)
             )
 
         return result
@@ -89,25 +89,25 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
-    particle_layers: list[ParticleLayer] = documented(
+    particle_ensembles: list[ParticleEnsemble] = documented(
         attrs.field(
             factory=list,
-            converter=_particle_layer_converter,
+            converter=_particle_ensemble_converter,
             validator=attrs.validators.deep_iterable(
-                attrs.validators.instance_of(ParticleLayer)
+                attrs.validators.instance_of(ParticleEnsemble)
             ),
         ),
-        doc="List of particle layers. Elements may be specified as "
+        doc="List of particle ensembles. Elements may be specified as "
         "dictionaries interpreted by :data:`.atmosphere_factory`; in that "
         "case, the ``type`` parameter may be omitted and will automatically "
-        'be set to ``"particle_layer"``.',
-        type="list of .ParticleLayer",
-        init_type="list of .ParticleLayer, optional",
+        'be set to ``"particle_ensemble"``.',
+        type="list of .ParticleEnsemble",
+        init_type="list of .ParticleEnsemble, optional",
         default="[]",
     )
 
-    @particle_layers.validator
-    def _particle_layers_validator(self, attribute, value):
+    @particle_ensembles.validator
+    def _particle_ensembles_validator(self, attribute, value):
         if not all(component.scale is None for component in value):
             raise ValueError(
                 f"while validating {attribute.name}: components cannot be "
@@ -124,7 +124,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     @property
-    def components(self) -> list[MolecularAtmosphere | ParticleLayer]:
+    def components(self) -> list[MolecularAtmosphere | ParticleEnsemble]:
         """
         Returns
         -------
@@ -132,7 +132,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             The list of all registered atmospheric components.
         """
         result = [self.molecular_atmosphere] if self.molecular_atmosphere else []
-        result.extend(self.particle_layers)
+        result.extend(self.particle_ensembles)
         return result
 
     def update(self):

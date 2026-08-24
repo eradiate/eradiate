@@ -31,7 +31,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     See Also
     --------
-    :class:`~eradiate.scenes.atmosphere.ParticleLayer`,
+    :class:`~eradiate.scenes.atmosphere.ParticleEnsemble`,
     :class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere`.
 
     Notes

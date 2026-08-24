@@ -2,7 +2,7 @@
 Particle distributions.
 
 Particle distributions define how the particle number fraction varies with
-altitude. The particle layer is split into a number of divisions
+altitude. The particle ensemble is split into a number of divisions
 (sub-layers) wherein the particle number fraction is evaluated.
 
 Notes
@@ -10,6 +10,8 @@ Notes
 Particle distributions are not normalized. The parent caller is responsible
 for normalizing returned values.
 """
+
+from __future__ import annotations
 
 import typing as t
 from abc import ABC, abstractmethod
@@ -38,7 +40,7 @@ particle_distribution_factory.register_lazy_batch(
 class ParticleDistribution(ABC):
     """
     Abstract base class for particle distributions used to define particle
-    layers.
+    ensembles.
 
     In practice, particle distributions are callables with the signature
     ``f(x: np.typing.ArrayLike) -> np.ndarray`` and are evaluated over the
@@ -83,10 +85,10 @@ class UniformParticleDistribution(ParticleDistribution):
         if len(value) != 2:
             raise ValueError(
                 f"while validating '{attribute.name}': passed array must have "
-                "exactly 2 elements"
+                "a length of 2"
             )
 
-        if value[1] <= value[0]:
+        if np.any(value[1] <= value[0]):
             raise ValueError(
                 f"while validating '{attribute.name}': bounds must be sorted in "
                 "ascending order "
@@ -136,7 +138,7 @@ class ExponentialParticleDistribution(ParticleDistribution):
                 f"while validating {attribute.name}: rate must be strictly positive"
             )
 
-    def __init__(self, rate: float = None, scale: float = None):
+    def __init__(self, rate: Optional[float] = None, scale: Optional[float] = None):
         if rate is None and scale is None:
             self.__attrs_init__()
         elif scale is None and rate is not None:
@@ -180,7 +182,7 @@ class GaussianParticleDistribution(ParticleDistribution):
         init_type="float, optional",
         default="0.5",
         doc="Mean of the Gaussian PDF. The default value places the mean in "
-        "the middle of the particle layer (at :math:`x = 0.5`).",
+        "the middle of the particle ensemble (at :math:`x = 0.5`).",
     )
 
     std: float = documented(
@@ -217,22 +219,27 @@ class ArrayParticleDistribution(ParticleDistribution):
 
     @values.validator
     def _values_validator(self, attribute, value):
-        if value.ndim != 1:
+        if value.ndim not in {1, 3}:
             raise ValueError(
-                f"while validating {attribute.name}: only 1D arrays are allowed"
+                f"while validating {attribute.name}: only 1D or 3D arrays are allowed"
             )
 
-        if len(value) < 2:
+        if value.shape[-1] < 2:
             raise ValueError(
                 f"while validating {attribute.name}: array must have at least 2 "
-                "elements"
+                "elements along the interpolation z-axis"
             )
 
     coords: np.ndarray = documented(
         attrs.field(
             default=attrs.Factory(
-                lambda x: (lambda edges: (edges[:-1] + edges[1:]) / 2)(
-                    np.linspace(0, 1, len(x.values) + 1)
+                lambda self: np.broadcast_to(
+                    np.convolve(
+                        np.linspace(0, 1, self.values.shape[-1] + 1),
+                        [0.5, 0.5],
+                        "valid",
+                    ),
+                    self.values.shape,
                 ),
                 takes_self=True,
             ),
@@ -255,30 +262,41 @@ class ArrayParticleDistribution(ParticleDistribution):
             )
 
     method: str = documented(
-        attrs.field(
-            default="linear",
-            converter=str,
-            validator=attrs.validators.in_(
-                {
-                    "linear",
-                    "nearest",
-                    "nearest-up",
-                    "zero",
-                    "slinear",
-                    "quadratic",
-                    "cubic",
-                    "previous",
-                    "next",
-                }
-            ),
-        ),
+        attrs.field(default="linear", converter=str),
         type="str",
         init_type='{ "linear", "nearest", "nearest-up", "zero", "slinear", '
         '"quadratic", "cubic", "previous", "next" }',
         default='"linear"',
         doc="Interpolation method. See :class:`scipy.interpolate.interp1d` "
-        "(*kind*) for more information.",
+        "(*kind*) for more information. With a 3D ``values`` array, only "
+        '``"linear"`` and ``"nearest"`` are supported.',
     )
+
+    @method.validator
+    def _method_validator(self, attribute, value):
+        allowed = {
+            "linear",
+            "nearest",
+            "nearest-up",
+            "zero",
+            "slinear",
+            "quadratic",
+            "cubic",
+            "previous",
+            "next",
+        }
+        if value not in allowed:
+            raise ValueError(
+                f"while validating '{attribute.name}': got '{value}', "
+                f"expected one of {sorted(allowed)}"
+            )
+
+        if self.values.ndim == 3 and value not in ("linear", "nearest"):
+            raise ValueError(
+                f"while validating '{attribute.name}': with a 3D 'values' "
+                f"array, only 'linear' and 'nearest' are supported (got "
+                f"'{value}')"
+            )
 
     extrapolate: str = documented(
         attrs.field(
@@ -307,11 +325,13 @@ class ArrayParticleDistribution(ParticleDistribution):
         "     - ``np.nan``\n",
     )
 
-    def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
+    def _interp1d(
+        self, coords: np.ndarray, values: np.ndarray, x: np.typing.ArrayLike
+    ) -> np.ndarray:
         if self.extrapolate == "zero":
             fill_value = 0.0
         elif self.extrapolate == "nearest":
-            fill_value = (self.values[0], self.values[-1])
+            fill_value = (values[0], values[-1])
         elif self.extrapolate == "method":
             fill_value = "extrapolate"
         else:
@@ -319,13 +339,86 @@ class ArrayParticleDistribution(ParticleDistribution):
 
         # TODO: This is unsafe, values of x outside of [0, 1] should return 0
         f = scipy.interpolate.interp1d(
-            self.coords,
-            self.values,
+            coords,
+            values,
             kind=self.method,
             bounds_error=False,
             fill_value=fill_value,
         )
         return f(x)
+
+    def _interp3d(
+        self, coords: np.ndarray, values: np.ndarray, x: np.ndarray
+    ) -> np.ndarray:
+        """
+        Evaluate one 'linear' or 'nearest' interpolant per (i_x, i_y) cell.
+        """
+        n = coords.shape[-1]
+        cell_shape = coords.shape[:-1]
+        size = int(np.prod(cell_shape, dtype=np.int64)) if cell_shape else 1
+
+        span = max(coords.max(), x.max()) - min(coords.min(), x.min())
+        cell = np.arange(size, dtype=np.int64).reshape(cell_shape + (1,))
+        offsets = (span + 1.0) * cell
+
+        coords_flat = (coords + offsets).reshape(-1)
+        x_flat = (x + offsets).reshape(-1)
+        idx = np.searchsorted(coords_flat, x_flat, side="right")
+        idx = idx.reshape(x.shape) - cell * n
+
+        if self.method == "nearest":
+            j0 = np.clip(idx - 1, 0, n - 1)
+            j1 = np.clip(idx, 0, n - 1)
+            c0 = np.take_along_axis(coords, j0, axis=-1)
+            c1 = np.take_along_axis(coords, j1, axis=-1)
+            v0 = np.take_along_axis(values, j0, axis=-1)
+            v1 = np.take_along_axis(values, j1, axis=-1)
+            # Bin edges at coord midpoints, matching interp1d.
+            result = np.where(x <= (c0 + c1) / 2.0, v0, v1)
+        else:  # "linear"
+            j0 = np.clip(idx - 1, 0, n - 2)
+            j1 = j0 + 1
+            c0 = np.take_along_axis(coords, j0, axis=-1)
+            c1 = np.take_along_axis(coords, j1, axis=-1)
+            v0 = np.take_along_axis(values, j0, axis=-1)
+            v1 = np.take_along_axis(values, j1, axis=-1)
+            t = np.where(c1 > c0, (x - c0) / (c1 - c0), 0.0)
+            result = v0 + t * (v1 - v0)
+
+        below = x < coords[..., :1]
+        above = x > coords[..., -1:]
+
+        if self.extrapolate == "zero":
+            return np.where(below | above, 0.0, result)
+        elif self.extrapolate == "nearest":
+            result = np.where(below, values[..., :1], result)
+            return np.where(above, values[..., -1:], result)
+        elif self.extrapolate == "method":
+            # 'linear' and 'nearest' extrapolate naturally, no special case.
+            return result
+        else:  # "nan"
+            return np.where(below | above, np.nan, result)
+
+    def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:
+        x = np.asarray(x, dtype=float)
+
+        if self.values.ndim == 1:
+            return self._interp1d(self.coords, self.values, x)
+
+        # 3D case: one independent interpolant per (i_x, i_y) horizontal cell.
+        n_x, n_y = self.values.shape[:2]
+        if x.ndim == 1:
+            x = np.broadcast_to(x, (n_x, n_y) + x.shape)
+        elif x.shape[:2] != (n_x, n_y):
+            raise ValueError(
+                "ArrayParticleDistribution: with a 3D 'values' array, the "
+                "query array must either be 1D, or have a leading (x, y) "
+                f"shape matching it (expected {(n_x, n_y)}, got "
+                f"{x.shape[:2]})."
+            )
+
+        # 3D only allows 'linear'/'nearest' (see '_method_validator').
+        return self._interp3d(self.coords, self.values, x)
 
 
 @define

@@ -46,8 +46,8 @@ def _create_integrator_surface(
                 "absorption_data": "monotropa",
                 "error_handler_config": absorption_database_error_handler_config,
             },
-            "particle_layers": {
-                "type": "particle_layer",
+            "particle_ensembles": {
+                "type": "particle_ensemble",
                 "bottom": 1 * ureg.km,
                 "top": 2 * ureg.km,
                 "tau_ref": 0.2,
@@ -112,8 +112,8 @@ def create_integrator_canopy(absorption_database_error_handler_config, integrato
                 "absorption_data": "monotropa",
                 "error_handler_config": absorption_database_error_handler_config,
             },
-            "particle_layers": {
-                "type": "particle_layer",
+            "particle_ensembles": {
+                "type": "particle_ensemble",
                 "bottom": 0 * ureg.km,
                 "top": 2 * ureg.km,
                 "distribution": {"type": "uniform"},

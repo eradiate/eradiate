@@ -211,10 +211,10 @@ def create_toa(case_id: str, spp: int, padding: int = 5) -> CanopyAtmosphereExpe
         )
 
     if aerosol_id == "0":
-        particle_layer = {}
+        particle_ensemble = {}
 
     elif aerosol_id in {"c", "d"}:
-        particle_layer = {
+        particle_ensemble = {
             "bottom": 0.0 * ureg.m,
             "top": 2000.0 * ureg.m,
             "distribution": {"type": "uniform"},
@@ -226,20 +226,20 @@ def create_toa(case_id: str, spp: int, padding: int = 5) -> CanopyAtmosphereExpe
         }
 
     else:
-        raise ValueError(f"Unhandled particle layer component id '{aerosol_id}'")
+        raise ValueError(f"Unhandled particle ensemble component id '{aerosol_id}'")
 
     if aerosol_ot_id == "0":
         pass
     elif aerosol_ot_id in {"2", "6"}:
-        if not particle_layer:
+        if not particle_ensemble:
             raise ValueError(
                 f"Optical thickness id '{aerosol_ot_id}' requires a particle "
                 f"layer, but the aerosol id is '{aerosol_id}' (none)"
             )
-        particle_layer["tau_ref"] = 0.2 if aerosol_ot_id == "2" else 0.6
+        particle_ensemble["tau_ref"] = 0.2 if aerosol_ot_id == "2" else 0.6
     else:
         raise ValueError(
-            f"Unhandled particle layer optical thickness '{aerosol_ot_id}'"
+            f"Unhandled particle ensemble optical thickness '{aerosol_ot_id}'"
         )
 
     if profile_id != "s":
@@ -248,7 +248,7 @@ def create_toa(case_id: str, spp: int, padding: int = 5) -> CanopyAtmosphereExpe
     atmosphere = {
         "type": "heterogeneous",
         "molecular_atmosphere": molecular_atmosphere,
-        "particle_layers": [particle_layer] if particle_layer else [],
+        "particle_ensembles": [particle_ensemble] if particle_ensemble else [],
     }
 
     return CanopyAtmosphereExperiment(
