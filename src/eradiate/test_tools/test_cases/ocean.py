@@ -128,7 +128,7 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmosphere=False)
         ],
         "geometry": {
             "type": "plane_parallel",
-            "zgrid": np.arange(0, 40 + 0.1, 0.1) * ureg.km,
+            "grid": np.arange(0, 40 + 0.1, 0.1) * ureg.km,
             "toa_altitude": 40 * ureg.km,
         },
         "atmosphere": atmosphere,

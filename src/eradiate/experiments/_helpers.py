@@ -108,7 +108,7 @@ def check_geometry_atmosphere(
     """
 
     radprops_zbounds = atmosphere.radprops_profile.zbounds
-    geometry_zbounds = geometry.zgrid.levels[[0, -1]]
+    geometry_zbounds = geometry.grid.levels[[0, -1]]
     suggested_solution = (
         "Try to set the experiment geometry so that it does not go beyond "
         "the vertical extent of the molecular atmosphere."
@@ -117,8 +117,8 @@ def check_geometry_atmosphere(
         geometry_zbounds[1] > radprops_zbounds[1]
     ):
         raise ValueError(
-            "Attribtues 'geometry' and 'atmosphere' are incompatible: "
-            f"'geometry.zgrid' bounds ({geometry_zbounds}) go beyond the "
+            "Attributes 'geometry' and 'atmosphere' are incompatible: "
+            f"'geometry.grid' bounds ({geometry_zbounds}) go beyond the "
             f"bounds of 'atmosphere.radprops_profile.zbounds' ({radprops_zbounds}). "
             f"{suggested_solution}"
         )

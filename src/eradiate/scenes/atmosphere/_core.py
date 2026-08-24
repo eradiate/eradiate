@@ -10,12 +10,19 @@ import pint
 import xarray as xr
 from axsdb import AbsorptionDatabase
 
+from eradiate.kernel._render import SearchSceneParameter
+
+from .._gridvolume import generate_gridvolume
 from ..core import (
     CompositeSceneElement,
     SceneElement,
     traverse,
 )
-from ..geometry import PlaneParallelGeometry, SceneGeometry, SphericalShellGeometry
+from ..geometry import (
+    PlaneParallelGeometry,
+    SceneGeometry,
+    SphericalShellGeometry,
+)
 from ..phase import PhaseFunction
 from ..shapes import Shape
 from ... import validators
@@ -23,13 +30,11 @@ from ..._factory import Factory
 from ..._mode import get_mode
 from ...attrs import define, documented, get_doc
 from ...contexts import KernelContext
+from ...grid import GridCoords
 from ...kernel import (
-    DictParameter,
     KernelSceneParameterFlags,
     SceneParameter,
-    SearchSceneParameter,
 )
-from ...radprops import ZGrid
 from ...spectral.index import SpectralIndex
 from ...units import symbol
 from ...units import unit_context_config as ucc
@@ -172,7 +177,6 @@ class Atmosphere(CompositeSceneElement, ABC):
         .PhaseFunction
             Phase function associated with the atmosphere.
         """
-        pass
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -196,7 +200,6 @@ class Atmosphere(CompositeSceneElement, ABC):
         mfp : quantity
             Mean free path estimate.
         """
-        pass
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
@@ -255,7 +258,6 @@ class Atmosphere(CompositeSceneElement, ABC):
             The phase function-related contribution to the kernel scene
             dictionary template for the atmosphere.
         """
-        pass
 
     @property
     @abstractmethod
@@ -267,7 +269,6 @@ class Atmosphere(CompositeSceneElement, ABC):
             The medium-related contribution to the kernel scene dictionary
             template for the atmosphere.
         """
-        pass
 
     @property
     def _template_shape(self) -> dict:
@@ -314,7 +315,6 @@ class Atmosphere(CompositeSceneElement, ABC):
             The phase function-related contribution to the parameter update map
             template for the atmosphere.
         """
-        pass
 
     @property
     @abstractmethod
@@ -326,7 +326,6 @@ class Atmosphere(CompositeSceneElement, ABC):
             The medium-related contribution to the parameter update map template
             for the atmosphere.
         """
-        pass
 
     @property
     def _params_shape(self) -> dict[str, SceneParameter]:
@@ -409,7 +408,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         """
         Update internal state.
         """
-        pass
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -435,7 +433,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_radprops(
         self,
         si: SpectralIndex,
-        zgrid: ZGrid | None = None,
+        grid: GridCoords | None = None,
         optional_fields: bool = False,
     ) -> xr.Dataset:
         """
@@ -446,10 +444,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : .SpectralIndex
             Spectral index.
 
-        zgrid : .ZGrid, optional
+        grid : .GridCoords, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+            (see :meth:`grid <.AbstractHeterogeneousAtmosphere.geometry.grid>`).
 
         optional_fields : bool, optional, default: False
             If ``True``, also output the absorption and scattering coefficients,
@@ -469,16 +467,18 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
             * ``z``: altitude.
         """
-        if zgrid is None:
-            zgrid = self.geometry.zgrid
+        if grid is None:
+            grid = self.geometry.grid
 
         sigma_units = ucc.get("collision_coefficient")
-        sigma_t = self.eval_sigma_t(si, zgrid).reshape(zgrid.layers.shape)
-        albedo = self.eval_albedo(si, zgrid).m_as(ureg.dimensionless)
+        sigma_t = self.eval_sigma_t(si, grid)
+        sigma_t = np.broadcast_to(sigma_t, grid.shape)
+        albedo = self.eval_albedo(si, grid).m_as(ureg.dimensionless)
+        albedo = np.broadcast_to(albedo, grid.shape)
 
         data_vars = {
             "sigma_t": (
-                "z_layer",
+                ("x_cells", "y_cells", "z_layer"),
                 sigma_t.m_as(sigma_units),
                 {
                     "units": f"{symbol(sigma_units)}",
@@ -487,7 +487,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 },
             ),
             "albedo": (
-                "z_layer",
+                ("x_cells", "y_cells", "z_layer"),
                 albedo,
                 {
                     "standard_name": "albedo",
@@ -501,7 +501,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             data_vars.update(
                 {
                     "sigma_a": (
-                        "z_layer",
+                        ("x_cells", "y_cells", "z_layer"),
                         sigma_t.m_as(sigma_units) * (1.0 - albedo),
                         {
                             "units": f"{symbol(sigma_units)}",
@@ -510,7 +510,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         },
                     ),
                     "sigma_s": (
-                        "z_layer",
+                        ("x_cells", "y_cells", "z_layer"),
                         sigma_t.m_as(sigma_units) * albedo,
                         {
                             "units": f"{symbol(sigma_units)}",
@@ -524,21 +524,39 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         return xr.Dataset(
             data_vars,
             coords={
+                "x_layer": (
+                    "x_layer",
+                    grid.cells_x.magnitude,
+                    {
+                        "units": f"{symbol(grid.cells_x.units)}",
+                        "standard_name": "cells_x",
+                        "long_name": "cells x position",
+                    },
+                ),
+                "y_layer": (
+                    "y_layer",
+                    grid.cells_y.magnitude,
+                    {
+                        "units": f"{symbol(grid.layers.units)}",
+                        "standard_name": "cells_y",
+                        "long_name": "cells y position",
+                    },
+                ),
                 "z_layer": (
                     "z_layer",
-                    zgrid.layers.magnitude,
+                    grid.layers.magnitude,
                     {
-                        "units": f"{symbol(zgrid.layers.units)}",
+                        "units": f"{symbol(grid.layers.units)}",
                         "standard_name": "layer_altitude",
                         "long_name": "layer altitude",
                     },
-                )
+                ),
             },
         )
 
     @abstractmethod
     def eval_albedo(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         """
         Evaluate albedo spectrum based on a spectral context. This method
@@ -550,10 +568,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : :class:`.SpectralIndex`
             Spectral index.
 
-        zgrid : .ZGrid, optional
+        grid : .GridCoords, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+            (see :meth:`grid <.AbstractHeterogeneousAtmosphere.geometry.grid>`).
 
         Returns
         -------
@@ -561,11 +579,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-        pass
 
     @abstractmethod
     def eval_sigma_t(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         """
         Evaluate extinction coefficient given a spectral context.
@@ -575,21 +592,20 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : :class:`.SpectralIndex`
             Spectral index.
 
-        zgrid : .ZGrid, optional
+        grid : .GridCoords, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+            (see :meth:`grid <.AbstractHeterogeneousAtmosphere.geometry.grid>`).
 
         Returns
         -------
         quantity
             Particle layer extinction coefficient.
         """
-        pass
 
     @abstractmethod
     def eval_sigma_a(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         """
         Evaluate absorption coefficient given a spectral context.
@@ -599,21 +615,20 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : :class:`.SpectralIndex`
             Spectral index.
 
-        zgrid : .ZGrid, optional
+        grid : .GridCoords, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+            (see :meth:`grid <.AbstractHeterogeneousAtmosphere.column.grid>`).
 
         Returns
         -------
         quantity
             Particle layer extinction coefficient.
         """
-        pass
 
     @abstractmethod
     def eval_sigma_s(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         """
         Evaluate scattering coefficient given a spectral context.
@@ -623,18 +638,16 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : :class:`.SpectralIndex`
             Spectral index.
 
-        zgrid : .ZGrid, optional
+        grid : .GridCoords, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`zgrid <.AbstractHeterogeneousAtmosphere.zgrid>`).
+            (see :meth:`grid <.AbstractHeterogeneousAtmosphere.geometry.grid>`).
 
         Returns
         -------
         quantity
             Particle layer scattering coefficient.
         """
-
-        pass
 
     def eval_transmittance(
         self,
@@ -666,12 +679,12 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         try:
             sigma = eval_sigma[interaction](si=si)
         except KeyError as e:
-            raise ValueError(
+            raise TypeError(
                 f"invalid interaction type '{interaction}', "
                 f"supported: {list(eval_sigma.keys())}"
             ) from e
-        dz = np.diff(self.geometry.zgrid.levels)
-        tau = np.sum((sigma * dz).to("1"))
+        dz = np.diff(self.geometry.grid.levels)
+        tau = np.sum(np.multiply(sigma, dz).to("1"), axis=-1)
         return np.exp(-tau)
 
     def eval_transmittance_t(self, si: SpectralIndex) -> pint.Quantity:
@@ -692,109 +705,48 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         # Inherit docstring
 
         extremum = None
+
+        volumes = {
+            "albedo": generate_gridvolume(
+                self.geometry,
+                self.eval_albedo,
+                units=ureg.dimensionless,
+                dtype=np.float64,
+            ),
+            "sigma_t": generate_gridvolume(
+                self.geometry,
+                self.eval_sigma_t,
+                units=uck.get("collision_coefficient"),
+                dtype=np.float64,
+            ),
+        }
         sigma_t_id = f"{self.id}_sigma_t"
 
-        if isinstance(self.geometry, PlaneParallelGeometry):
-            to_world = self.geometry.atmosphere_volume_to_world
-
-            medium = "eoheterogeneous" if self.force_majorant else "piecewise"
-            volumes = {
-                "albedo": {
-                    "type": "gridvolume",
-                    "grid": DictParameter(
-                        lambda ctx: mi.VolumeGrid(
-                            np.reshape(
-                                self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
-                                (-1, 1, 1),
-                            ).astype(np.float32)
-                        ),
-                    ),
-                    "to_world": to_world,
-                    "filter_type": "nearest",
-                },
-                "sigma_t": {
-                    "type": "gridvolume",
-                    "id": sigma_t_id,
-                    "grid": DictParameter(
-                        lambda ctx: mi.VolumeGrid(
-                            np.reshape(
-                                self.eval_sigma_t(ctx.si).m_as(
-                                    uck.get("collision_coefficient")
-                                ),
-                                (-1, 1, 1),
-                            ).astype(np.float32)
-                        ),
-                    ),
-                    "to_world": to_world,
-                    "filter_type": "nearest",
-                },
-            }
-
-            if medium == "eoheterogeneous":
-                if self.extremum_resolution != (1, 1, 1):
-                    extremum = {
-                        "type": "extremum_grid",
-                        "volume": {"type": "ref", "id": sigma_t_id},
-                        "resolution": self.extremum_resolution,
-                        "to_world": to_world,
-                    }
-
-        elif isinstance(self.geometry, SphericalShellGeometry):
-            volume_rmin = self.geometry.atmosphere_volume_rmin
-            to_world = self.geometry.atmosphere_volume_to_world
-
+        if isinstance(self.geometry, SphericalShellGeometry):
             medium = "eoheterogeneous"
-            volumes = {
-                "albedo": {
-                    "type": "sphericalcoordsvolume",
-                    "volume": {
-                        "type": "gridvolume",
-                        "grid": DictParameter(
-                            lambda ctx: mi.VolumeGrid(
-                                np.reshape(
-                                    self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
-                                    (1, 1, -1),
-                                ).astype(np.float32)
-                            ),
-                        ),
-                        "filter_type": "nearest",
-                    },
-                    "to_world": to_world,
-                    "rmin": volume_rmin,
-                },
-                "sigma_t": {
-                    "type": "sphericalcoordsvolume",
-                    "id": sigma_t_id,
-                    "volume": {
-                        "type": "gridvolume",
-                        "grid": DictParameter(
-                            lambda ctx: mi.VolumeGrid(
-                                np.reshape(
-                                    self.eval_sigma_t(ctx.si).m_as(
-                                        uck.get("collision_coefficient")
-                                    ),
-                                    (1, 1, -1),
-                                ).astype(np.float32)
-                            ),
-                        ),
-                        "filter_type": "nearest",
-                    },
-                    "to_world": to_world,
-                    "rmin": volume_rmin,
-                },
-            }
-
             if self.extremum_resolution != (1, 1, 1):
                 extremum = {
                     "type": "extremum_spherical",
                     "volume": {"type": "ref", "id": sigma_t_id},
-                    "rmin": volume_rmin,
+                    "rmin": self.geometry.atmosphere_volume_rmin,
                     "resolution": self.extremum_resolution,
-                    "to_world": to_world,
+                    "to_world": self.geometry.atmosphere_volume_to_world,
                 }
-
+        elif isinstance(self.geometry, PlaneParallelGeometry):
+            medium = (
+                "eoheterogeneous"
+                if self.force_majorant or not self.geometry.grid.onedim
+                else "piecewise"
+            )
+            if medium == "eoheterogeneous" and self.extremum_resolution != (1, 1, 1):
+                extremum = {
+                    "type": "extremum_grid",
+                    "volume": {"type": "ref", "id": sigma_t_id},
+                    "resolution": self.extremum_resolution,
+                    "to_world": self.geometry.atmosphere_volume_to_world,
+                }
         else:
-            raise ValueError(
+            raise TypeError(
                 f"unhandled scene geometry type '{type(self.geometry).__name__}'"
             )
 
@@ -812,6 +764,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         if extremum is not None:
             result["extremum"] = extremum
+            result["sigma_t"]["id"] = sigma_t_id
 
         if medium == "eoheterogeneous":
             result["use_rrt"] = self.use_rrt
@@ -823,67 +776,42 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     @property
     def _params_medium(self) -> dict[str, SceneParameter]:
         # Inherit docstring
+
         if isinstance(self.geometry, PlaneParallelGeometry):
-            return {
-                "albedo.data": SceneParameter(
-                    lambda ctx: np.reshape(
-                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
-                        (-1, 1, 1, 1),
-                    ).astype(np.float32),
-                    KernelSceneParameterFlags.SPECTRAL,
-                    search=SearchSceneParameter(
-                        node_type=mi.Medium,
-                        node_id=self.medium_id,
-                        parameter_relpath="albedo.data",
-                    ),
-                ),
-                "sigma_t.data": SceneParameter(
-                    lambda ctx: np.reshape(
-                        self.eval_sigma_t(ctx.si).m_as(
-                            uck.get("collision_coefficient")
-                        ),
-                        (-1, 1, 1, 1),
-                    ).astype(np.float32),
-                    KernelSceneParameterFlags.SPECTRAL,
-                    search=SearchSceneParameter(
-                        node_type=mi.Medium,
-                        node_id=self.medium_id,
-                        parameter_relpath="sigma_t.data",
-                    ),
-                ),
-            }
-
+            albedo_key = "albedo.data"
+            sigma_t_key = "sigma_t.data"
         elif isinstance(self.geometry, SphericalShellGeometry):
-            return {
-                "albedo.volume.data": SceneParameter(
-                    lambda ctx: np.reshape(
-                        self.eval_albedo(ctx.si).m_as(ureg.dimensionless),
-                        (1, 1, -1, 1),
-                    ).astype(np.float32),
-                    KernelSceneParameterFlags.SPECTRAL,
-                    search=SearchSceneParameter(
-                        node_type=mi.Medium,
-                        node_id=self.medium_id,
-                        parameter_relpath="albedo.volume.data",
-                    ),
-                ),
-                "sigma_t.volume.data": SceneParameter(
-                    lambda ctx: np.reshape(
-                        self.eval_sigma_t(ctx.si).m_as(
-                            uck.get("collision_coefficient")
-                        ),
-                        (1, 1, -1, 1),
-                    ).astype(np.float32),
-                    KernelSceneParameterFlags.SPECTRAL,
-                    search=SearchSceneParameter(
-                        node_type=mi.Medium,
-                        node_id=self.medium_id,
-                        parameter_relpath="sigma_t.volume.data",
-                    ),
-                ),
-            }
-
-        else:  # Shouldn't happen, prevented by validator
+            albedo_key = "albedo.volume.data"
+            sigma_t_key = "sigma_t.volume.data"
+        else:
             raise ValueError(
                 f"unhandled scene geometry type '{type(self.geometry).__name__}'"
             )
+
+        albedo_search = SearchSceneParameter(
+            node_type=mi.Medium, node_id=self.medium_id, parameter_relpath=albedo_key
+        )
+        sigma_t_search = SearchSceneParameter(
+            node_type=mi.Medium, node_id=self.medium_id, parameter_relpath=sigma_t_key
+        )
+        albedo_grid = generate_gridvolume(
+            self.geometry,
+            self.eval_albedo,
+            units=ureg.dimensionless,
+            search=albedo_search,
+            flag=KernelSceneParameterFlags.SPECTRAL,
+            dtype=np.float64,
+        )
+        sigma_t_grid = generate_gridvolume(
+            self.geometry,
+            self.eval_sigma_t,
+            units=uck.get("collision_coefficient"),
+            search=sigma_t_search,
+            flag=KernelSceneParameterFlags.SPECTRAL,
+            dtype=np.float64,
+        )
+
+        return {
+            albedo_key: albedo_grid,
+            sigma_t_key: sigma_t_grid,
+        }
