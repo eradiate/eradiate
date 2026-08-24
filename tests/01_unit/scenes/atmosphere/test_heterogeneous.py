@@ -6,12 +6,13 @@ import eradiate
 from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
+from eradiate.grid import PlaneParallelGridCoords
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     ParticleEnsemble,
 )
 from eradiate.scenes.core import traverse
-from eradiate.scenes.geometry import SceneGeometry
+from eradiate.scenes.geometry import PlaneParallelGeometry, SceneGeometry, WrapMode
 from eradiate.spectral.index import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
 
@@ -450,3 +451,73 @@ def test_heterogenous_extremum_type(
     elif geometry == "spherical_shell":
         assert "extremum" in template
         assert template["extremum"]["type"] == "extremum_spherical"
+
+
+@pytest.mark.parametrize(
+    "wrap_mode", [WrapMode.CLAMP, WrapMode.REPEAT, WrapMode.MIRROR]
+)
+def test_heterogeneous_extremum_wrap_mode(
+    mode_mono, wrap_mode, atmosphere_us_standard_mono
+):
+    """
+    The extremum structure's wrap_mode always mirrors the geometry's
+    wrap_mode, for each of the three supported modes.
+    """
+    atmosphere = HeterogeneousAtmosphere(
+        geometry={"type": "plane_parallel", "wrap_mode": wrap_mode},
+        molecular_atmosphere=atmosphere_us_standard_mono,
+        force_majorant=True,
+        extremum_resolution=(1, 1, 12),
+    )
+    template = atmosphere._template_medium
+    assert template["extremum"]["wrap_mode"] == str(wrap_mode)
+
+
+def test_heterogeneous_medium_aabb(mode_mono, atmosphere_us_standard_mono):
+    """
+    The medium AABB matches the geometry bbox horizontally; its vertical
+    minimum is the grid's bottom level, not the shape bbox's own minimum.
+    """
+    atmosphere = HeterogeneousAtmosphere(
+        geometry="plane_parallel",
+        molecular_atmosphere=atmosphere_us_standard_mono,
+        force_majorant=True,
+    )
+    template = atmosphere._template_medium
+    geometry = atmosphere.geometry
+
+    assert "aabb_min" in template and "aabb_max" in template
+    bbox_min = geometry.bbox.min.m_as("m")
+    bbox_max = geometry.bbox.max.m_as("m")
+
+    np.testing.assert_allclose(template["aabb_min"][:2], bbox_min[:2])
+    np.testing.assert_allclose(template["aabb_max"], bbox_max)
+
+    grid_bottom = geometry.grid.levels[0].m_as("m")
+    assert template["aabb_min"][2] == pytest.approx(grid_bottom)
+    assert template["aabb_min"][2] != pytest.approx(bbox_min[2])
+
+
+def test_heterogeneous_medium_type_genuine_3d_grid(
+    mode_mono, atmosphere_us_standard_mono
+):
+    """
+    A non-onedim horizontal grid forces the eoheterogeneous medium type even
+    with force_majorant left at its default (False).
+    """
+    grid = PlaneParallelGridCoords(
+        edges_x=np.array([-1.0, 0.0, 1.0]) * ureg.km,
+        edges_y=np.array([-1.0, 0.0, 1.0]) * ureg.km,
+        levels=np.linspace(0.0, 10.0, 6) * ureg.km,
+    )
+    geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
+    assert not geometry.grid.onedim
+
+    atmosphere = HeterogeneousAtmosphere(
+        geometry=geometry,
+        molecular_atmosphere=atmosphere_us_standard_mono,
+    )
+    template = atmosphere._template_medium
+
+    assert template["type"] == "eoheterogeneous"
+    assert "aabb_min" in template and "aabb_max" in template
