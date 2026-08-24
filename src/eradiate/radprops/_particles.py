@@ -13,6 +13,7 @@ from axsdb.math import interp1d
 
 from .. import converters
 from ..attrs import define, documented
+from ..data.convert import make_aer_core_v2
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -96,7 +97,7 @@ def _rdp1d_log(mu: np.ndarray, values: np.ndarray, n_out: int) -> np.ndarray:
     heap = [(-err, 0, n - 1, best)]
 
     while count < n_out and heap:
-        neg_err, i_l, i_r, mid = heapq.heappop(heap)
+        _neg_err, i_l, i_r, mid = heapq.heappop(heap)
         if selected[mid]:
             # Stale entry: mid was already inserted via another segment; skip.
             continue
@@ -212,6 +213,10 @@ class ParticleProperties:
     _particle_shape: str | None = attrs.field(default=None, init=False, repr=True)
     # -- Fixed mu grid flag
     _has_fixed_mu_grid: bool | None = attrs.field(default=None, init=False, repr=False)
+    # -- Effective radius (size-distribution datasets only)
+    _reff: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
+    # -- Effective variance (size-distribution datasets only)
+    _veff: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
 
     def __attrs_post_init__(self):
         # Resolve all cached attributes
@@ -225,6 +230,8 @@ class ParticleProperties:
             "pmom",
             "particle_shape",
             "has_fixed_mu_grid",
+            "reff",
+            "veff",
         ]:
             getattr(self, attr)
 
@@ -280,45 +287,40 @@ class ParticleProperties:
         Returns
         -------
         bool
-            ``True`` iff ``data`` has ``reff``/``veff`` dimensions (Part-Core
+            ``True`` iff ``data`` has ``reff``/``veff`` dimensions (Prt
             v1 format), ``False`` for a plain Aer-Core v2 dataset.
         """
         return "reff" in self.data.dims and "veff" in self.data.dims
 
-    def _resolve(
-        self, reff_idx: int | None, veff_idx: int | None
-    ) -> ParticleProperties:
+    @property
+    def reff(self) -> pint.Quantity | None:
         """
-        Select a point on the ``reff``/``veff`` dimensions by index, if present.
-
-        Parameters
-        ----------
-        reff_idx, veff_idx : int or None
-            Index along the ``reff``/``veff`` dimensions. Both must be set
-            iff ``data`` has ``reff``/``veff`` dimensions.
-
         Returns
         -------
-        ParticleProperties
-            ``self`` if ``data`` has no ``reff``/``veff`` dimensions;
-            otherwise a new instance with those dimensions selected away.
+        pint.Quantity or None
+            Effective radius grid, cached to minimize overhead. ``None`` if
+            :attr:`has_size_distribution` is ``False``.
         """
-        if not self.has_size_distribution:
-            if reff_idx is not None or veff_idx is not None:
-                raise ValueError(
-                    "'reff_idx'/'veff_idx' were provided, but this dataset "
-                    "has no 'reff'/'veff' dimensions"
-                )
-            return self
+        if self._reff is None:
+            if not self.has_size_distribution:
+                return None
+            self._reff = to_quantity(self.data["reff"])
+        return self._reff
 
-        if reff_idx is None or veff_idx is None:
-            raise ValueError(
-                "'reff_idx' and 'veff_idx' must both be provided: this "
-                "dataset has 'reff'/'veff' dimensions"
-            )
-
-        ds = self.data.isel(reff=reff_idx, veff=veff_idx, drop=True)
-        return ParticleProperties(ds)
+    @property
+    def veff(self) -> pint.Quantity | None:
+        """
+        Returns
+        -------
+        pint.Quantity or None
+            Effective variance grid, cached to minimize overhead. ``None`` if
+            :attr:`has_size_distribution` is ``False``.
+        """
+        if self._veff is None:
+            if not self.has_size_distribution:
+                return None
+            self._veff = to_quantity(self.data["veff"])
+        return self._veff
 
     @property
     def w(self) -> pint.Quantity:
@@ -450,16 +452,40 @@ class ParticleProperties:
             preserving the original grid exactly.
         """
         if self._has_fixed_mu_grid is None:
-            ds = self.data
-            nangles = ds["nangles"].values
-            n_iangle = ds.sizes["iangle"]
-            all_full = bool(np.all(nangles == n_iangle))
-            all_same = all_full and bool(
-                np.all(ds["mu"].values == ds["mu"].values[[0]])
-            )
-            self._has_fixed_mu_grid = all_same
+            self._has_fixed_mu_grid = self._has_fixed_mu_grid_at()
 
         return self._has_fixed_mu_grid
+
+    def _has_fixed_mu_grid_at(
+        self, reff_idx: int | None = None, veff_idx: int | None = None
+    ) -> bool:
+        """
+        Check whether all wavelengths share an identical angular grid (same
+        ``nangles`` and ``mu`` values), optionally restricted to a single
+        ``(reff, veff)`` grid point.
+
+        Parameters
+        ----------
+        reff_idx, veff_idx : int, optional
+            If given, restrict the check to this ``(reff, veff)`` grid point.
+
+        Returns
+        -------
+        bool
+            ``True`` iff all wavelengths share an identical mu grid.
+        """
+        ds = self.data
+        n_iangle = ds.sizes["iangle"]
+
+        if reff_idx is None:
+            nangles = ds["nangles"].values
+            mu_vals = ds["mu"].values
+        else:
+            nangles = ds["nangles"].values[:, reff_idx, veff_idx]
+            mu_vals = ds["mu"].values[:, reff_idx, veff_idx, :]
+
+        all_full = bool(np.all(nangles == n_iangle))
+        return all_full and bool(np.all(mu_vals == mu_vals[[0]]))
 
     @staticmethod
     def _broadcast_t(t: np.ndarray, reference: np.ndarray) -> np.ndarray:
@@ -535,30 +561,48 @@ class ParticleProperties:
         ssa_interp = np.where(ext_interp == 0.0, linear, weighted)
         return ssa_interp * ureg.dimensionless
 
-    def _get_mu_phase(self, w_idx: int) -> tuple[np.ndarray, np.ndarray]:
+    def _get_mu_phase(
+        self,
+        w_idx: int,
+        reff_idx: int | None = None,
+        veff_idx: int | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
-        Extract the valid mu grid and phase values for a single wavelength index.
+        Extract the valid mu grid and phase values for a single wavelength
+        index, optionally at a single ``(reff, veff)`` grid point.
 
-        Strips NaN-padding using ``nangles[w_idx]``.
+        Strips NaN-padding using ``nangles``.
 
         Parameters
         ----------
         w_idx : int
             Index along the ``w`` dimension.
 
+        reff_idx, veff_idx : int, optional
+            Index along the ``reff``/``veff`` dimensions. Both must be set
+            iff ``data`` has ``reff``/``veff`` dimensions.
+
         Returns
         -------
         mu : ndarray
-            Scattering angle cosines, shape ``(nangles[w_idx],)``.
+            Scattering angle cosines, shape ``(nangles,)``.
 
         phase : ndarray
-            Phase values, shape ``(n_phamat, nangles[w_idx])``.
+            Phase values, shape ``(n_phamat, nangles)``.
         """
         ds = self.data
-        nangles = int(ds["nangles"].values[w_idx])
-        mu = ds["mu"].values[w_idx, :nangles]
-        # phase is cached as (phamat, iangle, w)
-        phase = self.phase.values[:, :nangles, w_idx]  # (n_phamat, nangles)
+
+        if reff_idx is None:
+            nangles = int(ds["nangles"].values[w_idx])
+            mu = ds["mu"].values[w_idx, :nangles]
+            # phase is cached as (phamat, iangle, w)
+            phase = self.phase.values[:, :nangles, w_idx]  # (n_phamat, nangles)
+        else:
+            nangles = int(ds["nangles"].values[w_idx, reff_idx, veff_idx])
+            mu = ds["mu"].values[w_idx, reff_idx, veff_idx, :nangles]
+            # phase is cached as (phamat, iangle, w, reff, veff)
+            phase = self.phase.values[:, :nangles, w_idx, reff_idx, veff_idx]
+
         return mu, phase
 
     def _locate(self, w: pint.Quantity) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -642,6 +686,7 @@ class ParticleProperties:
         scat_arr = self.scat.m
         scat_l = scat_arr[idx_l]
         scat_r = scat_arr[idx_r]
+        t = self._broadcast_t(t, scat_l)
         scat_denom = (1.0 - t) * scat_l + t * scat_r
 
         safe_denom = np.where(scat_denom == 0.0, 1.0, scat_denom)
@@ -693,6 +738,12 @@ class ParticleProperties:
         interpolation preserves the piecewise-linear shape that Mitsuba uses
         during tabulated phase-function look-up, so no distortion is introduced.
         """
+        if self.has_size_distribution:
+            raise ValueError(
+                "eval_phase() cannot be called on a dataset with 'reff'/'veff' "
+                "dimensions; use eval_phase_grid() instead"
+            )
+
         is_scalar = np.isscalar(w.m)
         w = np.atleast_1d(w)
 
@@ -745,6 +796,175 @@ class ParticleProperties:
         if is_scalar:
             return mu[0], phase[:, 0, :]
         return mu, phase
+
+    def eval_phase_grid(
+        self, w: pint.Quantity
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Evaluate the phase function at a single wavelength for every native
+        ``(reff, veff)`` grid point.
+
+        This is the grid-native counterpart of :meth:`eval_phase`. It uses
+        the same per-point interpolation scheme: the union of the two
+        bracketing wavelengths' mu grids, decimated or upsampled to that
+        point's own target angle count. Every ``(reff, veff)`` point is
+        evaluated in a single call. Quantities shared across the whole grid
+        (bracket indices, scattering-weighted mixing weights) are computed
+        once.
+
+        Parameters
+        ----------
+        w : quantity
+            Query wavelength (scalar).
+
+        Returns
+        -------
+        mu : ndarray
+            Scattering angle cosines, shape ``(n_reff, n_veff, n_mu_max)``.
+            Points beyond a given grid point's own angle count are NaN-padded,
+            since different grid points may have a different native angular
+            resolution.
+
+        phase : ndarray
+            Phase function values in sr⁻¹, shape
+            ``(n_phamat, n_reff, n_veff, n_mu_max)``, NaN-padded like ``mu``.
+
+        nangles : ndarray
+            Valid angle count for each grid point, shape ``(n_reff, n_veff)``.
+        """
+        if not self.has_size_distribution:
+            raise ValueError(
+                "eval_phase_grid() requires a dataset with 'reff'/'veff' "
+                "dimensions; use eval_phase() instead"
+            )
+
+        w_arr = np.atleast_1d(w)
+        if w_arr.size != 1:
+            raise ValueError("eval_phase_grid() only accepts a scalar wavelength")
+
+        # --- Shared across the grid: bracket wavelengths and mixing weights ---
+        idx_l_arr, idx_r_arr, w0_arr, w1_arr, _ = self._bracket_and_weights(w_arr)
+        idx_l = int(idx_l_arr[0])
+        idx_r = int(idx_r_arr[0])
+        w0_grid = w0_arr[0]  # (n_reff, n_veff)
+        w1_grid = w1_arr[0]
+
+        n_reff = self.data.sizes["reff"]
+        n_veff = self.data.sizes["veff"]
+        n_phamat = self.data.sizes["phamat"]
+        n_iangle = self.data.sizes["iangle"]
+
+        mu_list: list[np.ndarray] = []
+        phase_list: list[np.ndarray] = []
+
+        for ireff in range(n_reff):
+            for iveff in range(n_veff):
+                # --- Per point: native grids can only be merged pointwise ---
+                mu1, phase1 = self._get_mu_phase(idx_l, ireff, iveff)
+                mu2, phase2 = self._get_mu_phase(idx_r, ireff, iveff)
+
+                mu_union = np.union1d(mu1, mu2)
+                phase1_union = interp1d(mu1, phase1, mu_union, bounds="clamp")
+                phase2_union = interp1d(mu2, phase2, mu_union, bounds="clamp")
+
+                w0_pt = float(w0_grid[ireff, iveff])
+                w1_pt = float(w1_grid[ireff, iveff])
+                phase_union = w0_pt * phase1_union + w1_pt * phase2_union
+
+                n_mu_pt = (
+                    n_iangle
+                    if self._has_fixed_mu_grid_at(ireff, iveff)
+                    else 2 * n_iangle
+                )
+                n_union = len(mu_union)
+
+                if n_union > n_mu_pt:
+                    keep = _rdp1d_log(mu_union, phase_union, n_mu_pt)
+                    mu_pt = mu_union[keep]
+                    phase_pt = phase_union[:, keep]
+                elif n_union < n_mu_pt:
+                    mu_pt = _upsample_mu(mu_union, n_mu_pt)
+                    phase_pt = interp1d(mu_union, phase_union, mu_pt, bounds="clamp")
+                else:
+                    mu_pt = mu_union
+                    phase_pt = phase_union
+
+                mu_list.append(mu_pt)
+                phase_list.append(phase_pt)
+
+        nangles = np.array([len(m) for m in mu_list]).reshape(n_reff, n_veff)
+        n_mu_max = int(nangles.max())
+
+        mu = np.full((n_reff, n_veff, n_mu_max), np.nan)
+        phase = np.full((n_phamat, n_reff, n_veff, n_mu_max), np.nan)
+        for idx, (mu_pt, phase_pt) in enumerate(zip(mu_list, phase_list)):
+            ireff, iveff = divmod(idx, n_veff)
+            n = len(mu_pt)
+            mu[ireff, iveff, :n] = mu_pt
+            phase[:, ireff, iveff, :n] = phase_pt
+
+        return mu, phase, nangles
+
+    def phase_dataset_for_reff_veff(
+        self,
+        w: pint.Quantity,
+        i_reff: int,
+        i_veff: int,
+        ext: pint.Quantity | None = None,
+    ) -> xr.Dataset:
+        """
+        Build a single-point Aer-Core v2 phase function dataset at the given
+        wavelength, from the exact ``(i_reff, i_veff)`` grid point (no
+        interpolation across ``reff``/``veff``).
+
+        Parameters
+        ----------
+        w : quantity
+            Wavelength at which ``ext``/``ssa``/the phase function are
+            evaluated (interpolated along the wavelength axis only).
+
+        i_reff, i_veff : int
+            Index along this dataset's own ``reff``/``veff`` dimensions.
+
+        ext : quantity, optional
+            Extinction coefficient stored in the output dataset. Defaults
+            to the native grid value at ``(i_reff, i_veff)``.
+
+        Returns
+        -------
+        xr.Dataset
+            An Aer-Core v2 dataset with no ``reff``/``veff`` dimensions.
+        """
+        if not self.has_size_distribution:
+            raise ValueError(
+                "phase_dataset_for_reff_veff() requires a dataset with "
+                "'reff'/'veff' dimensions"
+            )
+
+        wavelength = np.atleast_1d(w)
+        ext_grid = self.eval_ext(wavelength)
+        ssa_grid = self.eval_ssa(wavelength)
+        ssa = ssa_grid[0, i_reff, i_veff]
+        if ext is None:
+            ext = ext_grid[0, i_reff, i_veff]
+
+        mu_grid, phase_grid, nangles_grid = self.eval_phase_grid(wavelength[0])
+        n = int(nangles_grid[i_reff, i_veff])
+        mu = mu_grid[i_reff, i_veff, :n]
+        phase_vals = phase_grid[:, i_reff, i_veff, :n]  # (nphamat, n_mu)
+        theta = np.rad2deg(np.arccos(mu))
+        assert theta[0] > theta[-1], "expected descending theta"
+
+        return make_aer_core_v2(
+            w=wavelength,
+            phamat=list(self.data["phamat"].values),
+            mu=ureg.Quantity(mu[np.newaxis, :], "dimensionless"),
+            theta=ureg.Quantity(theta[np.newaxis, :], "degree"),
+            ext=ext.reshape(1),
+            ssa=ssa.reshape(1),
+            phase=ureg.Quantity(phase_vals[:, np.newaxis, :], "1/sr"),
+            pmom=np.zeros((1, 1)),
+        )
 
     def eval_pmom(self, w: pint.Quantity, clip: bool = False) -> tuple[np.ndarray, int]:
         """

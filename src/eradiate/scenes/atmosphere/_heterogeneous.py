@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 from collections import abc as cabc
+from typing import TYPE_CHECKING
 
 import attrs
 import mitsuba as mi
@@ -16,6 +17,7 @@ from axsdb import AbsorptionDatabase
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular import MolecularAtmosphere
 from ._particle_ensemble import ParticleEnsemble
+from ._particle_field import ParticleField
 from ..core import traverse
 from ..phase import MultiPhaseFunction, PhaseFunction
 from ...attrs import define, documented
@@ -26,6 +28,9 @@ from ...spectral.index import SpectralIndex
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
+
+if TYPE_CHECKING:
+    from axsdb import AbsorptionDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +44,6 @@ def _molecular_converter(value):
 def _particle_ensemble_converter(value):
     if not value:
         return []
-
     if not isinstance(value, (list, tuple)):
         return _particle_ensemble_converter([value])
 
@@ -60,6 +64,9 @@ def _particle_ensemble_converter(value):
 class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     """
     Heterogeneous atmosphere scene element [``heterogeneous``].
+
+    Supports both 1D (plane-parallel, layer-based) and 3D (fully gridded)
+    configurations.
     """
 
     molecular_atmosphere: MolecularAtmosphere | None = documented(
@@ -114,6 +121,15 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
+    particle_field: ParticleField | None = documented(
+        attrs.field(default=None, kw_only=True),
+        doc="Optional particle field component providing spatially "
+        "heterogeneous cloud optical properties with trilinear interpolation.",
+        type=".ParticleField or None",
+        init_type=".ParticleField or None, optional",
+        default="None",
+    )
+
     use_mis: bool = documented(
         attrs.field(default=True, converter=bool, kw_only=True),
         doc="If ``True``, multiple importance sampling is enabled for the "
@@ -124,15 +140,19 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     @property
-    def components(self) -> list[MolecularAtmosphere | ParticleEnsemble]:
+    def components(
+        self,
+    ) -> list[MolecularAtmosphere | ParticleEnsemble | ParticleField]:
         """
         Returns
         -------
-        list
+        list of .MolecularAtmosphere or .ParticleEnsemble or .ParticleField
             The list of all registered atmospheric components.
         """
         result = [self.molecular_atmosphere] if self.molecular_atmosphere else []
         result.extend(self.particle_ensembles)
+        if self.particle_field is not None:
+            result.append(self.particle_field)
         return result
 
     def update(self):
@@ -198,6 +218,31 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
         return albedo * ureg.dimensionless
 
+    @property
+    def _template_phase(self) -> dict:
+        # Inherit docstring
+        return traverse(self.phase)[0].data
+
+    @property
+    def _params_phase(self) -> dict:
+        # Inherit docstring
+        umap = traverse(self.phase)[1].data
+
+        # Add prefix and lookup strategy to all entries
+        result = {}
+
+        for uparam_key, uparam in umap.items():
+            result[uparam_key] = attrs.evolve(
+                uparam,
+                search=SearchSceneParameter(
+                    node_type=mi.PhaseFunction,
+                    node_id=self.phase_id,
+                    parameter_relpath=uparam_key,
+                ),
+            )
+
+        return result
+
     @cache_by_id
     def _eval_sigma_t_impl(self, si: SpectralIndex) -> pint.Quantity:
         sigma_units = ucc.get("collision_coefficient")
@@ -259,48 +304,20 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         if len(self.components) == 1:
             return self.components[0].phase
 
-        else:
-            components, weights = [], []
-            sigma_units = ucc.get("collision_coefficient")
+        components, weights = [], []
+        sigma_units = ucc.get("collision_coefficient")
 
-            for i, component in enumerate(self.components):
-                components.append(component.phase)
+        for i, component in enumerate(self.components):
+            components.append(component.phase)
 
-                def eval_sigma_s(si: SpectralIndex, n_component: int = i) -> np.ndarray:
-                    return self._eval_sigma_s_component(si, n_component).m_as(
-                        sigma_units
-                    )
+            def eval_sigma_s(si: SpectralIndex, n_component: int = i) -> np.ndarray:
+                return self._eval_sigma_s_component(si, n_component).m_as(sigma_units)
 
-                weights.append(eval_sigma_s)
+            weights.append(eval_sigma_s)
 
-            return MultiPhaseFunction(
-                components=components,
-                weights=weights,
-                geometry=self.geometry,
-                use_mis=self.use_mis,
-            )
-
-    @property
-    def _template_phase(self) -> dict:
-        # Inherit docstring
-        return traverse(self.phase)[0].data
-
-    @property
-    def _params_phase(self) -> dict:
-        # Inherit docstring
-        umap = traverse(self.phase)[1].data
-
-        # Add prefix and lookup strategy to all entries
-        result = {}
-
-        for uparam_key, uparam in umap.items():
-            result[uparam_key] = attrs.evolve(
-                uparam,
-                search=SearchSceneParameter(
-                    node_type=mi.PhaseFunction,
-                    node_id=self.phase_id,
-                    parameter_relpath=uparam_key,
-                ),
-            )
-
-        return result
+        return MultiPhaseFunction(
+            components=components,
+            weights=weights,
+            geometry=self.geometry,
+            use_mis=self.use_mis,
+        )

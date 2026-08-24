@@ -5,6 +5,7 @@ import xarray as xr
 
 from eradiate import KernelContext, fresolver
 from eradiate import unit_registry as ureg
+from eradiate.data.convert import make_aer_core_v2
 from eradiate.grid import GridCoords, PlaneParallelGridCoords
 from eradiate.radprops import ParticleProperties
 from eradiate.scenes.atmosphere import (
@@ -133,6 +134,31 @@ class TestParticleEnsemble:
                 bottom=1.2 * ureg.km,
                 top=1.8 * ureg.km,
                 tau_ref=-0.1 * ureg.dimensionless,
+            )
+
+    def test_particle_properties_rejects_size_distribution(self):
+        """Raises when 'particle_properties' has 'reff'/'veff' dimensions."""
+        mu = np.linspace(-1.0, 1.0, 5)
+        theta = np.rad2deg(np.arccos(mu))
+        properties_with_size_dist = make_aer_core_v2(
+            w=ureg.Quantity([1.0], "micron"),
+            phamat=["11"],
+            mu=ureg.Quantity(
+                mu[np.newaxis, np.newaxis, np.newaxis, :], "dimensionless"
+            ),
+            theta=ureg.Quantity(theta[np.newaxis, np.newaxis, np.newaxis, :], "degree"),
+            ext=ureg.Quantity([[[1.0]]], "1/km"),
+            ssa=ureg.Quantity([[[0.6]]], "dimensionless"),
+            phase=ureg.Quantity(np.ones((1, 1, 1, 1, 5)), "1/sr"),
+            pmom=np.zeros((1, 1, 1, 1)),
+            reff=ureg.Quantity([10.0], "micron"),
+            veff=ureg.Quantity([0.1], "dimensionless"),
+        )
+
+        with pytest.raises(ValueError, match="reff.*veff"):
+            ParticleEnsemble(
+                particle_properties=properties_with_size_dist,
+                w_ref=ureg.Quantity(1.0, "micron"),
             )
 
     @pytest.mark.parametrize("w", list([280.0, 550.0, 1600.0, 2400.0] * ureg.nm))
