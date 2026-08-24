@@ -5,11 +5,18 @@ import numpy as np
 import numpy.testing as npt
 import pint
 import pytest
+import xarray as xr
 
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
 from eradiate.exceptions import DataError
+from eradiate.grid import PlaneParallelGridCoords
+from eradiate.radprops._atmosphere import (
+    _average_adjacent_levels,
+    _layers_from_levels,
+    _validate_thermoprops_grid_shape,
+)
 from eradiate.scenes.atmosphere import MolecularAtmosphere
 from eradiate.scenes.core import Scene, traverse
 from eradiate.spectral import CKDSpectralIndex, SpectralIndex
@@ -174,4 +181,58 @@ def test_molecular_atmosphere_depolarization(mode_ckd):
     template, _ = traverse(atmosphere)
     assert template.render(KernelContext(si=si))
     assert isinstance(depol, pint.Quantity)
-    assert len(depol) == atmosphere.geometry.zgrid.n_layers
+    assert len(depol) == atmosphere.geometry.grid.n_layers
+
+
+def _make_grid(n_cells_x, n_cells_y):
+    return PlaneParallelGridCoords(
+        edges_x=np.linspace(-1.0, 1.0, n_cells_x + 1) * ureg.km,
+        edges_y=np.linspace(-1.0, 1.0, n_cells_y + 1) * ureg.km,
+        levels=np.linspace(0.0, 5.0, 6) * ureg.km,
+    )
+
+
+def test_validate_thermoprops_grid_shape_z_only_passthrough():
+    ds = xr.Dataset({"n": (["z"], np.arange(5.0))})
+    assert _validate_thermoprops_grid_shape(ds, _make_grid(3, 7)) is ds
+
+
+@pytest.mark.parametrize(
+    "n_cells_x, n_cells_y, match",
+    [(3, 3, "'x'"), (2, 5, "'y'")],
+)
+def test_validate_thermoprops_grid_shape_mismatch_raises(n_cells_x, n_cells_y, match):
+    ds = xr.Dataset({"n": (["x", "y", "z"], np.zeros((2, 3, 5)))})
+    with pytest.raises(ValueError, match=match):
+        _validate_thermoprops_grid_shape(ds, _make_grid(n_cells_x, n_cells_y))
+
+
+def test_average_adjacent_levels_generalizes_to_xyz():
+    # dims: (w=1, x=2, y=3, z=5) -- leading w dropped, z averaged into layers
+    raw = np.zeros((1, 2, 3, 5))
+    for i in range(2):
+        for j in range(3):
+            for k in range(5):
+                raw[0, i, j, k] = 100 * i + 10 * j + k
+
+    result = _average_adjacent_levels(raw)
+
+    assert result.shape == (2, 3, 4)
+    expected = 0.5 * (raw[0, :, :, 1:] + raw[0, :, :, :-1])
+    np.testing.assert_allclose(result, expected)
+
+
+def test_layers_from_levels_generalizes_to_scrambled_xyz():
+    # dims deliberately scrambled: z is not adjacent to w, and x/y precede it
+    raw = np.zeros((2, 1, 3, 5))
+    for i in range(2):
+        for j in range(3):
+            for k in range(5):
+                raw[i, 0, j, k] = 100 * i + 10 * j + k
+    values = xr.DataArray(raw, dims=["x", "w", "y", "z"], attrs={"units": "km^-1"})
+
+    result = _layers_from_levels(values)
+
+    assert result.shape == (2, 3, 4)
+    expected = 0.5 * (raw[:, 0, :, 1:] + raw[:, 0, :, :-1])
+    np.testing.assert_allclose(result.m_as("km^-1"), expected)
