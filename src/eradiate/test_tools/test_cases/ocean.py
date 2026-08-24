@@ -43,7 +43,7 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmosphere=False)
         Wind speed at mast height in m/s.
 
     has_atmosphere: bool
-        Flags whether to include an atmosphere and particle layer as described
+        Flags whether to include an atmosphere and particle ensemble as described
         by 3DREAMS scenario REF_OO_UB01_I_S20_PPL.
 
     Returns
@@ -69,9 +69,9 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmosphere=False)
                 ).joseki.rescale_to({"CO2": 360 * ureg.ppm}),
                 "rayleigh_depolarization": 0.0,
             },
-            "particle_layers": [
+            "particle_ensembles": [
                 {
-                    "type": "particle_layer",
+                    "type": "particle_ensemble",
                     "bottom": 0 * ureg.km,
                     "top": 40 * ureg.km,
                     "distribution": {
@@ -192,7 +192,7 @@ def create_ocean_grasp_open_atm():
     an open ocean water body reflectance spectrum.
     * Atmosphere (if `has_atmosphere=True`): afgl US standard atmosphere with
     rescaled CO2 concentration to 360 ppm and depolarization set to zero.
-    * Particle Layer (if `has_atmosphere=True): Exponentially distributed layer
+    * Particle ensemble (if `has_atmosphere=True`): Exponentially distributed layer
     with absorption and optical depth of 0.1, distribution
     * Illumination: Directional illumination with a zenith angle :math:`\theta = 20°`
     * Sensor: Multi Distant measure over the principal plane from -60 to 60 degrees

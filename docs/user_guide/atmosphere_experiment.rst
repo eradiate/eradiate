@@ -130,7 +130,7 @@ Heterogeneous atmosphere [:class:`.HeterogeneousAtmosphere`, ``heterogeneous``]
     configured by specifying a molecular component
     (:class:`.MolecularAtmosphere`), describing absorption and  scattering by
     atmospheric gases, and an arbitrary number of aerosol layers
-    (:class:`.ParticleLayer`).
+    (:class:`.ParticleEnsemble`).
 
 Surface [``surface``]
 ^^^^^^^^^^^^^^^^^^^^^

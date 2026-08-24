@@ -68,8 +68,8 @@ def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_conf
                 "absorption_data": "monotropa",
                 "error_handler_config": absorption_database_error_handler_config,
             },
-            "particle_layers": {
-                "type": "particle_layer",
+            "particle_ensembles": {
+                "type": "particle_ensemble",
                 "bottom": 1 * ureg.km,
                 "top": 2 * ureg.km,
                 "tau_ref": 0.5,

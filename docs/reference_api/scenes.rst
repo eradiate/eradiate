@@ -171,7 +171,7 @@ Quick access
    HomogeneousAtmosphere
    HeterogeneousAtmosphere
    MolecularAtmosphere
-   ParticleLayer
+   ParticleEnsemble
 
 **Particle distributions**
 

@@ -8,12 +8,12 @@ from eradiate import unit_registry as ureg
 @pytest.mark.slow
 @pytest.mark.parametrize("bottom", [0.0, 1.0, 10.0])
 @pytest.mark.parametrize("tau_ref", [0.1, 1.0, 10.0])
-def test_heterogeneous_atmosphere_expansion_particle_layer(
+def test_heterogeneous_atmosphere_expansion_particle_ensemble(
     mode_ckd_double, bottom, tau_ref, ert_seed_state
 ):
     """
-    Perfect single-component HeterogeneousAtmosphere expansion (particle layer)
-    ===========================================================================
+    Perfect single-component HeterogeneousAtmosphere expansion (particle ensemble)
+    ==============================================================================
 
     This test case checks if a single-component HeterogeneousAtmosphere
     container expands perfectly as its component. This is assessed by checking
@@ -25,8 +25,8 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
 
     Run an AtmosphereExperiment with two different atmosphere definitions:
 
-    1. A single particle layer.
-    2. Heterogeneous atmosphere that contains a single particle layer.
+    1. A single particle ensemble.
+    2. Heterogeneous atmosphere that contains a single particle ensemble.
 
     Expected behaviour
     ------------------
@@ -45,7 +45,7 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
         "srf": {"type": "delta", "wavelengths": 550.0 * ureg.nm},
     }
 
-    # Particle layer only
+    # Particle ensemble only
     bottom = bottom * ureg.km
     top = bottom + 1.0 * ureg.km
     geometry = {
@@ -53,27 +53,27 @@ def test_heterogeneous_atmosphere_expansion_particle_layer(
         "ground_altitude": bottom,
         "toa_altitude": top,
     }
-    layer = {
-        "type": "particle_layer",
+    ensemble = {
+        "type": "particle_ensemble",
         "bottom": bottom,
         "top": top,
         "tau_ref": tau_ref,
     }
     exp1 = eradiate.experiments.AtmosphereExperiment(
         geometry=geometry,
-        atmosphere=layer,
+        atmosphere=ensemble,
         measures=[measure],
     )
     ert_seed_state.reset()
     eradiate.run(exp1, seed_state=ert_seed_state, spp=spp)
     results1 = exp1.results["measure"]["radiance"].values
 
-    # Heterogeneous atmosphere with a particle layer
+    # Heterogeneous atmosphere with a particle ensemble
     exp2 = eradiate.experiments.AtmosphereExperiment(
         geometry=geometry,
         atmosphere={
             "type": "heterogeneous",
-            "particle_layers": [layer],
+            "particle_ensembles": [ensemble],
         },
         measures=[measure],
     )
