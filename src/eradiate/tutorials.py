@@ -62,7 +62,7 @@ def plot_polarfilm(
     """
 
     import matplotlib.pyplot as plt
-    import matplotlib.tri as tri
+    from matplotlib import tri
 
     # Filter grazing angles
     da = (
@@ -191,8 +191,19 @@ def plot_sigma_t(
 
     with plt.rc_context({"lines.linestyle": ":", "lines.marker": "."}):
         for atmosphere in atmospheres:
-            altitude = to_quantity(atmosphere.eval_radprops(si=si).z_layer).m_as("km")
-            sigma_t = to_quantity(atmosphere.eval_radprops(si=si).sigma_t).m_as("1/m")
+            radprops = atmosphere.eval_radprops(si=si)
+            altitude = to_quantity(radprops.z_layer).m_as("km")
+
+            sigma_t_da = radprops.sigma_t.squeeze()
+            if sigma_t_da.ndim != 1:
+                raise ValueError(
+                    "plot_sigma_t() only supports atmospheres without "
+                    "horizontal spatial variation; got a sigma_t array of "
+                    f"shape {radprops.sigma_t.shape} that does not reduce to "
+                    "a 1D altitude profile."
+                )
+
+            sigma_t = to_quantity(sigma_t_da).m_as("1/m")
             ax.plot(altitude, sigma_t, label=next(label_iter))
 
     formatter = ScalarFormatter(useMathText=True)
@@ -251,7 +262,7 @@ def load_ipython_extension(ipython):
     xr.set_options(display_expand_data=False)
     display(
         Markdown(
-            f"*Last updated: {datetime.datetime.now():%Y-%m-%d %H:%M} "
+            f"*Last updated: {datetime.datetime.now().astimezone():%Y-%m-%d %H:%M} "
             f"(eradiate v{__version__})*"
         )
     )
