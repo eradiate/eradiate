@@ -17,7 +17,8 @@ from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ... import converters
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...radprops import AtmosphereRadProfile, RadProfile, ZGrid, get_default_absdb
+from ...grid import GridCoords
+from ...radprops import AtmosphereRadProfile, RadProfile, get_default_absdb
 from ...spectral.index import SpectralIndex
 from ...units import unit_registry as ureg
 from ...util.misc import summary_repr
@@ -254,47 +255,47 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         return self._radprops_profile
 
     def eval_albedo(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_albedo(
             si,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     def eval_sigma_t(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_sigma_t(
             si,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     def eval_sigma_a(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None, **kwargs
+        self, si: SpectralIndex, grid: GridCoords | None = None, **kwargs
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_sigma_a(
             si,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     def eval_sigma_s(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_sigma_s(
             si,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     def eval_depolarization_factor(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         return self.radprops_profile.eval_depolarization_factor(
             si,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     # --------------------------------------------------------------------------

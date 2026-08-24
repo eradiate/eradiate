@@ -6,12 +6,12 @@ from __future__ import annotations
 
 import logging
 from collections import abc as cabc
-from typing import TYPE_CHECKING
 
 import attrs
 import mitsuba as mi
 import numpy as np
 import pint
+from axsdb import AbsorptionDatabase
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular import MolecularAtmosphere
@@ -20,15 +20,12 @@ from ..core import traverse
 from ..phase import BlendPhaseFunction, PhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
+from ...grid import GridCoords
 from ...kernel import SearchSceneParameter
-from ...radprops import ZGrid
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
-
-if TYPE_CHECKING:
-    from axsdb import AbsorptionDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -117,29 +114,12 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
-    _zgrid: ZGrid = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(
-                lambda x: ZGrid(x) if not isinstance(x, ZGrid) else x
-            ),
-            validator=attrs.validators.optional(attrs.validators.instance_of(ZGrid)),
-            repr=False,
-        ),
-        doc="A high-resolution layer altitude mesh on which the radiative "
-        "properties of the components are interpolated. If unset, a default grid "
-        "with one layer per 100 m (or 10 layers if the atmosphere object "
-        "height is less than 100 m) is used.",
-        type=".ZGrid",
-        init_type=".ZGrid, optional",
-    )
-
     @property
     def components(self) -> list[MolecularAtmosphere | ParticleLayer]:
         """
         Returns
         -------
-        list of .AbstractHeterogeneousAtmosphere
+        list
             The list of all registered atmospheric components.
         """
         result = [self.molecular_atmosphere] if self.molecular_atmosphere else []
@@ -166,11 +146,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties
     # --------------------------------------------------------------------------
-
-    @property
-    def zgrid(self) -> ZGrid:
-        # Inherit docstring
-        return self._zgrid
 
     @property
     def bottom(self) -> pint.Quantity:
@@ -200,11 +175,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             return None
 
     def eval_albedo(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if zgrid is not None and zgrid is not self.geometry.zgrid:
-            raise ValueError("zgrid must be left unset or set to self.geometry.zgrid")
+        if grid is not None and grid is not self.geometry.grid:
+            raise ValueError("grid must be left unset or set to self.geometry.grid")
 
         units = ucc.get("collision_coefficient")
         sigma_s = self.eval_sigma_s(si).m_as(units)
@@ -216,45 +191,41 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @cache_by_id
     def _eval_sigma_t_impl(self, si: SpectralIndex) -> pint.Quantity:
-        result = np.zeros((len(self.components), self.geometry.zgrid.n_layers))
         sigma_units = ucc.get("collision_coefficient")
-
-        # Evaluate extinction for current component
-        for i, component in enumerate(self.components):
-            result[i] = component.eval_sigma_t(si, self.geometry.zgrid).m_as(
-                sigma_units
+        result = []
+        for component in self.components:
+            cmp_result = component.eval_sigma_t(si, self.geometry.grid)
+            result.append(
+                np.broadcast_to(cmp_result.m_as(sigma_units), self.geometry.grid.shape)
             )
-
-        return result * sigma_units
+        return np.stack(result) * sigma_units
 
     def eval_sigma_t(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if zgrid is not None and zgrid is not self.geometry.zgrid:
-            raise ValueError("zgrid must be left unset or set to self.geometry.zgrid")
+        if grid is not None and grid is not self.geometry.grid:
+            raise ValueError("grid must be left unset or set to self.geometry.grid")
         return self._eval_sigma_t_impl(si).sum(axis=0)
 
     def eval_sigma_a(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if zgrid is not None and zgrid is not self.geometry.zgrid:
-            raise ValueError("zgrid must be left unset or set to self.geometry.zgrid")
+        if grid is not None and grid is not self.geometry.grid:
+            raise ValueError("grid must be left unset or set to self.geometry.grid")
         return self.eval_sigma_t(si) - self.eval_sigma_s(si)
 
     @cache_by_id
     def _eval_sigma_s_impl(self, si: SpectralIndex) -> pint.Quantity:
-        result = np.zeros((len(self.components), self.geometry.zgrid.n_layers))
         sigma_units = ucc.get("collision_coefficient")
-
-        # Evaluate scattering coefficient for current component
-        for i, component in enumerate(self.components):
-            result[i] = component.eval_sigma_s(si, self.geometry.zgrid).m_as(
-                sigma_units
+        result = []
+        for component in self.components:
+            cmp_result = component.eval_sigma_s(si, self.geometry.grid)
+            result.append(
+                np.broadcast_to(cmp_result.m_as(sigma_units), self.geometry.grid.shape)
             )
-
-        return result * sigma_units
+        return np.stack(result) * sigma_units
 
     def _eval_sigma_s_component(
         self, si: SpectralIndex, n_component: int
@@ -262,11 +233,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return self._eval_sigma_s_impl(si)[n_component]
 
     def eval_sigma_s(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if zgrid is not None and zgrid is not self.geometry.zgrid:
-            raise ValueError("zgrid must be left unset or set to self.geometry.zgrid")
+        if grid is not None and grid is not self.geometry.grid:
+            raise ValueError("grid must be left unset or set to self.geometry.grid")
         return self._eval_sigma_s_impl(si).sum(axis=0)
 
     # --------------------------------------------------------------------------
