@@ -8,7 +8,7 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
-    ParticleLayer,
+    ParticleEnsemble,
 )
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import SceneGeometry
@@ -58,9 +58,9 @@ def test_heterogeneous_single_mono(
         kernel_context = KernelContext(si=si)
 
     else:
-        component = ParticleLayer()
+        component = ParticleEnsemble()
         atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, particle_layers=[component]
+            geometry=geometry, particle_ensembles=[component]
         )
         kernel_context = KernelContext()
 
@@ -85,9 +85,9 @@ def test_heterogeneous_single_ckd(
         kernel_context = KernelContext(si=si)
 
     else:
-        component = ParticleLayer()
+        component = ParticleEnsemble()
         atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, particle_layers=[component]
+            geometry=geometry, particle_ensembles=[component]
         )
         kernel_context = KernelContext()
 
@@ -105,7 +105,7 @@ def test_heterogeneous_multi_mono(mode_mono, geometry, atmosphere_us_standard_mo
     atmosphere = HeterogeneousAtmosphere(
         geometry=geometry,
         molecular_atmosphere=atmosphere_us_standard_mono,
-        particle_layers=[ParticleLayer() for _ in range(2)],
+        particle_ensembles=[ParticleEnsemble() for _ in range(2)],
     )
 
     # The scene element produces valid kernel dictionary specifications
@@ -123,7 +123,7 @@ def test_heterogeneous_multi_ckd(mode_ckd, geometry, atmosphere_us_standard_ckd)
     atmosphere = HeterogeneousAtmosphere(
         geometry={"type": geometry, "grid": np.linspace(0, 120, 121) * ureg.km},
         molecular_atmosphere=atmosphere_us_standard_ckd,
-        particle_layers=[ParticleLayer() for _ in range(2)],
+        particle_ensembles=[ParticleEnsemble() for _ in range(2)],
     )
 
     # The scene element produces valid kernel dictionary specifications
@@ -139,16 +139,16 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
     extinction coefficients properly add up.
     """
     with ucc.override(length="km"):
-        component_1 = ParticleLayer(bottom=0.0, top=1.25)
-        component_2 = ParticleLayer(bottom=0.5, top=1.5)
-        component_3 = ParticleLayer(bottom=0.75, top=2.0)
+        component_1 = ParticleEnsemble(bottom=0.0, top=1.25)
+        component_2 = ParticleEnsemble(bottom=0.5, top=1.5)
+        component_3 = ParticleEnsemble(bottom=0.75, top=2.0)
 
     mixed = HeterogeneousAtmosphere(
         geometry={
             "type": "plane_parallel",
             "grid": np.linspace(0, 120, 1201) * ureg.km,
         },
-        particle_layers=[component_1, component_2, component_3],
+        particle_ensembles=[component_1, component_2, component_3],
     )
     ctx = KernelContext()
     grid = mixed.geometry.grid
@@ -223,7 +223,7 @@ def test_heterogeneous_mix_weights(
             if eradiate.mode().is_ckd
             else atmosphere_us_standard_mono
         ),
-        particle_layers=ParticleLayer(
+        particle_ensembles=ParticleEnsemble(
             bottom=0.0 * ureg.km,
             top=50.0 * ureg.km,
             distribution={"type": "uniform"},
@@ -246,18 +246,18 @@ def test_heterogeneous_mix_weights(
     # Second check: simple disjoint components, more than 1
     mixed = HeterogeneousAtmosphere(
         geometry=geometry,
-        particle_layers=[
-            ParticleLayer(
+        particle_ensembles=[
+            ParticleEnsemble(
                 bottom=0.0 * ureg.km,
                 top=50.0 * ureg.km,
                 distribution={"type": "uniform"},
             ),
-            ParticleLayer(
+            ParticleEnsemble(
                 bottom=50.0 * ureg.km,
                 top=80.0 * ureg.km,
                 distribution={"type": "uniform"},
             ),
-            ParticleLayer(
+            ParticleEnsemble(
                 bottom=80.0 * ureg.km,
                 top=100.0 * ureg.km,
                 distribution={"type": "uniform"},
@@ -286,14 +286,14 @@ def test_heterogeneous_mix_weights(
     # therefore they have the same extinction coefficient
     mixed = HeterogeneousAtmosphere(
         geometry=geometry,
-        particle_layers=[
-            ParticleLayer(
+        particle_ensembles=[
+            ParticleEnsemble(
                 bottom=0.0 * ureg.km,
                 top=100.0 * ureg.km,
                 tau_ref=1.0,
                 distribution={"type": "uniform"},
             ),
-            ParticleLayer(
+            ParticleEnsemble(
                 bottom=50.0 * ureg.km,
                 top=100.0 * ureg.km,
                 tau_ref=0.5,
@@ -319,7 +319,7 @@ def test_heterogeneous_scale(mode_mono, atmosphere_us_standard_mono):
     atmosphere = HeterogeneousAtmosphere(
         geometry="plane_parallel",
         molecular_atmosphere=atmosphere_us_standard_mono,
-        particle_layers=[ParticleLayer() for _ in range(2)],
+        particle_ensembles=[ParticleEnsemble() for _ in range(2)],
         scale=2.0,
     )
     template, _ = traverse(atmosphere)
@@ -335,10 +335,10 @@ def test_heterogeneous_blend_switches(
     mode_mono,
     atmosphere_us_standard_mono,
 ):
-    # Rayleigh-only atmosphere + particle layer combination works
+    # Rayleigh-only atmosphere + particle ensemble combination works
     assert HeterogeneousAtmosphere(
         molecular_atmosphere=atmosphere_us_standard_mono,
-        particle_layers=[ParticleLayer()],
+        particle_ensembles=[ParticleEnsemble()],
     )
 
 
@@ -351,20 +351,20 @@ def test_heterogeneous_absorbing_mol_atm(
 ):
     """
     Phase function weights are correct when the molecular atmosphere is
-    absorbing-only and the particle layer is either absorbing-only or
+    absorbing-only and the particle ensemble is either absorbing-only or
     scattering-only.
     """
     # Expand fixture
     _particle_radprops = request.getfixturevalue(particle_radprops)
     # Create the heterogeneous atmosphere
-    pl_bottom = 1.0 * ureg.km  # arbitrary
-    pl_top = 4.0 * ureg.km  # arbitrary
-    particle_layer = ParticleLayer(
-        bottom=pl_bottom, top=pl_top, particle_properties=_particle_radprops
+    pe_bottom = 1.0 * ureg.km  # arbitrary
+    pe_top = 4.0 * ureg.km  # arbitrary
+    particle_ensemble = ParticleEnsemble(
+        bottom=pe_bottom, top=pe_top, particle_properties=_particle_radprops
     )
     atmosphere = HeterogeneousAtmosphere(
         molecular_atmosphere=atmosphere_us_standard_ckd,
-        particle_layers=particle_layer,
+        particle_ensembles=particle_ensemble,
         geometry={
             "type": "spherical_shell",  # arbitrary
             "grid": np.linspace(0, 120, 121) * ureg.km,
@@ -376,20 +376,20 @@ def test_heterogeneous_absorbing_mol_atm(
     weights = np.squeeze(mi_wrapper.parameters["weight_1.volume.data"])
 
     # Extract phase function weights
-    inside_particle_layer = (atmosphere.geometry.grid.layers >= pl_bottom) & (
-        atmosphere.geometry.grid.layers <= pl_top
+    inside_particle_ensemble = (atmosphere.geometry.grid.layers >= pe_bottom) & (
+        atmosphere.geometry.grid.layers <= pe_top
     )
 
-    # Outside the particle layer, the phase function weight should be zero.
-    assert np.all(weights.T[~inside_particle_layer] == 0.0)
+    # Outside the particle ensemble, the phase function weight should be zero.
+    assert np.all(weights.T[~inside_particle_ensemble] == 0.0)
 
-    # Within the particle layer, the phase function weight should be:
-    #   - zero, if the particle layer is not scattering (i.e., absorbing-only)
-    #   - larger than zero, if the particle layer is scattering
+    # Within the particle ensemble, the phase function weight should be:
+    #   - zero, if the particle ensemble is not scattering (i.e., absorbing-only)
+    #   - larger than zero, if the particle ensemble is scattering
     if particle_radprops == "particle_properties_absorbing_only":
-        assert np.all(weights.T[inside_particle_layer] == 0.0)
+        assert np.all(weights.T[inside_particle_ensemble] == 0.0)
     elif particle_radprops == "particle_properties_scattering_only":
-        assert np.all(weights.T[inside_particle_layer] > 0.0)
+        assert np.all(weights.T[inside_particle_ensemble] > 0.0)
     else:
         raise ValueError(
             f"Test parametrisation inconsistent. Expected 'absorbing_only' or "

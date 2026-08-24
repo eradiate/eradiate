@@ -61,8 +61,8 @@ atmosphere_factory.register_lazy_batch(
             {},
         ),
         (
-            "_particle_layer.ParticleLayer",
-            "particle_layer",
+            "_particle_ensemble.ParticleEnsemble",
+            "particle_ensemble",
             {},
         ),
     ],
@@ -600,7 +600,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         Returns
         -------
         quantity
-            Particle layer extinction coefficient.
+            Extinction coefficient.
         """
 
     @abstractmethod
@@ -618,12 +618,12 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         grid : .GridCoords, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
-            (see :meth:`grid <.AbstractHeterogeneousAtmosphere.column.grid>`).
+            (see :meth:`grid <.AbstractHeterogeneousAtmosphere.geometry.grid>`).
 
         Returns
         -------
         quantity
-            Particle layer extinction coefficient.
+            Absorption coefficient.
         """
 
     @abstractmethod
@@ -646,7 +646,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         Returns
         -------
         quantity
-            Particle layer scattering coefficient.
+            Scattering coefficient.
         """
 
     def eval_transmittance(
@@ -784,7 +784,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             albedo_key = "albedo.volume.data"
             sigma_t_key = "sigma_t.volume.data"
         else:
-            raise ValueError(
+            raise TypeError(
                 f"unhandled scene geometry type '{type(self.geometry).__name__}'"
             )
 

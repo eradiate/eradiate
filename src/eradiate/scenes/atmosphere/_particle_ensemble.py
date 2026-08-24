@@ -1,5 +1,5 @@
 """
-Particle layers.
+Particle ensembles.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from ...util.misc import cache_by_id
 from ...validators import is_positive
 
 
-def _particle_layer_distribution_converter(value):
+def _particle_ensemble_distribution_converter(value):
     if isinstance(value, str):
         if value == "uniform":
             return particle_distribution_factory.convert({"type": "uniform"})
@@ -44,23 +44,22 @@ def _particle_layer_distribution_converter(value):
     return particle_distribution_factory.convert(value)
 
 
-@define(eq=False, slots=False, init=False)
-class ParticleLayer(AbstractHeterogeneousAtmosphere):
+@define(eq=False, slots=False)
+class ParticleEnsemble(AbstractHeterogeneousAtmosphere):
     """
-    Particle layer scene element [``particle_layer``].
+    Particle ensemble scene element [``particle_ensemble``].
 
-    The particle layer has a vertical extension specified by a bottom altitude
-    (set by ``bottom``) and a top altitude (set by ``top``).
-    Inside the layer, the particles number is distributed according to a
+    The particle ensemble has a vertical extension specified by a bottom
+    altitude (set by ``bottom``) and a top altitude (set by ``top``).
+    Inside the ensemble, the particles number is distributed according to a
     distribution (set by ``distribution``).
     See :mod:`~eradiate.scenes.atmosphere.particle_dist` for the available
     distribution types and corresponding parameters.
-    The particle layer is itself divided into a number of (sub-)layers
-    (``n_layers``) to allow to describe the variations of the particles number
-    with altitude.
-    The particle density in the layer is adjusted so that the particle layer's
-    optical thickness at a specified reference wavelength (``w_ref``) meets a
-    specified value (``tau_ref``).
+    The particle number fraction is evaluated on the vertical layers of the
+    render grid (see ``geometry``) to describe its variations with altitude.
+    The particle density in the ensemble is adjusted so that the particle
+    ensemble's optical thickness at a specified reference wavelength
+    (``w_ref``) meets a specified value (``tau_ref``).
     The particles radiative properties are specified by a data set
     (``dataset``).
 
@@ -76,7 +75,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             validator=[is_positive, pinttrs.validators.has_compatible_units],
             units=ucc.deferred("length"),
         ),
-        doc="Bottom altitude of the particle layer.\n"
+        doc="Bottom altitude of the particle ensemble. May be a scalar (the "
+        "same altitude everywhere) or an ``(n_x, n_y)`` array matching the "
+        "scene geometry's horizontal grid shape, for a bottom altitude that "
+        "varies spatially.\n"
         "\n"
         "Unit-enabled field (default: ucc[length])",
         type="quantity",
@@ -90,18 +92,21 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             default=ureg.Quantity(1.0, ureg.km),
             validator=[is_positive, pinttrs.validators.has_compatible_units],
         ),
-        doc="Top altitude of the particle layer.\n"
+        doc="Top altitude of the particle ensemble. May be a scalar (the "
+        "same altitude everywhere) or an ``(n_x, n_y)`` array matching the "
+        "scene geometry's horizontal grid shape, for a top altitude that "
+        "varies spatially.\n"
         "\n"
         "Unit-enabled field (default: ucc[length]).",
         type="quantity",
         init_type="float or quantity",
-        default="1 km.",
+        default="1 km",
     )
 
     @bottom.validator
     @top.validator
     def _bottom_top_validator(self, attribute, value):
-        if self.bottom >= self.top:
+        if np.any(self.bottom >= self.top):
             raise ValueError(
                 f"while validating '{attribute.name}': bottom altitude must be "
                 "lower than top altitude "
@@ -111,10 +116,11 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     distribution: ParticleDistribution = documented(
         attrs.field(
             default="uniform",
-            converter=_particle_layer_distribution_converter,
+            converter=_particle_ensemble_distribution_converter,
             validator=attrs.validators.instance_of(ParticleDistribution),
         ),
-        doc="Particle distribution. Simple defaults can be set using a string: "
+        doc="Particle distribution in the Z dimension of the coords grid. "
+        "Simple defaults can be set using a string: "
         '``"uniform"`` (resp. ``"gaussian"``, ``"exponential"``) is converted to '
         ":class:`UniformParticleDistribution() <.UniformParticleDistribution>` "
         "(resp. :class:`GaussianParticleDistribution() <.GaussianParticleDistribution>`, "
@@ -147,7 +153,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         w_units = self.particle_properties.w.u
         if not np.any(np.isclose(value.m_as(w_units), self.particle_properties.w.m)):
             warnings.warn(
-                "While initializing ParticleLayer: the provided aerosol "
+                "While initializing ParticleEnsemble: the provided aerosol "
                 "single-scattering property dataset does not contain the selected "
                 f"reference wavelength (w_ref = {value})",
                 stacklevel=2,
@@ -159,13 +165,41 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             factory=lambda: ureg.Quantity(0.2, ureg.dimensionless),
             validator=[is_positive, pinttrs.validators.has_compatible_units],
         ),
-        doc="Extinction optical thickness at the reference wavelength.\n"
+        doc="Extinction optical thickness at the reference wavelength. May be "
+        "a scalar (the same optical thickness everywhere) or an "
+        "``(n_x, n_y)`` array matching the scene geometry's horizontal grid "
+        "shape, for an optical thickness that varies spatially.\n"
         "\n"
         "Unit-enabled field (default: ucc[dimensionless]).",
         type="quantity",
         init_type="quantity or float",
         default="0.2",
     )
+
+    @tau_ref.validator
+    def _tau_ref_all_positive(self, attribute, value):
+        if np.any(value < 0.0):
+            raise ValueError(
+                "While initialising ParticleEnsemble: reference "
+                "extinction optical thickness must be positive"
+            )
+
+    @tau_ref.validator
+    @bottom.validator
+    @top.validator
+    def _xy_shape_validator(self, attribute, value):
+        if self.geometry is None:
+            return
+        if np.size(value) == 1:
+            return
+        if value.shape != self.geometry.grid.shape[:2]:
+            raise ValueError(
+                "While initialising ParticleEnsemble: the shape of the "
+                f"{attribute.name} attribute is inconsistent with the "
+                "scene geometry. Expected a scalar value or a "
+                f"{self.geometry.grid.shape[:2]} sized array, "
+                f"received a {value.shape} sized array."
+            )
 
     particle_properties: ParticleProperties = documented(
         attrs.field(
@@ -207,7 +241,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     force_polarized_phase: bool = documented(
         attrs.field(default=False, converter=bool),
-        doc="Force the use of a polarized phase function implementation, even"
+        doc="Force the use of a polarized phase function implementation, even "
         "when no polarization information is available.",
         type="bool",
         default="False",
@@ -238,21 +272,46 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     def eval_fractions(self, grid: GridCoords) -> np.ndarray:
         """
-        Compute the particle number fraction in the particle layer.
+        Compute the particle number fraction in the particle ensemble in 3D
+        according to the distribution.
 
-        Returns
+        The Z dimension (vertical extent) supports spatially varying
+        top and bottom in X and Y.
+
         -------
         ndarray
-            Particle number fractions as a (n_layers,)-shaped array.
+            Particle number fractions as a ([n_x, n_y, ]n_layers,)-shaped
+            array. The leading spatial dimensions are only present if `bottom`
+            and `top` vary spatially; otherwise the result is a flat
+            (n_layers,)-shaped array.
         """
-        x = (grid.layers - self.bottom) / (self.top - self.bottom)
-        fractions = self.distribution(x.m_as(ureg.dimensionless))
-        fractions /= np.sum(fractions)
-        return fractions
+
+        # Variable bottom and top altitude
+        bottom = np.atleast_1d(self.bottom)
+        extent = np.atleast_1d(self.top - self.bottom)
+        z = (grid.layers - bottom[..., np.newaxis]) / extent[..., np.newaxis]
+
+        if np.ndim(self.bottom) == 0:
+            z = z[0]
+
+        fractions = self.distribution(z.m_as(ureg.dimensionless))
+
+        out = np.zeros(fractions.shape)
+        fractions_sum = fractions.sum(axis=-1, keepdims=True)
+        np.divide(fractions, fractions_sum, out=out, where=fractions_sum > 0.0)
+
+        return out
 
     def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
-        min_sigma_s = self.eval_sigma_s(ctx.si).min()
-        return 1.0 / min_sigma_s if min_sigma_s != 0.0 else np.inf * ureg.m
+        min_sigma_s = self.eval_sigma_s(ctx.si).min(axis=-1)
+        out = np.full(min_sigma_s.shape, np.inf)
+        np.divide(
+            np.ones(min_sigma_s.shape[:-1]),
+            min_sigma_s,
+            where=min_sigma_s != 0,
+            out=out,
+        )
+        return out * ureg.m
 
     # --------------------------------------------------------------------------
     #                       Radiative properties
@@ -261,18 +320,18 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     @cache_by_id
     def _eval_albedo_impl(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         # Return albedo from dataset (without accounting for bypass switches)
-        # This routine is vectorized and returns an array of shape
-        # (n_wavelengths, n_layers)
+        # This routine returns an array of shape (n_wavelengths, [x, y, ]n_layers)
         pp = self.particle_properties
-        albedo = pp.eval_ssa(w)
-        zmask = np.reshape(self.eval_fractions(grid) > 0, (1, -1))
-        return albedo * zmask
+        interpolated = pp.eval_ssa(np.atleast_1d(w))
+        fractions = self.eval_fractions(grid)
+        where_present = fractions > 0
+        albedo = interpolated[..., np.newaxis] * where_present[np.newaxis, ...]
+        return albedo
 
     @cache_by_id
     def _eval_sigma_t_impl(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         # Return extinction coefficient from dataset (without accounting
-        # for bypass switches). This routine is vectorized and returns an
-        # array of shape (n_wavelengths, n_layers)
+        # for bypass switches). Returns an array of shape (n_wavelengths, [x, y, ]n_layers)
 
         # Collect input data
         w = np.atleast_1d(w)
@@ -281,34 +340,45 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         sigma_t_star_ref = pp.eval_ext(self.w_ref)
 
         # Compute target optical thickness value
-        tau = self.tau_ref * sigma_t_star / sigma_t_star_ref
+        sigma_t_star_expanded = sigma_t_star.reshape(
+            sigma_t_star.shape + (1,) * np.ndim(self.tau_ref)
+        )
+        tau = sigma_t_star_expanded * self.tau_ref / sigma_t_star_ref
 
         # Scatter this total OT to all layers
-        # TODO: Make sure that axis order is consistent with other vectorized
-        #  routines
         fractions = self.eval_fractions(grid)
-        tau_layers = np.broadcast_to(
-            np.reshape(tau, (-1, 1)), (len(w), grid.n_layers)
-        ) * np.reshape(fractions, (1, -1))
+        tau_layers = tau[..., np.newaxis] * fractions[np.newaxis, ...]
 
         # Compute corresponding average coefficient
         sigma_t = tau_layers / grid.layer_height
 
         return sigma_t
 
+    @staticmethod
+    def _pad_spatial_dims(value, ndim):
+        # Insert size-1 axes between the leading wavelength axis and the
+        # trailing layer axis so shapes with no spatial variation broadcast
+        # correctly against shapes that do vary spatially (via tau_ref).
+        extra = ndim - value.ndim
+        if extra <= 0:
+            return value
+        return value.reshape(value.shape[:1] + (1,) * extra + value.shape[1:])
+
     def _eval_sigma_a_impl(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         # Return absorption coefficient from dataset (without accounting for
         # bypass switches). This routine is vectorized and returns an array of
         # shape (n_wavelengths, n_layers)
-        albedo = self._eval_albedo_impl(w, grid)
-        return self._eval_sigma_t_impl(w, grid) * (1.0 - albedo.m)
+        sigma_t = self._eval_sigma_t_impl(w, grid)
+        albedo = self._pad_spatial_dims(self._eval_albedo_impl(w, grid), sigma_t.ndim)
+        return sigma_t * (1.0 - albedo.m)
 
     def _eval_sigma_s_impl(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         # Return scattering coefficient from dataset (without accounting for
         # bypass switches). This routine is vectorized and returns an array of
         # shape (n_wavelengths, n_layers)
-        albedo = self._eval_albedo_impl(w, grid)
-        return self._eval_sigma_t_impl(w, grid) * albedo.m
+        sigma_t = self._eval_sigma_t_impl(w, grid)
+        albedo = self._pad_spatial_dims(self._eval_albedo_impl(w, grid), sigma_t.ndim)
+        return sigma_t * albedo.m
 
     @singledispatchmethod
     def eval_albedo(
@@ -334,16 +404,13 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     def eval_albedo_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         if self.has_absorption and self.has_scattering:
-            albedo = self._eval_albedo_impl(w, grid).squeeze()
+            albedo = self._eval_albedo_impl(w, grid).squeeze(axis=0)
 
         elif self.has_absorption and not self.has_scattering:
             albedo = 0.0 * ureg.dimensionless
 
         elif self.has_scattering and not self.has_absorption:
             albedo = 1.0 * ureg.dimensionless
-
-        else:
-            raise RuntimeError
 
         # Albedo is constant vs spatial dimension
         return np.full_like(grid.layers, albedo)
@@ -355,7 +422,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
 
     @singledispatchmethod
     def eval_sigma_t(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self,
+        si: SpectralIndex,
+        grid: GridCoords | None = None,
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
@@ -363,37 +432,43 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     @eval_sigma_t.register(MonoSpectralIndex)
     def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_t_mono(
-            w=si.w, grid=self.geometry.grid if grid is None else grid
+            w=si.w,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     @eval_sigma_t.register(CKDSpectralIndex)
     def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_t_ckd(
-            w=si.w, g=si.g, grid=self.geometry.grid if grid is None else grid
+            w=si.w,
+            g=si.g,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     def eval_sigma_t_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
-        result = self._eval_sigma_t_impl(w, grid).squeeze()
+        result = self._eval_sigma_t_impl(w, grid).squeeze(axis=0)
 
         if self.has_absorption and self.has_scattering:
             return result
 
         elif not self.has_absorption and self.has_scattering:
-            return result - self._eval_sigma_a_impl(w, grid).squeeze()
+            return result - self._eval_sigma_a_impl(w, grid).squeeze(axis=0)
 
         elif self.has_absorption and not self.has_scattering:
-            return result - self._eval_sigma_s_impl(w, grid).squeeze()
-
-        raise RuntimeError
+            return result - self._eval_sigma_s_impl(w, grid).squeeze(axis=0)
 
     def eval_sigma_t_ckd(
-        self, w: pint.Quantity, g: float, grid: GridCoords
+        self,
+        w: pint.Quantity,
+        g: float,
+        grid: GridCoords,
     ) -> pint.Quantity:
         return self.eval_sigma_t_mono(w=w, grid=grid)
 
     @singledispatchmethod
     def eval_sigma_a(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self,
+        si: SpectralIndex,
+        grid: GridCoords | None = None,
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
@@ -401,17 +476,20 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     @eval_sigma_a.register(MonoSpectralIndex)
     def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_a_mono(
-            w=si.w, grid=self.geometry.grid if grid is None else grid
+            w=si.w,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     @eval_sigma_a.register(CKDSpectralIndex)
     def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_a_ckd(
-            w=si.w, g=si.g, grid=self.geometry.grid if grid is None else grid
+            w=si.w,
+            g=si.g,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     def eval_sigma_a_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
-        value = self._eval_sigma_a_impl(w, grid).squeeze()
+        value = self._eval_sigma_a_impl(w, grid).squeeze(axis=0)
         return value if self.has_absorption else np.zeros_like(value) * value.units
 
     def eval_sigma_a_ckd(
@@ -429,17 +507,20 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     @eval_sigma_s.register(MonoSpectralIndex)
     def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_s_mono(
-            w=si.w, grid=self.geometry.grid if grid is None else grid
+            w=si.w,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     @eval_sigma_s.register(CKDSpectralIndex)
     def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_s_ckd(
-            w=si.w, g=si.g, grid=self.geometry.grid if grid is None else grid
+            w=si.w,
+            g=si.g,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     def eval_sigma_s_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
-        value = self._eval_sigma_s_impl(w, grid).squeeze()
+        value = self._eval_sigma_s_impl(w, grid).squeeze(axis=0)
         return value if self.has_scattering else np.zeros_like(value) * value.units
 
     def eval_sigma_s_ckd(

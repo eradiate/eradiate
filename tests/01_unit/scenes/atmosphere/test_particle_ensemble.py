@@ -5,9 +5,13 @@ import xarray as xr
 
 from eradiate import KernelContext, fresolver
 from eradiate import unit_registry as ureg
-from eradiate.grid import GridCoords
+from eradiate.grid import GridCoords, PlaneParallelGridCoords
 from eradiate.radprops import ParticleProperties
-from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
+from eradiate.scenes.atmosphere import (
+    ArrayParticleDistribution,
+    ParticleEnsemble,
+    UniformParticleDistribution,
+)
 from eradiate.scenes.core import traverse
 from eradiate.spectral.index import SpectralIndex
 from eradiate.test_tools.types import check_scene_element
@@ -52,12 +56,20 @@ def particle_properties(particle_dataset):
 # ------------------------------------------------------------------------------
 
 
-class TestParticleLayer:
+def _make_3d_grid():
+    return PlaneParallelGridCoords(
+        edges_x=np.array([0.0, 1.0, 2.0]) * ureg.km,
+        edges_y=np.array([0.0, 1.0, 2.0]) * ureg.km,
+        levels=np.linspace(0.0, 5.0, 11) * ureg.km,
+    )
+
+
+class TestParticleEnsemble:
     @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
     def test_basic(self, mode_mono, geometry):
         """Basic constructor pattern"""
         # Construct from path
-        layer = ParticleLayer(
+        layer = ParticleEnsemble(
             particle_properties="tests/aerosol/govaerts_2021-desert-aer_core_v2.nc",
             geometry=geometry,
         )
@@ -68,14 +80,16 @@ class TestParticleLayer:
     def test_construct_noargs(self):
         """Construction succeeds with basic parameters"""
 
-        assert ParticleLayer()  # should pick up the default dataset from shipped assets
+        assert (
+            ParticleEnsemble()
+        )  # should pick up the default dataset from shipped assets
 
     def test_construct_attrs(self, particle_properties_test):
         """Assigns parameters to expected values."""
         bottom = 1.2 * ureg.km
         top = 1.8 * ureg.km
         tau_ref = 0.3 * ureg.dimensionless
-        layer = ParticleLayer(
+        layer = ParticleEnsemble(
             geometry={
                 "type": "plane_parallel",
                 "ground_altitude": bottom,
@@ -94,7 +108,7 @@ class TestParticleLayer:
 
     def test_altitude_units(self, particle_dataset_path):
         """Accept different units for bottom and top altitudes."""
-        assert ParticleLayer(
+        assert ParticleEnsemble(
             particle_properties=particle_dataset_path,
             bottom=1.0 * ureg.km,
             top=2000.0 * ureg.m,
@@ -105,7 +119,7 @@ class TestParticleLayer:
         with pytest.raises(
             ValueError, match="bottom altitude must be lower than top altitude"
         ):
-            ParticleLayer(
+            ParticleEnsemble(
                 particle_properties=particle_dataset_path,
                 top=1.2 * ureg.km,
                 bottom=1.8 * ureg.km,
@@ -114,7 +128,7 @@ class TestParticleLayer:
     def test_invalid_tau_ref(self, particle_dataset_path):
         """Raises when 'tau_ref' is invalid."""
         with pytest.raises(ValueError, match="tau_ref must be positive or zero"):
-            ParticleLayer(
+            ParticleEnsemble(
                 particle_properties=particle_dataset_path,
                 bottom=1.2 * ureg.km,
                 top=1.8 * ureg.km,
@@ -130,7 +144,7 @@ class TestParticleLayer:
         """
         bottom = 0.0 * ureg.km
         top = 1.0 * ureg.km
-        layer = ParticleLayer(
+        layer = ParticleEnsemble(
             geometry={
                 "type": "plane_parallel",
                 "ground_altitude": bottom,
@@ -160,7 +174,7 @@ class TestParticleLayer:
         """
         bottom = 0.0 * ureg.km
         top = 1.0 * ureg.km
-        layer = ParticleLayer(
+        layer = ParticleEnsemble(
             geometry={
                 "type": "plane_parallel",
                 "ground_altitude": bottom,
@@ -190,7 +204,7 @@ class TestParticleLayer:
         """
         bottom = 0.0 * ureg.km
         top = 1.0 * ureg.km
-        layer = ParticleLayer(
+        layer = ParticleEnsemble(
             geometry={
                 "type": "plane_parallel",
                 "ground_altitude": bottom,
@@ -214,17 +228,17 @@ class TestParticleLayer:
 
     def test_kernel_scale(self, modes_all_single, particle_properties_test):
         """Scale parameter propagates to kernel dict and latter can be loaded."""
-        particle_layer = ParticleLayer(
+        particle_ensemble = ParticleEnsemble(
             id="atmosphere", particle_properties=particle_properties_test, scale=2.0
         )
-        template, _ = traverse(particle_layer)
+        template, _ = traverse(particle_ensemble)
         assert template["medium_atmosphere.scale"] == 2.0
 
     def test_eval_radprops_format(self, modes_all_single, particle_dataset_path):
         """
         Method 'eval_radprops' returns dataset with expected datavars and coords.
         """
-        layer = ParticleLayer(particle_properties=particle_dataset_path)
+        layer = ParticleEnsemble(particle_properties=particle_dataset_path)
         si = SpectralIndex.new()
         ds = layer.eval_radprops(si)
         expected_data_vars = ["sigma_t", "albedo"]
@@ -237,7 +251,7 @@ class TestParticleLayer:
         "tau_ref", list(np.array([0.6, 1.0, 2.5]) * ureg.dimensionless)
     )
     def test_eval_radprops(self, mode_mono, particle_dataset_path, tau_ref):
-        layer = ParticleLayer(
+        layer = ParticleEnsemble(
             particle_properties=particle_dataset_path,
             bottom=0.5 * ureg.km,  # arbitrary
             top=3.0 * ureg.km,  # arbitrary
@@ -275,7 +289,7 @@ class TestParticleLayer:
         Check correct handling of spectral dependency of extinction.
 
         If σ_t(λ) denotes the extinction coefficient at the wavelength λ, then the
-        optical thickness of a uniform particle layer is τ(λ) = σ_t(λ) Δz, where Δz
+        optical thickness of a uniform particle ensemble is τ(λ) = σ_t(λ) Δz, where Δz
         is the layer's thickness. From that follows:
         τ(λ) / τ(λ_ref) = σ_t(λ) / σ_t(λ_ref).
 
@@ -291,11 +305,9 @@ class TestParticleLayer:
         n_wavelengths = 3
         n_layers = 10
         wavelengths = np.linspace(500.0, 1500.0, n_wavelengths) * ureg.nm
-        grid = GridCoords.make_onedim_from_levels(
-            np.linspace(0, 5, n_layers + 1) * ureg.km
-        )
+        grid = GridCoords.convert(np.linspace(0, 5, n_layers + 1) * ureg.km)
 
-        layer = ParticleLayer(
+        layer = ParticleEnsemble(
             particle_properties=ds,
             geometry={
                 "type": "plane_parallel",
@@ -336,6 +348,144 @@ class TestParticleLayer:
         result = (tau / tau_ref).m_as(ureg.dimensionless)
         expected = (sigma_t / sigma_t_ref).m_as(ureg.dimensionless)
         np.testing.assert_allclose(result, expected)
+
+    @pytest.mark.parametrize("distribution", ["uniform", "gaussian", "exponential"])
+    @pytest.mark.parametrize(
+        "bottom, top",
+        [
+            (1.0 * ureg.km, 4.0 * ureg.km),
+            (
+                np.array([[1.0, 1.5], [2.0, 2.5]]) * ureg.km,
+                np.array([[3.0, 3.5], [4.0, 4.5]]) * ureg.km,
+            ),
+        ],
+        ids=["scalar", "varying"],
+    )
+    def test_eval_fractions_shape_and_normalization(self, distribution, bottom, top):
+        grid = _make_3d_grid()
+        layer = ParticleEnsemble(
+            geometry={
+                "type": "plane_parallel",
+                "toa_altitude": grid.levels[-1],
+                "grid": grid,
+            },
+            bottom=bottom,
+            top=top,
+            distribution=distribution,
+        )
+
+        fractions = layer.eval_fractions(grid)
+        spatial_shape = fractions.shape[:-1]
+
+        z_centers = grid.layers.m_as(ureg.km)
+        bottom_grid = np.broadcast_to(bottom.m_as(ureg.km), spatial_shape)
+        top_grid = np.broadcast_to(top.m_as(ureg.km), spatial_shape)
+
+        for idx in np.ndindex(spatial_shape):
+            in_range = (z_centers >= bottom_grid[idx]) & (z_centers <= top_grid[idx])
+            col = fractions[idx]
+            assert np.isclose(col.sum(), 1.0)
+            assert np.all(col[in_range] > 0.0)
+            assert np.allclose(col[~in_range], 0.0)
+
+    def test_eval_fractions_scalar_bottom_top_with_3d_distribution(self):
+        grid = _make_3d_grid()
+        n_z = grid.layers.size
+        values = np.zeros((2, 2, n_z))
+        peak = np.arange(4).reshape(2, 2) % n_z
+        np.put_along_axis(values, peak[..., np.newaxis], 1.0, axis=-1)
+
+        ensemble = ParticleEnsemble(
+            geometry={
+                "type": "plane_parallel",
+                "toa_altitude": grid.levels[-1],
+                "grid": grid,
+            },
+            bottom=grid.levels[0],
+            top=grid.levels[-1],
+            distribution=ArrayParticleDistribution(values=values, method="nearest"),
+        )
+
+        fractions = ensemble.eval_fractions(grid)
+        assert fractions.shape == (2, 2, n_z)
+        assert np.allclose(fractions.sum(axis=-1), 1.0)
+        assert not np.allclose(fractions[0, 0], fractions[0, 1])
+        assert not np.allclose(fractions[0, 0], fractions[1, 0])
+
+    def test_eval_fractions_uniform_is_flat(self):
+        grid = _make_3d_grid()
+        layer = ParticleEnsemble(
+            bottom=1.0 * ureg.km, top=4.0 * ureg.km, distribution="uniform"
+        )
+
+        fractions = layer.eval_fractions(grid)
+        nonzero = fractions[fractions > 0.0]
+        assert np.allclose(nonzero, nonzero[0])
+
+    @pytest.mark.parametrize(
+        "bottom, top",
+        [
+            (1.0 * ureg.km, 4.0 * ureg.km),
+            (
+                np.array([[1.0, 1.5], [2.0, 2.5]]) * ureg.km,
+                np.array([[3.0, 3.5], [4.0, 4.5]]) * ureg.km,
+            ),
+        ],
+        ids=["scalar_extent", "varying_extent"],
+    )
+    @pytest.mark.parametrize(
+        "tau_ref",
+        [
+            0.5 * ureg.dimensionless,
+            np.array([[0.2, 0.5], [1.0, 2.0]]) * ureg.dimensionless,
+        ],
+        ids=["scalar_tau_ref", "varying_tau_ref"],
+    )
+    def test_eval_sigma_t_broadcast(
+        self, mode_mono, particle_dataset_path, bottom, top, tau_ref
+    ):
+        grid = _make_3d_grid()
+        w_ref = 550 * ureg.nm
+
+        layer = ParticleEnsemble(
+            geometry={
+                "type": "plane_parallel",
+                "toa_altitude": grid.levels[-1],
+                "grid": grid,
+            },
+            particle_properties=particle_dataset_path,
+            bottom=bottom,
+            top=top,
+            tau_ref=tau_ref,
+            w_ref=w_ref,
+        )
+
+        si = SpectralIndex.new(w=w_ref)
+        sigma_t = layer.eval_sigma_t(si, grid).m_as("km^-1")
+        albedo = layer.eval_albedo(si, grid).m_as(ureg.dimensionless)
+        sigma_s = layer.eval_sigma_s(si, grid).m_as("km^-1")
+        sigma_a = layer.eval_sigma_a(si, grid).m_as("km^-1")
+        fractions = layer.eval_fractions(grid)
+
+        sigma_t, albedo, sigma_s, sigma_a, fractions = np.broadcast_arrays(
+            sigma_t, albedo, sigma_s, sigma_a, fractions
+        )
+        spatial_shape = sigma_t.shape[:-1]
+
+        tau = np.sum(sigma_t * grid.layer_height.m_as("km"), axis=-1)
+        expected_tau = np.broadcast_to(tau_ref.m_as(ureg.dimensionless), spatial_shape)
+        np.testing.assert_allclose(tau, expected_tau)
+
+        np.testing.assert_allclose(sigma_s, sigma_t * albedo, rtol=1e-6)
+        np.testing.assert_allclose(sigma_a, sigma_t * (1.0 - albedo), rtol=1e-6)
+
+        for idx in np.ndindex(spatial_shape):
+            nonzero = fractions[idx] > 0.0
+            ratios = sigma_t[idx][nonzero] / fractions[idx][nonzero]
+            np.testing.assert_allclose(ratios, ratios[0], rtol=1e-6)
+
+        if np.prod(spatial_shape, dtype=int) > 1 and np.size(tau_ref) > 1:
+            assert not np.allclose(tau, tau.flat[0])
 
     @pytest.mark.parametrize(
         "has_absorption, has_scattering, expected",
@@ -380,7 +530,7 @@ class TestParticleLayer:
         try:
             bottom = 0.0 * ureg.km
             top = 1.0 * ureg.km
-            particle_layer = ParticleLayer(
+            particle_ensemble = ParticleEnsemble(
                 particle_properties=particle_dataset_path,
                 geometry={
                     "type": "plane_parallel",
@@ -391,13 +541,13 @@ class TestParticleLayer:
                 has_absorption=has_absorption,
                 has_scattering=has_scattering,
             )
-            grid = particle_layer.geometry.grid
+            grid = particle_ensemble.geometry.grid
             w = 550.0 * ureg.nm
 
             for field in ["albedo", "sigma_t", "sigma_a", "sigma_s"]:
                 expected_value = expected[field]
                 method = f"eval_{field}_mono"
-                result = getattr(particle_layer, method)(w, grid)
+                result = getattr(particle_ensemble, method)(w, grid)
 
                 if isinstance(expected_value, pint.Quantity):
                     np.testing.assert_allclose(
@@ -418,7 +568,7 @@ class TestParticleLayer:
                     )
 
                 elif expected_value == "sigma_t":
-                    expected_value = particle_layer.eval_sigma_t_mono(w, grid)
+                    expected_value = particle_ensemble.eval_sigma_t_mono(w, grid)
                     np.testing.assert_allclose(
                         result.m_as(expected_value.units),
                         expected_value.m,
@@ -439,7 +589,7 @@ class TestParticleLayer:
         particle_properties = particle_properties_test
         w1, w2 = particle_properties.w[[1, 2]]
 
-        assert ParticleLayer(
+        assert ParticleEnsemble(
             particle_properties=particle_properties, tau_ref=1.0, w_ref=w1
         )
 
@@ -447,7 +597,7 @@ class TestParticleLayer:
             UserWarning,
             match="dataset does not contain the selected reference wavelength",
         ):
-            ParticleLayer(
+            ParticleEnsemble(
                 particle_properties=particle_properties,
                 tau_ref=1.0,
                 w_ref=0.5 * (w1 + w2),

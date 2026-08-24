@@ -89,7 +89,7 @@ and nature of atmospheric constituents.
 Constituents  Uniform radiative properties     Non-uniform radiative properties
 ============  ===============================  =================================
 Molecules     N/A                              :class:`.MolecularAtmosphere`
-Particles     N/A                              :class:`.ParticleLayer`
+Particles     N/A                              :class:`.ParticleEnsemble`
 Both          :class:`.HomogeneousAtmosphere`  :class:`.HeterogeneousAtmosphere`
 ============  ===============================  =================================
 

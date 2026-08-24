@@ -134,3 +134,73 @@ def test_particle_dist_array_extrapolate(extrapolate, expected):
         assert np.allclose(result, expected)
     else:
         assert np.isnan(result).all()
+
+
+@pytest.mark.parametrize("method", ["linear", "nearest"])
+def test_particle_dist_array_3d(method):
+    # One profile per (i_x, i_y) horizontal cell
+    values = np.array(
+        [
+            [[0.1, 0.2, 0.3, 0.2, 0.1], [0.3, 0.2, 0.1, 0.2, 0.3]],
+            [[0.0, 0.0, 1.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0, 1.0]],
+        ]
+    )  # shape (2, 2, 5)
+
+    # Omitting 'coords' sets a default matching the 3D shape, regularly
+    # spaced along the last (z) axis
+    dist = ArrayParticleDistribution(values=values, method=method)
+    assert dist.coords.shape == values.shape
+    for ix in range(2):
+        for iy in range(2):
+            assert np.allclose(dist.coords[ix, iy], [0.1, 0.3, 0.5, 0.7, 0.9])
+
+    # Each cell is interpolated independently
+    x = np.broadcast_to(np.linspace(0, 1, 11), (2, 2, 11))
+    result = dist(x)
+    assert result.shape == (2, 2, 11)
+
+    # A cell's result matches evaluating its own profile as a standalone 1D
+    # distribution
+    for ix in range(2):
+        for iy in range(2):
+            expected = ArrayParticleDistribution(values=values[ix, iy], method=method)(
+                x[ix, iy]
+            )
+            assert np.allclose(result[ix, iy], expected)
+
+    # Distinct cells give distinct results for the same query points
+    assert not np.allclose(result[0, 0], result[0, 1])
+    assert not np.allclose(result[1, 0], result[1, 1])
+
+    # A 1D query broadcasts to every column
+    assert np.allclose(dist(np.linspace(0, 1, 11)), result)
+
+    # A mismatched leading (x, y) shape raises
+    with pytest.raises(ValueError):
+        dist(np.zeros((3, 3, 11)))
+
+
+def test_particle_dist_array_3d_method_restricted():
+    values = np.array(
+        [
+            [[0.1, 0.2, 0.3, 0.2, 0.1], [0.3, 0.2, 0.1, 0.2, 0.3]],
+            [[0.0, 0.0, 1.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0, 1.0]],
+        ]
+    )
+
+    # 'linear' and 'nearest' are supported with 3D 'values' ...
+    ArrayParticleDistribution(values=values, method="linear")
+    ArrayParticleDistribution(values=values, method="nearest")
+
+    # ... every other method is rejected at construction time
+    for method in [
+        "nearest-up",
+        "zero",
+        "slinear",
+        "quadratic",
+        "cubic",
+        "previous",
+        "next",
+    ]:
+        with pytest.raises(ValueError):
+            ArrayParticleDistribution(values=values, method=method)
