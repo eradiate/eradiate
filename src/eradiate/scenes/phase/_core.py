@@ -12,8 +12,8 @@ phase_function_factory = Factory()
 phase_function_factory.register_lazy_batch(
     [
         (
-            "_blend.BlendPhaseFunction",
-            "blend_phase",
+            "_multi.MultiPhaseFunction",
+            "multi_phase",
             {},
         ),
         (
