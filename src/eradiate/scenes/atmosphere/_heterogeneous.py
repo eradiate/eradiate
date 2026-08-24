@@ -17,7 +17,7 @@ from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular import MolecularAtmosphere
 from ._particle_layer import ParticleLayer
 from ..core import traverse
-from ..phase import BlendPhaseFunction, PhaseFunction
+from ..phase import MultiPhaseFunction, PhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...grid import GridCoords
@@ -113,6 +113,15 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 f"while validating {attribute.name}: components cannot be "
                 "scaled individually"
             )
+
+    use_mis: bool = documented(
+        attrs.field(default=True, converter=bool, kw_only=True),
+        doc="If ``True``, multiple importance sampling is enabled for the "
+        "3D phase function mixture.",
+        type="bool",
+        init_type="bool",
+        default="True",
+    )
 
     @property
     def components(self) -> list[MolecularAtmosphere | ParticleLayer]:
@@ -264,8 +273,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
                 weights.append(eval_sigma_s)
 
-            return BlendPhaseFunction(
-                components=components, weights=weights, geometry=self.geometry
+            return MultiPhaseFunction(
+                components=components,
+                weights=weights,
+                geometry=self.geometry,
+                use_mis=self.use_mis,
             )
 
     @property
