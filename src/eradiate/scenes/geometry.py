@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing as t
 from abc import ABC, abstractmethod
+from enum import Enum
 
 import attrs
 import mitsuba as mi
@@ -12,11 +13,28 @@ import pinttrs
 from .shapes import CuboidShape, RectangleShape, Shape, SphereShape
 from ..attrs import define, documented
 from ..constants import EARTH_RADIUS
+from ..grid import GridCoords, SphericalShellGridCoords
 from ..kernel import map_cube, map_unit_cube
-from ..radprops import ZGrid
 from ..units import unit_context_config as ucc
 from ..units import unit_context_kernel as uck
 from ..units import unit_registry as ureg
+
+
+class WrapMode(Enum):
+    CLAMP = 0
+    REPEAT = 1
+    MIRROR = 2
+
+    def __str__(self):
+        return self.name.lower()
+
+
+class FilterType(Enum):
+    TRILINEAR = 0
+    NEAREST = 1
+
+    def __str__(self) -> str:
+        return self.name.lower()
 
 
 @define
@@ -26,74 +44,103 @@ class SceneGeometry(ABC):
 
     Warnings
     --------
-    If a ``zgrid`` value is passed to the constructor (instead of letting
-    the constructor set it automatically), its extent must be
-    [``ground_altitude``, ``toa_altitude``]. The constructor will raise
-    a :class:`ValueError` otherwise.
+    If a ``grid`` value is passed to the constructor together with explicit
+    ``ground_altitude`` and/or ``toa_altitude`` values, its extent must be
+    [``ground_altitude``, ``toa_altitude``]. The constructor will raise a
+    :class:`ValueError` otherwise. If ``ground_altitude`` and/or
+    ``toa_altitude`` are left unset, they are instead derived from the
+    ``grid`` extent.
     """
 
-    toa_altitude: pint.Quantity = documented(
-        pinttrs.field(default=120.0 * ureg.km, units=ucc.deferred("length")),
-        doc="Top-of-atmosphere level altitude. "
+    toa_altitude: pint.Quantity | None = documented(
+        pinttrs.field(default=None, units=ucc.deferred("length")),
+        doc="Top-of-atmosphere level altitude. If unset, defaults to the "
+        "``grid`` top level when ``grid`` is set, and to 120 km otherwise. "
         'Unit-enabled field (default: ``ucc["length"]``).',
         default="120 km",
         type="pint.Quantity",
-        init_type="float or quantity",
+        init_type="float or quantity, optional",
     )
 
-    ground_altitude: pint.Quantity = documented(
-        pinttrs.field(default=0.0 * ureg.km, units=ucc.deferred("length")),
-        doc="Baseline ground altitude. "
+    ground_altitude: pint.Quantity | None = documented(
+        pinttrs.field(default=None, units=ucc.deferred("length")),
+        doc="Baseline ground altitude. If unset, defaults to the ``grid`` "
+        "bottom level when ``grid`` is set, and to 0 km otherwise. "
         'Unit-enabled field (default: ``ucc["length"]``).',
         default="0 km",
         type="pint.Quantity",
-        init_type="float or quantity",
+        init_type="float or quantity, optional",
     )
 
-    zgrid: ZGrid = documented(
+    grid: GridCoords = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(
-                lambda x: ZGrid(x) if not isinstance(x, ZGrid) else x
+                lambda x: GridCoords.convert(x) if not isinstance(x, GridCoords) else x
             ),
-            validator=attrs.validators.optional(attrs.validators.instance_of(ZGrid)),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(GridCoords)
+            ),
         ),
         doc="The altitude mesh on which the radiative properties of "
         "heterogeneous atmosphere components are evaluated. "
         "If unset, a default grid with one layer per 100 m (or 10 layers if "
         "the atmosphere object height is less than 100 m) is used.",
-        type=".ZGrid",
-        init_type=".ZGrid, quantity or ndarray, optional",
+        type=".GridCoords",
+        init_type=".GridCoords, quantity or ndarray, optional",
+    )
+
+    filter_type: FilterType = documented(
+        attrs.field(
+            default=FilterType.NEAREST,
+            converter=FilterType,
+            validator=attrs.validators.instance_of(FilterType),
+            kw_only=True,
+        ),
+        doc="Volume filter type.",
+        default="FilterType.NEAREST",
+        type=".FilterType",
+        init_type=".FilterType",
+    )
+
+    wrap_mode: WrapMode = documented(
+        attrs.field(
+            default=WrapMode.CLAMP,
+            converter=WrapMode,
+            validator=attrs.validators.instance_of(WrapMode),
+            kw_only=True,
+        ),
+        doc="Volume wrap mode.",
+        default="WrapMode.CLAMP",
+        type=".WrapMode",
+        init_type=".WrapMode",
     )
 
     def __attrs_post_init__(self) -> None:
-        # Set altitude grid
-        if self.zgrid is None:
-            bottom = self.ground_altitude.m_as(ureg.m)
-            top = self.toa_altitude.m_as(ureg.m)
-            step = min(100.0, (top - bottom) / 10.0)
-            self.zgrid = ZGrid(
-                ureg.convert(
-                    np.arange(bottom, top + step * 0.1, step),
-                    ureg.m,
-                    ucc.get("length"),
-                )
-            )
-
-        else:
-            grid_bottom = self.zgrid.levels[0]
-            if not np.isclose(grid_bottom, self.ground_altitude):
+        # Resolve ground_altitude and toa_altitude
+        if self.grid is not None:
+            grid_bottom = self.grid.levels[0]
+            if self.ground_altitude is None:
+                self.ground_altitude = grid_bottom
+            elif not np.isclose(grid_bottom, self.ground_altitude):
                 raise ValueError(
-                    "zgrid bottom must match ground_altitude; "
+                    "grid bottom must match ground_altitude; "
                     f"expected {self.ground_altitude}, got {grid_bottom}"
                 )
 
-            grid_top = self.zgrid.levels[-1]
-            if not np.isclose(grid_top, self.toa_altitude):
+            grid_top = self.grid.levels[-1]
+            if self.toa_altitude is None:
+                self.toa_altitude = grid_top
+            elif not np.isclose(grid_top, self.toa_altitude):
                 raise ValueError(
-                    "zgrid top must match toa_altitude; "
+                    "grid top must match toa_altitude; "
                     f"expected {self.toa_altitude}, got {grid_top}"
                 )
+        else:
+            if self.ground_altitude is None:
+                self.ground_altitude = 0.0 * ureg.km
+            if self.toa_altitude is None:
+                self.toa_altitude = 120.0 * ureg.km
 
     @classmethod
     def convert(cls, value: t.Any) -> t.Any:
@@ -146,7 +193,6 @@ class SceneGeometry(ABC):
         :class:`.Shape`: Stencil of the participating medium representing the
         atmosphere.
         """
-        pass
 
     @property
     @abstractmethod
@@ -156,7 +202,6 @@ class SceneGeometry(ABC):
             coordinates to world coordinates for heterogeneous atmosphere
             components.
         """
-        pass
 
     @property
     @abstractmethod
@@ -164,7 +209,13 @@ class SceneGeometry(ABC):
         """
         :class:`.Shape` : Shape representing the surface.
         """
-        pass
+
+    @property
+    def bbox(self):
+        """
+        :class:`eradiate.scenes.core.BoundingBox` : Bounding box of the geometry
+        """
+        return self.atmosphere_shape.bbox
 
 
 @define
@@ -211,6 +262,16 @@ class PlaneParallelGeometry(SceneGeometry):
     @property
     def surface_shape(self) -> RectangleShape:
         return RectangleShape.surface(altitude=self.ground_altitude, width=self.width)
+
+    def __attrs_post_init__(self) -> None:
+        super().__attrs_post_init__()
+
+        if self.grid is None:
+            bottom = self.ground_altitude
+            top = self.toa_altitude
+            step = min(100.0 * ureg.m, (top - bottom) / 10.0)
+
+            self.grid = GridCoords.make_onedim_arange(top, bottom, step, self.width)
 
 
 @define
@@ -263,3 +324,20 @@ class SphericalShellGeometry(SceneGeometry):
         return SphereShape.surface(
             altitude=self.ground_altitude, planet_radius=self.planet_radius
         )
+
+    def __attrs_post_init__(self) -> None:
+        super().__attrs_post_init__()
+
+        if self.grid is None:
+            bottom = self.ground_altitude.m_as(ureg.m)
+            top = self.toa_altitude.m_as(ureg.m)
+            step = min(100.0, (top - bottom) / 10.0)
+            self.grid = SphericalShellGridCoords(
+                levels=ureg.convert(
+                    np.arange(bottom, top + step * 0.1, step),
+                    ureg.m,
+                    ucc.get("length"),
+                ),
+                azimuths=np.asarray([0.0, 360.0]) * ureg.degree,
+                colatitudes=np.asarray([0.0, 180.0]) * ureg.degree,
+            )
