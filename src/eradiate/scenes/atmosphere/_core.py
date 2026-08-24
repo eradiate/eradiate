@@ -722,38 +722,52 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         }
         sigma_t_id = f"{self.id}_sigma_t"
 
+        piecewise = (
+            isinstance(self.geometry, PlaneParallelGeometry)
+            and not self.force_majorant
+            and self.geometry.grid.onedim
+        )
+
+        aabb_conf = {}
         if isinstance(self.geometry, SphericalShellGeometry):
-            medium = "eoheterogeneous"
+            extr_conf = {
+                "type": "extremum_spherical",
+                "rmin": self.geometry.atmosphere_volume_rmin,
+            }
+        elif not piecewise:
+            extr_conf = {"type": "extremum_grid"}
+            aabb_min = self.geometry.bbox.min.m_as("m")
+            # The geometry bbox inserts a sub-surface padding. We want the data to be evaluated
+            # on the entire geometry extent in x and y directions, but we should avoid the wrap_mode
+            # to affect the z direction.
+            aabb_min[2] = self.geometry.grid.levels[0].m_as("m")
+            aabb_conf = {
+                "aabb_min": aabb_min,
+                "aabb_max": self.geometry.bbox.max.m_as("m"),
+            }
+
+        if piecewise:
+            medium = "piecewise"
+        else:
             if self.extremum_resolution != (1, 1, 1):
                 extremum = {
-                    "type": "extremum_spherical",
-                    "volume": {"type": "ref", "id": sigma_t_id},
-                    "rmin": self.geometry.atmosphere_volume_rmin,
-                    "resolution": self.extremum_resolution,
-                    "to_world": self.geometry.atmosphere_volume_to_world,
-                }
-        elif isinstance(self.geometry, PlaneParallelGeometry):
-            medium = (
-                "eoheterogeneous"
-                if self.force_majorant or not self.geometry.grid.onedim
-                else "piecewise"
-            )
-            if medium == "eoheterogeneous" and self.extremum_resolution != (1, 1, 1):
-                extremum = {
-                    "type": "extremum_grid",
+                    **extr_conf,
                     "volume": {"type": "ref", "id": sigma_t_id},
                     "resolution": self.extremum_resolution,
-                    "to_world": self.geometry.atmosphere_volume_to_world,
+                    "to_world": self.geometry.grid.to_world,
+                    "wrap_mode": str(self.geometry.wrap_mode).lower(),
                 }
-        else:
-            raise TypeError(
-                f"unhandled scene geometry type '{type(self.geometry).__name__}'"
-            )
+            medium = "eoheterogeneous"
 
         # Create medium dictionary
         result = {
             "type": medium,
-            "has_spectral_extinction": (not get_mode().check(mi_color_mode="mono")),
+            "has_spectral_extinction": (
+                # piecewise volpath currently only works with spectral extinction true
+                # hack fix by setting to True when we have a piecewise medium
+                (not get_mode().check(mi_color_mode="mono")) or (medium == "piecewise")
+            ),
+            **aabb_conf,
             **volumes,
             # Note: "phase" is deliberately unset, this is left to the
             # Atmosphere.template property

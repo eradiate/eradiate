@@ -59,7 +59,7 @@ class SphereShape(ShapeNode):
             to_world = (
                 self.to_world
                 @ mi.ScalarTransform4f().translate(self.center.m_as(length_units))
-                @ mi.ScalarTransform4f().scale(self.radius.m_as(length_units))
+                @ mi.ScalarTransform4f().scale(float(self.radius.m_as(length_units)))
             )
         else:
             to_world = mi.ScalarTransform4f().translate(
@@ -109,12 +109,12 @@ class SphereShape(ShapeNode):
             to_world = (
                 self.to_world
                 @ mi.ScalarTransform4f().translate(self.center.m_as(length_units))
-                @ mi.ScalarTransform4f().scale(self.radius.m_as(length_units))
+                @ mi.ScalarTransform4f().scale(float(self.radius.m_as(length_units)))
             )
         else:
             to_world = mi.ScalarTransform4f().translate(
                 self.center.m_as(length_units)
-            ) @ mi.ScalarTransform4f().scale(self.radius.m_as(length_units))
+            ) @ mi.ScalarTransform4f().scale(float(self.radius.m_as(length_units)))
         p = np.atleast_2d(
             ensure_units(p, default_units=ucc.get("length")).m_as(length_units)
         )
