@@ -74,6 +74,7 @@ Alphabetical list of modules
    exceptions
    experiments
    frame
+   grid
    kernel
    notebook
    pipelines
