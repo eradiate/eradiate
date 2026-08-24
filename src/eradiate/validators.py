@@ -56,14 +56,15 @@ def is_vector3(instance, attribute, value):
 
 def is_positive(_, attribute, value):
     """
-    Validate iff value is a positive number.
+    Validate iff value is a positive number. Arrays are validated
+    element-wise.
 
     Raises
     ------
     ValueError
-        If the value is not positive or zero.
+        If value is negative.
     """
-    if value < 0.0:
+    if np.any(np.atleast_1d(value) < 0.0):
         raise ValueError(f"{attribute.name} must be positive or zero, got {value}")
 
 
@@ -110,7 +111,7 @@ def path_exists(_, attribute, value):
     """
     if not value.exists():
         raise FileNotFoundError(
-            f"{attribute} points to '{str(value)}' (path does not exist)"
+            f"{attribute} points to '{value!s}' (path does not exist)"
         )
 
 
@@ -126,9 +127,7 @@ def is_file(_, attribute, value):
         file.
     """
     if not value.is_file():
-        raise FileNotFoundError(
-            f"{attribute.name} points to '{str(value)}' (not a file)"
-        )
+        raise FileNotFoundError(f"{attribute.name} points to '{value!s}' (not a file)")
 
 
 def is_dir(_, attribute, value):
@@ -144,7 +143,7 @@ def is_dir(_, attribute, value):
     """
     if not value.is_dir():
         raise FileNotFoundError(
-            f"{attribute.name} points to '{str(value)}' (not a directory)"
+            f"{attribute.name} points to '{value!s}' (not a directory)"
         )
 
 
