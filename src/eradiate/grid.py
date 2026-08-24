@@ -11,6 +11,7 @@ from pinttr.util import ensure_units
 
 from eradiate.kernel.transform import map_unit_cube
 
+from . import _repr_diagrams
 from .attrs import documented, frozen
 from .units import to_quantity
 from .units import unit_context_config as ucc
@@ -310,6 +311,9 @@ class GridCoords(ABC):
     @abstractmethod
     def to_world(self) -> mi.ScalarTransform4f:
         """Grid to_world"""
+
+    def _repr_html_(self) -> str | None:
+        return _repr_diagrams.grid_repr_html(self)
 
 
 @frozen(eq=False, init=False)
