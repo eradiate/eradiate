@@ -11,6 +11,7 @@ import pint
 import pinttrs
 
 from .shapes import CuboidShape, RectangleShape, Shape, SphereShape
+from .. import _repr_diagrams
 from ..attrs import define, documented
 from ..constants import EARTH_RADIUS
 from ..grid import GridCoords, SphericalShellGridCoords
@@ -216,6 +217,9 @@ class SceneGeometry(ABC):
         :class:`eradiate.scenes.core.BoundingBox` : Bounding box of the geometry
         """
         return self.atmosphere_shape.bbox
+
+    def _repr_html_(self) -> str | None:
+        return _repr_diagrams.geometry_repr_html(self)
 
 
 @define
