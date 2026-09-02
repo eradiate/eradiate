@@ -760,7 +760,10 @@ class EarthObservationExperiment(Experiment, ABC):
             inputs = self._pipeline_inputs(i)
             outputs = pipeline.get_nodes_by_metadata(final=True, kind="data")
             result = pipeline.execute(outputs=outputs, inputs=inputs)
-            self.results[measure.id] = xr.Dataset({var: result[var] for var in outputs})
+            self.results[measure.id] = xr.Dataset(
+                {var: result[var] for var in outputs},
+                attrs=getattr(measure, "projection_metadata", {}),
+            )
 
     def pipeline(self, measure: Measure | int | str) -> Pipeline:
         # Inherit docstring
@@ -796,6 +799,9 @@ class EarthObservationExperiment(Experiment, ABC):
             result["angles"] = measure.viewing_angles.m_as(ureg.deg)
         else:
             result["viewing_angles"] = None
+
+        if config.get("add_valid_mask", False):
+            result["valid_mask"] = measure.valid_mask
 
         return result
 

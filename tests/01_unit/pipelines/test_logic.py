@@ -424,3 +424,24 @@ def test_09_degree_of_linear_polarization(mode, aggregate_ckd_quad):
     expected_size = {**spectral_sizes, **film_sizes, **solar_angle_sizes}
     assert isinstance(result, xr.DataArray)
     assert result.sizes == expected_size
+
+
+def test_10_valid_mask():
+    # The measure computes the mask itself, in bitmap layout, so this function
+    # only labels it with film coordinates, it must not transpose or reorder.
+    # A non-square input makes a stray transposition observable.
+    valid = np.ones((6, 4), dtype=bool)
+    valid[0, 0] = False  # a pixel imaging no direction
+    valid[5, 3] = False
+
+    result = logic.valid_mask(valid)
+
+    assert isinstance(result, xr.DataArray)
+    assert result.dims == ("y_index", "x_index")
+    assert result.shape == (6, 4)
+    assert result.dtype == bool
+    assert np.array_equal(result, valid)
+
+    assert not result[0, 0]
+    assert not result[5, 3]
+    assert result[5, 1]

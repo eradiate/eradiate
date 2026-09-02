@@ -32,6 +32,8 @@ def build_pipeline(config: dict) -> Pipeline:
             Whether the measure is a distant measure.
         ``add_viewing_angles`` : bool
             Whether to compute viewing angles.
+        ``add_valid_mask`` : bool
+            Whether to add the mask flagging the pixels that image a direction.
         ``var_name`` : str
             Name of the processed physical variable.
         ``var_metadata`` : dict
@@ -52,6 +54,7 @@ def build_pipeline(config: dict) -> Pipeline:
     mode_id = config["mode_id"]
     measure_distant = config["measure_distant"]
     add_viewing_angles = config["add_viewing_angles"]
+    add_valid_mask = config["add_valid_mask"]
     var_name = config["var_name"]
     apply_srf = config["apply_spectral_response"]
     calc_var = config["calculate_variance"]
@@ -69,6 +72,18 @@ def build_pipeline(config: dict) -> Pipeline:
             dependencies=["angles"],
             description="Compute viewing angles dataset",
             metadata=_FINAL_COORD,
+        )
+
+    # ------------------------------------------------------------------
+    # valid node (optional)
+    # ------------------------------------------------------------------
+    if add_valid_mask:
+        pipeline.add_node(
+            "valid",
+            func=lambda valid_mask: logic.valid_mask(valid_mask),
+            dependencies=["valid_mask"],
+            description="Index the valid pixel mask by film coordinates",
+            metadata=_FINAL_DATA,
         )
 
     # ------------------------------------------------------------------

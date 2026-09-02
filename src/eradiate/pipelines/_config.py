@@ -59,6 +59,9 @@ def config(
     # Does the measure provide viewing angle values?
     result["add_viewing_angles"] = hasattr(measure, "viewing_angles")
 
+    # Do some of its pixels contain no data?
+    result["add_valid_mask"] = hasattr(type(measure), "valid_mask")
+
     # Which physical variable are we processing?
     result["var_name"], result["var_metadata"] = measure.var
 

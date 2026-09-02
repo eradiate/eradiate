@@ -893,6 +893,35 @@ def viewing_angles(angles: np.ndarray) -> xr.Dataset:
     )
 
 
+def valid_mask(valid: np.ndarray) -> xr.DataArray:
+    """
+    Index a measure's valid-pixel mask by film coordinates.
+
+    Parameters
+    ----------
+    valid : ndarray
+        A boolean (height, width) array, ``True`` where the pixel images a
+        direction. Typically obtained from
+        :attr:`.FisheyeCameraMeasure.valid_mask`, which reports it in bitmap
+        layout so that it overlays the processed variable without transposing.
+
+    Returns
+    -------
+    DataArray
+        A boolean array indexed by film coordinates, ``True`` where the pixel
+        images a direction.
+    """
+    return xr.DataArray(
+        valid,
+        coords={
+            "y_index": [i for i in range(valid.shape[0])],
+            "x_index": [i for i in range(valid.shape[1])],
+        },
+        dims=("y_index", "x_index"),
+        attrs={"long_name": "valid pixel mask"},
+    )
+
+
 def moment2_to_variance(
     expectation: xr.DataArray,
     m2: xr.DataArray,
