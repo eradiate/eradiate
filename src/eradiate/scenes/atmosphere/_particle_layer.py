@@ -18,8 +18,9 @@ from ..core import traverse
 from ..phase import ParticlePhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
+from ...grid import GridCoords
 from ...kernel import SceneParameter
-from ...radprops import ParticleProperties, ZGrid
+from ...radprops import ParticleProperties
 from ...spectral.index import (
     CKDSpectralIndex,
     MonoSpectralIndex,
@@ -235,7 +236,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     #                    Spatial and thermophysical properties
     # --------------------------------------------------------------------------
 
-    def eval_fractions(self, zgrid: ZGrid) -> np.ndarray:
+    def eval_fractions(self, grid: GridCoords) -> np.ndarray:
         """
         Compute the particle number fraction in the particle layer.
 
@@ -244,7 +245,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         ndarray
             Particle number fractions as a (n_layers,)-shaped array.
         """
-        x = (zgrid.layers - self.bottom) / (self.top - self.bottom)
+        x = (grid.layers - self.bottom) / (self.top - self.bottom)
         fractions = self.distribution(x.m_as(ureg.dimensionless))
         fractions /= np.sum(fractions)
         return fractions
@@ -258,17 +259,17 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
     # --------------------------------------------------------------------------
 
     @cache_by_id
-    def _eval_albedo_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+    def _eval_albedo_impl(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         # Return albedo from dataset (without accounting for bypass switches)
         # This routine is vectorized and returns an array of shape
         # (n_wavelengths, n_layers)
         pp = self.particle_properties
         albedo = pp.eval_ssa(w)
-        zmask = np.reshape(self.eval_fractions(zgrid) > 0, (1, -1))
+        zmask = np.reshape(self.eval_fractions(grid) > 0, (1, -1))
         return albedo * zmask
 
     @cache_by_id
-    def _eval_sigma_t_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+    def _eval_sigma_t_impl(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         # Return extinction coefficient from dataset (without accounting
         # for bypass switches). This routine is vectorized and returns an
         # array of shape (n_wavelengths, n_layers)
@@ -285,55 +286,55 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         # Scatter this total OT to all layers
         # TODO: Make sure that axis order is consistent with other vectorized
         #  routines
-        fractions = self.eval_fractions(zgrid)
+        fractions = self.eval_fractions(grid)
         tau_layers = np.broadcast_to(
-            np.reshape(tau, (-1, 1)), (len(w), zgrid.n_layers)
+            np.reshape(tau, (-1, 1)), (len(w), grid.n_layers)
         ) * np.reshape(fractions, (1, -1))
 
         # Compute corresponding average coefficient
-        sigma_t = tau_layers / zgrid.layer_height
+        sigma_t = tau_layers / grid.layer_height
 
         return sigma_t
 
-    def _eval_sigma_a_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+    def _eval_sigma_a_impl(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         # Return absorption coefficient from dataset (without accounting for
         # bypass switches). This routine is vectorized and returns an array of
         # shape (n_wavelengths, n_layers)
-        albedo = self._eval_albedo_impl(w, zgrid)
-        return self._eval_sigma_t_impl(w, zgrid) * (1.0 - albedo.m)
+        albedo = self._eval_albedo_impl(w, grid)
+        return self._eval_sigma_t_impl(w, grid) * (1.0 - albedo.m)
 
-    def _eval_sigma_s_impl(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+    def _eval_sigma_s_impl(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         # Return scattering coefficient from dataset (without accounting for
         # bypass switches). This routine is vectorized and returns an array of
         # shape (n_wavelengths, n_layers)
-        albedo = self._eval_albedo_impl(w, zgrid)
-        return self._eval_sigma_t_impl(w, zgrid) * albedo.m
+        albedo = self._eval_albedo_impl(w, grid)
+        return self._eval_sigma_t_impl(w, grid) * albedo.m
 
     @singledispatchmethod
     def eval_albedo(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
 
     @eval_albedo.register(MonoSpectralIndex)
-    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
+    def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_albedo_mono(
             w=si.w,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
     @eval_albedo.register(CKDSpectralIndex)
-    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
+    def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_albedo_ckd(
             w=si.w,
             g=si.g,
-            zgrid=self.geometry.zgrid if zgrid is None else zgrid,
+            grid=self.geometry.grid if grid is None else grid,
         )
 
-    def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+    def eval_albedo_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         if self.has_absorption and self.has_scattering:
-            albedo = self._eval_albedo_impl(w, zgrid).squeeze()
+            albedo = self._eval_albedo_impl(w, grid).squeeze()
 
         elif self.has_absorption and not self.has_scattering:
             albedo = 0.0 * ureg.dimensionless
@@ -345,106 +346,106 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
             raise RuntimeError
 
         # Albedo is constant vs spatial dimension
-        return np.full_like(zgrid.layers, albedo)
+        return np.full_like(grid.layers, albedo)
 
     def eval_albedo_ckd(
-        self, w: pint.Quantity, g: float, zgrid: ZGrid
+        self, w: pint.Quantity, g: float, grid: GridCoords
     ) -> pint.Quantity:
-        return self.eval_albedo_mono(w=w, zgrid=zgrid)
+        return self.eval_albedo_mono(w=w, grid=grid)
 
     @singledispatchmethod
     def eval_sigma_t(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
 
     @eval_sigma_t.register(MonoSpectralIndex)
-    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
+    def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_t_mono(
-            w=si.w, zgrid=self.geometry.zgrid if zgrid is None else zgrid
+            w=si.w, grid=self.geometry.grid if grid is None else grid
         )
 
     @eval_sigma_t.register(CKDSpectralIndex)
-    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
+    def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_t_ckd(
-            w=si.w, g=si.g, zgrid=self.geometry.zgrid if zgrid is None else zgrid
+            w=si.w, g=si.g, grid=self.geometry.grid if grid is None else grid
         )
 
-    def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        result = self._eval_sigma_t_impl(w, zgrid).squeeze()
+    def eval_sigma_t_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+        result = self._eval_sigma_t_impl(w, grid).squeeze()
 
         if self.has_absorption and self.has_scattering:
             return result
 
         elif not self.has_absorption and self.has_scattering:
-            return result - self._eval_sigma_a_impl(w, zgrid).squeeze()
+            return result - self._eval_sigma_a_impl(w, grid).squeeze()
 
         elif self.has_absorption and not self.has_scattering:
-            return result - self._eval_sigma_s_impl(w, zgrid).squeeze()
+            return result - self._eval_sigma_s_impl(w, grid).squeeze()
 
         raise RuntimeError
 
     def eval_sigma_t_ckd(
-        self, w: pint.Quantity, g: float, zgrid: ZGrid
+        self, w: pint.Quantity, g: float, grid: GridCoords
     ) -> pint.Quantity:
-        return self.eval_sigma_t_mono(w=w, zgrid=zgrid)
+        return self.eval_sigma_t_mono(w=w, grid=grid)
 
     @singledispatchmethod
     def eval_sigma_a(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
 
     @eval_sigma_a.register(MonoSpectralIndex)
-    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
+    def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_a_mono(
-            w=si.w, zgrid=self.geometry.zgrid if zgrid is None else zgrid
+            w=si.w, grid=self.geometry.grid if grid is None else grid
         )
 
     @eval_sigma_a.register(CKDSpectralIndex)
-    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
+    def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_a_ckd(
-            w=si.w, g=si.g, zgrid=self.geometry.zgrid if zgrid is None else zgrid
+            w=si.w, g=si.g, grid=self.geometry.grid if grid is None else grid
         )
 
-    def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        value = self._eval_sigma_a_impl(w, zgrid).squeeze()
+    def eval_sigma_a_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+        value = self._eval_sigma_a_impl(w, grid).squeeze()
         return value if self.has_absorption else np.zeros_like(value) * value.units
 
     def eval_sigma_a_ckd(
-        self, w: pint.Quantity, g: float, zgrid: ZGrid
+        self, w: pint.Quantity, g: float, grid: GridCoords
     ) -> pint.Quantity:
-        return self.eval_sigma_a_mono(w, zgrid)
+        return self.eval_sigma_a_mono(w, grid)
 
     @singledispatchmethod
     def eval_sigma_s(
-        self, si: SpectralIndex, zgrid: ZGrid | None = None
+        self, si: SpectralIndex, grid: GridCoords | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         raise NotImplementedError
 
     @eval_sigma_s.register(MonoSpectralIndex)
-    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
+    def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_s_mono(
-            w=si.w, zgrid=self.geometry.zgrid if zgrid is None else zgrid
+            w=si.w, grid=self.geometry.grid if grid is None else grid
         )
 
     @eval_sigma_s.register(CKDSpectralIndex)
-    def _(self, si, zgrid: ZGrid | None = None) -> pint.Quantity:
+    def _(self, si, grid: GridCoords | None = None) -> pint.Quantity:
         return self.eval_sigma_s_ckd(
-            w=si.w, g=si.g, zgrid=self.geometry.zgrid if zgrid is None else zgrid
+            w=si.w, g=si.g, grid=self.geometry.grid if grid is None else grid
         )
 
-    def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        value = self._eval_sigma_s_impl(w, zgrid).squeeze()
+    def eval_sigma_s_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+        value = self._eval_sigma_s_impl(w, grid).squeeze()
         return value if self.has_scattering else np.zeros_like(value) * value.units
 
     def eval_sigma_s_ckd(
-        self, w: pint.Quantity, g: float, zgrid: ZGrid
+        self, w: pint.Quantity, g: float, grid: GridCoords
     ) -> pint.Quantity:
-        return self.eval_sigma_s_mono(w, zgrid)
+        return self.eval_sigma_s_mono(w, grid)
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
