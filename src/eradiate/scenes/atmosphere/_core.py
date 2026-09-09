@@ -70,6 +70,11 @@ atmosphere_factory.register_lazy_batch(
             "particle_extinction",
             {},
         ),
+        (
+            "_particle_field.ParticleField",
+            "particle_field",
+            {},
+        ),
     ],
     cls_prefix="eradiate.scenes.atmosphere",
 )
