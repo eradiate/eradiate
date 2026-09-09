@@ -36,6 +36,11 @@ phase_function_factory.register_lazy_batch(
             "rayleigh",
             {},
         ),
+        (
+            "_particle_field.ParticleFieldPhaseFunction",
+            "particlefieldphase",
+            {},
+        ),
     ],
     cls_prefix="eradiate.scenes.phase",
 )
