@@ -54,6 +54,11 @@ measure_factory.register_lazy_batch(
             {},
         ),
         (
+            "_fisheye.FisheyeCameraMeasure",
+            "fisheye",
+            {},
+        ),
+        (
             "_radiancemeter.RadiancemeterMeasure",
             "radiancemeter",
             {},
