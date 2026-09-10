@@ -172,6 +172,7 @@ Quick access
    HeterogeneousAtmosphere
    MolecularAtmosphere
    ParticleEnsemble
+   ParticleField
 
 **Particle distributions**
 
@@ -482,6 +483,7 @@ Quick access
    HenyeyGreensteinPhaseFunction
    MultiPhaseFunction
    ParticlePhaseFunction
+   ParticleFieldPhaseFunction
 
 .. _module-eradiate.scenes.integrators:
 

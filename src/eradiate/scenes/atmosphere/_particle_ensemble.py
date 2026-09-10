@@ -212,6 +212,15 @@ class ParticleEnsemble(AbstractHeterogeneousAtmosphere):
         default='"govaerts_2021-continental"',
     )
 
+    @particle_properties.validator
+    def _particle_properties_validator(self, attribute, value):
+        if value.has_size_distribution:
+            raise ValueError(
+                "While initialising ParticleEnsemble: 'particle_properties' "
+                "must not have 'reff'/'veff' dimensions; use ParticleField "
+                "for a spatially varying composition"
+            )
+
     has_absorption: bool = documented(
         attrs.field(default=True, converter=bool),
         doc="Absorption bypass switch. If ``True``, the absorption coefficient "
@@ -278,6 +287,7 @@ class ParticleEnsemble(AbstractHeterogeneousAtmosphere):
         The Z dimension (vertical extent) supports spatially varying
         top and bottom in X and Y.
 
+        Returns
         -------
         ndarray
             Particle number fractions as a ([n_x, n_y, ]n_layers,)-shaped
