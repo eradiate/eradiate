@@ -499,3 +499,17 @@ def test_09_degree_of_linear_polarization(mode, aggregate_ckd_quad):
     expected_size = {**spectral_sizes, **film_sizes, **solar_angle_sizes}
     assert isinstance(result, xr.DataArray)
     assert result.sizes == expected_size
+
+
+def test_10_valid_mask():
+    # The mask itself is computed by the measure, this function only labels it
+    # with the film coordinates the recorded variable is indexed by.
+    valid = np.ones((6, 4), dtype=bool)
+    valid[0, 0] = False
+
+    result = logic.valid_mask(valid)
+
+    assert result.dims == ("y_index", "x_index")
+    assert np.array_equal(result.y_index, np.arange(6))
+    assert np.array_equal(result.x_index, np.arange(4))
+    assert np.array_equal(result, valid)

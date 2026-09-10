@@ -54,6 +54,11 @@ measure_factory.register_lazy_batch(
             {},
         ),
         (
+            "_fisheye.FisheyeCameraMeasure",
+            "fisheye",
+            {},
+        ),
+        (
             "_radiancemeter.RadiancemeterMeasure",
             "radiancemeter",
             {},
@@ -257,3 +262,18 @@ class Measure(NodeSceneElement, ABC):
         str, dict: Post-processing variable field name and metadata.
         """
         return "img", dict()
+
+    def dataset_attrs(self) -> dict:
+        """
+        Return metadata to be published as global attributes of the result
+        dataset. Subclasses override this to describe aspects of the
+        measurement that are not captured by data variables and coordinates.
+        Values must be NetCDF-serializable: strings, numbers, or flat lists of
+        numbers.
+
+        Returns
+        -------
+        dict
+            Dataset attributes. Empty by default.
+        """
+        return {}
