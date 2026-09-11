@@ -96,6 +96,39 @@ class GridCoords(ABC):
         )
 
     @staticmethod
+    def make_default_levels(
+        top: pint.Quantity, bottom: pint.Quantity, step: pint.Quantity
+    ) -> pint.Quantity:
+        """
+        Build a regularly-spaced altitude level array from ``bottom`` to
+        ``top`` (inclusive) with spacing ``step``.
+
+        Parameters
+        ----------
+        top
+            Top of the atmosphere altitude
+        bottom
+            Ground altitude
+        step
+            Regular layer height
+
+        Returns
+        -------
+        quantity
+            1-D array of altitude levels.
+        """
+        ensure_units(top, default_units=ucc.get("length"))
+        ensure_units(bottom, default_units=ucc.get("length"))
+
+        return ureg.convert(
+            np.arange(
+                bottom.m_as(ureg.m), (top + step * 0.1).m_as(ureg.m), step.m_as(ureg.m)
+            ),
+            ureg.m,
+            ucc.get("length"),
+        )
+
+    @staticmethod
     def make_onedim_arange(
         top: pint.Quantity,
         bottom: pint.Quantity,
@@ -123,17 +156,9 @@ class GridCoords(ABC):
             Constructed coords grid
         """
 
-        ensure_units(top, default_units=ucc.get("length"))
-        ensure_units(bottom, default_units=ucc.get("length"))
         ensure_units(width, default_units=ucc.get("length"))
 
-        levels = ureg.convert(
-            np.arange(
-                bottom.m_as(ureg.m), (top + step * 0.1).m_as(ureg.m), step.m_as(ureg.m)
-            ),
-            ureg.m,
-            ucc.get("length"),
-        )
+        levels = GridCoords.make_default_levels(top, bottom, step)
 
         return PlaneParallelGridCoords.from_extent_and_resolution(
             levels=levels,

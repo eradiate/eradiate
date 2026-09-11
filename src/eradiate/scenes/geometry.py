@@ -333,15 +333,11 @@ class SphericalShellGeometry(SceneGeometry):
         super().__attrs_post_init__()
 
         if self.grid is None:
-            bottom = self.ground_altitude.m_as(ureg.m)
-            top = self.toa_altitude.m_as(ureg.m)
-            step = min(100.0, (top - bottom) / 10.0)
+            bottom = self.ground_altitude
+            top = self.toa_altitude
+            step = min(100.0 * ureg.m, (top - bottom) / 10.0)
             self.grid = SphericalShellGridCoords(
-                levels=ureg.convert(
-                    np.arange(bottom, top + step * 0.1, step),
-                    ureg.m,
-                    ucc.get("length"),
-                ),
+                levels=GridCoords.make_default_levels(top, bottom, step),
                 azimuths=np.asarray([0.0, 360.0]) * ureg.degree,
                 colatitudes=np.asarray([0.0, 180.0]) * ureg.degree,
             )
