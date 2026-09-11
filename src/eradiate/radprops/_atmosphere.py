@@ -169,7 +169,7 @@ class AtmosphereRadProfile(RadProfile):
         self.update()
 
     def update(self) -> None:
-        self._grid = GridCoords.make_default()
+        self._grid = GridCoords.make_onedim_from_levels(self.levels)
 
     @property
     def zbounds(self) -> tuple[pint.Quantity, pint.Quantity]:

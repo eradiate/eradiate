@@ -236,3 +236,41 @@ def test_layers_from_levels_generalizes_to_scrambled_xyz():
     assert result.shape == (2, 3, 4)
     expected = 0.5 * (raw[:, 0, :, 1:] + raw[:, 0, :, :-1])
     np.testing.assert_allclose(result.m_as("km^-1"), expected)
+
+
+def test_radprops_profile_grid_follows_thermoprops(
+    mode_mono, absorption_database_error_handler_config
+):
+    """The radprops profile's default grid is derived from the thermoprops
+    altitude levels, not a fixed global default."""
+    z = np.linspace(0.0, 30.0, 31) * ureg.km
+    atmosphere = MolecularAtmosphere(
+        thermoprops={
+            "identifier": "afgl_1986-us_standard",
+            "z": z,
+            "additional_molecules": False,
+        },
+        absorption_data="komodo",
+        error_handler_config=absorption_database_error_handler_config,
+    )
+
+    grid_levels = atmosphere.radprops_profile.grid.levels
+    np.testing.assert_allclose(grid_levels.m_as("km"), z.m_as("km"))
+
+
+def test_eval_mfp(mode_mono, absorption_database_error_handler_config):
+    """eval_mfp evaluates the scattering coefficient without an explicit grid
+    and returns a finite, positive mean free path."""
+    atmosphere = MolecularAtmosphere(
+        thermoprops={
+            "identifier": "afgl_1986-us_standard",
+            "z": np.linspace(0.0, 120.0, 121) * ureg.km,
+            "additional_molecules": False,
+        },
+        absorption_data="komodo",
+        error_handler_config=absorption_database_error_handler_config,
+    )
+
+    mfp = atmosphere.eval_mfp(KernelContext(si=_default_spectral_index(atmosphere)))
+    assert np.all(np.isfinite(mfp.m))
+    assert np.all(mfp.m > 0.0)

@@ -215,7 +215,9 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
         # Inherit docstring
-        min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.si).min()
+        min_sigma_s = self.radprops_profile.eval_sigma_s(
+            ctx.si, grid=self.geometry.grid
+        ).min()
         return np.divide(
             1.0,
             min_sigma_s,
