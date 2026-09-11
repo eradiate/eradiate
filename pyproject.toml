@@ -11,7 +11,7 @@ maintainers = [{ name = "The Eradiate Team" }]
 name = "eradiate"
 readme = "resources/README_PyPI.md"
 requires-python = ">=3.9"
-version = "1.2.0"
+version = "1.2.1-rc1"
 keywords = ["radiative transfer", "earth observation", "remote sensing"]
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -96,7 +96,7 @@ test = [
   "coverage>=7.13",
 ]
 dev = [
-  "bump-my-version>=1.2.0,<1.3.0",
+  "bump-my-version>=1.2.1-rc1,<1.3.0",
   "uv==0.9.*", # Used to lock docs dependencies
   "pandas-stubs",
 ]
