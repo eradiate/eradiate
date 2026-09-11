@@ -75,6 +75,22 @@ atmosphere_factory.register_lazy_batch(
 )
 
 
+def _broadcast_to_grid(value, grid: GridCoords):
+    """Broadcast a per-component array to ``grid.shape``, rejecting shapes
+    other than ``grid.shape`` or z-only ``(grid.n_cells_z,)``, ignoring any
+    number of leading size-1 axes (e.g. a squeezed-out spectral axis)."""
+    shape = np.shape(value)
+    trimmed = shape
+    while len(trimmed) > 1 and trimmed[0] == 1:
+        trimmed = trimmed[1:]
+    if trimmed not in (grid.shape, (grid.n_cells_z,)):
+        raise ValueError(
+            f"component radiative property has invalid shape {shape}; "
+            f"expected {grid.shape} or ({grid.n_cells_z},)"
+        )
+    return np.broadcast_to(value, grid.shape)
+
+
 @define(eq=False, slots=False)
 class Atmosphere(CompositeSceneElement, ABC):
     """
@@ -477,9 +493,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         sigma_units = ucc.get("collision_coefficient")
         sigma_t = self.eval_sigma_t(si, grid)
-        sigma_t = np.broadcast_to(sigma_t, grid.shape)
+        sigma_t = _broadcast_to_grid(sigma_t, grid)
         albedo = self.eval_albedo(si, grid).m_as(ureg.dimensionless)
-        albedo = np.broadcast_to(albedo, grid.shape)
+        albedo = _broadcast_to_grid(albedo, grid)
 
         data_vars = {
             "sigma_t": (

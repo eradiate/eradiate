@@ -13,7 +13,7 @@ import numpy as np
 import pint
 from axsdb import AbsorptionDatabase
 
-from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
+from ._core import AbstractHeterogeneousAtmosphere, _broadcast_to_grid, atmosphere_factory
 from ._molecular import MolecularAtmosphere
 from ._particle_ensemble import ParticleEnsemble
 from ._particle_field import ParticleField
@@ -246,7 +246,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         for component in self.components:
             cmp_result = component.eval_sigma_t(si, self.geometry.grid)
             result.append(
-                np.broadcast_to(cmp_result.m_as(sigma_units), self.geometry.grid.shape)
+                _broadcast_to_grid(cmp_result.m_as(sigma_units), self.geometry.grid)
             )
         return np.stack(result) * sigma_units
 
@@ -273,7 +273,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         for component in self.components:
             cmp_result = component.eval_sigma_s(si, self.geometry.grid)
             result.append(
-                np.broadcast_to(cmp_result.m_as(sigma_units), self.geometry.grid.shape)
+                _broadcast_to_grid(cmp_result.m_as(sigma_units), self.geometry.grid)
             )
         return np.stack(result) * sigma_units
 
