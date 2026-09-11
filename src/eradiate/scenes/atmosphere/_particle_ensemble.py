@@ -361,6 +361,9 @@ class ParticleEnsemble(AbstractHeterogeneousAtmosphere):
 
         # Compute corresponding average coefficient
         sigma_t = tau_layers / grid.layer_height
+        widths = np.diff(grid.levels)
+        true_tau = (sigma_t * widths).sum(axis=-1, keepdims=True)
+        sigma_t = sigma_t * (tau[..., np.newaxis] / true_tau)
 
         return sigma_t
 
