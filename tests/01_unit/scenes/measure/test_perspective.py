@@ -47,7 +47,7 @@ def test_perspective_construct(mode_mono, tested, expected):
             PerspectiveCameraMeasure(**tested)
 
     else:
-        RuntimeError("unhandled expected value")
+        raise RuntimeError("unhandled expected value")
 
 
 @pytest.mark.parametrize(

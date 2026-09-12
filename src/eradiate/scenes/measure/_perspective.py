@@ -112,7 +112,7 @@ class PerspectiveCameraMeasure(Measure):
         if np.allclose(np.cross(direction, value), 0):
             raise ValueError(
                 f"While initializing '{attribute.name}': "
-                f"up direction must not be colinear with viewing direction, "
+                "up direction must not be colinear with viewing direction, "
                 f"got up = {self.up}, direction = {direction}"
             )
 
@@ -125,7 +125,7 @@ class PerspectiveCameraMeasure(Measure):
         "\n"
         "Unit-enabled field (default: ucc[length]).",
         type="quantity",
-        init_type="quantity of float",
+        init_type="quantity or float",
         default="10 000 km",
     )
 
