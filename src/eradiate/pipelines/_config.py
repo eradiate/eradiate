@@ -57,7 +57,7 @@ def config(
     result["measure_distant"] = measure.is_distant()
 
     # Does the measure provide viewing angle values?
-    result["add_viewing_angles"] = hasattr(measure, "viewing_angles")
+    result["add_viewing_angles"] = hasattr(type(measure), "viewing_angles")
 
     # Which physical variable are we processing?
     result["var_name"], result["var_metadata"] = measure.var
