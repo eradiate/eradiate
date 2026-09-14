@@ -80,7 +80,7 @@ def detect_axes(from_=None):
         if all([isinstance(x, Axes) for x in from_]):
             return from_
 
-    raise TypeError("unsupported type")
+    raise TypeError(f"unsupported type '{type(from_).__name__}'")
 
 
 def get_axes_from_facet_grid(facet_grid: FacetGrid, exclude: str = None) -> list[Axes]:

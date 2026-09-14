@@ -129,7 +129,7 @@ def _path_converter(value: Path | str | list[Path | str]) -> list[Path]:
     if isinstance(value, str):
         return _path_converter(value.split(":"))
 
-    raise NotImplementedError(f"Cannot convert value of type {type(value)}")
+    raise TypeError(f"Cannot convert value of type {type(value)}")
 
 
 def _rng_seed_converter(value: Any):

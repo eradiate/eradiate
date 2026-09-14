@@ -414,7 +414,7 @@ def mesh_from_dem(
             )
 
         else:
-            raise RuntimeError(f"unknown input mode {mode}")
+            raise ValueError(f"unknown input mode {mode}")
 
     elif isinstance(geometry, SphericalShellGeometry):
         if mode == "xy":
@@ -461,10 +461,10 @@ def mesh_from_dem(
             ylat_lim = (ylat.m.min(), ylat.m.max()) * ylat.u
 
         else:
-            raise RuntimeError(f"unknown input mode {mode}")
+            raise ValueError(f"unknown input mode {mode}")
 
     else:  # For completeness
-        raise TypeError(f"unhandled geometry type '{type(PlaneParallelGeometry)}'")
+        raise TypeError(f"unhandled geometry type '{type(geometry).__name__}'")
 
     # Create mesh instance
     mesh = BufferMeshShape(vertices=vertices, faces=faces, texcoords=texcoords)

@@ -245,7 +245,7 @@ class BlendPhaseFunction(PhaseFunction):
                 result[f"{prefix}weight.rmin"] = self.geometry.atmosphere_volume_rmin
 
             else:
-                raise ValueError(
+                raise TypeError(
                     f"unhandled scene geometry type '{type(self.geometry).__name__}'"
                 )
 

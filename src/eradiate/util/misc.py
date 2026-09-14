@@ -408,7 +408,7 @@ def onedict_value(d: t.Mapping) -> t.Any:
     """
 
     if len(d) != 1:
-        raise ValueError(f"dictionary has wrong length (expected 1, got {len(d)}")
+        raise ValueError(f"dictionary has wrong length (expected 1, got {len(d)})")
 
     return next(iter(d.values()))
 

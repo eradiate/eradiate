@@ -53,12 +53,12 @@ def _spectral_dims(mode: Mode | str) -> tuple[tuple[str, dict], ...]:
             "units": symbol(ucc.get("dimensionless")),
         },
     )
-    if mode == "mono" or mode.is_mono:
+    if mode == "mono" or (isinstance(mode, Mode) and mode.is_mono):
         return (w,)
-    elif mode == "ckd" or mode.is_ckd:
+    elif mode == "ckd" or (isinstance(mode, Mode) and mode.is_ckd):
         return w, g
     else:
-        raise UnsupportedModeError
+        raise UnsupportedModeError(supported=["mono", "ckd"])
 
 
 def aggregate_ckd_quad(
@@ -533,7 +533,7 @@ def extract_irradiance(
             return result[indices]
 
         else:
-            raise UnsupportedModeError(supported=("monochromatic", "ckd"))
+            raise UnsupportedModeError(supported=["mono", "ckd"])
 
     # Now, proceed with actual spectrum evaluation
     solar_angles = None
@@ -996,7 +996,7 @@ def moment2_to_variance(
     dims_m2 = set(m2.dims)
     dims_expectation = set(expectation.dims)
     if dims_m2 != dims_expectation:
-        raise RuntimeError(
+        raise ValueError(
             "expectation and m2 must have the same dimensions, got "
             f"{expectation.dims = } and {m2.dims = }"
         )

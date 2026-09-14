@@ -79,7 +79,7 @@ def all_positive(_, attribute, value):
     if isinstance(value, ureg.Quantity):
         value = value.magnitude
     if np.any(np.array(value) < 0):
-        raise ValueError(f"{attribute} must be all positive or zero, got {value}")
+        raise ValueError(f"{attribute.name} must be all positive or zero, got {value}")
 
 
 def all_strictly_positive(_, attribute, value):
@@ -94,7 +94,7 @@ def all_strictly_positive(_, attribute, value):
     if isinstance(value, ureg.Quantity):
         value = value.magnitude
     if np.any(np.array(value) <= 0):
-        raise ValueError(f"{attribute} must be all strictly positive, got {value}")
+        raise ValueError(f"{attribute.name} must be all strictly positive, got {value}")
 
 
 def path_exists(_, attribute, value):
@@ -110,7 +110,7 @@ def path_exists(_, attribute, value):
     """
     if not value.exists():
         raise FileNotFoundError(
-            f"{attribute} points to '{str(value)}' (path does not exist)"
+            f"{attribute.name} points to '{str(value)}' (path does not exist)"
         )
 
 
@@ -183,7 +183,7 @@ def is_sorted(
 
     def f(_, attribute, value):
         if not cmp(value):
-            raise ValueError(f"while validating {attribute}: array must be sorted")
+            raise ValueError(f"while validating {attribute.name}: array must be sorted")
 
     return f
 
@@ -206,7 +206,7 @@ def has_len(size: int):
     def f(_, attribute, value):
         if len(value) != size:
             raise ValueError(
-                f"{attribute} must be have length {size}, "
+                f"{attribute.name} must have length {size}, "
                 f"got {value} of length {len(value)}"
             )
 

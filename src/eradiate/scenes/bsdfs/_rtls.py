@@ -114,11 +114,13 @@ class RTLSBSDF(BSDF):
 
     @r.validator
     def _r_validator(self, attribute, value):
-        assert value != 0.0
+        if value == 0.0:
+            raise ValueError(f"while validating '{attribute.name}': must be nonzero")
 
     @b.validator
     def _b_validator(self, attribute, value):
-        assert value != 0.0
+        if value == 0.0:
+            raise ValueError(f"while validating '{attribute.name}': must be nonzero")
 
     @property
     def template(self) -> dict:

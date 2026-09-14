@@ -117,7 +117,7 @@ def check_geometry_atmosphere(
         geometry_zbounds[1] > radprops_zbounds[1]
     ):
         raise ValueError(
-            "Attribtues 'geometry' and 'atmosphere' are incompatible: "
+            "Attributes 'geometry' and 'atmosphere' are incompatible: "
             f"'geometry.zgrid' bounds ({geometry_zbounds}) go beyond the "
             f"bounds of 'atmosphere.radprops_profile.zbounds' ({radprops_zbounds}). "
             f"{suggested_solution}"

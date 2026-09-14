@@ -268,7 +268,10 @@ class MonoSpectralGrid(SpectralGrid):
         Retrieve the spectral grid from a monochromatic absorption database.
         """
         if not isinstance(abs_db, MonoAbsorptionDatabase):
-            raise TypeError
+            raise TypeError(
+                "monochromatic spectral grid can only be derived from a "
+                f"MonoAbsorptionDatabase instance, got a {type(abs_db).__name__}"
+            )
 
         w = abs_db.spectral_coverage.index.get_level_values(level=1).values * ureg.nm
         return cls(wavelengths=w)
@@ -402,7 +405,7 @@ class CKDSpectralGrid(SpectralGrid):
             elif fix_bounds == "raise":
                 raise ValueError(
                     "while constructing CKDSpectralGrid: bin bound mismatch "
-                    f"(min: {wmins_m[1:][fix_locations]}; max: {wmaxs_m[:-1][fix_locations]}"
+                    f"(min: {wmins_m[1:][fix_locations]}; max: {wmaxs_m[:-1][fix_locations]})"
                 )
             elif fix_bounds == "ignore":
                 pass

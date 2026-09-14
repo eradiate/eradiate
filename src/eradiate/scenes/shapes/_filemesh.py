@@ -33,7 +33,7 @@ class FileMeshShape(ShapeNode):
     def _filename_validator(self, attribute, value):
         if value.suffix not in {".obj", ".ply"}:
             raise ValueError(
-                f"while validating {attribute.name}:"
+                f"while validating {attribute.name}: "
                 f"Eradiate supports mesh files only in PLY or OBJ format."
             )
 

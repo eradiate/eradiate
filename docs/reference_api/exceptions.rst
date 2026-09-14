@@ -8,8 +8,6 @@
 Exceptions
 ----------
 
-.. autoclass:: KernelVariantError
-
 .. autoclass:: ModeError
 
 .. autoclass:: TraversalError

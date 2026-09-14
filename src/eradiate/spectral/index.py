@@ -119,7 +119,7 @@ class SpectralIndex(ABC):
         elif isinstance(value, dict):
             return SpectralIndex.from_dict(value)
         else:
-            raise ValueError(f"Cannot convert {value} to a spectral index.")
+            raise TypeError(f"Cannot convert {value} to a spectral index.")
 
 
 @SpectralIndex.subtypes.register(ModeFlag.SPECTRAL_MODE_MONO)
@@ -209,7 +209,7 @@ class CKDSpectralIndex(SpectralIndex):
     def _g_validator(self, attribute, value):
         # g value must be between 0 and 1
         if not 0.0 <= value <= 1.0:
-            raise ValueError(f"{attribute} must be between 0 and 1, got {value}")
+            raise ValueError(f"{attribute.name} must be between 0 and 1, got {value}")
 
     @property
     def formatted_repr(self) -> str:

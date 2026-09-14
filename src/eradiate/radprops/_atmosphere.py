@@ -73,10 +73,13 @@ class AtmosphereRadProfile(RadProfile):
 
     @thermoprops.validator
     def _check_thermoprops(self, attribute, value):
-        if not value.joseki.is_valid:
+        try:
+            value.joseki.validate(ret_true_if_valid=True)
+        except ValueError as e:
             raise ValueError(
-                "Invalid thermophysical properties dataset."  # TODO: explain what is invalid
-            )
+                f"while validating '{attribute.name}': invalid thermophysical "
+                f"properties dataset: {e}"
+            ) from e
 
     has_absorption: bool = documented(
         attrs.field(
