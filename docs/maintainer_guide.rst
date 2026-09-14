@@ -66,6 +66,11 @@ Making a release of Eradiate
 
          export RELEASE_VERSION=X.Y.Z
 
+      .. important::
+         Development and candidate release versions must use a dash separator,
+         otherwise the release bump script will truncate their suffix:
+         ``1.3.0-dev0`` or ``1.3.0-rc1``, not ``1.3.0.dev0`` or ``1.3.0rc1``.
+
    4. Create a new branch for the release:
 
       .. code:: shell
