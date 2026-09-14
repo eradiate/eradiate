@@ -11,7 +11,7 @@ maintainers = [{ name = "The Eradiate Team" }]
 name = "eradiate"
 readme = "resources/README_PyPI.md"
 requires-python = ">=3.9"
-version = "1.2.0"
+version = "1.3.0-rc1"
 keywords = ["radiative transfer", "earth observation", "remote sensing"]
 classifiers = [
   "Development Status :: 4 - Beta",
