@@ -14,6 +14,8 @@ filterwarnings = [
   "ignore:.*utcnow.*:DeprecationWarning",
   # Ignore Skyfield ephemeris file handle warnings (expected behaviour)
   "ignore:.*de421.bsp.*:ResourceWarning",
+  # Remove when netCDF4 supports NumPy >= 2.5 (in-place reshape deprecated)
+  "ignore:Setting the shape on a NumPy array.*:DeprecationWarning",
 ]
 markers = ["unit", "system", "regression"]
 testpaths = ["tests"]

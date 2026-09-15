@@ -92,6 +92,136 @@ def make_single_w_dataset() -> xr.Dataset:
     )
 
 
+REFF = np.array([5.0, 15.0])  # micron
+VEFF = np.array([0.05, 0.15])  # dimensionless
+
+
+def make_size_distribution_dataset() -> xr.Dataset:
+    """
+    Build a minimal Prt v1-shaped dataset (``reff``/``veff`` dimensions
+    added to the Aer-Core v2 layout) for ``ParticleProperties``.
+
+    ``ext``/``ssa`` take a distinct value at every ``(w, reff, veff)`` grid
+    point, so index-based selection can be checked against known values. The
+    angular grid is shared across the whole grid: the ragged/union-grid
+    mechanics along ``w`` are already covered by other tests, so this dataset
+    only needs to exercise ``reff``/``veff`` selection.
+    """
+    n_w, n_reff, n_veff = len(W_NM), len(REFF), len(VEFF)
+
+    ext = np.zeros((n_w, n_reff, n_veff))
+    ssa = np.zeros((n_w, n_reff, n_veff))
+    for ireff in range(n_reff):
+        for iveff in range(n_veff):
+            ext[:, ireff, iveff] = EXT * (ireff + 1) * (iveff + 1)
+            ssa[:, ireff, iveff] = SSA * (1.0 - 0.05 * ireff - 0.01 * iveff)
+
+    mu_vals = np.tile(MU_1D, (n_w, n_reff, n_veff, 1))
+    theta_vals = np.degrees(np.arccos(mu_vals))
+    phase = np.tile(
+        _PHASE_DATA[:, :, np.newaxis, np.newaxis, :], (1, 1, n_reff, n_veff, 1)
+    )
+    nangles = np.full((n_w, n_reff, n_veff), len(MU_1D), dtype=np.int32)
+
+    return xr.Dataset(
+        {
+            "ext": (["w", "reff", "veff"], ext, {"units": "km^-1"}),
+            "ssa": (["w", "reff", "veff"], ssa, {"units": "dimensionless"}),
+            "mu": (
+                ["w", "reff", "veff", "iangle"],
+                mu_vals,
+                {"units": "dimensionless"},
+            ),
+            "theta": (
+                ["w", "reff", "veff", "iangle"],
+                theta_vals,
+                {"units": "degree"},
+            ),
+            "phase": (
+                ["phamat", "w", "reff", "veff", "iangle"],
+                phase,
+                {"units": "1/sr"},
+            ),
+            "nangles": (["w", "reff", "veff"], nangles),
+        },
+        coords={
+            "w": ("w", W_NM, {"units": "nm"}),
+            "reff": ("reff", REFF, {"units": "micron"}),
+            "veff": ("veff", VEFF, {"units": "dimensionless"}),
+            "phamat": ("phamat", ["11"]),
+        },
+    )
+
+
+def make_size_distribution_dataset_ragged() -> xr.Dataset:
+    """
+    Prt v1-shaped dataset where the native angular grid differs across the
+    ``(w, reff, veff)`` grid, to exercise ``eval_phase_grid()``'s per-point
+    raggedness/padding handling. Two wavelengths, two ``reff`` points, one
+    ``veff`` point.
+
+    * ``reff=0``: identical, fully-populated 4-point mu grid at both
+      wavelengths (fixed grid -> no padding needed for this point).
+    * ``reff=1``: only 3 valid points at w=0, 4 at w=1 (ragged -> union
+      smaller than the default ``2 * n_iangle``, triggers upsampling).
+    """
+    n_w, n_reff, n_veff, n_iangle = 2, 2, 1, 4
+
+    mu_full = np.array([-1.0, -0.3, 0.3, 1.0])
+    mu_vals = np.full((n_w, n_reff, n_veff, n_iangle), np.nan)
+    theta_vals = np.full((n_w, n_reff, n_veff, n_iangle), np.nan)
+    phase = np.full((1, n_w, n_reff, n_veff, n_iangle), np.nan)
+    nangles = np.full((n_w, n_reff, n_veff), n_iangle, dtype=np.int32)
+
+    for iw in range(n_w):
+        mu_vals[iw, 0, 0, :] = mu_full
+        theta_vals[iw, 0, 0, :] = np.degrees(np.arccos(mu_full))
+        phase[0, iw, 0, 0, :] = 1.0 + 0.1 * iw
+
+    mu_w0 = np.array([-1.0, 0.0, 1.0])
+    mu_vals[0, 1, 0, :3] = mu_w0
+    theta_vals[0, 1, 0, :3] = np.degrees(np.arccos(mu_w0))
+    phase[0, 0, 1, 0, :3] = 1.0
+    nangles[0, 1, 0] = 3
+
+    mu_vals[1, 1, 0, :] = mu_full
+    theta_vals[1, 1, 0, :] = np.degrees(np.arccos(mu_full))
+    phase[0, 1, 1, 0, :] = 1.2
+    nangles[1, 1, 0] = 4
+
+    ext = np.ones((n_w, n_reff, n_veff))
+    ssa = 0.9 * np.ones((n_w, n_reff, n_veff))
+
+    return xr.Dataset(
+        {
+            "ext": (["w", "reff", "veff"], ext, {"units": "km^-1"}),
+            "ssa": (["w", "reff", "veff"], ssa, {"units": "dimensionless"}),
+            "mu": (
+                ["w", "reff", "veff", "iangle"],
+                mu_vals,
+                {"units": "dimensionless"},
+            ),
+            "theta": (
+                ["w", "reff", "veff", "iangle"],
+                theta_vals,
+                {"units": "degree"},
+            ),
+            "phase": (
+                ["phamat", "w", "reff", "veff", "iangle"],
+                phase,
+                {"units": "1/sr"},
+            ),
+            "nangles": (["w", "reff", "veff"], nangles),
+        },
+        coords={
+            "w": ("w", [400.0, 700.0], {"units": "nm"}),
+            "reff": ("reff", [5.0, 15.0], {"units": "micron"}),
+            "veff": ("veff", [0.1], {"units": "dimensionless"}),
+            "phamat": ("phamat", ["11"]),
+        },
+    )
+
+
 @pytest.fixture
 def pp() -> ParticleProperties:
     return ParticleProperties(data=make_dataset())
@@ -201,6 +331,151 @@ class TestParticleProperties:
     def test_has_polarization(self, pp):
         assert pp.has_polarization is False
 
+    def test_has_size_distribution_false_for_aer_core_v2(self, pp):
+        assert pp.has_size_distribution is False
+
+    def test_has_size_distribution_true_for_prt_v1(self):
+        pp = ParticleProperties(data=make_size_distribution_dataset())
+        assert pp.has_size_distribution is True
+
+    class TestEvalPhaseGrid:
+        def test_eval_phase_raises_on_prt_v1(self):
+            """eval_phase() refuses a dataset with 'reff'/'veff' dimensions."""
+            pp = ParticleProperties(data=make_size_distribution_dataset())
+            with pytest.raises(ValueError, match="eval_phase_grid"):
+                pp.eval_phase(W_NM[0] * ureg.nm)
+
+        def test_raises_on_aer_core_v2(self, pp):
+            """eval_phase_grid() refuses a dataset without 'reff'/'veff' dimensions."""
+            with pytest.raises(ValueError, match="'reff'/'veff' dimensions"):
+                pp.eval_phase_grid(W_NM[0] * ureg.nm)
+
+        def test_raises_on_array_wavelength(self):
+            """eval_phase_grid() only accepts a scalar wavelength."""
+            pp = ParticleProperties(data=make_size_distribution_dataset())
+            with pytest.raises(ValueError, match="scalar wavelength"):
+                pp.eval_phase_grid(W_NM * ureg.nm)
+
+        @pytest.mark.parametrize("reff_idx", [0, 1])
+        @pytest.mark.parametrize("veff_idx", [0, 1])
+        def test_matches_manual_isel(self, reff_idx, veff_idx):
+            """Each grid point matches eval_phase() on a manually isel'd dataset."""
+            ds = make_size_distribution_dataset()
+            pp = ParticleProperties(data=ds)
+            w = 475.0 * ureg.nm  # midpoint [400, 550]
+
+            mu_grid, phase_grid, nangles_grid = pp.eval_phase_grid(w)
+
+            single = ParticleProperties(
+                data=ds.isel(reff=reff_idx, veff=veff_idx, drop=True)
+            )
+            mu_expected, phase_expected = single.eval_phase(w)
+
+            n = int(nangles_grid[reff_idx, veff_idx])
+            assert n == len(mu_expected)
+            np.testing.assert_allclose(
+                mu_grid[reff_idx, veff_idx, :n], mu_expected, rtol=1e-12
+            )
+            np.testing.assert_allclose(
+                phase_grid[:, reff_idx, veff_idx, :n], phase_expected, rtol=1e-10
+            )
+            # Beyond this point's own valid count, output is NaN-padded
+            assert np.all(np.isnan(mu_grid[reff_idx, veff_idx, n:]))
+
+        def test_ragged_grid_padding(self):
+            """
+            Points with a different native angular resolution end up with a
+            different valid count, and the shorter one is NaN-padded up to
+            the grid-wide max.
+            """
+            ds = make_size_distribution_dataset_ragged()
+            pp = ParticleProperties(data=ds)
+            w = 550.0 * ureg.nm  # midpoint [400, 700], t=0.5
+
+            mu_grid, phase_grid, nangles_grid = pp.eval_phase_grid(w)
+
+            assert mu_grid.shape[:2] == (2, 1)
+            assert phase_grid.shape[1:3] == (2, 1)
+            # reff=0: identical fixed grid at both wavelengths -> no padding
+            assert nangles_grid[0, 0] == 4
+            # reff=1: ragged native grids (3 vs 4 points) -> upsampled, more points
+            assert nangles_grid[1, 0] > nangles_grid[0, 0]
+
+            n_mu_max = mu_grid.shape[-1]
+            assert n_mu_max == nangles_grid.max()
+            n0 = int(nangles_grid[0, 0])
+            assert np.all(np.isnan(mu_grid[0, 0, n0:]))
+            assert np.all(np.isfinite(mu_grid[1, 0, :]))
+
+            # Matches a manual isel of the ragged point
+            single = ParticleProperties(data=ds.isel(reff=1, veff=0, drop=True))
+            mu_expected, phase_expected = single.eval_phase(w)
+            np.testing.assert_allclose(mu_grid[1, 0, :], mu_expected, rtol=1e-12)
+            np.testing.assert_allclose(
+                phase_grid[:, 1, 0, :], phase_expected, rtol=1e-10
+            )
+
+    class TestEvalPhaseUnion:
+        def test_raises_on_array_wavelength(self):
+            """eval_phase_union() only accepts a scalar wavelength."""
+            pp = ParticleProperties(data=make_size_distribution_dataset())
+            with pytest.raises(ValueError, match="scalar wavelength"):
+                pp.eval_phase_union(W_NM * ureg.nm)
+
+        def test_degenerate_single_point(self, pp):
+            """Without 'reff'/'veff' dims, there is a single point, so its row is the raw union grid, unpadded."""
+            w = 475.0 * ureg.nm
+            mu, phase = pp.eval_phase_union(w)
+
+            mu1, _ = pp._get_mu_phase(0)
+            mu2, _ = pp._get_mu_phase(1)
+            mu_union = np.union1d(mu1, mu2)
+
+            assert mu.shape == (1, len(mu_union))
+            np.testing.assert_allclose(mu[0], mu_union, rtol=1e-12)
+            assert phase.shape == (1, 1, len(mu_union))
+
+        def test_matches_raw_union_on_size_distribution_grid(self):
+            """Each grid point's own row is its raw union grid, NaN-padded to the widest point."""
+            ds = make_size_distribution_dataset_ragged()
+            pp = ParticleProperties(data=ds)
+            w = 550.0 * ureg.nm
+
+            mu, phase = pp.eval_phase_union(w)
+
+            single0 = ParticleProperties(data=ds.isel(reff=0, veff=0, drop=True))
+            mu1, _ = single0._get_mu_phase(0)
+            mu2, _ = single0._get_mu_phase(1)
+            mu_union0 = np.union1d(mu1, mu2)
+
+            single1 = ParticleProperties(data=ds.isel(reff=1, veff=0, drop=True))
+            mu1, _ = single1._get_mu_phase(0)
+            mu2, _ = single1._get_mu_phase(1)
+            mu_union1 = np.union1d(mu1, mu2)
+
+            max_len = max(len(mu_union0), len(mu_union1))
+            assert mu.shape == (2, max_len)
+            assert phase.shape == (2, 1, max_len)
+
+            np.testing.assert_allclose(mu[0, : len(mu_union0)], mu_union0, rtol=1e-12)
+            assert np.all(np.isnan(mu[0, len(mu_union0) :]))
+
+            np.testing.assert_allclose(mu[1, : len(mu_union1)], mu_union1, rtol=1e-12)
+            assert np.all(np.isnan(mu[1, len(mu_union1) :]))
+
+        def test_consistent_with_eval_phase_grid(self):
+            """eval_phase_grid()'s fixed-grid points match eval_phase_union()'s raw (unpadded) rows exactly."""
+            ds = make_size_distribution_dataset_ragged()
+            pp = ParticleProperties(data=ds)
+            w = 550.0 * ureg.nm
+
+            mu, _ = pp.eval_phase_union(w)
+            mu_grid, _, nangles_grid = pp.eval_phase_grid(w)
+
+            n0 = int((~np.isnan(mu[0])).sum())
+            assert n0 == nangles_grid[0, 0]
+            np.testing.assert_allclose(mu[0, :n0], mu_grid[0, 0, : nangles_grid[0, 0]])
+
     class TestLocate:
         @pytest.mark.parametrize(
             "w_nm, expected_t",
@@ -213,7 +488,7 @@ class TestParticleProperties:
         def test_at_nodes(self, pp, w_nm, expected_t):
             """t=0 at left node of a segment, t=1 at its right node."""
             w = w_nm * ureg.nm
-            idx_l, idx_r, t = pp._locate(w)
+            _idx_l, _idx_r, t = pp._locate(w)
             assert t.shape == (1,)
             np.testing.assert_allclose(t[0], expected_t, atol=1e-12)
 
@@ -226,22 +501,30 @@ class TestParticleProperties:
             assert idx_r[0] == 1
 
         @pytest.mark.parametrize(
-            "w_nm, exp_idx_l, exp_idx_r",
+            "w_nm, exp_idx_l, exp_idx_r, expected_t",
             [
-                (300.0, 0, 1),  # below min → boundary segment [0, 1], t < 0
-                (800.0, 1, 2),  # above max → boundary segment [1, 2], t > 1
+                (
+                    300.0,
+                    0,
+                    1,
+                    0.0,
+                ),  # below min → boundary segment [0, 1], clamped to t=0
+                (
+                    800.0,
+                    1,
+                    2,
+                    1.0,
+                ),  # above max → boundary segment [1, 2], clamped to t=1
             ],
         )
-        def test_out_of_range_extrapolates(self, pp, w_nm, exp_idx_l, exp_idx_r):
-            """Out-of-range w uses the boundary segment; t extrapolates beyond [0, 1]."""
+        def test_out_of_range_clamps(self, pp, w_nm, exp_idx_l, exp_idx_r, expected_t):
+            """Out-of-range w uses the boundary segment; t clamps to [0, 1], matching
+            np.interp's clamp-to-boundary behaviour (no extrapolation)."""
             w = w_nm * ureg.nm
             idx_l, idx_r, t = pp._locate(w)
             assert idx_l[0] == exp_idx_l
             assert idx_r[0] == exp_idx_r
-            if w_nm < W_NM[0]:
-                assert t[0] < 0.0
-            else:
-                assert t[0] > 1.0
+            assert t[0] == expected_t
 
         def test_array_input(self, pp):
             """Vectorized input returns arrays of correct shape."""
@@ -330,6 +613,17 @@ class TestParticleProperties:
             expected = 0.5 * (EXT[0] + EXT[1])
             np.testing.assert_allclose(result.m, expected, rtol=1e-10)
 
+        def test_preserves_reff_veff_dims(self):
+            """On a Prt v1 dataset, result keeps the 'reff'/'veff' dimensions."""
+            ds = make_size_distribution_dataset()
+            pp = ParticleProperties(data=ds)
+            w = np.array([475.0, 625.0]) * ureg.nm  # midpoints of both segments
+            result = pp.eval_ext(w)
+
+            assert result.shape == (2, len(REFF), len(VEFF))
+            expected = 0.5 * (ds["ext"].values[[0, 1]] + ds["ext"].values[[1, 2]])
+            np.testing.assert_allclose(result.m, expected, rtol=1e-10)
+
     class TestEvalSsa:
         @pytest.mark.parametrize("idx", [0, 1, 2])
         def test_at_nodes(self, pp, idx):
@@ -360,12 +654,40 @@ class TestParticleProperties:
             expected = 0.5 * SSA[0] + 0.5 * SSA[1]
             np.testing.assert_allclose(result.m, expected, rtol=1e-10)
 
+        def test_preserves_reff_veff_dims(self):
+            """On a Prt v1 dataset, result keeps the 'reff'/'veff' dimensions,
+            with the extinction-weighted formula applied independently at
+            each (reff, veff) grid point."""
+            ds = make_size_distribution_dataset()
+            pp = ParticleProperties(data=ds)
+            w = np.array([475.0, 625.0]) * ureg.nm  # midpoints of both segments
+            result = pp.eval_ssa(w)
+
+            assert result.shape == (2, len(REFF), len(VEFF))
+
+            t = 0.5
+            for iw, (il, ir) in enumerate([(0, 1), (1, 2)]):
+                ext_l = ds["ext"].values[il]
+                ext_r = ds["ext"].values[ir]
+                ssa_l = ds["ssa"].values[il]
+                ssa_r = ds["ssa"].values[ir]
+                ext_interp = (1 - t) * ext_l + t * ext_r
+                expected = ((1 - t) * ext_l * ssa_l + t * ext_r * ssa_r) / ext_interp
+                np.testing.assert_allclose(result.m[iw], expected, rtol=1e-10)
+
     class TestEvalPhase:
-        def test_array_raises(self, pp):
-            """Array w input raises ValueError."""
-            w = np.array([400.0, 550.0]) * ureg.nm
-            with pytest.raises(ValueError, match="scalar"):
-                pp.eval_phase(w)
+        def test_array_matches_scalar_calls(self, pp):
+            """Array w input matches independent per-wavelength scalar calls."""
+            w = np.array([400.0, 475.0, 550.0]) * ureg.nm
+            mu_out, phase_out = pp.eval_phase(w)
+            assert mu_out.shape == (3, phase_out.shape[-1])
+            assert phase_out.shape[0] == 1
+            assert phase_out.shape[1] == 3
+
+            for i, w_scalar in enumerate(w):
+                mu_scalar, phase_scalar = pp.eval_phase(w_scalar)
+                np.testing.assert_allclose(mu_out[i], mu_scalar)
+                np.testing.assert_allclose(phase_out[:, i, :], phase_scalar)
 
         @pytest.mark.parametrize("w_nm", [400.0, 475.0, 550.0, 700.0])
         def test_fixed_grid_shape(self, pp, w_nm):
@@ -512,7 +834,7 @@ class TestParticleProperties:
             assert pp_single.has_fixed_mu_grid
 
             # Default is n_iangle for a fixed grid; stored values reproduced exactly
-            mu_out, phase_out = pp_single.eval_phase(300.0 * ureg.nm)
+            _mu_out, phase_out = pp_single.eval_phase(300.0 * ureg.nm)
             assert phase_out.shape == (1, n_iangle)
             # phase dims in Aer-Core v2: (phamat, w, iangle)
             stored_phase = ds["phase"].values[0, 0, :]
