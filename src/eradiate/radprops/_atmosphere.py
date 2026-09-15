@@ -12,10 +12,11 @@ from axsdb import AbsorptionDatabase
 from joseki.profiles.core import interp
 
 from ._absorption import get_default_absdb
-from ._core import RadProfile, ZGrid, make_dataset
+from ._core import RadProfile, make_dataset
 from .rayleigh import compute_sigma_s_air, depolarization_bates, depolarization_bodhaine
 from .. import converters
 from ..attrs import define, documented
+from ..grid import GridCoords
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 from ..util.misc import cache_by_id, summary_repr
@@ -25,6 +26,45 @@ _THERMOPROPS_DEFAULT = {
     "z": np.linspace(0.0, 120.0, 121) * ureg.km,
     "additional_molecules": False,
 }
+
+
+def _validate_thermoprops_grid_shape(
+    thermoprops: xr.Dataset, grid: GridCoords
+) -> xr.Dataset:
+    """Check any 'x'/'y' dimensions of thermoprops against the render grid."""
+    horizontal_dims = set(thermoprops.dims) & {"x", "y"}
+    if not horizontal_dims:
+        return thermoprops
+
+    result = thermoprops.transpose(..., "z")
+    expected_sizes = {"x": grid.n_cells_x, "y": grid.n_cells_y}
+    for dim in horizontal_dims:
+        if result.sizes[dim] != expected_sizes[dim]:
+            raise ValueError(
+                f"thermoprops dimension '{dim}' has size {result.sizes[dim]}, "
+                f"expected {expected_sizes[dim]} to match the render grid"
+            )
+
+    return result
+
+
+def _average_adjacent_levels(values):
+    """
+    Average adjacent altitude levels (the last axis) into per-layer values,
+    then drop the leading axis (the wavelength axis) if it has size 1.
+    """
+    result = 0.5 * (values[..., 1:] + values[..., :-1])
+    return result[0] if result.shape[0] == 1 else result
+
+
+def _layers_from_levels(values: xr.DataArray) -> pint.Quantity:
+    """
+    Average adjacent altitude levels into per-layer values. ``values`` is
+    transposed so that ``w`` comes first and ``z`` last, whatever other
+    dimensions (e.g. ``x``, ``y``) sit in between and in whatever order they
+    originally came in.
+    """
+    return _average_adjacent_levels(to_quantity(values.transpose("w", ..., "z")))
 
 
 @define(eq=False)
@@ -123,13 +163,13 @@ class AtmosphereRadProfile(RadProfile):
         default="[0]",
     )
 
-    _zgrid: ZGrid | None = attrs.field(default=None, init=False)
+    _grid: GridCoords | None = attrs.field(default=None, init=False)
 
     def __attrs_post_init__(self):
         self.update()
 
     def update(self) -> None:
-        self._zgrid = ZGrid(levels=self.levels)
+        self._grid = GridCoords.make_default()
 
     @property
     def zbounds(self) -> tuple[pint.Quantity, pint.Quantity]:
@@ -141,127 +181,118 @@ class AtmosphereRadProfile(RadProfile):
         return to_quantity(self.thermoprops.z)
 
     @property
-    def zgrid(self) -> ZGrid:
+    def grid(self) -> GridCoords:
         # Inherit docstring
-        return self._zgrid
+        return self._grid
 
     @cache_by_id
-    def _thermoprops_interp(self, zgrid: ZGrid) -> xr.Dataset:
+    def _thermoprops_interp(self, grid: GridCoords) -> xr.Dataset:
         # Interpolate thermophysical profile on specified altitude grid
-        # Note: this value is cached so that repeated calls with the same zgrid
+        # Note: this value is cached so that repeated calls with the same grid
         #       won't trigger an unnecessary computation.
-        return interp(
+        result = interp(
             self.thermoprops,
-            z_new=zgrid.levels.m * ureg(str(zgrid.levels.units)),
+            z_new=grid.levels.m * ureg(str(grid.levels.units)),
             method={"default": "nearest"},  # TODO: revisit
         )
+        return _validate_thermoprops_grid_shape(result, grid)
 
-    def eval_albedo_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+    def eval_albedo_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         # Inherit docstring
-        sigma_s = self.eval_sigma_s_mono(w, zgrid)
-        sigma_t = self.eval_sigma_t_mono(w, zgrid)
+        sigma_s = self.eval_sigma_s_mono(w, grid)
+        sigma_t = self.eval_sigma_t_mono(w, grid)
         return np.divide(
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
     def eval_albedo_ckd(
-        self, w: pint.Quantity, g: float, zgrid: ZGrid
+        self, w: pint.Quantity, g: float, grid: GridCoords
     ) -> pint.Quantity:
-        sigma_s = self.eval_sigma_s_ckd(w=w, g=g, zgrid=zgrid)
-        sigma_t = self.eval_sigma_t_ckd(w=w, g=g, zgrid=zgrid)
+        sigma_s = self.eval_sigma_s_ckd(w=w, g=g, grid=grid)
+        sigma_t = self.eval_sigma_t_ckd(w=w, g=g, grid=grid)
         return np.divide(
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
-    def eval_sigma_a_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        # NOTE: this method accepts 'w'-arrays and is vectorized as far as
-        # each individual absorption dataset is concerned, namely when the
-        # wavelengths span multiple datasets we for-loop over them.
+    def eval_sigma_a_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         w = np.atleast_1d(w)
         if self.has_absorption:
-            thermoprops = self._thermoprops_interp(zgrid)
-            values = self.absorption_data.eval_sigma_a_mono(w, thermoprops).transpose(
-                "w", "z"
-            )
-            values = to_quantity(values)
-            # We evaluated the
-            # project on altitude layers
-            return 0.5 * (values[:, 1:] + values[:, :-1]).squeeze()
+            thermoprops = self._thermoprops_interp(grid)
+            values = self.absorption_data.eval_sigma_a_mono(w, thermoprops)
+            return _layers_from_levels(values)
         else:
-            return np.zeros((w.size, zgrid.n_layers)).squeeze() / ureg.km
+            return np.zeros((w.size, grid.n_layers)).squeeze() / ureg.km
 
     def eval_sigma_a_ckd(
-        self, w: pint.Quantity, g: float, zgrid: ZGrid
+        self, w: pint.Quantity, g: float, grid: GridCoords
     ) -> pint.Quantity:
         w = np.atleast_1d(w)
         if self.has_absorption:
             values = self.absorption_data.eval_sigma_a_ckd(
-                w, g, self._thermoprops_interp(zgrid)
-            )  # axis order = (w, z)
-            values = to_quantity(values)
-
-            # Interpolate on altitude layers
-            return 0.5 * (values[:, 1:] + values[:, :-1]).squeeze()
+                w, g, self._thermoprops_interp(grid)
+            )
+            return _layers_from_levels(values)
         else:
-            return np.zeros((w.size, zgrid.n_layers)).squeeze() / ureg.km
+            return np.zeros((w.size, grid.n_layers)).squeeze() / ureg.km
 
-    def eval_sigma_s_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
+    def eval_sigma_s_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
         if self.has_scattering:
-            thermoprops = self._thermoprops_interp(zgrid)
+            w = np.atleast_1d(w)
+            thermoprops = self._thermoprops_interp(grid)
             sigma_s = compute_sigma_s_air(
                 wavelength=w,
                 number_density=to_quantity(thermoprops.n),
             )
             # project on altitude layers
-            return 0.5 * (sigma_s[1:] + sigma_s[:-1])
+            return _average_adjacent_levels(sigma_s)
         else:
-            return np.zeros((1, zgrid.n_layers)) / ureg.km
+            return np.zeros((1, grid.n_layers)) / ureg.km
 
     def eval_sigma_s_ckd(
-        self, w: pint.Quantity, g: float, zgrid: ZGrid
+        self, w: pint.Quantity, g: float, grid: GridCoords
     ) -> pint.Quantity:
-        return self.eval_sigma_s_mono(w=w, zgrid=zgrid)
+        return self.eval_sigma_s_mono(w=w, grid=grid)
 
-    def eval_sigma_t_mono(self, w: pint.Quantity, zgrid: ZGrid) -> pint.Quantity:
-        sigma_a = self.eval_sigma_a_mono(w=w, zgrid=zgrid)
-        sigma_s = self.eval_sigma_s_mono(w=w, zgrid=zgrid)
+    def eval_sigma_t_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+        sigma_a = self.eval_sigma_a_mono(w=w, grid=grid)
+        sigma_s = self.eval_sigma_s_mono(w=w, grid=grid)
         return sigma_a + sigma_s
 
     def eval_sigma_t_ckd(
         self,
         w: pint.Quantity,
         g: float,
-        zgrid: ZGrid,
+        grid: GridCoords,
     ) -> pint.Quantity:
-        sigma_a = self.eval_sigma_a_ckd(w=w, g=g, zgrid=zgrid)
-        sigma_s = self.eval_sigma_s_ckd(w=w, g=g, zgrid=zgrid)
+        sigma_a = self.eval_sigma_a_ckd(w=w, g=g, grid=grid)
+        sigma_s = self.eval_sigma_s_ckd(w=w, g=g, grid=grid)
         return sigma_a + sigma_s
 
-    def eval_dataset_mono(self, w: pint.Quantity, zgrid: ZGrid) -> xr.Dataset:
+    def eval_dataset_mono(self, w: pint.Quantity, grid: GridCoords) -> xr.Dataset:
         return make_dataset(
             wavelength=w,
-            z_level=zgrid.levels,
-            z_layer=zgrid.layers,
-            sigma_a=self.eval_sigma_a_mono(w, zgrid),
-            sigma_s=self.eval_sigma_s_mono(w, zgrid),
+            z_level=grid.levels,
+            z_layer=grid.layers,
+            sigma_a=self.eval_sigma_a_mono(w, grid),
+            sigma_s=self.eval_sigma_s_mono(w, grid),
         ).squeeze()
 
     def eval_dataset_ckd(
         self,
         w: pint.Quantity,
         g: float,
-        zgrid: ZGrid,
+        grid: GridCoords,
     ) -> xr.Dataset:
         return make_dataset(
             wavelength=w,
-            z_level=zgrid.levels,
-            z_layer=zgrid.layers,
-            sigma_a=self.eval_sigma_a_ckd(w=w, g=g, zgrid=zgrid),
-            sigma_s=self.eval_sigma_s_ckd(w=w, g=g, zgrid=zgrid),
+            z_level=grid.levels,
+            z_layer=grid.layers,
+            sigma_a=self.eval_sigma_a_ckd(w=w, g=g, grid=grid),
+            sigma_s=self.eval_sigma_s_ckd(w=w, g=g, grid=grid),
         ).squeeze()
 
     def eval_depolarization_factor_mono(
-        self, w: pint.Quantity, zgrid: ZGrid
+        self, w: pint.Quantity, grid: GridCoords
     ) -> pint.Quantity:
         if self.has_scattering:
             if isinstance(self.rayleigh_depolarization, np.ndarray):
@@ -272,12 +303,12 @@ class AtmosphereRadProfile(RadProfile):
                     return depolarization_bates(wavelength=w)
 
                 elif self.rayleigh_depolarization == "bodhaine":
-                    thermoprops = self._thermoprops_interp(zgrid)
+                    thermoprops = self._thermoprops_interp(grid)
                     depol = depolarization_bodhaine(
                         wavelength=w,
                         x_CO2=to_quantity(thermoprops.x_CO2),
                     )
-                    return 0.5 * (depol[1:] + depol[:-1])
+                    return 0.5 * (depol[..., 1:] + depol[..., :-1])
                 else:
                     raise NotImplementedError
 
@@ -291,6 +322,6 @@ class AtmosphereRadProfile(RadProfile):
         self,
         w: pint.Quantity,
         g: float,
-        zgrid: ZGrid,
+        grid: GridCoords,
     ) -> pint.Quantity:
-        return self.eval_depolarization_factor_mono(w=w, zgrid=zgrid)
+        return self.eval_depolarization_factor_mono(w=w, grid=grid)

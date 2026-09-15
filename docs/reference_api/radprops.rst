@@ -19,7 +19,6 @@
    :recursive:
    :toctree: generated/autosummary/
 
-   ZGrid
    RadProfile
    ArrayRadProfile
    AtmosphereRadProfile

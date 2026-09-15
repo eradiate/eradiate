@@ -24,7 +24,7 @@ def test_data():
 
 
 def test_array(modes_all_mono, test_data):
-    zgrid = eradiate.scenes.geometry.ZGrid(np.linspace(0, 1000, 11))
+    grid = eradiate.grid.GridCoords.convert(np.linspace(0, 1000, 11))
     si = eradiate.spectral.SpectralIndex.new(w=550 * ureg.nm)
 
     array_radprofile = ArrayRadProfile(
@@ -35,15 +35,15 @@ def test_array(modes_all_mono, test_data):
         interpolation_method="nearest",
     )
 
-    sigma_s = array_radprofile.eval_sigma_s(si, zgrid)
-    sigma_a = array_radprofile.eval_sigma_s(si, zgrid)
+    sigma_s = array_radprofile.eval_sigma_s(si, grid)
+    sigma_a = array_radprofile.eval_sigma_s(si, grid)
 
     assert np.all(sigma_a.m_as("1/m") == test_data.isel(w=0).values)
     assert np.all(sigma_s.m_as("1/m") == test_data.isel(w=0).values)
 
 
 def test_resample_array(modes_all_mono, test_data):
-    zgrid = eradiate.scenes.geometry.ZGrid(np.linspace(0, 1000, 21))
+    grid = eradiate.grid.GridCoords.convert(np.linspace(0, 1000, 21))
     si = eradiate.spectral.SpectralIndex.new(w=550 * ureg.nm)
 
     array_radprofile = ArrayRadProfile(
@@ -57,8 +57,8 @@ def test_resample_array(modes_all_mono, test_data):
         },
     )
 
-    sigma_s = array_radprofile.eval_sigma_s(si, zgrid)
-    sigma_a = array_radprofile.eval_sigma_s(si, zgrid)
+    sigma_s = array_radprofile.eval_sigma_s(si, grid)
+    sigma_a = array_radprofile.eval_sigma_s(si, grid)
 
     gt = np.repeat(test_data.isel(w=0).values, 2)
     assert np.all(sigma_a.m_as("1/m") == gt)
@@ -66,7 +66,7 @@ def test_resample_array(modes_all_mono, test_data):
 
 
 def test_array_zeros(modes_all_mono, test_data):
-    zgrid = eradiate.scenes.geometry.ZGrid(np.linspace(0, 1000, 11))
+    grid = eradiate.grid.GridCoords.convert(np.linspace(0, 1000, 11))
     si = eradiate.spectral.SpectralIndex.new(w=550 * ureg.nm)
 
     array_sigma_a = ArrayRadProfile(
@@ -77,8 +77,8 @@ def test_array_zeros(modes_all_mono, test_data):
         interpolation_method="nearest",
     )
 
-    sigma_s = array_sigma_a.eval_sigma_s(si, zgrid)
-    sigma_a = array_sigma_a.eval_sigma_a(si, zgrid)
+    sigma_s = array_sigma_a.eval_sigma_s(si, grid)
+    sigma_a = array_sigma_a.eval_sigma_a(si, grid)
 
     assert np.all(sigma_a.m_as("1/m") == test_data.isel(w=0).values)
     assert np.all(sigma_s.m_as("1/m") == np.zeros(10))
@@ -91,8 +91,8 @@ def test_array_zeros(modes_all_mono, test_data):
         interpolation_method="nearest",
     )
 
-    sigma_s = array_sigma_s.eval_sigma_s(si, zgrid)
-    sigma_a = array_sigma_s.eval_sigma_a(si, zgrid)
+    sigma_s = array_sigma_s.eval_sigma_s(si, grid)
+    sigma_a = array_sigma_s.eval_sigma_a(si, grid)
 
     assert np.all(sigma_a.m_as("1/m") == np.zeros(10))
     assert np.all(sigma_s.m_as("1/m") == test_data.isel(w=0).values)
