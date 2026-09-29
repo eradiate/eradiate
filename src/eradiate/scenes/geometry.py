@@ -239,7 +239,7 @@ class SphericalShellGeometry(SceneGeometry):
 
     @property
     def atmosphere_volume_to_world(self) -> mi.ScalarTransform4f:
-        length_units = ucc.get("length")
+        length_units = uck.get("length")
 
         # The bounding box corresponds to the vertices of the bounding box
         bbox = self.atmosphere_shape.bbox
