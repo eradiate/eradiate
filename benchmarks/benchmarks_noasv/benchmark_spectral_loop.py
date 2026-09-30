@@ -1,6 +1,8 @@
 """
-This benchmark is an empty simulation that sweeps the spectral dimension to
-estimate the amount of time spent on evaluating the spectral loop.
+This benchmark sweeps the spectral dimension of an atmosphere experiment
+without calling Mitsuba: it generates kernel contexts and evaluates the scene
+parameter update map for each of them. It estimates the Python-side overhead
+of the spectral loop.
 """
 
 import time
@@ -9,9 +11,9 @@ from contextlib import contextmanager
 import numpy as np
 
 import eradiate
+from eradiate.contexts import KernelContext
 from eradiate.experiments import AtmosphereExperiment
-from eradiate.quad import Quad
-from eradiate.units import unit_registry as ureg
+from eradiate.scenes.core import traverse
 
 
 @contextmanager
@@ -24,19 +26,6 @@ def timer(label: str = "Elapsed"):
 
 eradiate.set_mode("ckd")
 
-try:
-    from eradiate.radprops import absdb_factory
-
-    db = absdb_factory.create("panellus")
-except ImportError:
-    from eradiate.radprops import AbsorptionDatabase
-
-    db = AbsorptionDatabase.from_name("panellus")
-
-quad = Quad.gauss_legendre(16)
-gs = quad.nodes
-ws = np.array([x[1] for x in db._spectral_coverage.index.values]) / ureg.nm
-
 exp = AtmosphereExperiment(
     geometry={"type": "plane_parallel", "zgrid": np.linspace(0, 120e3, 12001)},
     atmosphere={"type": "molecular", "absorption_data": "panellus"},
@@ -44,13 +33,22 @@ exp = AtmosphereExperiment(
         "type": "mdistant",
         "construct": "hplane",
         "azimuth": 30.0,
-        "zeniths": np.linspace(-75, 76, 1),
+        "zeniths": [-75.0],
         "srf": {"type": "uniform", "wmin": 525.0, "wmax": 575.0},
         "spp": 1,
     },
 )
-exp.init()
 
+# ponytail: no kernel scene, so parameter lookups keep their template keys
+with timer("Scene traversal"):
+    _, umap_template = traverse(exp.scene)
+    umap_template.update(exp.kpmap)
 
-with timer("Simulation"):
-    exp.process()
+with timer("Context generation"):
+    kwargs = exp._context_kwargs()
+    ctxs = [KernelContext(si, kwargs=kwargs) for si in exp.spectral_indices(0)]
+print(f"Contexts: {len(ctxs)}")
+
+with timer("Parameter map evaluation"):
+    for ctx in ctxs:
+        umap_template.render(ctx)
