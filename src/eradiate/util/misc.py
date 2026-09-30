@@ -7,6 +7,7 @@ from __future__ import annotations
 import datetime
 import functools
 import inspect
+import operator
 import os
 import re
 import sys
@@ -25,25 +26,30 @@ from eradiate.typing import PathLike
 
 class cache_by_id:
     """
-    Cache the result of a function based on the ID of its arguments.
+    Cache the result of a function based on the identity of its arguments.
 
     This decorator caches the value returned by the function it wraps in order
     to avoid unnecessary execution upon repeated calls with the same arguments.
+    The cache holds a single entry: a call with different arguments replaces
+    it. When decorating a method, each instance has its own entry, stored in
+    the instance's ``__dict__``.
 
     Warnings
     --------
     The main difference with
-    :func:`functools.lru_cache(maxsize=1) <functools.lru_cache>` is that the
-    cache is referenced by positional argument IDs instead of hashes.
-    Therefore, this decorator can be used with NumPy arrays; but it's also
-    unsafe, because mutating an argument won't trigger a recompute, while it
-    actually shoud! **Use with great care!**
+    :func:`functools.lru_cache(maxsize=1) <functools.lru_cache>` is that
+    arguments are compared by identity (``is``) instead of by hash and
+    equality. Therefore, this decorator can be used with NumPy arrays; but it's
+    also unsafe, because mutating an argument won't trigger a recompute, while
+    it actually should! **Use with great care!**
 
     Notes
     -----
     * Meant to be used as a decorator.
     * The wrapped function may only have positional arguments.
-    * Works with functions and methods.
+    * Works with functions and methods. Methods must belong to a class whose
+      instances have a ``__dict__`` (*e.g.* not a slotted attrs class).
+    * The cache holds strong references to the arguments of the last call.
 
     Examples
     --------
@@ -63,24 +69,44 @@ class cache_by_id:
     (1, 1)
     """
 
+    @staticmethod
+    def _lookup(store: dict, key: str, args: tuple, compute):
+        entry = store.get(key)
+        if (
+            entry is None
+            or len(entry[0]) != len(args)
+            or not all(map(operator.is_, entry[0], args))
+        ):
+            entry = store[key] = (args, compute(*args))  # stored only on success
+        return entry[1]
+
     def __init__(self, func):
         functools.update_wrapper(self, func)
         self.func = func
-        self._cached_value = None
-        self._cached_index = None
+        self._key = f"_cache_by_id_{func.__qualname__}"
+        self._store = {}  # for plain-function case
 
     def __call__(self, *args):
-        index = tuple(id(arg) for arg in args)
-
-        if index != self._cached_index:
-            self._cached_value = self.func(*args)  # update cache only on success
-            self._cached_index = index
-
-        return self._cached_value
+        return self._lookup(self._store, self._key, args, self.func)
 
     def __get__(self, instance, owner):
-        # See https://stackoverflow.com/questions/30104047 for full explanation
-        return functools.partial(self.__call__, instance)
+        if instance is None:
+            return self.func  # avoid the shared entry (issue 1)
+        try:
+            store = instance.__dict__
+        except AttributeError:
+            raise TypeError(
+                f"cache_by_id requires {owner.__name__} instances to have a __dict__"
+            ) from None
+        key, compute = self._key, functools.partial(self.func, instance)
+
+        def bound(*args):
+            return self._lookup(store, key, args, compute)
+
+        return bound
+
+    def cache_clear(self, instance=None):
+        (self._store if instance is None else instance.__dict__).pop(self._key, None)
 
 
 class LoggingContext:

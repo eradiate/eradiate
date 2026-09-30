@@ -67,7 +67,7 @@ def _layers_from_levels(values: xr.DataArray) -> pint.Quantity:
     return _average_adjacent_levels(to_quantity(values.transpose("w", ..., "z")))
 
 
-@define(eq=False)
+@define(eq=False, slots=False)
 class AtmosphereRadProfile(RadProfile):
     """
     Atmospheric radiative profile.
@@ -193,15 +193,15 @@ class AtmosphereRadProfile(RadProfile):
         #       won't trigger an unnecessary computation.
         result = interp(
             self.thermoprops,
-            z_new=grid.levels.m * ureg(str(grid.levels.units)),
+            z_new=grid.levels,
             method={"default": "nearest"},  # TODO: revisit
         )
         return _validate_thermoprops_grid_shape(result, grid)
 
     def eval_albedo_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
         # Inherit docstring
-        sigma_s = self.eval_sigma_s_mono(w, grid)
-        sigma_t = self.eval_sigma_t_mono(w, grid)
+        sigma_s = self._eval_sigma_s_impl(w, grid)
+        sigma_t = self._eval_sigma_a_mono_impl(w, grid) + sigma_s
         return np.divide(
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
@@ -209,13 +209,24 @@ class AtmosphereRadProfile(RadProfile):
     def eval_albedo_ckd(
         self, w: pint.Quantity, g: float, grid: SpatialGrid
     ) -> pint.Quantity:
-        sigma_s = self.eval_sigma_s_ckd(w=w, g=g, grid=grid)
-        sigma_t = self.eval_sigma_t_ckd(w=w, g=g, grid=grid)
+        sigma_s = self._eval_sigma_s_impl(w, grid)
+        sigma_t = self._eval_sigma_a_ckd_impl(w, g, grid) + sigma_s
         return np.divide(
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
+    # Absorption and scattering coefficients are cached because the albedo
+    # and extinction coefficient are both evaluated at each iteration of the
+    # spectral loop. Rayleigh scattering does not depend on g and its cache is
+    # keyed on w only, so that consecutive g-points of a CKD bin hit it.
+
     def eval_sigma_a_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
+        return self._eval_sigma_a_mono_impl(w, grid)
+
+    @cache_by_id
+    def _eval_sigma_a_mono_impl(
+        self, w: pint.Quantity, grid: SpatialGrid
+    ) -> pint.Quantity:
         w = np.atleast_1d(w)
         if self.has_absorption:
             thermoprops = self._thermoprops_interp(grid)
@@ -225,6 +236,12 @@ class AtmosphereRadProfile(RadProfile):
             return np.zeros((w.size, grid.n_layers)).squeeze() / ureg.km
 
     def eval_sigma_a_ckd(
+        self, w: pint.Quantity, g: float, grid: SpatialGrid
+    ) -> pint.Quantity:
+        return self._eval_sigma_a_ckd_impl(w, g, grid)
+
+    @cache_by_id
+    def _eval_sigma_a_ckd_impl(
         self, w: pint.Quantity, g: float, grid: SpatialGrid
     ) -> pint.Quantity:
         w = np.atleast_1d(w)
@@ -237,6 +254,10 @@ class AtmosphereRadProfile(RadProfile):
             return np.zeros((w.size, grid.n_layers)).squeeze() / ureg.km
 
     def eval_sigma_s_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
+        return self._eval_sigma_s_impl(w, grid)
+
+    @cache_by_id
+    def _eval_sigma_s_impl(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
         if self.has_scattering:
             w = np.atleast_1d(w)
             thermoprops = self._thermoprops_interp(grid)
@@ -252,12 +273,12 @@ class AtmosphereRadProfile(RadProfile):
     def eval_sigma_s_ckd(
         self, w: pint.Quantity, g: float, grid: SpatialGrid
     ) -> pint.Quantity:
-        return self.eval_sigma_s_mono(w=w, grid=grid)
+        return self._eval_sigma_s_impl(w, grid)
 
     def eval_sigma_t_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
-        sigma_a = self.eval_sigma_a_mono(w=w, grid=grid)
-        sigma_s = self.eval_sigma_s_mono(w=w, grid=grid)
-        return sigma_a + sigma_s
+        return self._eval_sigma_a_mono_impl(w, grid) + self._eval_sigma_s_impl(
+            w, grid
+        )
 
     def eval_sigma_t_ckd(
         self,
@@ -265,9 +286,9 @@ class AtmosphereRadProfile(RadProfile):
         g: float,
         grid: SpatialGrid,
     ) -> pint.Quantity:
-        sigma_a = self.eval_sigma_a_ckd(w=w, g=g, grid=grid)
-        sigma_s = self.eval_sigma_s_ckd(w=w, g=g, grid=grid)
-        return sigma_a + sigma_s
+        return self._eval_sigma_a_ckd_impl(w, g, grid) + self._eval_sigma_s_impl(
+            w, grid
+        )
 
     def eval_dataset_mono(self, w: pint.Quantity, grid: SpatialGrid) -> xr.Dataset:
         return make_dataset(
@@ -295,6 +316,13 @@ class AtmosphereRadProfile(RadProfile):
     def eval_depolarization_factor_mono(
         self, w: pint.Quantity, grid: SpatialGrid
     ) -> pint.Quantity:
+        return self._eval_depolarization_factor_impl(w, grid)
+
+    @cache_by_id
+    def _eval_depolarization_factor_impl(
+        self, w: pint.Quantity, grid: SpatialGrid
+    ) -> pint.Quantity:
+        # Cached and keyed on w only, like the scattering coefficient
         if self.has_scattering:
             if isinstance(self.rayleigh_depolarization, np.ndarray):
                 return np.atleast_1d(self.rayleigh_depolarization) * ureg.dimensionless
@@ -325,4 +353,4 @@ class AtmosphereRadProfile(RadProfile):
         g: float,
         grid: SpatialGrid,
     ) -> pint.Quantity:
-        return self.eval_depolarization_factor_mono(w=w, grid=grid)
+        return self._eval_depolarization_factor_impl(w, grid)

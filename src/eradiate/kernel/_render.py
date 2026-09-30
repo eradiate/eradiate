@@ -312,13 +312,13 @@ def mi_render(
             logger.debug("Updating Mitsuba scene parameters")
             mi_scene.parameters.update(mi_scene.umap_template.render(ctx))
 
+            all_sensors = mi_scene.obj.sensors()
             active_sensors = ctx.active_sensors
             if active_sensors is None:
-                mi_sensors = [
-                    (i, sensor) for i, sensor in enumerate(mi_scene.obj.sensors())
-                ]
+                mi_sensors = list(enumerate(all_sensors))
             else:
-                mi_sensors = [(i, mi_scene.obj.sensors()[i]) for i in active_sensors]
+                mi_sensors = [(i, all_sensors[i]) for i in active_sensors]
+            siah = ctx.si.as_hashable
 
             # Loop on sensors
             for i_sensor, mi_sensor in mi_sensors:
@@ -332,11 +332,9 @@ def mi_render(
                 mi.render(mi_scene.obj, sensor=i_sensor, seed=seed, spp=spp)
 
                 # Store result in a new Bitmap object
-                siah = ctx.si.as_hashable
-                if siah not in results:
-                    results[siah] = {}
-
-                results[siah][mi_sensor.id()] = mi.Bitmap(mi_sensor.film().bitmap())
+                results.setdefault(siah, {})[mi_sensor.id()] = mi.Bitmap(
+                    mi_sensor.film().bitmap()
+                )
 
             pbar.update()
 

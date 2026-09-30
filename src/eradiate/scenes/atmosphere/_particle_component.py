@@ -322,19 +322,39 @@ class ParticleAOTComponent(ParticleComponent):
             Particle number fractions as a (n_x, n_y, n_layers)-shaped
             array.
         """
+        return self._eval_fractions_impl(
+            grid, self.bottom, self.top, self.distribution
+        ).copy()
 
+    # Spectrally invariant terms are cached against the fields they depend on,
+    # so that reassigning a field invalidates them.
+
+    @cache_by_id
+    def _eval_fractions_impl(
+        self,
+        grid: SpatialGrid,
+        bottom: pint.Quantity,
+        top: pint.Quantity,
+        distribution: ParticleDistribution,
+    ) -> np.ndarray:
         # Variable bottom and top altitude
-        bottom = np.atleast_2d(self.bottom)
-        extent = np.atleast_2d(self.top - self.bottom)
+        bottom = np.atleast_2d(bottom)
+        extent = np.atleast_2d(top - bottom)
         z = (grid.layers - bottom[..., np.newaxis]) / extent[..., np.newaxis]
 
-        fractions = self.distribution(z.m_as(ureg.dimensionless))
+        fractions = distribution(z.m_as(ureg.dimensionless))
 
         out = np.zeros(fractions.shape)
         fractions_sum = fractions.sum(axis=-1, keepdims=True)
         np.divide(fractions, fractions_sum, out=out, where=fractions_sum > 0.0)
 
         return out
+
+    @cache_by_id
+    def _eval_ext_ref(
+        self, particle_properties: ParticleProperties, w_ref: pint.Quantity
+    ) -> pint.Quantity:
+        return particle_properties.eval_ext(w_ref)
 
     # --------------------------------------------------------------------------
     #                       Radiative properties
@@ -345,7 +365,9 @@ class ParticleAOTComponent(ParticleComponent):
         # This routine returns an array of shape (n_wavelengths, x, y, n_layers)
         pp = self.particle_properties
         interpolated = pp.eval_ssa(np.atleast_1d(w))
-        fractions = self.eval_fractions(grid)
+        fractions = self._eval_fractions_impl(
+            grid, self.bottom, self.top, self.distribution
+        )
         where_present = fractions > 0
         # np.multiply.outer() does not support pint Quantity operands, so the
         # magnitude and units are combined by hand.
@@ -360,7 +382,7 @@ class ParticleAOTComponent(ParticleComponent):
         w = np.atleast_1d(w)
         pp = self.particle_properties
         sigma_t_star = pp.eval_ext(w)
-        sigma_t_star_ref = pp.eval_ext(self.w_ref)
+        sigma_t_star_ref = self._eval_ext_ref(pp, self.w_ref)
 
         # Compute target optical thickness value. np.multiply.outer() does
         # not support pint Quantity operands, so the magnitude and units are
@@ -374,7 +396,9 @@ class ParticleAOTComponent(ParticleComponent):
         )
 
         # Scatter this total OT to all layers
-        fractions = self.eval_fractions(grid)
+        fractions = self._eval_fractions_impl(
+            grid, self.bottom, self.top, self.distribution
+        )
         tau_layers = tau[..., np.newaxis] * fractions[np.newaxis, ...]
 
         # Compute corresponding average coefficient
