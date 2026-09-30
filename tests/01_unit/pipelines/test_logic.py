@@ -12,8 +12,8 @@ import pytest
 import xarray as xr
 
 import eradiate
-import eradiate.pipelines.logic as logic
 from eradiate.experiments import AtmosphereExperiment
+from eradiate.pipelines import logic
 from eradiate.scenes.illumination import ConstantIllumination, DirectionalIllumination
 from eradiate.spectral import CKDSpectralGrid, MonoSpectralGrid
 from eradiate.units import unit_registry as ureg
@@ -513,3 +513,24 @@ def test_10_valid_mask():
     assert np.array_equal(result.y_index, np.arange(6))
     assert np.array_equal(result.x_index, np.arange(4))
     assert np.array_equal(result, valid)
+
+
+@pytest.mark.parametrize("complete", [True, False], ids=["complete", "missing"])
+def test_stack_spectral(complete):
+    # Output matches xarray.combine_by_coords: sorted outer-product grid, with
+    # NaN fill and dtype promotion where grid points are missing
+    keys = [(510.0, 0.6), (500.0, 0.1), (510.0, 0.1), (500.0, 0.6)]
+    if not complete:
+        keys = keys[:-1]
+    arrays = [np.full(2, i, dtype=np.int32) for i in range(len(keys))]
+    template = xr.DataArray(np.zeros(2, dtype=np.int32), dims="x", coords={"x": [0, 1]})
+
+    result = logic._stack_spectral(keys, arrays, ["w", "g"], template)
+    expected = xr.combine_by_coords(
+        [
+            template.copy(data=a).expand_dims(w=[k[0]], g=[k[1]])
+            for k, a in zip(keys, arrays)
+        ]
+    )
+    xr.testing.assert_identical(result, expected)
+    assert result.dtype == expected.dtype
