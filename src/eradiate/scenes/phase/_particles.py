@@ -162,7 +162,7 @@ class ParticlePhaseFunction(PhaseFunction):
         phase : ndarray
             Evaluated phase function as a 2D array, shape ``(n_phamat, n_mu)``.
         """
-        return self.particle_properties.eval_phase(w=w)
+        return self.particle_properties.eval_phase(w=w, resample_mu=True)
 
     @singledispatchmethod
     def eval_pmom(self, si: SpectralIndex) -> np.ndarray:

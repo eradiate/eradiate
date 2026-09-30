@@ -12,7 +12,7 @@ import pinttrs
 import xarray as xr
 
 from ._file_resolver import fresolver
-from .convert import libradtran_to_aer_core_v2
+from .convert import libradtran_to_prt
 from ..typing import PathLike
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -83,7 +83,7 @@ def load_aerosol_libradtran(
 
     See Also
     --------
-    :func:`.libradtran_to_aer_core_v2`
+    :func:`.libradtran_to_prt`
 
     Notes
     -----
@@ -191,4 +191,4 @@ def load_aerosol_libradtran(
         )
         data = data.where(data["wavelen"] <= wmax).dropna("nlam", how="all")
 
-    return libradtran_to_aer_core_v2(data, fallback_units=fallback_units)
+    return libradtran_to_prt(data, fallback_units=fallback_units)

@@ -13,7 +13,7 @@ from axsdb.math import interp1d
 
 from .. import converters
 from ..attrs import define, documented
-from ..data.convert import make_aer_core_v2
+from ..data.convert import make_prt_core_v1
 from ..units import to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
@@ -169,6 +169,16 @@ def _upsample_mu(mu: np.ndarray, n_out: int) -> np.ndarray:
     return np.sort(np.concatenate([mu, new_pts]))
 
 
+def _broadcast_t(t: np.ndarray, reference: np.ndarray) -> np.ndarray:
+    """
+    Reshape a per-wavelength interpolation weight ``t`` (shape ``(nw,)``)
+    so that it broadcasts against ``reference`` (shape ``(nw, ...)``)
+    along its leading axis, instead of numpy's default trailing-axis
+    alignment.
+    """
+    return t.reshape(t.shape + (1,) * (reference.ndim - t.ndim))
+
+
 _resolve_keyword = converters.resolve_keyword(lambda x: f"aerosol/{x}.nc")
 _resolve_path = converters.resolve_path
 
@@ -217,7 +227,8 @@ class ParticleProperties:
     _reff: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
     # -- Effective variance (size-distribution datasets only)
     _veff: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
-    # -- Worst-case eval_phase_union() flat size across adjacent wavelength pairs
+    # -- Worst-case _eval_phase_interp_spectral() flat size across adjacent
+    # -- wavelength pairs
     _max_union_size: int | None = attrs.field(default=None, init=False, repr=False)
 
     def __attrs_post_init__(self):
@@ -289,8 +300,8 @@ class ParticleProperties:
         Returns
         -------
         bool
-            ``True`` iff ``data`` has ``reff``/``veff`` dimensions (Prt
-            v1 format), ``False`` for a plain Aer-Core v2 dataset.
+            ``True`` iff ``data`` has ``reff``/``veff`` dimensions
+            (Prt-Cloud v1 format), ``False`` for a plain Aer-Core v2 dataset.
         """
         return "reff" in self.data.dims and "veff" in self.data.dims
 
@@ -394,7 +405,12 @@ class ParticleProperties:
             layout during interpolation, cached to minimize overhead.
         """
         if self._phase is None:
-            self._phase = self.data["phase"].transpose("phamat", "iangle", "w", ...)
+            if self.has_size_distribution:
+                self._phase = self.data["phase"].transpose(
+                    "phamat", "iangle", "w", "reff", "veff"
+                )
+            else:
+                self._phase = self.data["phase"].transpose("phamat", "iangle", "w")
         return self._phase
 
     @property
@@ -408,8 +424,10 @@ class ParticleProperties:
         if self._pmom is None:
             if "pmom" not in self.data:
                 return None
+            elif self.has_size_distribution:
+                self._pmom = self.data["pmom"].transpose("imom", "w", "reff", "veff")
             else:
-                self._pmom = self.data["pmom"].transpose("imom", "w", ...)
+                self._pmom = self.data["pmom"].transpose("imom", "w")
 
         return self._pmom
 
@@ -489,16 +507,6 @@ class ParticleProperties:
         all_full = bool(np.all(nangles == n_iangle))
         return all_full and bool(np.all(mu_vals == mu_vals[[0]]))
 
-    @staticmethod
-    def _broadcast_t(t: np.ndarray, reference: np.ndarray) -> np.ndarray:
-        """
-        Reshape a per-wavelength interpolation weight ``t`` (shape ``(nw,)``)
-        so that it broadcasts against ``reference`` (shape ``(nw, ...)``)
-        along its leading axis, instead of numpy's default trailing-axis
-        alignment.
-        """
-        return t.reshape(t.shape + (1,) * (reference.ndim - t.ndim))
-
     def eval_ext(self, w: pint.Quantity) -> pint.Quantity:
         """
         Evaluate the extinction coefficient at wavelength(s) ``w`` by plain
@@ -518,7 +526,7 @@ class ParticleProperties:
         idx_l, idx_r, t = self._locate(w)
         ext = self.ext.m
         ext_l, ext_r = ext[idx_l], ext[idx_r]
-        t = self._broadcast_t(t, ext_l)
+        t = _broadcast_t(t, ext_l)
         ext_interp = (1.0 - t) * ext_l + t * ext_r
         return ext_interp * self.ext.units
 
@@ -554,7 +562,7 @@ class ParticleProperties:
         ssa = self.ssa.m
         ext_l, ext_r = ext[idx_l], ext[idx_r]
         ssa_l, ssa_r = ssa[idx_l], ssa[idx_r]
-        t = self._broadcast_t(t, ext_l)
+        t = _broadcast_t(t, ext_l)
         ext_interp = (1.0 - t) * ext_l + t * ext_r
         linear = (1.0 - t) * ssa_l + t * ssa_r
         weighted = ((1.0 - t) * ext_l * ssa_l + t * ext_r * ssa_r) / np.where(
@@ -689,7 +697,7 @@ class ParticleProperties:
         scat_arr = self.scat.m
         scat_l = scat_arr[idx_l]
         scat_r = scat_arr[idx_r]
-        t = self._broadcast_t(t, scat_l)
+        t = _broadcast_t(t, scat_l)
         scat_denom = (1.0 - t) * scat_l + t * scat_r
 
         safe_denom = np.where(scat_denom == 0.0, 1.0, scat_denom)
@@ -704,7 +712,7 @@ class ParticleProperties:
         Returns
         -------
         int
-            Upper bound on :meth:`eval_phase_union`'s ``total_pts`` across
+            Upper bound on :meth:`_eval_phase_interp_spectral`'s ``total_pts`` across
             all adjacent wavelength pairs in :attr:`w`.
         """
         if self._max_union_size is None:
@@ -716,19 +724,22 @@ class ParticleProperties:
                 bracket_points = 0.5 * (w_arr[:-1] + w_arr[1:])
 
             lens = [
-                int((~np.isnan(self.eval_phase_union(w)[0])).sum())
+                int((~np.isnan(self._eval_phase_interp_spectral(w)[0])).sum())
                 for w in bracket_points
             ]
             self._max_union_size = max(lens)
 
         return self._max_union_size
 
-    def eval_phase_union(self, w: pint.Quantity) -> tuple[np.ndarray, np.ndarray]:
+    def _eval_phase_interp_spectral(
+        self, w: pint.Quantity
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
-        Evaluate the phase function at a single wavelength for every native
-        ``(reff, veff)`` grid point, keeping each point's own union of its
-        two bracketing wavelengths' mu grids as-is. Every point is NaN-padded
-        to the widest point's length.
+        Evaluate the phase function at a single wavelength by linearly
+        combining its two bracketing dataset wavelengths, weighted by
+        scattering coefficient. Each grid point keeps its own union of the
+        two wavelengths' native mu grids, as-is (no resampling to a common
+        point count).
 
         Parameters
         ----------
@@ -738,19 +749,21 @@ class ParticleProperties:
         Returns
         -------
         mu : ndarray
-            Scattering angle cosines, shape ``(n_reff * n_veff, max_len)``
-            (or ``(1, max_len)`` if ``data`` has no ``reff``/``veff``
-            dimensions), row-major ``(reff, veff)`` order. NaN past a
-            point's own native length.
+            Scattering angle cosines. Shape ``(max_len,)`` if ``data`` has
+            no ``reff``/``veff`` dimensions, else ``(n_reff, n_veff,
+            max_len)``, NaN-padded past each grid point's own native union
+            length (``max_len`` is the widest point's length).
 
         phase : ndarray
-            Phase function values in sr⁻¹, shape
-            ``(n_reff * n_veff, n_phamat, max_len)`` (or
-            ``(1, n_phamat, max_len)``), NaN-padded like ``mu``.
+            Phase function values in sr⁻¹, ``phamat`` leading. Shape
+            ``(n_phamat, max_len)``, or ``(n_phamat, n_reff, n_veff,
+            max_len)`` with a size distribution. NaN-padded like ``mu``.
         """
         w_arr = np.atleast_1d(w)
         if w_arr.size != 1:
-            raise ValueError("eval_phase_union() only accepts a scalar wavelength")
+            raise ValueError(
+                "_eval_phase_interp_spectral() only accepts a scalar wavelength"
+            )
 
         idx_l_arr, idx_r_arr, w0_arr, w1_arr, _ = self._bracket_and_weights(w_arr)
         idx_l = int(idx_l_arr[0])
@@ -796,12 +809,14 @@ class ParticleProperties:
         grid_len = np.array([len(m) for m in mu_list], dtype=np.uint32)
         max_len = int(grid_len.max())
 
+        # (n_points, max_len)
         mu_pad = np.asarray(
             [
                 np.concatenate([m, np.full(max_len - n, np.nan)])
                 for m, n in zip(mu_list, grid_len)
             ]
         )
+        # (n_points, n_phamat, max_len)
         phase_pad = np.asarray(
             [
                 np.concatenate(
@@ -811,184 +826,155 @@ class ParticleProperties:
             ]
         )
 
-        return mu_pad, phase_pad
+        if not self.has_size_distribution:
+            return mu_pad[0], phase_pad[0]
 
-    def eval_phase(
-        self, w: pint.Quantity, n_mu: int | None = None
+        mu = mu_pad.reshape(n_reff, n_veff, max_len)
+        phase = np.moveaxis(phase_pad.reshape(n_reff, n_veff, -1, max_len), 2, 0)
+        return mu, phase
+
+    def _eval_phase_resample_mu(
+        self,
+        mu: np.ndarray,
+        phase: np.ndarray,
+        n_mu: int | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         """
-        Evaluate the phase function at wavelength(s) ``w`` by interpolation.
+        Resample ``mu``/``phase`` — as returned by
+        :meth:`_eval_phase_interp_spectral`, possibly NaN-padded past each
+        grid point's own native union length — onto a common, fixed-size mu
+        grid of ``n_mu`` points, applied independently to every grid point.
+
+        Each point is decimated with a greedy log-space RDP algorithm where
+        its native grid is larger than ``n_mu``, or upsampled with linear
+        interpolation in mu where it is smaller. Upsampling via linear
+        interpolation preserves the piecewise-linear shape that Mitsuba uses
+        during tabulated phase-function look-up, so no distortion is
+        introduced.
 
         Parameters
         ----------
-        w : quantity
-            Query wavelength(s); scalar or array. Each wavelength is
-            interpolated independently, since it may have a different
-            bracketing pair and thus a different union mu grid.
+        mu, phase : ndarray
+            As returned by :meth:`_eval_phase_interp_spectral`.
 
         n_mu : int, optional
-            Number of output mu points. Defaults to ``2 * n_iangle``, where
-            ``n_iangle = data.sizes["iangle"]``. Since each bracketing
-            wavelength has at most ``n_iangle`` valid angular points, their
-            union is at most ``2 * n_iangle``, so the default never triggers
-            RDP decimation in practice.
+            Target mu point count, applied uniformly to every grid point.
+            Defaults to ``n_iangle`` if :attr:`has_fixed_mu_grid`, else
+            ``2 * n_iangle``, where ``n_iangle = data.sizes["iangle"]``.
 
         Returns
         -------
         mu : ndarray
-            Scattering angle cosines of the output grid: shape ``(n_mu,)``
-            for a scalar ``w``, ``(nw, n_mu)`` for an array ``w``.
+            Shape ``(n_mu,)``, or ``(n_reff, n_veff, n_mu)`` with a size
+            distribution.
 
         phase : ndarray
-            Phase function values in sr⁻¹: shape ``(n_phamat, n_mu)`` for a
-            scalar ``w``, ``(n_phamat, nw, n_mu)`` for an array ``w``.
-
-        Notes
-        -----
-        The spectral interpolation scheme is similar to libRadtran's and weighs
-        bracketing wavelengths by their scattering coefficient.
-
-        When the two bracketing wavelengths have different mu grids, the phase
-        function is resampled onto their union grid before interpolation. The
-        result is then brought to exactly ``n_mu`` points: decimated with a
-        greedy log-space RDP algorithm when the union is larger, or upsampled
-        with linear interpolation in μ when it is smaller. Upsampling via linear
-        interpolation preserves the piecewise-linear shape that Mitsuba uses
-        during tabulated phase-function look-up, so no distortion is introduced.
+            ``phamat`` leading. Shape ``(n_phamat, n_mu)``, or
+            ``(n_phamat, n_reff, n_veff, n_mu)`` with a size distribution.
         """
-        if self.has_size_distribution:
-            raise ValueError(
-                "eval_phase() cannot be called on a dataset with 'reff'/'veff' "
-                "dimensions; use eval_phase_grid() instead"
-            )
-
-        is_scalar = np.isscalar(w.m)
-        w = np.atleast_1d(w)
-
         n_iangle = self.data.sizes["iangle"]
         if n_mu is None:
             n_mu = n_iangle if self.has_fixed_mu_grid else 2 * n_iangle
 
-        n_phamat = self.data.sizes["phamat"]
-        mu = np.empty((len(w), n_mu))
-        phase = np.empty((n_phamat, len(w), n_mu))
+        def resample_point(mu_native, phase_native):
+            n_native = int((~np.isnan(mu_native)).sum())
+            mu_native = mu_native[:n_native]
+            phase_native = phase_native[..., :n_native]
 
-        for i in range(len(w)):
-            mu_pad, phase_pad = self.eval_phase_union(w[i])
-            n_union = int((~np.isnan(mu_pad[0])).sum())
-            mu_union = mu_pad[0, :n_union]
-            phase_union = phase_pad[0, :, :n_union]
-
-            if n_union > n_mu:
+            if n_native > n_mu:
                 # Decimate: keep the most informative points in log space
-                keep = _rdp1d_log(mu_union, phase_union, n_mu)
-                mu[i] = mu_union[keep]
-                phase[:, i, :] = phase_union[:, keep]
-
-            elif n_union < n_mu:
-                # Upsample: insert midpoints into the largest gaps of the union
-                # grid. All original points are preserved, so the non-uniform
-                # density near the forward-scattering peak is maintained.
-                mu[i] = _upsample_mu(mu_union, n_mu)
-                phase[:, i, :] = interp1d(mu_union, phase_union, mu[i], bounds="clamp")
-
+                keep = _rdp1d_log(mu_native, phase_native, n_mu)
+                return mu_native[keep], phase_native[..., keep]
+            elif n_native < n_mu:
+                # Upsample: insert midpoints into the largest gaps of the
+                # native grid. All original points are preserved, so the
+                # non-uniform density near the forward-scattering peak is
+                # maintained.
+                mu_pt = _upsample_mu(mu_native, n_mu)
+                return mu_pt, interp1d(mu_native, phase_native, mu_pt, bounds="clamp")
             else:
-                mu[i] = mu_union
-                phase[:, i, :] = phase_union
+                return mu_native, phase_native
 
-        if is_scalar:
-            return mu[0], phase[:, 0, :]
-        return mu, phase
+        if mu.ndim == 1:
+            return resample_point(mu, phase)
 
-    def eval_phase_grid(
-        self, w: pint.Quantity
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        n_reff, n_veff = mu.shape[:2]
+        n_phamat = phase.shape[0]
+
+        mu_out = np.empty((n_reff, n_veff, n_mu))
+        phase_out = np.empty((n_phamat, n_reff, n_veff, n_mu))
+
+        for ireff in range(n_reff):
+            for iveff in range(n_veff):
+                mu_pt, phase_pt = resample_point(
+                    mu[ireff, iveff], phase[:, ireff, iveff]
+                )
+                mu_out[ireff, iveff] = mu_pt
+                phase_out[:, ireff, iveff] = phase_pt
+
+        return mu_out, phase_out
+
+    def eval_phase(
+        self,
+        w: pint.Quantity,
+        resample_mu: bool = False,
+        n_mu: int | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
-        Evaluate the phase function at a single wavelength for every native
-        ``(reff, veff)`` grid point.
-
-        This is the grid-native counterpart of :meth:`eval_phase`: it calls
-        :meth:`eval_phase_union` for the raw per-point union grids, then
-        decimates or upsamples each point to its own target angle count.
+        Evaluate the phase function at a single wavelength by spectral
+        interpolation between the two bracketing dataset wavelengths.
 
         Parameters
         ----------
         w : quantity
-            Query wavelength (scalar).
+            Query wavelength (scalar). Each call interpolates a single
+            wavelength, since it may have a different bracketing pair and
+            thus a different union mu grid; looping over an array of
+            wavelengths, if ever needed, is left to the caller.
+
+        resample_mu : bool, optional
+            If ``False`` (default), return each grid point's own union of
+            its two bracketing wavelengths' native mu grids, as-is (see
+            :meth:`_eval_phase_interp_spectral`). If ``True``, additionally
+            resample every grid point onto a common, fixed-size mu grid of
+            ``n_mu`` points (see :meth:`_eval_phase_resample_mu`).
+
+        n_mu : int, optional
+            Target mu point count, used only when ``resample_mu`` is
+            ``True``. Defaults to ``n_iangle`` if :attr:`has_fixed_mu_grid`,
+            else ``2 * n_iangle``, where ``n_iangle = data.sizes["iangle"]``.
 
         Returns
         -------
         mu : ndarray
-            Scattering angle cosines, shape ``(n_reff, n_veff, n_mu_max)``.
-            Points beyond a given grid point's own angle count are NaN-padded,
-            since different grid points may have a different native angular
-            resolution.
+            Scattering angle cosines.
+
+            * No size distribution: shape ``(n_mu,)`` (or ``(max_len,)``
+              when ``resample_mu=False``).
+            * Size distribution: shape ``(n_reff, n_veff, n_mu)`` (or
+              ``(n_reff, n_veff, max_len)``, NaN-padded past each grid
+              point's own native length, when ``resample_mu=False``).
 
         phase : ndarray
-            Phase function values in sr⁻¹, shape
-            ``(n_phamat, n_reff, n_veff, n_mu_max)``, NaN-padded like ``mu``.
+            Phase function values in sr⁻¹, ``phamat`` leading, with the
+            same trailing shape as ``mu``: ``(n_phamat, n_mu)`` (or
+            ``(n_phamat, max_len)``) without a size distribution,
+            ``(n_phamat, n_reff, n_veff, n_mu)`` (or
+            ``(n_phamat, n_reff, n_veff, max_len)``) with one.
 
-        nangles : ndarray
-            Valid angle count for each grid point, shape ``(n_reff, n_veff)``.
+        Notes
+        -----
+        The spectral interpolation scheme is similar to libRadtran's and
+        weighs bracketing wavelengths by their scattering coefficient. When
+        the two bracketing wavelengths have different mu grids, the phase
+        function is resampled onto their union grid before interpolation.
         """
-        if not self.has_size_distribution:
-            raise ValueError(
-                "eval_phase_grid() requires a dataset with 'reff'/'veff' "
-                "dimensions; use eval_phase() instead"
-            )
+        mu, phase = self._eval_phase_interp_spectral(w)
 
-        w_arr = np.atleast_1d(w)
-        if w_arr.size != 1:
-            raise ValueError("eval_phase_grid() only accepts a scalar wavelength")
+        if not resample_mu:
+            return mu, phase
 
-        mu_pad, phase_pad = self.eval_phase_union(w_arr)
-
-        n_reff = self.data.sizes["reff"]
-        n_veff = self.data.sizes["veff"]
-        n_phamat = self.data.sizes["phamat"]
-        n_iangle = self.data.sizes["iangle"]
-
-        mu_list: list[np.ndarray] = []
-        phase_list: list[np.ndarray] = []
-
-        for idx in range(n_reff * n_veff):
-            ireff, iveff = divmod(idx, n_veff)
-
-            n = int((~np.isnan(mu_pad[idx])).sum())
-            mu_union = mu_pad[idx, :n]
-            phase_union = phase_pad[idx, :, :n]
-
-            n_mu_pt = (
-                n_iangle if self._has_fixed_mu_grid_at(ireff, iveff) else 2 * n_iangle
-            )
-            n_union = n
-
-            if n_union > n_mu_pt:
-                keep = _rdp1d_log(mu_union, phase_union, n_mu_pt)
-                mu_pt = mu_union[keep]
-                phase_pt = phase_union[:, keep]
-            elif n_union < n_mu_pt:
-                mu_pt = _upsample_mu(mu_union, n_mu_pt)
-                phase_pt = interp1d(mu_union, phase_union, mu_pt, bounds="clamp")
-            else:
-                mu_pt = mu_union
-                phase_pt = phase_union
-
-            mu_list.append(mu_pt)
-            phase_list.append(phase_pt)
-
-        nangles = np.array([len(m) for m in mu_list]).reshape(n_reff, n_veff)
-        n_mu_max = int(nangles.max())
-
-        mu = np.full((n_reff, n_veff, n_mu_max), np.nan)
-        phase = np.full((n_phamat, n_reff, n_veff, n_mu_max), np.nan)
-        for idx, (mu_pt, phase_pt) in enumerate(zip(mu_list, phase_list)):
-            ireff, iveff = divmod(idx, n_veff)
-            n = len(mu_pt)
-            mu[ireff, iveff, :n] = mu_pt
-            phase[:, ireff, iveff, :n] = phase_pt
-
-        return mu, phase, nangles
+        return self._eval_phase_resample_mu(mu, phase, n_mu)
 
     def phase_dataset_for_reff_veff(
         self,
@@ -1033,14 +1019,14 @@ class ParticleProperties:
         if ext is None:
             ext = ext_grid[0, i_reff, i_veff]
 
-        mu_grid, phase_grid, nangles_grid = self.eval_phase_grid(wavelength[0])
-        n = int(nangles_grid[i_reff, i_veff])
+        mu_grid, phase_grid = self.eval_phase(wavelength[0])
+        n = int((~np.isnan(mu_grid[i_reff, i_veff])).sum())
         mu = mu_grid[i_reff, i_veff, :n]
         phase_vals = phase_grid[:, i_reff, i_veff, :n]  # (nphamat, n_mu)
         theta = np.rad2deg(np.arccos(mu))
         assert theta[0] > theta[-1], "expected descending theta"
 
-        return make_aer_core_v2(
+        return make_prt_core_v1(
             w=wavelength,
             phamat=list(self.data["phamat"].values),
             mu=ureg.Quantity(mu[np.newaxis, :], "dimensionless"),
