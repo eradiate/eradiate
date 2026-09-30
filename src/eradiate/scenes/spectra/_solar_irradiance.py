@@ -21,7 +21,7 @@ from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...util.misc import summary_repr
+from ...util.misc import cache_by_id, summary_repr
 
 # Cache for Skyfield ephemeris loader (initialized lazily)
 _SKYFIELD_LOADER = None
@@ -182,14 +182,53 @@ class SolarIrradianceSpectrum(Spectrum):
         "scaling controlled by the ``scale`` parameter.",
     )
 
+    # Derived quantities are cached against the field values they are computed
+    # from, so that reassigning a field invalidates them.
+
+    @cache_by_id
+    def _ssi_arrays(
+        self, dataset: xr.Dataset
+    ) -> tuple[pint.Unit, np.ndarray, pint.Unit, np.ndarray]:
+        """
+        Extract the spectral irradiance and its wavelength coordinate from the
+        dataset as double precision arrays, sorted by increasing wavelength.
+
+        Returns
+        -------
+        w_units : pint.Unit
+            Wavelength units.
+
+        w : ndarray
+            Wavelength magnitudes, in ``w_units``.
+
+        ssi_units : pint.Unit
+            Spectral irradiance units.
+
+        ssi : ndarray
+            Spectral irradiance magnitudes, in ``ssi_units``.
+        """
+        w = to_quantity(dataset.ssi.w)
+        ssi = to_quantity(dataset.ssi)
+        order = np.argsort(w.magnitude)
+        return (
+            w.units,
+            w.magnitude[order].astype(np.float64),
+            ssi.units,
+            ssi.magnitude[order].astype(np.float64),
+        )
+
     def _scale_earth_sun_distance(self) -> float:
         """
         Compute scaling factor applied to the irradiance spectrum based on the
         Earth-Sun distance.
         """
+        return self._scale_earth_sun_distance_impl(self.datetime)
+
+    @cache_by_id
+    def _scale_earth_sun_distance_impl(self, dt: datetime.datetime | None) -> float:
         # Note: We assume that the loaded dataset is for a reference
         # Earth-Sun distance of 1 AU
-        if self.datetime is None:
+        if dt is None:
             return 1.0
 
         else:
@@ -232,11 +271,7 @@ class SolarIrradianceSpectrum(Spectrum):
                 sun = _SKYFIELD_EPHEMERIS["sun"]
 
                 # Convert datetime to skyfield time (ensure UTC timezone)
-                dt_utc = (
-                    self.datetime.replace(tzinfo=utc)
-                    if self.datetime.tzinfo is None
-                    else self.datetime
-                )
+                dt_utc = dt.replace(tzinfo=utc) if dt.tzinfo is None else dt
                 t = ts.from_datetime(dt_utc)
 
                 # Calculate Earth-Sun distance in AU
@@ -258,16 +293,18 @@ class SolarIrradianceSpectrum(Spectrum):
     def eval_mono(self, w: pint.Quantity) -> pint.Quantity:
         # Inherit docstring
 
-        w_units = ureg(self.dataset.ssi.w.attrs["units"])
-        irradiance = to_quantity(
-            self.dataset.ssi.interp(w=np.atleast_1d(w.m_as(w_units)), method="linear")
+        # Computation is done on magnitudes: pint operations dominate the cost
+        # otherwise, and resolving units by name is slow
+        w_units, w_ssi, ssi_units, ssi = self._ssi_arrays(self.dataset)
+        irradiance = np.interp(
+            np.atleast_1d(w.m_as(w_units)), w_ssi, ssi, left=np.nan, right=np.nan
         )
 
         # Raise if out of bounds or ill-formed dataset
-        if np.any(np.isnan(irradiance.magnitude)):
+        if np.any(np.isnan(irradiance)):
             raise ValueError("interpolation of solar irradiance dataset returned nan")
 
-        result = irradiance * self._scale_total()
+        result = ureg.Quantity(irradiance * self._scale_total(), ssi_units)
 
         # Squeeze result if input was scalar
         return result.squeeze() if np.isscalar(w.magnitude) else result
