@@ -25,25 +25,30 @@ from eradiate.typing import PathLike
 
 class cache_by_id:
     """
-    Cache the result of a function based on the ID of its arguments.
+    Cache the result of a function based on the identity of its arguments.
 
     This decorator caches the value returned by the function it wraps in order
     to avoid unnecessary execution upon repeated calls with the same arguments.
+    The cache holds a single entry: a call with different arguments replaces
+    it. When decorating a method, each instance has its own entry, stored in
+    the instance's ``__dict__``.
 
     Warnings
     --------
     The main difference with
-    :func:`functools.lru_cache(maxsize=1) <functools.lru_cache>` is that the
-    cache is referenced by positional argument IDs instead of hashes.
-    Therefore, this decorator can be used with NumPy arrays; but it's also
-    unsafe, because mutating an argument won't trigger a recompute, while it
-    actually shoud! **Use with great care!**
+    :func:`functools.lru_cache(maxsize=1) <functools.lru_cache>` is that
+    arguments are compared by identity (``is``) instead of by hash and
+    equality. Therefore, this decorator can be used with NumPy arrays; but it's
+    also unsafe, because mutating an argument won't trigger a recompute, while
+    it actually should! **Use with great care!**
 
     Notes
     -----
     * Meant to be used as a decorator.
     * The wrapped function may only have positional arguments.
-    * Works with functions and methods.
+    * Works with functions and methods. Methods must belong to a class whose
+      instances have a ``__dict__`` (*e.g.* not a slotted attrs class).
+    * The cache holds strong references to the arguments of the last call.
 
     Examples
     --------
@@ -65,22 +70,58 @@ class cache_by_id:
 
     def __init__(self, func):
         functools.update_wrapper(self, func)
-        self.func = func
-        self._cached_value = None
-        self._cached_index = None
+        self.func = func  # wrapped callable
+
+        # Method case: the cached value is stored in the instance's __dict__
+        # under the key self._cache_attr_name
+        self._cache_attr_name = f"_cache_by_id_{func.__qualname__}"
+
+        # Plain function case: the cached value is stored directly in this descriptor
+        self._entry = None  # (args, value) of the last call to a plain function
+
+    @staticmethod
+    def _is_hit(entry: tuple | None, args: tuple) -> bool:
+        """Test for a cache hit."""
+        return (
+            entry is not None
+            and len(entry[0]) == len(args)
+            and all(a is b for a, b in zip(entry[0], args))
+        )
 
     def __call__(self, *args):
-        index = tuple(id(arg) for arg in args)
-
-        if index != self._cached_index:
-            self._cached_value = self.func(*args)  # update cache only on success
-            self._cached_index = index
-
-        return self._cached_value
+        # Only used when decorating a plain function: method calls go through
+        # the closure returned by __get__
+        entry = self._entry
+        if not self._is_hit(entry, args):
+            # Update cache only on success
+            entry = self._entry = (args, self.func(*args))
+        return entry[1]
 
     def __get__(self, instance, owner):
-        # See https://stackoverflow.com/questions/30104047 for full explanation
-        return functools.partial(self.__call__, instance)
+        """
+        Bind the cached function to ``instance``.
+
+        The descriptor is shared by all instances of the owner class; the
+        per-instance cache entry, an ``(args, value)`` tuple, lives in
+        ``instance.__dict__[self._cache_attr_name]``.
+        """
+        if instance is None:
+            return self
+
+        instance_dict = instance.__dict__
+        attr_name = self._cache_attr_name
+        func = self.func
+
+        def bound(*args):
+            # The instance is excluded from the stored args, so that the entry
+            # held by the instance does not reference it
+            entry = instance_dict.get(attr_name)
+            if not cache_by_id._is_hit(entry, args):
+                # Update cache only on success
+                entry = instance_dict[attr_name] = (args, func(instance, *args))
+            return entry[1]
+
+        return bound
 
 
 class LoggingContext:

@@ -244,10 +244,30 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         ndarray
             Particle number fractions as a (n_layers,)-shaped array.
         """
-        x = (zgrid.layers - self.bottom) / (self.top - self.bottom)
-        fractions = self.distribution(x.m_as(ureg.dimensionless))
-        fractions /= np.sum(fractions)
-        return fractions
+        return self._eval_fractions_impl(
+            zgrid, self.bottom, self.top, self.distribution
+        ).copy()
+
+    # Spectrally invariant terms are cached against the fields they depend on,
+    # so that reassigning a field invalidates them.
+
+    @cache_by_id
+    def _eval_fractions_impl(
+        self,
+        zgrid: ZGrid,
+        bottom: pint.Quantity,
+        top: pint.Quantity,
+        distribution: ParticleDistribution,
+    ) -> np.ndarray:
+        x = (zgrid.layers - bottom) / (top - bottom)
+        fractions = distribution(x.m_as(ureg.dimensionless))
+        return fractions / np.sum(fractions)
+
+    @cache_by_id
+    def _eval_ext_ref(
+        self, particle_properties: ParticleProperties, w_ref: pint.Quantity
+    ) -> pint.Quantity:
+        return particle_properties.eval_ext(w_ref)
 
     def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
         min_sigma_s = self.eval_sigma_s(ctx.si).min()
@@ -264,7 +284,10 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         # (n_wavelengths, n_layers)
         pp = self.particle_properties
         albedo = pp.eval_ssa(w)
-        zmask = np.reshape(self.eval_fractions(zgrid) > 0, (1, -1))
+        fractions = self._eval_fractions_impl(
+            zgrid, self.bottom, self.top, self.distribution
+        )
+        zmask = np.reshape(fractions > 0, (1, -1))
         return albedo * zmask
 
     @cache_by_id
@@ -277,7 +300,7 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         w = np.atleast_1d(w)
         pp = self.particle_properties
         sigma_t_star = pp.eval_ext(w)
-        sigma_t_star_ref = pp.eval_ext(self.w_ref)
+        sigma_t_star_ref = self._eval_ext_ref(pp, self.w_ref)
 
         # Compute target optical thickness value
         tau = self.tau_ref * sigma_t_star / sigma_t_star_ref
@@ -285,7 +308,9 @@ class ParticleLayer(AbstractHeterogeneousAtmosphere):
         # Scatter this total OT to all layers
         # TODO: Make sure that axis order is consistent with other vectorized
         #  routines
-        fractions = self.eval_fractions(zgrid)
+        fractions = self._eval_fractions_impl(
+            zgrid, self.bottom, self.top, self.distribution
+        )
         tau_layers = np.broadcast_to(
             np.reshape(tau, (-1, 1)), (len(w), zgrid.n_layers)
         ) * np.reshape(fractions, (1, -1))

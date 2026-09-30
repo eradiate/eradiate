@@ -103,51 +103,6 @@ def test_fullname(mode_mono):
     )
 
 
-def test_cache_by_id(capsys):
-    # Function
-    @cache_by_id
-    def f(x, y):
-        print("Calling f")
-        return x, y
-
-    assert f(1, 1) == (1, 1)
-    captured = capsys.readouterr()
-    assert captured.out == "Calling f\n"
-    assert f(1, 1) == (1, 1)
-    captured = capsys.readouterr()
-    assert captured.out == ""
-
-    assert f(1, 2) == (1, 2)
-    captured = capsys.readouterr()
-    assert captured.out == "Calling f\n"
-    assert f(1, 2) == (1, 2)
-    captured = capsys.readouterr()
-    assert captured.out == ""
-
-    # Class
-    class MyClass:
-        @cache_by_id
-        def f(self, x, y):
-            print("Calling f")
-            return x, y
-
-    obj = MyClass()
-
-    assert obj.f(1, 1) == (1, 1)
-    captured = capsys.readouterr()
-    assert captured.out == "Calling f\n"
-    assert obj.f(1, 1) == (1, 1)
-    captured = capsys.readouterr()
-    assert captured.out == ""
-
-    assert obj.f(1, 2) == (1, 2)
-    captured = capsys.readouterr()
-    assert captured.out == "Calling f\n"
-    assert obj.f(1, 2) == (1, 2)
-    captured = capsys.readouterr()
-    assert captured.out == ""
-
-
 @pytest.mark.parametrize(
     "input, expected",
     [
@@ -158,3 +113,89 @@ def test_cache_by_id(capsys):
 )
 def test_multi_generator(input, expected):
     assert list(MultiGenerator(input)) == expected
+
+
+class TestCacheByID:
+    def test_core(self, capsys):
+        # Function
+        @cache_by_id
+        def f(x, y):
+            print("Calling f")
+            return x, y
+
+        assert f(1, 1) == (1, 1)
+        captured = capsys.readouterr()
+        assert captured.out == "Calling f\n"
+        assert f(1, 1) == (1, 1)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+        assert f(1, 2) == (1, 2)
+        captured = capsys.readouterr()
+        assert captured.out == "Calling f\n"
+        assert f(1, 2) == (1, 2)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+        # Class
+        class MyClass:
+            @cache_by_id
+            def f(self, x, y):
+                print("Calling f")
+                return x, y
+
+        obj = MyClass()
+
+        assert obj.f(1, 1) == (1, 1)
+        captured = capsys.readouterr()
+        assert captured.out == "Calling f\n"
+        assert obj.f(1, 1) == (1, 1)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+        assert obj.f(1, 2) == (1, 2)
+        captured = capsys.readouterr()
+        assert captured.out == "Calling f\n"
+        assert obj.f(1, 2) == (1, 2)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_per_instance(self):
+        calls = []
+
+        class MyClass:
+            @cache_by_id
+            def f(self, x):
+                calls.append((self, x))
+                return object()
+
+        a, b = MyClass(), MyClass()
+        x = object()
+
+        # Interleaved calls on two instances hit their own cache
+        ra, rb = a.f(x), b.f(x)
+        assert ra is not rb
+        for _ in range(3):
+            assert a.f(x) is ra
+            assert b.f(x) is rb
+        assert len(calls) == 2
+
+    def test_id_reuse(self):
+        ncalls = 0
+
+        @cache_by_id
+        def f(x):
+            nonlocal ncalls
+            ncalls += 1
+            return x.value
+
+        class Value:
+            def __init__(self, value):
+                self.value = value
+
+        # Temporary arguments may be allocated at the address of a collected
+        # one; # the cache keeps them alive, so a new argument always triggers a
+        # recompute
+        results = [f(Value(i)) for i in range(10)]
+        assert results == list(range(10))
+        assert ncalls == 10

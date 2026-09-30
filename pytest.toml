@@ -2,20 +2,25 @@
 strict = true # Don't tolerate mistakes in config
 minversion = "9.0"
 addopts = ["-p", "no:robotframework", "--tb=short", "-vv", "-ra"]
-filterwarnings = [
-  "error",
-  # Remove the following when environment issues are solved
-  "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning",
-  # Ignore pyparsing deprecation warnings from matplotlib (remove when matplotlib is updated)
-  "ignore:.*deprecated - use.*:DeprecationWarning:matplotlib.*",
-  "ignore:.*argument is deprecated.*:DeprecationWarning:matplotlib.*",
-  "ignore:.*argument is deprecated.*:DeprecationWarning:pyparsing.*",
-  # Remove the warnings coming from deprecated usage of utcnow in Joseki
-  "ignore:.*utcnow.*:DeprecationWarning",
-  # Ignore Skyfield ephemeris file handle warnings (expected behaviour)
-  "ignore:.*de421.bsp.*:ResourceWarning",
-]
 markers = ["unit", "system", "regression"]
 testpaths = ["tests"]
 log_level = "INFO" # Show logs on failure
 xfail_strict = true # An xfail test that succeeds will fail the test suite
+filterwarnings = [
+  "error",
+  # Remove the following when environment issues are solved
+  "ignore:numpy.ndarray size changed, may indicate binary incompatibility:RuntimeWarning",
+  # Ignore pyparsing deprecation warnings from matplotlib
+  # TODO: remove when matplotlib is updated
+  "ignore:.*deprecated - use.*:DeprecationWarning:matplotlib.*",
+  "ignore:.*argument is deprecated.*:DeprecationWarning:matplotlib.*",
+  "ignore:.*argument is deprecated.*:DeprecationWarning:pyparsing.*",
+  # Ignore warnings coming from deprecated usage of utcnow in Joseki
+  # TODO: Remove once Joseki is fixed or we upgrade to Skytherm
+  "ignore:.*utcnow.*:DeprecationWarning",
+  # Ignore Skyfield ephemeris file handle warnings (expected behaviour)
+  "ignore:.*de421.bsp.*:ResourceWarning",
+  # Ignore NetCDF4 1.7 issues with Numpy 2.5
+  # TODO: Remove once fixed on the NetCDF side
+  "ignore:Setting the shape on a NumPy array:DeprecationWarning:xarray.backends.netCDF4_",
+]
