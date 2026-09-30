@@ -98,6 +98,21 @@ class TestSolarIrradianceSpectrum:
             == s.eval_mono(550.0 * ureg.nm) * 10.0
         )
 
+    def test_field_update(self, mode_mono):
+        # Updating fields after an evaluation is reflected by later evaluations
+        w = 550.0 * ureg.nm
+        s = SolarIrradianceSpectrum(dataset="thuillier_2003")
+        s.eval_mono(w)
+
+        s.dataset = "coddington_2021-1_nm"
+        expected = SolarIrradianceSpectrum(dataset="coddington_2021-1_nm").eval_mono(w)
+        np.testing.assert_allclose(s.eval_mono(w).m_as(expected.u), expected.m)
+
+        s.datetime = "2021-11-18"
+        np.testing.assert_allclose(
+            s.eval_mono(w).m_as(expected.u), expected.m / 0.98854537**2
+        )
+
     @pytest.mark.parametrize(
         "dt",
         [

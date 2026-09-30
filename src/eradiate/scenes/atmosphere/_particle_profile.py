@@ -49,7 +49,7 @@ def _clip_and_interp(
     return property_grid
 
 
-@define
+@define(slots=False)
 class ParticleProfile:
     """
     Dense, per-voxel description of a spatially varying particle field, in
