@@ -5,7 +5,7 @@ import xarray as xr
 
 import eradiate
 from eradiate import fresolver
-from eradiate.data.convert import make_aer_core_v2
+from eradiate.data.convert import make_prt_core_v1
 from eradiate.radprops import ParticleProperties
 from eradiate.scenes.phase import ParticlePhaseFunction
 from eradiate.spectral import SpectralIndex
@@ -31,7 +31,7 @@ def make_minimal_aer_core_v2(nphamat: int) -> xr.Dataset:
     mu = np.tile(np.array([-1.0, 0.0, 1.0]), (len(w), 1))
     phase = np.ones((nphamat, *mu.shape))
 
-    return make_aer_core_v2(
+    return make_prt_core_v1(
         w=w * ureg.nm,
         phamat=phamat_names[:nphamat],
         mu=mu * ureg.dimensionless,

@@ -17,7 +17,7 @@ from ._regression import (  # noqa: F401
 )
 from ..util import check_plugin
 from ... import fresolver
-from ...data.convert import make_aer_core_v2
+from ...data.convert import make_prt_core_v1
 from ...units import unit_registry as ureg
 
 
@@ -140,7 +140,7 @@ def particle_properties_absorbing_only():
     ssa = np.zeros_like(w) * ureg.dimensionless
 
     phase = np.ones_like(mu).reshape(1, nw, nangles) / ureg.steradian
-    ds = make_aer_core_v2(
+    ds = make_prt_core_v1(
         w=w, phamat=["11"], mu=mu, theta=theta, ext=ext, ssa=ssa, phase=phase
     )
     yield ParticleProperties(ds)
@@ -162,7 +162,7 @@ def particle_properties_scattering_only():
     ssa = np.ones_like(w) * ureg.dimensionless
 
     phase = np.ones_like(mu).reshape(1, nw, nangles) / ureg.steradian
-    ds = make_aer_core_v2(
+    ds = make_prt_core_v1(
         w=w, phamat=["11"], mu=mu, theta=theta, ext=ext, ssa=ssa, phase=phase
     )
     yield ParticleProperties(ds)
@@ -193,7 +193,7 @@ def particle_properties_test():
     ssa = np.ones_like(w) * 0.8 * ureg.dimensionless
 
     phase = np.ones_like(mu).reshape(1, nw, nangles) / ureg.steradian
-    ds = make_aer_core_v2(
+    ds = make_prt_core_v1(
         w=w, phamat=["11"], mu=mu, theta=theta, ext=ext, ssa=ssa, phase=phase
     )
     yield ParticleProperties(ds)

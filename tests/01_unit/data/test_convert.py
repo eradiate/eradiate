@@ -10,8 +10,9 @@ from eradiate import unit_registry as ureg
 from eradiate.data.convert import (
     aer_v1_to_aer_core_v2,
     concat_particles_veff,
-    libradtran_to_aer_core_v2,
-    make_aer_core_v2,
+    libradtran_to_prt,
+    make_prt_core_v1,
+    make_prt_psd_v1,
 )
 
 # ------------------------------------------------------------------------------
@@ -26,7 +27,7 @@ def _isotropic_args(
     mu_1d: np.ndarray | None = None,
 ) -> dict:
     """
-    Keyword args for make_aer_core_v2 with a uniform isotropic phase (p = scale).
+    Keyword args for make_prt_core_v1 with a uniform isotropic phase (p = scale).
 
     For scale=1 the function is 4π-normalized (∫p dμ = 2). Uses a uniform
     ascending mu grid unless ``mu_1d`` is supplied.
@@ -54,18 +55,32 @@ def _size_distribution_args(
     nveff: int = 2,
     nangle: int = 5,
     scale: float = 1.0,
+    mu_1d: np.ndarray | None = None,
+    phamat: list[str] | None = None,
+    phase_values: list[float] | None = None,
 ) -> dict:
     """
-    Keyword args for make_aer_core_v2 with reff/veff dimensions.
+    Keyword args for make_prt_psd_v1 with reff/veff dimensions.
 
     Phase is a uniform isotropic p = scale (4π-normalized when scale=1) with
-    a shared ascending mu grid across the whole (w, reff, veff) grid. ext/ssa
-    take a distinct value at every (w, reff, veff) point.
+    a shared ascending mu grid across the whole (w, reff, veff) grid, unless
+    ``mu_1d`` is supplied. ext/ssa take a distinct value at every
+    (w, reff, veff) point.
+
+    phamat/phase_values allow building a multi-component phase matrix, with
+    one uniform value per component (index-matched); both default to a
+    single "11" component with value ``scale``.
     """
-    mu_1d = np.linspace(-1.0, 1.0, nangle)
+    if mu_1d is None:
+        mu_1d = np.linspace(-1.0, 1.0, nangle)
+    else:
+        nangle = len(mu_1d)
+    if phamat is None:
+        phamat = ["11"]
+        phase_values = [scale]
     mu = np.tile(mu_1d, (nw, nreff, nveff, 1))
     theta = np.degrees(np.arccos(mu))
-    phase = np.full((1, nw, nreff, nveff, nangle), scale)
+    phase = np.stack([np.full((nw, nreff, nveff, nangle), v) for v in phase_values])
 
     ext = np.zeros((nw, nreff, nveff))
     ssa = np.zeros((nw, nreff, nveff))
@@ -76,7 +91,7 @@ def _size_distribution_args(
 
     return {
         "w": np.linspace(400.0, 700.0, nw) * ureg.nm,
-        "phamat": ["11"],
+        "phamat": phamat,
         "mu": mu * ureg.dimensionless,
         "theta": theta * ureg.deg,
         "ext": ext * ureg("1/km"),
@@ -91,7 +106,7 @@ def _size_distribution_padded_args(
     nangles_grid: np.ndarray, nangle_max: int = 10
 ) -> dict:
     """
-    Keyword args for make_aer_core_v2 with reff/veff dimensions and a
+    Keyword args for make_prt_psd_v1 with reff/veff dimensions and a
     varying, nan padded angle count per (w, reff, veff) point.
     """
     nreff, nveff = nangles_grid.shape
@@ -124,7 +139,7 @@ def _size_distribution_padded_args(
 
 def _padded_args(nangles_vals: np.ndarray, nangle_max: int = 10) -> dict:
     """
-    Keyword args for make_aer_core_v2 with a NaN-padded isotropic phase (p = 1).
+    Keyword args for make_prt_core_v1 with a NaN-padded isotropic phase (p = 1).
 
     The first ``nangles_vals[iw]`` entries per row are valid; the rest are NaN.
     """
@@ -231,7 +246,7 @@ def _make_libradtran_ds(ntheta_per_w: list[int]) -> xr.Dataset:
 
 class TestMakeAerCoreV2:
     class TestCheck:
-        """Tests for the mu sort-order check in make_aer_core_v2()."""
+        """Tests for the mu sort-order check in make_prt_core_v1()."""
 
         @pytest.fixture(scope="class")
         @classmethod
@@ -245,25 +260,25 @@ class TestMakeAerCoreV2:
 
         def test_no_check(self, mu_desc):
             """check=None and check='none' do not raise even for descending mu."""
-            make_aer_core_v2(**_isotropic_args(mu_1d=mu_desc), check=None)
-            make_aer_core_v2(**_isotropic_args(mu_1d=mu_desc), check="none")
+            make_prt_core_v1(**_isotropic_args(mu_1d=mu_desc), check=None)
+            make_prt_core_v1(**_isotropic_args(mu_1d=mu_desc), check="none")
 
         def test_full_raises_on_descending(self, mu_desc):
             """check='full' raises ValueError for a descending mu grid."""
             with pytest.raises(ValueError, match="strictly ascending"):
-                make_aer_core_v2(**_isotropic_args(mu_1d=mu_desc), check="full")
+                make_prt_core_v1(**_isotropic_args(mu_1d=mu_desc), check="full")
 
         def test_full_passes_on_ascending(self, mu_asc):
             """check='full' does not raise for a valid ascending mu grid."""
-            make_aer_core_v2(**_isotropic_args(mu_1d=mu_asc), check="full")
+            make_prt_core_v1(**_isotropic_args(mu_1d=mu_asc), check="full")
 
         def test_fast_raises_on_descending(self, mu_desc):
             """check='fast' catches an ill-sorted grid."""
             with pytest.raises(ValueError, match="strictly ascending"):
-                make_aer_core_v2(**_isotropic_args(mu_1d=mu_desc), check="fast")
+                make_prt_core_v1(**_isotropic_args(mu_1d=mu_desc), check="fast")
 
     class TestNangles:
-        """Tests for the nangles parameter in make_aer_core_v2()."""
+        """Tests for the nangles parameter in make_prt_core_v1()."""
 
         @pytest.fixture(scope="class")
         @classmethod
@@ -272,12 +287,12 @@ class TestMakeAerCoreV2:
 
         def test_nangles_written(self, nangles_vals):
             """nangles variable is present and matches input."""
-            ds = make_aer_core_v2(**_padded_args(nangles_vals))
+            ds = make_prt_core_v1(**_padded_args(nangles_vals))
             np.testing.assert_array_equal(ds["nangles"].values, nangles_vals)
 
         def test_check_full_ignores_nan_tails(self, nangles_vals):
             """check='full' validates only the valid portion; NaN tails do not cause failure."""
-            make_aer_core_v2(**_padded_args(nangles_vals), check="full")
+            make_prt_core_v1(**_padded_args(nangles_vals), check="full")
 
         def test_check_raises_on_unsorted_valid_portion(self, nangles_vals):
             """check='full' raises if the valid portion of any row is not ascending."""
@@ -287,16 +302,16 @@ class TestMakeAerCoreV2:
             mu_arr[1, :n] = mu_arr[1, :n][::-1]
             args["mu"] = mu_arr * ureg.dimensionless
             with pytest.raises(ValueError, match="strictly ascending"):
-                make_aer_core_v2(**args, check="full")
+                make_prt_core_v1(**args, check="full")
 
         def test_nangles_inferred_from_phase(self):
             """When nangles is None it is inferred by counting non-NaN entries in phase."""
             nw, nangle = 2, 5
-            ds = make_aer_core_v2(**_isotropic_args(nw=nw, nangle=nangle))
+            ds = make_prt_core_v1(**_isotropic_args(nw=nw, nangle=nangle))
             np.testing.assert_array_equal(ds["nangles"].values, np.full(nw, nangle))
 
     class TestAutoPmom:
-        """Tests for automatic Legendre coefficient computation in make_aer_core_v2()."""
+        """Tests for automatic Legendre coefficient computation in make_prt_core_v1()."""
 
         @pytest.fixture(scope="class")
         @classmethod
@@ -306,14 +321,14 @@ class TestMakeAerCoreV2:
         def test_default_129_moments(self, base_args):
             """pmom is computed with 129 moments by default."""
             nw = base_args["w"].shape[0]
-            ds = make_aer_core_v2(**base_args)
+            ds = make_prt_core_v1(**base_args)
             assert ds["pmom"].shape == (nw, 129)
             np.testing.assert_array_equal(ds["nmom"].values, np.full(nw, 129))
 
         def test_scalar_nmom(self, base_args):
             """pmom has the requested moment count when nmom is an int."""
             nw = base_args["w"].shape[0]
-            ds = make_aer_core_v2(**base_args, nmom=64)
+            ds = make_prt_core_v1(**base_args, nmom=64)
             assert ds["pmom"].shape == (nw, 64)
             np.testing.assert_array_equal(ds["nmom"].values, np.full(nw, 64))
 
@@ -321,7 +336,7 @@ class TestMakeAerCoreV2:
             """Explicitly provided pmom is stored as-is; nmom is inferred from non-NaN count."""
             nw = base_args["w"].shape[0]
             sentinel = np.full((nw, 10), 42.0)
-            ds = make_aer_core_v2(**base_args, pmom=sentinel)
+            ds = make_prt_core_v1(**base_args, pmom=sentinel)
             np.testing.assert_array_equal(ds["pmom"].values, sentinel)
             np.testing.assert_array_equal(ds["nmom"].values, np.full(nw, 10))
 
@@ -332,8 +347,18 @@ class TestMakeAerCoreV2:
             pmom_arr = np.full((nw, int(nmom_per_w.max())), np.nan)
             for iw, n in enumerate(nmom_per_w):
                 pmom_arr[iw, :n] = 1.0
-            ds = make_aer_core_v2(**base_args, pmom=pmom_arr)
+            ds = make_prt_core_v1(**base_args, pmom=pmom_arr)
             np.testing.assert_array_equal(ds["nmom"].values, nmom_per_w)
+
+        def test_explicit_nmom_passthrough(self, base_args):
+            """An explicit ndarray nmom is stored as given, alongside explicit pmom."""
+            nw = base_args["w"].shape[0]
+            nmom_vals = np.array([4, 7, 10], dtype=np.int32)[:nw]
+            pmom_arr = np.full((nw, int(nmom_vals.max())), np.nan)
+            for iw, n in enumerate(nmom_vals):
+                pmom_arr[iw, :n] = 1.0
+            ds = make_prt_core_v1(**base_args, pmom=pmom_arr, nmom=nmom_vals)
+            np.testing.assert_array_equal(ds["nmom"].values, nmom_vals)
 
         def test_nmom_ndarray_without_pmom_raises(self, base_args):
             """ValueError when nmom is an ndarray but pmom is not provided."""
@@ -342,11 +367,11 @@ class TestMakeAerCoreV2:
                 ValueError,
                 match="Pass an ndarray only together with an explicit 'pmom'",
             ):
-                make_aer_core_v2(**base_args, nmom=np.full(nw, 10, dtype=np.int32))
+                make_prt_core_v1(**base_args, nmom=np.full(nw, 10, dtype=np.int32))
 
         def test_isotropic_pmom_values(self, base_args):
             """For isotropic p=1, l=0 coefficient is 1 and l>0 are ~0."""
-            ds = make_aer_core_v2(**base_args, nmom=20)
+            ds = make_prt_core_v1(**base_args, nmom=20)
             pmom_vals = ds["pmom"].values[0, :]  # first wavelength
             np.testing.assert_allclose(pmom_vals[0], 1.0, rtol=1e-6)
             np.testing.assert_allclose(pmom_vals[1:], 0.0, atol=1e-6)
@@ -354,24 +379,24 @@ class TestMakeAerCoreV2:
         def test_nan_padded_phase(self):
             """Auto-computation handles NaN-padded angular arrays correctly."""
             nangles_vals = np.array([5, 10], dtype=np.int32)
-            ds = make_aer_core_v2(**_padded_args(nangles_vals, nangle_max=10), nmom=10)
+            ds = make_prt_core_v1(**_padded_args(nangles_vals, nangle_max=10), nmom=10)
             assert ds["pmom"].shape == (len(nangles_vals), 10)
             np.testing.assert_allclose(ds["pmom"].values[:, 0], 1.0, rtol=1e-6)
 
     class TestNormalize:
-        """Tests for the normalize parameter in make_aer_core_v2()."""
+        """Tests for the normalize parameter in make_prt_core_v1()."""
 
         def test_false_leaves_phase_unchanged(self):
             """normalize=False (default) stores phase as-is."""
             nw = 2
             args = _isotropic_args(nw=nw, scale=4.0)
-            ds = make_aer_core_v2(**args, normalize=False, pmom=np.zeros((nw, 2)))
+            ds = make_prt_core_v1(**args, normalize=False, pmom=np.zeros((nw, 2)))
             np.testing.assert_allclose(ds["phase"].values, 4.0, rtol=1e-12)
 
         def test_true_enforces_integral(self):
             """normalize=True rescales p11 so that ∫p11 dμ = 2."""
             args = _isotropic_args(nw=2, scale=4.0)
-            ds = make_aer_core_v2(**args, normalize=True)
+            ds = make_prt_core_v1(**args, normalize=True)
             mu = ds["mu"].values
             phase = ds["phase"].values
             for iw in range(mu.shape[0]):
@@ -387,7 +412,7 @@ class TestMakeAerCoreV2:
             phase = np.stack(
                 [np.full((nw, nangle), 4.0), np.full((nw, nangle), 2.0)]
             ) * ureg("1/sr")
-            ds = make_aer_core_v2(
+            ds = make_prt_core_v1(
                 w=np.linspace(400.0, 700.0, nw) * ureg.nm,
                 phamat=["11", "12"],
                 mu=mu_2d * ureg.dimensionless,
@@ -408,64 +433,23 @@ class TestMakeAerCoreV2:
             """normalize=True raises ValueError when p11 integrates to 0."""
             args = _isotropic_args(nw=1, scale=0.0)
             with pytest.raises(ValueError, match="integrates to 0"):
-                make_aer_core_v2(**args, normalize=True)
+                make_prt_core_v1(**args, normalize=True)
 
-    class TestSizeDistribution:
-        """Tests for the reff/veff (Prt v1) dimensions in make_aer_core_v2()."""
 
-        def test_no_reff_veff_omits_dimensions(self):
-            """Without reff/veff, the dataset has no such dimensions (Aer-Core v2)."""
-            ds = make_aer_core_v2(**_isotropic_args())
-            assert "reff" not in ds.dims
-            assert "veff" not in ds.dims
+class TestMakePrtPsdV1:
+    class TestCheck:
+        """Tests for the mu sort-order check in make_prt_psd_v1()."""
 
-        def test_only_reff_raises(self):
-            """Providing reff without veff raises ValueError."""
-            args = _size_distribution_args()
-            del args["veff"]
-            with pytest.raises(ValueError, match="must be provided together"):
-                make_aer_core_v2(**args)
+        def test_no_check(self):
+            """check=None and check='none' do not raise even for descending mu."""
+            args = _size_distribution_args(mu_1d=np.linspace(1, -1, 11))
+            make_prt_psd_v1(**args, check=None)
+            make_prt_psd_v1(**args, check="none")
 
-        def test_only_veff_raises(self):
-            """Providing veff without reff raises ValueError."""
-            args = _size_distribution_args()
-            del args["reff"]
-            with pytest.raises(ValueError, match="must be provided together"):
-                make_aer_core_v2(**args)
-
-        def test_dimensions_and_shapes(self):
-            """ext/ssa/mu/theta/phase/nangles gain reff/veff dimensions."""
-            nw, nreff, nveff, nangle = 2, 3, 2, 5
-            ds = make_aer_core_v2(
-                **_size_distribution_args(
-                    nw=nw, nreff=nreff, nveff=nveff, nangle=nangle
-                )
-            )
-            assert ds["ext"].dims == ("w", "reff", "veff")
-            assert ds["ext"].shape == (nw, nreff, nveff)
-            assert ds["mu"].dims == ("w", "reff", "veff", "iangle")
-            assert ds["mu"].shape == (nw, nreff, nveff, nangle)
-            assert ds["phase"].dims == ("phamat", "w", "reff", "veff", "iangle")
-            assert ds["nangles"].shape == (nw, nreff, nveff)
-
-        def test_ext_ssa_values_at_each_point(self):
-            """ext/ssa are stored verbatim at every (w, reff, veff) point."""
-            args = _size_distribution_args()
-            ds = make_aer_core_v2(**args)
-            np.testing.assert_allclose(ds["ext"].values, args["ext"].m)
-            np.testing.assert_allclose(ds["ssa"].values, args["ssa"].m)
-
-        def test_nangles_inferred_at_each_point(self):
-            """nangles is inferred per (w, reff, veff) point when not provided."""
-            nw, nreff, nveff, nangle = 2, 2, 2, 5
-            ds = make_aer_core_v2(
-                **_size_distribution_args(
-                    nw=nw, nreff=nreff, nveff=nveff, nangle=nangle
-                )
-            )
-            np.testing.assert_array_equal(
-                ds["nangles"].values, np.full((nw, nreff, nveff), nangle)
-            )
+        def test_full_passes_on_ascending(self):
+            """check='full' does not raise for a valid ascending mu grid."""
+            args = _size_distribution_args(mu_1d=np.linspace(-1, 1, 11))
+            make_prt_psd_v1(**args, check="full")
 
         def test_check_full_catches_unsorted_point(self):
             """check='full' validates every (w, reff, veff) point, not just w."""
@@ -474,12 +458,12 @@ class TestMakeAerCoreV2:
             mu_arr[1, 1, 0, :] = mu_arr[1, 1, 0, :][::-1]
             args["mu"] = mu_arr * ureg.dimensionless
             with pytest.raises(ValueError, match="strictly ascending"):
-                make_aer_core_v2(**args, check="full")
+                make_prt_psd_v1(**args, check="full")
 
         def test_fast_passes_on_sorted_grid(self):
             """check='fast' runs over the full (w, reff, veff) index space without error."""
             args = _size_distribution_args(nw=2, nreff=5, nveff=5)
-            make_aer_core_v2(**args, check="fast")
+            make_prt_psd_v1(**args, check="fast")
 
         def test_fast_catches_unsorted_point_in_reff_veff_space(self):
             """check='fast' samples over (w, reff, veff), not just w."""
@@ -501,40 +485,35 @@ class TestMakeAerCoreV2:
             args["mu"] = mu_arr * ureg.dimensionless
 
             with pytest.raises(ValueError, match="strictly ascending"):
-                make_aer_core_v2(**args, check="fast")
+                make_prt_psd_v1(**args, check="fast")
 
-        def test_unsorted_reff_raises(self):
-            """A non-strictly-increasing reff grid raises ValueError."""
-            args = _size_distribution_args(nreff=3)
-            args["reff"] = args["reff"][::-1]
-            with pytest.raises(ValueError, match="'reff' must be strictly increasing"):
-                make_aer_core_v2(**args)
+    class TestNangles:
+        """Tests for the nangles parameter in make_prt_psd_v1()."""
 
-        def test_unsorted_veff_raises(self):
-            """A non-strictly-increasing veff grid raises ValueError."""
-            args = _size_distribution_args(nveff=3)
-            args["veff"] = args["veff"][::-1]
-            with pytest.raises(ValueError, match="'veff' must be strictly increasing"):
-                make_aer_core_v2(**args)
-
-        def test_irregular_reff_veff_accepted(self):
-            """Strictly increasing but irregularly spaced reff/veff are accepted."""
-            args = _size_distribution_args(nreff=3, nveff=1)
-            args["reff"] = np.array([5.0, 6.0, 15.0]) * ureg.micron
-            make_aer_core_v2(**args)
+        def test_nangles_inferred_at_each_point(self):
+            """nangles is inferred per (w, reff, veff) point when not provided."""
+            nw, nreff, nveff, nangle = 2, 2, 2, 5
+            ds = make_prt_psd_v1(
+                **_size_distribution_args(
+                    nw=nw, nreff=nreff, nveff=nveff, nangle=nangle
+                )
+            )
+            np.testing.assert_array_equal(
+                ds["nangles"].values, np.full((nw, nreff, nveff), nangle)
+            )
 
         def test_nangles_varies_per_reff_veff_point(self):
             """nangles can vary independently across (w, reff, veff) points."""
             nangles_grid = np.array([[4, 7], [10, 3]])
             args = _size_distribution_padded_args(nangles_grid)
-            ds = make_aer_core_v2(**args)
+            ds = make_prt_psd_v1(**args)
             np.testing.assert_array_equal(ds["nangles"].values[0], nangles_grid)
 
         def test_check_full_ignores_nan_tails_per_point(self):
             """check='full' validates only the valid portion of each ragged row."""
             nangles_grid = np.array([[4, 7], [10, 3]])
             args = _size_distribution_padded_args(nangles_grid)
-            make_aer_core_v2(**args, check="full")
+            make_prt_psd_v1(**args, check="full")
 
         def test_check_full_raises_on_unsorted_valid_portion(self):
             """check='full' raises if the valid part of a ragged row is unsorted."""
@@ -545,33 +524,26 @@ class TestMakeAerCoreV2:
             mu_arr[0, 1, 0, :n] = mu_arr[0, 1, 0, :n][::-1]
             args["mu"] = mu_arr * ureg.dimensionless
             with pytest.raises(ValueError, match="strictly ascending"):
-                make_aer_core_v2(**args, check="full")
+                make_prt_psd_v1(**args, check="full")
 
-        def test_normalize_at_each_point(self):
-            """normalize=True enforces the integral convention at every point."""
-            args = _size_distribution_args(scale=4.0)
-            ds = make_aer_core_v2(**args, normalize=True)
-            mu = ds["mu"].values
-            phase = ds["phase"].values
-            for idx in np.ndindex(mu.shape[:-1]):
-                integral = np.trapezoid(phase[(0, *idx)], mu[idx])
-                np.testing.assert_allclose(integral, 2.0, rtol=1e-12)
+    class TestAutoPmom:
+        """Tests for automatic Legendre coefficient computation in make_prt_psd_v1()."""
 
-        def test_auto_pmom_at_each_point(self):
-            """Automatic pmom computation runs independently at every point."""
+        def test_default_129_moments(self):
+            """pmom is computed with 129 moments by default."""
             nw, nreff, nveff = 2, 2, 2
-            ds = make_aer_core_v2(
-                **_size_distribution_args(nw=nw, nreff=nreff, nveff=nveff), nmom=20
+            ds = make_prt_psd_v1(
+                **_size_distribution_args(nw=nw, nreff=nreff, nveff=nveff)
             )
-            assert ds["pmom"].shape == (nw, nreff, nveff, 20)
-            # Isotropic phase: l=0 coefficient is 1, l>0 are ~0, everywhere.
-            np.testing.assert_allclose(ds["pmom"].values[..., 0], 1.0, rtol=1e-6)
-            np.testing.assert_allclose(ds["pmom"].values[..., 1:], 0.0, atol=1e-6)
+            assert ds["pmom"].shape == (nw, nreff, nveff, 129)
+            np.testing.assert_array_equal(
+                ds["nmom"].values, np.full((nw, nreff, nveff), 129)
+            )
 
         def test_scalar_nmom_broadcasts_to_grid_shape(self):
             """An int nmom broadcasts to the full (w, reff, veff) shape."""
             nw, nreff, nveff = 2, 3, 2
-            ds = make_aer_core_v2(
+            ds = make_prt_psd_v1(
                 **_size_distribution_args(nw=nw, nreff=nreff, nveff=nveff), nmom=64
             )
             assert ds["nmom"].shape == (nw, nreff, nveff)
@@ -584,11 +556,24 @@ class TestMakeAerCoreV2:
             nw, nreff, nveff = 2, 2, 2
             args = _size_distribution_args(nw=nw, nreff=nreff, nveff=nveff)
             sentinel = np.full((nw, nreff, nveff, 10), 42.0)
-            ds = make_aer_core_v2(**args, pmom=sentinel)
+            ds = make_prt_psd_v1(**args, pmom=sentinel)
             np.testing.assert_array_equal(ds["pmom"].values, sentinel)
             np.testing.assert_array_equal(
                 ds["nmom"].values, np.full((nw, nreff, nveff), 10)
             )
+
+        def test_explicit_pmom_nan_padded_nmom_inferred_per_point(self):
+            """nmom is inferred per (w, reff, veff) point for NaN-padded explicit pmom."""
+            nw, nreff, nveff = 1, 2, 2
+            args = _size_distribution_args(nw=nw, nreff=nreff, nveff=nveff)
+            nmom_grid = np.array([4, 7, 10, 3], dtype=np.int32).reshape(
+                nw, nreff, nveff
+            )
+            pmom = np.full((nw, nreff, nveff, int(nmom_grid.max())), np.nan)
+            for idx in np.ndindex(nmom_grid.shape):
+                pmom[idx][: nmom_grid[idx]] = 1.0
+            ds = make_prt_psd_v1(**args, pmom=pmom)
+            np.testing.assert_array_equal(ds["nmom"].values, nmom_grid)
 
         def test_ndarray_nmom_stored_verbatim_per_point(self):
             """An ndarray nmom is stored as-is per (w, reff, veff) point."""
@@ -598,8 +583,125 @@ class TestMakeAerCoreV2:
             pmom = np.full((nw, nreff, nveff, int(nmom_grid.max())), np.nan)
             for idx in np.ndindex(nmom_grid.shape):
                 pmom[idx][: nmom_grid[idx]] = 1.0
-            ds = make_aer_core_v2(**args, pmom=pmom, nmom=nmom_grid)
+            ds = make_prt_psd_v1(**args, pmom=pmom, nmom=nmom_grid)
             np.testing.assert_array_equal(ds["nmom"].values, nmom_grid)
+
+        def test_nmom_ndarray_without_pmom_raises(self):
+            """ValueError when nmom is an ndarray but pmom is not provided."""
+            nw, nreff, nveff = 2, 2, 2
+            args = _size_distribution_args(nw=nw, nreff=nreff, nveff=nveff)
+            with pytest.raises(
+                ValueError,
+                match="Pass an ndarray only together with an explicit 'pmom'",
+            ):
+                make_prt_psd_v1(
+                    **args, nmom=np.full((nw, nreff, nveff), 10, dtype=np.int32)
+                )
+
+        def test_auto_pmom_at_each_point(self):
+            """Automatic pmom computation runs independently at every point."""
+            nw, nreff, nveff = 2, 2, 2
+            ds = make_prt_psd_v1(
+                **_size_distribution_args(nw=nw, nreff=nreff, nveff=nveff), nmom=20
+            )
+            assert ds["pmom"].shape == (nw, nreff, nveff, 20)
+            # Isotropic phase: l=0 coefficient is 1, l>0 are ~0, everywhere.
+            np.testing.assert_allclose(ds["pmom"].values[..., 0], 1.0, rtol=1e-6)
+            np.testing.assert_allclose(ds["pmom"].values[..., 1:], 0.0, atol=1e-6)
+
+        def test_nan_padded_phase(self):
+            """Auto-computation handles NaN-padded angular arrays correctly."""
+            nangles_grid = np.array([[4, 7], [10, 3]])
+            args = _size_distribution_padded_args(nangles_grid)
+            ds = make_prt_psd_v1(**args, nmom=10)
+            assert ds["pmom"].shape == (1, 2, 2, 10)
+            np.testing.assert_allclose(ds["pmom"].values[..., 0], 1.0, rtol=1e-6)
+
+    class TestNormalize:
+        """Tests for the normalize parameter in make_prt_psd_v1()."""
+
+        def test_false_leaves_phase_unchanged(self):
+            """normalize=False (default) stores phase as-is."""
+            nw, nreff, nveff = 2, 2, 2
+            args = _size_distribution_args(nw=nw, nreff=nreff, nveff=nveff, scale=4.0)
+            ds = make_prt_psd_v1(
+                **args, normalize=False, pmom=np.zeros((nw, nreff, nveff, 2))
+            )
+            np.testing.assert_allclose(ds["phase"].values, 4.0, rtol=1e-12)
+
+        def test_normalize_at_each_point(self):
+            """normalize=True enforces the integral convention at every point."""
+            args = _size_distribution_args(scale=4.0)
+            ds = make_prt_psd_v1(**args, normalize=True)
+            mu = ds["mu"].values
+            phase = ds["phase"].values
+            for idx in np.ndindex(mu.shape[:-1]):
+                integral = np.trapezoid(phase[(0, *idx)], mu[idx])
+                np.testing.assert_allclose(integral, 2.0, rtol=1e-12)
+
+        def test_scales_all_components(self):
+            """All phase matrix components are rescaled by the same factor, everywhere."""
+            # p11=4, p12=2 → after normalization (factor 0.5) → p11=1, p12=0.5
+            args = _size_distribution_args(
+                nw=2, nreff=2, nveff=2, phamat=["11", "12"], phase_values=[4.0, 2.0]
+            )
+            ds = make_prt_psd_v1(**args, normalize=True, pmom=np.zeros((2, 2, 2, 2)))
+            ratio = (
+                ds["phase"].sel(phamat="12").values
+                / ds["phase"].sel(phamat="11").values
+            )
+            np.testing.assert_allclose(ratio, 0.5, rtol=1e-12)
+
+        def test_zero_integral_raises(self):
+            """normalize=True raises ValueError when p11 integrates to 0 at any point."""
+            args = _size_distribution_args(nw=1, nreff=1, nveff=1, scale=0.0)
+            with pytest.raises(ValueError, match="integrates to 0"):
+                make_prt_psd_v1(**args, normalize=True)
+
+    class TestSizeDistribution:
+        """Tests for the reff/veff dimensions in make_prt_psd_v1()."""
+
+        def test_dimensions_and_shapes(self):
+            """ext/ssa/mu/theta/phase/nangles gain reff/veff dimensions."""
+            nw, nreff, nveff, nangle = 2, 3, 2, 5
+            ds = make_prt_psd_v1(
+                **_size_distribution_args(
+                    nw=nw, nreff=nreff, nveff=nveff, nangle=nangle
+                )
+            )
+            assert ds["ext"].dims == ("w", "reff", "veff")
+            assert ds["ext"].shape == (nw, nreff, nveff)
+            assert ds["mu"].dims == ("w", "reff", "veff", "iangle")
+            assert ds["mu"].shape == (nw, nreff, nveff, nangle)
+            assert ds["phase"].dims == ("phamat", "w", "reff", "veff", "iangle")
+            assert ds["nangles"].shape == (nw, nreff, nveff)
+
+        def test_ext_ssa_values_at_each_point(self):
+            """ext/ssa are stored verbatim at every (w, reff, veff) point."""
+            args = _size_distribution_args()
+            ds = make_prt_psd_v1(**args)
+            np.testing.assert_allclose(ds["ext"].values, args["ext"].m)
+            np.testing.assert_allclose(ds["ssa"].values, args["ssa"].m)
+
+        def test_unsorted_reff_raises(self):
+            """A non-strictly-increasing reff grid raises ValueError."""
+            args = _size_distribution_args(nreff=3)
+            args["reff"] = args["reff"][::-1]
+            with pytest.raises(ValueError, match="'reff' must be strictly increasing"):
+                make_prt_psd_v1(**args)
+
+        def test_unsorted_veff_raises(self):
+            """A non-strictly-increasing veff grid raises ValueError."""
+            args = _size_distribution_args(nveff=3)
+            args["veff"] = args["veff"][::-1]
+            with pytest.raises(ValueError, match="'veff' must be strictly increasing"):
+                make_prt_psd_v1(**args)
+
+        def test_irregular_reff_veff_accepted(self):
+            """Strictly increasing but irregularly spaced reff/veff are accepted."""
+            args = _size_distribution_args(nreff=3, nveff=1)
+            args["reff"] = np.array([5.0, 6.0, 15.0]) * ureg.micron
+            make_prt_psd_v1(**args)
 
 
 class TestConcatParticlesVeff:
@@ -607,8 +709,8 @@ class TestConcatParticlesVeff:
 
     def test_concatenates_veff_values(self):
         """Combined dataset spans the union of both inputs' veff values."""
-        ds1 = make_aer_core_v2(**_size_distribution_args(nveff=1))
-        ds2 = make_aer_core_v2(**_size_distribution_args(nveff=1))
+        ds1 = make_prt_psd_v1(**_size_distribution_args(nveff=1))
+        ds2 = make_prt_psd_v1(**_size_distribution_args(nveff=1))
         # Give ds2 a distinct veff value so the union is non-trivial.
         ds2 = ds2.assign_coords(veff=("veff", ds2["veff"].values + 1.0))
 
@@ -628,8 +730,8 @@ class TestConcatParticlesVeff:
 
     def test_pads_mismatched_iangle(self):
         """Datasets with different iangle sizes are NaN-padded to the max."""
-        ds1 = make_aer_core_v2(**_size_distribution_args(nveff=1, nangle=5))
-        ds2 = make_aer_core_v2(**_size_distribution_args(nveff=1, nangle=8))
+        ds1 = make_prt_psd_v1(**_size_distribution_args(nveff=1, nangle=5))
+        ds2 = make_prt_psd_v1(**_size_distribution_args(nveff=1, nangle=8))
         ds2 = ds2.assign_coords(veff=("veff", ds2["veff"].values + 1.0))
 
         combined = concat_particles_veff([ds1, ds2])
@@ -655,9 +757,9 @@ class TestConcatParticlesVeff:
     )
     def test_mismatched_grid_raises(self, override, match):
         """Datasets with different w/reff/phamat coordinates raise ValueError."""
-        ds1 = make_aer_core_v2(**_size_distribution_args(nveff=1))
+        ds1 = make_prt_psd_v1(**_size_distribution_args(nveff=1))
         args2 = {**_size_distribution_args(nveff=1), **override}
-        ds2 = make_aer_core_v2(**args2)
+        ds2 = make_prt_psd_v1(**args2)
         ds2 = ds2.assign_coords(veff=("veff", ds2["veff"].values + 1.0))
 
         with pytest.raises(ValueError, match=match):
@@ -746,7 +848,7 @@ class TestAerV1ToAerCoreV2:
 
 
 class TestLibradtranToAerCoreV2:
-    """Tests for libradtran_to_aer_core_v2()."""
+    """Tests for libradtran_to_prt()."""
 
     @pytest.fixture(scope="class")
     @classmethod
@@ -761,7 +863,7 @@ class TestLibradtranToAerCoreV2:
     @pytest.fixture(scope="class")
     @classmethod
     def ds_result(cls, ds_input):
-        return libradtran_to_aer_core_v2(ds_input, check="full")
+        return libradtran_to_prt(ds_input, check="full")
 
     def test_nangles_match_ntheta(self, ds_result, ntheta_per_w):
         """nangles values match the source ntheta counts."""
@@ -821,7 +923,7 @@ class TestLibradtranToAerCoreV2:
         @pytest.fixture(scope="class")
         @classmethod
         def ds_result(cls, ds_input):
-            return libradtran_to_aer_core_v2(ds_input, check="full")
+            return libradtran_to_prt(ds_input, check="full")
 
         def test_nangles_is_union_size(self, ds_result):
             """nangles equals the count of distinct mu values from all components."""
@@ -829,7 +931,7 @@ class TestLibradtranToAerCoreV2:
             np.testing.assert_array_equal(ds_result["nangles"].values, [5, 5])
 
     class TestReff:
-        """Tests for the multi-``reff`` input path, which produces Prt v1."""
+        """Tests for the multi-``reff`` input path, which produces Prt-Psd v1."""
 
         PARAM_ALPHA = 5.0
 
@@ -862,7 +964,7 @@ class TestLibradtranToAerCoreV2:
         @pytest.fixture(scope="class")
         @classmethod
         def ds_result(cls, ds_input):
-            return libradtran_to_aer_core_v2(ds_input, check="full")
+            return libradtran_to_prt(ds_input, check="full")
 
         def test_produces_reff_veff_dimensions(self, ds_result):
             """Output has a 'reff' dimension and a size-1 'veff' dimension."""
@@ -880,7 +982,7 @@ class TestLibradtranToAerCoreV2:
             np.testing.assert_allclose(ds_result["veff"].values, [expected])
 
         def test_explicit_veff_overrides_default(self, ds_input):
-            ds_result = libradtran_to_aer_core_v2(ds_input, check="full", veff=0.1)
+            ds_result = libradtran_to_prt(ds_input, check="full", veff=0.1)
             np.testing.assert_allclose(ds_result["veff"].values, [0.1])
 
         def test_ext_ssa_values_at_each_reff(self, ds_input, ds_result):
