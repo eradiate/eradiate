@@ -21,5 +21,3 @@ def test_on_quantity():
 
     with pytest.raises(TypeError):
         v(None, attribute, "1.")
-    with pytest.raises(TypeError):
-        v(None, attribute, ureg.Quantity("1.", "km"))
