@@ -530,7 +530,8 @@ def test_stack_spectral(complete):
         [
             template.copy(data=a).expand_dims(w=[k[0]], g=[k[1]])
             for k, a in zip(keys, arrays)
-        ]
+        ],
+        join="outer",
     )
     xr.testing.assert_identical(result, expected)
     assert result.dtype == expected.dtype
