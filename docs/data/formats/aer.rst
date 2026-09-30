@@ -1,24 +1,14 @@
-Aerosol / particles (Aer)
-=========================
+Aerosol / particles (Aer, deprecated)
+=====================================
 
 .. _sec-data-formats-aer_core_v2:
 
-Aer-Core v2 [``aer_core_v2``]
------------------------------
+Aer-Core v2 (legacy) [``aer_core_v2``]
+--------------------------------------
 
-This data format is derived from libRadtran's aerosol data format. It features
-an adaptive scattering angle (θ) grid that allows for an optimal positioning of
-samples depending on the wavelength.
-
-The number of angular samples can vary across wavelengths up to a maximum equal
-to the size of the ``iangle`` dimension. The per-wavelength count is stored in
-``nangles``; entries beyond ``nangles[iw]`` in ``theta``, ``mu``, and ``phase``
-are NaN-padded.
-
-Similarly, the number of Legendre coefficients can vary across wavelengths up to
-a maximum equal to the size of the ``imom`` dimension. When ``pmom`` is present,
-``nmom`` stores the per-wavelength count; entries beyond ``nmom[iw]`` in
-``pmom`` are NaN-padded.
+This format is equivalent to ``prt_core_v1`` and shares the same dimensions
+and content. It is deprecated in favor of this format to better fit within
+the Eradiate particles naming convention.
 
 Format
     ``xarray.Dataset`` (in-memory), NetCDF (storage)
@@ -122,65 +112,6 @@ Normalization conventions
       * ``imom``
       * ``nmommax``
 
-.. _sec-data-formats-prt_v1:
-
-Prt v1 [``prt_v1``]
---------------------
-
-Extension of ``aer_core_v2`` for particle properties. This data format
-indexes properties defined by ``aer_core_v2`` on two extra dimensions,
-``reff`` and ``veff``, the mean and variance of the particle size
-distribution, respectively. It shares the same normalization conventions
-as ``aer_core_v2``.
-
-Format
-    ``xarray.Dataset`` (in-memory), NetCDF (storage)
-
-Dimensions
-    * ``w``: radiation wavelength
-    * ``reff``: effective radius of the particles
-    * ``veff``: variance of the particles radii
-    * ``phamat``: nonzero coefficients in the phase matrix
-    * ``iangle``: angular data points
-    * ``imom``: Legendre coefficients for the (1,1) phase matrix component
-
-Coordinates
-    *When relevant, units are required and specified in the "units" metadata field.*
-
-    * ``w(w)``: float [length]: wavelength
-    * ``reff(reff)``: float [length]: effective radius
-    * ``veff(veff)``: float [—]: variance of particles radii
-    * ``phamat(phamat)``: str [—]: row and column indices of the phase matrix coefficient
-      (*e.g.* "11", "12", etc.)
-    * ``theta(w, reff, veff, iangle)``: float [angle]: scattering angle θ; NaN-padded beyond
-      ``nangles[iw, ireff, iveff]``
-    * ``mu(w, reff, veff, iangle)``: float [—]: value of cos θ; NaN-padded beyond 
-      ``nangles[iw, ireff, iveff]``
-
-Data variables
-    *When relevant, units are required and specified in the "units" metadata field.*
-
-    * ``ext(w, reff, veff)`` float [1 / length]: extinction coefficient per unit concentration
-    * ``ssa(w, reff, veff)`` float [—]: single-scattering albedo
-    * ``phase(phamat, w, reff, veff, iangle)`` float [1 / sr]: value of the phase matrix;
-      NaN-padded beyond ``nangles[iw, ireff, iveff]``
-    * ``nangles(w, reff, veff)`` int [—]: number of valid angular samples per wavelength,
-      reff and veff; must be consistent with the NaN padding of ``theta``, ``mu``, and 
-      ``phase``
-    * ``pmom(w, reff, veff, imom)`` float [—], optional: Legendre expansion coefficients
-      of the (1,1) phase matrix element; NaN-padded beyond ``nmom[iw, ireff, iveff]``
-    * ``nmom(w, reff, veff)`` int [—], required if ``pmom`` is present: number of valid
-      Legendre coefficients per wavelength; must be consistent with the NaN
-      padding of ``pmom``
-
-.. note::
-
-    * Data are sorted in ascending order of ``w``, ``reff``, ``veff`` and ``mu``
-    * ``reff`` and ``veff`` must be strictly increasing, but need not be
-      regularly spaced
-    * ``phamat`` conventions (valid values, and their implication for
-      polarization and particle shape) are the same as ``aer_core_v2``
-
 .. _sec-data-formats-aer_v1:
 
 Aer v1 (legacy) [``aer_v1``]
@@ -252,7 +183,8 @@ The following conversion components are provided:
       * Aer-Core v2
     - * :func:`.libradtran_to_aer_core_v2`
       * libRadtran / MOPSMAP
-      * Aer-Core v2
+      * Aer-Core v2, or :ref:`sec-data-formats-prt_cloud_v1` when the input
+        varies over ``reff``
     - * :func:`.libradtran_to_aer_v1`
       * libRadtran / MOPSMAP
       * Aer v1
