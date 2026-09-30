@@ -449,3 +449,38 @@ class TestParticleLayer:
                 tau_ref=1.0,
                 w_ref=0.5 * (w1 + w2),
             )
+
+    def test_spectrally_invariant_cache(self, mode_mono, monkeypatch):
+        # Spectrally invariant terms are evaluated once for several wavelengths
+        layer = ParticleLayer(bottom=0.0, top=5.0 * ureg.km)
+        counts = {"distribution": 0, "ext": 0}
+        cls_dist, cls_pp = type(layer.distribution), type(layer.particle_properties)
+        dist_call, eval_ext = cls_dist.__call__, cls_pp.eval_ext
+
+        def spy_dist(self, x):
+            counts["distribution"] += 1
+            return dist_call(self, x)
+
+        def spy_ext(self, w):
+            counts["ext"] += 1
+            return eval_ext(self, w)
+
+        monkeypatch.setattr(cls_dist, "__call__", spy_dist)
+        monkeypatch.setattr(cls_pp, "eval_ext", spy_ext)
+
+        for w in [500.0, 600.0]:
+            si = SpectralIndex.new(w=w * ureg.nm)
+            layer.eval_sigma_t(si)
+            layer.eval_albedo(si)
+
+        # One evaluation of the distribution; one of eval_ext for w_ref, plus one
+        # per wavelength
+        assert counts == {"distribution": 1, "ext": 3}
+
+        # Reassigning a field the cached terms depend on is taken into account
+        layer.bottom = 1.0 * ureg.km
+        zgrid = layer.geometry.zgrid
+        expected = ParticleLayer(
+            bottom=1.0 * ureg.km, top=5.0 * ureg.km
+        ).eval_fractions(zgrid)
+        np.testing.assert_allclose(layer.eval_fractions(zgrid), expected)

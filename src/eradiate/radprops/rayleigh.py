@@ -20,6 +20,17 @@ _LOSCHMIDT = ureg.Quantity(
 # Air number density at 101325 Pa and 288.15 K
 _STANDARD_AIR_NUMBER_DENSITY = _LOSCHMIDT * (273.15 / 288.15)
 
+# Units used internally. Computations are done on magnitudes because this code
+# runs for every spectral index, and pint operations (including resolving a
+# unit by name) dominate its cost otherwise.
+_MICRON = ureg.Unit("micron")
+_KM_INV = ureg.Unit("km^-1")
+_KM3_INV = ureg.Unit("km^-3")
+_STANDARD_AIR_NUMBER_DENSITY_M = _STANDARD_AIR_NUMBER_DENSITY.m_as(_KM3_INV)
+# Conversion factor from µm^-4 km^3 (units of the scattering coefficient with
+# wavelength in µm and number density in km^-3) to km^-1
+_SIGMA_S_TO_KM_INV = ureg.Quantity(1.0, "micron^-4 km^3").m_as(_KM_INV)
+
 
 # Bates (1984) King correction factor data
 class _BATES_1984_DATA(metaclass=Singleton):
@@ -115,28 +126,27 @@ def compute_sigma_s_air(
     # risk, we convert the wavelength to micron.
     # In addition, the Bates (1984) dataset is indexed by wavelengths in microns
     # as well, meaning that this conversion is anyway necessary.
-    w = wavelength.to("micron") if wavelength is not None else 0.550 * ureg.micron
+    w = wavelength.m_as(_MICRON) if wavelength is not None else 0.550
+    n = number_density.m_as(_KM3_INV)
 
     BATES_1984_DATA = _BATES_1984_DATA()
-    king_factor = BATES_1984_DATA.interp(w.m_as("micron"))
+    king_factor = BATES_1984_DATA.interp(w)
 
-    refractive_index = air_refractive_index(wavelength=w, number_density=number_density)
-    if isinstance(w.magnitude, np.ndarray) and isinstance(
-        number_density.magnitude, np.ndarray
-    ):
+    refractive_index = _air_refractive_index(w, n)
+    if isinstance(w, np.ndarray) and isinstance(n, np.ndarray):
         king_factor = king_factor[:, np.newaxis]
         w = w[:, np.newaxis]
-        number_density = number_density[np.newaxis, :]
+        n = n[np.newaxis, :]
 
     result = (
         8.0
         * np.power(np.pi, 3)
         / (3.0 * np.power(w, 4))
-        / number_density
+        / n
         * np.square(np.square(refractive_index) - 1.0)
         * king_factor
     )
-    return result.to("km^-1")
+    return ureg.Quantity(result * _SIGMA_S_TO_KM_INV, _KM_INV)
 
 
 def air_refractive_index(
@@ -169,20 +179,29 @@ def air_refractive_index(
         Air refractive index value(s).
     """
 
+    return _air_refractive_index(
+        wavelength.m_as(_MICRON) if wavelength is not None else 0.550,
+        number_density.m_as(_KM3_INV),
+    )
+
+
+def _air_refractive_index(w_um, n_km3):
+    # Implementation of air_refractive_index() on magnitudes, with wavelength
+    # in µm and number density in km^-3
+
     # wavenumber in inverse micrometer
-    w_um = wavelength.m_as("micrometer") if wavelength is not None else 0.550
     sigma = 1 / w_um
     sigma2 = np.square(sigma)
 
     # refractivity in parts per 1e8
     x = (5791817.0 / (238.0183 - sigma2)) + 167909.0 / (57.362 - sigma2)
 
-    if isinstance(x, np.ndarray) and isinstance(number_density.magnitude, np.ndarray):
+    if isinstance(x, np.ndarray) and isinstance(n_km3, np.ndarray):
         x = x[:, np.newaxis]
-        number_density = number_density[np.newaxis, :]
+        n_km3 = n_km3[np.newaxis, :]
 
     # number density scaling
-    x_scaled = x * (number_density / _STANDARD_AIR_NUMBER_DENSITY).m_as("dimensionless")
+    x_scaled = x * (n_km3 / _STANDARD_AIR_NUMBER_DENSITY_M)
 
     # refractive index
     index = 1 + x_scaled * 1e-8

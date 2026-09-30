@@ -7,6 +7,7 @@ import pint
 import pytest
 
 import eradiate
+import eradiate.radprops._atmosphere as atmosphere_module
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
 from eradiate.exceptions import DataError
@@ -175,3 +176,56 @@ def test_molecular_atmosphere_depolarization(mode_ckd):
     assert template.render(KernelContext(si=si))
     assert isinstance(depol, pint.Quantity)
     assert len(depol) == atmosphere.geometry.zgrid.n_layers
+
+
+def test_molecular_atmosphere_eval_count(modes_all_unpolarized_double, monkeypatch):
+    # Rendering the parameter map for one spectral index queries the absorption
+    # database and evaluates Rayleigh scattering once each
+    atmosphere = MolecularAtmosphere()
+    si = _default_spectral_index(atmosphere)
+    _, params = traverse(atmosphere)
+
+    counts = {"sigma_a": 0, "sigma_s": 0}
+
+    def spy(name, func):
+        def wrapped(*args, **kwargs):
+            counts[name] += 1
+            return func(*args, **kwargs)
+
+        return wrapped
+
+    method = "eval_sigma_a_ckd" if eradiate.get_mode().is_ckd else "eval_sigma_a_mono"
+    cls = type(atmosphere.absorption_data)
+    monkeypatch.setattr(cls, method, spy("sigma_a", getattr(cls, method)))
+    monkeypatch.setattr(
+        atmosphere_module,
+        "compute_sigma_s_air",
+        spy("sigma_s", atmosphere_module.compute_sigma_s_air),
+    )
+
+    params.render(KernelContext(si=si))
+    assert counts == {"sigma_a": 1, "sigma_s": 1}
+
+
+def test_molecular_atmosphere_eval_count_g_points(mode_ckd, monkeypatch):
+    # g-independent quantities are evaluated once for consecutive g-points
+    # sharing the same wavelength
+    atmosphere = MolecularAtmosphere(rayleigh_depolarization="bodhaine")
+    w = _default_spectral_index(atmosphere).w
+    counts = {"compute_sigma_s_air": 0, "depolarization_bodhaine": 0}
+
+    for name in counts:
+        func = getattr(atmosphere_module, name)
+
+        def wrapped(*args, name=name, func=func, **kwargs):
+            counts[name] += 1
+            return func(*args, **kwargs)
+
+        monkeypatch.setattr(atmosphere_module, name, wrapped)
+
+    for g in [0.25, 0.75]:
+        si = CKDSpectralIndex(w=w, g=g)
+        atmosphere.eval_sigma_s(si)
+        atmosphere.eval_depolarization_factor(si)
+
+    assert counts == {"compute_sigma_s_air": 1, "depolarization_bodhaine": 1}
