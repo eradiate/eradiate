@@ -20,7 +20,7 @@ def test_het01_brfpp(mode_mono_double, exp, dataset_regression):
 
     Simulation results are compared to a reference obtained with a prior
     version and validated with ROMC. Comparison is done with a z-test
-    with a threshold of 0.05.
+    with a threshold of 0.01.
     """
     result = eradiate.run(exp)
 
@@ -28,6 +28,6 @@ def test_het01_brfpp(mode_mono_double, exp, dataset_regression):
 
     dataset_regression.check(
         result,
-        ZTest(0.05, variable="radiance"),
+        ZTest(0.01, variable="radiance"),
         basename="het01_brfpp_ref",
     )
