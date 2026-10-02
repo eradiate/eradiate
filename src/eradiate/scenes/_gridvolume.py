@@ -174,7 +174,7 @@ def generate_gridvolume(
     wrap_mode: str | None = None,
     spectral_index: bool = True,
     units=None,
-    dtype: type = np.float32,
+    dtype: type = None,
     extra_kwargs: dict | None = None,
 ) -> dict | SceneParameter:
     """
@@ -217,13 +217,13 @@ def generate_gridvolume(
     wrap_mode : str, optional
         Mitsuba wrap mode string. Defaults to ``str(geometry.wrap_mode)``.
 
-    spectral_index : bool, optional, default: False
+    spectral_index : bool, default: False
         If ``True``, pass ``ctx.si`` instead of ``ctx`` to ``eval_grid``.
 
     units : pint.Unit, optional
-    If set, convert grid values to these units before processing.
+        If set, convert grid values to these units before processing.
 
-    dtype : numpy.dtype, optional, default: numpy.float32
+    dtype : numpy.dtype, optional, default: None
         NumPy dtype of the resulting grid buffer.
 
     extra_kwargs : dict, optional

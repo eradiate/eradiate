@@ -10,7 +10,7 @@ import pint
 import xarray as xr
 from axsdb import AbsorptionDatabase
 
-from eradiate.kernel._render import SearchSceneParameter
+from ...kernel import SearchSceneParameter
 
 from .._gridvolume import generate_gridvolume
 from ..core import (
@@ -30,7 +30,7 @@ from ..._factory import Factory
 from ..._mode import get_mode
 from ...attrs import define, documented, get_doc
 from ...contexts import KernelContext
-from ...grid import GridCoords
+from ...grid import SpatialGrid
 from ...kernel import (
     KernelSceneParameterFlags,
     SceneParameter,
@@ -433,7 +433,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_radprops(
         self,
         si: SpectralIndex,
-        grid: GridCoords | None = None,
+        grid: SpatialGrid | None = None,
         optional_fields: bool = False,
     ) -> xr.Dataset:
         """
@@ -444,7 +444,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : .SpectralIndex
             Spectral index.
 
-        grid : .GridCoords, optional
+        grid : .SpatialGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
             (see :meth:`grid <.AbstractHeterogeneousAtmosphere.geometry.grid>`).
@@ -478,7 +478,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         data_vars = {
             "sigma_t": (
-                ("x_cells", "y_cells", "z_layer"),
+                ("x_cell", "y_cell", "z_layer"),
                 sigma_t.m_as(sigma_units),
                 {
                     "units": f"{symbol(sigma_units)}",
@@ -487,7 +487,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 },
             ),
             "albedo": (
-                ("x_cells", "y_cells", "z_layer"),
+                ("x_cell", "y_cell", "z_layer"),
                 albedo,
                 {
                     "standard_name": "albedo",
@@ -501,7 +501,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             data_vars.update(
                 {
                     "sigma_a": (
-                        ("x_cells", "y_cells", "z_layer"),
+                        ("x_cell", "y_cell", "z_layer"),
                         sigma_t.m_as(sigma_units) * (1.0 - albedo),
                         {
                             "units": f"{symbol(sigma_units)}",
@@ -510,7 +510,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         },
                     ),
                     "sigma_s": (
-                        ("x_cells", "y_cells", "z_layer"),
+                        ("x_cell", "y_cell", "z_layer"),
                         sigma_t.m_as(sigma_units) * albedo,
                         {
                             "units": f"{symbol(sigma_units)}",
@@ -556,7 +556,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @abstractmethod
     def eval_albedo(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate albedo spectrum based on a spectral context. This method
@@ -568,7 +568,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : :class:`.SpectralIndex`
             Spectral index.
 
-        grid : .GridCoords, optional
+        grid : .SpatialGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
             (see :meth:`grid <.AbstractHeterogeneousAtmosphere.geometry.grid>`).
@@ -582,7 +582,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @abstractmethod
     def eval_sigma_t(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate extinction coefficient given a spectral context.
@@ -592,7 +592,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : :class:`.SpectralIndex`
             Spectral index.
 
-        grid : .GridCoords, optional
+        grid : .SpatialGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
             (see :meth:`grid <.AbstractHeterogeneousAtmosphere.geometry.grid>`).
@@ -605,7 +605,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @abstractmethod
     def eval_sigma_a(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate absorption coefficient given a spectral context.
@@ -615,7 +615,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : :class:`.SpectralIndex`
             Spectral index.
 
-        grid : .GridCoords, optional
+        grid : .SpatialGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
             (see :meth:`grid <.AbstractHeterogeneousAtmosphere.column.grid>`).
@@ -628,7 +628,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
     @abstractmethod
     def eval_sigma_s(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         """
         Evaluate scattering coefficient given a spectral context.
@@ -638,7 +638,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         si : :class:`.SpectralIndex`
             Spectral index.
 
-        grid : .GridCoords, optional
+        grid : .SpatialGrid, optional
             Altitude grid on which evaluation is performed. If unset, an
             instance-specific default is used
             (see :meth:`grid <.AbstractHeterogeneousAtmosphere.geometry.grid>`).
@@ -711,13 +711,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 self.geometry,
                 self.eval_albedo,
                 units=ureg.dimensionless,
-                dtype=np.float64,
             ),
             "sigma_t": generate_gridvolume(
                 self.geometry,
                 self.eval_sigma_t,
                 units=uck.get("collision_coefficient"),
-                dtype=np.float64,
             ),
         }
         sigma_t_id = f"{self.id}_sigma_t"
@@ -735,7 +733,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         elif isinstance(self.geometry, PlaneParallelGeometry):
             medium = (
                 "eoheterogeneous"
-                if self.force_majorant or not self.geometry.grid.onedim
+                if self.force_majorant or not self.geometry.grid.is_1d
                 else "piecewise"
             )
             if medium == "eoheterogeneous" and self.extremum_resolution != (1, 1, 1):
@@ -800,7 +798,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             units=ureg.dimensionless,
             search=albedo_search,
             flag=KernelSceneParameterFlags.SPECTRAL,
-            dtype=np.float64,
         )
         sigma_t_grid = generate_gridvolume(
             self.geometry,
@@ -808,7 +805,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             units=uck.get("collision_coefficient"),
             search=sigma_t_search,
             flag=KernelSceneParameterFlags.SPECTRAL,
-            dtype=np.float64,
         )
 
         return {

@@ -24,7 +24,7 @@ def test_data():
 
 
 def test_array(modes_all_mono, test_data):
-    grid = eradiate.grid.GridCoords.convert(np.linspace(0, 1000, 11))
+    grid = eradiate.grid.SpatialGrid.convert(np.linspace(0, 1000, 11))
     si = eradiate.spectral.SpectralIndex.new(w=550 * ureg.nm)
 
     array_radprofile = ArrayRadProfile(
@@ -43,7 +43,7 @@ def test_array(modes_all_mono, test_data):
 
 
 def test_resample_array(modes_all_mono, test_data):
-    grid = eradiate.grid.GridCoords.convert(np.linspace(0, 1000, 21))
+    grid = eradiate.grid.SpatialGrid.convert(np.linspace(0, 1000, 21))
     si = eradiate.spectral.SpectralIndex.new(w=550 * ureg.nm)
 
     array_radprofile = ArrayRadProfile(
@@ -66,7 +66,7 @@ def test_resample_array(modes_all_mono, test_data):
 
 
 def test_array_zeros(modes_all_mono, test_data):
-    grid = eradiate.grid.GridCoords.convert(np.linspace(0, 1000, 11))
+    grid = eradiate.grid.SpatialGrid.convert(np.linspace(0, 1000, 11))
     si = eradiate.spectral.SpectralIndex.new(w=550 * ureg.nm)
 
     array_sigma_a = ArrayRadProfile(

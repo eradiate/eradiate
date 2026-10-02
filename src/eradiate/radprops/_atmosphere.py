@@ -16,7 +16,7 @@ from ._core import RadProfile, make_dataset
 from .rayleigh import compute_sigma_s_air, depolarization_bates, depolarization_bodhaine
 from .. import converters
 from ..attrs import define, documented
-from ..grid import GridCoords
+from ..grid import SpatialGrid
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 from ..util.misc import cache_by_id, summary_repr
@@ -29,7 +29,7 @@ _THERMOPROPS_DEFAULT = {
 
 
 def _validate_thermoprops_grid_shape(
-    thermoprops: xr.Dataset, grid: GridCoords
+    thermoprops: xr.Dataset, grid: SpatialGrid
 ) -> xr.Dataset:
     """Check any 'x'/'y' dimensions of thermoprops against the render grid."""
     horizontal_dims = set(thermoprops.dims) & {"x", "y"}
@@ -163,13 +163,13 @@ class AtmosphereRadProfile(RadProfile):
         default="[0]",
     )
 
-    _grid: GridCoords | None = attrs.field(default=None, init=False)
+    _grid: SpatialGrid | None = attrs.field(default=None, init=False)
 
     def __attrs_post_init__(self):
         self.update()
 
     def update(self) -> None:
-        self._grid = GridCoords.make_default()
+        self._grid = SpatialGrid.make_default()
 
     @property
     def zbounds(self) -> tuple[pint.Quantity, pint.Quantity]:
@@ -181,12 +181,12 @@ class AtmosphereRadProfile(RadProfile):
         return to_quantity(self.thermoprops.z)
 
     @property
-    def grid(self) -> GridCoords:
+    def grid(self) -> SpatialGrid:
         # Inherit docstring
         return self._grid
 
     @cache_by_id
-    def _thermoprops_interp(self, grid: GridCoords) -> xr.Dataset:
+    def _thermoprops_interp(self, grid: SpatialGrid) -> xr.Dataset:
         # Interpolate thermophysical profile on specified altitude grid
         # Note: this value is cached so that repeated calls with the same grid
         #       won't trigger an unnecessary computation.
@@ -197,7 +197,7 @@ class AtmosphereRadProfile(RadProfile):
         )
         return _validate_thermoprops_grid_shape(result, grid)
 
-    def eval_albedo_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+    def eval_albedo_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
         # Inherit docstring
         sigma_s = self.eval_sigma_s_mono(w, grid)
         sigma_t = self.eval_sigma_t_mono(w, grid)
@@ -206,7 +206,7 @@ class AtmosphereRadProfile(RadProfile):
         ).to("dimensionless")
 
     def eval_albedo_ckd(
-        self, w: pint.Quantity, g: float, grid: GridCoords
+        self, w: pint.Quantity, g: float, grid: SpatialGrid
     ) -> pint.Quantity:
         sigma_s = self.eval_sigma_s_ckd(w=w, g=g, grid=grid)
         sigma_t = self.eval_sigma_t_ckd(w=w, g=g, grid=grid)
@@ -214,7 +214,7 @@ class AtmosphereRadProfile(RadProfile):
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
-    def eval_sigma_a_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+    def eval_sigma_a_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
         w = np.atleast_1d(w)
         if self.has_absorption:
             thermoprops = self._thermoprops_interp(grid)
@@ -224,7 +224,7 @@ class AtmosphereRadProfile(RadProfile):
             return np.zeros((w.size, grid.n_layers)).squeeze() / ureg.km
 
     def eval_sigma_a_ckd(
-        self, w: pint.Quantity, g: float, grid: GridCoords
+        self, w: pint.Quantity, g: float, grid: SpatialGrid
     ) -> pint.Quantity:
         w = np.atleast_1d(w)
         if self.has_absorption:
@@ -235,7 +235,7 @@ class AtmosphereRadProfile(RadProfile):
         else:
             return np.zeros((w.size, grid.n_layers)).squeeze() / ureg.km
 
-    def eval_sigma_s_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+    def eval_sigma_s_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
         if self.has_scattering:
             w = np.atleast_1d(w)
             thermoprops = self._thermoprops_interp(grid)
@@ -249,11 +249,11 @@ class AtmosphereRadProfile(RadProfile):
             return np.zeros((1, grid.n_layers)) / ureg.km
 
     def eval_sigma_s_ckd(
-        self, w: pint.Quantity, g: float, grid: GridCoords
+        self, w: pint.Quantity, g: float, grid: SpatialGrid
     ) -> pint.Quantity:
         return self.eval_sigma_s_mono(w=w, grid=grid)
 
-    def eval_sigma_t_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+    def eval_sigma_t_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
         sigma_a = self.eval_sigma_a_mono(w=w, grid=grid)
         sigma_s = self.eval_sigma_s_mono(w=w, grid=grid)
         return sigma_a + sigma_s
@@ -262,13 +262,13 @@ class AtmosphereRadProfile(RadProfile):
         self,
         w: pint.Quantity,
         g: float,
-        grid: GridCoords,
+        grid: SpatialGrid,
     ) -> pint.Quantity:
         sigma_a = self.eval_sigma_a_ckd(w=w, g=g, grid=grid)
         sigma_s = self.eval_sigma_s_ckd(w=w, g=g, grid=grid)
         return sigma_a + sigma_s
 
-    def eval_dataset_mono(self, w: pint.Quantity, grid: GridCoords) -> xr.Dataset:
+    def eval_dataset_mono(self, w: pint.Quantity, grid: SpatialGrid) -> xr.Dataset:
         return make_dataset(
             wavelength=w,
             z_level=grid.levels,
@@ -281,7 +281,7 @@ class AtmosphereRadProfile(RadProfile):
         self,
         w: pint.Quantity,
         g: float,
-        grid: GridCoords,
+        grid: SpatialGrid,
     ) -> xr.Dataset:
         return make_dataset(
             wavelength=w,
@@ -292,7 +292,7 @@ class AtmosphereRadProfile(RadProfile):
         ).squeeze()
 
     def eval_depolarization_factor_mono(
-        self, w: pint.Quantity, grid: GridCoords
+        self, w: pint.Quantity, grid: SpatialGrid
     ) -> pint.Quantity:
         if self.has_scattering:
             if isinstance(self.rayleigh_depolarization, np.ndarray):
@@ -322,6 +322,6 @@ class AtmosphereRadProfile(RadProfile):
         self,
         w: pint.Quantity,
         g: float,
-        grid: GridCoords,
+        grid: SpatialGrid,
     ) -> pint.Quantity:
         return self.eval_depolarization_factor_mono(w=w, grid=grid)
