@@ -1,4 +1,4 @@
-"""SVG diagrams for GridCoords/SceneGeometry HTML reprs."""
+"""SVG diagrams for SpatialGrid/SceneGeometry HTML reprs."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 import pint
 
-from .units import unit_registry as ureg
+from ..units import unit_registry as ureg
 
 
 def _attrib(attrib: dict) -> dict[str, str]:
@@ -614,18 +614,18 @@ def spherical_extent(
 
 
 def grid_repr_html(grid) -> str | None:
-    from .grid import PlaneParallelGridCoords, SphericalShellGridCoords
+    from .grid import CartesianGrid, SphericalGrid
 
     # Never let a display helper break notebook rendering: fall back to
     # the plain-text repr if anything goes wrong.
     try:
-        if isinstance(grid, PlaneParallelGridCoords):
+        if isinstance(grid, CartesianGrid):
             axes = [
                 ("x (width)", grid.edges_x),
                 ("y (length)", grid.edges_y),
                 ("z (altitude)", grid.levels),
             ]
-        elif isinstance(grid, SphericalShellGridCoords):
+        elif isinstance(grid, SphericalGrid):
             axes = [
                 ("azimuth", grid.azimuths),
                 ("colatitude", grid.colatitudes),

@@ -11,7 +11,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
 from eradiate.exceptions import DataError
-from eradiate.grid import PlaneParallelGridCoords
+from eradiate.grid import CartesianGrid
 from eradiate.radprops._atmosphere import (
     _average_adjacent_levels,
     _layers_from_levels,
@@ -185,7 +185,7 @@ def test_molecular_atmosphere_depolarization(mode_ckd):
 
 
 def _make_grid(n_cells_x, n_cells_y):
-    return PlaneParallelGridCoords(
+    return CartesianGrid(
         edges_x=np.linspace(-1.0, 1.0, n_cells_x + 1) * ureg.km,
         edges_y=np.linspace(-1.0, 1.0, n_cells_y + 1) * ureg.km,
         levels=np.linspace(0.0, 5.0, 6) * ureg.km,

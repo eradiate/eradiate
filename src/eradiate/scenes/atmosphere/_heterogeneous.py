@@ -3,6 +3,7 @@ Heterogeneous atmospheres.
 """
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 import logging
 from collections import abc as cabc
@@ -11,7 +12,6 @@ import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-from axsdb import AbsorptionDatabase
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular import MolecularAtmosphere
@@ -20,12 +20,15 @@ from ..core import traverse
 from ..phase import BlendPhaseFunction, PhaseFunction
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...grid import GridCoords
+from ...grid import SpatialGrid
 from ...kernel import SearchSceneParameter
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
+
+if TYPE_CHECKING:
+    from axsdb import AbsorptionDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +122,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         """
         Returns
         -------
-        list
+        list of .AbstractHeterogeneousAtmosphere
             The list of all registered atmospheric components.
         """
         result = [self.molecular_atmosphere] if self.molecular_atmosphere else []
@@ -175,7 +178,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             return None
 
     def eval_albedo(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         if grid is not None and grid is not self.geometry.grid:
@@ -201,7 +204,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return np.stack(result) * sigma_units
 
     def eval_sigma_t(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         if grid is not None and grid is not self.geometry.grid:
@@ -209,7 +212,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return self._eval_sigma_t_impl(si).sum(axis=0)
 
     def eval_sigma_a(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         if grid is not None and grid is not self.geometry.grid:
@@ -233,7 +236,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         return self._eval_sigma_s_impl(si)[n_component]
 
     def eval_sigma_s(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         if grid is not None and grid is not self.geometry.grid:

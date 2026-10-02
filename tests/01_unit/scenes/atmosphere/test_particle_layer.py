@@ -5,7 +5,7 @@ import xarray as xr
 
 from eradiate import KernelContext, fresolver
 from eradiate import unit_registry as ureg
-from eradiate.grid import GridCoords
+from eradiate.grid import SpatialGrid
 from eradiate.radprops import ParticleProperties
 from eradiate.scenes.atmosphere import ParticleLayer, UniformParticleDistribution
 from eradiate.scenes.core import traverse
@@ -291,7 +291,7 @@ class TestParticleLayer:
         n_wavelengths = 3
         n_layers = 10
         wavelengths = np.linspace(500.0, 1500.0, n_wavelengths) * ureg.nm
-        grid = GridCoords.make_onedim_from_levels(
+        grid = SpatialGrid.make_onedim_from_levels(
             np.linspace(0, 5, n_layers + 1) * ureg.km
         )
 
