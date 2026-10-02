@@ -14,7 +14,7 @@ import xarray as xr
 
 from ._core import RadProfile, make_dataset
 from ..attrs import define, documented
-from ..grid import GridCoords
+from ..grid import SpatialGrid
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 
@@ -154,10 +154,10 @@ class ArrayRadProfile(RadProfile):
         raise NotImplementedError
 
     @property
-    def grid(self) -> GridCoords:
+    def grid(self) -> SpatialGrid:
         raise NotImplementedError
 
-    def eval_albedo_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+    def eval_albedo_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
         # Inherit docstring
         sigma_s = self.eval_sigma_s_mono(w, grid)
         sigma_t = self.eval_sigma_t_mono(w, grid)
@@ -166,7 +166,7 @@ class ArrayRadProfile(RadProfile):
         ).to("dimensionless")
 
     def eval_albedo_ckd(
-        self, w: pint.Quantity, g: float, grid: GridCoords
+        self, w: pint.Quantity, g: float, grid: SpatialGrid
     ) -> pint.Quantity:
         sigma_s = self.eval_sigma_s_ckd(w=w, g=g, grid=grid)
         sigma_t = self.eval_sigma_t_ckd(w=w, g=g, grid=grid)
@@ -174,7 +174,7 @@ class ArrayRadProfile(RadProfile):
             sigma_s, sigma_t, where=sigma_t != 0.0, out=np.zeros_like(sigma_s)
         ).to("dimensionless")
 
-    def eval_sigma_a_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+    def eval_sigma_a_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
         w = np.atleast_1d(w)
         if self.has_absorption and self.sigma_a is not None:
             values = self.sigma_a.interp(
@@ -192,7 +192,7 @@ class ArrayRadProfile(RadProfile):
             return np.zeros((w.size, grid.n_layers)).squeeze() / ureg.km
 
     def eval_sigma_a_ckd(
-        self, w: pint.Quantity, g: float, grid: GridCoords
+        self, w: pint.Quantity, g: float, grid: SpatialGrid
     ) -> pint.Quantity:
         warnings.warn(
             "You are using ArrayRadProps in CKD mode, this is not standard "
@@ -201,7 +201,7 @@ class ArrayRadProfile(RadProfile):
         )
         return self.eval_sigma_a_mono(w=w, grid=grid)
 
-    def eval_sigma_s_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+    def eval_sigma_s_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
         w = np.atleast_1d(w)
         if self.has_scattering and self.sigma_s is not None:
             sigma_s = self.sigma_s.interp(
@@ -219,11 +219,11 @@ class ArrayRadProfile(RadProfile):
             return np.zeros((1, grid.n_layers)) / ureg.km
 
     def eval_sigma_s_ckd(
-        self, w: pint.Quantity, g: float, grid: GridCoords
+        self, w: pint.Quantity, g: float, grid: SpatialGrid
     ) -> pint.Quantity:
         return self.eval_sigma_s_mono(w=w, grid=grid)
 
-    def eval_sigma_t_mono(self, w: pint.Quantity, grid: GridCoords) -> pint.Quantity:
+    def eval_sigma_t_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
         sigma_a = self.eval_sigma_a_mono(w=w, grid=grid)
         sigma_s = self.eval_sigma_s_mono(w=w, grid=grid)
         return sigma_a + sigma_s
@@ -232,13 +232,13 @@ class ArrayRadProfile(RadProfile):
         self,
         w: pint.Quantity,
         g: float,
-        grid: GridCoords,
+        grid: SpatialGrid,
     ) -> pint.Quantity:
         sigma_a = self.eval_sigma_a_ckd(w=w, g=g, grid=grid)
         sigma_s = self.eval_sigma_s_ckd(w=w, g=g, grid=grid)
         return sigma_a + sigma_s
 
-    def eval_dataset_mono(self, w: pint.Quantity, grid: GridCoords) -> xr.Dataset:
+    def eval_dataset_mono(self, w: pint.Quantity, grid: SpatialGrid) -> xr.Dataset:
         return make_dataset(
             wavelength=w,
             z_level=grid.levels,
@@ -251,7 +251,7 @@ class ArrayRadProfile(RadProfile):
         self,
         w: pint.Quantity,
         g: float,
-        grid: GridCoords,
+        grid: SpatialGrid,
     ) -> xr.Dataset:
         return make_dataset(
             wavelength=w,
@@ -262,7 +262,7 @@ class ArrayRadProfile(RadProfile):
         ).squeeze()
 
     def eval_depolarization_factor_mono(
-        self, w: pint.Quantity, grid: GridCoords
+        self, w: pint.Quantity, grid: SpatialGrid
     ) -> pint.Quantity:
         if self.has_scattering:
             if isinstance(self.rayleigh_depolarization, np.ndarray):
@@ -277,6 +277,6 @@ class ArrayRadProfile(RadProfile):
         self,
         w: pint.Quantity,
         g: float,
-        grid: GridCoords,
+        grid: SpatialGrid,
     ) -> pint.Quantity:
         return self.eval_depolarization_factor_mono(w=w, grid=grid)

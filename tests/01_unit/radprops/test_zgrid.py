@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from eradiate import unit_registry as ureg
-from eradiate.grid import GridCoords
+from eradiate.grid import SpatialGrid
 
 
 @pytest.mark.parametrize(
@@ -14,7 +14,7 @@ from eradiate.grid import GridCoords
     ids=["pint", "unitless"],
 )
 def test_grid_all(levels):
-    grid = GridCoords.convert(levels)
+    grid = SpatialGrid.convert(levels)
 
     np.testing.assert_array_equal(
         grid.levels.m_as("km"), [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -32,4 +32,4 @@ def test_grid_all(levels):
 
 def test_grid_fails():
     with pytest.raises(ValueError, match="levels must be regularly spaced"):
-        GridCoords.convert(np.asarray([0, 1, 3]))
+        SpatialGrid.convert(np.asarray([0, 1, 3]))

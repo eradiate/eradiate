@@ -17,7 +17,7 @@ from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ... import converters
 from ...attrs import define, documented
 from ...contexts import KernelContext
-from ...grid import GridCoords
+from ...grid import SpatialGrid
 from ...radprops import AtmosphereRadProfile, RadProfile, get_default_absdb
 from ...spectral.index import SpectralIndex
 from ...units import unit_registry as ureg
@@ -255,7 +255,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         return self._radprops_profile
 
     def eval_albedo(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_albedo(
@@ -264,7 +264,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         )
 
     def eval_sigma_t(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_sigma_t(
@@ -273,7 +273,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         )
 
     def eval_sigma_a(
-        self, si: SpectralIndex, grid: GridCoords | None = None, **kwargs
+        self, si: SpectralIndex, grid: SpatialGrid | None = None, **kwargs
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_sigma_a(
@@ -282,7 +282,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         )
 
     def eval_sigma_s(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
         return self.radprops_profile.eval_sigma_s(
@@ -291,7 +291,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         )
 
     def eval_depolarization_factor(
-        self, si: SpectralIndex, grid: GridCoords | None = None
+        self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         return self.radprops_profile.eval_depolarization_factor(
             si,
