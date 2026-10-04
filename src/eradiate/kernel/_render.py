@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
-import typing as t
 import warnings
+from typing import Any
 
 import attrs
 import mitsuba as mi
@@ -254,7 +254,7 @@ def mi_render(
     ctxs: list[KernelContext],
     spp: int = 0,
     seed_state: SeedState | None = None,
-) -> dict[t.Any, mi.Bitmap]:
+) -> dict[Any, mi.Bitmap]:
     """
     Render a Mitsuba scene multiple times given specified contexts and sensor
     indices.

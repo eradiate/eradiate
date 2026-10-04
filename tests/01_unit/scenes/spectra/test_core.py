@@ -1,5 +1,5 @@
 import pytest
-from pinttr.exceptions import UnitsError
+from pinttrs.exceptions import UnitsError
 
 from eradiate import unit_registry as ureg
 from eradiate.scenes.spectra import UniformSpectrum, spectrum_factory

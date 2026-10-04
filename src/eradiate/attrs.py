@@ -243,8 +243,8 @@ def parse_docs(cls: type) -> type:
     Notes
     -----
     * Meant to be used as a class decorator.
-    * Must be applied **after** :func:`@attr.s <attr.s>` (or any other
-      attrs decorator).
+    * Must be applied **after** :func:`@attrs.define <attrs.define>` (or any
+      other attrs decorator).
     * Fields must be documented using :func:`documented`.
     """
     formatter = _numpy_formatter
@@ -315,7 +315,7 @@ def documented(
 
     See Also
     --------
-    :func:`attrs.field`, :func:`pinttr.field`, :func:`parse_docs`
+    :func:`attrs.field`, :func:`pinttrs.field`, :func:`parse_docs`
     """
     _attrib = cast(
         Any, attrib

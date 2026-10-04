@@ -9,7 +9,7 @@ lookup dataset (wrapped in a :class:`.ParticleProperties`).
 
 from __future__ import annotations
 
-from collections import abc as cabc
+from collections.abc import MutableMapping
 from typing import Any
 
 import attrs
@@ -101,7 +101,7 @@ class ParticleStateComponent(ParticleComponent):
           omitted and will automatically be set to ``"particle_state"``.
         * Otherwise, the value is returned unchanged.
         """
-        if isinstance(value, cabc.MutableMapping) and "type" not in value:
+        if isinstance(value, MutableMapping) and "type" not in value:
             value = {**value, "type": "particle_state"}
         return atmosphere_factory.convert(value, allowed_cls=cls)
 
@@ -580,7 +580,7 @@ class ParticlePSDComponent(ParticleStateComponent):
           omitted and will automatically be set to ``"particle_psd"``.
         * Otherwise, the value is returned unchanged.
         """
-        if isinstance(value, cabc.MutableMapping) and "type" not in value:
+        if isinstance(value, MutableMapping) and "type" not in value:
             value = {**value, "type": "particle_psd"}
         return atmosphere_factory.convert(value, allowed_cls=cls)
 

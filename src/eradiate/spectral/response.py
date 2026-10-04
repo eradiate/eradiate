@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import os
-import typing as t
 import warnings
 from abc import ABC, abstractmethod
+from typing import Any
 
 import attrs
 import numpy as np
-import numpy.typing as npt
 import pint
 import pinttrs
 import scipy.integrate as spi
 import xarray as xr
+from numpy.typing import ArrayLike
 from pinttrs.util import ensure_units
 
 from .. import converters, validators
@@ -35,7 +35,7 @@ class SpectralResponseFunction(ABC):
     """
 
     @staticmethod
-    def convert(value) -> t.Any:
+    def convert(value) -> Any:
         """
         Converter for the ``Measure.srf`` field.
 
@@ -98,7 +98,7 @@ class SpectralResponseFunction(ABC):
         return value
 
     @abstractmethod
-    def eval(self, w: npt.ArrayLike) -> pint.Quantity:
+    def eval(self, w: ArrayLike) -> pint.Quantity:
         """
         Evaluate the spectral response function for one or several wavelengths.
         Evaluation is vectorized.
@@ -202,7 +202,7 @@ class UniformSRF(SpectralResponseFunction):
             "/>"
         )
 
-    def eval(self, w: npt.ArrayLike) -> pint.Quantity:
+    def eval(self, w: ArrayLike) -> pint.Quantity:
         # Inherit docstring
 
         w_units = ucc.get("wavelength")
@@ -274,7 +274,7 @@ class DeltaSRF(SpectralResponseFunction):
             "/>"
         )
 
-    def eval(self, w: npt.ArrayLike) -> pint.Quantity:
+    def eval(self, w: ArrayLike) -> pint.Quantity:
         # Inherit docstring
 
         return np.zeros_like(w) * ureg.dimensionless
@@ -554,7 +554,7 @@ class BandSRF(SpectralResponseFunction):
         wmax_m = self.wavelengths.m.max()
         return (wmin_m, wmax_m) * self.wavelengths.u
 
-    def eval(self, w: npt.ArrayLike) -> pint.Quantity:
+    def eval(self, w: ArrayLike) -> pint.Quantity:
         # Inherit docstring
 
         w_units = self.wavelengths.u
@@ -607,7 +607,7 @@ class BandSRF(SpectralResponseFunction):
         # Compute integral
         return spi.trapezoid(values_m, w_m) * w_u
 
-    def integrate_cumulative(self, w: npt.ArrayLike) -> pint.Quantity:
+    def integrate_cumulative(self, w: ArrayLike) -> pint.Quantity:
         """
         Return the cumulative integral of the SRF on the specified mesh, using
         the trapezoid rule.
