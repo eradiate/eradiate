@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import typing as t
 from abc import ABC, abstractmethod
 from functools import singledispatchmethod
+from typing import Any, Callable
 
 import attrs
 import pint
@@ -19,7 +19,7 @@ from ...units import PhysicalQuantity
 
 
 class SpectrumFactory(Factory):
-    def converter(self, quantity: str | PhysicalQuantity) -> t.Callable[[t.Any], t.Any]:
+    def converter(self, quantity: str | PhysicalQuantity) -> Callable[[Any], Any]:
         """
         Generate a converter wrapping :meth:`SpectrumFactory.convert` to
         handle defaults for shortened spectrum definitions. The produced

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import typing as t
 from abc import ABC, abstractmethod
+from typing import Any
 
 import attrs
 import numpy as np
@@ -48,7 +48,7 @@ class Layout(ABC):
     )
 
     @staticmethod
-    def convert(value: t.Any) -> t.Any:
+    def convert(value: Any) -> Any:
         """
         Attempt to instantiate a :class:`Layout` concrete class from an object.
 

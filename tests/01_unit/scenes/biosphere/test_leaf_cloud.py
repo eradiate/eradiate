@@ -1,7 +1,7 @@
 import os
 import tempfile
 
-import attr
+import attrs
 import numpy as np
 import pytest
 
@@ -28,9 +28,9 @@ def rng():
 
 @pytest.fixture(scope="function")
 def rng_mock():
-    @attr.s
+    @attrs.define
     class RngMock:
-        values = attr.ib(converter=np.atleast_1d)
+        values = attrs.field(converter=np.atleast_1d)
 
         def random(self, n=1):
             selector = np.array([i % len(self.values) for i in range(n)])

@@ -111,7 +111,7 @@ be
    <Quantity(100.0, 'kilometer')>
 
 If one tries to set ``top`` with a value which has wrong units, a
-:class:`~pinttr.exceptions.UnitsError` will be raised:
+:class:`~pinttrs.exceptions.UnitsError` will be raised:
 
 .. doctest::
 

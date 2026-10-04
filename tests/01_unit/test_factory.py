@@ -1,4 +1,4 @@
-import attr
+import attrs
 
 from eradiate._factory import Factory
 from eradiate.units import unit_registry as ureg
@@ -10,9 +10,9 @@ def test_factory_convert():
     # We register a type with a nondefault constructor used for dict-based
     # creation
     @factory.register(type_id="mycls", dict_constructor="foo")
-    @attr.s
+    @attrs.define
     class MyClass:
-        field = attr.ib(default=None)
+        field = attrs.field(default=None)
 
         @classmethod
         def foo(cls):

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
-import typing as t
 import warnings
+from typing import Any
 
 import attrs
 
@@ -206,7 +206,7 @@ class AtmosphereExperiment(EarthObservationExperiment):
 
         return result
 
-    def _context_kwargs(self) -> dict[str, t.Any]:
+    def _context_kwargs(self) -> dict[str, Any]:
         kwargs = {}
 
         for measure in self.measures:
