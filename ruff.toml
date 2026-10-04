@@ -1,8 +1,23 @@
 exclude = ["docs/_ext/autodocsumm.py", "src/eradiate/test_tools/benchmark/asvdb.py"]
 include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
+target-version = "py39"
 
 [lint]
-extend-select = ["B", "E", "F", "I", "UP"]
+select = [
+  "B",
+  "C4",
+  "E",
+  "F",
+  "FURB",
+  "I",
+  "NPY",
+  "PERF",
+  "PIE",
+  "RUF",
+  "SIM",
+  "UP",
+  "W",
+]
 ignore = ["E501", "F821"]
 isort = { relative-imports-order = "closest-to-furthest" }
 per-file-ignores = { "*.ipynb" = ["E402"] }
