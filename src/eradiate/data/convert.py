@@ -8,6 +8,7 @@ import pint
 import xarray as xr
 from numpy.typing import DTypeLike
 
+from .._compat import trapezoid
 from ..units import symbol, to_quantity
 from ..units import unit_registry as ureg
 from ..util.deprecation import deprecated
@@ -364,7 +365,7 @@ def make_prt_psd_v1(
             n = int(nangles[idx])
             mu_pt = mu_vals[idx][:n]
             phase_pt = phase_vals[(slice(None), *idx)]  # (nphamat, nangle)
-            integral = np.trapezoid(phase_pt[0, :n], mu_pt)
+            integral = trapezoid(phase_pt[0, :n], mu_pt)
             if integral == 0.0:
                 raise ValueError(
                     f"make_prt_psd_v1(): p11 integrates to 0 at index "

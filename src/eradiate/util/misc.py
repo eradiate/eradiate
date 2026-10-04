@@ -11,7 +11,6 @@ import inspect
 import operator
 import os
 import re
-import sys
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from numbers import Number
@@ -696,14 +695,6 @@ def dirsize(path: PathLike) -> int:
     return total_size
 
 
-# TODO: Remove when Python <3.11 is dropped
-# Helper function to get the utcnow datetime
-if sys.version_info >= (3, 11):
-
-    def get_utcnow():
-        return datetime.datetime.now(datetime.UTC)
-
-else:
-
-    def get_utcnow():
-        return datetime.datetime.utcnow()
+def get_utcnow() -> datetime.datetime:
+    """Return the current time as a timezone-aware UTC datetime."""
+    return datetime.datetime.now(datetime.timezone.utc)

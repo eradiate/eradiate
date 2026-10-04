@@ -18,14 +18,13 @@ from rich.prompt import Confirm
 from rich.table import Table
 
 from . import converters
+from ._compat import trapezoid
 from ._version import _version as __version__
 from .typing import PathLike
 from .units import to_quantity
 from .units import unit_registry as ureg
 from .util.deprecation import deprecated
 from .util.misc import get_utcnow
-
-_trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz  # noqa: NPY201
 
 convert_no_id = converters.passthrough_type(xr.Dataset)(converters.resolve_path)
 convert = converters.passthrough_type(xr.Dataset)(
@@ -543,7 +542,7 @@ def _integral_filter_bounds_symmetry(
     x: ArrayLike, y: ArrayLike, fraction: float
 ) -> tuple[tuple[int, int], float]:
     # Insert mean in x array
-    xmean = _trapezoid(y * x, x) / _trapezoid(y, x)
+    xmean = trapezoid(y * x, x) / trapezoid(y, x)
     i_xmean = np.argwhere(x < xmean).max() + 1
     xext = np.insert(x, i_xmean, xmean)
     yext = np.insert(y, i_xmean, np.interp(xmean, x, y))

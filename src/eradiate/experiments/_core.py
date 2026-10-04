@@ -518,7 +518,7 @@ class EarthObservationExperiment(Experiment, ABC):
         return {
             "convention": "CF-1.10",
             "source": f"eradiate, version {eradiate.__version__}",
-            "history": f"{datetime.datetime.now(datetime.UTC).replace(microsecond=0).isoformat()}"
+            "history": f"{datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat()}"
             f" - data creation - {self.__class__.__name__}.postprocess()",
             "references": "",
         }
