@@ -8,6 +8,7 @@ import pint
 import xarray as xr
 from numpy.typing import DTypeLike
 
+from .._compat import trapezoid
 from ..units import symbol, to_quantity
 from ..units import unit_registry as ureg
 from ..util.pmom import compute_pmom as _compute_pmom
@@ -199,7 +200,7 @@ def make_aer_core_v2(
             n = int(nangles[iw])
             mu_w = mu_vals[iw, :n]
             p11_w = phase_vals[0, iw, :n]
-            integral = np.trapezoid(p11_w, mu_w)
+            integral = trapezoid(p11_w, mu_w)
             if integral == 0.0:
                 raise ValueError(
                     f"make_aer_core_v2(): p11 integrates to 0 at wavelength "
