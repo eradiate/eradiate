@@ -4,8 +4,8 @@ Array radiative profile.
 
 from __future__ import annotations
 
-import typing as t
 import warnings
+from typing import Any, Literal
 
 import attrs
 import numpy as np
@@ -99,7 +99,7 @@ class ArrayRadProfile(RadProfile):
         default="[0]",
     )
 
-    interpolation_method: t.Literal["nearest", "linear"] = documented(
+    interpolation_method: Literal["nearest", "linear"] = documented(
         attrs.field(
             default="nearest",
             converter=str,
@@ -111,7 +111,7 @@ class ArrayRadProfile(RadProfile):
         default="nearest",
     )
 
-    interpolation_kwargs: dict[str, t.Any] = documented(
+    interpolation_kwargs: dict[str, Any] = documented(
         attrs.field(
             factory=dict,
             converter=dict,

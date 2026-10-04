@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as t
+from typing import Any
 
 import attrs
 
@@ -73,7 +73,7 @@ class KernelContext(Context):
         default="None",
     )
 
-    kwargs: dict[str, t.Any] = documented(
+    kwargs: dict[str, Any] = documented(
         attrs.field(factory=dict),
         doc="Object-specific parameter overrides.",
         type="dict",
