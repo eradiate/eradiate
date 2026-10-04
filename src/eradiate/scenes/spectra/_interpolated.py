@@ -10,14 +10,13 @@ import xarray as xr
 
 from ._core import Spectrum
 from ... import converters, validators
+from ..._compat import trapezoid
 from ...attrs import define, documented
 from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-
-_trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz  # noqa: NPY201
 
 
 @define(eq=False, slots=False, init=False)
@@ -250,7 +249,7 @@ class InterpolatedSpectrum(Spectrum):
         interp = self.eval_mono(w * wavelength_units)
 
         # Compute integral
-        integral = _trapezoid(interp, w)
+        integral = trapezoid(interp, w)
 
         # Apply units
         return integral * ureg.dimensionless * wavelength_units
