@@ -10,9 +10,9 @@ from typing import Any, Callable, TypeVar
 
 import matplotlib.pyplot as plt
 import pytest
-from typing_extensions import ParamSpec, TypeAlias
 
 from .. import fresolver
+from .._compat import ParamSpec, TypeAlias
 from ..typing import PathLike
 
 

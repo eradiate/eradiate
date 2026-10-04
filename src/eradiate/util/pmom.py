@@ -16,6 +16,8 @@ from typing import Annotated
 import numpy as np
 import typer
 
+from .._compat import trapezoid
+
 
 def calc_pmom_bde(mu: np.ndarray, phase: np.ndarray, nmom: int) -> np.ndarray:
     """
@@ -57,7 +59,7 @@ def calc_pmom_bde(mu: np.ndarray, phase: np.ndarray, nmom: int) -> np.ndarray:
     pmom = np.zeros(nmom)
 
     # Zeroth moment: trapezoidal (mirrors the separate loop in calc_pmom)
-    pmom[0] = np.trapezoid(phase, mu)
+    pmom[0] = trapezoid(phase, mu)
 
     if nmom < 2:
         return pmom
@@ -137,17 +139,17 @@ def calc_pmom_trapz(mu: np.ndarray, phase: np.ndarray, nmom: int) -> np.ndarray:
     pmom = np.zeros(nmom)
 
     p_prev = np.ones(ntheta)  # P_0
-    pmom[0] = 0.5 * np.trapezoid(p_prev * phase, mu)
+    pmom[0] = 0.5 * trapezoid(p_prev * phase, mu)
 
     if nmom < 2:
         return pmom
 
     p_curr = mu.copy()  # P_1
-    pmom[1] = 0.5 * np.trapezoid(p_curr * phase, mu)
+    pmom[1] = 0.5 * trapezoid(p_curr * phase, mu)
 
     for l in range(2, nmom):  # noqa: E741
         p_next = ((2 * l - 1) * mu * p_curr - (l - 1) * p_prev) / l
-        pmom[l] = 0.5 * np.trapezoid(p_next * phase, mu)
+        pmom[l] = 0.5 * trapezoid(p_next * phase, mu)
         p_prev = p_curr
         p_curr = p_next
 
@@ -217,7 +219,7 @@ def compute_pmom(
     mu = np.cos(theta * np.pi / 180.0)
 
     # ∫₋₁¹ p(μ) dμ — abs() handles either mu ordering.
-    pint = abs(np.trapezoid(phase, mu))
+    pint = abs(trapezoid(phase, mu))
     if check_normalization and abs(2.0 - pint) > 1e-2:
         warnings.warn(
             f"Phase function not normalized to 2 but to {pint:.8f}",

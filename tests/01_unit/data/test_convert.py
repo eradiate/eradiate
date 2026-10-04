@@ -7,6 +7,7 @@ import pytest
 import xarray as xr
 
 from eradiate import unit_registry as ureg
+from eradiate._compat import trapezoid
 from eradiate.data.convert import (
     aer_v1_to_aer_core_v2,
     concat_particles_veff,
@@ -400,7 +401,7 @@ class TestMakeAerCoreV2:
             mu = ds["mu"].values
             phase = ds["phase"].values
             for iw in range(mu.shape[0]):
-                integral = np.trapezoid(phase[0, iw, :], mu[iw, :])
+                integral = trapezoid(phase[0, iw, :], mu[iw, :])
                 np.testing.assert_allclose(integral, 2.0, rtol=1e-12)
 
         def test_scales_all_components(self):
@@ -636,7 +637,7 @@ class TestMakePrtPsdV1:
             mu = ds["mu"].values
             phase = ds["phase"].values
             for idx in np.ndindex(mu.shape[:-1]):
-                integral = np.trapezoid(phase[(0, *idx)], mu[idx])
+                integral = trapezoid(phase[(0, *idx)], mu[idx])
                 np.testing.assert_allclose(integral, 2.0, rtol=1e-12)
 
         def test_scales_all_components(self):
