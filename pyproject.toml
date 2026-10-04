@@ -215,7 +215,6 @@ bump-show = { cmd = "bump-my-version show-bump" }
 bump-dry = { cmd = "bump-my-version bump --new-version $RELEASE_VERSION --dry-run --verbose" }
 # Linting
 lint = { cmd = """ruff check""" }
-lint-ext = { cmd = """ruff check --extend-select B,C4,SIM,PIE,UP,PERF,NPY,RUF""" }
 
 [tool.pixi.environments]
 default = { features = ["py310", "recommended", "test", "dev"], solve-group = "dev" }
