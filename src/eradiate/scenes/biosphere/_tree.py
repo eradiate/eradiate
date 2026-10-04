@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import typing as t
 from abc import ABC
 from collections.abc import MutableMapping
 from pathlib import Path
+from typing import Any
 
 import attrs
 import mitsuba as mi
@@ -405,7 +405,7 @@ class MeshTreeElement:
         return MeshTreeElement(**d_copy)
 
     @staticmethod
-    def convert(value: t.Any) -> t.Any:
+    def convert(value: Any) -> Any:
         """
         Object converter method.
 

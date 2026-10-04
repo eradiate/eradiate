@@ -5,7 +5,6 @@ Utilities for the Eradiate test suite.
 from __future__ import annotations
 
 import os
-import typing as t
 from pathlib import Path
 from typing import Any, Callable, TypeVar
 
@@ -17,7 +16,7 @@ from .. import fresolver
 from ..typing import PathLike
 
 
-def skipif_data_not_found(path: PathLike, action: t.Callable | None = None) -> None:
+def skipif_data_not_found(path: PathLike, action: Callable | None = None) -> None:
     """
     During a Pytest session, skip the current test if the referenced dataset
     cannot be resolved by the file resolver.

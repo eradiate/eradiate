@@ -27,8 +27,9 @@ For example, :class:`MonoSpectralIndex` is used in monochromatic mode.
 
 from __future__ import annotations
 
-import typing as t
 from abc import ABC, abstractmethod
+from collections.abc import Hashable
+from typing import Any
 
 import attrs
 import pint
@@ -62,7 +63,7 @@ class SpectralIndex(ABC):
 
     @property
     @abstractmethod
-    def as_hashable(self) -> t.Hashable:
+    def as_hashable(self) -> Hashable:
         """
         Hashable representation of the spectral index.
 
@@ -106,12 +107,12 @@ class SpectralIndex(ABC):
         return si_cls(**kwargs)
 
     @staticmethod
-    def from_dict(d: dict[str, t.Any]) -> SpectralIndex:
+    def from_dict(d: dict[str, Any]) -> SpectralIndex:
         d_copy = pinttrs.interpret_units(d, ureg=ureg)
         return SpectralIndex.new(**d_copy)
 
     @staticmethod
-    def convert(value: t.Any) -> SpectralIndex:
+    def convert(value: Any) -> SpectralIndex:
         if isinstance(value, SpectralIndex):
             return value
         elif isinstance(value, dict):
