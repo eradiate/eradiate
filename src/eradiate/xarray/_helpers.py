@@ -1,8 +1,8 @@
-import typing as t
+from typing import Union
 
 import xarray as xr
 
-XarrayObj = t.Union[xr.DataArray, xr.Dataset]
+XarrayObj = Union[xr.DataArray, xr.Dataset]
 
 
 def unstack_mdistant_grid(obj: XarrayObj) -> XarrayObj:

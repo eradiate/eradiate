@@ -8,7 +8,7 @@ import numpy as np
 import pint
 import pinttrs
 import xarray as xr
-from pinttr.util import always_iterable
+from pinttrs.util import always_iterable
 
 from .._mode import Mode
 from ..exceptions import UnsupportedModeError

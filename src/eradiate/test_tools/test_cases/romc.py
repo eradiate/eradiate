@@ -1,8 +1,8 @@
 import numpy as np
 
-from eradiate import fresolver
-from eradiate.experiments import CanopyExperiment
-from eradiate.units import unit_registry as ureg
+from ...data import fresolver
+from ...experiments import CanopyExperiment
+from ...units import unit_registry as ureg
 
 
 def fetch_het01_brfpp():

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import importlib
-import typing as t
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
+from typing import Any
 
 import attrs
 import mitsuba as mi
@@ -311,7 +311,7 @@ class SceneTraversal:
     def __attrs_post_init__(self):
         self.hierarchy[self.node] = (self.parent, self.depth)
 
-    def put_template(self, template: t.Mapping) -> None:
+    def put_template(self, template: Mapping) -> None:
         """
         Add a contribution to the kernel dictionary template.
         """
@@ -320,7 +320,7 @@ class SceneTraversal:
         for k, v in template.items():
             self.template[f"{prefix}{k}"] = v
 
-    def put_params(self, params: t.Mapping) -> None:
+    def put_params(self, params: Mapping) -> None:
         """
         Add a contribution to the parameter map.
         """
@@ -442,8 +442,8 @@ class BoundingBox:
 
     @classmethod
     def convert(
-        cls, value: t.Sequence | t.Mapping | np.typing.ArrayLike | pint.Quantity
-    ) -> t.Any:
+        cls, value: Sequence | Mapping | np.typing.ArrayLike | pint.Quantity
+    ) -> Any:
         """
         Attempt conversion of a value to a :class:`BoundingBox`.
 

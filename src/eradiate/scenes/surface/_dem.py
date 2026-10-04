@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import typing as t
 import warnings
+from typing import Literal
 
 import attrs
 import mitsuba as mi
@@ -130,7 +130,7 @@ def triangulate_grid(
     y: np.ndarray,
     z: np.ndarray | None = None,
     flip: bool = False,
-    divide: t.Literal["nesw", "nwse"] = "nesw",
+    divide: Literal["nesw", "nwse"] = "nesw",
 ):
     """
     Create a 2D triangulation for a regular (x, y) grid.

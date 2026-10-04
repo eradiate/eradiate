@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import enum
-import typing as t
+from typing import Any
 
 import aenum
 import numpy as np
@@ -30,7 +30,7 @@ class AzimuthConvention(enum.Enum):
     SOUTH_LEFT = (1.5 * np.pi, -1)  #: South left
 
     @staticmethod
-    def convert(value: t.Any) -> AzimuthConvention:
+    def convert(value: Any) -> AzimuthConvention:
         """
         Attempt conversion of a value to an :class:`.AzimuthConvention`
         instance. The conversion protocol is as follows:

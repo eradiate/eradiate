@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as t
+from typing import Any
 
 import attrs
 
@@ -124,7 +124,7 @@ class CanopyExperiment(EarthObservationExperiment):
 
         return result
 
-    def _context_kwargs(self) -> dict[str, t.Any]:
+    def _context_kwargs(self) -> dict[str, Any]:
         return {}
 
     @property

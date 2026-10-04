@@ -2,7 +2,8 @@ from __future__ import annotations
 
 __all__ = ["dataarray_to_rgb", "film_to_angular"]
 
-import typing as t
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 import xarray as xr
@@ -109,7 +110,7 @@ def film_to_angular(
 
 def dataarray_to_rgb(
     da: xr.DataArray,
-    channels: t.Sequence[tuple[str, t.Any]],
+    channels: Sequence[tuple[str, Any]],
     normalize: bool = True,
     gamma_correction: bool = True,
 ) -> np.ndarray:

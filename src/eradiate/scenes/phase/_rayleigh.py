@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as t
+from typing import Callable
 
 import attrs
 import numpy as np
@@ -28,7 +28,7 @@ class RayleighPhaseFunction(PhaseFunction):
     atmosphere.
     """
 
-    depolarization: np.ndarray | t.Callable[[KernelContext], np.ndarray] = documented(
+    depolarization: np.ndarray | Callable[[KernelContext], np.ndarray] = documented(
         attrs.field(
             converter=lambda x: x if callable(x) else np.array(x, dtype=np.float64),
             kw_only=True,
@@ -73,7 +73,7 @@ class RayleighPhaseFunction(PhaseFunction):
             either be 1 or the number of layers of the atmosphere's vertical
             axis.
         """
-        if isinstance(self.depolarization, t.Callable):
+        if isinstance(self.depolarization, Callable):
             depolarization = self.depolarization(si)
         elif isinstance(self.depolarization, np.ndarray):
             depolarization = np.atleast_1d(self.depolarization)

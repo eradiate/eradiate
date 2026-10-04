@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-import typing as t
 from collections.abc import MutableMapping
 from copy import deepcopy
 
@@ -292,7 +291,7 @@ class DiscreteCanopy(Canopy):
     def leaf_cloud_from_files(
         cls,
         size: pint.Quantity,
-        leaf_cloud_dicts: list[t.MutableMapping],
+        leaf_cloud_dicts: list[MutableMapping],
         padding: int = 0,
         id: str = "discrete_canopy",
     ):

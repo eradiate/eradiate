@@ -1,5 +1,5 @@
 import pytest
-from pinttr.exceptions import UnitsError
+from pinttrs.exceptions import UnitsError
 
 from eradiate.units import interpret_quantities, symbol
 from eradiate.units import unit_context_config as ucc
@@ -18,7 +18,7 @@ def test_symbol():
 
 
 def test_interpret_quantities():
-    # If we pass no quantity map, behaviour is the same as pinttr.interpret_units()
+    # If we pass no quantity map, behaviour is the same as pinttrs.interpret_units()
     assert interpret_quantities({"wmin": 550.0}, {}, ucc) == {"wmin": 550.0}
     assert interpret_quantities({"wmin": 550.0, "wmin_units": "nm"}, {}, ucc) == {
         "wmin": 550.0 * ureg.nm

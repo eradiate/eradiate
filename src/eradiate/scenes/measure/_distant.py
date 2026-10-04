@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import typing as t
 from abc import ABC
 from copy import deepcopy
+from typing import Any
 
 import attrs
 import mitsuba as mi
@@ -66,7 +66,7 @@ class Target:
             raise ValueError(f"unknown target type {target_type}")
 
     @staticmethod
-    def convert(value) -> t.Any:
+    def convert(value) -> Any:
         """
         Object converter method.
 

@@ -13,9 +13,9 @@ __all__ = [
 import enum
 import importlib
 import logging
-import typing as t
 from functools import lru_cache
 from importlib.resources import files
+from typing import Any
 
 import pint
 import pinttrs
@@ -247,7 +247,7 @@ def to_quantity(da: xarray.DataArray) -> pint.Quantity:
 
 
 def interpret_quantities(
-    d: dict[str, t.Any],
+    d: dict[str, Any],
     quantity_map: dict[str, str],
     uctx: pinttrs.UnitContext,
     force: bool = False,

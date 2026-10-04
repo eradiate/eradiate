@@ -5,7 +5,7 @@ Particle components.
 from __future__ import annotations
 
 import warnings
-from collections import abc as cabc
+from collections.abc import MutableMapping
 from functools import singledispatchmethod
 from typing import TYPE_CHECKING, Any
 
@@ -73,7 +73,7 @@ class ParticleComponent(AbstractHeterogeneousAtmosphere):
           explicitly.
         * Otherwise, the value is returned unchanged.
         """
-        if isinstance(value, cabc.MutableMapping) and "type" not in value:
+        if isinstance(value, MutableMapping) and "type" not in value:
             value = {**value, "type": "particle_aot"}
         return atmosphere_factory.convert(value, allowed_cls=cls)
 

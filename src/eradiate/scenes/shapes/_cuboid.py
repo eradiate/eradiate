@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as t
+from collections.abc import Sequence
 
 import mitsuba as mi
 import numpy as np
@@ -101,9 +101,7 @@ class CuboidShape(ShapeNode):
 
             return BoundingBox(min, max)
 
-    def contains(
-        self, p: np.typing.ArrayLike, strict: bool = False
-    ) -> t.Sequence[bool]:
+    def contains(self, p: np.typing.ArrayLike, strict: bool = False) -> Sequence[bool]:
         """
         Test whether a point lies within the cuboid.
 

@@ -5,7 +5,7 @@ Heterogeneous atmospheres.
 from __future__ import annotations
 
 import logging
-from collections import abc as cabc
+from collections.abc import MutableMapping
 from typing import TYPE_CHECKING
 
 import attrs
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 def _molecular_converter(value):
-    if isinstance(value, cabc.MutableMapping) and ("type" not in value):
+    if isinstance(value, MutableMapping) and ("type" not in value):
         value["type"] = "molecular"
     return atmosphere_factory.convert(value, allowed_cls=MolecularAtmosphere)
 

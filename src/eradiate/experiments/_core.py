@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import datetime
 import logging
-import typing as t
 import warnings
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Generator, Sequence
+from typing import Any
 
 import attrs
 import mitsuba as mi
@@ -72,7 +72,7 @@ class MeasureRegistry(Sequence):
     _id_to_idx: dict[str, int] = attrs.field(factory=dict, repr=False)
     _idx_to_id: dict[int, str] = attrs.field(factory=dict, repr=False)
 
-    def __init__(self, measures: t.Sequence):
+    def __init__(self, measures: Sequence):
         # Convert all values to a measure
         measures = [measure_factory.convert(x) for x in measures]
 
@@ -523,7 +523,7 @@ class EarthObservationExperiment(Experiment, ABC):
             "references": "",
         }
 
-    def spectral_indices(self, measure_index: int) -> t.Generator[SpectralIndex]:
+    def spectral_indices(self, measure_index: int) -> Generator[SpectralIndex]:
         """
         Generate spectral indices for a given measure.
 
@@ -569,7 +569,7 @@ class EarthObservationExperiment(Experiment, ABC):
         )
 
     @abstractmethod
-    def _context_kwargs(self) -> dict[str, t.Any]:
+    def _context_kwargs(self) -> dict[str, Any]:
         pass
 
     def contexts(self, measures: int | list[int] | None = None) -> list[KernelContext]:

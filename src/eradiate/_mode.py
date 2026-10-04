@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import enum
 import functools
-import typing as t
+from typing import Callable, Literal
 
 import attrs
 import mitsuba
@@ -182,21 +182,21 @@ class Mode:
         type="str",
     )
 
-    spectral_mode: t.Literal[
-        ModeFlag.SPECTRAL_MODE_MONO, ModeFlag.SPECTRAL_MODE_CKD
-    ] = documented(
-        attrs.field(
-            converter=_spectral_mode_converter,
-            validator=attrs.validators.in_(
-                {ModeFlag.SPECTRAL_MODE_MONO, ModeFlag.SPECTRAL_MODE_CKD}
+    spectral_mode: Literal[ModeFlag.SPECTRAL_MODE_MONO, ModeFlag.SPECTRAL_MODE_CKD] = (
+        documented(
+            attrs.field(
+                converter=_spectral_mode_converter,
+                validator=attrs.validators.in_(
+                    {ModeFlag.SPECTRAL_MODE_MONO, ModeFlag.SPECTRAL_MODE_CKD}
+                ),
             ),
-        ),
-        doc="Spectral dimension handling.",
-        type=".ModeFlag",
-        init_type=".ModeFlag or str",
+            doc="Spectral dimension handling.",
+            type=".ModeFlag",
+            init_type=".ModeFlag or str",
+        )
     )
 
-    mi_backend: t.Literal[ModeFlag.MI_BACKEND_SCALAR, ModeFlag.MI_BACKEND_LLVM] = (
+    mi_backend: Literal[ModeFlag.MI_BACKEND_SCALAR, ModeFlag.MI_BACKEND_LLVM] = (
         documented(
             attrs.field(
                 converter=_mi_backend_converter,
@@ -210,7 +210,7 @@ class Mode:
         )
     )
 
-    mi_color_mode: t.Literal[ModeFlag.MI_COLOR_MODE_MONO] = documented(
+    mi_color_mode: Literal[ModeFlag.MI_COLOR_MODE_MONO] = documented(
         attrs.field(
             converter=_mi_color_mode_converter,
             validator=attrs.validators.in_({ModeFlag.MI_COLOR_MODE_MONO}),
@@ -220,7 +220,7 @@ class Mode:
         init_type=".ModeFlag or str",
     )
 
-    mi_polarized: t.Literal[ModeFlag.MI_POLARIZED_NO, ModeFlag.MI_POLARIZED_YES] = (
+    mi_polarized: Literal[ModeFlag.MI_POLARIZED_NO, ModeFlag.MI_POLARIZED_YES] = (
         documented(
             attrs.field(
                 converter=_mi_polarized_converter,
@@ -234,7 +234,7 @@ class Mode:
         )
     )
 
-    mi_double_precision: t.Literal[
+    mi_double_precision: Literal[
         ModeFlag.MI_DOUBLE_PRECISION_NO, ModeFlag.MI_DOUBLE_PRECISION_YES
     ] = documented(
         attrs.field(
@@ -409,7 +409,7 @@ class SubtypeDispatcher:
     _type_name: str = attrs.field()
     _registry: dict[ModeFlag, type] = attrs.field(factory=dict)
 
-    def register(self, mode_flags: ModeFlag | str) -> t.Callable[[type], type]:
+    def register(self, mode_flags: ModeFlag | str) -> Callable[[type], type]:
         """
         Register a subtype against a combination of mode flags. This method is
         meant to be used as a decorator.
@@ -500,7 +500,7 @@ def mode(raise_exc: bool = True) -> Mode | None:
 
 
 def modes(
-    filter: t.Callable[[Mode], bool] | None = None, asdict: bool = False
+    filter: Callable[[Mode], bool] | None = None, asdict: bool = False
 ) -> list[str] | dict[str, Mode]:
     """
     Get list of registered operational modes.

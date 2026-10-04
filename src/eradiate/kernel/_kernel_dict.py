@@ -6,10 +6,9 @@ dictionaries and scene parameter maps.
 from __future__ import annotations
 
 import enum
-import typing as t
 from collections import UserDict
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
 import attrs
 import mitsuba as mi
@@ -30,16 +29,16 @@ class DictParameter:
     """
 
     #: Sentinel value indicating that a parameter is not used
-    UNUSED: t.ClassVar[object] = object()
+    UNUSED: ClassVar[object] = object()
 
-    func: t.Callable = documented(
+    func: Callable = documented(
         attrs.field(validator=attrs.validators.is_callable()),
         doc="A callable that returns the value of the parameter for a given "
         "context, with signature ``f(ctx: KernelContext) -> Any``.",
         type="callable",
     )
 
-    def __call__(self, ctx: KernelContext) -> t.Any:
+    def __call__(self, ctx: KernelContext) -> Any:
         return self.func(ctx)
 
 
@@ -67,9 +66,9 @@ class SceneParameter:
     """
 
     #: Sentinel value indicating that a parameter is not used
-    UNUSED: t.ClassVar[object] = object()
+    UNUSED: ClassVar[object] = object()
 
-    func: t.Callable = documented(
+    func: Callable = documented(
         attrs.field(validator=attrs.validators.is_callable()),
         doc="A callable that returns the value of the parameter for a given "
         "context, with signature ``f(ctx: KernelContext) -> Any``.",
@@ -84,7 +83,7 @@ class SceneParameter:
         default=".KernelSceneParameterFlags.ALL",
     )
 
-    search: t.Callable[[mi.Object, str], str | None] | None = documented(
+    search: Callable[[mi.Object, str], str | None] | None = documented(
         attrs.field(default=None),
         doc="A callable that searches a Mitsuba scene tree node for a desired "
         "parameter ID, with signature "
@@ -102,7 +101,7 @@ class SceneParameter:
         init_type="str, optional",
     )
 
-    def __call__(self, ctx: KernelContext) -> t.Any:
+    def __call__(self, ctx: KernelContext) -> Any:
         return self.func(ctx)
 
 

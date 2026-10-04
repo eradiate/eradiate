@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import contextlib
 import json
-import typing as t
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -13,7 +13,7 @@ SCENARIO_FILE_NAME = "scenario.json"
 def _update_material(
     elem: dict,
     canopy_name: str,
-    spectral_data: dict[str, t.Any | dict[str, t.Any]] | None,
+    spectral_data: dict[str, Any | dict[str, Any]] | None,
 ) -> dict:
     """
     Update the material of an element with spectral data if available.
@@ -53,8 +53,8 @@ def _update_material(
 
 
 def _parse_rpv_surface(
-    surface: dict[str, t.Any], spectral_data: dict[str, t.Any]
-) -> dict[str, t.Any]:
+    surface: dict[str, Any], spectral_data: dict[str, Any]
+) -> dict[str, Any]:
     """
     Convert surface data to RPV representation.
 
@@ -91,8 +91,8 @@ def _parse_rpv_surface(
 
 
 def _parse_lambertian_surface(
-    surface: dict[str, t.Any], spectral_data: dict[str, t.Any]
-) -> dict[str, t.Any]:
+    surface: dict[str, Any], spectral_data: dict[str, Any]
+) -> dict[str, Any]:
     """
     Convert surface data to reflectance representation.
 
@@ -152,7 +152,7 @@ def apply_transformation(transf: np.ndarray, center: np.ndarray) -> np.ndarray:
 def load_scenario(
     scenario_folder: Path,
     padding: int,
-    spectral_data: dict[str, t.Any | dict[str, t.Any]] | None = None,
+    spectral_data: dict[str, Any | dict[str, Any]] | None = None,
 ) -> dict:
     """
     Parse JSON file of scenario from a given path. Apply transformation to the

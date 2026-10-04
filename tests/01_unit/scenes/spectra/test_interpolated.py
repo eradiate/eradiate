@@ -2,7 +2,7 @@ import mitsuba as mi
 import numpy as np
 import pint
 import pytest
-from pinttr.exceptions import UnitsError
+from pinttrs.exceptions import UnitsError
 
 import eradiate
 from eradiate import converters

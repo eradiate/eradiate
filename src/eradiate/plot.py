@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import typing as t
 import warnings
+from collections.abc import Sequence
 
 import matplotlib.pyplot as _plt
 import numpy as np
@@ -155,7 +155,7 @@ def remove_xyticks(from_=None) -> None:
         ax.get_yaxis().set_visible(False)
 
 
-def make_ticks(num_ticks: int, limits: t.Sequence[float]):
+def make_ticks(num_ticks: int, limits: Sequence[float]):
     """
     Generate ticks and their respective tickmarks.
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import typing as t
-from collections import abc as cabc
+from collections.abc import Sequence
+from typing import Callable
 
 import attrs
 import numpy as np
@@ -59,7 +59,7 @@ class MultiPhaseFunction(PhaseFunction):
                 "have at least two components"
             )
 
-    weights: np.ndarray | list[t.Callable[[KernelContext], np.ndarray]] = documented(
+    weights: np.ndarray | list[Callable[[KernelContext], np.ndarray]] = documented(
         attrs.field(
             converter=_weights_converter,
             kw_only=True,
@@ -126,7 +126,7 @@ class MultiPhaseFunction(PhaseFunction):
                     "(n, ...) where n is the number of components; got "
                     f"{value.shape}",
                 )
-        elif isinstance(value, cabc.Sequence):
+        elif isinstance(value, Sequence):
             if not len(value) == len(self.components):
                 raise ValueError(
                     f"while validating '{attribute.name}': weight and component "

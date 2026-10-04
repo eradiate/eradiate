@@ -9,11 +9,11 @@ from typing import Literal
 import attrs
 import matplotlib.pyplot as plt
 import numpy as np
-import numpy.typing as npt
 import pint
 import rich
 import scipy.integrate as spint
 import xarray as xr
+from numpy.typing import ArrayLike
 from rich.prompt import Confirm
 from rich.table import Table
 
@@ -525,7 +525,7 @@ def threshold_filter(srf: PathLike | xr.Dataset, value: float = 1e-3) -> xr.Data
 
 
 def _integral_filter_bounds_walk(
-    x: npt.ArrayLike, y: npt.ArrayLike, fraction: float
+    x: ArrayLike, y: ArrayLike, fraction: float
 ) -> tuple[tuple[int, int], float]:
     # Compute CDF
     cdf = np.concatenate(([0], spint.cumulative_trapezoid(y, x)))
@@ -540,7 +540,7 @@ def _integral_filter_bounds_walk(
 
 
 def _integral_filter_bounds_symmetry(
-    x: npt.ArrayLike, y: npt.ArrayLike, fraction: float
+    x: ArrayLike, y: ArrayLike, fraction: float
 ) -> tuple[tuple[int, int], float]:
     # Insert mean in x array
     xmean = _trapezoid(y * x, x) / _trapezoid(y, x)

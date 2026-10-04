@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import typing as t
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Any
 
 import attrs
 import mitsuba as mi
@@ -150,7 +150,7 @@ class SceneGeometry(ABC):
                 self.toa_altitude = 120.0 * ureg.km
 
     @classmethod
-    def convert(cls, value: t.Any) -> t.Any:
+    def convert(cls, value: Any) -> Any:
         """
         Attempt conversion of a value to a :class:`.SceneGeometry` subtype.
 

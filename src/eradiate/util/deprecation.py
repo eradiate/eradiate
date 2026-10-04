@@ -3,8 +3,8 @@ from __future__ import annotations
 import datetime
 import functools
 import inspect
-import typing as t
 import warnings
+from typing import Callable
 
 from packaging import version
 
@@ -218,7 +218,7 @@ def deprecated(
     return _wrapper
 
 
-def substitute(subs: dict[str, tuple[type, dict[str, str]]]) -> t.Callable:
+def substitute(subs: dict[str, tuple[type, dict[str, str]]]) -> Callable:
     """
     Generate a simple module :func:`__getattr__` which redirects outdated
     attribute lookups to current values with a deprecation warning.
