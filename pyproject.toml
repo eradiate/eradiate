@@ -41,7 +41,7 @@ dependencies = [
   "netcdf4",
   "networkx>=3.0",
   "numpy",
-  "pint",
+  "pint>=0.24.0",
   "pinttrs>=23.2.0",
   "pooch",
   "rich",
