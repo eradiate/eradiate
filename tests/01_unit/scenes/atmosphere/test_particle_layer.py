@@ -291,7 +291,7 @@ class TestParticleLayer:
         n_wavelengths = 3
         n_layers = 10
         wavelengths = np.linspace(500.0, 1500.0, n_wavelengths) * ureg.nm
-        grid = SpatialGrid.make_onedim_from_levels(
+        grid = SpatialGrid.make_1d_from_levels(
             np.linspace(0, 5, n_layers + 1) * ureg.km
         )
 

@@ -117,7 +117,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
-    use_mis: bool = documented(
+    use_phase_mis: bool = documented(
         attrs.field(default=True, converter=bool, kw_only=True),
         doc="If ``True``, multiple importance sampling is enabled for the "
         "3D phase function mixture.",
@@ -280,7 +280,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 components=components,
                 weights=weights,
                 geometry=self.geometry,
-                use_mis=self.use_mis,
+                use_mis=self.use_phase_mis,
             )
 
     @property
