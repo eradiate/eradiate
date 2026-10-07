@@ -4,7 +4,7 @@ import pytest
 
 from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.grid import PlaneParallelGridCoords
+from eradiate.grid import CartesianGrid
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import (
     PlaneParallelGeometry,
@@ -164,7 +164,7 @@ def test_multi_kernel_dict_2_components(mode_mono, weights, use_small_grid):
     """
     kwargs = {}
     if use_small_grid:
-        grid = PlaneParallelGridCoords(
+        grid = CartesianGrid(
             edges_x=np.array([-1.0, 1.0]) * ureg.km,
             edges_y=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.linspace(0.0, 4.0, 5) * ureg.km,
@@ -208,9 +208,8 @@ def test_multi_kernel_dict_2_components(mode_mono, weights, use_small_grid):
 
 def test_multi_kernel_dict_3_components(mode_mono):
     """
-    A flat 3-component blend produces one independent weight grid per
-    component, equal to the raw input weights directly (no pairwise
-    conversion, unlike the former nested BlendPhaseFunction design).
+    A 3-component blend produces one independent weight per component.
+    This test uses a single scalar weight per component.
     """
     weights = [0.3, 0.3, 0.4]
     phase = MultiPhaseFunction(
@@ -253,7 +252,7 @@ def test_multi_kernel_dict_3_components(mode_mono):
 
 
 def _make_small_geometry():
-    grid = PlaneParallelGridCoords(
+    grid = CartesianGrid(
         edges_x=np.array([-1.0, 0.0, 1.0]) * ureg.km,
         edges_y=np.array([-1.0, 0.0, 1.0]) * ureg.km,
         levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
@@ -263,7 +262,7 @@ def _make_small_geometry():
 
 def test_multi_full_3d_weights(mode_mono):
     """
-    A genuine full 3D weight array (n_components, n_x, n_y, n_z) matching the
+    A full 3D weight array (n_components, n_x, n_y, n_z) matching the
     geometry's grid exactly is passed through to the kernel dict unchanged.
     """
     geometry = _make_small_geometry()
@@ -297,7 +296,7 @@ def test_multi_partial_broadcast_weights_raises(mode_mono):
     A per-component weight shape that only partially matches the grid (e.g.
     broadcasting along x only) is rejected: generate_gridvolume only accepts
     a scalar, an exact (n_z,) vertical profile, or an exact (n_x,n_y,n_z)
-    match -- not arbitrary partial reductions.
+    match.
     """
     geometry = _make_small_geometry()
     n_y, n_z = geometry.grid.n_cells_y, geometry.grid.n_cells_z
