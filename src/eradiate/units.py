@@ -2,6 +2,7 @@ from __future__ import annotations
 
 __all__ = [
     "PhysicalQuantity",
+    "magnitude_as",
     "symbol",
     "to_quantity",
     "unit_context_config",
@@ -211,6 +212,46 @@ def symbol(units: pint.Unit | str) -> str:
     """
     units = unit_registry.Unit(units)
     return format(units, "~")
+
+
+def magnitude_as(
+    value: Any, units: pint.Unit | str, default_units: pint.Unit | str
+) -> Any:
+    """
+    Return the magnitude of a value in target units, without building an
+    intermediate quantity for unitless input.
+
+    Parameters
+    ----------
+    value
+        Value to convert. If it is a :class:`pint.Quantity`, it is converted to
+        ``units``; otherwise, it is interpreted as expressed in
+        ``default_units``. Lists and tuples are converted to arrays.
+
+    units : :class:`pint.Unit` or str
+        Target units.
+
+    default_units : :class:`pint.Unit` or str
+        Units applied to unitless ``value``.
+
+    Returns
+    -------
+    Magnitude of ``value`` in ``units``.
+
+    Raises
+    ------
+    pint.DimensionalityError
+        If ``value`` (or ``default_units``) is incompatible with ``units``.
+
+    Notes
+    -----
+    Equivalent to ``ensure_units(value, default_units).m_as(units)``.
+    """
+    if isinstance(value, pint.Quantity):
+        return value.m_as(units)
+    if isinstance(value, (list, tuple)):
+        value = np.asarray(value)
+    return unit_registry.convert(value, default_units, units)
 
 
 def to_quantity(da: xarray.DataArray) -> pint.Quantity:
