@@ -36,8 +36,8 @@ class OceanLegacyBSDF(BSDF):
 
     wind_speed: pint.Quantity = documented(
         pinttrs.field(
-            units=ureg("m/s").units,
-            factory=lambda: 0.01 * ureg("m/s"),
+            units=ureg.Unit("m/s"),
+            factory=lambda: ureg.Quantity(0.01, "m/s"),
             validator=[is_positive, pinttrs.validators.has_compatible_units],
         ),
         doc="Wind speed [m/s] at 10 meters above the surface.",
@@ -61,7 +61,7 @@ class OceanLegacyBSDF(BSDF):
     chlorinity: pint.Quantity = documented(
         pinttrs.field(
             units=ureg.Unit("g/kg"),
-            factory=lambda: 19.0 * ureg("g/kg"),
+            factory=lambda: ureg.Quantity(19.0, "g/kg"),
             validator=[is_positive, pinttrs.validators.has_compatible_units],
         ),
         doc="Chlorinity of water.",
@@ -73,7 +73,7 @@ class OceanLegacyBSDF(BSDF):
     pigmentation: pint.Quantity = documented(
         pinttrs.field(
             units=ureg.Unit("mg/m^3"),
-            factory=lambda: 0.3 * ureg("mg/m^3"),
+            factory=lambda: ureg.Quantity(0.3, "mg/m^3"),
             validator=[is_positive, pinttrs.validators.has_compatible_units],
         ),
         doc="Pigmentation of water.",

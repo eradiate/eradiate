@@ -5,10 +5,10 @@ from typing import Callable, Literal
 
 import attrs
 import numpy as np
+import pint
 
 from .attrs import AUTO
 from .units import PhysicalQuantity
-from .units import unit_registry as ureg
 
 
 def is_scalar(_, attribute, value):
@@ -76,7 +76,7 @@ def all_positive(_, attribute, value):
     ValueError
         If not all values are positive.
     """
-    if isinstance(value, ureg.Quantity):
+    if isinstance(value, pint.Quantity):
         value = value.magnitude
     if np.any(np.array(value) < 0):
         raise ValueError(f"{attribute.name} must be all positive or zero, got {value}")
@@ -91,7 +91,7 @@ def all_strictly_positive(_, attribute, value):
     ValueError
         If not all values are strictly positive.
     """
-    if isinstance(value, ureg.Quantity):
+    if isinstance(value, pint.Quantity):
         value = value.magnitude
     if np.any(np.array(value) <= 0):
         raise ValueError(f"{attribute.name} must be all strictly positive, got {value}")
@@ -251,7 +251,7 @@ def on_quantity(wrapped_validator: Callable):
     """
 
     def f(instance, attribute, value):
-        if isinstance(value, ureg.Quantity):
+        if isinstance(value, pint.Quantity):
             return wrapped_validator(instance, attribute, value.magnitude)
         else:
             return wrapped_validator(instance, attribute, value)
