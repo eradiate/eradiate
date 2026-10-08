@@ -29,7 +29,7 @@ _KM3_INV = ureg.Unit("km^-3")
 _STANDARD_AIR_NUMBER_DENSITY_M = _STANDARD_AIR_NUMBER_DENSITY.m_as(_KM3_INV)
 # Conversion factor from µm^-4 km^3 (units of the scattering coefficient with
 # wavelength in µm and number density in km^-3) to km^-1
-_SIGMA_S_TO_KM_INV = ureg.Quantity(1.0, "micron^-4 km^3").m_as(_KM_INV)
+_SIGMA_S_TO_KM_INV = ureg.convert(1.0, "micron^-4 km^3", _KM_INV)
 
 
 # Bates (1984) King correction factor data

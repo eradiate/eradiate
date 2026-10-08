@@ -14,6 +14,7 @@ import xarray as xr
 from ._file_resolver import fresolver
 from .convert import libradtran_to_aer_core_v2
 from ..typing import PathLike
+from ..units import magnitude_as
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 
@@ -181,14 +182,10 @@ def load_aerosol_libradtran(
     default_units = KWARG_TO_DEFAULT_UNITS["w"]
 
     if wmin is not None:
-        wmin = pinttrs.converters.ensure_units(wmin, default_units=default_units).m_as(
-            units
-        )
+        wmin = magnitude_as(wmin, units, default_units)
         data = data.where(data["wavelen"] >= wmin).dropna("nlam", how="all")
     if wmax is not None:
-        wmax = pinttrs.converters.ensure_units(wmax, default_units=default_units).m_as(
-            units
-        )
+        wmax = magnitude_as(wmax, units, default_units)
         data = data.where(data["wavelen"] <= wmax).dropna("nlam", how="all")
 
     return libradtran_to_aer_core_v2(data, fallback_units=fallback_units)

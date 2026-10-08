@@ -225,7 +225,7 @@ def make_aer_core_v2(
         # mu in the dataset is ascending (-1 → +1), so theta is descending
         # (180° → 0°). compute_pmom() expects theta ascending (0° → 180°),
         # so we reverse each per-wavelength slice.
-        theta_deg = theta.to("deg").magnitude  # (nw, nangle)
+        theta_deg = theta.m_as("deg")  # (nw, nangle)
         phase_vals = phase.m  # (nphamat, nw, nangle)
         _nw = theta_deg.shape[0]
 
@@ -423,8 +423,8 @@ def aer_v1_to_aer_core_v2(
     mu = np.broadcast_to(mu_1d[sort_idx], (nw, nangles)).copy()
     if dtype:
         mu = mu.astype(dtype)
-    mu = mu * ureg("dimensionless")
-    theta = (np.arccos(mu.m) * ureg("rad")).to("deg")
+    theta = ureg.Quantity(np.rad2deg(np.arccos(mu)), "deg")
+    mu = ureg.Quantity(mu, "dimensionless")
 
     _phase_datasets = {}
     for ij, (i, j) in PHAMAT_TO_IDX:
@@ -600,9 +600,9 @@ def libradtran_to_aer_core_v2(
         n_ = nangles_out[iw]
         phase_arr[:, iw, :n_] = union_phases[iw]
 
-    mu = mu_arr * ureg("dimensionless")
-    phase = phase_arr * ureg("1 / sr")
-    theta = np.rad2deg(np.arccos(mu_arr)) * ureg("deg")  # NaN propagates
+    mu = ureg.Quantity(mu_arr, "dimensionless")
+    phase = ureg.Quantity(phase_arr, "1/sr")
+    theta = ureg.Quantity(np.rad2deg(np.arccos(mu_arr)), "deg")  # NaN propagates
 
     # Copy Legendre coefficients (p_11 only)
     pmom = ds["pmom"].isel(nphamat=0).transpose("nlam", "nmommax").values

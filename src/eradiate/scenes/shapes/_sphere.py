@@ -4,13 +4,13 @@ import mitsuba as mi
 import numpy as np
 import pint
 import pinttrs
-from pinttrs.util import ensure_units
 
 from ._core import ShapeNode
 from ..bsdfs import BSDF
 from ..core import BoundingBox
 from ...attrs import define, documented
 from ...constants import EARTH_RADIUS
+from ...units import magnitude_as
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -115,9 +115,7 @@ class SphereShape(ShapeNode):
             to_world = mi.ScalarTransform4f().translate(
                 self.center.m_as(length_units)
             ) @ mi.ScalarTransform4f().scale(self.radius.m_as(length_units))
-        p = np.atleast_2d(
-            ensure_units(p, default_units=ucc.get("length")).m_as(length_units)
-        )
+        p = np.atleast_2d(magnitude_as(p, length_units, ucc.get("length")))
         c = to_world @ (0, 0, 0)
         d = np.linalg.norm(p - c, axis=1)
         r = np.linalg.norm(to_world @ (1, 0, 0) - c)

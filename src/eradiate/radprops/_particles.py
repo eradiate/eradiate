@@ -527,7 +527,7 @@ class ParticleProperties:
             Linear interpolation weight for ``idx_r`` (0 at ``idx_l``, 1 at
             ``idx_r``), shape ``(nw,)``.
         """
-        w_m = np.atleast_1d(w.to(ucc.get("wavelength")).m)
+        w_m = np.atleast_1d(w.m_as(ucc.get("wavelength")))
         w_arr = self.w.m
 
         if len(w_arr) == 1:

@@ -15,6 +15,7 @@ from ..shapes import RectangleShape, shape_factory
 from ...attrs import define, documented
 from ...data import fresolver
 from ...exceptions import OverriddenValueWarning, TraversalError
+from ...units import magnitude_as
 from ...units import unit_context_config as ucc
 
 
@@ -22,7 +23,7 @@ def _edges_converter(value):
     # Basic unit conversion and array reshaping
     length_units = ucc.get("length")
     value = np.reshape(
-        pinttrs.util.ensure_units(value, default_units=length_units).m_as(length_units),
+        magnitude_as(value, length_units, length_units),
         (-1,),
     )
 

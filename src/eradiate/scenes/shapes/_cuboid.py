@@ -14,6 +14,7 @@ from ..core import BoundingBox
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...kernel.transform import transform_affine
+from ...units import magnitude_as
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -23,7 +24,7 @@ def _edges_converter(x):
     # Basic unit conversion and array reshaping
     length_units = ucc.get("length")
     x = np.reshape(
-        pinttrs.util.ensure_units(x, default_units=length_units).m_as(length_units),
+        magnitude_as(x, length_units, length_units),
         (-1,),
     )
 
