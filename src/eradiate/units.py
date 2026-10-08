@@ -18,6 +18,7 @@ from functools import lru_cache
 from importlib.resources import files
 from typing import Any
 
+import numpy as np
 import pint
 import pinttrs
 import xarray
@@ -61,7 +62,7 @@ def _load_definitions(ureg: pint.UnitRegistry, definitions: list[str]) -> None:
         _unit_name, _unit_definition = [x.strip() for x in definition.split("=")][0:2]
 
         if _unit_name in ureg:
-            if 1.0 * ureg(_unit_definition) == 1.0 * ureg(_unit_name):
+            if 1.0 * ureg(_unit_definition) == 1.0 * ureg(_unit_name):  # pint: ok
                 # Definitions are identical: skip
                 # Note: we don't check symbols or aliases, might cause bugs in
                 # very rare cases
@@ -138,12 +139,13 @@ def _make_unit_context():
         PhysicalQuantity.REFLECTANCE: pinttrs.UnitGenerator(unit_registry.dimensionless),
         PhysicalQuantity.TRANSMITTANCE: pinttrs.UnitGenerator(unit_registry.dimensionless),
         PhysicalQuantity.WAVELENGTH: pinttrs.UnitGenerator(unit_registry.nm),
-        PhysicalQuantity.WAVENUMBER: pinttrs.UnitGenerator(unit_registry.cm ** -1),
+        PhysicalQuantity.WAVENUMBER: pinttrs.UnitGenerator(unit_registry.Unit("cm^-1")),
     }.items():
         uctx.register(key, value)
     # fmt: on
 
     # The following quantities will update automatically based on their parent units
+    watt_per_sr = unit_registry.Unit("W/sr")
     uctx.register(
         PhysicalQuantity.COLLISION_COEFFICIENT,
         pinttrs.UnitGenerator(lambda: uctx.get(PhysicalQuantity.LENGTH) ** -1),
@@ -151,11 +153,7 @@ def _make_unit_context():
     uctx.register(
         PhysicalQuantity.INTENSITY,
         pinttrs.UnitGenerator(
-            lambda: (
-                unit_registry.watt
-                / unit_registry.steradian
-                / uctx.get(PhysicalQuantity.WAVELENGTH)
-            )
+            lambda: watt_per_sr / uctx.get(PhysicalQuantity.WAVELENGTH)
         ),
     )
     uctx.register(
@@ -172,9 +170,8 @@ def _make_unit_context():
         PhysicalQuantity.RADIANCE,
         pinttrs.UnitGenerator(
             lambda: (
-                unit_registry.watt
+                watt_per_sr
                 / uctx.get(PhysicalQuantity.LENGTH) ** 2
-                / unit_registry.steradian
                 / uctx.get(PhysicalQuantity.WAVELENGTH)
             )
         ),

@@ -11,7 +11,6 @@ import pint
 import pinttrs
 from axsdb import AbsorptionDatabase, CKDAbsorptionDatabase, MonoAbsorptionDatabase
 from numpy.typing import ArrayLike
-from pinttrs.util import ensure_units
 
 from .ckd_quad import CKDQuadConfig, CKDQuadPolicy
 from .index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
@@ -21,6 +20,7 @@ from .._mode import ModeFlag, SubtypeDispatcher
 from ..attrs import define, documented
 from ..constants import SPECTRAL_RANGE_MAX, SPECTRAL_RANGE_MIN
 from ..quad import Quad
+from ..units import magnitude_as
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.misc import deduplicate_sorted, summary_repr
@@ -255,9 +255,9 @@ class MonoSpectralGrid(SpectralGrid):
             Generated spectral grid.
         """
         w_u = ucc.get("wavelength")
-        start = ensure_units(start, default_units=w_u).m_as(w_u)
-        stop = ensure_units(stop, default_units=w_u).m_as(w_u)
-        step = ensure_units(step, default_units=w_u).m_as(w_u)
+        start = magnitude_as(start, w_u, w_u)
+        stop = magnitude_as(stop, w_u, w_u)
+        step = magnitude_as(step, w_u, w_u)
         return MonoSpectralGrid(wavelengths=np.arange(start, stop, step) * w_u)
 
     @classmethod
@@ -389,8 +389,8 @@ class CKDSpectralGrid(SpectralGrid):
     ):
         # Ensure consistent units and appropriate dtype
         w_u = ucc.get("wavelength")
-        wmins_m = ensure_units(wmins, default_units=w_u).m_as(w_u).astype(np.float64)
-        wmaxs_m = ensure_units(wmaxs, default_units=w_u).m_as(w_u).astype(np.float64)
+        wmins_m = magnitude_as(wmins, w_u, w_u).astype(np.float64)
+        wmaxs_m = magnitude_as(wmaxs, w_u, w_u).astype(np.float64)
 
         # Detect bound mismatch
         diff_bounds = wmaxs_m[:-1] - wmins_m[1:]
@@ -510,9 +510,9 @@ class CKDSpectralGrid(SpectralGrid):
             Generated CKD spectral grid.
         """
         w_u = ucc.get("wavelength")
-        start_m = ensure_units(start, default_units=w_u).m_as(w_u)
-        stop_m = ensure_units(stop, default_units=w_u).m_as(w_u)
-        width_m = ensure_units(step, default_units=w_u).m_as(w_u)
+        start_m = magnitude_as(start, w_u, w_u)
+        stop_m = magnitude_as(stop, w_u, w_u)
+        width_m = magnitude_as(step, w_u, w_u)
 
         wcenters_m = np.arange(start_m, stop_m, width_m)
         wmins_m = wcenters_m - 0.5 * width_m

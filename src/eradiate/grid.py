@@ -586,9 +586,9 @@ class CartesianGrid(SpatialGrid):
         int
             Number of cells.
         """
-        ratio = extent / cell_size
-        n = int(np.floor(ratio.to("").magnitude))
-        remainder = (ratio.to("").magnitude - n) * cell_size
+        ratio = (extent / cell_size).m_as(ureg.dimensionless)
+        n = int(np.floor(ratio))
+        remainder = (ratio - n) * cell_size
         if atol is not None and remainder > atol:
             raise ValueError(
                 f"extent {extent} is not a multiple of cell size {cell_size} "

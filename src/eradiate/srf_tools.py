@@ -119,7 +119,7 @@ def wavelength_bandwidth(srf: PathLike | xr.Dataset) -> pint.Quantity:
     response function.
     """
     srf = convert_no_id(srf)
-    return srf.srf.integrate(coord="w").values * ureg(srf.w.attrs["units"])
+    return ureg.Quantity(srf.srf.integrate(coord="w").values, srf.w.attrs["units"])
 
 
 def mean_wavelength(srf: PathLike | xr.Dataset) -> pint.Quantity:
@@ -154,7 +154,7 @@ def mean_wavelength(srf: PathLike | xr.Dataset) -> pint.Quantity:
     srf = convert_no_id(srf)
     srf_integrated = srf.srf.integrate(coord="w")
     mean_value = (srf.w * srf.srf).integrate(coord="w").values / srf_integrated.values
-    return mean_value * ureg(srf.w.attrs["units"])
+    return ureg.Quantity(mean_value, srf.w.attrs["units"])
 
 
 def filtering_summary(

@@ -18,7 +18,7 @@ from .. import converters, validators
 from ..attrs import define, documented
 from ..data import fresolver
 from ..exceptions import DataError
-from ..units import symbol, to_quantity
+from ..units import magnitude_as, symbol, to_quantity
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
 from ..util.misc import summary_repr
@@ -206,7 +206,7 @@ class UniformSRF(SpectralResponseFunction):
         # Inherit docstring
 
         w_units = ucc.get("wavelength")
-        w_m = pinttrs.util.ensure_units(w, default_units=w_units).m_as(w_units)
+        w_m = magnitude_as(w, w_units, w_units)
 
         return (
             np.where(
@@ -558,9 +558,7 @@ class BandSRF(SpectralResponseFunction):
         # Inherit docstring
 
         w_units = self.wavelengths.u
-        w_m = pinttrs.util.ensure_units(w, default_units=ucc.get("wavelength")).m_as(
-            w_units
-        )
+        w_m = magnitude_as(w, w_units, ucc.get("wavelength"))
         return (
             np.interp(w_m, self.wavelengths.m, self.values.m, left=0.0, right=0.0)
             * self.values.u
@@ -626,7 +624,7 @@ class BandSRF(SpectralResponseFunction):
             ``wavelength`` has shape (N,).
         """
         w_u = ucc.get("wavelength")
-        w_m = ensure_units(w, default_units=w_u).m_as(w_u)
+        w_m = magnitude_as(w, w_u, w_u)
 
         # Evaluate SRF at mesh nodes
         values_m = self.eval(w).m
