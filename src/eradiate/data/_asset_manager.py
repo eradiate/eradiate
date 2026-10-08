@@ -345,8 +345,8 @@ class AssetManager:
             it as a dictionary.
         """
 
-        cache_size = (self._cache_size() * ureg("B")).to_compact()
-        unpack_size = (self._unpack_size() * ureg("B")).to_compact()
+        cache_size = ureg.Quantity(self._cache_size(), "B").to_compact()
+        unpack_size = ureg.Quantity(self._unpack_size(), "B").to_compact()
 
         result = {
             "remote_url": self.base_uri,
@@ -442,7 +442,7 @@ class AssetManager:
             available_resources = []
             for resource_id, resource in manifest.items():
                 kw = resource.keyword
-                size = (resource.size * ureg("B")).to_compact()
+                size = ureg.Quantity(resource.size, "B").to_compact()
                 type = resource.type
                 state = ResourceState.to_string(self.state(resource_id)[resource_id])
                 available_resources.append((kw, type, size, state))

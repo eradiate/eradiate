@@ -32,8 +32,8 @@ class OceanMishchenkoBSDF(BSDF):
 
     wind_speed: pint.Quantity = documented(
         pinttrs.field(
-            units=ureg("m/s").units,
-            factory=lambda: 0.01 * ureg("m/s"),
+            units=ureg.Unit("m/s"),
+            factory=lambda: ureg.Quantity(0.01, "m/s"),
             validator=[validators.is_positive, pinttrs.validators.has_compatible_units],
         ),
         doc="Wind speed [m/s] at 10 meters above the surface.",

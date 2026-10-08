@@ -11,6 +11,7 @@ from ..bsdfs import BSDF
 from ..core import BoundingBox
 from ... import validators
 from ...attrs import define, documented
+from ...units import magnitude_as
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -25,7 +26,7 @@ def _edges_converter(value):
     # Basic unit conversion and array reshaping
     length_units = ucc.get("length")
     value = np.reshape(
-        pinttrs.util.ensure_units(value, default_units=length_units).m_as(length_units),
+        magnitude_as(value, length_units, length_units),
         (-1,),
     )
 

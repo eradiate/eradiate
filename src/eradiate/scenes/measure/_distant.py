@@ -9,14 +9,13 @@ import mitsuba as mi
 import numpy as np
 import pint
 import pinttrs
-from pinttrs.util import ensure_units
 
 from ._core import Measure
 from ..core import BoundingBox
 from ... import converters, frame, validators
 from ...attrs import define, documented
 from ...config import settings
-from ...units import symbol
+from ...units import magnitude_as, symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -173,21 +172,11 @@ class TargetRectangle(Target):
         transform_kwargs = {"to_world"}
 
         if set(kwargs) == bounds_kwargs or set(kwargs) == bounds_kwargs_no_z:
-            xmin = ensure_units(kwargs["xmin"], default_units=config_length).m_as(
-                kernel_length
-            )
-            xmax = ensure_units(kwargs["xmax"], default_units=config_length).m_as(
-                kernel_length
-            )
-            ymin = ensure_units(kwargs["ymin"], default_units=config_length).m_as(
-                kernel_length
-            )
-            ymax = ensure_units(kwargs["ymax"], default_units=config_length).m_as(
-                kernel_length
-            )
-            z = ensure_units(kwargs.get("z", 0.0), default_units=config_length).m_as(
-                kernel_length
-            )
+            xmin = magnitude_as(kwargs["xmin"], kernel_length, config_length)
+            xmax = magnitude_as(kwargs["xmax"], kernel_length, config_length)
+            ymin = magnitude_as(kwargs["ymin"], kernel_length, config_length)
+            ymax = magnitude_as(kwargs["ymax"], kernel_length, config_length)
+            z = magnitude_as(kwargs.get("z", 0.0), kernel_length, config_length)
             dx = xmax - xmin
             dy = ymax - ymin
 
@@ -199,15 +188,9 @@ class TargetRectangle(Target):
             ) @ mi.ScalarTransform4f().scale(scale)
 
         elif set(kwargs) == normal_kwargs:
-            dx = ensure_units(kwargs["size_x"], default_units=config_length).m_as(
-                kernel_length
-            )
-            dy = ensure_units(kwargs["size_y"], default_units=config_length).m_as(
-                kernel_length
-            )
-            origin = ensure_units(kwargs["xyz"], default_units=config_length).m_as(
-                kernel_length
-            )
+            dx = magnitude_as(kwargs["size_x"], kernel_length, config_length)
+            dy = magnitude_as(kwargs["size_y"], kernel_length, config_length)
+            origin = magnitude_as(kwargs["xyz"], kernel_length, config_length)
             direction = kwargs["n"]
             up = kwargs["up"]
             scale = [0.5 * dx, 0.5 * dy, 1.0]
@@ -454,7 +437,7 @@ class DistantMeasure(AbstractDistantMeasure):
         if azimuth_convention is None:
             azimuth_convention = settings.azimuth_convention
 
-        angles = ensure_units(angles, default_units=ucc.get("angle")).m_as(ureg.rad)
+        angles = magnitude_as(angles, ureg.rad, ucc.get("angle"))
         direction = np.squeeze(
             frame.angles_to_direction(
                 angles=angles, azimuth_convention=azimuth_convention
@@ -601,7 +584,7 @@ class MultiPixelDistantMeasure(AbstractDistantMeasure):
         if azimuth_convention is None:
             azimuth_convention = settings.azimuth_convention
 
-        angles = ensure_units(angles, default_units=ucc.get("angle")).m_as(ureg.rad)
+        angles = magnitude_as(angles, ureg.rad, ucc.get("angle"))
         direction = np.squeeze(
             frame.angles_to_direction(
                 angles=angles, azimuth_convention=azimuth_convention
