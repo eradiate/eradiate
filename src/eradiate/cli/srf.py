@@ -96,7 +96,7 @@ def text_input_to_quantity(
         return None
     else:
         # try to parse value into wavelength quantity
-        parsed = ureg(value)
+        parsed = ureg(value)  # pint: ok (parses user input)
         if isinstance(parsed, pint.Quantity):
             return parsed
         else:  # float

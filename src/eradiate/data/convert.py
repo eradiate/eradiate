@@ -694,8 +694,8 @@ def aer_v1_to_aer_core_v2(
     mu = np.broadcast_to(mu_1d[sort_idx], (nw, nangles)).copy()
     if dtype:
         mu = mu.astype(dtype)
-    mu = mu * ureg("dimensionless")
-    theta = ureg.Quantity(np.rad2deg(np.arccos(mu.m)), "deg")
+    theta = ureg.Quantity(np.rad2deg(np.arccos(mu)), "deg")
+    mu = ureg.Quantity(mu, "dimensionless")
 
     _phase_datasets = {}
     for ij, (i, j) in PHAMAT_TO_IDX:
@@ -936,9 +936,9 @@ def libradtran_to_prt(
         nmom = nmom[:, 0]
         veff_arg = None
 
-    mu = mu_arr * ureg("dimensionless")
-    phase = phase_arr * ureg("1 / sr")
-    theta = theta_arr * ureg("deg")
+    mu = ureg.Quantity(mu_arr, "dimensionless")
+    phase = ureg.Quantity(phase_arr, "1/sr")
+    theta = ureg.Quantity(theta_arr, "deg")
     ext = ext_np * units_ext
     ssa = ssa_np * units_ssa
 
