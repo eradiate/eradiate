@@ -1,7 +1,9 @@
+import numpy as np
 import pytest
 from pinttrs.exceptions import UnitsError
+from pinttrs.util import ensure_units
 
-from eradiate.units import interpret_quantities, symbol
+from eradiate.units import interpret_quantities, magnitude_as, symbol
 from eradiate.units import unit_context_config as ucc
 from eradiate.units import unit_registry as ureg
 
@@ -55,4 +57,22 @@ def test_interpret_quantities():
             {"wmin": 0.55 * ureg.micron}, {"wmin": "wavelength"}, ucc, force=True
         )["wmin"].magnitude
         == 550.0
+    )
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        ureg.Quantity(1.0, "m"),
+        ureg.Quantity([1.0, 1.0], "m"),
+        1.0,
+        [1.0, 1.0],
+        np.array([1.0, 1.0]),
+    ],
+    ids=["quantity_float", "quantity_array", "float", "list", "array"],
+)
+def test_magnitude_as(value):
+    assert np.all(
+        magnitude_as(value, "km", default_units="m")
+        == ensure_units(value, default_units=ureg.Unit("m")).m_as("km")
     )
