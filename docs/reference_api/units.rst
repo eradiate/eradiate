@@ -29,6 +29,8 @@ Functions
 
 .. autofunction:: interpret_quantities
 
+.. autofunction:: magnitude_as
+
 .. autofunction:: symbol
 
 .. autofunction:: to_quantity
