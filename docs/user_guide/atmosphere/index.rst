@@ -13,6 +13,6 @@ Atmosphere guide
    homogeneous
    heterogeneous
    molecular
-   particle_ensemble
+   particles
    absorption
    rayleigh_scattering

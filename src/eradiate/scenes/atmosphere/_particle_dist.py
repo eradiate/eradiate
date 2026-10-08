@@ -2,7 +2,7 @@
 Particle distributions.
 
 Particle distributions define how the particle number fraction varies with
-altitude. The particle ensemble is split into a number of divisions
+altitude. The particle medium is split into a number of divisions
 (sub-layers) wherein the particle number fraction is evaluated.
 
 Notes
@@ -40,7 +40,7 @@ particle_distribution_factory.register_lazy_batch(
 class ParticleDistribution(ABC):
     """
     Abstract base class for particle distributions used to define particle
-    ensembles.
+    components.
 
     In practice, particle distributions are callables with the signature
     ``f(x: np.typing.ArrayLike) -> np.ndarray`` and are evaluated over the
@@ -138,7 +138,7 @@ class ExponentialParticleDistribution(ParticleDistribution):
                 f"while validating {attribute.name}: rate must be strictly positive"
             )
 
-    def __init__(self, rate: Optional[float] = None, scale: Optional[float] = None):
+    def __init__(self, rate: float | None = None, scale: float | None = None):
         if rate is None and scale is None:
             self.__attrs_init__()
         elif scale is None and rate is not None:
@@ -182,7 +182,7 @@ class GaussianParticleDistribution(ParticleDistribution):
         init_type="float, optional",
         default="0.5",
         doc="Mean of the Gaussian PDF. The default value places the mean in "
-        "the middle of the particle ensemble (at :math:`x = 0.5`).",
+        "the middle of the particle component (at :math:`x = 0.5`).",
     )
 
     std: float = documented(

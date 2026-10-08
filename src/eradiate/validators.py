@@ -56,15 +56,14 @@ def is_vector3(instance, attribute, value):
 
 def is_positive(_, attribute, value):
     """
-    Validate iff value is a positive number. Arrays are validated
-    element-wise.
+    Validate iff value is a positive number.
 
     Raises
     ------
     ValueError
-        If value is negative.
+        If the value is not positive or zero.
     """
-    if np.any(np.atleast_1d(value) < 0.0):
+    if value < 0.0:
         raise ValueError(f"{attribute.name} must be positive or zero, got {value}")
 
 
@@ -80,7 +79,7 @@ def all_positive(_, attribute, value):
     if isinstance(value, ureg.Quantity):
         value = value.magnitude
     if np.any(np.array(value) < 0):
-        raise ValueError(f"{attribute} must be all positive or zero, got {value}")
+        raise ValueError(f"{attribute.name} must be all positive or zero, got {value}")
 
 
 def all_strictly_positive(_, attribute, value):
