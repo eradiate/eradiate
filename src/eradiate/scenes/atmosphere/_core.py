@@ -61,8 +61,13 @@ atmosphere_factory.register_lazy_batch(
             {},
         ),
         (
-            "_particle_ensemble.ParticleEnsemble",
-            "particle_ensemble",
+            "_particle_component.ParticleAOTComponent",
+            "particle_aot",
+            {},
+        ),
+        (
+            "_particle_component.ParticleExtinctionComponent",
+            "particle_extinction",
             {},
         ),
     ],
@@ -782,7 +787,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             albedo_key = "albedo.volume.data"
             sigma_t_key = "sigma_t.volume.data"
         else:
-            raise TypeError(
+            raise ValueError(
                 f"unhandled scene geometry type '{type(self.geometry).__name__}'"
             )
 

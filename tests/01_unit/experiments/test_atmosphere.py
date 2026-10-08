@@ -172,7 +172,7 @@ def test_atmosphere_experiment_run_basic(
         atmosphere={
             "type": "heterogeneous",
             "molecular_atmosphere": molecular_atmosphere,
-            "particle_ensembles": [{"type": "particle_ensemble"}],
+            "particle_components": [{"type": "particle_aot"}],
         },
         surface={"type": "lambertian"},
         measures={

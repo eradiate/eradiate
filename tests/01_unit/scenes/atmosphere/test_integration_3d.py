@@ -4,11 +4,11 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
-from eradiate.grid import PlaneParallelGridCoords
+from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     MolecularAtmosphere,
-    ParticleEnsemble,
+    ParticleAOTComponent,
 )
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.spectral.index import SpectralIndex
@@ -42,9 +42,7 @@ def test_gridded_empty(modes_all_double):
 @pytest.mark.parametrize(
     "geometry",
     [
-        PlaneParallelGeometry(
-            grid=PlaneParallelGridCoords.make_default().resampled(3, 3)
-        ),
+        PlaneParallelGeometry(grid=CartesianGrid.make_default().resampled(3, 3)),
         # SphericalShellGeometry(), TBD convenience factories
     ],
     ids=[
@@ -58,7 +56,7 @@ def test_gridded_empty(modes_all_double):
         lambda: {"molecular_atmosphere": MolecularAtmosphere()},
         lambda: {
             "molecular_atmosphere": None,
-            "particle_ensembles": ParticleEnsemble(),
+            "particle_components": ParticleAOTComponent(),
         },
     ],
     ids=["molecular", "particle"],
