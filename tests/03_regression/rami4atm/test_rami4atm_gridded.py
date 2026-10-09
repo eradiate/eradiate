@@ -6,7 +6,7 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.attrs import AUTO
-from eradiate.grid import PlaneParallelGridCoords
+from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     MolecularAtmosphere,
@@ -50,7 +50,7 @@ def test_rami4atm_gridded(mode_ckd_double, case):
         mol_atm_1d = exp.atmosphere.molecular_atmosphere
 
         geometry = PlaneParallelGeometry(
-            grid=PlaneParallelGridCoords.from_extent_and_resolution(
+            grid=CartesianGrid.from_extent_and_resolution(
                 levels=exp.geometry.grid.levels,
                 extent_x=GRID_EXTENT,
                 extent_y=GRID_EXTENT,

@@ -709,6 +709,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def _template_medium(self) -> dict:
         # Inherit docstring
 
+        collision_coefficient_units = uck.get("collision_coefficient")
+        length_units = uck.get("length")
+
         extremum = None
 
         volumes = {
@@ -720,7 +723,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             "sigma_t": generate_gridvolume(
                 self.geometry,
                 self.eval_sigma_t,
-                units=uck.get("collision_coefficient"),
+                units=collision_coefficient_units,
             ),
         }
         sigma_t_id = f"{self.id}_sigma_t"
@@ -739,14 +742,14 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             }
         elif not piecewise:
             extr_conf = {"type": "extremum_grid"}
-            aabb_min = self.geometry.bbox.min.m_as("m")
+            aabb_min = self.geometry.bbox.min.m_as(length_units)
             # The geometry bbox inserts a sub-surface padding. We want the data to be
             # evaluated on the entire geometry extent in x and y directions, but we
             # should avoid the wrap_mode affecting the z direction.
-            aabb_min[2] = self.geometry.grid.levels[0].m_as("m")
+            aabb_min[2] = self.geometry.grid.levels[0].m_as(length_units)
             aabb_conf = {
                 "aabb_min": aabb_min,
-                "aabb_max": self.geometry.bbox.max.m_as("m"),
+                "aabb_max": self.geometry.bbox.max.m_as(length_units),
             }
 
         if piecewise:
@@ -794,6 +797,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def _params_medium(self) -> dict[str, SceneParameter]:
         # Inherit docstring
 
+        collision_coefficient_units = uck.get("collision_coefficient")
+
         if isinstance(self.geometry, PlaneParallelGeometry):
             albedo_key = "albedo.data"
             sigma_t_key = "sigma_t.data"
@@ -821,7 +826,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         sigma_t_grid = generate_gridvolume(
             self.geometry,
             self.eval_sigma_t,
-            units=uck.get("collision_coefficient"),
+            units=collision_coefficient_units,
             search=sigma_t_search,
             flag=KernelSceneParameterFlags.SPECTRAL,
         )
