@@ -6,11 +6,12 @@ import xarray as xr
 from eradiate import KernelContext, fresolver
 from eradiate import unit_registry as ureg
 from eradiate.grid import SpatialGrid, CartesianGrid, SphericalGrid
-from eradiate.data.convert import make_aer_core_v2
+from eradiate.data.convert import make_prt_psd_v1
 from eradiate.radprops import ParticleProperties
 from eradiate.scenes.atmosphere import (
     ArrayParticleDistribution,
     ParticleAOTComponent,
+    ParticleComponent,
     UniformParticleDistribution,
 )
 from eradiate.scenes.core import traverse
@@ -65,7 +66,7 @@ def _make_3d_grid():
     )
 
 
-class TestParticleEnsemble:
+class TestParticleAOTComponent:
     @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
     def test_basic(self, mode_mono, geometry):
         """Basic constructor pattern"""
@@ -84,6 +85,25 @@ class TestParticleEnsemble:
         assert (
             ParticleAOTComponent()
         )  # should pick up the default dataset from shipped assets
+
+    def test_convert_passthrough(self):
+        """ParticleComponent.convert returns an existing instance unchanged."""
+        component = ParticleAOTComponent()
+        assert ParticleAOTComponent.convert(component) is component
+        assert ParticleComponent.convert(component) is component
+
+    def test_convert_from_dict_defaults_to_particle_aot(self):
+        """
+        Called on the abstract ParticleComponent base, a dict without 'type'
+        defaults to 'particle_aot' and is routed through atmosphere_factory.
+        """
+        result = ParticleComponent.convert({})
+        assert isinstance(result, ParticleAOTComponent)
+
+    def test_convert_rejects_wrong_type(self):
+        """A value that is neither a dict nor a ParticleComponent instance is rejected."""
+        with pytest.raises(TypeError):
+            ParticleComponent.convert(object())
 
     def test_construct_attrs(self, particle_properties_test):
         """Assigns parameters to expected values."""
@@ -140,7 +160,7 @@ class TestParticleEnsemble:
         """Raises when 'particle_properties' has 'reff'/'veff' dimensions."""
         mu = np.linspace(-1.0, 1.0, 5)
         theta = np.rad2deg(np.arccos(mu))
-        properties_with_size_dist = make_aer_core_v2(
+        properties_with_size_dist = make_prt_psd_v1(
             w=ureg.Quantity([1.0], "micron"),
             phamat=["11"],
             mu=ureg.Quantity(
@@ -156,7 +176,7 @@ class TestParticleEnsemble:
         )
 
         with pytest.raises(ValueError, match="reff.*veff"):
-            ParticleEnsemble(
+            ParticleAOTComponent(
                 particle_properties=properties_with_size_dist,
                 w_ref=ureg.Quantity(1.0, "micron"),
             )

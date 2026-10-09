@@ -4,10 +4,10 @@ import pytest
 
 from eradiate import KernelContext
 from eradiate import unit_registry as ureg
-from eradiate.grid import PlaneParallelGridCoords
+from eradiate.grid import CartesianGrid
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import PlaneParallelGeometry
-from eradiate.scenes.phase import ParticleFieldPhaseFunction
+from eradiate.scenes.phase import GriddedParticlePhaseFunction
 from eradiate.spectral.index import MonoSpectralIndex
 from eradiate.test_tools.types import check_scene_element
 
@@ -33,21 +33,21 @@ def make_phase_data():
     for ci, v in enumerate((100.0, 110.0, 120.0, 130.0)):
         phase[1, ci, :2] = v
 
-    ext = np.array([[2.0], [3.0]])
-    ssa = np.array([[0.5], [0.6]])
+    ext = ureg.Quantity(np.array([[2.0], [3.0]]), "1/km")
+    ssa = ureg.Quantity(np.array([[0.5], [0.6]]), "dimensionless")
 
     return {"mu": mu, "phase": phase, "ext": ext, "ssa": ssa, "max_union_size": 5}
 
 
 def make_particle_phase(r_eff_volume=None, v_eff_volume=None, **kwargs):
-    """Build a minimal 2-reff by 1-veff :class:`.ParticleFieldPhaseFunction`."""
+    """Build a minimal 2-reff by 1-veff :class:`.GriddedParticlePhaseFunction`."""
     # n_cells_x != n_cells_z on purpose: r_eff_volume/v_eff_volume must be
     # shaped (n_cells_x, n_cells_y, n_cells_z), matching GridCoords.shape.
     # With n_cells_x == n_cells_z (as a 1x1xN grid would give), a wrongly
     # transposed array is still broadcast-compatible and the mismatch goes
     # undetected; making them different forces the exact-shape check in
     # _prepare_grid() to actually run.
-    grid = PlaneParallelGridCoords(
+    grid = CartesianGrid(
         edges_x=np.array([-1.0, 0.0, 1.0]) * ureg.km,
         edges_y=np.array([-1.0, 1.0]) * ureg.km,
         levels=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
@@ -64,13 +64,13 @@ def make_particle_phase(r_eff_volume=None, v_eff_volume=None, **kwargs):
         )
     phase_data_dict = make_phase_data()
 
-    kwargs.setdefault("r_eff_grid", ureg.Quantity(np.array([10.0, 20.0]), "micron"))
-    kwargs.setdefault("v_eff_grid", ureg.Quantity(np.array([0.1]), "dimensionless"))
+    kwargs.setdefault("grid_1", ureg.Quantity(np.array([10.0, 20.0]), "micron"))
+    kwargs.setdefault("grid_2", ureg.Quantity(np.array([0.1]), "dimensionless"))
 
-    return ParticleFieldPhaseFunction(
+    return GriddedParticlePhaseFunction(
         geometry=geometry,
-        r_eff_volume=lambda ctx: r_eff_volume,
-        v_eff_volume=lambda ctx: v_eff_volume,
+        volume_1=r_eff_volume,
+        volume_2=v_eff_volume,
         phase_data=lambda si: phase_data_dict,
         **kwargs,
     )
@@ -83,7 +83,10 @@ def test_particle_phase_kernel_dict(mode_mono):
 
     template, params = traverse(phase)
     assert template["type"] == "particlephase"
-    np.testing.assert_allclose(np.array(template["r_eff_grid"]).ravel(), [10.0, 20.0])
+    np.testing.assert_allclose(
+        np.array(template["r_eff_grid"]).ravel(),
+        ureg.Quantity([10.0, 20.0], "micron").m_as("m"),
+    )
     np.testing.assert_allclose(np.array(template["v_eff_grid"]).ravel(), [0.1])
 
     assert set(params.keys()) == {
@@ -124,7 +127,7 @@ def test_particle_phase_r_eff_volume_wrong_axis_order_raises(mode_mono):
     """r_eff_volume/v_eff_volume must be (n_cells_x, n_cells_y, n_cells_z);
     a (n_cells_z, n_cells_y, n_cells_x) array must be rejected, not silently
     broadcast."""
-    grid = PlaneParallelGridCoords(
+    grid = CartesianGrid(
         edges_x=np.array([-1.0, 0.0, 1.0]) * ureg.km,
         edges_y=np.array([-1.0, 1.0]) * ureg.km,
         levels=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
@@ -148,7 +151,7 @@ def test_particle_phase_r_eff_volume_wrong_axis_order_raises(mode_mono):
 def test_particle_phase_r_eff_grid_validation(grid, match):
     """r_eff_grid must be a strictly increasing 1-D array."""
     with pytest.raises(ValueError, match=match):
-        make_particle_phase(r_eff_grid=grid)
+        make_particle_phase(grid_1=grid)
 
 
 @pytest.mark.parametrize(
@@ -160,14 +163,16 @@ def test_particle_phase_r_eff_grid_validation(grid, match):
 def test_particle_phase_v_eff_grid_validation(grid, match):
     """v_eff_grid must be a strictly increasing 1-D array."""
     with pytest.raises(ValueError, match=match):
-        make_particle_phase(v_eff_grid=grid)
+        make_particle_phase(grid_2=grid)
 
 
 def test_particle_phase_r_eff_grid_irregular_accepted():
     """r_eff_grid may be strictly increasing without being regularly spaced."""
-    make_particle_phase(r_eff_grid=np.array([10.0, 15.0, 30.0]))
+    make_particle_phase(grid_1=ureg.Quantity(np.array([10.0, 15.0, 30.0]), "micron"))
 
 
 def test_particle_phase_v_eff_grid_irregular_accepted():
     """v_eff_grid may be strictly increasing without being regularly spaced."""
-    make_particle_phase(v_eff_grid=np.array([0.1, 0.15, 0.3]))
+    make_particle_phase(
+        grid_2=ureg.Quantity(np.array([0.1, 0.15, 0.3]), "dimensionless")
+    )

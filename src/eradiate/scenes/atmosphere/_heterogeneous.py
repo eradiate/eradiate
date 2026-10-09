@@ -16,7 +16,6 @@ import pint
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
 from ._molecular import MolecularAtmosphere
 from ._particle_component import ParticleComponent
-from ._particle_field import ParticleField
 from ..core import traverse
 from ..phase import MultiPhaseFunction, PhaseFunction
 from ...attrs import define, documented
@@ -45,18 +44,7 @@ def _particles_converter(value):
         return []
     if not isinstance(value, (list, tuple)):
         return _particles_converter([value])
-
-    else:
-        result = []
-
-        for element in value:
-            if isinstance(element, cabc.MutableMapping) and ("type" not in element):
-                element["type"] = "particle_aot"
-            result.append(
-                atmosphere_factory.convert(element, allowed_cls=ParticleComponent)
-            )
-
-        return result
+    return [ParticleComponent.convert(element) for element in value]
 
 
 @define(eq=False, slots=False)
@@ -64,7 +52,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     """
     Heterogeneous atmosphere scene element [``heterogeneous``].
 
-    Supports both 1D (plane-parallel, layer-based) and 3D (fully gridded)
+    Supports both 1D (layer-based) and 3D (fully gridded)
     configurations.
     """
 
@@ -120,15 +108,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
-    particle_field: ParticleField | None = documented(
-        attrs.field(default=None, kw_only=True),
-        doc="Optional particle field component providing spatially "
-        "heterogeneous cloud optical properties with trilinear interpolation.",
-        type=".ParticleField or None",
-        init_type=".ParticleField or None, optional",
-        default="None",
-    )
-
     use_phase_mis: bool = documented(
         attrs.field(default=True, converter=bool, kw_only=True),
         doc="If ``True``, multiple importance sampling is enabled for the "
@@ -138,19 +117,18 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         default="True",
     )
 
+    @property
     def components(
         self,
-    ) -> list[MolecularAtmosphere | ParticleComponent | ParticleField]:
+    ) -> list[MolecularAtmosphere | ParticleComponent]:
         """
         Returns
         -------
-        list of .MolecularAtmosphere or .ParticleComponent or .ParticleField
+        list of .MolecularAtmosphere or .ParticleComponent
             The list of all registered atmospheric components.
         """
         result = [self.molecular_atmosphere] if self.molecular_atmosphere else []
-        result.extend(self.particle_ensembles)
-        if self.particle_field is not None:
-            result.append(self.particle_field)
+        result.extend(self.particle_components)
         return result
 
     def update(self):
