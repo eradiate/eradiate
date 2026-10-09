@@ -169,7 +169,8 @@ class AtmosphereRadProfile(RadProfile):
         self.update()
 
     def update(self) -> None:
-        self._grid = SpatialGrid.make_default()
+        if self._grid is None:
+            self._grid = SpatialGrid.make_default()
 
     @property
     def zbounds(self) -> tuple[pint.Quantity, pint.Quantity]:
