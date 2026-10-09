@@ -72,13 +72,13 @@ def test_rami4atm_gridded(mode_ckd_double, case):
         atm = HeterogeneousAtmosphere(
             geometry=geometry,
             molecular_atmosphere=mol_atm_3d,
-            particle_ensembles=[
+            particle_components=[
                 attrs.evolve(
                     ensemble,
                     tau_ref=ensemble.tau_ref * np.ones(resolution),
                     geometry=geometry,
                 )
-                for ensemble in exp.atmosphere.particle_ensembles
+                for ensemble in exp.atmosphere.particle_components
             ],
         )
 
