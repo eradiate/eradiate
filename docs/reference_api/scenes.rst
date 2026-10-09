@@ -139,6 +139,8 @@ Quick access
    SceneGeometry
    PlaneParallelGeometry
    SphericalShellGeometry
+   WrapMode
+   FilterType
 
 .. _module-eradiate.scenes.atmosphere:
 
