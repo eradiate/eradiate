@@ -174,8 +174,8 @@ Quick access
    HeterogeneousAtmosphere
    MolecularAtmosphere
    ParticleAOTComponent
-   PartilceExtinctionComponent
-   ParticleField
+   ParticleExtinctionComponent
+   ParticlePSDComponent
 
 **Particle distributions**
 
@@ -487,7 +487,7 @@ Quick access
    HenyeyGreensteinPhaseFunction
    MultiPhaseFunction
    ParticlePhaseFunction
-   ParticleFieldPhaseFunction
+   GriddedParticlePhaseFunction
 
 .. _module-eradiate.scenes.integrators:
 

@@ -8,6 +8,7 @@ import attrs
 import numpy as np
 import pint
 import pinttrs
+import scipy.interpolate
 import xarray as xr
 from axsdb.math import interp1d
 
@@ -506,6 +507,67 @@ class ParticleProperties:
 
         all_full = bool(np.all(nangles == n_iangle))
         return all_full and bool(np.all(mu_vals == mu_vals[[0]]))
+
+    def interp(
+        self, grid: pint.Quantity, query: dict[str, pint.Quantity]
+    ) -> pint.Quantity:
+        """
+        Interpolate the array ``grid`` at the points described by
+        ``query``. ``grid``'s axes correspond to some of this dataset's
+        dimensions. The coordinate values for those dimensions are read
+        from this dataset. Each axis must have a matching entry in
+        ``query``, keyed by dimension name. The axis order of ``grid``
+        must match the key order of ``query``. Interpolation is linear.
+        Query points are clipped to each dimension's own coordinate range.
+
+        Parameters
+        ----------
+        grid : quantity
+            Array of values to interpolate. Each axis corresponds to one
+            of this dataset's dimensions.
+
+        query : dict[str, quantity]
+            Query points. One same-shaped array per dimension of ``grid``,
+            keyed by dimension name, in the same order as ``grid``'s axes.
+
+        Returns
+        -------
+        quantity
+            Interpolated value, with the same shape as ``query``'s arrays.
+        """
+        dims = list(query)
+        spatial_shape = next(iter(query.values())).shape
+
+        values = grid.m
+        squeeze_axes = []
+        points = []
+        query_arrays = []
+
+        for axis, d in enumerate(dims):
+            grid_vals_q = to_quantity(self.data[d])
+            if values.shape[axis] == 1:
+                squeeze_axes.append(axis)
+                continue
+
+            grid_vals = grid_vals_q.m
+            points.append(grid_vals)
+
+            q = query[d].m_as(grid_vals_q.units)
+            query_arrays.append(np.clip(q, grid_vals.min(), grid_vals.max()))
+
+        if squeeze_axes:
+            values = values.squeeze(axis=tuple(squeeze_axes))
+
+        if not points:
+            result = np.broadcast_to(values, spatial_shape)
+        else:
+            interpolator = scipy.interpolate.RegularGridInterpolator(
+                points, values, method="linear"
+            )
+            query_points = np.stack([q.ravel() for q in query_arrays], axis=-1)
+            result = interpolator(query_points).reshape(spatial_shape)
+
+        return result * grid.units
 
     def eval_ext(self, w: pint.Quantity) -> pint.Quantity:
         """

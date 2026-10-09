@@ -2,23 +2,24 @@
 Particle profiles.
 
 Particle profiles describe the spatial distribution of a particle field:
-which voxels are populated, and the local particle size distribution
-parameters and mass concentration at each of them.
+the local particle size distribution parameters and mass concentration at
+every voxel of a regular grid. Voxels with no particles carry a mass
+concentration of zero.
 """
 
 from __future__ import annotations
 
-from functools import singledispatchmethod
 from os import PathLike
 from typing import Any
 
 import attrs
 import numpy as np
+import pint
 import xarray as xr
 
 from ...attrs import define, documented
 from ...converters import load_dataset
-from ...grid import GridCoords, PlaneParallelGridCoords, SphericalShellGridCoords
+from ...grid import SpatialGrid, CartesianGrid, SphericalGrid
 from ...units import to_quantity
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
@@ -51,16 +52,31 @@ def _clip_and_interp(
 @define
 class ParticleProfile:
     """
-    Sparse, per-voxel description of a spatially varying particle field, in
-    the :ref:`Ppr v1 <sec-data-formats-ppr_v1>` format.
+    Dense, per-voxel description of a spatially varying particle field, in
+    the :ref:`Pfd-Core v1 <sec-data-formats-pfd_core_v1>` format.
     """
 
     data: xr.Dataset = documented(
         attrs.field(validator=attrs.validators.instance_of(xr.Dataset)),
-        doc="Particle profile dataset, in Ppr v1 format.",
+        doc="Particle profile dataset, in Pfd-Core v1 format.",
         type="xarray.Dataset",
         init_type="xarray.Dataset",
     )
+
+    # The following fields are used to cache properties
+    # -- Effective radius
+    _reff: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
+    # -- Effective variance
+    _veff: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
+    # -- Mass concentration
+    _mass_concentration: pint.Quantity | None = attrs.field(
+        default=None, init=False, repr=False
+    )
+
+    def __attrs_post_init__(self):
+        # Resolve all cached attributes
+        for attr in ["reff", "veff", "mass_concentration"]:
+            getattr(self, attr)
 
     @classmethod
     def convert(cls, value: Any) -> ParticleProfile:
@@ -90,9 +106,6 @@ class ParticleProfile:
         missing = [
             name
             for name in (
-                "i_x",
-                "i_y",
-                "i_z",
                 "reff",
                 "veff",
                 "mass_concentration",
@@ -107,15 +120,68 @@ class ParticleProfile:
                 f"Particle profile dataset is missing required variable(s): {missing}"
             )
 
+    @property
+    def variables(self) -> tuple[str, ...]:
+        """
+        Returns
+        -------
+        tuple[str, ...]
+            Names of this profile's non-structural variables (``x_levels``,
+            ``y_levels`` and ``z_levels`` excluded).
+        """
+        structural = {"x_levels", "y_levels", "z_levels"}
+        return tuple(v for v in self.data.data_vars if v not in structural)
+
+    @property
+    def reff(self) -> pint.Quantity:
+        """
+        Returns
+        -------
+        pint.Quantity
+            Effective radius grid, cached to minimize overhead.
+        """
+        if self._reff is None:
+            self._reff = to_quantity(self.data["reff"])
+        return self._reff
+
+    @property
+    def veff(self) -> pint.Quantity:
+        """
+        Returns
+        -------
+        pint.Quantity
+            Effective variance grid, cached to minimize overhead.
+        """
+        if self._veff is None:
+            self._veff = to_quantity(self.data["veff"])
+        return self._veff
+
+    @property
+    def mass_concentration(self) -> pint.Quantity:
+        """
+        Returns
+        -------
+        pint.Quantity
+            Mass concentration grid, cached to minimize overhead.
+        """
+        if self._mass_concentration is None:
+            self._mass_concentration = to_quantity(self.data["mass_concentration"])
+        return self._mass_concentration
+
+    def __getitem__(self, name: str) -> pint.Quantity:
+        """Return the per-voxel quantity for a non-structural variable."""
+        if name not in self.variables:
+            raise KeyError(f"'{name}' is not a variable of this profile: {self.variables}")
+        return getattr(self, name)
+
     @staticmethod
-    def _check_regular(name: str, values: np.ndarray) -> None:
+    def _check_regular(name: str, values: pint.Quantity) -> None:
         """Raise if ``values`` isn't evenly spaced."""
         step = np.diff(values)
         if not np.allclose(step, step[0]):
             raise ValueError(f"'{name}' must be regularly spaced")
 
-    @singledispatchmethod
-    def resample_regular(self, grid: GridCoords) -> ParticleProfile:
+    def resample_regular(self, grid: SpatialGrid) -> ParticleProfile:
         """
         Resample the profile onto a regular grid.
 
@@ -126,7 +192,7 @@ class ParticleProfile:
 
         Parameters
         ----------
-        grid : .GridCoords
+        grid : .SpatialGrid
             Target regular grid.
 
         Returns
@@ -140,56 +206,49 @@ class ParticleProfile:
             If the profile's ``x_levels``/``y_levels`` are not regularly
             spaced, or do not match ``grid``'s extent and resolution.
         """
-        raise NotImplementedError(
-            f"resample_regular() is not implemented for grid type {type(grid).__name__}"
-        )
 
-    @resample_regular.register(PlaneParallelGridCoords)
-    def _(self, grid) -> ParticleProfile:
-        x_levels = to_quantity(self.data["x_levels"]).m_as(grid.edges_x.units)
-        y_levels = to_quantity(self.data["y_levels"]).m_as(grid.edges_y.units)
-        self._check_regular("x_levels", x_levels)
-        self._check_regular("y_levels", y_levels)
-
-        if (
-            x_levels.shape != grid.edges_x.shape
-            or y_levels.shape != grid.edges_y.shape
-            or not np.allclose(x_levels, grid.edges_x.m)
-            or not np.allclose(y_levels, grid.edges_y.m)
-        ):
-            raise ValueError(
-                "Profile 'x_levels'/'y_levels' do not match the target "
-                "grid's extent and resolution."
-            )
-
-        return self._resample_z(grid, grid.edges_x, grid.edges_y)
-
-    @resample_regular.register(SphericalShellGridCoords)
-    def _(self, grid) -> ParticleProfile:
-        x_levels = to_quantity(self.data["x_levels"]).m_as(grid.azimuths.units)
-        y_levels = to_quantity(self.data["y_levels"]).m_as(grid.colatitudes.units)
-        self._check_regular("x_levels", x_levels)
-        self._check_regular("y_levels", y_levels)
-
-        if (
-            x_levels.shape != grid.azimuths.shape
-            or y_levels.shape != grid.colatitudes.shape
-            or not np.allclose(x_levels, grid.azimuths.m)
-            or not np.allclose(y_levels, grid.colatitudes.m)
-        ):
-            raise ValueError(
-                "Profile 'x_levels'/'y_levels' do not match the target "
-                "grid's extent and resolution."
-            )
-
-        return self._resample_z(grid, grid.azimuths, grid.colatitudes)
+        return self._resample_regular_impl(grid)
 
     @cache_by_id
+    def _resample_regular_impl(self, grid: SpatialGrid) -> ParticleProfile:
+
+        if isinstance(grid, CartesianGrid):
+            x_levels = to_quantity(self.data["x_levels"])
+            y_levels = to_quantity(self.data["y_levels"])
+            x_grid_edges = grid.edges_x
+            y_grid_edges = grid.edges_y
+        elif isinstance(grid, SphericalGrid):
+            x_levels = to_quantity(self.data["x_levels"])
+            y_levels = to_quantity(self.data["y_levels"])
+            x_grid_edges = grid.azimuths
+            y_grid_edges = grid.colatitudes
+        else:
+            raise TypeError(f"unsupported grid type {type(grid).__name__}")
+
+        self._check_regular("x_levels", x_levels)
+        self._check_regular("y_levels", y_levels)
+
+        x_levels_m = x_levels.m_as(x_grid_edges.units)
+        y_levels_m = y_levels.m_as(y_grid_edges.units)
+
+        if (
+            x_levels_m.shape != x_grid_edges.shape
+            or y_levels_m.shape != y_grid_edges.shape
+            or not np.allclose(x_levels_m, x_grid_edges.m)
+            or not np.allclose(y_levels_m, y_grid_edges.m)
+        ):
+            raise ValueError(
+                "Profile 'x_levels'/'y_levels' do not match the target "
+                "grid's extent and resolution."
+            )
+
+        return self._resample_z(grid, x_grid_edges, y_grid_edges)
+
     def _resample_z(
         self,
-        grid: GridCoords,
-        x_levels_out: ureg.Quantity,
-        y_levels_out: ureg.Quantity,
+        grid: SpatialGrid,
+        x_levels_out: ping.Quantity,
+        y_levels_out: pint.Quantity,
     ) -> ParticleProfile:
         """
         Resample this profile onto ``grid``'s ``z`` layer centres by
@@ -197,7 +256,7 @@ class ParticleProfile:
 
         Parameters
         ----------
-        grid : .GridCoords
+        grid : .SpatialGrid
             Target grid providing ``z`` layer centres.
         x_levels_out, y_levels_out : :class:`pint.Quantity`
             Horizontal level edges to store on the output profile, as-is.
@@ -212,29 +271,13 @@ class ParticleProfile:
         z_centers_tgt = grid.layers.m_as(ureg.meter)
         n_z_src = len(z_centers_src)
 
-        ix = self.data["i_x"].values
-        iy = self.data["i_y"].values
-        iz = self.data["i_z"].values
-        n_x = grid.n_cells_x
-        n_y = grid.n_cells_y
+        mass_concentration_unit = str(self.mass_concentration.units)
+        reff_unit = str(self.reff.units)
+        veff_unit = str(self.veff.units)
 
-        mass_concentration_unit = str(
-            to_quantity(self.data["mass_concentration"]).units
-        )
-        reff_unit = str(self.data["reff"].attrs.get("units", "micron"))
-        veff_unit = str(self.data["veff"].attrs.get("units", "dimensionless"))
-
-        reff_src = np.zeros((n_x, n_y, n_z_src))
-        veff_src = np.zeros((n_x, n_y, n_z_src))
-        mass_concentration_src = np.zeros((n_x, n_y, n_z_src))
-        valid_src = np.zeros((n_x, n_y, n_z_src), dtype=bool)
-
-        valid_src[ix, iy, iz] = True
-        reff_src[ix, iy, iz] = to_quantity(self.data["reff"]).m_as(reff_unit)
-        veff_src[ix, iy, iz] = to_quantity(self.data["veff"]).m_as(veff_unit)
-        mass_concentration_src[ix, iy, iz] = to_quantity(
-            self.data["mass_concentration"]
-        ).m_as(mass_concentration_unit)
+        reff_src = self.reff.m  # (z, y, x)
+        veff_src = self.veff.m  # (z, y, x)
+        mass_concentration_src = self.mass_concentration.m  # (z, y, x)
 
         # Nearest-neighbour lookup
         il = np.searchsorted(z_centers_src, z_centers_tgt, side="right") - 1
@@ -247,35 +290,38 @@ class ParticleProfile:
         mid = 0.5 * (z_centers_src[il_safe] + z_centers_src[iu_safe])
         inn = np.where(z_centers_tgt < mid, il_safe, iu_safe)
 
-        reff_tgt = reff_src[:, :, inn]
-        veff_tgt = veff_src[:, :, inn]
-        mass_concentration_tgt = mass_concentration_src[:, :, inn]
-        valid_tgt = valid_src[:, :, inn] & in_range
+        reff_tgt = reff_src[inn, :, :]
+        veff_tgt = veff_src[inn, :, :]
+        mass_concentration_tgt = mass_concentration_src[inn, :, :]
 
-        ix_tgt, iy_tgt, iz_tgt = np.where(valid_tgt)
+        out_of_range = ~in_range
+        if np.any(out_of_range):
+            mass_concentration_tgt = mass_concentration_tgt.copy()
+            mass_concentration_tgt[out_of_range, :, :] = 0.0
 
         data_vars = {
-            "i_x": (["index"], ix_tgt),
-            "i_y": (["index"], iy_tgt),
-            "i_z": (["index"], iz_tgt),
-            "reff": (
-                ["index"],
-                reff_tgt[ix_tgt, iy_tgt, iz_tgt],
-                {"units": reff_unit},
-            ),
-            "veff": (
-                ["index"],
-                veff_tgt[ix_tgt, iy_tgt, iz_tgt],
-                {"units": veff_unit},
-            ),
+            "reff": (["z", "y", "x"], reff_tgt, {"units": reff_unit}),
+            "veff": (["z", "y", "x"], veff_tgt, {"units": veff_unit}),
             "mass_concentration": (
-                ["index"],
-                mass_concentration_tgt[ix_tgt, iy_tgt, iz_tgt],
+                ["z", "y", "x"],
+                mass_concentration_tgt,
                 {"units": mass_concentration_unit},
             ),
-            "x_levels": (["x"], x_levels_out.m, {"units": str(x_levels_out.units)}),
-            "y_levels": (["y"], y_levels_out.m, {"units": str(y_levels_out.units)}),
-            "z_levels": (["z"], grid.levels.m, {"units": str(grid.levels.units)}),
+            "x_levels": (
+                ["x_levels"],
+                x_levels_out.m,
+                {"units": str(x_levels_out.units)},
+            ),
+            "y_levels": (
+                ["y_levels"],
+                y_levels_out.m,
+                {"units": str(y_levels_out.units)},
+            ),
+            "z_levels": (
+                ["z_levels"],
+                grid.levels.m,
+                {"units": str(grid.levels.units)},
+            ),
         }
 
         return ParticleProfile(data=xr.Dataset(data_vars=data_vars))
@@ -284,36 +330,41 @@ class ParticleProfile:
         """
         Continuously interpolate a ``(reff, veff)``-indexed property grid
         (e.g. an ext/ssa grid from :class:`.ParticleProperties`) at this
-        profile's own per-voxel ``reff``/``veff`` (dims ``index``).
+        profile's own per-voxel ``reff``/``veff`` (dims ``z``, ``y``, ``x``).
 
         Points are clipped to *property_grid*'s own ``reff``/``veff``
         coordinate range, so that voxels sitting exactly on (or just past,
         from floating-point drift) the properties grid boundary do not
         turn into NaNs.
         """
-        reff_pts = xr.DataArray(self.data["reff"].values, dims="index")
-        veff_pts = xr.DataArray(self.data["veff"].values, dims="index")
+        reff_grid = to_quantity(property_grid["reff"])
+        veff_grid = to_quantity(property_grid["veff"])
+        reff_pts = xr.DataArray(
+            self.reff.m_as(reff_grid.units),
+            dims=["z", "y", "x"],
+            attrs={"units": str(reff_grid.units)},
+        )
+        veff_pts = xr.DataArray(
+            self.veff.m_as(veff_grid.units),
+            dims=["z", "y", "x"],
+            attrs={"units": str(veff_grid.units)},
+        )
         return _clip_and_interp(property_grid, reff_pts, veff_pts)
 
-    def to_reff_veff_volumes(self) -> tuple[ureg.Quantity, ureg.Quantity]:
+    def to_reff_veff_volumes(self) -> tuple[pint.Quantity, pint.Quantity]:
         """
-        Scatter this (regular) profile's per-voxel ``reff``/``veff`` into
-        dense ``(n_x, n_y, n_z)`` volumes. NaN marks empty cells.
+        Return this profile's per-voxel ``reff``/``veff`` as dense
+        ``(n_x, n_y, n_z)`` volumes. NaN marks empty cells.
         """
-        n_x = len(self.data["x_levels"]) - 1
-        n_y = len(self.data["y_levels"]) - 1
-        n_z = len(self.data["z_levels"]) - 1
+        empty = self.mass_concentration.m <= 0  # (z, y, x)
 
-        reff_volume = np.full((n_x, n_y, n_z), np.nan, dtype=np.float64)
-        veff_volume = np.full((n_x, n_y, n_z), np.nan, dtype=np.float64)
+        reff_zyx = np.where(empty, np.nan, self.reff.m)
+        veff_zyx = np.where(empty, np.nan, self.veff.m)
 
-        ix = self.data["i_x"].values
-        iy = self.data["i_y"].values
-        iz = self.data["i_z"].values
-        reff_volume[ix, iy, iz] = self.data["reff"].values
-        veff_volume[ix, iy, iz] = self.data["veff"].values
+        reff_volume = np.transpose(reff_zyx, (2, 1, 0))
+        veff_volume = np.transpose(veff_zyx, (2, 1, 0))
 
         return (
-            reff_volume * ureg.Unit(self.data["reff"].attrs["units"]),
-            veff_volume * ureg.Unit(self.data["veff"].attrs["units"]),
+            ureg.Quantity(reff_volume, self.reff.units),
+            ureg.Quantity(veff_volume, self.veff.units),
         )

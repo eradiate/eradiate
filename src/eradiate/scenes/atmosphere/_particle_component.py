@@ -3,9 +3,10 @@ Particle components.
 """
 
 from __future__ import annotations
+from typing import TYPE_CHECKING, Any
 
-import typing as t
 import warnings
+from collections import abc as cabc
 from functools import singledispatchmethod
 
 import attrs
@@ -14,8 +15,8 @@ import pint
 import pinttrs
 import xarray as xr
 
-from ._core import AbstractHeterogeneousAtmosphere
-from ._particle_dist import ParticleDistribution, particle_distribution_factory
+from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
+from ._particle_dist import ParticleDistribution, ArrayParticleDistribution, particle_distribution_factory
 from ..core import traverse
 from ..phase import PhaseFunction, ParticlePhaseFunction, phase_function_factory
 from ...attrs import define, documented
@@ -29,10 +30,14 @@ from ...spectral.index import (
     SpectralIndex,
 )
 from ...units import unit_context_config as ucc
+from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 from ...units import to_quantity
 from ...util.misc import cache_by_id
 from ...validators import is_positive, all_positive
+
+if TYPE_CHECKING:
+    from ._particle_psd_component import ParticlePSDComponent
 
 
 def _particle_distribution_converter(value):
@@ -51,14 +56,22 @@ def _particle_distribution_converter(value):
 class ParticleComponent(AbstractHeterogeneousAtmosphere):
     """Abstract base class for particulate media"""
 
-    @particle_properties.validator
-    def _particle_properties_validator(self, attribute, value):
-        if value.has_size_distribution:
-            raise ValueError(
-                "While initialising ParticleEnsemble: 'particle_properties' "
-                "must not have 'reff'/'veff' dimensions; use ParticleField "
-                "for a spatially varying composition"
-            )
+    @classmethod
+    def convert(cls, value: Any) -> ParticleComponent:
+        """
+        Conversion logic:
+
+        * If value is a ParticleComponent instance, return it unchanged.
+        * If value is a dictionary, it is interpreted by
+          :data:`.atmosphere_factory`; the ``"type"`` parameter may be
+          omitted and will automatically be set to ``"particle_aot"``.
+          Other types, e.g. ``"particle_psd"``, must set ``"type"``
+          explicitly.
+        * Otherwise, the value is returned unchanged.
+        """
+        if isinstance(value, cabc.MutableMapping) and "type" not in value:
+            value = {**value, "type": "particle_aot"}
+        return atmosphere_factory.convert(value, allowed_cls=cls)
 
     has_absorption: bool = documented(
         attrs.field(default=True, converter=bool),
@@ -96,6 +109,7 @@ class ParticleComponent(AbstractHeterogeneousAtmosphere):
     )
 
     def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
+        # Inherit docstring
         min_sigma_s = self.eval_sigma_s(ctx.si).min(axis=-1)
         # Set to inf if sigma_s is zero
         with np.errstate(divide="ignore"):
@@ -261,6 +275,15 @@ class ParticleAOTComponent(ParticleComponent):
         init_type="ParticleProperties or Dataset or path-like or str",
         default='"govaerts_2021-continental"',
     )
+
+    @particle_properties.validator
+    def _particle_properties_validator(self, attribute, value):
+        if value.has_size_distribution:
+            raise ValueError(
+                "While initializing ParticleAOTComponent: 'particle_properties' "
+                "must not have 'reff'/'veff' dimensions; use ParticlePSDComponent "
+                "for a spatially varying composition"
+            )
 
     _phase: ParticlePhaseFunction | None = attrs.field(default=None, init=False)
 
@@ -518,6 +541,227 @@ class ParticleAOTComponent(ParticleComponent):
         _, result = traverse(self.phase)
         return result.data
 
+    @classmethod
+    def from_psd_voxel(
+        cls,
+        particle_psd_component: ParticlePSDComponent,
+        w: pint.Quantity,
+        ix: int,
+        iy: int,
+        iz: int,
+        grid: SpatialGrid | None = None,
+    ) -> ParticleAOTComponent:
+        """
+        Build a :class:`.ParticleAOTComponent` representing a single voxel of
+        the particle PSD component at the given grid location.
+
+        Parameters
+        ----------
+        particle_psd_component : :class:`.ParticlePSDComponent`
+            Source particle PSD component.
+
+        w : :class:`pint.Quantity`
+            Evaluation wavelength.
+
+        ix, iy, iz : int
+            Voxel indices in the render grid.
+
+        grid : :class:`.SpatialGrid`, optional
+            Target render grid. Defaults to ``particle_psd_component.geometry.grid``.
+
+        Returns
+        -------
+        :class:`.ParticleAOTComponent`
+
+        Raises
+        ------
+        ValueError
+            If ``(ix, iy, iz)`` is out of bounds, or the voxel there has no
+            cloud (zero ``mass_concentration``).
+        """
+        grid = grid or particle_psd_component.geometry.grid
+        resampled_profile = particle_psd_component.profile.resample_regular(grid).data
+
+        sizes = resampled_profile.sizes
+        in_bounds = (
+            0 <= ix < sizes["x"] and 0 <= iy < sizes["y"] and 0 <= iz < sizes["z"]
+        )
+
+        has_cloud = (
+            in_bounds
+            and float(resampled_profile["mass_concentration"].values[iz, iy, ix]) > 0.0
+        )
+        if not has_cloud:
+            raise ValueError(f"No cloud voxel found at ({ix}, {iy}, {iz}).")
+
+        profile_point = resampled_profile.isel(x=ix, y=iy, z=iz)
+
+        col_units = uck.get("collision_coefficient")
+        wavelength = np.atleast_1d(w)
+        pp = particle_psd_component.properties
+
+        reff_qty = to_quantity(profile_point["reff"]).item()
+        veff_qty = to_quantity(profile_point["veff"]).item()
+        mass_concentration_quantity = to_quantity(
+            profile_point["mass_concentration"]
+        ).item()
+
+        i_reff = int(
+            np.argmin(np.abs(pp.reff.m_as(ureg.micron) - reff_qty.m_as(ureg.micron)))
+        )
+        i_veff = int(
+            np.argmin(
+                np.abs(
+                    pp.veff.m_as(ureg.dimensionless) - veff_qty.m_as(ureg.dimensionless)
+                )
+            )
+        )
+
+        # Evaluate on the wavelength axis first, then pick this exact point.
+        m_extinction = pp.eval_ext(wavelength)[0, i_reff, i_veff]
+        sigma_t = (m_extinction * mass_concentration_quantity).to(col_units)
+
+        layer_height = to_quantity(
+            xr.DataArray(np.diff(grid.levels.m_as(ureg.km)), attrs={"units": "km"})
+        )[iz]
+
+        tgt_edges_x = grid.edges_x.m_as(ureg.km)
+        tgt_edges_y = grid.edges_y.m_as(ureg.km)
+        src_x0, src_x1 = float(tgt_edges_x[ix]), float(tgt_edges_x[ix + 1])
+        src_y0, src_y1 = float(tgt_edges_y[iy]), float(tgt_edges_y[iy + 1])
+
+        def _compute_overlap(
+            src_x0: float,
+            src_x1: float,
+            src_y0: float,
+            src_y1: float,
+            tgt_edges_x: np.ndarray,
+            tgt_edges_y: np.ndarray,
+        ) -> np.ndarray:
+            """Return the ``(n_x, n_y)`` fractional area overlap between the
+            source cell and each target grid cell."""
+            overlap_x = np.maximum(
+                0.0,
+                np.minimum(src_x1, tgt_edges_x[1:])
+                - np.maximum(src_x0, tgt_edges_x[:-1]),
+            ) / (tgt_edges_x[1:] - tgt_edges_x[:-1])
+            overlap_y = np.maximum(
+                0.0,
+                np.minimum(src_y1, tgt_edges_y[1:])
+                - np.maximum(src_y0, tgt_edges_y[:-1]),
+            ) / (tgt_edges_y[1:] - tgt_edges_y[:-1])
+            return np.outer(overlap_x, overlap_y)
+
+        overlap = _compute_overlap(
+            src_x0, src_x1, src_y0, src_y1, tgt_edges_x, tgt_edges_y
+        )
+        tau_ref = (sigma_t * layer_height * overlap).to(ureg.dimensionless)
+
+        phase_ds = pp.phase_dataset_for_reff_veff(
+            wavelength[0], i_reff, i_veff, sigma_t
+        )
+
+        return cls(
+            bottom=grid.levels[iz],
+            top=grid.levels[iz + 1],
+            distribution="uniform",
+            w_ref=wavelength[0],
+            tau_ref=tau_ref,
+            particle_properties=phase_ds,
+            geometry=particle_psd_component.geometry,
+        )
+
+    @classmethod
+    def from_psd_composition(
+        cls,
+        particle_psd_component: ParticlePSDComponent,
+        w: pint.Quantity,
+        i_reff: int,
+        i_veff: int,
+        grid: SpatialGrid | None = None,
+        ext: pint.Quantity | None = None,
+    ) -> ParticleAOTComponent:
+        """
+        Build a single :class:`.ParticleAOTComponent` approximating the whole
+        component with one fixed ``(reff, veff)`` grid point.
+
+        Every voxel's own ``reff``/``veff`` is ignored in favour of the
+        given grid point; only its ``mass_concentration`` is used to build
+        the per-voxel density (``tau_ref`` and ``distribution``).
+
+        Parameters
+        ----------
+        particle_psd_component : :class:`.ParticlePSDComponent`
+            Source particle PSD component.
+
+        w : :class:`pint.Quantity`
+            Evaluation wavelength.
+
+        i_reff, i_veff : int
+            Index along ``particle_psd_component.properties``'s ``reff``/``veff``
+            dimensions, assumed constant across the whole component.
+
+        grid : :class:`.SpatialGrid`, optional
+            Target render grid. Defaults to ``particle_psd_component.geometry.grid``.
+
+        ext : :class:`pint.Quantity`, optional
+            Extinction coefficient stored in the output ParticleAOTComponent's
+            ``particle_properties``. Defaults to the native grid value at
+            ``(i_reff, i_veff)``. Since that dataset only ever has one
+            wavelength point, this value is only ever compared to itself
+            (``ext(w) / ext(w_ref)``) and has no effect on the output.
+
+        Returns
+        -------
+        :class:`.ParticleAOTComponent`
+        """
+        grid = grid or particle_psd_component.geometry.grid
+        col_units = uck.get("collision_coefficient")
+        length_units = uck.get("length")
+        wavelength = np.atleast_1d(w)
+        pp = particle_psd_component.properties
+
+        # Evaluate on the wavelength axis first, then pick this exact point.
+        m_extinction = pp.eval_ext(wavelength)[0, i_reff, i_veff]
+
+        resampled = particle_psd_component.profile.resample_regular(grid)
+        mass_concentration = to_quantity(resampled.data["mass_concentration"])
+        sigma_t = m_extinction * mass_concentration  # (z, y, x)
+
+        sigma_t_grid = np.transpose(sigma_t.m_as(col_units), (2, 1, 0))  # ->(x,y,z)
+
+        layer_height = np.diff(grid.levels.m_as(length_units))
+        tau_per_voxel = sigma_t_grid * layer_height[np.newaxis, np.newaxis, :]
+        tau_ref = ureg.Quantity(tau_per_voxel.sum(axis=-1), ureg.dimensionless)
+
+        z_coords = (grid.layers - grid.levels[0]) / (grid.levels[-1] - grid.levels[0])
+        z_coords = np.broadcast_to(
+            z_coords.m_as(ureg.dimensionless), tau_per_voxel.shape
+        )
+        distribution = ArrayParticleDistribution(
+            values=tau_per_voxel, coords=z_coords, method="nearest"
+        )
+
+        phase_ds = pp.phase_dataset_for_reff_veff(wavelength[0], i_reff, i_veff, ext)
+
+        geometry = (
+            particle_psd_component.geometry
+            if grid is particle_psd_component.geometry.grid
+            else attrs.evolve(particle_psd_component.geometry, grid=grid)
+        )
+
+        return cls(
+            bottom=np.broadcast_to(grid.levels[0], (grid.n_cells_x, grid.n_cells_y)),
+            top=np.broadcast_to(grid.levels[-1], (grid.n_cells_x, grid.n_cells_y)),
+            distribution=distribution,
+            w_ref=wavelength[0],
+            tau_ref=tau_ref,
+            particle_properties=phase_ds,
+            geometry=geometry,
+            has_absorption=particle_psd_component.has_absorption,
+            has_scattering=particle_psd_component.has_scattering,
+        )
+
 
 @define(eq=False, slots=False)
 class ParticleExtinctionComponent(ParticleComponent):
@@ -564,7 +808,7 @@ class ParticleExtinctionComponent(ParticleComponent):
         init_type="DataArray",
     )
 
-    phase_spec: t.Any = documented(
+    phase_spec: Any = documented(
         attrs.field(kw_only=True, converter=phase_function_factory.convert),
         doc="Phase function specification: a :class:`.PhaseFunction` "
         "instance, or a dict/string the phase function factory can "

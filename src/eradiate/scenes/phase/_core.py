@@ -37,7 +37,7 @@ phase_function_factory.register_lazy_batch(
             {},
         ),
         (
-            "_particle_field.ParticleFieldPhaseFunction",
+            "_gridded_particle.GriddedParticlePhaseFunction",
             "particlefieldphase",
             {},
         ),
