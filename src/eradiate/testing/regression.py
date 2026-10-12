@@ -5,7 +5,7 @@ and the charts that make a verdict readable.
 This module is deliberately free of any I/O and of any dependency on Pytest:
 reference data management (locating references, regenerating them, archiving
 artefacts) is handled by the ``dataset_regression`` fixture, see
-:mod:`eradiate.test_tools.fixtures`.
+:mod:`eradiate.testing.fixtures`.
 """
 
 from __future__ import annotations

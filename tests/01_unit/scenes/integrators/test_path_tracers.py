@@ -9,7 +9,7 @@ from eradiate.scenes.integrators import (
     VolPathIntegrator,
     VolPathMISIntegrator,
 )
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 @pytest.mark.parametrize(

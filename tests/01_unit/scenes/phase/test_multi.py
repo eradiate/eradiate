@@ -13,7 +13,7 @@ from eradiate.scenes.geometry import (
 )
 from eradiate.scenes.phase import MultiPhaseFunction
 from eradiate.spectral.index import MonoSpectralIndex
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 def mi_to_numpy(d):

@@ -11,7 +11,7 @@ from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.shapes import RectangleShape
 from eradiate.spectral.response import DeltaSRF
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 from eradiate.units import to_quantity
 
 

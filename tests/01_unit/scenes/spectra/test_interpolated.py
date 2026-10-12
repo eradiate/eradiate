@@ -11,7 +11,7 @@ from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.scenes.spectra import InterpolatedSpectrum, spectrum_factory
 from eradiate.spectral.index import SpectralIndex
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 from eradiate.units import PhysicalQuantity
 
 

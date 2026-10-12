@@ -1,6 +1,6 @@
 import eradiate
-from eradiate.test_tools.test_cases.rami4atm import CASES, create_toa
-from eradiate.test_tools.util import append_doc
+from eradiate.testing.test_cases.rami4atm import CASES, create_toa
+from eradiate.testing.util import append_doc
 
 #: Case timed by this benchmark
 CASE_ID = "hom00_bla_sd2s_m03_z30a000_brfpp"

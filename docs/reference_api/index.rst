@@ -85,7 +85,7 @@ Alphabetical list of modules
    scenes
    spectral
    srf_tools
-   test_tools
+   testing
    tutorials
    units
    util

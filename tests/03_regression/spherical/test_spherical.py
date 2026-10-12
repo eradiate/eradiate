@@ -5,7 +5,7 @@ import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.constants import EARTH_RADIUS
 from eradiate.experiments import AtmosphereExperiment
-from eradiate.test_tools.regression import ZTest
+from eradiate.testing.regression import ZTest
 
 
 @pytest.mark.regression

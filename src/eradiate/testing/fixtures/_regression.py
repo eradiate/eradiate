@@ -4,7 +4,7 @@ Reference data management for regression tests, built on :mod:`pytest_regression
 This module owns everything that is *not* statistics: where reference datasets
 are read from, where regenerated ones are written to, where artefacts land, and
 how verdicts reach the test report. The comparison criteria themselves live in
-:mod:`eradiate.test_tools.regression`.
+:mod:`eradiate.testing.regression`.
 """
 
 from __future__ import annotations

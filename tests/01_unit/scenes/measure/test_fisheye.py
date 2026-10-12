@@ -8,7 +8,7 @@ from eradiate.experiments import AtmosphereExperiment
 from eradiate.scenes.core import traverse
 from eradiate.scenes.measure import FisheyeCameraMeasure
 from eradiate.scenes.measure._fisheye import _convert_lens_coefficients
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 # An example calibration
 CALIBRATION = {

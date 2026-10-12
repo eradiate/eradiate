@@ -9,7 +9,7 @@ from eradiate import unit_registry as ureg
 from eradiate.kernel._kernel_dict import KernelDict
 from eradiate.scenes.biosphere import MeshTree, MeshTreeElement
 from eradiate.scenes.core import traverse
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 from eradiate.util.misc import flatten
 
 # ------------------------------------------------------------------------------

@@ -12,7 +12,7 @@ package which enables tracking a project's performance over time. To run the ben
 
     conda activate <env name>
     cd benchmarks
-    python -m eradiate.test_tools.benchmark.cli
+    python -m eradiate.testing.benchmark.cli
 
 By default, it will run the benchmark using the currently active environment.
 For dev environments, this means that you need an operational version
@@ -32,7 +32,7 @@ of the database, where the ``asv.conf.json`` file exists.
 
 .. code:: bash
 
-    python -m eradiate.test_tools.benchmark.cli --git-ref=main^!
+    python -m eradiate.testing.benchmark.cli --git-ref=main^!
 
 The benchmark results are stored in the ``results`` folder. Those can be
 publish to an html page and viewed by running:
@@ -53,4 +53,4 @@ Write Benchmarks
 Benchmarks are in the ``benchmarks`` folder. They follow the
 `ASV syntax <https://asv.readthedocs.io/en/v0.6.1/writing_benchmarks.html>`__.
 The test cases that are benchmarks are often also used for regression test.
-For this reason, they are stored in ``src/eradiate/test_tools/test_cases/``.
+For this reason, they are stored in ``src/eradiate/testing/test_cases/``.

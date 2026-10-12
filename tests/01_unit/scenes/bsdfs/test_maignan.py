@@ -3,7 +3,7 @@ import pytest
 
 from eradiate.scenes.bsdfs import MaignanBSDF
 from eradiate.scenes.spectra import UniformSpectrum
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 MAIGNAN_PARAMS = ["C", "ndvi", "refr_re", "refr_im", "ext_ior"]
 

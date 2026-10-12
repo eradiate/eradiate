@@ -11,7 +11,7 @@ from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import DEMSurface, mesh_from_dem
 from eradiate.spectral import DeltaSRF
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 def test_dem_experiment_construct_default(modes_all_double):

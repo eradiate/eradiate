@@ -11,7 +11,7 @@ from ..scenes.core import CompositeSceneElement, NodeSceneElement, Scene, traver
 def check_scene_element(
     instance: NodeSceneElement | CompositeSceneElement,
     mi_cls=None,
-    ctx: KernelContext = None,
+    ctx: KernelContext | None = None,
     drop_parameters: bool = True,
 ) -> MitsubaObjectWrapper:
     """

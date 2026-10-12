@@ -14,7 +14,7 @@ from eradiate.scenes.atmosphere import (
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import PlaneParallelGeometry, SceneGeometry, WrapMode
 from eradiate.spectral.index import SpectralIndex
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 def _find_nearest(array, value):

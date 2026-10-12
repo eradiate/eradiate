@@ -9,7 +9,7 @@ import xarray as xr
 
 import eradiate
 from eradiate import unit_registry as ureg
-from eradiate.test_tools.report import report_logger
+from eradiate.testing.report import report_logger
 
 
 @pytest.mark.parametrize("illumination_azimuth", [0.0, 30.0, 120.0, 210.0, 300.0])

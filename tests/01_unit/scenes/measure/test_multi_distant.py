@@ -13,7 +13,7 @@ from eradiate.scenes.measure import (
     MultiDistantMeasure,
     measure_factory,
 )
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 # ------------------------------------------------------------------------------
 #                               Layout framework

@@ -4,7 +4,7 @@ import pytest
 import xarray as xr
 
 from eradiate.scenes.bsdfs import MQDiffuseBSDF
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 ds = xr.Dataset(
     {

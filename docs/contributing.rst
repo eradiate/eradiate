@@ -461,7 +461,7 @@ reference) and metrics.
 
 Responsibilities are split between:
 
-* :mod:`eradiate.test_tools.regression`: provides statistical testing
+* :mod:`eradiate.testing.regression`: provides statistical testing
   infrastructure (criteria and result plotting). These components are pure
   comparators that hold only comparison criteria, not the data they are applied
   to;
@@ -489,7 +489,7 @@ satisfy:
 
 .. code:: python
 
-    from eradiate.test_tools.regression import ZTest
+    from eradiate.testing.regression import ZTest
 
 
     def test_my_case(mode_ckd_double, dataset_regression):

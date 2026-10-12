@@ -12,9 +12,9 @@ from eradiate.scenes.atmosphere import (
     MolecularAtmosphere,
 )
 from eradiate.scenes.geometry import PlaneParallelGeometry
-from eradiate.test_tools.regression import RegressionTestFailure, ZTest
-from eradiate.test_tools.report import figure_to_html, report_logger
-from eradiate.test_tools.test_cases import rami4atm
+from eradiate.testing.regression import RegressionTestFailure, ZTest
+from eradiate.testing.report import figure_to_html, report_logger
+from eradiate.testing.test_cases import rami4atm
 
 # Small enough that oblique rays (these cases go out to 75 deg zenith) need to
 # sample outside the grid's own horizontal extent, so wrap_mode=CLAMP is

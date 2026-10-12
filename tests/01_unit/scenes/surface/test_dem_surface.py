@@ -16,7 +16,7 @@ from eradiate.scenes.surface._dem import (
     mesh_from_dem,
     triangulate_grid,
 )
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 from eradiate.units import symbol
 from eradiate.units import unit_registry as ureg
 

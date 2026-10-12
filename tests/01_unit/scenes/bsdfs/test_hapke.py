@@ -2,7 +2,7 @@ import mitsuba as mi
 import pytest
 
 from eradiate.scenes.bsdfs import HapkeBSDF
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 from eradiate.units import unit_registry as ureg
 
 

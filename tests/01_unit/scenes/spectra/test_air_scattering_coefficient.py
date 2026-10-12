@@ -6,7 +6,7 @@ from eradiate import KernelContext
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.scenes.spectra import AirScatteringCoefficientSpectrum
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 def test_air_scattering_coefficient_construct(modes_all):

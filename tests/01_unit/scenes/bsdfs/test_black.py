@@ -1,7 +1,7 @@
 import mitsuba as mi
 
 from eradiate.scenes.bsdfs import BlackBSDF
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 def test_black_constructor(modes_all):

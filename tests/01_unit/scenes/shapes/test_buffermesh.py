@@ -5,7 +5,7 @@ import pytest
 from eradiate.exceptions import TraversalError
 from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.shapes import BufferMeshShape
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 @pytest.mark.parametrize(

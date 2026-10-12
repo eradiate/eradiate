@@ -6,7 +6,7 @@ from eradiate.exceptions import TraversalError
 from eradiate.scenes.core import Scene, traverse
 from eradiate.scenes.shapes import RectangleShape, Shape
 from eradiate.scenes.surface import BasicSurface
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 @pytest.mark.parametrize(
