@@ -44,7 +44,7 @@ def test_homogeneous_atmosphere_params(mode_mono):
 
     # Phase function parameters are exposed at highest level
     assert "phase_atmosphere.g" in umap_template
-    assert "phase_atmosphere.g" in mi_wrapper.parameters.keys()
+    assert "phase_atmosphere.g" in mi_wrapper.parameters
     # Volume data source parameters are exposed at highest level
     assert "medium_atmosphere.sigma_t.value.value" in umap_template
     assert "medium_atmosphere.albedo.value.value" in umap_template

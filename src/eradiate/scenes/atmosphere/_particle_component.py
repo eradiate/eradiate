@@ -3,11 +3,11 @@ Particle components.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
 
 import warnings
 from collections import abc as cabc
 from functools import singledispatchmethod
+from typing import TYPE_CHECKING, Any
 
 import attrs
 import numpy as np
@@ -16,9 +16,13 @@ import pinttrs
 import xarray as xr
 
 from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
-from ._particle_dist import ParticleDistribution, ArrayParticleDistribution, particle_distribution_factory
+from ._particle_dist import (
+    ArrayParticleDistribution,
+    ParticleDistribution,
+    particle_distribution_factory,
+)
 from ..core import traverse
-from ..phase import PhaseFunction, ParticlePhaseFunction, phase_function_factory
+from ..phase import ParticlePhaseFunction, PhaseFunction, phase_function_factory
 from ...attrs import define, documented
 from ...contexts import KernelContext
 from ...grid import SpatialGrid
@@ -29,12 +33,12 @@ from ...spectral.index import (
     MonoSpectralIndex,
     SpectralIndex,
 )
+from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...units import to_quantity
 from ...util.misc import cache_by_id
-from ...validators import is_positive, all_positive
+from ...validators import all_positive, is_positive
 
 if TYPE_CHECKING:
     from ._particle_psd_component import ParticlePSDComponent

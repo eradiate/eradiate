@@ -279,9 +279,7 @@ class AtmosphereRadProfile(RadProfile):
         return self._eval_sigma_s_impl(w, grid)
 
     def eval_sigma_t_mono(self, w: pint.Quantity, grid: SpatialGrid) -> pint.Quantity:
-        return self._eval_sigma_a_mono_impl(w, grid) + self._eval_sigma_s_impl(
-            w, grid
-        )
+        return self._eval_sigma_a_mono_impl(w, grid) + self._eval_sigma_s_impl(w, grid)
 
     def eval_sigma_t_ckd(
         self,

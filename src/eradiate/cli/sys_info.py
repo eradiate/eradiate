@@ -50,9 +50,7 @@ def main():
         import mitsuba as mi
 
         table.add_section()
-        table.add_row(
-            "Mitsuba variants", "\n".join([variant for variant in mi.variants()])
-        )
+        table.add_row("Mitsuba variants", "\n".join(mi.variants()))
     except ImportError:
         pass
 

@@ -9,7 +9,7 @@ from eradiate.test_tools.types import check_scene_element
 
 @pytest.mark.parametrize(
     "tested",
-    [{}, dict(origins=[[0, 0, 0]] * 3, directions=[[1, 0, 0], [0, 1, 0], [0, 0, 1]])],
+    [{}, {"origins": [[0, 0, 0]] * 3, "directions": [[1, 0, 0], [0, 1, 0], [0, 0, 1]]}],
     ids=[
         "no_args",
         "origins_directions",

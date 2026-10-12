@@ -143,7 +143,7 @@ def ng_minimum(error: xr.DataArray, ng_max: int | None = None):
 
     error_w0 = error.isel(w=0)
     ng_min = int(error.ng.where(error_w0 == error_w0.min(), drop=True)[0])
-    return ng_max if ng_min > ng_max else ng_min
+    return min(ng_min, ng_max)
 
 
 # TODO: Refactor to use new absorption database format
@@ -180,4 +180,4 @@ def ng_threshold(error: xr.DataArray, threshold: float, ng_max: int | None = Non
         return ng_max
     else:
         ng = int(ng[0])
-        return ng_max if ng > ng_max else ng
+        return min(ng, ng_max)

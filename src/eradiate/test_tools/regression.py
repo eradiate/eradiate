@@ -637,7 +637,6 @@ class RegressionTest(ABC):
         Apply the test criterion to a single pair of datasets, *i.e.* without
         the per-slice dispatch performed by :meth:`evaluate`.
         """
-        pass
 
     def plot(
         self,

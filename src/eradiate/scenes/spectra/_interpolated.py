@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+
 import attrs
 import numpy as np
 import pint
@@ -15,7 +17,7 @@ from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 
-_trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz
+_trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz  # noqa: NPY201
 
 
 @define(eq=False, slots=False, init=False)
@@ -202,10 +204,8 @@ class InterpolatedSpectrum(Spectrum):
             kwargs[id] = id
 
         if quantity is None:
-            try:
+            with contextlib.suppress(KeyError):
                 kwargs["quantity"] = dataarray.attrs["quantity"]
-            except KeyError:
-                pass
         else:
             kwargs["quantity"] = quantity
 
@@ -240,15 +240,11 @@ class InterpolatedSpectrum(Spectrum):
         # small margin
         eps = 1e-12  # nm
 
-        try:
+        with contextlib.suppress(ValueError):
             w.insert(w.index(s_wmin), s_wmin - eps)
-        except ValueError:
-            pass
 
-        try:
+        with contextlib.suppress(ValueError):
             w.insert(w.index(s_wmax) + 1, s_wmax + eps)
-        except ValueError:
-            pass
 
         # Evaluate spectrum at wavelengths
         interp = self.eval_mono(w * wavelength_units)

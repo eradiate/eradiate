@@ -55,13 +55,13 @@ def test_mi_render(mode_mono):
     Rendering succeed and results are stored in a dictionary which uses
     parametric loop index values (in this case, the wavelength) as keys.
     """
-    template, params = traverse(make_scene())
+    template, _params = traverse(make_scene())
     mi_scene = mi_traverse(mi.load_dict(template.render(ctx=KernelContext())))
     contexts = [KernelContext(si={"w": w}) for w in wavelengths]
     result = mi_render(mi_scene, contexts, spp=spp)
 
     # We store film values and SPPs
-    assert set(result.keys()) == set(x.si.w.magnitude for x in contexts)
+    assert set(result.keys()) == {x.si.w.magnitude for x in contexts}
     assert set(result[500.0].keys()) == {"measure"}
 
 
@@ -90,7 +90,7 @@ def test_mi_render_rebuild(mode_mono):
     *Mitsuba render scene* to complete.
     """
     # TODO: Recycle this test and merge with previous
-    template, params = traverse(make_scene())
+    template, _params = traverse(make_scene())
     kdict = template.render(ctx=KernelContext(), drop=True)
 
     for w in wavelengths:

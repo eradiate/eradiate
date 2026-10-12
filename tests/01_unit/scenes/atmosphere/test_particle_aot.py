@@ -5,8 +5,8 @@ import xarray as xr
 
 from eradiate import KernelContext, fresolver
 from eradiate import unit_registry as ureg
-from eradiate.grid import SpatialGrid, CartesianGrid, SphericalGrid
 from eradiate.data.convert import make_prt_psd_v1
+from eradiate.grid import CartesianGrid, SpatialGrid
 from eradiate.radprops import ParticleProperties
 from eradiate.scenes.atmosphere import (
     ArrayParticleDistribution,
@@ -175,7 +175,7 @@ class TestParticleAOTComponent:
             veff=ureg.Quantity([0.1], "dimensionless"),
         )
 
-        with pytest.raises(ValueError, match="reff.*veff"):
+        with pytest.raises(ValueError, match=r"reff.*veff"):
             ParticleAOTComponent(
                 particle_properties=properties_with_size_dist,
                 w_ref=ureg.Quantity(1.0, "micron"),
