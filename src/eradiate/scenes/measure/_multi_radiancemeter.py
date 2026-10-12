@@ -58,13 +58,13 @@ class MultiRadiancemeterMeasure(Measure):
     def _target_origin_validator(self, attribute, value):
         if value.shape[1] != 3:
             raise ValueError(
-                f"While initializing {attribute}: "
+                f"While initializing {attribute.name}: "
                 f"Expected shape (N, 3), got {value.shape}"
             )
 
         if not self.origins.shape == self.directions.shape:
             raise ValueError(
-                f"While initializing {attribute}: "
+                f"While initializing {attribute.name}: "
                 f"Origin and direction arrays must have the same shape, "
                 f"got origins.shape = {self.origins.shape}, "
                 f"directions.shape = {self.directions.shape}"

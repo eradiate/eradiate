@@ -6,6 +6,7 @@ import eradiate
 
 from ._core import Integrator
 from ...attrs import define, documented
+from ...exceptions import UnsupportedModeError
 
 
 @define(eq=False, slots=False)
@@ -82,7 +83,9 @@ class MonteCarloIntegrator(Integrator):
     def template(self) -> dict:
         # Validation
         if self.stokes and not eradiate.mode().is_polarized:
-            raise RuntimeError("stokes should only be set to True in polarized mode.")
+            raise UnsupportedModeError(
+                msg="'stokes' can only be set to True in polarized modes"
+            )
 
         # Build the kernel dict (children can override _build_kernel_dict)
         result = self._build_kernel_dict()

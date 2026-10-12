@@ -315,8 +315,11 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
             canopy_width = 0.0 * ureg.m
 
         # Check sizes, compute surface size
-        if atmosphere is not None:
-            assert atmosphere_width > canopy_width
+        if atmosphere is not None and atmosphere_width <= canopy_width:
+            raise ValueError(
+                f"atmosphere width ({atmosphere_width}) must be larger than "
+                f"canopy width ({canopy_width}, padding included)"
+            )
         surface_width = self._default_surface_width
         if canopy_width > surface_width:
             surface_width = canopy_width
