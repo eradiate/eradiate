@@ -38,25 +38,20 @@ class UnsupportedModeError(ModeError):
         self.unsupported = list(always_iterable(unsupported))
 
     def __str__(self):
-        msg = f"'{self.mode}'" if self.mode is not None else "None"
-        extra_msg = []
+        msg = self.args[0] if self.args and self.args[0] else "unsupported mode"
+        details = [
+            f"current mode: '{self.mode}'"
+            if self.mode is not None
+            else "no active mode"
+        ]
 
         if self.supported:
-            extra_msg.append(f"supported: {', '.join(self.supported)}")
+            details.append(f"supported: {', '.join(self.supported)}")
 
         if self.unsupported:
-            extra_msg.append(f"unsupported: {', '.join(self.unsupported)}")
+            details.append(f"unsupported: {', '.join(self.unsupported)}")
 
-        if extra_msg:
-            msg += f" ({'; '.join(extra_msg)})"
-
-        return msg
-
-
-class KernelVariantError(Exception):
-    """Raised when encountering issues with Eradiate kernel variants."""
-
-    pass
+        return f"{msg} ({'; '.join(details)})"
 
 
 class DataError(Exception):
@@ -67,32 +62,6 @@ class DataError(Exception):
 
 class TraversalError(Exception):
     """Raised when an error is encountered during scene element traversal."""
-
-    pass
-
-
-class InterpolationError(Exception):
-    """Raised when encountering errors during interpolation."""
-
-    pass
-
-
-class MissingCoordinateError(InterpolationError):
-    """Raised when a dataset is being interpolated along a coordinate that it
-    does not have."""
-
-    pass
-
-
-class ScalarCoordinateError(InterpolationError):
-    """Raised when a dataset is being interpolated along a scalar coordinate."""
-
-    pass
-
-
-class OutOfBoundsCoordinateError(InterpolationError):
-    """Raised when a dataset is being interpolated along a coordinate with
-    out-of-bounds values."""
 
     pass
 

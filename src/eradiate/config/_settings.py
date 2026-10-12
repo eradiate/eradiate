@@ -129,7 +129,7 @@ def _path_converter(value: Path | str | list[Path | str]) -> list[Path]:
     if isinstance(value, str):
         return _path_converter(value.split(":"))
 
-    raise NotImplementedError(f"Cannot convert value of type {type(value)}")
+    raise TypeError(f"Cannot convert value of type {type(value)}")
 
 
 def _rng_seed_converter(value: Any):
@@ -138,7 +138,7 @@ def _rng_seed_converter(value: Any):
 
     try:
         value = int(value)
-    except TypeError as e:
+    except (TypeError, ValueError) as e:
         raise ValueError(
             f"While converting RNG_SEED: Cannot convert value ({value!r}) to int"
         ) from e
