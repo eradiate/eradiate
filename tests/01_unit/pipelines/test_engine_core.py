@@ -715,7 +715,7 @@ class TestExecutionContext:
 
     def test_output_subset_makes_nodes_inactive(self, pipeline_chain):
         """Requesting only 'c' should mark 'd' as inactive."""
-        active, bypassed, satisfied, inactive = pipeline_chain._execution_context(
+        active, _bypassed, _satisfied, inactive = pipeline_chain._execution_context(
             outputs=["c"], inputs=None
         )
         assert active == {"b", "c"}
@@ -723,7 +723,7 @@ class TestExecutionContext:
 
     def test_bypass_node_appears_in_bypassed(self, pipeline_chain):
         """Bypassing 'b' should put it in bypassed, not active."""
-        active, bypassed, satisfied, inactive = pipeline_chain._execution_context(
+        active, bypassed, _satisfied, inactive = pipeline_chain._execution_context(
             outputs=["d"], inputs={"b": 5}
         )
         assert "b" in bypassed
@@ -732,7 +732,7 @@ class TestExecutionContext:
 
     def test_satisfied_virtual_input(self, pipeline_chain):
         """Providing a virtual input value puts it in satisfied_vis."""
-        active, bypassed, satisfied, inactive = pipeline_chain._execution_context(
+        _active, _bypassed, satisfied, inactive = pipeline_chain._execution_context(
             outputs=["d"], inputs={"a": 1}
         )
         assert "a" in satisfied
@@ -742,7 +742,7 @@ class TestExecutionContext:
         """Virtual inputs outside the requested subgraph appear as inactive."""
         # Add a second unrelated branch
         pipeline_chain.add_node("z", lambda x: x, dependencies=["x"])
-        active, bypassed, satisfied, inactive = pipeline_chain._execution_context(
+        _active, _bypassed, _satisfied, inactive = pipeline_chain._execution_context(
             outputs=["d"], inputs=None
         )
         assert "x" in inactive  # 'x' feeds only 'z', not needed for 'd'
@@ -750,7 +750,7 @@ class TestExecutionContext:
 
     def test_bypass_cuts_upstream_from_active(self, pipeline_chain):
         """When 'b' is bypassed, 'a' (its only supplier) becomes inactive."""
-        active, bypassed, satisfied, inactive = pipeline_chain._execution_context(
+        _active, _bypassed, satisfied, inactive = pipeline_chain._execution_context(
             outputs=["d"], inputs={"b": 5}
         )
         # The backward BFS stops at bypassed 'b', so 'a' is outside the subgraph
@@ -759,7 +759,7 @@ class TestExecutionContext:
 
     def test_diamond_partial_bypass(self, pipeline_diamond):
         """Bypassing one branch of a diamond leaves the other active."""
-        active, bypassed, satisfied, inactive = pipeline_diamond._execution_context(
+        active, bypassed, _satisfied, inactive = pipeline_diamond._execution_context(
             outputs=["d"], inputs={"b": 3}
         )
         assert "b" in bypassed

@@ -43,7 +43,6 @@ class SpectralGrid(ABC):
         """
         Convenience accessor to characteristic wavelengths of this spectral grid.
         """
-        pass
 
     @staticmethod
     def default() -> SpectralGrid:
@@ -139,7 +138,6 @@ class SpectralGrid(ABC):
         SpectralGrid
             A new spectral grid of the same type that merges the two.
         """
-        pass
 
     @abstractmethod
     def walk_indices(self, **kwargs) -> t.Generator[SpectralIndex, None, None]:
@@ -152,7 +150,6 @@ class SpectralGrid(ABC):
             Generated spectral index of a type aligned with the current active
             mode.
         """
-        pass
 
 
 @SpectralGrid.subtypes.register(ModeFlag.SPECTRAL_MODE_MONO)

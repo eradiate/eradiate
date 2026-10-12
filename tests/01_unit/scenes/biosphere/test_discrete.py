@@ -116,8 +116,8 @@ def test_discrete_canopy_homogeneous(mode_mono):
     )
     check_scene_element(canopy)
 
-    # Check template and parameter map contents
-    template, params = traverse(canopy)
+    # Check that traversal succeeds
+    traverse(canopy)
 
 
 def test_discrete_canopy_from_files(mode_mono, tempfile_spheres, tempfile_leaves):

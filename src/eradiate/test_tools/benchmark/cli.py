@@ -132,11 +132,10 @@ def benchmark(
                 branch_in_conf = True
 
         if not branch_in_conf:
-            if click.confirm(
+            click.confirm(
                 f"The branch '{commit_branches[0]}' you are about to benchmark isn't tracked by asv.conf.json. Are you sure you want to continue?",
                 abort=True,
-            ):
-                pass
+            )
 
     # construct and run the full command
     cmd = " ".join(cmd)

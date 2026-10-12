@@ -22,7 +22,7 @@ class BasicSurface(Surface):
     A basic surface description consisting of a single shape and BSDF.
     """
 
-    shape: None | RectangleShape | SphereShape = documented(
+    shape: RectangleShape | SphereShape | None = documented(
         attrs.field(
             default=None,
             converter=attrs.converters.optional(shape_factory.convert),

@@ -93,10 +93,7 @@ def reset_seed_state(seed: int | None = None) -> None:
         from .config import settings
 
         seed = settings.get("RNG_SEED")
-        if seed == "random":
-            seed = None
-        else:
-            seed = int(seed)
+        seed = None if seed == "random" else int(seed)
 
     _root_seed_state = SeedState(seed=seed)
 
