@@ -766,8 +766,8 @@ class RMSETest(RegressionTest):
         ref_np = reference[self.variable].values
         _check_shape(value_np, ref_np, self.variable, "reference")
 
-        result_flat = np.array(value_np).flatten()
-        ref_flat = np.array(ref_np).flatten()
+        result_flat = value_np.ravel()
+        ref_flat = ref_np.ravel()
 
         rmse = float(np.linalg.norm(result_flat - ref_flat) / np.sqrt(len(ref_flat)))
 

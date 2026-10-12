@@ -165,7 +165,7 @@ class DiscreteCanopy(Canopy):
         # Convenience aliases
         config_length = ucc.get("length")
         x_size, y_size = result.size.m_as(config_length)[:2]
-        padding_factors = np.array(list(range(-padding, padding + 1)))
+        padding_factors = np.arange(-padding, padding + 1)
 
         for instanced_canopy_element in result.instanced_canopy_elements:
             # More convenience aliases

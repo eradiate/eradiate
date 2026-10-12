@@ -87,7 +87,7 @@ class ArrayRadProfile(RadProfile):
 
     rayleigh_depolarization: np.ndarray = documented(
         attrs.field(
-            converter=lambda x: np.array(x, dtype=np.float64),
+            converter=lambda x: np.asarray(x, dtype=np.float64),
             kw_only=True,
             factory=lambda: np.array(0.0),
         ),

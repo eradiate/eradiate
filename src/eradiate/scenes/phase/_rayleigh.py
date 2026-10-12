@@ -30,7 +30,7 @@ class RayleighPhaseFunction(PhaseFunction):
 
     depolarization: np.ndarray | Callable[[KernelContext], np.ndarray] = documented(
         attrs.field(
-            converter=lambda x: x if callable(x) else np.array(x, dtype=np.float64),
+            converter=lambda x: x if callable(x) else np.asarray(x, dtype=np.float64),
             kw_only=True,
             factory=lambda: np.array([0.0]),
         ),
