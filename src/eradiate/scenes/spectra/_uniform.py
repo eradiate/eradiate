@@ -41,7 +41,7 @@ class UniformSpectrum(Spectrum):
         # If a quantity is passed, it must match the quantity field
         if isinstance(value, pint.Quantity):
             if self.quantity is None:
-                raise ValueError(
+                raise TypeError(
                     f"while validating {attribute.name}, got a Pint quantity, "
                     "incompatible with 'quantity' field set to None; "
                     "please provide a unitless value"

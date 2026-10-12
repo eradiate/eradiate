@@ -91,7 +91,7 @@ class UniformParticleDistribution(ParticleDistribution):
         if np.any(value[1] <= value[0]):
             raise ValueError(
                 f"while validating '{attribute.name}': bounds must be sorted in "
-                "ascending order "
+                "ascending order"
             )
 
     def __call__(self, x: np.typing.ArrayLike) -> np.ndarray:

@@ -692,12 +692,13 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             "scattering": self.eval_sigma_s,
         }
         try:
-            sigma = eval_sigma[interaction](si=si)
+            eval_sigma_func = eval_sigma[interaction]
         except KeyError as e:
-            raise TypeError(
+            raise ValueError(
                 f"invalid interaction type '{interaction}', "
                 f"supported: {list(eval_sigma.keys())}"
             ) from e
+        sigma = eval_sigma_func(si=si)
         dz = np.diff(self.geometry.grid.levels)
         tau = np.sum(np.multiply(sigma, dz).to("1"), axis=-1)
         return np.exp(-tau)
@@ -816,7 +817,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             albedo_key = "albedo.volume.data"
             sigma_t_key = "sigma_t.volume.data"
         else:
-            raise ValueError(
+            raise TypeError(
                 f"unhandled scene geometry type '{type(self.geometry).__name__}'"
             )
 

@@ -49,7 +49,7 @@ from eradiate.units import PhysicalQuantity
         ),
         (
             {"value": 1.0 * ureg.dimensionless},
-            ValueError,
+            TypeError,
         ),
     ],
     ids=[

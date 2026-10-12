@@ -83,17 +83,13 @@ class MQDiffuseBSDF(BSDF):
 
         # Check coordinates
         for coord_name in ["cos_theta_o", "cos_theta_i", "phi_d"]:
-            try:
-                coord = to_quantity(value.coords[coord_name])
-            except ValueError as e:
-                if e.args[0] == "this DataArray has no 'units' metadata field":
-                    raise ValueError(
-                        f"while validating '{attribute.name}': input dataset "
-                        f"coordinate variable '{coord_name}' is missing "
-                        "'units' metadata field"
-                    ) from e
-                else:
-                    raise e
+            if "units" not in value.coords[coord_name].attrs:
+                raise ValueError(
+                    f"while validating '{attribute.name}': input dataset "
+                    f"coordinate variable '{coord_name}' is missing "
+                    "'units' metadata field"
+                )
+            coord = to_quantity(value.coords[coord_name])
 
             expected = (
                 np.linspace(0.0, 1.0, len(coord))

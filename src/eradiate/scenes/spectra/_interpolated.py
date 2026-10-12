@@ -84,7 +84,7 @@ class InterpolatedSpectrum(Spectrum):
     def _values_validator(self, attribute, value):
         if self.quantity is not None:
             if not isinstance(self.values, pint.Quantity):
-                raise ValueError(
+                raise TypeError(
                     f"while validating '{attribute.name}': expected a Pint "
                     "quantity compatible with quantity field value "
                     f"'{self.quantity}', got a unitless value instead"

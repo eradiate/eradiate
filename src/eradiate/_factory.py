@@ -36,7 +36,10 @@ class Factory(dessinemoi.Factory):
             value_copy = pinttrs.interpret_units(value, ureg=ureg)
 
             # Query registry
-            type_id = value_copy.pop("type")
+            try:
+                type_id = value_copy.pop("type")
+            except KeyError:
+                raise ValueError("cannot convert dict, missing 'type' entry") from None
 
             try:
                 entry = self.registry[type_id]
@@ -66,7 +69,10 @@ class Factory(dessinemoi.Factory):
             # Check if object has allowed type
             if allowed_cls is not None:
                 if not isinstance(value, allowed_cls):
-                    raise TypeError("value type is not allowed")
+                    raise TypeError(
+                        f"value type '{type(value).__name__}' is not allowed "
+                        f"(expected {allowed_cls})"
+                    )
 
             return value
 

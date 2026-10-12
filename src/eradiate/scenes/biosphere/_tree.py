@@ -329,7 +329,7 @@ class MeshTreeElement:
 
         if value.suffix not in {".obj", ".ply"}:
             raise ValueError(
-                f"While validating {attribute.name}: File extension must be '.obj'"
+                f"While validating {attribute.name}: File extension must be '.obj' "
                 f"or '.ply', got '{value.suffix}'"
             )
 

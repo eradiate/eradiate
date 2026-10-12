@@ -454,9 +454,9 @@ class SubtypeDispatcher:
             if mode_flags & key:
                 return value
 
-        raise NotImplementedError(
-            f"Type {self._type_name} has no registered subtype for mode flags "
-            f"{mode_flags}."
+        raise UnsupportedModeError(
+            msg=f"type {self._type_name} has no registered subtype for mode flags "
+            f"{mode_flags}"
         )
 
 
@@ -598,11 +598,17 @@ def supported_mode(**kwargs):
 
     Raises
     ------
+    UnsetModeError
+        No mode is active.
+
     UnsupportedModeError
         Current mode does not pass the check.
     """
-    if mode() is None or not mode().check(**kwargs):
-        raise UnsupportedModeError
+    if mode() is None:
+        raise UnsetModeError
+    if not mode().check(**kwargs):
+        flags = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+        raise UnsupportedModeError(msg=f"feature requires mode flags {flags}")
 
 
 def unsupported_mode(**kwargs):
@@ -616,8 +622,16 @@ def unsupported_mode(**kwargs):
 
     Raises
     ------
+    UnsetModeError
+        No mode is active.
+
     UnsupportedModeError
         Current mode has the requested flags.
     """
-    if mode() is None or mode().check(**kwargs):
-        raise UnsupportedModeError
+    if mode() is None:
+        raise UnsetModeError
+    if mode().check(**kwargs):
+        flags = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+        raise UnsupportedModeError(
+            msg=f"feature is unavailable with mode flags {flags}"
+        )

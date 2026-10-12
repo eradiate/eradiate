@@ -361,10 +361,10 @@ class TestMakeAerCoreV2:
             np.testing.assert_array_equal(ds["nmom"].values, nmom_vals)
 
         def test_nmom_ndarray_without_pmom_raises(self, base_args):
-            """ValueError when nmom is an ndarray but pmom is not provided."""
+            """TypeError when nmom is an ndarray but pmom is not provided."""
             nw = base_args["w"].shape[0]
             with pytest.raises(
-                ValueError,
+                TypeError,
                 match="Pass an ndarray only together with an explicit 'pmom'",
             ):
                 make_prt_core_v1(**base_args, nmom=np.full(nw, 10, dtype=np.int32))
@@ -587,11 +587,11 @@ class TestMakePrtPsdV1:
             np.testing.assert_array_equal(ds["nmom"].values, nmom_grid)
 
         def test_nmom_ndarray_without_pmom_raises(self):
-            """ValueError when nmom is an ndarray but pmom is not provided."""
+            """TypeError when nmom is an ndarray but pmom is not provided."""
             nw, nreff, nveff = 2, 2, 2
             args = _size_distribution_args(nw=nw, nreff=nreff, nveff=nveff)
             with pytest.raises(
-                ValueError,
+                TypeError,
                 match="Pass an ndarray only together with an explicit 'pmom'",
             ):
                 make_prt_psd_v1(

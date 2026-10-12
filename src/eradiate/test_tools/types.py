@@ -67,7 +67,7 @@ def check_scene_element(
         kdict_template, umap_template = traverse(Scene(objects={"composite": instance}))
 
     else:
-        raise RuntimeError(f"Cannot test type '{instance.__class__}'")
+        raise TypeError(f"Cannot test type '{instance.__class__}'")
 
     # Check if the template can be instantiated
     ctx = KernelContext() if ctx is None else ctx

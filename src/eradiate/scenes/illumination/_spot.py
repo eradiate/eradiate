@@ -68,7 +68,7 @@ class SpotIllumination(Illumination):
     def _target_origin_validator(self, attribute, value):
         if np.allclose(self.target, self.origin):
             raise ValueError(
-                f"While initializing {attribute}: "
+                f"While initializing {attribute.name}: "
                 f"Origin and target must not be equal, "
                 f"got target = {self.target}, origin = {self.origin}"
             )

@@ -262,7 +262,7 @@ class LeafCloudParams:
             for field in [x.name.lstrip("_") for x in self.__attrs_attrs__]:
                 self.__getattribute__(field)
         except Exception as e:
-            raise Exception(
+            raise ValueError(
                 f"cannot compute field '{field}', parameter set is likely "
                 "under-constrained"
             ) from e

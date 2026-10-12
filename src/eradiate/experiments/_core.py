@@ -563,7 +563,7 @@ class EarthObservationExperiment(Experiment, ABC):
             def generator():
                 yield from spectral_grid.walk_indices(quad_config, abs_db)
         else:
-            raise UnsupportedModeError
+            raise UnsupportedModeError(supported=["mono", "ckd"])
 
         yield from generator()
 
@@ -669,7 +669,7 @@ class EarthObservationExperiment(Experiment, ABC):
                 umap_template=umap_template,
             )
         except RuntimeError as e:
-            raise RuntimeError(f"(while loading kernel scene dictionary){e}") from e
+            raise RuntimeError(f"while loading kernel scene dictionary: {e}") from e
 
         # Remove unused elements from Mitsuba scene parameter table
         if drop_parameters:
