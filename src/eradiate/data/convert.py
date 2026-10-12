@@ -161,8 +161,10 @@ def make_aer_core_v2(
     Raises
     ------
     ValueError
-        If a value check fails, or if ``nmom`` is an ndarray but ``pmom`` is
-        not provided.
+        If a value check fails.
+
+    TypeError
+        If ``nmom`` is an ndarray but ``pmom`` is not provided.
     """
     # nangles is always stored. Infer from the first phase matrix component when
     # not provided: count non-NaN entries per wavelength.
@@ -213,7 +215,7 @@ def make_aer_core_v2(
         elif isinstance(nmom, int):
             _nmom_scalar = nmom
         else:
-            raise ValueError(
+            raise TypeError(
                 "make_aer_core_v2(): 'nmom' must be an int or None when 'pmom' is "
                 "not provided. Pass an ndarray only together with an explicit 'pmom'."
             )

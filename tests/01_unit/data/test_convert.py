@@ -264,7 +264,7 @@ class TestMakeAerCoreV2:
             """ValueError when nmom is an ndarray but pmom is not provided."""
             nw = base_args["w"].shape[0]
             with pytest.raises(
-                ValueError,
+                TypeError,
                 match="Pass an ndarray only together with an explicit 'pmom'",
             ):
                 make_aer_core_v2(**base_args, nmom=np.full(nw, 10, dtype=np.int32))
