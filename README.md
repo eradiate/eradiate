@@ -318,7 +318,7 @@ Example:
 ## License
 
 Eradiate is free software licensed under the
-[GNU Lesser General Public License (v3)](./LICENSE).
+[GNU Lesser General Public License (v3)](./LICENSES/LGPL-3.0-or-later.txt).
 
 ## Project status
 

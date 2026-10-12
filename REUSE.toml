@@ -1,0 +1,37 @@
+# REUSE.toml
+version = 1
+
+[[annotations]]
+# Default
+path = "**"
+SPDX-FileCopyrightText = "2020 The Eradiate Team"
+SPDX-License-Identifier = "LGPL-3.0-or-later"
+
+[[annotations]]
+# Vendored from autodocsumm; prose copyright lines in the file would otherwise
+# be merged with the default annotation
+path = "docs/_ext/autodocsumm.py"
+precedence = "override"
+SPDX-FileCopyrightText = [
+  "2016-2019 Philipp S. Sommer",
+  "2020-2021 Helmholtz-Zentrum Hereon",
+]
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+# Vendored from asvdb
+path = "src/eradiate/testing/benchmark/asvdb.py"
+SPDX-FileCopyrightText = ["2020 The Eradiate Team", "2020 NVIDIA Corporation"]
+SPDX-License-Identifier = "LGPL-3.0-or-later AND Apache-2.0"
+
+[[annotations]]
+# Adapted from deprecation
+path = "src/eradiate/util/deprecation.py"
+SPDX-FileCopyrightText = ["2020 The Eradiate Team", "2017 Brian Curtin"]
+SPDX-License-Identifier = "LGPL-3.0-or-later AND Apache-2.0"
+
+[[annotations]]
+# Adapted from mitsuba.sys_info
+path = "src/eradiate/util/sys_info.py"
+SPDX-FileCopyrightText = ["2020 The Eradiate Team", "2017 Wenzel Jakob"]
+SPDX-License-Identifier = "LGPL-3.0-or-later AND BSD-3-Clause"

@@ -45,6 +45,6 @@ To propose a change to the codebase, please:
 ## Any contributions you make will be under the LGPLv3 Software License
 
 In short, when you submit code changes, your submissions are understood to be
-under the same [LGPLv3 License](https://github.com/eradiate/eradiate/blob/main/LICENSE)
+under the same [LGPLv3 License](https://github.com/eradiate/eradiate/blob/main/LICENSES/LGPL-3.0-or-later.txt)
 that covers the project. Feel free to contact the maintainers if that's a
 concern.

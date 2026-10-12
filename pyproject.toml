@@ -6,7 +6,7 @@ requires = ["setuptools>=77"]
 authors = [{ name = "The Eradiate Team" }]
 description = "A radiative transfer model for the Earth observation community"
 license = "LGPL-3.0-or-later"
-license-files = ["LICENSE"]
+license-files = ["LICENSES/*"]
 maintainers = [{ name = "The Eradiate Team" }]
 name = "eradiate"
 readme = "resources/README_PyPI.md"
@@ -204,6 +204,11 @@ docs-lock = { cmd = """
     --output-file docs/requirements.txt pyproject.toml
 """ }
 
+[tool.pixi.feature.dev.dependencies]
+# REUSE must be sourced from conda: PyPI doesn't provide a macOS wheel, and the
+# sdist builds a wheel tagged for the host macOS version, which pixi rejects
+reuse = "*"
+
 [tool.pixi.feature.dev.tasks]
 release = { cmd = "python resources/release.py" }
 # Version bump
@@ -211,7 +216,8 @@ bump = { cmd = "bump-my-version bump --new-version $RELEASE_VERSION" }
 bump-show = { cmd = "bump-my-version show-bump" }
 bump-dry = { cmd = "bump-my-version bump --new-version $RELEASE_VERSION --dry-run --verbose" }
 # Linting
-lint = { cmd = """ruff check""" }
+lint = { cmd = "ruff check" }
+lint-reuse = { cmd = "reuse lint" }
 
 [tool.pixi.environments]
 default = { features = ["py310", "recommended", "test", "dev"], solve-group = "dev" }
