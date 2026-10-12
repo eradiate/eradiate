@@ -12,7 +12,7 @@ from eradiate import unit_registry as ureg
 
 def compute(ray_offset="distant", sigma=1.0, rho=1.0, exp_cls="AtmosphereExperiment"):
     result = []
-    spps = [4**i for i in range(0, 11)]
+    spps = [4**i for i in range(11)]
 
     for spp in spps:
         exp = getattr(eradiate.experiments, exp_cls)(

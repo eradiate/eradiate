@@ -98,7 +98,7 @@ def test_central_patch_scale_kernel_dict(mode_mono):
         id="surface",
     )
 
-    template, params = traverse(surface)
+    template, _params = traverse(surface)
     kernel_dict = template.render(ctx=KernelContext())
     result = kernel_dict["surface_bsdf"]["weight"]["to_uv"].matrix
     expected = (

@@ -10,8 +10,6 @@ from pinttr.util import always_iterable
 class ModeError(Exception):
     """Raised when encountering issues with Eradiate modes."""
 
-    pass
-
 
 class UnsetModeError(ModeError):
     """
@@ -57,13 +55,9 @@ class UnsupportedModeError(ModeError):
 class DataError(Exception):
     """Raised when encountering issues with data."""
 
-    pass
-
 
 class TraversalError(Exception):
     """Raised when an error is encountered during scene element traversal."""
-
-    pass
 
 
 # ------------------------------------------------------------------------------
@@ -74,10 +68,6 @@ class TraversalError(Exception):
 class ConfigWarning(UserWarning):
     """Used when encountering nonfatal configuration issues."""
 
-    pass
-
 
 class OverriddenValueWarning(UserWarning):
     """Used when a user-defined value is overridden during execution."""
-
-    pass

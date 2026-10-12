@@ -105,7 +105,7 @@ def _rdp1d_log(mu: np.ndarray, values: np.ndarray, n_out: int) -> np.ndarray:
     heap = [(-err, 0, n - 1, best)]
 
     while count < n_out and heap:
-        neg_err, i_l, i_r, mid = heapq.heappop(heap)
+        _neg_err, i_l, i_r, mid = heapq.heappop(heap)
         if selected[mid]:
             # Stale entry: mid was already inserted via another segment; skip.
             continue

@@ -32,7 +32,7 @@ def assert_cmp_dict(value, expected):
     # Keys should be identical
     assert set(value.keys()) == set(expected.keys())
 
-    for key in value.keys():
+    for key in value:
         first_element = value[key]
         second_element = expected[key]
 

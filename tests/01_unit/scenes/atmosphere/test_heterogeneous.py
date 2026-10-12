@@ -190,7 +190,7 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
 
     components = sorted(set(radprofiles.keys()) - {"mixed"})
 
-    for z in collision_coefficient.keys():
+    for z in collision_coefficient:
         total = collision_coefficient[z]["mixed"]
         expected = sum(collision_coefficient[z][component] for component in components)
         np.testing.assert_allclose(

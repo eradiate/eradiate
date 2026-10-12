@@ -52,7 +52,7 @@ def test_atmosphere_experiment_extra_objects(mode_mono):
     assert isinstance(exp.extra_objects["reference_surface"], RectangleShape)
     mi_wrapper = check_scene_element(exp.scene, mi.Scene, ctx=exp.context_init())
     assert mi_wrapper.obj.shapes()[2].id() == "reference_surface"
-    assert "reference_surface.bsdf.reflectance.value" in mi_wrapper.parameters.keys()
+    assert "reference_surface.bsdf.reflectance.value" in mi_wrapper.parameters
 
 
 def test_atmosphere_experiment_construct_measures(modes_all_double):
@@ -107,7 +107,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
         mi.ScalarTransform4f().scale([21000, 21000, 1]).matrix,
     )
     # -- Atmosphere is part of the scene
-    assert "shape_atmosphere" in set(shape.id() for shape in mi_wrapper.obj.shapes())
+    assert "shape_atmosphere" in {shape.id() for shape in mi_wrapper.obj.shapes()}
     # -- Measure gets no external medium assigned
     assert all(sensor.get_medium() is None for sensor in mi_wrapper.obj.sensors())
 
@@ -128,9 +128,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
         mi.ScalarTransform4f().scale([5e8, 5e8, 1]).matrix,
     )
     # -- Atmosphere is not part of the scene
-    assert "shape_atmosphere" not in set(
-        shape.id() for shape in mi_wrapper.obj.shapes()
-    )
+    assert "shape_atmosphere" not in {shape.id() for shape in mi_wrapper.obj.shapes()}
     # -- Measures get no external medium assigned
     assert all(sensor.get_medium() is None for sensor in mi_wrapper.obj.sensors())
 

@@ -213,7 +213,7 @@ class TestParticleProperties:
         def test_at_nodes(self, pp, w_nm, expected_t):
             """t=0 at left node of a segment, t=1 at its right node."""
             w = w_nm * ureg.nm
-            idx_l, idx_r, t = pp._locate(w)
+            _idx_l, _idx_r, t = pp._locate(w)
             assert t.shape == (1,)
             np.testing.assert_allclose(t[0], expected_t, atol=1e-12)
 
@@ -512,7 +512,7 @@ class TestParticleProperties:
             assert pp_single.has_fixed_mu_grid
 
             # Default is n_iangle for a fixed grid; stored values reproduced exactly
-            mu_out, phase_out = pp_single.eval_phase(300.0 * ureg.nm)
+            _mu_out, phase_out = pp_single.eval_phase(300.0 * ureg.nm)
             assert phase_out.shape == (1, n_iangle)
             # phase dims in Aer-Core v2: (phamat, w, iangle)
             stored_phase = ds["phase"].values[0, 0, :]

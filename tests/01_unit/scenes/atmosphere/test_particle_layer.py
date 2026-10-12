@@ -228,8 +228,8 @@ class TestParticleLayer:
         ds = layer.eval_radprops(si)
         expected_data_vars = ["sigma_t", "albedo"]
         expected_coords = ["z_layer"]
-        assert all([coord in ds.coords for coord in expected_coords]) and all(
-            [var in ds.data_vars for var in expected_data_vars]
+        assert all(coord in ds.coords for coord in expected_coords) and all(
+            var in ds.data_vars for var in expected_data_vars
         )
 
     @pytest.mark.parametrize(

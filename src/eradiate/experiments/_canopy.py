@@ -61,7 +61,7 @@ class CanopyExperiment(EarthObservationExperiment):
         default="0",
     )
 
-    surface: None | BasicSurface = documented(
+    surface: BasicSurface | None = documented(
         attrs.field(
             factory=lambda: LambertianBSDF(),
             converter=attrs.converters.optional(surface_converter),

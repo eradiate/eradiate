@@ -172,7 +172,6 @@ class Atmosphere(CompositeSceneElement, ABC):
         .PhaseFunction
             Phase function associated with the atmosphere.
         """
-        pass
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -196,7 +195,6 @@ class Atmosphere(CompositeSceneElement, ABC):
         mfp : quantity
             Mean free path estimate.
         """
-        pass
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
@@ -255,7 +253,6 @@ class Atmosphere(CompositeSceneElement, ABC):
             The phase function-related contribution to the kernel scene
             dictionary template for the atmosphere.
         """
-        pass
 
     @property
     @abstractmethod
@@ -267,7 +264,6 @@ class Atmosphere(CompositeSceneElement, ABC):
             The medium-related contribution to the kernel scene dictionary
             template for the atmosphere.
         """
-        pass
 
     @property
     def _template_shape(self) -> dict:
@@ -314,7 +310,6 @@ class Atmosphere(CompositeSceneElement, ABC):
             The phase function-related contribution to the parameter update map
             template for the atmosphere.
         """
-        pass
 
     @property
     @abstractmethod
@@ -326,7 +321,6 @@ class Atmosphere(CompositeSceneElement, ABC):
             The medium-related contribution to the parameter update map template
             for the atmosphere.
         """
-        pass
 
     @property
     def _params_shape(self) -> dict[str, SceneParameter]:
@@ -409,7 +403,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         """
         Update internal state.
         """
-        pass
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -561,7 +554,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             Evaluated spectrum as an array with length equal to the number of
             layers.
         """
-        pass
 
     @abstractmethod
     def eval_sigma_t(
@@ -585,7 +577,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         quantity
             Particle layer extinction coefficient.
         """
-        pass
 
     @abstractmethod
     def eval_sigma_a(
@@ -609,7 +600,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         quantity
             Particle layer extinction coefficient.
         """
-        pass
 
     @abstractmethod
     def eval_sigma_s(
@@ -633,8 +623,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         quantity
             Particle layer scattering coefficient.
         """
-
-        pass
 
     def eval_transmittance(
         self,
@@ -731,14 +719,13 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 },
             }
 
-            if medium == "eoheterogeneous":
-                if self.extremum_resolution != (1, 1, 1):
-                    extremum = {
-                        "type": "extremum_grid",
-                        "volume": {"type": "ref", "id": sigma_t_id},
-                        "resolution": self.extremum_resolution,
-                        "to_world": to_world,
-                    }
+            if medium == "eoheterogeneous" and self.extremum_resolution != (1, 1, 1):
+                extremum = {
+                    "type": "extremum_grid",
+                    "volume": {"type": "ref", "id": sigma_t_id},
+                    "resolution": self.extremum_resolution,
+                    "to_world": to_world,
+                }
 
         elif isinstance(self.geometry, SphericalShellGeometry):
             volume_rmin = self.geometry.atmosphere_volume_rmin

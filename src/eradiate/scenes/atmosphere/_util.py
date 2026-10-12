@@ -62,7 +62,7 @@ def eval_transmittance_mono(
             "w": (
                 "w",
                 wavelengths.m_as(w_u),
-                {**ATTRIBUTES["radiation_wavelength"], **{"units": symbol(w_u)}},
+                {**ATTRIBUTES["radiation_wavelength"], "units": symbol(w_u)},
             )
         },
         attrs={"units": "1", "long_name": "transmittance"},
@@ -150,7 +150,7 @@ def eval_transmittance_ckd(
             "w": (
                 "w",
                 spectral_grid.wavelengths.m_as(w_u),
-                {**ATTRIBUTES["radiation_wavelength"], **{"units": symbol(w_u)}},
+                {**ATTRIBUTES["radiation_wavelength"], "units": symbol(w_u)},
             )
         },
         attrs={"units": "1", "long_name": "transmittance"},

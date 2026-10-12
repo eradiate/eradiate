@@ -146,7 +146,6 @@ class SceneGeometry(ABC):
         :class:`.Shape`: Stencil of the participating medium representing the
         atmosphere.
         """
-        pass
 
     @property
     @abstractmethod
@@ -156,7 +155,6 @@ class SceneGeometry(ABC):
             coordinates to world coordinates for heterogeneous atmosphere
             components.
         """
-        pass
 
     @property
     @abstractmethod
@@ -164,7 +162,6 @@ class SceneGeometry(ABC):
         """
         :class:`.Shape` : Shape representing the surface.
         """
-        pass
 
 
 @define

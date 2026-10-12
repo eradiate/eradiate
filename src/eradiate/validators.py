@@ -110,7 +110,7 @@ def path_exists(_, attribute, value):
     """
     if not value.exists():
         raise FileNotFoundError(
-            f"{attribute.name} points to '{str(value)}' (path does not exist)"
+            f"{attribute.name} points to '{value!s}' (path does not exist)"
         )
 
 
@@ -126,9 +126,7 @@ def is_file(_, attribute, value):
         file.
     """
     if not value.is_file():
-        raise FileNotFoundError(
-            f"{attribute.name} points to '{str(value)}' (not a file)"
-        )
+        raise FileNotFoundError(f"{attribute.name} points to '{value!s}' (not a file)")
 
 
 def is_dir(_, attribute, value):

@@ -87,67 +87,67 @@ def make_dataset(
             "sigma_a": (
                 ("w", "z_layer"),
                 sigma_a.reshape(1, z_layer.size),
-                dict(
-                    standard_name="absorption_coefficient",
-                    units="km^-1",
-                    long_name="absorption coefficient",
-                ),
+                {
+                    "standard_name": "absorption_coefficient",
+                    "units": "km^-1",
+                    "long_name": "absorption coefficient",
+                },
             ),
             "sigma_s": (
                 ("w", "z_layer"),
                 sigma_s.reshape(1, z_layer.size),
-                dict(
-                    standard_name="scattering_coefficient",
-                    units="km^-1",
-                    long_name="scattering coefficient",
-                ),
+                {
+                    "standard_name": "scattering_coefficient",
+                    "units": "km^-1",
+                    "long_name": "scattering coefficient",
+                },
             ),
             "sigma_t": (
                 ("w", "z_layer"),
                 sigma_t.reshape(1, z_layer.size),
-                dict(
-                    standard_name="extinction_coefficient",
-                    units="km^-1",
-                    long_name="extinction coefficient",
-                ),
+                {
+                    "standard_name": "extinction_coefficient",
+                    "units": "km^-1",
+                    "long_name": "extinction coefficient",
+                },
             ),
             "albedo": (
                 ("w", "z_layer"),
                 albedo.reshape(1, z_layer.size),
-                dict(
-                    standard_name="albedo",
-                    units="",
-                    long_name="albedo",
-                ),
+                {
+                    "standard_name": "albedo",
+                    "units": "",
+                    "long_name": "albedo",
+                },
             ),
         },
         coords={
             "z_level": (
                 "z_level",
                 z_level,
-                dict(
-                    standard_name="level_altitude",
-                    units="km",
-                    long_name="level altitude",
-                ),
+                {
+                    "standard_name": "level_altitude",
+                    "units": "km",
+                    "long_name": "level altitude",
+                },
             ),
             "z_layer": (
                 "z_layer",
                 z_layer,
-                dict(
-                    standard_name="layer_altitude",
-                    units="km",
-                    long_name="layer altitude",
-                ),
+                {
+                    "standard_name": "layer_altitude",
+                    "units": "km",
+                    "long_name": "layer altitude",
+                },
             ),
             "w": (
                 "w",
                 [wavelength],
-                dict(
-                    standard_name="radiation_wavelength",
-                    units="nm",
-                    long_name="wavelength",
-                ),
+                {
+                    "standard_name": "radiation_wavelength",
+                    "units": "nm",
+                    "long_name": "wavelength",
+                },
             ),
         },
         attrs={
@@ -283,7 +283,6 @@ class RadProfile(ABC):
         """
         Bounds of the z profile.
         """
-        pass
 
     @property
     @abstractmethod
@@ -291,7 +290,6 @@ class RadProfile(ABC):
         """
         Default altitude grid used for profile evaluation.
         """
-        pass
 
     @singledispatchmethod
     def eval_albedo(
