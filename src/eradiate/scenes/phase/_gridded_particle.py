@@ -1,5 +1,6 @@
 from __future__ import annotations
-from functools import lru_cache
+
+from functools import cache
 from typing import Callable
 
 import attrs
@@ -11,13 +12,11 @@ from ._core import PhaseFunction
 from .._gridvolume import generate_gridvolume
 from ..geometry import SceneGeometry
 from ...attrs import define, documented
-from ...contexts import KernelContext
 from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...spectral.index import SpectralIndex
-from ...units import PhysicalQuantity
+from ...units import PhysicalQuantity, units_compatible
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
-from ...units import units_compatible
 from ...util.misc import cache_by_id
 
 
@@ -32,7 +31,7 @@ def _validate_increasing_grid_axis(instance, attribute, value):
         raise ValueError(f"'{attribute.name}' must be strictly increasing")
 
 
-@lru_cache(maxsize=None)
+@cache
 def _kernel_unit_for(units: pint.Unit) -> pint.Unit:
     """Return the registered kernel-context unit sharing ``units``'s dimensionality."""
     for kind in PhysicalQuantity:
@@ -125,9 +124,7 @@ class GriddedParticlePhaseFunction(PhaseFunction):
         if (value is None) != (self.volume_2 is None):
             raise ValueError("'grid_2' and 'volume_2' must be both set or both unset")
 
-        if value is not None and not units_compatible(
-            self.volume_2.units, value.units
-        ):
+        if value is not None and not units_compatible(self.volume_2.units, value.units):
             raise ValueError(
                 "'grid_2' and 'volume_2' must have compatible units, got "
                 f"'{value.units}' and '{self.volume_2.units}'"

@@ -81,15 +81,15 @@ class CentralPatchSurface(Surface):
 
     @shape.validator
     def _shape_validator(self, attribute, value):
-        if value is not None:  # Means it's a Shape
-            if value.bsdf is not None:
-                warnings.warn(
-                    f"while validating '{attribute.name}': "
-                    f"'{attribute.name}.bsdf' should be set to None; it will "
-                    "be overridden upon kernel dictionary generation",
-                    OverriddenValueWarning,
-                    stacklevel=2,
-                )
+        # A non-None value is a Shape
+        if value is not None and value.bsdf is not None:
+            warnings.warn(
+                f"while validating '{attribute.name}': "
+                f"'{attribute.name}.bsdf' should be set to None; it will "
+                "be overridden upon kernel dictionary generation",
+                OverriddenValueWarning,
+                stacklevel=2,
+            )
 
     bsdf: BSDF = documented(
         attrs.field(

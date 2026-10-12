@@ -9,9 +9,8 @@ import pinttrs
 import xarray as xr
 from pinttrs.util import ensure_units
 
-from .kernel.transform import map_unit_cube
-
 from .attrs import documented, frozen
+from .kernel.transform import map_unit_cube
 from .units import to_quantity
 from .units import unit_context_config as ucc
 from .units import unit_context_kernel as uck

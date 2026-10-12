@@ -108,7 +108,7 @@ class SceneGeometry(ABC):
         default="FilterType.NEAREST",
         type=".FilterType",
         init_type=".FilterType",
-        )
+    )
 
     wrap_mode: WrapMode = documented(
         attrs.field(

@@ -19,7 +19,7 @@ import xarray as xr
 
 from ...attrs import define, documented
 from ...converters import load_dataset
-from ...grid import SpatialGrid, CartesianGrid, SphericalGrid
+from ...grid import CartesianGrid, SpatialGrid, SphericalGrid
 from ...units import to_quantity
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
@@ -171,7 +171,9 @@ class ParticleProfile:
     def __getitem__(self, name: str) -> pint.Quantity:
         """Return the per-voxel quantity for a non-structural variable."""
         if name not in self.variables:
-            raise KeyError(f"'{name}' is not a variable of this profile: {self.variables}")
+            raise KeyError(
+                f"'{name}' is not a variable of this profile: {self.variables}"
+            )
         return getattr(self, name)
 
     @staticmethod

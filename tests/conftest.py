@@ -165,9 +165,7 @@ variants = [x for x in eradiate.modes() if x not in {"mono", "ckd"}]  # Remove a
 variant_groups = {
     "all_mono": [x for x in variants if x.startswith("mono")],
     "all_ckd": [x for x in variants if x.startswith("ckd")],
-    "all_mono_ckd": [
-        x for x in variants if (x.startswith("mono") or x.startswith("ckd"))
-    ],
+    "all_mono_ckd": [x for x in variants if (x.startswith(("mono", "ckd")))],
     "all_single": [x for x in variants if "single" in x],
     "all_double": [x for x in variants if "double" in x],
     "all_unpolarized": [x for x in variants if "polarized" not in x],
@@ -189,4 +187,4 @@ del generate_fixture_group
 #                                 Other fixtures
 # ------------------------------------------------------------------------------
 
-from eradiate.test_tools.fixtures import *  # noqa: E402, F401, F403
+from eradiate.test_tools.fixtures import *  # noqa: E402, F403

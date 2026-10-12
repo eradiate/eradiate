@@ -148,10 +148,9 @@ class MultiPhaseFunction(PhaseFunction):
     @cache_by_id
     def _eval_weights_impl(self, si: SpectralIndex) -> np.ndarray:
         if isinstance(self.weights, list):
-            weights = []
-            for weight_func in self.weights:
-                weights.append(weight_func(si))
-            weights = np.stack(weights, dtype=np.float32)
+            weights = np.stack(
+                [weight_func(si) for weight_func in self.weights], dtype=np.float32
+            )
 
         else:  # if isinstance(self.weights, np.ndarray):
             weights = np.array(self.weights, dtype=np.float32)

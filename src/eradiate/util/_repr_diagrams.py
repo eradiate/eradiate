@@ -289,22 +289,23 @@ def cuboid(
     def _gridline(a: tuple[float, float], b: tuple[float, float]) -> ET.Element:
         return line(*a, *b, stroke="white", stroke_opacity=0.65, stroke_width=0.8)
 
-    grid_lines = []
-    # Front face (X-Z): X divisions run bottom-to-top, Z divisions left-to-right.
-    for fx in x_lines:
-        grid_lines.append(_gridline(_pt(p0, ux, fx, uz, 0), _pt(p0, ux, fx, uz, 1)))
-    for fz in z_lines:
-        grid_lines.append(_gridline(_pt(p0, uz, fz, ux, 0), _pt(p0, uz, fz, ux, 1)))
-    # Top face (X-Y): X divisions continue into depth, Y divisions run across.
-    for fx in x_lines:
-        grid_lines.append(_gridline(_pt(p3, ux, fx, uy, 0), _pt(p3, ux, fx, uy, 1)))
-    for fy in y_lines:
-        grid_lines.append(_gridline(_pt(p3, uy, fy, ux, 0), _pt(p3, uy, fy, ux, 1)))
-    # Right face (Z-Y): Z divisions continue into depth, Y divisions run across.
-    for fz in z_lines:
-        grid_lines.append(_gridline(_pt(p1, uz, fz, uy, 0), _pt(p1, uz, fz, uy, 1)))
-    for fy in y_lines:
-        grid_lines.append(_gridline(_pt(p1, uy, fy, uz, 0), _pt(p1, uy, fy, uz, 1)))
+    # Each entry: (face origin, division axis, divisions, span axis)
+    faces = [
+        # Front face (X-Z): X divisions run bottom-to-top, Z divisions left-to-right.
+        (p0, ux, x_lines, uz),
+        (p0, uz, z_lines, ux),
+        # Top face (X-Y): X divisions continue into depth, Y divisions run across.
+        (p3, ux, x_lines, uy),
+        (p3, uy, y_lines, ux),
+        # Right face (Z-Y): Z divisions continue into depth, Y divisions run across.
+        (p1, uz, z_lines, uy),
+        (p1, uy, y_lines, uz),
+    ]
+    grid_lines = [
+        _gridline(_pt(origin, u_div, f, u_span, 0), _pt(origin, u_div, f, u_span, 1))
+        for origin, u_div, lines, u_span in faces
+        for f in lines
+    ]
 
     def _ellipsis_dots(
         origin: tuple[float, float],
@@ -694,7 +695,7 @@ def grid_repr_html(grid) -> str | None:
             style="font-size:1.17em",
         )
         return tostring(root)
-    except Exception:  # noqa: BLE001 — repr helper must never raise
+    except Exception:
         return None
 
 
@@ -736,5 +737,5 @@ def geometry_repr_html(geometry) -> str | None:
             style="font-size:1.17em",
         )
         return tostring(root)
-    except Exception:  # noqa: BLE001 — repr helper must never raise
+    except Exception:
         return None

@@ -125,7 +125,6 @@ class Layout(ABC):
             sequence produced by :attr:`directions`, as a (N, 2) array.
             The last dimension is ordered as (zenith, azimuth).
         """
-        pass
 
     @property
     def directions(self) -> np.narray:
