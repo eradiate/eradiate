@@ -78,7 +78,7 @@ def all_positive(_, attribute, value):
     """
     if isinstance(value, pint.Quantity):
         value = value.magnitude
-    if np.any(np.array(value) < 0):
+    if np.any(np.asarray(value) < 0):
         raise ValueError(f"{attribute.name} must be all positive or zero, got {value}")
 
 
@@ -93,7 +93,7 @@ def all_strictly_positive(_, attribute, value):
     """
     if isinstance(value, pint.Quantity):
         value = value.magnitude
-    if np.any(np.array(value) <= 0):
+    if np.any(np.asarray(value) <= 0):
         raise ValueError(f"{attribute.name} must be all strictly positive, got {value}")
 
 

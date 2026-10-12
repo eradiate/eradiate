@@ -776,7 +776,7 @@ class EarthObservationExperiment(Experiment, ABC):
         }
 
         def convert_to_y_format(img):
-            img_np = np.array(img, copy=False)[:, :, [0]]
+            img_np = np.asarray(img)[:, :, [0]]
             return mi.Bitmap(img_np, mi.Bitmap.PixelFormat.Y)
 
         # Map bitmap names to result names
