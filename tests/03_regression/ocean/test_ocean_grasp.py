@@ -1,8 +1,8 @@
 import pytest
 
 import eradiate
-from eradiate.test_tools.regression import RMSETest, ZTest
-from eradiate.test_tools.test_cases.ocean import (
+from eradiate.testing.regression import RMSETest, ZTest
+from eradiate.testing.test_cases.ocean import (
     create_ocean_grasp_coastal_no_atm,
     create_ocean_grasp_open_atm,
     create_ocean_grasp_open_no_atm,

@@ -9,7 +9,7 @@ from eradiate.scenes.atmosphere import ParticleExtinctionComponent
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import IsotropicPhaseFunction
 from eradiate.spectral.index import SpectralIndex
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 # ------------------------------------------------------------------------------
 #                                   Fixtures

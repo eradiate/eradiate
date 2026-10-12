@@ -1,4 +1,4 @@
-exclude = ["docs/_ext/autodocsumm.py", "src/eradiate/test_tools/benchmark/asvdb.py"]
+exclude = ["docs/_ext/autodocsumm.py", "src/eradiate/testing/benchmark/asvdb.py"]
 include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
 target-version = "py39"
 

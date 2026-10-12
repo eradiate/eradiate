@@ -18,7 +18,7 @@ from eradiate.scenes.biosphere._leaf_cloud import (
     _sample_lad,
 )
 from eradiate.scenes.core import traverse
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 @pytest.fixture(scope="function")

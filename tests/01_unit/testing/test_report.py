@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import matplotlib.pyplot as plt
 import pytest
 
-from eradiate.test_tools.report import ReportLogger, figure_to_html, report_logger
+from eradiate.testing.report import ReportLogger, figure_to_html, report_logger
 
 
 def test_figure_to_html():
@@ -54,7 +54,7 @@ class TestReportLogger:
         """
         logger = ReportLogger(use_robot=False)
 
-        with caplog.at_level(logging.INFO, logger="eradiate.test_tools.report"):
+        with caplog.at_level(logging.INFO, logger="eradiate.testing.report"):
             logger.info("hello report")
             logger.html("<svg></svg>")
 

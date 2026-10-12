@@ -4,7 +4,7 @@ import pytest
 import scipy.stats as spstats
 import xarray as xr
 
-from eradiate.test_tools.regression import (
+from eradiate.testing.regression import (
     RegressionTest,
     RMSETest,
     ZTest,

@@ -8,7 +8,7 @@ from eradiate import KernelContext
 from eradiate import unit_registry as ureg
 from eradiate.scenes.biosphere import AbstractTree, LeafCloud
 from eradiate.scenes.core import traverse
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 # ------------------------------------------------------------------------------
 #                            Fixture definitions

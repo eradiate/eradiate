@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 import eradiate
-from eradiate.test_tools.report import report_logger
-from eradiate.test_tools.test_cases import rami4atm
+from eradiate.testing.report import report_logger
+from eradiate.testing.test_cases import rami4atm
 
 #: Sample count shared by every case of the suite
 SPP = 1_000

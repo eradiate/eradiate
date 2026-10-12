@@ -1,9 +1,9 @@
 import eradiate
-from eradiate.test_tools.test_cases.romc import (
+from eradiate.testing.test_cases.romc import (
     create_het06_brfpp,
     fetch_het06_brfpp,
 )
-from eradiate.test_tools.util import append_doc
+from eradiate.testing.util import append_doc
 
 
 class BenchmarkROMC:
@@ -27,4 +27,3 @@ class BenchmarkROMC:
 
         exp = create_het06_brfpp(self.data)
         eradiate.run(exp)
-   

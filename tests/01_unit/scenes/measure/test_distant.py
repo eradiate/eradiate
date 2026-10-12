@@ -5,7 +5,7 @@ import pytest
 import eradiate
 from eradiate.experiments import AtmosphereExperiment
 from eradiate.scenes.measure import DistantMeasure, MultiPixelDistantMeasure
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 @pytest.mark.parametrize(

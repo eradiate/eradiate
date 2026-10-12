@@ -11,7 +11,7 @@ from eradiate.converters import load_dataset
 from eradiate.exceptions import DataError
 from eradiate.scenes.spectra import SolarIrradianceSpectrum
 from eradiate.spectral.index import SpectralIndex
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 from eradiate.units import PhysicalQuantity
 
 

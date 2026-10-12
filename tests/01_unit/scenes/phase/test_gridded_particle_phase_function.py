@@ -9,7 +9,7 @@ from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import GriddedParticlePhaseFunction
 from eradiate.spectral.index import MonoSpectralIndex
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 def make_phase_data():

@@ -10,7 +10,7 @@ from eradiate import unit_registry as ureg
 from eradiate.kernel import mi_load_dict
 from eradiate.scenes.core import traverse
 from eradiate.scenes.shapes import CuboidShape
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 @pytest.mark.parametrize(

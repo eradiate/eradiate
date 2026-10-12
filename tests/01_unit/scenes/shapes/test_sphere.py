@@ -7,7 +7,7 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_registry as ureg
 from eradiate.scenes.core import traverse
 from eradiate.scenes.shapes import SphereShape
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 @pytest.mark.parametrize(

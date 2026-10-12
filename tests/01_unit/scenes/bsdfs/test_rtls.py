@@ -2,7 +2,7 @@ import mitsuba as mi
 import pytest
 
 from eradiate.scenes.bsdfs import RTLSBSDF
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 @pytest.mark.parametrize(

@@ -3,7 +3,7 @@ import mitsuba as mi
 from eradiate import unit_registry as ureg
 from eradiate.scenes.illumination import ConstantIllumination
 from eradiate.scenes.spectra import UniformSpectrum
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 def test_constant_construct(modes_all):

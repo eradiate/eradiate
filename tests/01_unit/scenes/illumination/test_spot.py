@@ -3,7 +3,7 @@ import numpy as np
 
 from eradiate import unit_registry as ureg
 from eradiate.scenes.illumination import SpotIllumination
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 def test_construct_basic(mode_mono):

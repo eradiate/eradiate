@@ -9,7 +9,7 @@ from eradiate.experiments import CanopyExperiment
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.spectral import DeltaSRF
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 def test_canopy_experiment_construct_default(modes_all_double):

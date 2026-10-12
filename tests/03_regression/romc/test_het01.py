@@ -1,10 +1,10 @@
 import pytest
 
 import eradiate
-from eradiate.test_tools.regression import ZTest
-from eradiate.test_tools.report import report_logger
-from eradiate.test_tools.test_cases.romc import create_het01_brfpp
-from eradiate.test_tools.util import append_doc
+from eradiate.testing.regression import ZTest
+from eradiate.testing.report import report_logger
+from eradiate.testing.test_cases.romc import create_het01_brfpp
+from eradiate.testing.util import append_doc
 
 
 @pytest.fixture

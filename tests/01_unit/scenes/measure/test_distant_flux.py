@@ -6,7 +6,7 @@ import pytest
 from eradiate import unit_registry as ureg
 from eradiate.scenes.core import traverse
 from eradiate.scenes.measure import DistantFluxMeasure
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 @pytest.mark.parametrize(

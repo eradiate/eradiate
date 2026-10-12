@@ -21,7 +21,7 @@ from eradiate.scenes.integrators import PathIntegrator
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.shapes import RectangleShape
 from eradiate.scenes.surface import BasicSurface
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 @pytest.mark.parametrize(

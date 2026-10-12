@@ -127,7 +127,7 @@ def pytest_robot_modify_options(options, session):
 # ------------------------------------------------------------------------------
 
 # This improves assert handling when using the check_scene_element() function
-pytest.register_assert_rewrite("eradiate.test_tools.types.check_scene_element")
+pytest.register_assert_rewrite("eradiate.testing.types.check_scene_element")
 
 
 # ------------------------------------------------------------------------------
@@ -187,4 +187,4 @@ del generate_fixture_group
 #                                 Other fixtures
 # ------------------------------------------------------------------------------
 
-from eradiate.test_tools.fixtures import *  # noqa: E402, F403
+from eradiate.testing.fixtures import *  # noqa: E402, F403

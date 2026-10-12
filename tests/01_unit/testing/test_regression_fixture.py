@@ -25,9 +25,9 @@ import xarray as xr
 # the pytest-robotframework plugin is loaded).
 from _pytest.outcomes import Failed
 
-from eradiate.test_tools.fixtures._regression import DatasetRegressionFixture
-from eradiate.test_tools.regression import RegressionTestFailure, RMSETest, ZTest
-from eradiate.test_tools.report import ReportLogger
+from eradiate.testing.fixtures._regression import DatasetRegressionFixture
+from eradiate.testing.regression import RegressionTestFailure, RMSETest, ZTest
+from eradiate.testing.report import ReportLogger
 
 
 class ReportLoggerSpy(ReportLogger):

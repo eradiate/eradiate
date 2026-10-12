@@ -1,10 +1,10 @@
 import eradiate
-from eradiate.test_tools.test_cases.atmospheres import (
+from eradiate.testing.test_cases.atmospheres import (
     absorption_database_error_handler_config,
     create_rpv_afgl1986_brfpp,
     create_rpv_afgl1986_continental_brfpp,
 )
-from eradiate.test_tools.util import append_doc
+from eradiate.testing.util import append_doc
 
 
 class BenchmarkAtmosphere:

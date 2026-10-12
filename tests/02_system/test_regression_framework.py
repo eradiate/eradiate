@@ -13,8 +13,8 @@ import functools
 import pytest
 
 import eradiate
-from eradiate.test_tools.regression import ZTest
-from eradiate.test_tools.test_cases import rami4atm
+from eradiate.testing.regression import ZTest
+from eradiate.testing.test_cases import rami4atm
 
 CASE = "hom00_bla_sd2s_m03_z30a000_brfpp"
 

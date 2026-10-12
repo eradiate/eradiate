@@ -6,7 +6,7 @@ from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import PlaneParallelGeometry, SphericalShellGeometry
 from eradiate.scenes.phase import RayleighPhaseFunction
 from eradiate.spectral import CKDSpectralIndex
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 from eradiate.units import unit_registry as ureg
 
 

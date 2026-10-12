@@ -9,7 +9,7 @@ from eradiate.scenes.atmosphere import HomogeneousAtmosphere
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import CentralPatchSurface
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 
 def test_canopy_atmosphere_experiment_construct_default(mode_mono):

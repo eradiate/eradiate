@@ -14,7 +14,7 @@ from eradiate.scenes.biosphere import (
     MeshTreeElement,
 )
 from eradiate.scenes.core import traverse
-from eradiate.test_tools.types import check_scene_element
+from eradiate.testing.types import check_scene_element
 
 # ------------------------------------------------------------------------------
 #                            Fixture definitions
