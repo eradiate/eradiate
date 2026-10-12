@@ -117,7 +117,7 @@ class TestParticleExtinctionComponent:
         grid = _make_grid()
         sigma_t, albedo = _make_data(grid, [550.0] * ureg.nm, 1.0, 1.5)
 
-        with pytest.raises(ValueError, match="Albedo must be lower or equal to 1.0"):
+        with pytest.raises(ValueError, match=r"Albedo must be lower or equal to 1\.0"):
             ParticleExtinctionComponent(
                 geometry=_make_geometry(grid),
                 sigma_t=sigma_t,

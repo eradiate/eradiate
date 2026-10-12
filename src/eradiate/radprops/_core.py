@@ -83,7 +83,7 @@ def make_dataset(
     # 3D atmosphere, (x, y, z_layer)
     horizontal_shape = np.shape(sigma_a)[:-1]
     dims = ("w",) + (("x", "y") if horizontal_shape else ()) + ("z_layer",)
-    shape = (1,) + horizontal_shape + (z_layer.size,)
+    shape = (1, *horizontal_shape, z_layer.size)
 
     coords = {
         "z_level": (

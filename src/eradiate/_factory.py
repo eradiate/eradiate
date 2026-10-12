@@ -67,12 +67,11 @@ class Factory(dessinemoi.Factory):
 
         else:
             # Check if object has allowed type
-            if allowed_cls is not None:
-                if not isinstance(value, allowed_cls):
-                    raise TypeError(
-                        f"value type '{type(value).__name__}' is not allowed "
-                        f"(expected {allowed_cls})"
-                    )
+            if allowed_cls is not None and not isinstance(value, allowed_cls):
+                raise TypeError(
+                    f"value type '{type(value).__name__}' is not allowed "
+                    f"(expected {allowed_cls})"
+                )
 
             return value
 

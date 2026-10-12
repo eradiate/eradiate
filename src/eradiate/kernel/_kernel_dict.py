@@ -84,7 +84,7 @@ class SceneParameter:
         default=".KernelSceneParameterFlags.ALL",
     )
 
-    search: None | (t.Callable[[mi.Object, str], str | None]) = documented(
+    search: t.Callable[[mi.Object, str], str | None] | None = documented(
         attrs.field(default=None),
         doc="A callable that searches a Mitsuba scene tree node for a desired "
         "parameter ID, with signature "

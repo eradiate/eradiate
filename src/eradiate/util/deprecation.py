@@ -19,7 +19,7 @@ def deprecated(
     deprecated_in: str | None = None,
     removed_in: str | None = None,
     details: str = "",
-    current_version: str = None,
+    current_version: str | None = None,
 ):
     r"""
     Decorate a component to signify its deprecation

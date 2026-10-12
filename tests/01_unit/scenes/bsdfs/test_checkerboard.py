@@ -18,5 +18,5 @@ def test_checkerboard_construct(modes_all, kwargs):
 def test_checkerboard_kernel_dict(modes_all_double):
     bsdf = CheckerboardBSDF()
     mi_wrapper = check_scene_element(bsdf, mi.BSDF)
-    assert "reflectance.color0.value" in mi_wrapper.parameters.keys()
-    assert "reflectance.color1.value" in mi_wrapper.parameters.keys()
+    assert "reflectance.color0.value" in mi_wrapper.parameters
+    assert "reflectance.color1.value" in mi_wrapper.parameters

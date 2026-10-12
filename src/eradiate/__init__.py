@@ -9,7 +9,7 @@ __version__ = _version  #: Eradiate version string.
 
 # -- Lazy imports ------------------------------------------------------
 
-import lazy_loader  # noqa: E402
+import lazy_loader
 
 __getattr__, __dir__, __all__ = lazy_loader.attach_stub(__name__, __file__)
 

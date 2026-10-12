@@ -60,7 +60,7 @@ def test_sigma_s_air_optical_thickness():
         coords={
             "z": ("z", z.m_as("km")),
         },
-        attrs=dict(units=sigma_s.units),
+        attrs={"units": sigma_s.units},
     )
     optical_thickness = sigma_s.integrate(coord="z")
 

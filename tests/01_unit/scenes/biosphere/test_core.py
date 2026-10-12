@@ -66,7 +66,7 @@ def test_instanced_canopy_element_kernel_dict(mode_mono):
 
     # The generated kernel dictionary can be instantiated
     check_scene_element(instances)
-    template, params = traverse(instances)
+    _template, params = traverse(instances)
     assert set(params.keys()) == {
         "bsdf_leaf_cloud.reflectance.value",
         "bsdf_leaf_cloud.transmittance.value",

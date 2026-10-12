@@ -18,7 +18,7 @@ def test_write_read_binary_grid3d(modes_all, shape, tmpdir):
     """Reads what was written."""
 
     length = np.prod(shape)
-    write_values = np.random.random(length).reshape(shape)
+    write_values = np.random.default_rng().random(length).reshape(shape)
 
     tmp_filename = pathlib.Path(tmpdir, "test.vol")
     write_binary_grid3d(filename=tmp_filename, values=write_values)

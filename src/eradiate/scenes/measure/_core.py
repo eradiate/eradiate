@@ -195,7 +195,6 @@ class Measure(NodeSceneElement, ABC):
         """
         tuple: Getter for film resolution as a (int, int) pair.
         """
-        pass
 
     # --------------------------------------------------------------------------
     #                             Flag-style queries
@@ -242,10 +241,8 @@ class Measure(NodeSceneElement, ABC):
                 ),
             ),
             "medium.id": DictParameter(
-                lambda ctx: (
-                    ctx.kwargs[f"{self.sensor_id}.atmosphere_medium_id"]
-                    if f"{self.sensor_id}.atmosphere_medium_id" in ctx.kwargs
-                    else DictParameter.UNUSED
+                lambda ctx: ctx.kwargs.get(
+                    f"{self.sensor_id}.atmosphere_medium_id", DictParameter.UNUSED
                 ),
             ),
         }
@@ -261,7 +258,7 @@ class Measure(NodeSceneElement, ABC):
         """
         str, dict: Post-processing variable field name and metadata.
         """
-        return "img", dict()
+        return "img", {}
 
     def dataset_attrs(self) -> dict:
         """

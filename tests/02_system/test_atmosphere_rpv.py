@@ -691,12 +691,10 @@ def test_rpv_vs_lambertian(
         "lambertian": {"type": "lambertian", "reflectance": reflectance},
         "rpv": {
             "type": "rpv",
-            **dict(
-                rho_0=reflectance,
-                g=0.0,
-                k=1.0,
-                rho_c=1.0,
-            ),
+            "rho_0": reflectance,
+            "g": 0.0,
+            "k": 1.0,
+            "rho_c": 1.0,
         },
     }
 
@@ -713,7 +711,7 @@ def test_rpv_vs_lambertian(
             atmosphere=None if atmosphere is None else {"type": atmosphere},
             surface=bsdfs[bsdf],
         )
-        for bsdf in bsdfs.keys()
+        for bsdf in bsdfs
     }
 
     # Run experiments

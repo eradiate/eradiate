@@ -28,7 +28,7 @@ from eradiate.quad import Quad
             [0.347855, 0.652145, 0.652145, 0.347855],
         ),
     ],
-    ids=list([f"n-{i}" for i in range(1, 5)]),
+    ids=[f"n-{i}" for i in range(1, 5)],
 )
 def test_gauss_legendre(n, exp_nodes, exp_weights, mode_mono):
     quad = Quad.gauss_legendre(n)
@@ -60,7 +60,7 @@ def test_gauss_legendre(n, exp_nodes, exp_weights, mode_mono):
             [1.0 / 10.0, 49.0 / 90.0, 32.0 / 45.0, 49.0 / 90.0, 1.0 / 10.0],
         ),
     ],
-    ids=list([f"n-{i}" for i in range(2, 6)]),
+    ids=[f"n-{i}" for i in range(2, 6)],
 )
 def test_gauss_lobatto(n, exp_nodes, exp_weights, mode_mono):
     quad = Quad.gauss_lobatto(n)

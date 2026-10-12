@@ -10,8 +10,8 @@ from numpy.typing import DTypeLike
 
 from ..units import symbol, to_quantity
 from ..units import unit_registry as ureg
-from ..util.pmom import compute_pmom as _compute_pmom
 from ..util.deprecation import deprecated
+from ..util.pmom import compute_pmom as _compute_pmom
 
 
 def _convert_units(value: str):
@@ -393,7 +393,7 @@ def make_prt_psd_v1(
         phase_vals = phase.m  # (nphamat, nw, nreff, nveff, nangle)
         leading_shape = theta_deg.shape[:-1]
 
-        pmom = np.zeros(leading_shape + (_nmom_scalar,))
+        pmom = np.zeros((*leading_shape, _nmom_scalar))
         for idx in np.ndindex(leading_shape):
             n = int(nangles[idx])
             theta_pt = theta_deg[idx][:n][::-1]  # ascending 0° → 180°

@@ -10,8 +10,6 @@ import pint
 import xarray as xr
 from axsdb import AbsorptionDatabase
 
-from ...kernel import SearchSceneParameter
-
 from .._gridvolume import generate_gridvolume
 from ..core import (
     CompositeSceneElement,
@@ -34,6 +32,7 @@ from ...grid import SpatialGrid
 from ...kernel import (
     KernelSceneParameterFlags,
     SceneParameter,
+    SearchSceneParameter,
 )
 from ...spectral.index import SpectralIndex
 from ...units import symbol

@@ -124,9 +124,9 @@ def test_symmetry_zenith(
         ax2.set_ylabel(f"×$10^{{{int(exp)}}}$")
         ax1.set_title("")
         ax2.set_title("")
-        fig.suptitle(f"Surface: {surface}, Atmosphere: {str(atmosphere)}")
+        fig.suptitle(f"Surface: {surface}, Atmosphere: {atmosphere!s}")
 
-        filename = f"test_symmetry_zenith_{surface}_{str(atmosphere)}.png"
+        filename = f"test_symmetry_zenith_{surface}_{atmosphere!s}.png"
         outdir = Path(artefact_dir) / "plots"
         outdir.mkdir(parents=True, exist_ok=True)
         fname_plot = outdir / filename

@@ -3,10 +3,10 @@ Heterogeneous atmospheres.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import logging
 from collections import abc as cabc
+from typing import TYPE_CHECKING
 
 import attrs
 import mitsuba as mi

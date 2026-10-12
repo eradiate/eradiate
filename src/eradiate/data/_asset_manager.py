@@ -231,12 +231,7 @@ class AssetManager:
         Return a resource definition given its ID.
         """
         resource_ids = self._resolve_alias(resource_ids)
-        result = []
-
-        for resource_id in resource_ids:
-            result.append(self._manifest[resource_id])
-
-        return result
+        return [self._manifest[resource_id] for resource_id in resource_ids]
 
     def _get_path_remote(self, resource: str | Resource) -> str:
         """
@@ -270,13 +265,11 @@ class AssetManager:
         List unpacked files for a given resource.
         """
         resource_dir = self._get_path_unpack(resource_id)
-        result = []
-
-        for root, _dirs, files in os.walk(str(resource_dir)):
-            for filename in files:
-                result.append(Path(root) / filename)
-
-        return result
+        return [
+            Path(root) / filename
+            for root, _dirs, files in os.walk(str(resource_dir))
+            for filename in files
+        ]
 
     def _install_remove(
         self, resource_id: str, mode: Literal["install", "remove"]

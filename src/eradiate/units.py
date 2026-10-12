@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 __all__ = [
+    "PhysicalQuantity",
     "symbol",
     "to_quantity",
-    "units_compatible",
     "unit_context_config",
     "unit_context_kernel",
     "unit_registry",
-    "PhysicalQuantity",
+    "units_compatible",
 ]
 
 import enum
@@ -57,9 +57,7 @@ def _load_definitions(ureg: pint.UnitRegistry, definitions: list[str]) -> None:
     # a very simple wrapper around Pint's usual unit definition logic.
 
     for definition in definitions:
-        _unit_name, _unit_definition = list(
-            map(lambda x: x.strip(), definition.split("="))
-        )[0:2]
+        _unit_name, _unit_definition = [x.strip() for x in definition.split("=")][0:2]
 
         if _unit_name in ureg:
             if 1.0 * ureg(_unit_definition) == 1.0 * ureg(_unit_name):
@@ -127,7 +125,7 @@ def _make_unit_context():
     # fmt: off
     for key, value in {
         # We allow for dimensionless quantities
-        PhysicalQuantity.DIMENSIONLESS: pinttrs.UnitGenerator(unit_registry.dimensionless),  # noqa: E501
+        PhysicalQuantity.DIMENSIONLESS: pinttrs.UnitGenerator(unit_registry.dimensionless),
         # Basic quantities must be named after their SI name
         # https://en.wikipedia.org/wiki/International_System_of_Units
         PhysicalQuantity.LENGTH: pinttrs.UnitGenerator(unit_registry.m),
@@ -137,7 +135,7 @@ def _make_unit_context():
         PhysicalQuantity.ALBEDO: pinttrs.UnitGenerator(unit_registry.dimensionless),
         PhysicalQuantity.ANGLE: pinttrs.UnitGenerator(unit_registry.deg),
         PhysicalQuantity.REFLECTANCE: pinttrs.UnitGenerator(unit_registry.dimensionless),
-        PhysicalQuantity.TRANSMITTANCE: pinttrs.UnitGenerator(unit_registry.dimensionless),  # noqa: E501
+        PhysicalQuantity.TRANSMITTANCE: pinttrs.UnitGenerator(unit_registry.dimensionless),
         PhysicalQuantity.WAVELENGTH: pinttrs.UnitGenerator(unit_registry.nm),
         PhysicalQuantity.WAVENUMBER: pinttrs.UnitGenerator(unit_registry.cm ** -1),
     }.items():

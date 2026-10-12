@@ -113,7 +113,6 @@ class SpectralResponseFunction(ABC):
         quantity
             The returned value as the same shape as ``w``.
         """
-        pass
 
 
 @define

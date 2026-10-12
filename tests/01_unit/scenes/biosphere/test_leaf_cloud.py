@@ -306,7 +306,7 @@ def test_leaf_cloud_kernel_dict(mode_mono):
         leaf_transmittance=0.5,
     )
 
-    template, params = traverse(leaf_cloud)
+    template, _params = traverse(leaf_cloud)
 
     # The BSDF is bilambertian with the parameters we initially set
     kernel_dict = template.render(ctx=KernelContext())

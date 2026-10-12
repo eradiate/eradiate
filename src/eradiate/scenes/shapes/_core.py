@@ -76,13 +76,12 @@ class Shape:
 
     @to_world.validator
     def to_world_validator(self, attribute, value):
-        if value is not None:
-            if not isinstance(value, mi.ScalarTransform4f):
-                raise TypeError(
-                    f"while validating '{attribute.name}': "
-                    f"'{attribute.name}' must be a mitsuba.ScalarTransform4f; "
-                    f"found: {type(value)}",
-                )
+        if value is not None and not isinstance(value, mi.ScalarTransform4f):
+            raise TypeError(
+                f"while validating '{attribute.name}': "
+                f"'{attribute.name}' must be a mitsuba.ScalarTransform4f; "
+                f"found: {type(value)}",
+            )
 
     def __attrs_post_init__(self):
         self.update()
@@ -122,13 +121,9 @@ class ShapeNode(Shape, NodeSceneElement, ABC):
     nodes.
     """
 
-    pass
-
 
 @attrs.define(eq=False, slots=False)
 class ShapeInstance(Shape, InstanceSceneElement, ABC):
     """
     Interface for shapes which have to be expanded as Mitsuba objects.
     """
-
-    pass

@@ -42,13 +42,12 @@ class OpacityMaskBSDF(BSDF):
 
     @opacity_bitmap.validator
     def _opacity_bitmap_validator(self, attribute, value):
-        if value is not None:
-            if not isinstance(value, mi.Bitmap):
-                raise TypeError(
-                    f"while validating '{attribute.name}': "
-                    f"'{attribute.name}' must be a mitsuba Bitmap instance; "
-                    f"found: {type(value)}",
-                )
+        if value is not None and not isinstance(value, mi.Bitmap):
+            raise TypeError(
+                f"while validating '{attribute.name}': "
+                f"'{attribute.name}' must be a mitsuba Bitmap instance; "
+                f"found: {type(value)}",
+            )
 
     uv_trafo: mi.ScalarTransform4f = documented(
         attrs.field(converter=converters.to_mi_scalar_transform, kw_only=True),
@@ -60,13 +59,12 @@ class OpacityMaskBSDF(BSDF):
 
     @uv_trafo.validator
     def _uv_trafo_validator(self, attribute, value):
-        if value is not None:
-            if not isinstance(value, mi.ScalarTransform4f):
-                raise TypeError(
-                    f"while validating '{attribute.name}': "
-                    f"'{attribute.name}' must be a mitsuba ScalarTransform4f instance; "
-                    f"found: {type(value)}"
-                )
+        if value is not None and not isinstance(value, mi.ScalarTransform4f):
+            raise TypeError(
+                f"while validating '{attribute.name}': "
+                f"'{attribute.name}' must be a mitsuba ScalarTransform4f instance; "
+                f"found: {type(value)}"
+            )
 
     nested_bsdf: BSDF = documented(
         attrs.field(

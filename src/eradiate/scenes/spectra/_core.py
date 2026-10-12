@@ -153,7 +153,7 @@ class Spectrum(NodeSceneElement, ABC):
             raise ValueError(
                 f"while validating {attribute.name}: "
                 f"got value '{value}', expected one of "
-                f"{str(PhysicalQuantity.spectrum())}"
+                f"{PhysicalQuantity.spectrum()!s}"
             )
 
     @singledispatchmethod
@@ -228,7 +228,6 @@ class Spectrum(NodeSceneElement, ABC):
         absorption coefficient—are uniform over the spectral bin. These
         spectra are evaluated at the spectral bin center wavelength.
         """
-        pass
 
     def integral(self, wmin: pint.Quantity, wmax: pint.Quantity) -> pint.Quantity:
         """

@@ -6,9 +6,7 @@ from eradiate.contexts import KernelContext
 from eradiate.data.convert import make_prt_core_v1, make_prt_psd_v1
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import ParticleAOTComponent
-from eradiate.scenes.atmosphere._particle_psd_component import (
-    ParticlePSDComponent, ParticleAOTComponent
-)
+from eradiate.scenes.atmosphere._particle_psd_component import ParticlePSDComponent
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import GriddedParticlePhaseFunction
 from eradiate.spectral.index import MonoSpectralIndex
@@ -460,9 +458,7 @@ def test_eval_phase_data_matches_grid_evals():
     np.testing.assert_allclose(data["mu"], expected_mu)
     np.testing.assert_allclose(data["phase"], expected_phase)
     ext_unit = ureg.km**-1 / (ureg.gram / ureg.meter**3)
-    np.testing.assert_allclose(
-        data["ext"].m_as(ext_unit), expected_ext.m_as(ext_unit)
-    )
+    np.testing.assert_allclose(data["ext"].m_as(ext_unit), expected_ext.m_as(ext_unit))
     np.testing.assert_allclose(
         data["ssa"].m_as(ureg.dimensionless), expected_ssa.m_as(ureg.dimensionless)
     )
@@ -653,7 +649,7 @@ def test_particle_psd_component_properties_requires_size_distribution():
         pmom=np.zeros((1, 1)),
     )
 
-    with pytest.raises(ValueError, match="reff.*veff"):
+    with pytest.raises(ValueError, match=r"reff.*veff"):
         ParticlePSDComponent(
             profile=profile, properties=properties_no_size_dist, geometry=geometry
         )

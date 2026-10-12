@@ -67,7 +67,7 @@ class DatasetValidator(cerberus.Validator):
         try:
             u_value = ureg.Unit(value)
         except Exception:
-            self._error(field, f"Cannot convert {repr(value)} to valid units")
+            self._error(field, f"Cannot convert {value!r} to valid units")
             return
 
         u_constraint = ureg.Unit(constraint)

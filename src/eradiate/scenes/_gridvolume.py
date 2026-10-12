@@ -124,10 +124,7 @@ class _partial(partial):
 
     def __repr__(self):
         instance = self.get_bound_instance()
-        if instance is None:
-            cls_name = None
-        else:
-            cls_name = instance.__class__.__name__
+        cls_name = None if instance is None else instance.__class__.__name__
         return f"partial({self.func.__name__}, {cls_name}, extra_parameters={list(self.keywords)})"
 
     def get_bound_instance(self):
@@ -174,7 +171,7 @@ def generate_gridvolume(
     wrap_mode: str | None = None,
     spectral_index: bool = True,
     units=None,
-    dtype: type = None,
+    dtype: type | None = None,
     extra_kwargs: dict | None = None,
 ) -> dict | SceneParameter:
     """

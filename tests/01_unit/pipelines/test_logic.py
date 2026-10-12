@@ -238,7 +238,7 @@ def test_01_gather_bitmaps(mode, experiment, gather_bitmaps):
         "radiance_m2_raw": all_sizes_pol if mode.is_polarized else all_sizes,
     }
 
-    for var, da in gather_bitmaps.items():  # noqa: F402
+    for var, da in gather_bitmaps.items():
         if da is None:
             continue
         assert da.sizes == expected_sizes[var], (

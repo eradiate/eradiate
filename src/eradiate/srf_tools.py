@@ -25,7 +25,7 @@ from .units import unit_registry as ureg
 from .util.deprecation import deprecated
 from .util.misc import get_utcnow
 
-_trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz
+_trapezoid = np.trapezoid if int(np.__version__.split(".")[0]) >= 2 else np.trapz  # noqa: NPY201
 
 convert_no_id = converters.passthrough_type(xr.Dataset)(converters.resolve_path)
 convert = converters.passthrough_type(xr.Dataset)(
@@ -250,7 +250,7 @@ def summarize(
         table.add_column(name, justify=justification)
 
     for key in summary:
-        row_items = [key] + list(summary[key].values())
+        row_items = [key, *summary[key].values()]
 
         if key == "Difference":
             pass
@@ -388,9 +388,8 @@ def trim_and_save(
             percentage=None,
         )
 
-    if interactive:
-        if not Confirm.ask("Save filtered dataset?"):
-            return
+    if interactive and not Confirm.ask("Save filtered dataset?"):
+        return
 
     save(
         ds=trimmed,
@@ -612,9 +611,9 @@ def integral_filter(
     values = ds.srf.values
 
     if method == "symmetry":
-        (i_left, i_right), cs = _integral_filter_bounds_symmetry(w, values, fraction)
+        (i_left, i_right), _ = _integral_filter_bounds_symmetry(w, values, fraction)
     elif method == "walk":
-        (i_left, i_right), cs = _integral_filter_bounds_walk(w, values, fraction)
+        (i_left, i_right), _ = _integral_filter_bounds_walk(w, values, fraction)
     else:
         raise ValueError(f"Unknown method '{method}'")
 
@@ -731,7 +730,7 @@ def show(
     ds = convert_no_id(ds)
 
     # setup figure
-    fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+    _fig, ax = plt.subplots(1, 1, figsize=(6, 4))
 
     plt_params = {"lw": 0.6, "marker": ".", "markersize": 2, "yscale": "log"}
 
@@ -986,9 +985,8 @@ def filter_srf(
             percentage=percentage,
         )
 
-    if interactive:
-        if not Confirm.ask("Save filtered dataset?"):
-            return
+    if interactive and not Confirm.ask("Save filtered dataset?"):
+        return
 
     save(ds=filtered, path=output_path, verbose=verbose, dry_run=dry_run)
 

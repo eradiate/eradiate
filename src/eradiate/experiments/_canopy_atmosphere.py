@@ -174,11 +174,13 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
             # comply with the atmosphere's vertical extent.
             if isinstance(self.atmosphere, MolecularAtmosphere):
                 check_geometry_atmosphere(self.geometry, self.atmosphere)
-            if isinstance(self.atmosphere, HeterogeneousAtmosphere):
-                if self.atmosphere.molecular_atmosphere is not None:
-                    check_geometry_atmosphere(
-                        self.geometry, self.atmosphere.molecular_atmosphere
-                    )
+            if (
+                isinstance(self.atmosphere, HeterogeneousAtmosphere)
+                and self.atmosphere.molecular_atmosphere is not None
+            ):
+                check_geometry_atmosphere(
+                    self.geometry, self.atmosphere.molecular_atmosphere
+                )
 
             # Override atmosphere geometry with experiment geometry
             self.atmosphere.geometry = self.geometry
@@ -196,37 +198,35 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         """
         for measure in self.measures:
             # Override ray target location if relevant
-            if isinstance(measure, AbstractDistantMeasure):
-                if measure.target is None:
-                    if self.canopy is None:  # No canopy: target origin point
-                        measure.target = {"type": "point", "xyz": [0, 0, 0]}
+            if isinstance(measure, AbstractDistantMeasure) and measure.target is None:
+                if self.canopy is None:  # No canopy: target origin point
+                    measure.target = {"type": "point", "xyz": [0, 0, 0]}
 
-                    else:  # Canopy: target top of canopy
-                        measure.target = {
-                            "type": "rectangle",
-                            "xmin": -0.5 * self.canopy.size[0],
-                            "xmax": 0.5 * self.canopy.size[0],
-                            "ymin": -0.5 * self.canopy.size[1],
-                            "ymax": 0.5 * self.canopy.size[1],
-                            "z": self.canopy.size[2],
-                        }
+                else:  # Canopy: target top of canopy
+                    measure.target = {
+                        "type": "rectangle",
+                        "xmin": -0.5 * self.canopy.size[0],
+                        "xmax": 0.5 * self.canopy.size[0],
+                        "ymin": -0.5 * self.canopy.size[1],
+                        "ymax": 0.5 * self.canopy.size[1],
+                        "z": self.canopy.size[2],
+                    }
 
     def _normalize_integrator(self) -> None:
         """
         Ensures that the integrator is compatible with the atmosphere and geometry.
         """
-        if isinstance(self.atmosphere, AbstractHeterogeneousAtmosphere):
-            if (
-                self.atmosphere.extremum_resolution != (1, 1, 1)
-                and not self.integrator.extremum_compatible
-            ):
-                warnings.warn(
-                    UserWarning(
-                        "Extremum structures are not compatible with "
-                        f"{type(self.integrator).__name__} and will be ignored."
-                    ),
-                    stacklevel=2,
-                )
+        if isinstance(self.atmosphere, AbstractHeterogeneousAtmosphere) and (
+            self.atmosphere.extremum_resolution != (1, 1, 1)
+            and not self.integrator.extremum_compatible
+        ):
+            warnings.warn(
+                UserWarning(
+                    "Extremum structures are not compatible with "
+                    f"{type(self.integrator).__name__} and will be ignored."
+                ),
+                stacklevel=2,
+            )
 
         piecewise_compatible, pw_msg = check_piecewise_compatible(
             self.geometry, self.atmosphere

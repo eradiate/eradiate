@@ -59,7 +59,6 @@ class SpectralIndex(ABC):
         """
         Formatted representation of the spectral index.
         """
-        pass
 
     @property
     @abstractmethod
@@ -73,7 +72,6 @@ class SpectralIndex(ABC):
         to identify the simulation results corresponding to a given spectral
         index.
         """
-        pass
 
     @staticmethod
     def new(mode: ModeFlag | str | None = None, **kwargs) -> SpectralIndex:

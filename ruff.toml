@@ -18,6 +18,15 @@ select = [
   "UP",
   "W",
 ]
-ignore = ["E501", "F821"]
+ignore = [
+  "E501",
+  "F821",
+  "PERF203", # Negligible overhead, try/except in loops is often the clearest form
+]
 isort = { relative-imports-order = "closest-to-furthest" }
 per-file-ignores = { "*.ipynb" = ["E402"] }
+allowed-confusables = ["×", "–", "ν", "σ"]
+flake8-bugbear = { extend-immutable-calls = [
+  "eradiate.attrs.documented",
+  "pinttrs.field",
+] }

@@ -89,11 +89,11 @@ def format_doc(sections: dict[str, str]) -> str:
     """
 
     # Generate section full text
-    section_fulltexts = []
-
-    for section_title in ["_short_summary", "_deprecation", "_extended_summary"]:
-        if section_title in sections:
-            section_fulltexts.append(sections.pop(section_title) + "\n")
+    section_fulltexts = [
+        sections.pop(section_title) + "\n"
+        for section_title in ["_short_summary", "_deprecation", "_extended_summary"]
+        if section_title in sections
+    ]
 
     for section_title in NUMPYDOC_SECTION_TITLES:
         try:

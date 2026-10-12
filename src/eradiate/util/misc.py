@@ -4,6 +4,7 @@ A collection of tools which don't really fit anywhere else.
 
 from __future__ import annotations
 
+import contextlib
 import datetime
 import functools
 import inspect
@@ -166,7 +167,7 @@ class Singleton(type):
        del Singleton
     """
 
-    _instances = {}
+    _instances: t.ClassVar[dict] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
@@ -211,11 +212,9 @@ def deduplicate_sorted(value: t.Sequence, cmp: t.Callable | None = None) -> list
         cmp = lambda x, y: x == y  # noqa: E731
 
     result = [value[0]]
-
-    for i in range(1, len(value)):
-        if not cmp(value[i], value[i - 1]):
-            result.append(value[i])
-
+    result.extend(
+        value[i] for i in range(1, len(value)) if not cmp(value[i], value[i - 1])
+    )
     return result
 
 
@@ -323,7 +322,7 @@ def is_vector3(value: t.Any):
             or (isinstance(value, t.Sequence) and not isinstance(value, str))
         )
         and len(value) == 3
-        and all(map(lambda x: isinstance(x, Number), value))
+        and all(isinstance(x, Number) for x in value)
     )
 
 
@@ -340,10 +339,8 @@ def natsort_alphanum_key(x):
     .. [2] `Natural sorting on Stack Overflow <https://stackoverflow.com/a/11150413/3645374>`__.
     """
     return tuple(
-        map(
-            lambda text: int(text) if text.isdigit() else text.lower(),
-            re.split("([0-9]+)", x),
-        )
+        int(text) if text.isdigit() else text.lower()
+        for text in re.split("([0-9]+)", x)
     )
 
 
@@ -506,10 +503,8 @@ def summary_repr(value):
 def _(ds: xr.Dataset):
     extra_info = {}
 
-    try:
+    with contextlib.suppress(KeyError):
         extra_info["source"] = repr(ds.encoding["source"])
-    except KeyError:
-        pass
 
     desc = ", ".join([f"{key}={value}" for key, value in extra_info.items()])
 
@@ -523,17 +518,13 @@ def _(ds: xr.Dataset):
 def _(da: xr.DataArray):
     extra_info = {}
 
-    try:
+    with contextlib.suppress(AttributeError):
         extra_info["name"] = repr(da.name)
-    except AttributeError:
-        pass
 
     extra_info["dims"] = repr(list(da.dims))
 
-    try:
+    with contextlib.suppress(KeyError):
         extra_info["source"] = repr(da.encoding["source"])
-    except KeyError:
-        pass
 
     desc = ", ".join([f"{key}={value}" for key, value in extra_info.items()])
 

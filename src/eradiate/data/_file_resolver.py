@@ -158,7 +158,7 @@ class FileResolver:
         path = Path(path)
 
         if not path.is_absolute():
-            for base in self.paths if not cwd else [Path.cwd()] + self.paths:
+            for base in self.paths if not cwd else [Path.cwd(), *self.paths]:
                 combined = base / path
                 if combined.exists():
                     return combined
