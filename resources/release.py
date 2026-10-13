@@ -30,7 +30,7 @@ def _run(cmd, cwd=".", show_output=False):
 
 
 def get_package_requirements(pyproject_path):
-    with open(pyproject_path, "r") as f:
+    with open(pyproject_path) as f:
         pyproject = tomlkit.load(f)
 
     req = Requirement(
@@ -44,7 +44,7 @@ def get_package_requirements(pyproject_path):
 
 
 def get_mi_header_versions(header_path):
-    with open(header_path, "r") as f:
+    with open(header_path) as f:
         contents = f.read()
 
     mi_version = re.search(
@@ -53,7 +53,7 @@ def get_mi_header_versions(header_path):
         r"#define\ MI\_VERSION\_PATCH\ (?P<patch>\d+)",
         contents,
     ).groupdict()
-    erd_mi_version = re.search(
+    eradiate_mi_version = re.search(
         r"#define\ ERD\_MI\_VERSION\_MAJOR\ (?P<major>\d+)\n"
         r"#define\ ERD\_MI\_VERSION\_MINOR\ (?P<minor>\d+)\n"
         r"#define\ ERD\_MI\_VERSION\_PATCH\ (?P<patch>\d+)",
@@ -61,17 +61,17 @@ def get_mi_header_versions(header_path):
     ).groupdict()
     result = {
         "mi_version": Version(
-            f'{mi_version["major"]}.{mi_version["minor"]}.{mi_version["patch"]}',
+            f"{mi_version['major']}.{mi_version['minor']}.{mi_version['patch']}",
         ),
-        "erd_mi_version": Version(
-            f'{erd_mi_version["major"]}.{erd_mi_version["minor"]}.{erd_mi_version["patch"]}',
+        "eradiate_mi_version": Version(
+            f"{eradiate_mi_version['major']}.{eradiate_mi_version['minor']}.{eradiate_mi_version['patch']}",
         ),
     }
     return result
 
 
 def get_kernel_requirements(module_path):
-    with open(module_path, "r") as f:
+    with open(module_path) as f:
         contents = f.read()
 
     mi_version = re.search(
@@ -79,7 +79,7 @@ def get_kernel_requirements(module_path):
         r"\"(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\"",
         contents,
     ).groupdict()
-    erd_mi_version = re.search(
+    eradiate_mi_version = re.search(
         r"REQUIRED\_MITSUBA\_PATCH\_VERSION\ =\ "
         r"\"(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\"",
         contents,
@@ -87,10 +87,10 @@ def get_kernel_requirements(module_path):
 
     result = {
         "mitsuba_version": Version(
-            f'{mi_version["major"]}.{mi_version["minor"]}.{mi_version["patch"]}',
+            f"{mi_version['major']}.{mi_version['minor']}.{mi_version['patch']}",
         ),
         "mitsuba_patch_version": Version(
-            f'{erd_mi_version["major"]}.{erd_mi_version["minor"]}.{erd_mi_version["patch"]}',
+            f"{eradiate_mi_version['major']}.{eradiate_mi_version['minor']}.{eradiate_mi_version['patch']}",
         ),
     }
     return result
@@ -153,7 +153,7 @@ def _check_mitsuba_requirements(
         mitsuba_root_dir / "include/mitsuba/mitsuba.h"
     )
     info["mi_header_mitsuba_version"] = mi_header_versions["mi_version"]
-    info["mi_header_mitsuba_patch_version"] = mi_header_versions["erd_mi_version"]
+    info["mi_header_mitsuba_patch_version"] = mi_header_versions["eradiate_mi_version"]
 
     # Get Eradiate kernel requirements
     print("Getting Eradiate kernel requirements ...")
@@ -270,7 +270,7 @@ def update_citation():
     """
     target_version = Version(os.environ["RELEASE_VERSION"])
 
-    citation_file = open("CITATION.cff", "r").read()
+    citation_file = open("CITATION.cff").read()
     print(citation_file)
 
     # Replace version
@@ -310,7 +310,7 @@ def update_pypi_readme():
     """
     split_str = "Eradiate is a modern radiative transfer simulation software package"
 
-    with open("README.md", "r") as f:
+    with open("README.md") as f:
         readme_content = f.read()
 
     stripped_content = split_str + readme_content.split(split_str)[1]

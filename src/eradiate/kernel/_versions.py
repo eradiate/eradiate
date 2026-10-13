@@ -5,8 +5,8 @@ Upon import, this module checks if the kernel dependencies are correctly set up.
 from importlib.metadata import PackageNotFoundError, version
 
 # Internal constants
-REQUIRED_MITSUBA_VERSION = "3.7.1"
-REQUIRED_MITSUBA_PATCH_VERSION = "0.5.0"
+REQUIRED_MITSUBA_VERSION = "3.9.1"
+REQUIRED_MITSUBA_PATCH_VERSION = "0.6.0"
 
 
 def find_drjit():
@@ -52,7 +52,7 @@ def kernel_version():
         :data:`mitsuba.MI_VERSION` constant.
 
     patch_version : str or None
-        The version of the kernel. This is the :data:`mitsuba.ERD_MI_VERSION`
+        The version of the kernel. This is the :data:`mitsuba.ERADIATE_MI_VERSION`
         constant. If the constant is not found, *i.e.* if the detected Mitsuba
         package is not the Eradiate kernel, ``None`` is returned.
 
@@ -64,7 +64,9 @@ def kernel_version():
     # Retrieve the kernel and kernel patch versions
     _mi = __import__("mitsuba")
     mitsuba_version = _mi.MI_VERSION
-    patch_version = _mi.ERD_MI_VERSION if hasattr(_mi, "ERD_MI_VERSION") else None
+    patch_version = (
+        _mi.ERADIATE_MI_VERSION if hasattr(_mi, "ERADIATE_MI_VERSION") else None
+    )
     return mitsuba_version, patch_version
 
 
