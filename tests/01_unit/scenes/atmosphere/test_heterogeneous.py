@@ -494,8 +494,8 @@ def test_heterogeneous_medium_aabb(mode_mono, atmosphere_us_standard_mono):
     np.testing.assert_allclose(template["aabb_max"], bbox_max)
 
     grid_bottom = geometry.grid.levels[0].m_as("m")
-    assert template["aabb_min"][2] == pytest.approx(grid_bottom)
-    assert template["aabb_min"][2] != pytest.approx(bbox_min[2])
+    np.testing.assert_allclose(template["aabb_min"][2], grid_bottom)
+    assert not np.isclose(template["aabb_min"][2], bbox_min[2])
 
 
 def test_heterogeneous_medium_type_genuine_3d_grid(
