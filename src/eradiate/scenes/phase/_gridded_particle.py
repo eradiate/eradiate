@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from functools import cache
 from typing import Callable
 
 import attrs
@@ -14,9 +13,8 @@ from ..geometry import SceneGeometry
 from ...attrs import define, documented
 from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...spectral.index import SpectralIndex
-from ...units import PhysicalQuantity, units_compatible
-from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+from ...units import units_compatible
 from ...util.misc import cache_by_id
 
 
@@ -29,17 +27,6 @@ def _validate_increasing_grid_axis(instance, attribute, value):
 
     if len(value) > 1 and np.any(np.diff(value) <= 0):
         raise ValueError(f"'{attribute.name}' must be strictly increasing")
-
-
-@cache
-def _kernel_unit_for(units: pint.Unit) -> pint.Unit:
-    """Return the registered kernel-context unit sharing ``units``'s dimensionality."""
-    for kind in PhysicalQuantity:
-        candidate = uck.get(kind)
-        if units_compatible(candidate, units):
-            return candidate
-
-    raise ValueError(f"no kernel unit convention registered for units '{units}'")
 
 
 @define(eq=False, slots=False)
@@ -258,8 +245,10 @@ class GriddedParticlePhaseFunction(PhaseFunction):
     def template(self) -> dict:
         grid_2 = self._grid_2_or_default()
         volume_2 = self._volume_2_or_default()
-        unit_1 = _kernel_unit_for(self.grid_1.units)
-        unit_2 = _kernel_unit_for(grid_2.units)
+        # The plugin only interpolates volume values against grid nodes, so any
+        # unit shared by a grid and its volume works: use the grid's own
+        unit_1 = self.grid_1.units
+        unit_2 = grid_2.units
 
         return {
             "type": "particlephase",
