@@ -5,170 +5,19 @@ import xarray as xr
 from eradiate.contexts import KernelContext
 from eradiate.data.convert import make_prt_core_v1, make_prt_psd_v1
 from eradiate.grid import CartesianGrid
-from eradiate.scenes.atmosphere import ParticleAOTComponent
-from eradiate.scenes.atmosphere._particle_psd_component import ParticlePSDComponent
+from eradiate.scenes.atmosphere import ParticleAOTComponent, ParticlePSDComponent
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import GriddedParticlePhaseFunction
 from eradiate.spectral.index import MonoSpectralIndex
 from eradiate.units import unit_registry as ureg
 
-PHAMAT_LABELS = {
-    4: ["11", "12", "33", "34"],
-    6: ["11", "12", "22", "33", "34", "44"],
-}
-
-
-def make_properties_dataset(
-    reff=10.0,
-    veff=0.1,
-    w=(0.5, 1.5),
-    n_theta=5,
-    nphamat=4,
-    phase_value=1.0,
-    ext_value=1.0,
-    ssa_value=0.8,
-) -> xr.Dataset:
-    """
-    Build a Prt v1 properties dataset (with ``reff``/``veff`` dimensions)
-    directly, with a shared ascending mu grid across the whole
-    ``(w, reff, veff)`` grid.
-    """
-    reff_values = np.atleast_1d(np.asarray(reff, dtype=float))
-    veff_values = np.atleast_1d(np.asarray(veff, dtype=float))
-    w_values = np.atleast_1d(np.asarray(w, dtype=float))
-    nw, nreff, nveff = len(w_values), len(reff_values), len(veff_values)
-
-    mu_1d = np.linspace(-1.0, 1.0, n_theta)
-    mu = np.tile(mu_1d, (nw, nreff, nveff, 1))
-    theta = np.degrees(np.arccos(mu))
-
-    ext = np.broadcast_to(np.asarray(ext_value, dtype=float), (nw, nreff, nveff)).copy()
-    ssa = np.broadcast_to(np.asarray(ssa_value, dtype=float), (nw, nreff, nveff)).copy()
-    phase = np.broadcast_to(
-        np.asarray(phase_value, dtype=float), (nphamat, nw, nreff, nveff, n_theta)
-    ).copy()
-
-    return make_prt_psd_v1(
-        w=w_values * ureg.micron,
-        phamat=PHAMAT_LABELS[nphamat],
-        mu=mu * ureg.dimensionless,
-        theta=theta * ureg.degree,
-        ext=ext * ureg("km^-1 / (g / m^3)"),
-        ssa=ssa * ureg.dimensionless,
-        phase=phase * ureg("1/sr"),
-        reff=reff_values * ureg.micron,
-        veff=veff_values * ureg.dimensionless,
-    )
-
-
-def make_profile_dataset(
-    grid: CartesianGrid,
-    reff=10.0,
-    veff=0.1,
-    mass_concentration=1e-3,
-    z_levels=None,
-) -> xr.Dataset:
-    """Build a dense Pfd-Core v1 profile dataset filling every voxel of ``grid``."""
-    n_x, n_y = grid.n_cells_x, grid.n_cells_y
-    z_levels_km = (
-        np.asarray(z_levels, dtype=float)
-        if z_levels is not None
-        else grid.levels.m_as("km")
-    )
-    n_z = len(z_levels_km) - 1
-    shape = (n_z, n_y, n_x)
-
-    def _to_zyx(value):
-        arr = np.asarray(value, dtype=float)
-        if arr.ndim == 1 and arr.shape[0] == n_z:
-            arr = arr.reshape(n_z, 1, 1)
-        return np.broadcast_to(arr, shape).copy()
-
-    data_vars = {
-        "reff": (["z", "y", "x"], _to_zyx(reff), {"units": "micron"}),
-        "veff": (["z", "y", "x"], _to_zyx(veff), {"units": "dimensionless"}),
-        "mass_concentration": (
-            ["z", "y", "x"],
-            _to_zyx(mass_concentration),
-            {"units": "g/m^3"},
-        ),
-    }
-    coords = {
-        "x_levels": (["x_levels"], grid.edges_x.m_as("km"), {"units": "kilometer"}),
-        "y_levels": (["y_levels"], grid.edges_y.m_as("km"), {"units": "kilometer"}),
-        "z_levels": (["z_levels"], z_levels_km, {"units": "kilometer"}),
-    }
-
-    return xr.Dataset(data_vars=data_vars, coords=coords)
-
-
-def make_particle_psd_component(
-    n_x: int = 2,
-    n_y: int = 2,
-    n_z: int = 3,
-    x_extent: ureg.Quantity = 2.0 * ureg.km,
-    y_extent: ureg.Quantity = 2.0 * ureg.km,
-    z_extent: ureg.Quantity = 3.0 * ureg.km,
-    reff=10.0,
-    veff=0.1,
-    mass_concentration=1e-3,
-    w=(0.5, 1.5),
-    ext_value=1.0,
-    ssa_value=0.8,
-    has_absorption=True,
-    has_scattering=True,
-) -> ParticlePSDComponent:
-    """Build a dense, spatially-uniform :class:`.ParticlePSDComponent`."""
-    grid = CartesianGrid(
-        edges_x=np.linspace(0.0, x_extent.m_as("km"), n_x + 1) * ureg.km,
-        edges_y=np.linspace(0.0, y_extent.m_as("km"), n_y + 1) * ureg.km,
-        levels=np.linspace(0.0, z_extent.m_as("km"), n_z + 1) * ureg.km,
-    ).centered()
-    geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
-
-    return ParticlePSDComponent(
-        profile=make_profile_dataset(
-            grid, reff=reff, veff=veff, mass_concentration=mass_concentration
-        ),
-        properties=make_properties_dataset(
-            reff=reff, veff=veff, w=w, ext_value=ext_value, ssa_value=ssa_value
-        ),
-        geometry=geometry,
-        has_absorption=has_absorption,
-        has_scattering=has_scattering,
-    )
-
-
-def _make_z_profile_particle_psd_component(z_levels_src, target_levels):
-    """Build a single-reff/veff :class:`.ParticlePSDComponent` with a z-varying
-    profile, resampled onto ``target_levels``."""
-    z_levels_src = np.asarray(z_levels_src, dtype=float)
-    z_centers_src = 0.5 * (z_levels_src[:-1] + z_levels_src[1:])
-
-    target_grid = CartesianGrid(
-        edges_x=np.array([-1.0, 1.0]) * ureg.km,
-        edges_y=np.array([-1.0, 1.0]) * ureg.km,
-        levels=np.asarray(target_levels, dtype=float) * ureg.km,
-    )
-    geometry = PlaneParallelGeometry(
-        grid=target_grid,
-        toa_altitude=target_grid.levels[-1],
-        ground_altitude=target_grid.levels[0],
-    )
-    profile = make_profile_dataset(
-        target_grid,
-        reff=10.0 + z_centers_src,
-        veff=0.1,
-        mass_concentration=z_centers_src,
-        z_levels=z_levels_src,
-    )
-    # Properties has a single reff/veff point, so ext/ssa interpolation is
-    # constant regardless of the profile's own per-voxel reff, which is
-    # therefore free to vary with z here.
-    psd = ParticlePSDComponent(
-        profile=profile, properties=make_properties_dataset(), geometry=geometry
-    )
-    return psd, target_grid
+from ._psd_helpers import (
+    PHAMAT_LABELS,
+    make_particle_psd_component,
+    make_profile_dataset,
+    make_properties_dataset,
+    make_z_profile_particle_psd_component,
+)
 
 
 def make_particle_aot(
@@ -344,7 +193,7 @@ def test_eval_family_no_absorption_no_scattering():
 
 def test_eval_sigma_t_outside_cloud():
     """Voxels outside the profile's z-extent get zero sigma_t."""
-    psd, target_grid = _make_z_profile_particle_psd_component(
+    psd, target_grid = make_z_profile_particle_psd_component(
         [0.0, 1.0, 2.0, 3.0, 4.0, 5.0], np.arange(-1.0, 6.1, 1.0)
     )
     si = MonoSpectralIndex(w=ureg.Quantity(1.0, "micron"))
@@ -504,126 +353,6 @@ def test_to_profile_regular_grid():
     )
     assert result.profile is psd.profile
     assert result.properties is psd.properties
-
-
-def test_voxel_to_particle_aot_invalid_voxel_raises():
-    """voxel_to_particle_aot raises when the requested voxel index has no cloud."""
-    psd = make_particle_psd_component(w=(1.0,))
-
-    with pytest.raises(ValueError, match="No cloud voxel"):
-        ParticleAOTComponent.from_psd_voxel(
-            psd, w=ureg.Quantity(1.0, "micron"), ix=999, iy=999, iz=999
-        )
-
-
-def test_voxel_to_particle_aot_tau_ref_concentrated_at_voxel(mode_mono):
-    """voxel_to_particle_aot places the whole voxel's tau_ref at its own (x, y) cell, zero elsewhere."""
-    psd = make_particle_psd_component(
-        n_x=2,
-        n_y=2,
-        n_z=2,
-        w=(1.0,),
-        mass_concentration=0.5,
-        ext_value=2.0,
-        ssa_value=0.6,
-    )
-    grid = psd.geometry.grid
-    w = ureg.Quantity(1.0, "micron")
-
-    layer = ParticleAOTComponent.from_psd_voxel(psd, w=w, ix=0, iy=1, iz=0)
-
-    assert isinstance(layer, ParticleAOTComponent)
-    assert layer.bottom == grid.levels[0]
-    assert layer.top == grid.levels[1]
-    assert layer.w_ref == w
-
-    tau_ref = layer.tau_ref.m_as("dimensionless")
-    assert tau_ref.shape == (grid.n_cells_x, grid.n_cells_y)
-
-    mask = np.zeros_like(tau_ref, dtype=bool)
-    mask[0, 1] = True
-    layer_height_km = np.diff(grid.levels.m_as("km"))[0]
-    expected_tau = (
-        2.0 * 0.5 * layer_height_km
-    )  # (ext_value * mass_concentration) * height
-    np.testing.assert_allclose(tau_ref[mask], expected_tau)
-    np.testing.assert_allclose(tau_ref[~mask], 0.0)
-
-
-def test_composition_to_particle_aot_matches_psd_component(mode_mono):
-    """When the fixed (reff, veff) matches the component's own composition, per-voxel sigma_t matches exactly."""
-    psd = make_particle_psd_component(
-        n_x=2,
-        n_y=2,
-        n_z=3,
-        w=(1.0,),
-        reff=10.0,
-        veff=0.1,
-        mass_concentration=0.5,
-        ext_value=2.0,
-        ssa_value=0.6,
-    )
-    grid = psd.geometry.grid
-    w = ureg.Quantity(1.0, "micron")
-    si = MonoSpectralIndex(w=w)
-
-    part_aot = ParticleAOTComponent.from_psd_composition(
-        psd,
-        w=w,
-        i_reff=0,
-        i_veff=0,
-    )
-
-    assert isinstance(part_aot, ParticleAOTComponent)
-    assert part_aot.tau_ref.m_as("dimensionless").shape == (
-        grid.n_cells_x,
-        grid.n_cells_y,
-    )
-    assert np.all(part_aot.bottom == grid.levels[0])
-    assert np.all(part_aot.top == grid.levels[-1])
-
-    sigma_t_psd = psd.eval_sigma_t(si, grid).m_as("1/km")
-    sigma_t_aot = part_aot.eval_sigma_t(si, grid).m_as("1/km")
-    np.testing.assert_allclose(sigma_t_aot, sigma_t_psd, rtol=1e-8)
-
-
-def test_composition_to_particle_aot_irregular_z(mode_mono):
-    """Density is preserved exactly when the source profile has an irregular z-grid."""
-    z_levels_src = [0.0, 1.0, 1.5, 4.0]
-    target_levels = np.linspace(0.0, 4.0, 9)
-    psd, grid = _make_z_profile_particle_psd_component(
-        z_levels_src, target_levels=target_levels
-    )
-    w = ureg.Quantity(1.0, "micron")
-    si = MonoSpectralIndex(w=w)
-
-    part_aot = ParticleAOTComponent.from_psd_composition(
-        psd,
-        w=w,
-        i_reff=0,
-        i_veff=0,
-    )
-
-    sigma_t_psd = psd.eval_sigma_t(si, grid).m_as("1/km")
-    sigma_t_aot = part_aot.eval_sigma_t(si, grid).m_as("1/km")
-    np.testing.assert_allclose(sigma_t_aot, sigma_t_psd, rtol=1e-8)
-
-
-def test_composition_to_particle_aot_zero_density_column(mode_mono):
-    """A zero mass_concentration field yields a zero tau_ref particle_aot."""
-    psd = make_particle_psd_component(
-        n_x=2, n_y=1, n_z=2, w=(1.0,), mass_concentration=0.0
-    )
-    w = ureg.Quantity(1.0, "micron")
-
-    part_aot = ParticleAOTComponent.from_psd_composition(
-        psd,
-        w=w,
-        i_reff=0,
-        i_veff=0,
-    )
-
-    np.testing.assert_allclose(part_aot.tau_ref.m_as("dimensionless"), 0.0)
 
 
 def test_particle_psd_component_properties_requires_size_distribution():
