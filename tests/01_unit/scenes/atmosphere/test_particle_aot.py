@@ -15,9 +15,14 @@ from eradiate.scenes.atmosphere import (
     UniformParticleDistribution,
 )
 from eradiate.scenes.core import traverse
-from eradiate.spectral.index import SpectralIndex
+from eradiate.spectral.index import MonoSpectralIndex, SpectralIndex
 from eradiate.testing.types import check_scene_element
 from eradiate.units import to_quantity
+
+from ._psd_helpers import (
+    make_particle_psd_component,
+    make_z_profile_particle_psd_component,
+)
 
 # ------------------------------------------------------------------------------
 #                                   Fixtures
@@ -657,6 +662,121 @@ class TestParticleAOTComponent:
                 tau_ref=1.0,
                 w_ref=0.5 * (w1 + w2),
             )
+
+    def test_from_psd_voxel_invalid_voxel_raises(self):
+        """from_psd_voxel raises when the requested voxel index has no cloud."""
+        psd = make_particle_psd_component(w=(1.0,))
+
+        with pytest.raises(ValueError, match="No cloud voxel"):
+            ParticleAOTComponent.from_psd_voxel(
+                psd, w=ureg.Quantity(1.0, "micron"), ix=999, iy=999, iz=999
+            )
+
+    def test_from_psd_voxel_tau_ref_concentrated_at_voxel(self, mode_mono):
+        """from_psd_voxel places the whole voxel's tau_ref at its own (x, y) cell, zero elsewhere."""
+        psd = make_particle_psd_component(
+            n_x=2,
+            n_y=2,
+            n_z=2,
+            w=(1.0,),
+            mass_concentration=0.5,
+            ext_value=2.0,
+            ssa_value=0.6,
+        )
+        grid = psd.geometry.grid
+        w = ureg.Quantity(1.0, "micron")
+
+        layer = ParticleAOTComponent.from_psd_voxel(psd, w=w, ix=0, iy=1, iz=0)
+
+        assert isinstance(layer, ParticleAOTComponent)
+        assert layer.bottom == grid.levels[0]
+        assert layer.top == grid.levels[1]
+        assert layer.w_ref == w
+
+        tau_ref = layer.tau_ref.m_as("dimensionless")
+        assert tau_ref.shape == (grid.n_cells_x, grid.n_cells_y)
+
+        mask = np.zeros_like(tau_ref, dtype=bool)
+        mask[0, 1] = True
+        layer_height_km = np.diff(grid.levels.m_as("km"))[0]
+        expected_tau = (
+            2.0 * 0.5 * layer_height_km
+        )  # (ext_value * mass_concentration) * height
+        np.testing.assert_allclose(tau_ref[mask], expected_tau)
+        np.testing.assert_allclose(tau_ref[~mask], 0.0)
+
+    def test_from_psd_composition_matches_psd_component(self, mode_mono):
+        """from_psd_composition: when the fixed (reff, veff) matches the component's own composition, per-voxel sigma_t matches exactly."""
+        psd = make_particle_psd_component(
+            n_x=2,
+            n_y=2,
+            n_z=3,
+            w=(1.0,),
+            reff=10.0,
+            veff=0.1,
+            mass_concentration=0.5,
+            ext_value=2.0,
+            ssa_value=0.6,
+        )
+        grid = psd.geometry.grid
+        w = ureg.Quantity(1.0, "micron")
+        si = MonoSpectralIndex(w=w)
+
+        part_aot = ParticleAOTComponent.from_psd_composition(
+            psd,
+            w=w,
+            i_reff=0,
+            i_veff=0,
+        )
+
+        assert isinstance(part_aot, ParticleAOTComponent)
+        assert part_aot.tau_ref.m_as("dimensionless").shape == (
+            grid.n_cells_x,
+            grid.n_cells_y,
+        )
+        assert np.all(part_aot.bottom == grid.levels[0])
+        assert np.all(part_aot.top == grid.levels[-1])
+
+        sigma_t_psd = psd.eval_sigma_t(si, grid).m_as("1/km")
+        sigma_t_aot = part_aot.eval_sigma_t(si, grid).m_as("1/km")
+        np.testing.assert_allclose(sigma_t_aot, sigma_t_psd, rtol=1e-8)
+
+    def test_from_psd_composition_irregular_z(self, mode_mono):
+        """from_psd_composition preserves density exactly when the source profile has an irregular z-grid."""
+        z_levels_src = [0.0, 1.0, 1.5, 4.0]
+        target_levels = np.linspace(0.0, 4.0, 9)
+        psd, grid = make_z_profile_particle_psd_component(
+            z_levels_src, target_levels=target_levels
+        )
+        w = ureg.Quantity(1.0, "micron")
+        si = MonoSpectralIndex(w=w)
+
+        part_aot = ParticleAOTComponent.from_psd_composition(
+            psd,
+            w=w,
+            i_reff=0,
+            i_veff=0,
+        )
+
+        sigma_t_psd = psd.eval_sigma_t(si, grid).m_as("1/km")
+        sigma_t_aot = part_aot.eval_sigma_t(si, grid).m_as("1/km")
+        np.testing.assert_allclose(sigma_t_aot, sigma_t_psd, rtol=1e-8)
+
+    def test_from_psd_composition_zero_density_column(self, mode_mono):
+        """from_psd_composition: a zero mass_concentration field yields a zero tau_ref particle_aot."""
+        psd = make_particle_psd_component(
+            n_x=2, n_y=1, n_z=2, w=(1.0,), mass_concentration=0.0
+        )
+        w = ureg.Quantity(1.0, "micron")
+
+        part_aot = ParticleAOTComponent.from_psd_composition(
+            psd,
+            w=w,
+            i_reff=0,
+            i_veff=0,
+        )
+
+        np.testing.assert_allclose(part_aot.tau_ref.m_as("dimensionless"), 0.0)
 
     def test_spectrally_invariant_cache(self, mode_mono, monkeypatch):
         # Spectrally invariant terms are evaluated once for several wavelengths
