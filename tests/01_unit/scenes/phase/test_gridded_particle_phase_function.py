@@ -83,10 +83,7 @@ def test_particle_phase_kernel_dict(mode_mono):
 
     template, params = traverse(phase)
     assert template["type"] == "particlephase"
-    np.testing.assert_allclose(
-        np.array(template["r_eff_grid"]).ravel(),
-        ureg.Quantity([10.0, 20.0], "micron").m_as("m"),
-    )
+    np.testing.assert_allclose(np.array(template["r_eff_grid"]).ravel(), [10.0, 20.0])
     np.testing.assert_allclose(np.array(template["v_eff_grid"]).ravel(), [0.1])
 
     assert set(params.keys()) == {
