@@ -183,7 +183,7 @@ The following conversion components are provided:
       * Aer-Core v2
     - * :func:`.libradtran_to_aer_core_v2`
       * libRadtran / MOPSMAP
-      * Aer-Core v2, or :ref:`sec-data-formats-prt_cloud_v1` when the input
+      * Aer-Core v2, or :ref:`sec-data-formats-prt_psd_v1` when the input
         varies over ``reff``
     - * :func:`.libradtran_to_aer_v1`
       * libRadtran / MOPSMAP
