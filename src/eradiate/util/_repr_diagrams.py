@@ -615,7 +615,7 @@ def spherical_extent(
 
 
 def grid_repr_html(grid) -> str | None:
-    from .grid import CartesianGrid, SphericalGrid
+    from ..grid import CartesianGrid, SphericalGrid
 
     # Never let a display helper break notebook rendering: fall back to
     # the plain-text repr if anything goes wrong.
@@ -700,7 +700,7 @@ def grid_repr_html(grid) -> str | None:
 
 
 def geometry_repr_html(geometry) -> str | None:
-    from .scenes.geometry import PlaneParallelGeometry, SphericalShellGeometry
+    from ..scenes.geometry import PlaneParallelGeometry, SphericalShellGeometry
 
     # Never let a display helper break notebook rendering: fall back to
     # the plain-text repr if anything goes wrong.
