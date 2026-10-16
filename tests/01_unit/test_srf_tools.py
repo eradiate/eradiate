@@ -96,7 +96,7 @@ def test_spectral_filter(wrange) -> None:
     wmin, wmax = wrange
 
     w = np.linspace(400, 800)
-    srf_values = np.random.random(w.size)
+    srf_values = np.random.default_rng().random(w.size)
     utcnow = get_utcnow().strftime("%Y-%m-%d %H:%M:%S")
     srf = xr.Dataset(
         {"srf": ("w", srf_values, {"units": "dimensionless"})},

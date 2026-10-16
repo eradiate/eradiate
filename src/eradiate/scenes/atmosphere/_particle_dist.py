@@ -358,7 +358,7 @@ class ArrayParticleDistribution(ParticleDistribution):
         size = int(np.prod(cell_shape, dtype=np.int64)) if cell_shape else 1
 
         span = max(coords.max(), x.max()) - min(coords.min(), x.min())
-        cell = np.arange(size, dtype=np.int64).reshape(cell_shape + (1,))
+        cell = np.arange(size, dtype=np.int64).reshape((*cell_shape, 1))
         offsets = (span + 1.0) * cell
 
         coords_flat = (coords + offsets).reshape(-1)
@@ -408,7 +408,7 @@ class ArrayParticleDistribution(ParticleDistribution):
         # 3D case: one independent interpolant per (i_x, i_y) horizontal cell.
         n_x, n_y = self.values.shape[:2]
         if x.ndim == 1:
-            x = np.broadcast_to(x, (n_x, n_y) + x.shape)
+            x = np.broadcast_to(x, (n_x, n_y, *x.shape))
         elif x.shape[:2] != (n_x, n_y):
             raise ValueError(
                 "ArrayParticleDistribution: with a 3D 'values' array, the "

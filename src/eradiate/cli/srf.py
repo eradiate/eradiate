@@ -19,7 +19,6 @@ def main():
     """
     Spectral response function filtering utility.
     """
-    pass
 
 
 @app.command()

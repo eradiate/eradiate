@@ -18,37 +18,34 @@ import pint
 import xarray as xr
 
 from ._core import atmosphere_factory
-from ._particle_dist import ArrayParticleDistribution
-from ._particle_component import ParticleComponent, ParticleAOTComponent
+from ._particle_component import ParticleAOTComponent, ParticleComponent
 from ._particle_profile import ParticleProfile
 from ..core import traverse
 from ..geometry import PlaneParallelGeometry
 from ..phase import GriddedParticlePhaseFunction
 from ...attrs import define, documented, get_doc
+from ...contexts import KernelContext
 from ...data.convert import make_prt_psd_v1
-from ...grid import SpatialGrid, CartesianGrid
+from ...grid import CartesianGrid, SpatialGrid
 from ...kernel import SceneParameter
 from ...radprops._particles import ParticleProperties
 from ...spectral.index import MonoSpectralIndex, SpectralIndex
-from ...contexts import KernelContext
-from ...units import to_quantity
-from ...units import unit_registry as ureg
+from ...units import to_quantity, units_compatible
 from ...units import unit_context_kernel as uck
-from ...units import units_compatible
+from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
 
 
 @define(eq=False, slots=False)
 class ParticleStateComponent(ParticleComponent):
-
     """
     Base class for a ParticleComponent defined by a ``profile`` class and a
-    ``properties`` class. The profile defines the variation of a set of 
+    ``properties`` class. The profile defines the variation of a set of
     ``state_variables`` and ``amount`` in space, used to interpolate the
     ``properties`` at each location. The ``properties`` defines the mapping
     from state variables to optical properties such as extinction, albedo and
     phase function. This class is typically used for complex particle
-    properties varying in space, such as clouds. When evaluated, the 
+    properties varying in space, such as clouds. When evaluated, the
     ``profile`` is resampled onto the render grid.
 
     The ``amount`` is a special state variable treated separately. It defines
@@ -67,7 +64,7 @@ class ParticleStateComponent(ParticleComponent):
     source (``properties``) and destination (``profile``) variables linked by
     the ``state_variables`` dict. The ``amount`` units constraint lies in its
     combination with the properties dataset's per-``amount`` ``.ext`` quantity:
-    the product of their units must have the dimensionality of an inverse 
+    the product of their units must have the dimensionality of an inverse
     length, expressing an ``amount``-scaled extinction coefficient. These
     units compatibility requirements are only checked when the component is
     evaluated (e.g. when computing extinction, albedo or the phase function).
@@ -238,7 +235,9 @@ class ParticleStateComponent(ParticleComponent):
         return matches[0]
 
     @cache_by_id
-    def _eval_ext_ssa_grid(self, si: SpectralIndex) -> tuple[pint.Quantity, pint.Quantity]:
+    def _eval_ext_ssa_grid(
+        self, si: SpectralIndex
+    ) -> tuple[pint.Quantity, pint.Quantity]:
         """
         Evaluate ``ext``/``ssa`` at ``si.w``, over the whole state-variable
         grid (no per-voxel resolution). Axis order matches :attr:`state_dims`.
@@ -556,7 +555,7 @@ class ParticlePSDComponent(ParticleStateComponent):
 
     state_variables: dict[str, str] = documented(
         attrs.field(
-            default={ "reff": "reff", "veff": "veff" },
+            default={"reff": "reff", "veff": "veff"},
             kw_only=True,
             validator=attrs.validators.deep_mapping(
                 key_validator=attrs.validators.instance_of(str),
@@ -567,7 +566,7 @@ class ParticlePSDComponent(ParticleStateComponent):
         doc=get_doc(ParticleStateComponent, "state_variables", "doc"),
         type=get_doc(ParticleStateComponent, "state_variables", "type"),
         init_type=get_doc(ParticleStateComponent, "state_variables", "init_type"),
-        default='{ "reff": "reff", "veff": "veff" }'
+        default='{ "reff": "reff", "veff": "veff" }',
     )
 
     @classmethod

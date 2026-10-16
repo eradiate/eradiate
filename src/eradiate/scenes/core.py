@@ -81,7 +81,6 @@ class SceneElement(ABC):
         callback : SceneTraversal
             Callback data structure storing the collected data.
         """
-        pass
 
     def update(self) -> None:  # noqa: B027
         """
@@ -89,7 +88,6 @@ class SceneElement(ABC):
         fields are modified. It is automatically called as a post-init step.
         """
         # The default implementation is a no-op
-        pass
 
 
 @define(eq=False, slots=False)
@@ -118,7 +116,6 @@ class NodeSceneElement(SceneElement, ABC):
         --------
         :class:`.DictParameter`, :class:`.KernelDict`
         """
-        pass
 
     @property
     def objects(self) -> dict[str, NodeSceneElement] | None:
@@ -162,8 +159,6 @@ class InstanceSceneElement(SceneElement, ABC):
         -------
         mitsuba.Object
         """
-
-        pass
 
     def traverse(self, callback):
         # Inherit docstring

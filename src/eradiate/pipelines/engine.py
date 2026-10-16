@@ -379,12 +379,13 @@ class Pipeline:
         # Check if any of this node's dependencies were virtual inputs
         # that are now orphaned (no other nodes depend on them)
         for dep in node.dependencies:
-            if dep in self._virtual_inputs:
-                if not self._graph.has_node(dep) or self._graph.out_degree(dep) == 0:
-                    # This virtual input is no longer needed
-                    if self._graph.has_node(dep):
-                        self._graph.remove_node(dep)
-                    self._virtual_inputs.remove(dep)
+            if dep in self._virtual_inputs and (
+                not self._graph.has_node(dep) or self._graph.out_degree(dep) == 0
+            ):
+                # This virtual input is no longer needed
+                if self._graph.has_node(dep):
+                    self._graph.remove_node(dep)
+                self._virtual_inputs.remove(dep)
 
         return self
 
@@ -654,14 +655,17 @@ class Pipeline:
             ancestors = nx.ancestors(self._graph, output)
 
             for ancestor in ancestors:
-                # If ancestor is a virtual input and not bypassed, it's required
-                if ancestor in self._virtual_inputs and ancestor not in node_bypasses:
-                    # Check if there's a path from this virtual input to output
-                    # that doesn't go through bypassed nodes
-                    if self._is_reachable_without_bypass(
+                # A virtual input is required if it is not bypassed and there
+                # is a path from it to the output that doesn't go through
+                # bypassed nodes
+                if (
+                    ancestor in self._virtual_inputs
+                    and ancestor not in node_bypasses
+                    and self._is_reachable_without_bypass(
                         ancestor, output, node_bypasses
-                    ):
-                        required.add(ancestor)
+                    )
+                ):
+                    required.add(ancestor)
 
         return required
 
@@ -1096,15 +1100,14 @@ class Pipeline:
                     lines = []
                     current_line = []
                     for word in words:
-                        if len(" ".join(current_line + [word])) > 30:
+                        if len(" ".join([*current_line, word])) > 30:
                             lines.append(" ".join(current_line))
                             current_line = [word]
                         else:
                             current_line.append(word)
                     if current_line:
                         lines.append(" ".join(current_line))
-                    for line in lines:
-                        label_parts.append(line)
+                    label_parts.extend(lines)
 
                 # Add metadata tags in italic Helvetica
                 if node.metadata:

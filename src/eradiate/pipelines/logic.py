@@ -950,8 +950,8 @@ def viewing_angles(angles: np.ndarray) -> xr.Dataset:
             "vza": xr.DataArray(
                 theta,
                 coords={
-                    "x_index": [i for i in range(theta.shape[0])],
-                    "y_index": [i for i in range(theta.shape[1])],
+                    "x_index": list(range(theta.shape[0])),
+                    "y_index": list(range(theta.shape[1])),
                 },
                 dims=("x_index", "y_index"),
                 attrs={
@@ -963,8 +963,8 @@ def viewing_angles(angles: np.ndarray) -> xr.Dataset:
             "vaa": xr.DataArray(
                 phi,
                 coords={
-                    "x_index": [i for i in range(phi.shape[0])],
-                    "y_index": [i for i in range(phi.shape[1])],
+                    "x_index": list(range(phi.shape[0])),
+                    "y_index": list(range(phi.shape[1])),
                 },
                 dims=("x_index", "y_index"),
                 attrs={

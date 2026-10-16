@@ -31,5 +31,3 @@ class BSDF(NodeSceneElement, ABC):
     """
     Abstract base class  for all BSDF scene elements.
     """
-
-    pass

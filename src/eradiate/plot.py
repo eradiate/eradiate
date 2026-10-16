@@ -76,14 +76,15 @@ def detect_axes(from_=None):
     if isinstance(from_, FacetGrid):
         return list(from_.axes.flatten())
 
-    if isinstance(from_, list):
-        if all([isinstance(x, Axes) for x in from_]):
-            return from_
+    if isinstance(from_, list) and all(isinstance(x, Axes) for x in from_):
+        return from_
 
     raise TypeError(f"unsupported type '{type(from_).__name__}'")
 
 
-def get_axes_from_facet_grid(facet_grid: FacetGrid, exclude: str = None) -> list[Axes]:
+def get_axes_from_facet_grid(
+    facet_grid: FacetGrid, exclude: str | None = None
+) -> list[Axes]:
     """
     Extract a flat list of :class:`~matplotlib.axes.Axes` from a
     :class:`~xarray.plot.FacetGrid`.

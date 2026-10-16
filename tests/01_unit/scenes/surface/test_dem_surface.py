@@ -305,7 +305,7 @@ def test_dem_surface_kernel_dict(mode_mono):
 
     # When enclosed in a Scene, the surface can be traversed
     scene = Scene(objects={"surface": dem})
-    template, params = traverse(scene)
+    template, _params = traverse(scene)
     kernel_dict = template.render(KernelContext())
     assert isinstance(mi.load_dict(kernel_dict), mi.Scene)
 

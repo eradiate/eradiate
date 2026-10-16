@@ -318,12 +318,11 @@ class Experiment(ABC):
             If ``True``, drop Mitsuba scene parameters that are not used (*i.e.*
             that do not have an updater associated).
         """
-        pass
 
     @abstractmethod
     def process(
         self,
-        measures: None | int | list[int] = None,
+        measures: int | list[int] | None = None,
         spp: int = 0,
         seed_state: SeedState | None = None,
     ) -> None:
@@ -345,10 +344,9 @@ class Experiment(ABC):
             every iteration of the parametric loop. If unset, Eradiate's
             :attr:`root seed state <.root_seed_state>` is used.
         """
-        pass
 
     @abstractmethod
-    def postprocess(self, measures: None | int | list[int] = None) -> None:
+    def postprocess(self, measures: int | list[int] | None = None) -> None:
         """
         Post-process raw results and store them in :attr:`results`.
 
@@ -358,7 +356,6 @@ class Experiment(ABC):
             Indices of the measures that will be processed. By default, all
             measures are processed.
         """
-        pass
 
     @abstractmethod
     def pipeline(self, measure: Measure | int) -> Pipeline:
@@ -374,7 +371,6 @@ class Experiment(ABC):
         -------
         .Pipeline
         """
-        pass
 
     @abstractmethod
     def context_init(self) -> KernelContext:
@@ -385,10 +381,9 @@ class Experiment(ABC):
         -------
         .KernelContext
         """
-        pass
 
     @abstractmethod
-    def contexts(self, measures: None | int | list[int] = None) -> list[KernelContext]:
+    def contexts(self, measures: int | list[int] | None = None) -> list[KernelContext]:
         """
         Return a list of contexts used for processing.
 
@@ -402,7 +397,6 @@ class Experiment(ABC):
         -------
         list of .KernelContext
         """
-        pass
 
 
 def _extra_objects_converter(value: dict | None) -> dict:
@@ -578,7 +572,7 @@ class EarthObservationExperiment(Experiment, ABC):
     def _context_kwargs(self) -> dict[str, t.Any]:
         pass
 
-    def contexts(self, measures: None | int | list[int] = None) -> list[KernelContext]:
+    def contexts(self, measures: int | list[int] | None = None) -> list[KernelContext]:
         # Inherit docstring
 
         if measures is None:
@@ -643,7 +637,6 @@ class EarthObservationExperiment(Experiment, ABC):
         your own :class:`.EarthObservationExperiment` subclass, this property is
         critical.
         """
-        pass
 
     @property
     def scene(self) -> Scene:
@@ -677,7 +670,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
     def process(
         self,
-        measures: None | int | str | list[int | str] = None,
+        measures: int | str | list[int | str] | None = None,
         spp: int = 0,
         seed_state: SeedState | None = None,
     ) -> None:
@@ -713,13 +706,10 @@ class EarthObservationExperiment(Experiment, ABC):
             return mi.Bitmap(img_np, mi.Bitmap.PixelFormat.Y)
 
         # Map bitmap names to result names
-        mapping = {}
         if self.integrator.stokes:
             stokes = ["nested.S0", "nested.S1", "nested.S2", "nested.S3"]
             iquv = ["I", "Q", "U", "V"]
-
-            for s, i in zip(stokes, iquv):
-                mapping[s] = i
+            mapping = dict(zip(stokes, iquv))
 
         else:
             mapping = {"<root>": "bitmap"}
@@ -744,7 +734,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
                 measure.mi_results[ctx_index] = result_imgs
 
-    def postprocess(self, measures: None | int | list[int] = None) -> None:
+    def postprocess(self, measures: int | list[int] | None = None) -> None:
         # Inherit docstring
         logger.info("Post-processing results")
 
@@ -814,7 +804,7 @@ class EarthObservationExperiment(Experiment, ABC):
 
 def run(
     exp: Experiment,
-    measures: None | int | str | list[int | str] = None,
+    measures: int | str | list[int | str] | None = None,
     spp: int = 0,
     seed_state: SeedState | None = None,
 ) -> xr.Dataset | dict[str, xr.Dataset]:

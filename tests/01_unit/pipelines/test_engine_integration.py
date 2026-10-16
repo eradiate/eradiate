@@ -21,7 +21,7 @@ class TestSimplePostprocessing:
         # Simulate raw data assembly
         def assemble_raw():
             return xr.DataArray(
-                np.random.randn(3, 4),
+                np.random.default_rng().standard_normal((3, 4)),
                 dims=["x", "y"],
                 coords={"x": [0, 1, 2], "y": [0, 1, 2, 3]},
             )
@@ -173,7 +173,7 @@ class TestComplexWorkflow:
         def gather_raw():
             # Simulate spectral data with g-points
             return xr.DataArray(
-                np.random.randn(3, 2, 4, 5),  # (w, g, y, x)
+                np.random.default_rng().standard_normal((3, 2, 4, 5)),  # (w, g, y, x)
                 dims=["w", "g", "y", "x"],
                 coords={
                     "w": [400, 500, 600],
