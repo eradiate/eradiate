@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import typing as t
 from numbers import Number
+from typing import Callable, Literal
 
 import attrs
 import numpy as np
@@ -147,7 +147,7 @@ def is_dir(_, attribute, value):
 
 
 def is_sorted(
-    order: t.Literal["ascending", "descending"] = "ascending", strict: bool = False
+    order: Literal["ascending", "descending"] = "ascending", strict: bool = False
 ):
     """
     Validate iff a 1D array is sorted.
@@ -240,7 +240,7 @@ def has_quantity(quantity: PhysicalQuantity | str | None):
     return f
 
 
-def on_quantity(wrapped_validator: t.Callable):
+def on_quantity(wrapped_validator: Callable):
     """
     Apply a validator to the magnitude of a quantity.
 

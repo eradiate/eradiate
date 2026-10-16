@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import itertools
-import typing as t
 from abc import ABC, abstractmethod
+from collections.abc import Generator
 from functools import singledispatchmethod
+from typing import Literal
 
 import numpy as np
-import numpy.typing as npt
 import pint
 import pinttrs
 from axsdb import AbsorptionDatabase, CKDAbsorptionDatabase, MonoAbsorptionDatabase
+from numpy.typing import ArrayLike
 from pinttrs.util import ensure_units
 
 from .ckd_quad import CKDQuadConfig, CKDQuadPolicy
@@ -140,7 +141,7 @@ class SpectralGrid(ABC):
         """
 
     @abstractmethod
-    def walk_indices(self, **kwargs) -> t.Generator[SpectralIndex, None, None]:
+    def walk_indices(self, **kwargs) -> Generator[SpectralIndex, None, None]:
         """
         A generator that yields a sequence of spectral index values.
 
@@ -313,7 +314,7 @@ class MonoSpectralGrid(SpectralGrid):
 
         return MonoSpectralGrid(wavelengths=w_m * w_u)
 
-    def walk_indices(self) -> t.Generator[MonoSpectralIndex, None, None]:
+    def walk_indices(self) -> Generator[MonoSpectralIndex, None, None]:
         # Inherit docstring
         for w in self.wavelengths:
             yield MonoSpectralIndex(w=w)
@@ -380,10 +381,10 @@ class CKDSpectralGrid(SpectralGrid):
 
     def __init__(
         self,
-        wmins: npt.ArrayLike,
-        wmaxs: npt.ArrayLike,
-        wcenters: npt.ArrayLike | None = None,
-        fix_bounds: t.Literal["keep_min", "keep_max", "raise", "ignore"] = "keep_min",
+        wmins: ArrayLike,
+        wmaxs: ArrayLike,
+        wcenters: ArrayLike | None = None,
+        fix_bounds: Literal["keep_min", "keep_max", "raise", "ignore"] = "keep_min",
         epsilon: float = 1e-6,
     ):
         # Ensure consistent units and appropriate dtype
@@ -520,7 +521,7 @@ class CKDSpectralGrid(SpectralGrid):
         return CKDSpectralGrid(wmins_m * w_u, wmaxs_m * w_u, wcenters_m * w_u)
 
     @classmethod
-    def from_nodes(cls, wnodes: npt.ArrayLike) -> CKDSpectralGrid:
+    def from_nodes(cls, wnodes: ArrayLike) -> CKDSpectralGrid:
         wmins = wnodes[:-1]
         wmaxs = wnodes[1:]
         return cls(wmins=wmins, wmaxs=wmaxs)
@@ -619,7 +620,7 @@ class CKDSpectralGrid(SpectralGrid):
         self,
         ckd_quad_config: CKDQuadConfig,
         abs_db: CKDAbsorptionDatabase | None = None,
-    ) -> t.Generator[tuple[pint.Quantity, Quad]]:
+    ) -> Generator[tuple[pint.Quantity, Quad]]:
         """
         Walk the spectral grid and retrieve, based on a quadrature configuration
         and, if necessary, an absorption database, the spectral quadrature for
@@ -659,7 +660,7 @@ class CKDSpectralGrid(SpectralGrid):
         self,
         ckd_quad_config: CKDQuadConfig,
         abs_db: CKDAbsorptionDatabase | None = None,
-    ) -> t.Generator[CKDSpectralIndex]:
+    ) -> Generator[CKDSpectralIndex]:
         """
         Walk the spectral grid and retrieve, based on a quadrature configuration
         and, if necessary, an absorption database, the sequence of spectral

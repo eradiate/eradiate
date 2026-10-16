@@ -1,6 +1,6 @@
 """Exceptions and warnings specific to Eradiate."""
 
-from pinttr.util import always_iterable
+from pinttrs.util import always_iterable
 
 # ------------------------------------------------------------------------------
 #                                   Exceptions
