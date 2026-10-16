@@ -130,7 +130,7 @@ Normalization conventions
    :ref:`sec-data-formats-aer_core_v2`
 
 
-.. _sec-data-formats-prt_cloud_v1:
+.. _sec-data-formats-prt_psd_v1:
 
 Prt-Psd v1 [``prt_psd_v1``]
 ---------------------------
