@@ -10,7 +10,7 @@ license-files = ["LICENSE"]
 maintainers = [{ name = "The Eradiate Team" }]
 name = "eradiate"
 readme = "resources/README_PyPI.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 version = "1.2.0"
 keywords = ["radiative transfer", "earth observation", "remote sensing"]
 classifiers = [
@@ -18,11 +18,12 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Topic :: Scientific/Engineering :: Atmospheric Science",
   "Topic :: Scientific/Engineering :: Physics",
 ]
@@ -113,7 +114,7 @@ Changelog = "https://github.com/eradiate/eradiate/releases"
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
+platforms = ["linux-64", "win-64", "osx-arm64"]
 
 [tool.pixi.dependencies]
 pixi-pycharm = ">=0.0.12,<0.0.13"
@@ -146,21 +147,17 @@ ninja = "*"
 [tool.pixi.target.win-64.activation]
 scripts = ["setpath.bat"]
 
-[tool.pixi.target.osx-64.pypi-dependencies]
-# AxsDB depends on Numba. Old x86_64 macs are no longer supported, so we need to
-# constrain specifically numba for this platform.
-numba = "<0.63"
-
 [tool.pixi.target.osx-arm64.dependencies]
 netcdf4 = "*"
 
 [tool.pixi.feature]
 # All supported Python versions are listed
-py39 = { dependencies = { python = "3.9.*" } }
 py310 = { dependencies = { python = "3.10.*" } } # Current dev version
 py311 = { dependencies = { python = "3.11.*" } } # Current docs version
 py312 = { dependencies = { python = "3.12.*" } }
 py313 = { dependencies = { python = "3.13.*" } }
+py314 = { dependencies = { python = "3.14.*" } }
+py315 = { dependencies = { python = "3.15.*" } }
 
 [tool.pixi.feature.test.tasks]
 doctest = { cmd = "make -C docs doctest" }
@@ -223,11 +220,12 @@ test = { features = ["py310", "recommended", "test"], solve-group = "dev" }
 docs = { features = ["py311", "recommended", "docs"] }
 # The following environments exist only to ensure that a production environment
 # can be resolved
-py39 = { features = ["py39", "kernel", "recommended"] }
 py310 = { features = ["py310", "kernel", "recommended"] }
 py311 = { features = ["py311", "kernel", "recommended"] }
 py312 = { features = ["py312", "kernel", "recommended"] }
 py313 = { features = ["py313", "kernel", "recommended"] }
+py314 = { features = ["py314", "kernel", "recommended"] }
+py315 = { features = ["py315", "kernel", "recommended"] }
 # Deprecated
 dev = { features = ["py310", "recommended", "test", "dev"], solve-group = "dev" }
 
