@@ -4,9 +4,6 @@ Basic components of post-processing pipeline assembly.
 
 from __future__ import annotations
 
-import itertools
-from collections import OrderedDict
-
 import numpy as np
 import pint
 import pinttrs
@@ -121,19 +118,12 @@ def aggregate_ckd_quad(
         result.name = result_name
         return raw_data
 
-    # Get dimensions of current variable
-    sizes = OrderedDict((y, len(raw_data.coords[y])) for y in raw_data.sizes)
-
     for dim in ["w", "g"]:
-        if dim not in sizes:
+        if dim not in raw_data.dims:
             raise ValueError(
                 f"CKD quadrature computation requires dimension {dim}, missing "
                 "from input data"
             )
-
-    # Init storage
-    del sizes["w"]
-    del sizes["g"]
 
     # -- Collect wavelengths associated with each bin
     wavelength_units = ucc.get("wavelength")
@@ -143,29 +133,14 @@ def aggregate_ckd_quad(
     # -- Proceed with actual storage initialization
     result = xr.full_like(raw_data, np.nan).isel(g=0, drop=True)
 
-    # For each bin and each pixel, compute quadrature and store the result
-    for i_bin, (w, quad) in enumerate(zip(spectral_grid.wcenters, ckd_quads)):
-        values_at_nodes = raw_data.sel(w=w).values
-
-        # Rationale: Avoid using xarray's indexing in this loop for
-        # performance reasons (wrong data indexing method will result in
-        # 10x+ speed reduction)
-        for indexes in itertools.product(*[list(range(n)) for n in sizes.values()]):
-            interval = (0.0, 1.0)
-
-            if is_variance:
-                weights = quad.weights.copy()
-                if interval is not None:
-                    weights *= 0.5 * (interval[1] - interval[0])
-
-                variance = values_at_nodes[(slice(None), *indexes)]
-                weighted_sum = float(np.dot(weights**2, variance))
-                result.values[(i_bin, *indexes)] = weighted_sum
-            else:
-                result.values[(i_bin, *indexes)] = quad.integrate(
-                    values_at_nodes[(slice(None), *indexes)],
-                    interval=interval,
-                )
+    # For each bin, compute the quadrature for all pixels at once
+    for w, quad in zip(spectral_grid.wcenters, ckd_quads):
+        # g leads; other dimensions keep their order in raw_data, as in result
+        values_at_nodes = raw_data.sel(w=w).transpose("g", ...).values
+        weights = 0.5 * quad.weights  # Scaling from [-1, 1] to g in [0, 1]
+        if is_variance:
+            weights = weights**2
+        result.loc[{"w": w}] = np.tensordot(weights, values_at_nodes, axes=(0, 0))
 
     if is_variance:  # At the moment, we do not populate metadata for variance
         result.attrs.clear()
@@ -643,6 +618,66 @@ def extract_irradiance(
     return {"irradiance": irradiance, "solar_angles": solar_angles}
 
 
+def _stack_spectral(
+    keys: list[tuple],
+    arrays: list,
+    spectral_dims: list[str],
+    template: xr.DataArray | None = None,
+) -> xr.DataArray:
+    """
+    Stack per-spectral-index arrays along spectral dimensions.
+
+    The spectral grid is the outer product of the sorted unique coordinate
+    values in each spectral dimension. Grid points without data are filled
+    with NaN, promoting the data type to floating point if needed. This
+    reproduces the output of :func:`xarray.combine_by_coords`, which is much
+    slower when there are many spectral indexes.
+
+    Parameters
+    ----------
+    keys : list of tuple
+        Spectral coordinates of each array, in the order of ``spectral_dims``.
+
+    arrays : list of array-like
+        Arrays to stack, all with the same shape.
+
+    spectral_dims : list of str
+        Names of the spectral dimensions.
+
+    template : DataArray, optional
+        A data array holding the dimensions, coordinates and attributes of the
+        stacked arrays. If unset, stacked arrays are scalars.
+
+    Returns
+    -------
+    DataArray
+    """
+    spectral_coords = [np.unique(c) for c in zip(*keys)]
+    shape = tuple(len(c) for c in spectral_coords)
+    positions = tuple(
+        np.searchsorted(c, k) for c, k in zip(spectral_coords, zip(*keys))
+    )
+    values = np.stack(arrays)
+
+    if len(keys) == np.prod(shape):
+        data = np.empty(shape + values.shape[1:], dtype=values.dtype)
+    else:
+        dtype = np.result_type(values.dtype, np.float16)
+        data = np.full(shape + values.shape[1:], np.nan, dtype=dtype)
+    data[positions] = values
+
+    coords = dict(zip(spectral_dims, spectral_coords))
+    if template is None:
+        return xr.DataArray(data, dims=spectral_dims, coords=coords)
+    else:
+        return xr.DataArray(
+            data,
+            dims=[*spectral_dims, *template.dims],
+            coords={**coords, **template.coords},
+            attrs=template.attrs,
+        )
+
+
 def gather_bitmaps(
     mode_id: str,
     var_name: str,
@@ -723,61 +758,53 @@ def gather_bitmaps(
             spectral_dims.append(y[0])
             spectral_dim_metadata[y[0]] = y[1]
 
-    # Loop on spectral indexes and collect all bitmap contents in data arrays
-    sensor_data = {
-        "spp": [],
-        "weights_raw": [],
-        f"{var_name}_raw": [],
-        f"{var_name}_m2_raw": [],
+    # Collect bitmap contents for all spectral indexes. Only the first bitmap
+    # of each variable is converted to a data array, which serves as a template
+    # for the dimensions and coordinates of the others.
+    spectral_keys = [tuple(always_iterable(k)) for k in bitmaps]
+    result_dicts = list(bitmaps.values())
+    stokes_coords = {"stokes": ["I", "Q", "U", "V"]}
+
+    def read(bmp, template):
+        return np.reshape(np.array(bmp, dtype=template.dtype), template.shape)
+
+    # Main variable
+    if not calculate_stokes:
+        template = bitmap_to_dataarray(result_dicts[0]["bitmap"])
+        arrays = [read(d["bitmap"], template) for d in result_dicts]
+    else:
+        components = stokes_coords["stokes"]
+        template = xr.concat(
+            [bitmap_to_dataarray(result_dicts[0][c]) for c in components], "stokes"
+        ).assign_coords(stokes_coords)
+        pixel_template = template.isel(stokes=0)
+        arrays = [
+            np.stack([read(d[c], pixel_template) for c in components])
+            for d in result_dicts
+        ]
+
+    result = {
+        "spp": _stack_spectral(
+            spectral_keys, [d["spp"] for d in result_dicts], spectral_dims
+        ),
+        "weights_raw": None,
+        f"{var_name}_raw": _stack_spectral(
+            spectral_keys, arrays, spectral_dims, template
+        ),
+        f"{var_name}_m2_raw": None,
     }
 
-    for spectral_index_hashable, result_dict in bitmaps.items():
-        spectral_index = spectral_index_hashable
-
-        # Define spectral coordinates
-        spectral_coords = {
-            spectral_dim: [spectral_coord]
-            for spectral_dim, spectral_coord in zip(
-                spectral_dims, always_iterable(spectral_index)
-            )
-        }
-
-        # Define Stokes vector coordinates
-        stokes_coords = {} if not calculate_stokes else {"stokes": ["I", "Q", "U", "V"]}
-
-        # Package spp in a data array
-        spp = result_dict["spp"]
-        all_dims = list(spectral_coords.keys())
-        spp_shape = [1 for _ in all_dims]
-        sensor_data["spp"].append(
-            xr.DataArray(np.reshape(spp, spp_shape), coords=spectral_coords)
+    # Second moment
+    if gather_variance:
+        template = bitmap_to_dataarray(result_dicts[0]["m2"])
+        arrays = [read(d["m2"], template) for d in result_dicts]
+        if calculate_stokes:
+            # The second moment is broadcast along the Stokes dimension
+            template = template.expand_dims(stokes_coords)
+            arrays = [np.broadcast_to(x, template.shape) for x in arrays]
+        result[f"{var_name}_m2_raw"] = _stack_spectral(
+            spectral_keys, arrays, spectral_dims, template
         )
-
-        # Collect bitmaps
-        if not calculate_stokes:
-            name = "bitmap"
-            da = bitmap_to_dataarray(result_dict[name])
-        else:
-            components = stokes_coords["stokes"]
-            stokes = [bitmap_to_dataarray(result_dict[s]) for s in components]
-            da = xr.concat(stokes, "stokes")
-            da = da.assign_coords(stokes_coords)
-
-        # Add spectral and sensor dimensions to img array
-        sensor_data[f"{var_name}_raw"].append(da.expand_dims(dim=spectral_coords))
-
-        if gather_variance:
-            name = "m2"
-            da_m2 = bitmap_to_dataarray(result_dict[name])
-            coords = (
-                spectral_coords
-                if not calculate_stokes
-                else {**spectral_coords, "stokes": ["I", "Q", "U", "V"]}
-            )
-            sensor_data[f"{var_name}_m2_raw"].append(da_m2.expand_dims(dim=coords))
-
-    # Combine all the data
-    result = {k: xr.combine_by_coords(v) if v else None for k, v in sensor_data.items()}
 
     keys = [f"{var_name}_raw"]
     if gather_variance:
