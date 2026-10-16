@@ -224,7 +224,7 @@ class TargetRectangle(Target):
         else:
             raise TypeError(
                 f"Unhandled keyword argument combination {set(kwargs)} "
-                f"(allowed: {bounds_kwargs = }, {normal_kwargs = }, {transform_kwargs = }"
+                f"(allowed: {bounds_kwargs = }, {normal_kwargs = }, {transform_kwargs = })"
             )
 
         bbox = mi.BoundingBox3f()

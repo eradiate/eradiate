@@ -167,8 +167,11 @@ def make_prt_core_v1(
     Raises
     ------
     ValueError
-        If a value check fails, if ``mu`` carries an extra (reff/veff)
-        dimension, or if ``nmom`` is an ndarray but ``pmom`` is not provided.
+        If a value check fails, or if ``mu`` carries an extra (reff/veff)
+        dimension.
+
+    TypeError
+        If ``nmom`` is an ndarray but ``pmom`` is not provided.
     """
     # The Core format is exactly the Psd format with singleton reff/veff
     # axes, dropped: insert those axes, delegate the actual construction to
@@ -377,7 +380,7 @@ def make_prt_psd_v1(
         elif isinstance(nmom, int):
             _nmom_scalar = nmom
         else:
-            raise ValueError(
+            raise TypeError(
                 "make_prt_psd_v1(): 'nmom' must be an int or None when 'pmom' is "
                 "not provided. Pass an ndarray only together with an explicit 'pmom'."
             )

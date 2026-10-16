@@ -108,8 +108,6 @@ def get_default_absdb(
     -------
     AbsorptionDatabase
     """
-    mode_error = UnsupportedModeError(supported=["mono", "ckd"])
-
     if mode is None:
         mode = eradiate.get_mode()
 
@@ -119,13 +117,13 @@ def get_default_absdb(
         elif mode.is_ckd:
             mode = "ckd"
         else:
-            raise mode_error
+            raise UnsupportedModeError(supported=["mono", "ckd"])
 
     if mode == "mono":
         default = "komodo"
     elif mode == "ckd":
         default = "monotropa"
     else:
-        raise mode_error
+        raise UnsupportedModeError(supported=["mono", "ckd"])
 
     return absdb_factory.create(default)
