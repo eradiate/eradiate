@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import datetime
-import importlib.util
 import warnings
-from pathlib import Path
 from typing import Any
 
 import attrs
@@ -14,18 +12,14 @@ import xarray as xr
 
 from ._core import Spectrum
 from ... import converters, validators
+from ..._skyfield import earth_sun_distance, require_skyfield
 from ...attrs import define, documented
-from ...config import settings
 from ...exceptions import DataError
 from ...kernel import DictParameter, KernelSceneParameterFlags, SceneParameter
 from ...units import PhysicalQuantity, to_quantity
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id, summary_repr
-
-# Cache for Skyfield ephemeris loader (initialized lazily)
-_SKYFIELD_LOADER = None
-_SKYFIELD_EPHEMERIS = None
 
 
 def _datetime_converter(x: Any):
@@ -41,16 +35,7 @@ def _datetime_converter(x: Any):
             )
             raise
 
-        try:
-            importlib.import_module("skyfield")
-        except ModuleNotFoundError:
-            warnings.warn(
-                "To use the date-based Solar irradiance scaling feature, you "
-                "must install skyfield.\n"
-                "See instructions on https://rhodesmill.org/skyfield/.",
-                stacklevel=2,
-            )
-            raise
+        require_skyfield()
 
         # datetime instances pass through
         if isinstance(x, datetime.datetime):
@@ -232,56 +217,10 @@ class SolarIrradianceSpectrum(Spectrum):
             return 1.0
 
         else:
-            # Note: The import is optional to avoid loading ephemeris data
-            # unless needed.
-            from skyfield.api import Loader, utc
-
-            # Suppress ResourceWarning from Skyfield's file handling
-            # Skyfield keeps ephemeris files open for performance reasons
-            with warnings.catch_warnings():
-                warnings.filterwarnings(
-                    "ignore", category=ResourceWarning, message=".*de421.bsp.*"
-                )
-
-                # Use cached ephemeris loader to avoid repeated file opens
-                global _SKYFIELD_LOADER, _SKYFIELD_EPHEMERIS
-                if _SKYFIELD_LOADER is None:
-                    try:
-                        # Use the skyfield-data package if available
-                        from skyfield_data import get_skyfield_data_path
-
-                        skyfield_cache_dir = get_skyfield_data_path()
-                    except ImportError:
-                        # Otherwise store ephemeris files in Eradiate's cache directory
-                        skyfield_cache_dir = (
-                            Path(settings["data_path"]) / "cached" / "skyfield"
-                        )
-                        skyfield_cache_dir.mkdir(parents=True, exist_ok=True)
-
-                    _SKYFIELD_LOADER = Loader(skyfield_cache_dir)
-
-                if _SKYFIELD_EPHEMERIS is None:
-                    _SKYFIELD_EPHEMERIS = _SKYFIELD_LOADER("de421.bsp")
-
-                # Get timescale
-                ts = _SKYFIELD_LOADER.timescale()
-
-                # Get Earth and Sun positions
-                earth = _SKYFIELD_EPHEMERIS["earth"]
-                sun = _SKYFIELD_EPHEMERIS["sun"]
-
-                # Convert datetime to skyfield time (ensure UTC timezone)
-                dt_utc = dt.replace(tzinfo=utc) if dt.tzinfo is None else dt
-                t = ts.from_datetime(dt_utc)
-
-                # Calculate Earth-Sun distance in AU
-                astrometric = earth.at(t).observe(sun)
-                distance_au = astrometric.distance().au
-
             # The irradiance scales as the inverse of d**2, where d is the
             # Earth-Sun distance divided by the AU (reference distance for all
             # Solar irradiance spectra in Eradiate).
-            return (1.0 / distance_au) ** 2
+            return (1.0 / earth_sun_distance(dt)) ** 2
 
     def _scale_total(self) -> float:
         """
