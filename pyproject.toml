@@ -28,29 +28,28 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
-  "aenum",
+  "aenum>=3.1.0",
   "axsdb>=0.1.2,<0.2",
   "attrs>=22.2",
   "cachetools>=5.3",
   "cerberus>=1.3",
-  "click",
+  "click>=8.0",
   "dessinemoi>=23.1.0",
   "dynaconf>=3.2",
   "joseki>=2.6.0",
-  "lazy_loader>=0.1",
+  "lazy_loader>=0.6",
   "matplotlib>=3.3",
-  "netcdf4",
+  "netcdf4>=1.6.5",
   "networkx>=3.0",
-  "numpy",
-  "pint",
+  "numpy>=1.26.0",
+  "pint>=0.24.0",
   "pinttrs>=23.2.0",
-  "pooch",
-  "rich",
-  "ruamel.yaml",
-  "scipy",
+  "pooch>=1.7.0",
+  "rich>=13.6.0",
+  "ruamel.yaml>=0.18.0",
+  "scipy>=1.12.0",
   "typer>=0.9.0",
-  "tqdm",
-  "shellingham!=1.5.1", # Typer dependency; exclude this version which raises while previous don't
+  "tqdm>=4.65.0",
   "xarray>=2023",
 ]
 
@@ -69,35 +68,36 @@ recommended = [
 
 [dependency-groups]
 docs = [
-  "myst-parser",
+  "myst-parser>=1.0.0",
   "nbsphinx>=0.9.0",
   "ipython", # Required for syntax highlighting in notebooks
-  "pytest", # Required for pytest-related function docs
-  "pytest-datadir", # Required for pytest-related function docs
-  "pytest-regressions", # Required for pytest-related function docs
-  "seaborn",
+  "pytest>=9.0", # Required for pytest-related function docs
+  "pytest-datadir>=1.7.0", # Required for pytest-related function docs
+  "pytest-regressions>=2.11", # Required for pytest-related function docs
+  "seaborn>=0.13.0",
   "sphinx>=9.0",
   "sphinxcontrib-bibtex>=2.0",
-  "sphinx-autobuild>=2024", # Capped because v2024+ raises
-  "sphinx-copybutton",
-  "sphinx-design",
-  "sphinx-iconify",
-  "shibuya",
+  "sphinx-autobuild>=2024",
+  "sphinx-copybutton>=0.5.2",
+  "sphinx-design>=0.6.0",
+  "sphinx-iconify>=0.3.0",
+  "shibuya>=2026.7.12",
 ]
 test = [
   "pytest>=9.0",
   "colorcet>=3.0",
   "pytest-cov",
   "pytest-json-report",
+  "pytest-datadir>=1.7.0",
   "pytest-regressions>=2.11",
   "asv==0.6.*",
-  "robotframework",
-  "pytest-robotframework",
-  "skyfield-data", # Load skyfield data from PyPI (better for CI)
+  "robotframework>=6.0",
+  "pytest-robotframework>=4.6.0",
+  "skyfield-data>=7.0.0", # Load skyfield data from PyPI (better for CI)
   "coverage>=7.13",
 ]
 dev = [
-  "bump-my-version>=1.2.0,<1.3.0",
+  "bump-my-version>=1.2.0",
   "uv==0.9.*", # Used to lock docs dependencies
   "pandas-stubs",
 ]
