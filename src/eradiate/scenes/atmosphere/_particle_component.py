@@ -24,7 +24,6 @@ from ._particle_dist import (
 from ..core import traverse
 from ..phase import ParticlePhaseFunction, PhaseFunction, phase_function_factory
 from ...attrs import define, documented
-from ...contexts import KernelContext
 from ...grid import SpatialGrid
 from ...kernel import SceneParameter
 from ...radprops import ParticleProperties
@@ -111,13 +110,6 @@ class ParticleComponent(AbstractHeterogeneousAtmosphere):
         type="bool",
         default="False",
     )
-
-    def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
-        # Inherit docstring
-        min_sigma_s = self.eval_sigma_s(ctx.si).min(axis=-1)
-        # Set to inf if sigma_s is zero
-        with np.errstate(divide="ignore"):
-            return 1.0 / min_sigma_s
 
 
 @define(eq=False, slots=False)

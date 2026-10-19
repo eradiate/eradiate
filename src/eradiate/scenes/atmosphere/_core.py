@@ -27,7 +27,6 @@ from ... import validators
 from ..._factory import Factory
 from ..._mode import get_mode
 from ...attrs import define, documented, get_doc
-from ...contexts import KernelContext
 from ...grid import SpatialGrid
 from ...kernel import (
     KernelSceneParameterFlags,
@@ -190,29 +189,6 @@ class Atmosphere(CompositeSceneElement, ABC):
         -------
         .PhaseFunction
             Phase function associated with the atmosphere.
-        """
-
-    # --------------------------------------------------------------------------
-    #                    Spatial and thermophysical properties
-    # --------------------------------------------------------------------------
-
-    @abstractmethod
-    def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
-        """
-        Compute a typical scattering mean free path. This rough estimate can be
-        used *e.g.* to compute a distance guaranteeing that the medium can be
-        considered optically thick.
-
-        Parameters
-        ----------
-        ctx : :class:`.KernelContext`
-            A context data structure containing parameters relevant for kernel
-            dictionary generation.
-
-        Returns
-        -------
-        mfp : quantity
-            Mean free path estimate.
         """
 
     # --------------------------------------------------------------------------

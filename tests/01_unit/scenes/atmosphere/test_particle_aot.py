@@ -4,7 +4,7 @@ import pint
 import pytest
 import xarray as xr
 
-from eradiate import KernelContext, fresolver
+from eradiate import fresolver
 from eradiate import unit_registry as ureg
 from eradiate.data.convert import make_prt_psd_v1
 from eradiate.grid import CartesianGrid, SpatialGrid
@@ -214,9 +214,6 @@ class TestParticleAOTComponent:
         np.testing.assert_allclose(layer.eval_sigma_a(si).m_as("1/km"), 0.2)
         np.testing.assert_allclose(layer.eval_albedo(si).m, 0.0)
 
-        ctx = KernelContext(si=si)
-        assert layer.eval_mfp(ctx).magnitude == np.inf
-
     @pytest.mark.parametrize("w", list([280.0, 550.0, 1600.0, 2400.0] * ureg.nm))
     def test_eval_mono_scattering_only(
         self, modes_all_unpolarized_double, particle_properties_scattering_only, w
@@ -243,9 +240,6 @@ class TestParticleAOTComponent:
         np.testing.assert_allclose(layer.eval_sigma_s(si).m_as("1/km"), 0.2)
         np.testing.assert_allclose(layer.eval_sigma_a(si).m_as("1/km"), 0.0)
         np.testing.assert_allclose(layer.eval_albedo(si).m, 1.0)
-
-        ctx = KernelContext(si=si)
-        assert np.isclose(layer.eval_mfp(ctx), 5.0 * ureg.km)
 
     @pytest.mark.parametrize("w", list([280.0, 550.0, 1600.0, 2400.0] * ureg.nm))
     def test_eval_general(
@@ -274,9 +268,6 @@ class TestParticleAOTComponent:
         np.testing.assert_allclose(layer.eval_sigma_s(si).m_as("1/km"), 0.8)
         np.testing.assert_allclose(layer.eval_sigma_a(si).m_as("1/km"), 0.2)
         np.testing.assert_allclose(layer.eval_albedo(si).m, 0.8)
-
-        ctx = KernelContext(si=si)
-        assert np.isclose(layer.eval_mfp(ctx), 1.25 * ureg.km)
 
     def test_kernel_scale(self, modes_all_single, particle_properties_test):
         """Scale parameter propagates to kernel dict and latter can be loaded."""

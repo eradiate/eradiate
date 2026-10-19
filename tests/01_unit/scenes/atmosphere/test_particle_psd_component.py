@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate.contexts import KernelContext
 from eradiate.data.convert import make_prt_core_v1, make_prt_psd_v1
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import ParticleAOTComponent, ParticlePSDComponent
@@ -151,7 +150,7 @@ class TestParticlePSDComponent:
         ids=["absorbing_and_scattering", "absorbing_only", "scattering_only"],
     )
     def test_eval_family_values(self, has_absorption, has_scattering, expected):
-        """sigma_t/albedo/sigma_s/sigma_a/mfp are consistent under all has_absorption/has_scattering combinations."""
+        """sigma_t/albedo/sigma_s/sigma_a are consistent under all has_absorption/has_scattering combinations."""
         psd = make_particle_psd_component(
             w=(1.0,),
             mass_concentration=0.5,
@@ -182,13 +181,6 @@ class TestParticlePSDComponent:
         sigma_a = psd.eval_sigma_a(si)
         assert sigma_a.shape == shape
         np.testing.assert_allclose(sigma_a.m_as("1/km"), expected["sigma_a"])
-
-        mfp = psd.eval_mfp(KernelContext(si=si))
-        assert mfp.shape == shape[:-1]  # per-column, not per-voxel
-        expected_mfp = (
-            np.inf if expected["sigma_s"] == 0.0 else 1.0 / expected["sigma_s"] * 1000.0
-        )
-        np.testing.assert_allclose(mfp.m_as("m"), expected_mfp)
 
     def test_eval_family_no_absorption_no_scattering(self):
         """Disabling both has_absorption and has_scattering raises at construction."""

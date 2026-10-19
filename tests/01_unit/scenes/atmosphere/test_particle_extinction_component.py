@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate import KernelContext
 from eradiate import unit_registry as ureg
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import ParticleExtinctionComponent
@@ -206,28 +205,6 @@ class TestParticleExtinctionComponent:
         np.testing.assert_allclose(
             ds.sigma_t.sel(x_cell=0.5, y_cell=1.5) * sigma_t_units.m_as("1/km"), 1.0
         )
-
-    def test_eval_mfp(self, mode_mono):
-        """eval_mfp (inherited from ParticleComponent) matches 1/min(sigma_s)."""
-        grid = _make_grid()
-        nx, ny, nz = grid.shape
-        sigma_t_values = np.full((1, nx, ny, nz), 1.0)
-        sigma_t_values[..., 0] = 4.0  # vary with z so min() is non-trivial
-        sigma_t, albedo = _make_data(grid, [550.0] * ureg.nm, sigma_t_values, 0.5)
-        particles = ParticleExtinctionComponent(
-            geometry=_make_geometry(grid),
-            sigma_t=sigma_t,
-            albedo=albedo,
-            phase_spec={"type": "isotropic"},
-        )
-
-        si = SpectralIndex.new(w=550.0 * ureg.nm)
-        ctx = KernelContext(si=si)
-        mfp = particles.eval_mfp(ctx)
-
-        sigma_s = particles.eval_sigma_s(si)
-        expected = 1.0 / sigma_s.min(axis=-1)
-        np.testing.assert_allclose(mfp.m_as("km"), expected.m_as("km"), equal_nan=False)
 
     def test_interp_wavelength(self, mode_mono):
         """sigma_t/albedo are linearly interpolated over w."""
