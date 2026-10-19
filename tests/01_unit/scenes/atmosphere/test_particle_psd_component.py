@@ -140,12 +140,12 @@ class TestParticlePSDComponent:
             (
                 True,
                 False,
-                {"sigma_t": 1.0, "albedo": 0.0, "sigma_s": 0.0, "sigma_a": 1.0},
+                {"sigma_t": 0.4, "albedo": 0.0, "sigma_s": 0.0, "sigma_a": 0.4},
             ),
             (
                 False,
                 True,
-                {"sigma_t": 1.0, "albedo": 1.0, "sigma_s": 1.0, "sigma_a": 0.0},
+                {"sigma_t": 0.6, "albedo": 1.0, "sigma_s": 0.6, "sigma_a": 0.0},
             ),
         ],
         ids=["absorbing_and_scattering", "absorbing_only", "scattering_only"],

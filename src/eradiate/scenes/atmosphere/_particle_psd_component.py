@@ -369,7 +369,27 @@ class ParticleStateComponent(ParticleComponent):
 
         extinction_values = np.where(amount.m > 0, extinction.m, 0.0)
         sigma_t_values = np.transpose(extinction_values, (2, 1, 0))  # (z,y,x)->(x,y,z)
+
+        # Remove the disabled interaction from the extinction
+        if not self.has_absorption:
+            sigma_t_values = sigma_t_values * self._eval_ssa(si, grid)
+        elif not self.has_scattering:
+            sigma_t_values = sigma_t_values * (1.0 - self._eval_ssa(si, grid))
+
         return sigma_t_values * col_units
+
+    def _eval_ssa(self, si: SpectralIndex, grid: SpatialGrid) -> np.ndarray:
+        """
+        Evaluate the particles' single-scattering albedo on ``grid``,
+        regardless of :attr:`has_absorption` and :attr:`has_scattering`.
+        Empty voxels are set to 0. Axis order is ``(x, y, z)``.
+        """
+        resampled = self.profile.resample_regular(grid)
+        _, ssa_grid = self._eval_ext_ssa_grid(si)
+        amount = resampled[self._amount]
+        albedo = self._interp_state(ssa_grid, resampled)
+        albedo_m = np.where(amount.m > 0, albedo.m_as(ureg.dimensionless), 0.0)
+        return np.transpose(albedo_m, (2, 1, 0))  # (z,y,x)->(x,y,z)
 
     def eval_albedo(
         self, si: SpectralIndex, grid: SpatialGrid | None = None
@@ -399,15 +419,7 @@ class ParticleStateComponent(ParticleComponent):
         """
         if self.has_absorption and self.has_scattering:
             grid = grid or self.geometry.grid
-            resampled = self.profile.resample_regular(grid)
-            _, ssa_grid = self._eval_ext_ssa_grid(si)
-
-            amount = resampled[self._amount]
-            albedo = self._interp_state(ssa_grid, resampled)
-            albedo_m = np.where(amount.m > 0, albedo.m, 0.0)
-
-            albedo_values = np.transpose(albedo_m, (2, 1, 0))  # (z,y,x)->(x,y,z)
-            return albedo_values * ureg.dimensionless
+            return self._eval_ssa(si, grid) * ureg.dimensionless
 
         if self.has_absorption:
             return ureg.Quantity(0.0, ureg.dimensionless)
