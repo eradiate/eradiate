@@ -724,6 +724,30 @@ class TestParticleAOTComponent:
         result = constructor(renamed, w=w, **kwargs).tau_ref.m_as("dimensionless")
         np.testing.assert_allclose(result, expected)
 
+    @pytest.mark.parametrize(
+        "method, kwargs",
+        [
+            ("from_psd_voxel", {"ix": 0, "iy": 1, "iz": 0}),
+            ("from_psd_composition", {"i_reff": 0, "i_veff": 0}),
+        ],
+    )
+    def test_from_psd_forwards_grid_and_interactions(self, mode_mono, method, kwargs):
+        """from_psd_* use the custom grid in the output geometry and forward has_absorption/has_scattering."""
+        psd = make_particle_psd_component(
+            n_x=2, n_y=2, n_z=2, w=(1.0,), has_absorption=False
+        )
+        grid = CartesianGrid(
+            edges_x=psd.geometry.grid.edges_x,
+            edges_y=psd.geometry.grid.edges_y,
+            levels=np.linspace(0.0, 3.0, 5) * ureg.km,
+        ).centered()
+        constructor = getattr(ParticleAOTComponent, method)
+
+        result = constructor(psd, w=ureg.Quantity(1.0, "micron"), grid=grid, **kwargs)
+        assert result.geometry.grid is grid
+        assert not result.has_absorption
+        assert result.has_scattering
+
     def test_from_psd_composition_matches_psd_component(self, mode_mono):
         """from_psd_composition: when the fixed (reff, veff) matches the component's own composition, per-voxel sigma_t matches exactly."""
         psd = make_particle_psd_component(
