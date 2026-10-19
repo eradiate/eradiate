@@ -1,7 +1,7 @@
 Aerosol / particles (Aer, deprecated)
 =====================================
 
-.. _sec-data-formats-aer_core_v2:
+.. _sec-data_formats-aer_core_v2:
 
 Aer-Core v2 (legacy) [``aer_core_v2``]
 --------------------------------------
@@ -112,7 +112,7 @@ Normalization conventions
       * ``imom``
       * ``nmommax``
 
-.. _sec-data-formats-aer_v1:
+.. _sec-data_formats-aer_v1:
 
 Aer v1 (legacy) [``aer_v1``]
 ----------------------------
@@ -183,7 +183,7 @@ The following conversion components are provided:
       * Aer-Core v2
     - * :func:`.libradtran_to_aer_core_v2`
       * libRadtran / MOPSMAP
-      * Aer-Core v2, or :ref:`sec-data-formats-prt_psd_v1` when the input
+      * Aer-Core v2, or :ref:`sec-data_formats-prt_psd_v1` when the input
         varies over ``reff``
     - * :func:`.libradtran_to_aer_v1`
       * libRadtran / MOPSMAP

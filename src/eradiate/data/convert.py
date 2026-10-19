@@ -227,7 +227,7 @@ def make_prt_psd_v1(
     check: Literal["none", "fast", "full"] | None = None,
 ) -> xr.Dataset:
     """
-    Create a new dataset in the Prt-Psd v1 format.
+    Create a new dataset in the Prt-PSD v1 format.
 
     Parameters
     ----------
@@ -548,12 +548,12 @@ def _shared_attrs(datasets: list[xr.Dataset]) -> dict:
 
 def concat_particles_veff(datasets: list[xr.Dataset]) -> xr.Dataset:
     """
-    Concatenate several Prt-Psd v1 datasets along the ``veff`` dimension.
+    Concatenate several Prt-PSD v1 datasets along the ``veff`` dimension.
 
     Parameters
     ----------
     datasets : list of xr.Dataset
-        Prt-Psd v1 datasets (as produced by :func:`make_prt_psd_v1`),
+        Prt-PSD v1 datasets (as produced by :func:`make_prt_psd_v1`),
         each with a ``reff``/``veff``-dimensioned layout. Every dataset may
         cover one or several ``veff`` values. All datasets must share the
         same ``w``, ``reff``, and ``phamat`` coordinates.
@@ -561,7 +561,7 @@ def concat_particles_veff(datasets: list[xr.Dataset]) -> xr.Dataset:
     Returns
     -------
     xr.Dataset
-        Prt-Psd v1 dataset with a ``veff`` dimension spanning the concatenation
+        Prt-PSD v1 dataset with a ``veff`` dimension spanning the concatenation
         of all input datasets' ``veff`` values. ``iangle``/``imom`` are
         padded to the largest size found across inputs. Only attributes common
         to all input datasets are retained.
@@ -633,8 +633,8 @@ def aer_v1_to_aer_core_v2(
     check: Literal["none", "fast", "full"] = "full",
 ) -> xr.Dataset:
     """
-    Convert a dataset in the :ref:`Aer v1 <sec-data-formats-aer_v1>`
-    format to :ref:`Aer-Core v2 <sec-data-formats-aer_core_v2>`.
+    Convert a dataset in the :ref:`Aer v1 <sec-data_formats-aer_v1>`
+    format to :ref:`Aer-Core v2 <sec-data_formats-aer_core_v2>`.
 
     Parameters
     ----------
@@ -769,7 +769,7 @@ def libradtran_to_prt(
 ) -> xr.Dataset:
     """
     Convert a libRadtran scattering particle property dataset to Prt-Core v1,
-    or to Prt-Psd v1 when ``ds`` varies over ``reff``.
+    or to Prt-PSD v1 when ``ds`` varies over ``reff``.
 
     Parameters
     ----------
@@ -795,7 +795,7 @@ def libradtran_to_prt(
         Apply validation checks to the output.
 
     veff : float, optional
-        The effective variance used to build Prt-Psd v1 output. When ``ds`` has
+        The effective variance used to build Prt-PSD v1 output. When ``ds`` has
         a ``reff`` dimension and ``veff`` is not given, it defaults to
         ``1 / (param_alpha + 3)``, the standard gamma-distribution relation,
         computed from ``ds.attrs["param_alpha"]``.
@@ -812,7 +812,7 @@ def libradtran_to_prt(
       dataset is constructed as the union of the libRadtran grids for all
       coefficients; all coefficients are then interpolated linearly in μ space
       on the angular points that were missing for them. The same construction
-      applies independently at each ``reff`` point for Prt-Psd v1 output.
+      applies independently at each ``reff`` point for Prt-PSD v1 output.
     """
     PHAMAT_TO_IDX = [
         # Coefficients for spherical particles

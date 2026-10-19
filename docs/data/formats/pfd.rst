@@ -1,7 +1,7 @@
 Particle field (Pfd)
 ====================
 
-.. _sec-data-formats-pfd_core_v1:
+.. _sec-data_formats-pfd_core_v1:
 
 Pfd-Core v1 [``pfd_core_v1``]
 -----------------------------
@@ -10,7 +10,7 @@ Dense, per-voxel description of a spatially varying particle field.
 Typically used for clouds. Every voxel of the grid carries a value: the
 local particle size distribution parameters and the mass concentration used
 to scale optical properties looked up from a
-:ref:`Prt-Psd v1 <sec-data-formats-prt_psd_v1>` dataset. Voxels with no
+:ref:`Prt-Cloud v1 <sec-data_formats-prt_psd_v1>` dataset. Voxels with no
 particles simply carry a mass concentration of zero.
 
 The grid is described by the ``x_levels``/``y_levels``/``z_levels`` arrays of

@@ -7,7 +7,7 @@ Eradiate's built-in particle radiative property datasets are managed by the
 data store (see :ref:`sec-data-intro` for details).
 
 Scattering particle properties are provided as xarray Datasets in a format
-documented in :ref:`the dedicated page <sec-data-formats-aer_v1>`.
+documented in :ref:`the dedicated page <sec-data_formats-aer_v1>`.
 
 Dataset index
 -------------
