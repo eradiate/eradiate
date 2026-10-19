@@ -680,6 +680,12 @@ class ParticleAOTComponent(ParticleComponent):
             wavelength[0], i_reff, i_veff, sigma_t
         )
 
+        geometry = (
+            particle_psd_component.geometry
+            if grid is particle_psd_component.geometry.grid
+            else attrs.evolve(particle_psd_component.geometry, grid=grid)
+        )
+
         return cls(
             bottom=grid.levels[iz],
             top=grid.levels[iz + 1],
@@ -687,7 +693,9 @@ class ParticleAOTComponent(ParticleComponent):
             w_ref=wavelength[0],
             tau_ref=tau_ref,
             particle_properties=phase_ds,
-            geometry=particle_psd_component.geometry,
+            geometry=geometry,
+            has_absorption=particle_psd_component.has_absorption,
+            has_scattering=particle_psd_component.has_scattering,
         )
 
     @classmethod
