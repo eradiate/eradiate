@@ -24,7 +24,7 @@ def _weights_converter(x):
     for _ in range(np.ndim(dt_value)):
         dt_value = dt_value[0]
     if callable(dt_value):
-        return x
+        return list(x)
     return np.array(x, dtype=np.float64)
 
 
