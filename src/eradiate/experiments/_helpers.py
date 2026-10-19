@@ -152,6 +152,13 @@ def check_piecewise_compatible(
         )
         return False, debug_message
 
+    if not geometry.grid.is_1d:
+        debug_message = (
+            "Piecewise integrator not compatible with a grid with horizontal "
+            "resolution."
+        )
+        return False, debug_message
+
     if atmosphere is None or not isinstance(
         atmosphere, AbstractHeterogeneousAtmosphere
     ):
