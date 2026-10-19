@@ -34,11 +34,11 @@ def get_package_requirements(pyproject_path):
         pyproject = tomlkit.load(f)
 
     req = Requirement(
-        [
+        next(
             x
             for x in pyproject["project"]["optional-dependencies"]["kernel"]
             if x.startswith("eradiate-mitsuba")
-        ][0]
+        )
     )
     return req.specifier
 
@@ -54,9 +54,9 @@ def get_mi_header_versions(header_path):
         contents,
     ).groupdict()
     eradiate_mi_version = re.search(
-        r"#define\ ERD\_MI\_VERSION\_MAJOR\ (?P<major>\d+)\n"
-        r"#define\ ERD\_MI\_VERSION\_MINOR\ (?P<minor>\d+)\n"
-        r"#define\ ERD\_MI\_VERSION\_PATCH\ (?P<patch>\d+)",
+        r"#define\ ERADIATE\_MI\_VERSION\_MAJOR\ (?P<major>\d+)\n"
+        r"#define\ ERADIATE\_MI\_VERSION\_MINOR\ (?P<minor>\d+)\n"
+        r"#define\ ERADIATE\_MI\_VERSION\_PATCH\ (?P<patch>\d+)",
         contents,
     ).groupdict()
     result = {
@@ -112,7 +112,7 @@ def get_git_submodule_status():
     cmd = ["git", "submodule", "status"]
     s = _run(cmd)
     sections = s.split("\n")
-    mi_submodule = [x for x in sections if "ext/mitsuba" in x][0].strip()
+    mi_submodule = next(x for x in sections if "ext/mitsuba" in x).strip()
     result = {
         "hash_mismatch": mi_submodule.startswith("+"),
         "hash": mi_submodule.strip("+").split()[0][:9],
@@ -223,7 +223,7 @@ def _check_mitsuba_requirements(
 
     print()
     if diagnostics:
-        messages = [diag for diag in diagnostics.values()]
+        messages = list(diagnostics.values())
         print("\n\n".join(messages))
         return 1
     else:
@@ -238,7 +238,6 @@ def cli():
 
     This tool performs release operations for the Eradiate software package.
     """
-    pass
 
 
 @cli.command()
@@ -270,14 +269,15 @@ def update_citation():
     """
     target_version = Version(os.environ["RELEASE_VERSION"])
 
-    citation_file = open("CITATION.cff").read()
+    with open("CITATION.cff") as f:
+        citation_file = f.read()
     print(citation_file)
 
     # Replace version
     m = re.search(
         r"^version: (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$",
         citation_file,
-        flags=re.M,
+        flags=re.MULTILINE,
     )
     if m:
         old_version = Version(f"{m[1]}.{m[2]}.{m[3]}")
