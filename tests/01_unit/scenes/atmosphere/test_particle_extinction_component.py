@@ -263,8 +263,11 @@ class TestParticleExtinctionComponent:
         expected = np.broadcast_to(grid.layers.m_as("km"), (nx, ny, nz))
         np.testing.assert_allclose(result, expected, equal_nan=False)
 
-    def test_xy_passthrough(self, mode_mono):
-        """x/y variation passes through unchanged, aligned with the grid."""
+    @pytest.mark.parametrize(
+        "dims", [("w", "x", "y", "z"), ("z", "y", "w", "x")], ids=["wxyz", "zywx"]
+    )
+    def test_xy_passthrough(self, mode_mono, dims):
+        """x/y variation passes through unchanged, aligned with the grid, for any input dim order."""
         grid = _make_grid()
         nx, ny, nz = grid.shape
         xy_pattern = np.arange(nx * ny).reshape(nx, ny, 1).astype(float)
@@ -273,8 +276,8 @@ class TestParticleExtinctionComponent:
 
         particles = ParticleExtinctionComponent(
             geometry=_make_geometry(grid),
-            sigma_t=sigma_t,
-            albedo=albedo,
+            sigma_t=sigma_t.transpose(*dims),
+            albedo=albedo.transpose(*dims),
             phase_spec={"type": "isotropic"},
         )
 
