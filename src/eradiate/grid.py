@@ -1063,6 +1063,69 @@ class SphericalGrid(SpatialGrid):
             sector_width=sector_width,
             band_width=band_width,
         )
+        self.kernel_azimuths()  # Raises if the azimuth range is unsupported
+
+    def kernel_azimuths(self) -> tuple[float, float, int]:
+        """
+        Placement of the azimuth range in the kernel's [-π, π] convention.
+
+        ``sphericalcoordsvolume`` maps the azimuth
+        :math:`\\varphi = \\operatorname{atan2}(y, x) \\in [-\\pi, \\pi]` to the
+        volume's Z coordinate. The grid's azimuth range is placed in that
+        interval as follows:
+
+        * if it fits after a shift by a multiple of 2π, the edges are shifted
+          and the data order is unchanged;
+        * if it covers the full circle and the ±π cut falls on a cell edge,
+          the edges become [-π, π] and the data must be rolled along the
+          azimuth axis so that the first kernel cell is the one starting at
+          the cut;
+        * a single cell covering the full circle maps to [-π, π].
+
+        Returns
+        -------
+        phi_min, phi_max : float
+            Kernel-side azimuth bounds in radian.
+
+        n_roll : int
+            Number of cells by which volume data must be rolled backwards
+            along the azimuth axis (``np.roll(data, -n_roll, axis=0)``).
+
+        Raises
+        ------
+        ValueError
+            If the range is wider than 2π, or crosses the ±π cut without
+            being a full circle with the cut on a cell edge.
+        """
+        a0, a1 = self.azimuths[[0, -1]].m_as(ureg.rad)
+        width = a1 - a0
+        two_pi = 2.0 * np.pi
+        full = bool(np.isclose(width, two_pi))
+
+        if width <= 0.0 or (width > two_pi and not full):
+            raise ValueError(
+                "azimuth range must be increasing and at most 2π wide, got "
+                f"{self.azimuths[[0, -1]]:~P}"
+            )
+
+        # Shift the range start into [-π, π)
+        phi_min = a0 - two_pi * np.floor((a0 + np.pi) / two_pi)
+        phi_max = phi_min + width
+        if phi_max <= np.pi or np.isclose(phi_max, np.pi):
+            return float(phi_min), float(phi_max), 0
+
+        if full:
+            if self.n_cells_x == 1:
+                return -np.pi, np.pi, 0
+            n_roll = (np.pi - phi_min) / self.sector_width.m_as(ureg.rad)
+            if np.isclose(n_roll, np.round(n_roll)):
+                return -np.pi, np.pi, int(np.round(n_roll)) % self.n_cells_x
+
+        raise ValueError(
+            f"azimuth range {self.azimuths[[0, -1]]:~P} crosses the ±180° cut "
+            "of the kernel's [-180°, 180°] azimuth convention; only full-circle "
+            "ranges with the cut on a cell edge can cross it"
+        )
 
     @property
     def sectors(self) -> pint.Quantity:
@@ -1153,8 +1216,7 @@ class SphericalGrid(SpatialGrid):
         azimuths and altitude.
         """
 
-        phi_min = self.azimuths.min().m_as(ureg.rad)
-        phi_max = self.azimuths.max().m_as(ureg.rad)
+        phi_min, phi_max, _ = self.kernel_azimuths()
         theta_min = self.colatitudes.min().m_as(ureg.rad)
         theta_max = self.colatitudes.max().m_as(ureg.rad)
 

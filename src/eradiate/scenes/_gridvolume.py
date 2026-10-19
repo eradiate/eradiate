@@ -12,6 +12,7 @@ from .geometry import (
     SphericalShellGeometry,
 )
 from ..contexts import KernelContext
+from ..grid import SphericalGrid
 from ..kernel import (
     DictParameter,
     KernelSceneParameterFlags,
@@ -88,7 +89,8 @@ def make_volume_grid(
     For :class:`.PlaneParallelGeometry` and ``geometry=None`` (1D
     plane-parallel case), the grid is transposed from ``(x, y, z)`` to
     ``(z, y, x)``. For :class:`.SphericalShellGeometry` the ``(x, y, z)``
-    layout is used as-is.
+    layout is used as-is, with the azimuth (X) axis rolled as prescribed by
+    :meth:`.SphericalGrid.kernel_azimuths`.
 
     Returns
     -------
@@ -109,6 +111,10 @@ def make_volume_grid(
     )
     if geometry is None or isinstance(geometry, PlaneParallelGeometry):
         grid = grid.T
+    elif isinstance(geometry.grid, SphericalGrid):
+        _, _, n_roll = geometry.grid.kernel_azimuths()
+        if n_roll:
+            grid = np.roll(grid, -n_roll, axis=0)
     if extra_dim:
         grid = grid.reshape(*grid.shape, 1)
     if to_mi:
