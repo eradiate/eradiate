@@ -63,16 +63,16 @@ def make_profile_dataset(
     reff=10.0,
     veff=0.1,
     mass_concentration=1e-3,
-    z_levels=None,
+    z_edges=None,
 ) -> xr.Dataset:
     """Build a dense Pfd-Core v1 profile dataset filling every voxel of ``grid``."""
     n_x, n_y = grid.n_cells_x, grid.n_cells_y
-    z_levels_km = (
-        np.asarray(z_levels, dtype=float)
-        if z_levels is not None
+    z_edges_km = (
+        np.asarray(z_edges, dtype=float)
+        if z_edges is not None
         else grid.levels.m_as("km")
     )
-    n_z = len(z_levels_km) - 1
+    n_z = len(z_edges_km) - 1
     shape = (n_z, n_y, n_x)
 
     def _to_zyx(value):
@@ -91,9 +91,9 @@ def make_profile_dataset(
         ),
     }
     coords = {
-        "x_levels": (["x_levels"], grid.edges_x.m_as("km"), {"units": "kilometer"}),
-        "y_levels": (["y_levels"], grid.edges_y.m_as("km"), {"units": "kilometer"}),
-        "z_levels": (["z_levels"], z_levels_km, {"units": "kilometer"}),
+        "x_edges": (["x_edges"], grid.edges_x.m_as("km"), {"units": "kilometer"}),
+        "y_edges": (["y_edges"], grid.edges_y.m_as("km"), {"units": "kilometer"}),
+        "z_edges": (["z_edges"], z_edges_km, {"units": "kilometer"}),
     }
 
     return xr.Dataset(data_vars=data_vars, coords=coords)
@@ -136,11 +136,11 @@ def make_particle_psd_component(
     )
 
 
-def make_z_profile_particle_psd_component(z_levels_src, target_levels):
+def make_z_profile_particle_psd_component(z_edges_src, target_levels):
     """Build a single-reff/veff :class:`.ParticlePSDComponent` with a z-varying
     profile, resampled onto ``target_levels``."""
-    z_levels_src = np.asarray(z_levels_src, dtype=float)
-    z_centers_src = 0.5 * (z_levels_src[:-1] + z_levels_src[1:])
+    z_edges_src = np.asarray(z_edges_src, dtype=float)
+    z_centers_src = 0.5 * (z_edges_src[:-1] + z_edges_src[1:])
 
     target_grid = CartesianGrid(
         edges_x=np.array([-1.0, 1.0]) * ureg.km,
@@ -157,7 +157,7 @@ def make_z_profile_particle_psd_component(z_levels_src, target_levels):
         reff=10.0 + z_centers_src,
         veff=0.1,
         mass_concentration=z_centers_src,
-        z_levels=z_levels_src,
+        z_edges=z_edges_src,
     )
     # Properties has a single reff/veff point, so ext/ssa interpolation is
     # constant regardless of the profile's own per-voxel reff, which is

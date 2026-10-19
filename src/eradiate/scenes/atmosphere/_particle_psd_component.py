@@ -74,8 +74,9 @@ class ParticleStateComponent(ParticleComponent):
     ``properties``, that is treated as a simple lookup table by this class.
     Spatial resampling of the profile onto the render grid is axis-dependent:
     the ``x`` and ``y`` grids are not interpolated and must match the render
-    grid's extent and resolution; the ``z`` axis is resampled onto the render
-    grid's layers using a nearest-neighbour filter.
+    grid's extent and resolution; each render grid layer takes the values of
+    the profile layer containing its centre, and layers outside the profile's
+    vertical extent get zero for every variable.
 
     Extinction and albedo are interpolated per voxel in Python; the phase
     function is interpolated per voxel by the
@@ -143,6 +144,13 @@ class ParticleStateComponent(ParticleComponent):
             raise ValueError(
                 f"'profile' has no variable for state dimension(s) {missing} "
                 f"(expected {[self._binding[d] for d in missing]})"
+            )
+
+        # Checked here rather than on 'amount', which subclasses redefine
+        if self.amount is not None and self.amount not in self.profile.variables:
+            raise ValueError(
+                f"'profile' has no amount variable '{self.amount}' "
+                f"(available: {list(self.profile.variables)})"
             )
 
     amount: str | None = documented(
@@ -505,7 +513,7 @@ class ParticleStateComponent(ParticleComponent):
     def _profile_regular_grid(self) -> CartesianGrid:
         """
         Return a regular :class:`.CartesianGrid` aligned with
-        and fine enough to resolve the profile's z-levels.
+        and fine enough to resolve the profile's z edges.
         """
 
         def _regularize(arr: np.ndarray) -> np.ndarray:
@@ -515,14 +523,17 @@ class ParticleStateComponent(ParticleComponent):
             n = round((arr[-1] - arr[0]) / min_gap) * 2 + 1
             return np.linspace(arr[0], arr[-1], n)
 
-        x_levels = self.profile.data["x_levels"].values * ureg.km
-        y_levels = self.profile.data["y_levels"].values * ureg.km
-        z_levels = _regularize(self.profile.data["z_levels"].values) * ureg.km
+        x_edges = to_quantity(self.profile.data["x_edges"])
+        y_edges = to_quantity(self.profile.data["y_edges"])
+        z_edges = (
+            _regularize(to_quantity(self.profile.data["z_edges"]).m_as(ureg.km))
+            * ureg.km
+        )
 
         return CartesianGrid(
-            edges_x=x_levels,
-            edges_y=y_levels,
-            levels=z_levels,
+            edges_x=x_edges,
+            edges_y=y_edges,
+            levels=z_edges,
         ).centered()
 
     def to_profile_regular_grid(self):
@@ -549,7 +560,7 @@ class ParticlePSDComponent(ParticleStateComponent):
 
     The particle component is defined by a dense volumetric *profile*
     (per-voxel microphysical properties, in the
-    :ref:`Pfd-core v1 <sec-data_formats-pfd_core_v1>` format) and particle
+    :ref:`Pfd-PSD v1 <sec-data_formats-pfd_psd_v1>` format) and particle
     properties (in the :ref:`Prt-Psd v1 <sec-data_formats-prt_psd_v1>` format).
     """
 
@@ -677,18 +688,18 @@ class ParticlePSDComponent(ParticleStateComponent):
                 ),
             },
             coords={
-                "x_levels": (
-                    ["x_levels"],
+                "x_edges": (
+                    ["x_edges"],
                     target_grid.edges_x.m_as(ureg.kilometer),
                     level_units,
                 ),
-                "y_levels": (
-                    ["y_levels"],
+                "y_edges": (
+                    ["y_edges"],
                     target_grid.edges_y.m_as(ureg.kilometer),
                     level_units,
                 ),
-                "z_levels": (
-                    ["z_levels"],
+                "z_edges": (
+                    ["z_edges"],
                     target_grid.levels.m_as(ureg.kilometer),
                     level_units,
                 ),

@@ -1,3 +1,4 @@
+import attrs
 import numpy as np
 import pint
 import pytest
@@ -705,6 +706,33 @@ class TestParticleAOTComponent:
         np.testing.assert_allclose(tau_ref[mask], expected_tau)
         np.testing.assert_allclose(tau_ref[~mask], 0.0)
 
+    @pytest.mark.parametrize(
+        "method, kwargs",
+        [
+            ("from_psd_voxel", {"ix": 0, "iy": 1, "iz": 0}),
+            ("from_psd_composition", {"i_reff": 0, "i_veff": 0}),
+        ],
+    )
+    def test_from_psd_custom_bindings(self, mode_mono, method, kwargs):
+        """from_psd_* read profile variables through the component's amount and state variable bindings."""
+        psd = make_particle_psd_component(
+            n_x=2, n_y=2, n_z=2, w=(1.0,), mass_concentration=0.5, ext_value=2.0
+        )
+        renamed = attrs.evolve(
+            psd,
+            profile=psd.profile.data.rename(
+                {"reff": "r_eff", "veff": "v_eff", "mass_concentration": "lwc"}
+            ),
+            state_variables={"reff": "r_eff", "veff": "v_eff"},
+            amount="lwc",
+        )
+        w = ureg.Quantity(1.0, "micron")
+        constructor = getattr(ParticleAOTComponent, method)
+
+        expected = constructor(psd, w=w, **kwargs).tau_ref.m_as("dimensionless")
+        result = constructor(renamed, w=w, **kwargs).tau_ref.m_as("dimensionless")
+        np.testing.assert_allclose(result, expected)
+
     def test_from_psd_composition_matches_psd_component(self, mode_mono):
         """from_psd_composition: when the fixed (reff, veff) matches the component's own composition, per-voxel sigma_t matches exactly."""
         psd = make_particle_psd_component(
@@ -743,10 +771,10 @@ class TestParticleAOTComponent:
 
     def test_from_psd_composition_irregular_z(self, mode_mono):
         """from_psd_composition preserves density exactly when the source profile has an irregular z-grid."""
-        z_levels_src = [0.0, 1.0, 1.5, 4.0]
+        z_edges_src = [0.0, 1.0, 1.5, 4.0]
         target_levels = np.linspace(0.0, 4.0, 9)
         psd, grid = make_z_profile_particle_psd_component(
-            z_levels_src, target_levels=target_levels
+            z_edges_src, target_levels=target_levels
         )
         w = ureg.Quantity(1.0, "micron")
         si = MonoSpectralIndex(w=w)

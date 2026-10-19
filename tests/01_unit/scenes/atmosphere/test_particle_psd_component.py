@@ -97,11 +97,11 @@ class TestParticlePSDComponent:
             ParticlePSDComponent.convert(object())
 
     @pytest.mark.parametrize(
-        "z_levels",
+        "z_edges",
         [[0.0, 1.0, 2.0, 3.0, 4.0], [0.0, 1.0, 1.5, 4.0]],
         ids=["regular", "irregular"],
     )
-    def test_profile_regular_grid(self, z_levels):
+    def test_profile_regular_grid(self, z_edges):
         """_profile_regular_grid halves the profile's smallest z-gap and preserves x/y extent."""
         grid = CartesianGrid(
             edges_x=np.array([0.0, 2.0, 4.0]) * ureg.km,
@@ -109,19 +109,19 @@ class TestParticlePSDComponent:
             levels=np.array([0.0, 1.0, 2.0, 3.0, 4.0]) * ureg.km,
         )
         geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
-        profile = make_profile_dataset(grid, z_levels=z_levels)
+        profile = make_profile_dataset(grid, z_edges=z_edges)
         psd = ParticlePSDComponent(
             profile=profile, properties=make_properties_dataset(), geometry=geometry
         )
 
         reg_grid = psd._profile_regular_grid()
 
-        z_levels = np.asarray(z_levels)
-        min_gap = np.diff(z_levels).min()
+        z_edges = np.asarray(z_edges)
+        min_gap = np.diff(z_edges).min()
         levels_km = reg_grid.levels.m_as("km")
 
-        np.testing.assert_allclose(levels_km[0], z_levels[0])
-        np.testing.assert_allclose(levels_km[-1], z_levels[-1])
+        np.testing.assert_allclose(levels_km[0], z_edges[0])
+        np.testing.assert_allclose(levels_km[-1], z_edges[-1])
         np.testing.assert_allclose(np.diff(levels_km), min_gap / 2.0)
 
         assert reg_grid.n_cells_x == grid.n_cells_x
@@ -235,18 +235,18 @@ class TestParticlePSDComponent:
                 ),
             },
             coords={
-                "x_levels": (
-                    ["x_levels"],
+                "x_edges": (
+                    ["x_edges"],
                     grid.edges_x.m_as("km"),
                     {"units": "kilometer"},
                 ),
-                "y_levels": (
-                    ["y_levels"],
+                "y_edges": (
+                    ["y_edges"],
                     grid.edges_y.m_as("km"),
                     {"units": "kilometer"},
                 ),
-                "z_levels": (
-                    ["z_levels"],
+                "z_edges": (
+                    ["z_edges"],
                     grid.levels.m_as("km"),
                     {"units": "kilometer"},
                 ),
@@ -393,6 +393,17 @@ class TestParticlePSDComponent:
         with pytest.raises(ValueError, match=r"reff.*veff"):
             ParticlePSDComponent(
                 profile=profile, properties=properties_no_size_dist, geometry=geometry
+            )
+
+    def test_missing_amount_raises(self):
+        """Constructing with an amount absent from the profile raises."""
+        psd = make_particle_psd_component()
+        with pytest.raises(ValueError, match="no amount variable 'lwc'"):
+            ParticlePSDComponent(
+                profile=psd.profile,
+                properties=psd.properties,
+                geometry=psd.geometry,
+                amount="lwc",
             )
 
     def test_from_particle_aot_roundtrip(self, mode_mono):
