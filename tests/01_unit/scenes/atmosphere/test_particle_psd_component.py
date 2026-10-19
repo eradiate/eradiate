@@ -1,3 +1,4 @@
+import attrs
 import numpy as np
 import pytest
 import xarray as xr
@@ -6,7 +7,10 @@ from eradiate.data.convert import make_prt_core_v1, make_prt_psd_v1
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import ParticleAOTComponent, ParticlePSDComponent
 from eradiate.scenes.geometry import PlaneParallelGeometry
-from eradiate.scenes.phase import GriddedParticlePhaseFunction
+from eradiate.scenes.phase import (
+    GriddedParticlePhaseFunction,
+    HenyeyGreensteinPhaseFunction,
+)
 from eradiate.spectral.index import MonoSpectralIndex
 from eradiate.units import unit_registry as ureg
 
@@ -287,11 +291,9 @@ class TestParticlePSDComponent:
         assert psd.phase is not psd.phase
 
     def test_phase_override_bypasses_construction(self):
-        """Setting _phase short-circuits the phase property's normal construction."""
-        psd = make_particle_psd_component(w=(1.0,))
-        sentinel = object()
-        psd._phase = sentinel
-        assert psd.phase is sentinel
+        """Setting phase short-circuits the phase property's normal construction."""
+        psd = attrs.evolve(make_particle_psd_component(w=(1.0,)), phase={"type": "hg"})
+        assert isinstance(psd.phase, HenyeyGreensteinPhaseFunction)
 
     def test_eval_phase_data_matches_grid_evals(self):
         """_eval_phase_data flattens eval_phase's result and combines it with _eval_ext_ssa_grid's."""
