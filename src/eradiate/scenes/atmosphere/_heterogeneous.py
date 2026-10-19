@@ -19,7 +19,6 @@ from ._particle_component import ParticleComponent
 from ..core import traverse
 from ..phase import MultiPhaseFunction, PhaseFunction
 from ...attrs import define, documented
-from ...contexts import KernelContext
 from ...grid import SpatialGrid
 from ...kernel import SearchSceneParameter
 from ...spectral.index import SpectralIndex
@@ -162,11 +161,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         # Inherit docstring
         return max([component.top for component in self.components])
 
-    def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
-        # Inherit docstring
-        mfp = [component.eval_mfp(ctx=ctx) for component in self.components]
-        return max(mfp)
-
     # --------------------------------------------------------------------------
     #                       Radiative properties
     # --------------------------------------------------------------------------
@@ -193,31 +187,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         np.divide(sigma_s, sigma_t, where=sigma_t != 0.0, out=albedo)
 
         return albedo * ureg.dimensionless
-
-    @property
-    def _template_phase(self) -> dict:
-        # Inherit docstring
-        return traverse(self.phase)[0].data
-
-    @property
-    def _params_phase(self) -> dict:
-        # Inherit docstring
-        umap = traverse(self.phase)[1].data
-
-        # Add prefix and lookup strategy to all entries
-        result = {}
-
-        for uparam_key, uparam in umap.items():
-            result[uparam_key] = attrs.evolve(
-                uparam,
-                search=SearchSceneParameter(
-                    node_type=mi.PhaseFunction,
-                    node_id=self.phase_id,
-                    parameter_relpath=uparam_key,
-                ),
-            )
-
-        return result
 
     @cache_by_id
     def _eval_sigma_t_impl(self, si: SpectralIndex) -> pint.Quantity:

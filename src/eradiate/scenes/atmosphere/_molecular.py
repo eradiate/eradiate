@@ -16,7 +16,6 @@ from ..core import traverse
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ... import converters
 from ...attrs import define, documented
-from ...contexts import KernelContext
 from ...grid import SpatialGrid
 from ...radprops import AtmosphereRadProfile, RadProfile, get_default_absdb
 from ...spectral.index import SpectralIndex
@@ -212,16 +211,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     def thermoprops(self) -> xr.Dataset:
         # Inherit docstring
         return self._thermoprops
-
-    def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
-        # Inherit docstring
-        min_sigma_s = self.radprops_profile.eval_sigma_s(ctx.si).min()
-        return np.divide(
-            1.0,
-            min_sigma_s,
-            where=min_sigma_s != 0.0,
-            out=np.array([np.inf]),
-        )
 
     # --------------------------------------------------------------------------
     #                             Radiative properties

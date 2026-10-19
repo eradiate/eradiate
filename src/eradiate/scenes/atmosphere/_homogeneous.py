@@ -9,7 +9,6 @@ from ..core import traverse
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ..spectra import AirScatteringCoefficientSpectrum, Spectrum, spectrum_factory
 from ...attrs import define, documented
-from ...contexts import KernelContext
 from ...kernel import (
     DictParameter,
     KernelSceneParameterFlags,
@@ -109,14 +108,6 @@ class HomogeneousAtmosphere(Atmosphere):
     # --------------------------------------------------------------------------
     #                           Evaluation methods
     # --------------------------------------------------------------------------
-
-    def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
-        # Inherit docstring
-        return (
-            1.0 / self.eval_sigma_s(ctx.si)
-            if self.eval_sigma_s(ctx.si).m != 0.0
-            else 1.0 / self.eval_sigma_a(ctx.si)
-        )
 
     def eval_albedo(self, si: SpectralIndex) -> pint.Quantity:
         """

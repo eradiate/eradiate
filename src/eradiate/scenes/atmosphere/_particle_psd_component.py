@@ -24,7 +24,6 @@ from ..core import traverse
 from ..geometry import PlaneParallelGeometry
 from ..phase import GriddedParticlePhaseFunction
 from ...attrs import define, documented, get_doc
-from ...contexts import KernelContext
 from ...data.convert import make_prt_psd_v1
 from ...grid import CartesianGrid, SpatialGrid
 from ...kernel import SceneParameter
@@ -495,16 +494,6 @@ class ParticleStateComponent(ParticleComponent):
         return self.eval_sigma_t(si, grid) * (
             1.0 - self.eval_albedo(si, grid).m_as(ureg.dimensionless)
         )
-
-    def eval_mfp(self, ctx: KernelContext) -> pint.Quantity:
-        # Inherit docstring
-        if not (self.has_absorption or self.has_scattering):
-            raise RuntimeError(
-                "At least one of 'has_absorption' or 'has_scattering' must be True."
-            )
-        min_sigma_s = self.eval_sigma_s(ctx.si).min(axis=-1)
-        with np.errstate(divide="ignore"):
-            return 1.0 / min_sigma_s
 
     # --------------------------------------------------------------------------
     #                       Profile-aligned geometry
