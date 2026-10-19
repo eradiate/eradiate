@@ -478,9 +478,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             * ``sigma_a``: absorption coefficient (optional);
             * ``sigma_s``: scattering coefficient (optional).
 
-            and coordinates:
+            with dimensions ``(x_cell, y_cell, z_layer)`` and coordinates:
 
-            * ``z``: altitude.
+            * ``x_cell``: X cell centres (azimuth for a spherical grid);
+            * ``y_cell``: Y cell centres (colatitude for a spherical grid);
+            * ``z_layer``: layer centre altitude.
         """
         if grid is None:
             grid = self.geometry.grid
@@ -539,8 +541,8 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         return xr.Dataset(
             data_vars,
             coords={
-                "x_layer": (
-                    "x_layer",
+                "x_cell": (
+                    "x_cell",
                     grid.cells_x.magnitude,
                     {
                         "units": f"{symbol(grid.cells_x.units)}",
@@ -548,11 +550,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                         "long_name": "cells x position",
                     },
                 ),
-                "y_layer": (
-                    "y_layer",
+                "y_cell": (
+                    "y_cell",
                     grid.cells_y.magnitude,
                     {
-                        "units": f"{symbol(grid.layers.units)}",
+                        "units": f"{symbol(grid.cells_y.units)}",
                         "standard_name": "cells_y",
                         "long_name": "cells y position",
                     },

@@ -10,6 +10,7 @@ from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import IsotropicPhaseFunction
 from eradiate.spectral.index import SpectralIndex
 from eradiate.testing.types import check_scene_element
+from eradiate.units import symbol
 
 # ------------------------------------------------------------------------------
 #                                   Fixtures
@@ -179,6 +180,31 @@ class TestParticleExtinctionComponent:
         )
         np.testing.assert_allclose(
             particles.eval_sigma_s(si).m_as("1/km"), expected_s, equal_nan=False
+        )
+
+    def test_eval_radprops(self, mode_mono):
+        """eval_radprops returns (x_cell, y_cell, z_layer) data with matching coords."""
+        grid = _make_grid()
+        sigma_t, albedo = _make_data(grid, [550.0] * ureg.nm, 1.0, 0.8)
+        particles = ParticleExtinctionComponent(
+            geometry=_make_geometry(grid),
+            sigma_t=sigma_t,
+            albedo=albedo,
+            phase_spec={"type": "isotropic"},
+        )
+
+        ds = particles.eval_radprops(SpectralIndex.new(w=550.0 * ureg.nm))
+        assert dict(ds.sizes) == {"x_cell": 2, "y_cell": 2, "z_layer": 4}
+        for dim, cells in [
+            ("x_cell", grid.cells_x),
+            ("y_cell", grid.cells_y),
+            ("z_layer", grid.layers),
+        ]:
+            assert ds[dim].attrs["units"] == symbol(cells.units)
+            np.testing.assert_allclose(ds[dim].values, cells.magnitude)
+        sigma_t_units = ureg(ds.sigma_t.attrs["units"])
+        np.testing.assert_allclose(
+            ds.sigma_t.sel(x_cell=0.5, y_cell=1.5) * sigma_t_units.m_as("1/km"), 1.0
         )
 
     def test_eval_mfp(self, mode_mono):
