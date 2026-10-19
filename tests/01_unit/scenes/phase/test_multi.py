@@ -351,11 +351,14 @@ def test_multi_normalized(weights, expected):
     np.testing.assert_allclose(result.weights, expected, rtol=1e-6)
 
 
-def test_multi_normalized_callable_weights():
+@pytest.mark.parametrize("container", [list, tuple])
+def test_multi_normalized_callable_weights(container):
     """with_normalized_weights() evaluates callable weights at the given context before normalizing."""
     phase = MultiPhaseFunction(
         components=[{"type": "isotropic"}, {"type": "rayleigh"}],
-        weights=[lambda si: np.array([1.0, 3.0]), lambda si: np.array([3.0, 1.0])],
+        weights=container(
+            [lambda si: np.array([1.0, 3.0]), lambda si: np.array([3.0, 1.0])]
+        ),
     )
     ctx = KernelContext(si=MonoSpectralIndex(w=ureg.Quantity(1.0, "micron")))
 
