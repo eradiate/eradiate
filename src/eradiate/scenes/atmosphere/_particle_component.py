@@ -790,6 +790,14 @@ class ParticleAOTComponent(ParticleComponent):
         )
 
 
+def _to_wxyz(value: Any) -> Any:
+    # Reorder once at construction so that per-wavelength evaluation never
+    # transposes; dim set validation is left to the validator
+    if isinstance(value, xr.DataArray):
+        return value.transpose("w", "x", "y", "z", ..., missing_dims="ignore")
+    return value
+
+
 @define(eq=False, slots=False)
 class ParticleExtinctionComponent(ParticleComponent):
     """
@@ -799,8 +807,8 @@ class ParticleExtinctionComponent(ParticleComponent):
     This class is parameterized by absolute values of extinction and single
     -scattering albedo provided through spatially defined data arrays.
 
-    ``sigma_t`` and ``albedo`` must be defined over exactly the ``(w, x, y,
-    z)`` dimensions, with ``w`` wavelength and ``x``/``y``/``z`` spatial axes
+    ``sigma_t`` and ``albedo`` must be defined over exactly the ``w``, ``x``,
+    ``y`` and ``z`` dimensions, in any order, with ``w`` wavelength and ``x``/``y``/``z`` spatial axes
     aligned with the scene geometry's grid. They are interpolated over ``w``
     and ``z``; ``x``/``y`` are used as-is, so their values must already match
     the scene geometry's horizontal grid shape.
@@ -811,10 +819,11 @@ class ParticleExtinctionComponent(ParticleComponent):
     sigma_t: xr.DataArray = documented(
         attrs.field(
             kw_only=True,
+            converter=_to_wxyz,
             validator=attrs.validators.instance_of(xr.DataArray),
         ),
         doc="Extinction coefficient. A ``DataArray`` whose dimensions are "
-        "exactly ``(w, x, y, z)``: ``w`` is wavelength, ``x``/``y``/``z`` "
+        "exactly ``w``, ``x``, ``y`` and ``z``, in any order: ``w`` is wavelength, ``x``/``y``/``z`` "
         "are spatial axes aligned with the scene geometry's grid. Values "
         "and the ``w``/``z`` coordinates must carry a ``'units'`` entry in "
         "their ``attrs``, as read by :func:`.to_quantity`. Must have "
@@ -826,6 +835,7 @@ class ParticleExtinctionComponent(ParticleComponent):
     albedo: xr.DataArray = documented(
         attrs.field(
             kw_only=True,
+            converter=_to_wxyz,
             validator=attrs.validators.instance_of(xr.DataArray),
         ),
         doc="Single-scattering albedo. Same dimension and unit-metadata "
@@ -852,7 +862,7 @@ class ParticleExtinctionComponent(ParticleComponent):
         if set(value.dims) != {"w", "x", "y", "z"}:
             raise ValueError(
                 f"while validating '{attribute.name}': dimensions must be "
-                "exactly ('w', 'x', 'y', 'z')"
+                f"exactly 'w', 'x', 'y', 'z' (got {value.dims})"
             )
         if self.sigma_t.sizes != self.albedo.sizes:
             raise ValueError(
