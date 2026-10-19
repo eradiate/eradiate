@@ -188,9 +188,9 @@ class ParticleProfile:
         Resample the profile onto a regular grid.
 
         The profile's own ``x_levels``/``y_levels`` must already be regularly
-        spaced and must match ``grid``'s extent and resolution exactly. ``z``
-        is resampled onto ``grid``'s layer centres by nearest-neighbour
-        lookup.
+        spaced and must match ``grid``'s extent and resolution exactly. Each
+        ``grid`` layer takes the values of the profile layer containing its
+        centre.
 
         Parameters
         ----------
@@ -253,8 +253,10 @@ class ParticleProfile:
         y_levels_out: pint.Quantity,
     ) -> ParticleProfile:
         """
-        Resample this profile onto ``grid``'s ``z`` layer centres by
-        nearest-neighbour lookup.
+        Resample this profile onto ``grid``'s ``z`` layers. Each target layer
+        takes the values of the source layer containing its centre; target
+        layers whose centre lies outside the profile's extent get a zero mass
+        concentration.
 
         Parameters
         ----------
@@ -269,9 +271,8 @@ class ParticleProfile:
             A new profile resampled onto ``grid``'s vertical layers.
         """
         z_levels_src = to_quantity(self.data["z_levels"]).m_as(ureg.meter)
-        z_centers_src = 0.5 * (z_levels_src[:-1] + z_levels_src[1:])
         z_centers_tgt = grid.layers.m_as(ureg.meter)
-        n_z_src = len(z_centers_src)
+        n_z_src = len(z_levels_src) - 1
 
         mass_concentration_unit = str(self.mass_concentration.units)
         reff_unit = str(self.reff.units)
@@ -281,16 +282,15 @@ class ParticleProfile:
         veff_src = self.veff.m  # (z, y, x)
         mass_concentration_src = self.mass_concentration.m  # (z, y, x)
 
-        # Nearest-neighbour lookup
-        il = np.searchsorted(z_centers_src, z_centers_tgt, side="right") - 1
-        in_range = (z_centers_tgt >= z_centers_src[0]) & (
-            z_centers_tgt <= z_centers_src[-1]
+        # Look up the source layer containing each target layer centre
+        inn = np.clip(
+            np.searchsorted(z_levels_src, z_centers_tgt, side="right") - 1,
+            0,
+            n_z_src - 1,
         )
-        il_safe = np.clip(il, 0, n_z_src - 2)
-        iu_safe = il_safe + 1
-
-        mid = 0.5 * (z_centers_src[il_safe] + z_centers_src[iu_safe])
-        inn = np.where(z_centers_tgt < mid, il_safe, iu_safe)
+        in_range = (z_centers_tgt >= z_levels_src[0]) & (
+            z_centers_tgt <= z_levels_src[-1]
+        )
 
         reff_tgt = reff_src[inn, :, :]
         veff_tgt = veff_src[inn, :, :]
