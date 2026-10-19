@@ -605,10 +605,12 @@ class ParticleAOTComponent(ParticleComponent):
         ------
         ValueError
             If ``(ix, iy, iz)`` is out of bounds, or the voxel there has no
-            cloud (zero ``mass_concentration``).
+            cloud (zero amount).
         """
         grid = grid or particle_psd_component.geometry.grid
         resampled_profile = particle_psd_component.profile.resample_regular(grid).data
+        amount_name = particle_psd_component._amount
+        binding = particle_psd_component._binding
 
         sizes = resampled_profile.sizes
         in_bounds = (
@@ -616,8 +618,7 @@ class ParticleAOTComponent(ParticleComponent):
         )
 
         has_cloud = (
-            in_bounds
-            and float(resampled_profile["mass_concentration"].values[iz, iy, ix]) > 0.0
+            in_bounds and float(resampled_profile[amount_name].values[iz, iy, ix]) > 0.0
         )
         if not has_cloud:
             raise ValueError(f"No cloud voxel found at ({ix}, {iy}, {iz}).")
@@ -628,11 +629,9 @@ class ParticleAOTComponent(ParticleComponent):
         wavelength = np.atleast_1d(w)
         pp = particle_psd_component.properties
 
-        reff_qty = to_quantity(profile_point["reff"]).item()
-        veff_qty = to_quantity(profile_point["veff"]).item()
-        mass_concentration_quantity = to_quantity(
-            profile_point["mass_concentration"]
-        ).item()
+        reff_qty = to_quantity(profile_point[binding["reff"]]).item()
+        veff_qty = to_quantity(profile_point[binding["veff"]]).item()
+        amount_qty = to_quantity(profile_point[amount_name]).item()
 
         i_reff = int(
             np.argmin(np.abs(pp.reff.m_as(ureg.micron) - reff_qty.m_as(ureg.micron)))
@@ -647,7 +646,7 @@ class ParticleAOTComponent(ParticleComponent):
 
         # Evaluate on the wavelength axis first, then pick this exact point.
         m_extinction = pp.eval_ext(wavelength)[0, i_reff, i_veff]
-        sigma_t = (m_extinction * mass_concentration_quantity).to(col_units)
+        sigma_t = (m_extinction * amount_qty).to(col_units)
 
         layer_height = to_quantity(
             xr.DataArray(np.diff(grid.levels.m_as(ureg.km)), attrs={"units": "km"})
@@ -714,7 +713,7 @@ class ParticleAOTComponent(ParticleComponent):
         component with one fixed ``(reff, veff)`` grid point.
 
         Every voxel's own ``reff``/``veff`` is ignored in favour of the
-        given grid point; only its ``mass_concentration`` is used to build
+        given grid point; only its amount is used to build
         the per-voxel density (``tau_ref`` and ``distribution``).
 
         Parameters
@@ -753,8 +752,8 @@ class ParticleAOTComponent(ParticleComponent):
         m_extinction = pp.eval_ext(wavelength)[0, i_reff, i_veff]
 
         resampled = particle_psd_component.profile.resample_regular(grid)
-        mass_concentration = to_quantity(resampled.data["mass_concentration"])
-        sigma_t = m_extinction * mass_concentration  # (z, y, x)
+        amount = resampled[particle_psd_component._amount]
+        sigma_t = m_extinction * amount  # (z, y, x)
 
         sigma_t_grid = np.transpose(sigma_t.m_as(col_units), (2, 1, 0))  # ->(x,y,z)
 

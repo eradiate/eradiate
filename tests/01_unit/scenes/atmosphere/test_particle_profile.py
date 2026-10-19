@@ -8,14 +8,14 @@ from eradiate.scenes.atmosphere import ParticleProfile
 
 
 def make_profile_dataset(
-    reff, veff, mass_concentration, x_levels, y_levels, z_levels
+    reff, veff, mass_concentration, x_edges, y_edges, z_edges
 ) -> xr.Dataset:
     """
     Build a dense Pfd-Core v1 profile dataset. ``reff``/``veff``/
     ``mass_concentration`` must be broadcastable to shape
-    ``(len(z_levels) - 1, len(y_levels) - 1, len(x_levels) - 1)``.
+    ``(len(z_edges) - 1, len(y_edges) - 1, len(x_edges) - 1)``.
     """
-    shape = (len(z_levels) - 1, len(y_levels) - 1, len(x_levels) - 1)
+    shape = (len(z_edges) - 1, len(y_edges) - 1, len(x_edges) - 1)
     return xr.Dataset(
         data_vars={
             "reff": (
@@ -33,9 +33,9 @@ def make_profile_dataset(
                 np.broadcast_to(mass_concentration, shape).copy(),
                 {"units": "g/m^3"},
             ),
-            "x_levels": (["x_levels"], np.asarray(x_levels), {"units": "km"}),
-            "y_levels": (["y_levels"], np.asarray(y_levels), {"units": "km"}),
-            "z_levels": (["z_levels"], np.asarray(z_levels), {"units": "km"}),
+            "x_edges": (["x_edges"], np.asarray(x_edges), {"units": "km"}),
+            "y_edges": (["y_edges"], np.asarray(y_edges), {"units": "km"}),
+            "z_edges": (["z_edges"], np.asarray(z_edges), {"units": "km"}),
         },
     )
 
@@ -47,34 +47,65 @@ class TestConstruction:
             reff=10.0,
             veff=0.1,
             mass_concentration=1e-3,
-            x_levels=[0.0, 1.0],
-            y_levels=[0.0, 1.0],
-            z_levels=[0.0, 1.0],
+            x_edges=[0.0, 1.0],
+            y_edges=[0.0, 1.0],
+            z_edges=[0.0, 1.0],
         )
         ParticleProfile(data=ds)
 
-    @pytest.mark.parametrize(
-        "missing",
-        [
-            "reff",
-            "veff",
-            "mass_concentration",
-            "x_levels",
-            "y_levels",
-            "z_levels",
-        ],
-    )
-    def test_missing_variable_raises(self, missing):
-        """Constructing from a dataset missing any required variable raises."""
+    def test_arbitrary_variables(self):
+        """Field variables are not prescribed."""
         ds = make_profile_dataset(
             reff=10.0,
             veff=0.1,
             mass_concentration=1e-3,
-            x_levels=[0.0, 1.0],
-            y_levels=[0.0, 1.0],
-            z_levels=[0.0, 1.0],
+            x_edges=[0.0, 1.0],
+            y_edges=[0.0, 1.0],
+            z_edges=[0.0, 1.0],
+        ).rename({"mass_concentration": "number_concentration"})
+        ds = ds.drop_vars(["reff", "veff"])
+        profile = ParticleProfile(data=ds)
+        assert profile.variables == ("number_concentration",)
+
+    @pytest.mark.parametrize("missing", ["x_edges", "y_edges", "z_edges"])
+    def test_missing_variable_raises(self, missing):
+        """Constructing from a dataset missing a structural variable raises."""
+        ds = make_profile_dataset(
+            reff=10.0,
+            veff=0.1,
+            mass_concentration=1e-3,
+            x_edges=[0.0, 1.0],
+            y_edges=[0.0, 1.0],
+            z_edges=[0.0, 1.0],
         ).drop_vars(missing)
         with pytest.raises(ValueError, match="missing required variable"):
+            ParticleProfile(data=ds)
+
+    def test_no_field_variable_raises(self):
+        """Constructing from a dataset with only structural variables raises."""
+        ds = make_profile_dataset(
+            reff=10.0,
+            veff=0.1,
+            mass_concentration=1e-3,
+            x_edges=[0.0, 1.0],
+            y_edges=[0.0, 1.0],
+            z_edges=[0.0, 1.0],
+        ).drop_vars(["reff", "veff", "mass_concentration"])
+        with pytest.raises(ValueError, match="no variable besides"):
+            ParticleProfile(data=ds)
+
+    def test_wrong_dims_raises(self):
+        """Constructing from a dataset with a field variable not on (z, y, x) raises."""
+        ds = make_profile_dataset(
+            reff=10.0,
+            veff=0.1,
+            mass_concentration=1e-3,
+            x_edges=[0.0, 1.0],
+            y_edges=[0.0, 1.0],
+            z_edges=[0.0, 1.0],
+        )
+        ds["reff"] = ds["reff"].transpose("x", "y", "z")
+        with pytest.raises(ValueError, match=r"offending variable.*reff"):
             ParticleProfile(data=ds)
 
 
@@ -86,9 +117,9 @@ class TestVariablesAndGetitem:
                 reff=10.0,
                 veff=0.1,
                 mass_concentration=1e-3,
-                x_levels=[0.0, 1.0],
-                y_levels=[0.0, 1.0],
-                z_levels=[0.0, 1.0],
+                x_edges=[0.0, 1.0],
+                y_edges=[0.0, 1.0],
+                z_edges=[0.0, 1.0],
             )
         )
 
@@ -96,16 +127,16 @@ class TestVariablesAndGetitem:
         """variables lists non-structural data_vars only."""
         assert set(profile.variables) == {"reff", "veff", "mass_concentration"}
 
-    def test_getitem_matches_named_property(self, profile):
-        """profile[name] returns the same cached value as the matching property."""
-        assert profile["reff"] is profile.reff
-        assert profile["veff"] is profile.veff
-        assert profile["mass_concentration"] is profile.mass_concentration
+    def test_getitem_cached(self, profile):
+        """profile[name] returns the same cached quantity on every access."""
+        for name in profile.variables:
+            assert profile[name] is profile[name]
+        assert profile["reff"].units == ureg.micron
 
     def test_getitem_rejects_structural_variable(self, profile):
-        """profile[name] raises for a structural (x/y/z_levels) variable."""
-        with pytest.raises(KeyError, match="x_levels"):
-            profile["x_levels"]
+        """profile[name] raises for a structural (x/y/z_edges) variable."""
+        with pytest.raises(KeyError, match="x_edges"):
+            profile["x_edges"]
 
     def test_getitem_rejects_unknown_variable(self, profile):
         """profile[name] raises for a name that isn't a profile variable at all."""
@@ -126,9 +157,9 @@ class TestResampleRegular:
                 reff=reff,
                 veff=0.1,
                 mass_concentration=mass_concentration,
-                x_levels=[0.0, 1.0, 2.0],
-                y_levels=[0.0, 1.0, 2.0],
-                z_levels=[0.0, 1.0, 4.0],
+                x_edges=[0.0, 1.0, 2.0],
+                y_edges=[0.0, 1.0, 2.0],
+                z_edges=[0.0, 1.0, 4.0],
             )
         )
 
@@ -167,9 +198,9 @@ class TestResampleRegular:
                 reff=10.0,
                 veff=0.1,
                 mass_concentration=1e-3,
-                x_levels=[0.0, 1.0],
-                y_levels=[0.0, 1.0],
-                z_levels=[1.0, 2.0],
+                x_edges=[0.0, 1.0],
+                y_edges=[0.0, 1.0],
+                z_edges=[1.0, 2.0],
             )
         )
         grid = CartesianGrid(
@@ -183,10 +214,26 @@ class TestResampleRegular:
             [0.0, 0.0, 1e-3, 1e-3, 0.0, 0.0],
         )
 
+    def test_extra_variable(self, profile, grid):
+        """Variables beyond reff/veff/mass_concentration are accessible and resampled."""
+        ds = profile.data.copy()
+        ds["number_concentration"] = (
+            ["z", "y", "x"],
+            np.full((2, 2, 2), 5.0),
+            {"units": "cm^-3"},
+        )
+        extended = ParticleProfile(data=ds)
+        assert extended["number_concentration"].units == ureg("cm^-3").units
+
+        result = extended.resample_regular(grid)
+        np.testing.assert_allclose(
+            result["number_concentration"].m_as("cm^-3"), np.full((4, 2, 2), 5.0)
+        )
+
     def test_output_is_regular_on_all_axes(self, profile, grid):
-        """The resampled profile's x/y/z levels are all evenly spaced."""
+        """The resampled profile's x/y/z edges are all evenly spaced."""
         result = profile.resample_regular(grid)
-        for name in ("x_levels", "y_levels", "z_levels"):
+        for name in ("x_edges", "y_edges", "z_edges"):
             values = result.data[name].values
             step = np.diff(values)
             np.testing.assert_allclose(step, step[0])
@@ -196,9 +243,9 @@ class TestResampleRegular:
         result = profile.resample_regular(grid)
         ParticleProfile(data=result.data)
 
-    @pytest.mark.parametrize("axis", ["x_levels", "y_levels"])
+    @pytest.mark.parametrize("axis", ["x_edges", "y_edges"])
     def test_irregular_source_raises(self, profile, grid, axis):
-        """resample_regular rejects a profile with an irregular x_levels/y_levels axis."""
+        """resample_regular rejects a profile with an irregular x_edges/y_edges axis."""
         ds = profile.data.copy()
         ds[axis] = ([axis], np.array([0.0, 1.0, 3.0]), {"units": "km"})
         irregular = ParticleProfile(data=ds)
@@ -232,13 +279,13 @@ class TestResampleRegular:
                 reff=10.0,
                 veff=0.1,
                 mass_concentration=1e-3,
-                x_levels=np.linspace(0.0, 2 * np.pi, 3),
-                y_levels=np.linspace(0.0, np.pi, 3),
-                z_levels=[0.0, 1.0],
+                x_edges=np.linspace(0.0, 2 * np.pi, 3),
+                y_edges=np.linspace(0.0, np.pi, 3),
+                z_edges=[0.0, 1.0],
             )
         )
-        profile.data["x_levels"].attrs["units"] = "radian"
-        profile.data["y_levels"].attrs["units"] = "radian"
+        profile.data["x_edges"].attrs["units"] = "radian"
+        profile.data["y_edges"].attrs["units"] = "radian"
 
         grid = SphericalGrid(
             levels=np.array([0.0, 1.0]) * ureg.km,
@@ -247,23 +294,3 @@ class TestResampleRegular:
         )
         result = profile.resample_regular(grid)
         assert result.data["reff"].shape == (1, 2, 2)
-
-
-class TestToReffVeffVolumes:
-    def test_empty_voxels_are_nan(self):
-        """Voxels with zero mass_concentration carry NaN, regardless of their stored reff/veff."""
-        ds = make_profile_dataset(
-            reff=[[[10.0, 10.0]]],
-            veff=0.1,
-            mass_concentration=[[[1e-3, 0.0]]],
-            x_levels=[0.0, 1.0, 2.0],
-            y_levels=[0.0, 1.0],
-            z_levels=[0.0, 1.0],
-        )
-        profile = ParticleProfile(data=ds)
-        reff_volume, veff_volume = profile.to_reff_veff_volumes()
-
-        assert reff_volume.shape == (2, 1, 1)
-        np.testing.assert_allclose(reff_volume.m_as("micron")[0, 0, 0], 10.0)
-        assert np.isnan(reff_volume.m_as("micron")[1, 0, 0])
-        assert np.isnan(veff_volume.m_as(ureg.dimensionless)[1, 0, 0])
