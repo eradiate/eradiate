@@ -153,9 +153,16 @@ def test_multi_geometry(mode_mono, geometry):
         ([0.25, 0.75], False),
         ([0.0, 1.0], False),
         ([1.0, 0.0], False),
+        ([np.linspace(1.0, 0.0, 4), np.linspace(0.0, 1.0, 4)], False),
         ([np.linspace(1.0, 0.0, 4), np.linspace(0.0, 1.0, 4)], True),
     ],
-    ids=["scalar_even", "scalar_all_second", "scalar_all_first", "array"],
+    ids=[
+        "scalar_even",
+        "scalar_all_second",
+        "scalar_all_first",
+        "array_no_geometry",
+        "array",
+    ],
 )
 def test_multi_kernel_dict_2_components(mode_mono, weights, use_small_grid):
     """

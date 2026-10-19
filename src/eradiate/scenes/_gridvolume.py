@@ -85,9 +85,10 @@ def make_volume_grid(
 
     Raises ``ValueError`` if geometry is None and the grid is not one dimensional.
 
-    For :class:`.PlaneParallelGeometry` the grid is transposed from
-    ``(x, y, z)`` to ``(z, y, x)``. For :class:`.SphericalShellGeometry` the
-    ``(x, y, z)`` layout is used as-is.
+    For :class:`.PlaneParallelGeometry` and ``geometry=None`` (1D
+    plane-parallel case), the grid is transposed from ``(x, y, z)`` to
+    ``(z, y, x)``. For :class:`.SphericalShellGeometry` the ``(x, y, z)``
+    layout is used as-is.
 
     Returns
     -------
@@ -106,7 +107,7 @@ def make_volume_grid(
         extra_kwargs=extra_kwargs,
         units=units,
     )
-    if isinstance(geometry, PlaneParallelGeometry):
+    if geometry is None or isinstance(geometry, PlaneParallelGeometry):
         grid = grid.T
     if extra_dim:
         grid = grid.reshape(*grid.shape, 1)
