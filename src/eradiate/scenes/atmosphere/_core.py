@@ -402,6 +402,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     extremum_resolution: tuple[int, int, int] = documented(
         attrs.field(
             default=(1, 1, 1),
+            converter=tuple,
             validator=validators.is_vector3,
         ),
         doc="[EXPERIMENTAL] Resolution of the extremum structure. Applies to "
@@ -749,9 +750,14 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             extr_conf = {
                 "type": "extremum_spherical",
                 "rmin": self.geometry.atmosphere_volume_rmin,
+                "to_world": self.geometry.atmosphere_volume_to_world,
             }
         elif not piecewise:
-            extr_conf = {"type": "extremum_grid"}
+            extr_conf = {
+                "type": "extremum_grid",
+                "to_world": self.geometry.grid.to_world,
+                "wrap_mode": str(self.geometry.wrap_mode).lower(),
+            }
             aabb_min = self.geometry.bbox.min.m_as(length_units)
             # The geometry bbox inserts a sub-surface padding. We want the data to be
             # evaluated on the entire geometry extent in x and y directions, but we
@@ -770,8 +776,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     **extr_conf,
                     "volume": {"type": "ref", "id": sigma_t_id},
                     "resolution": self.extremum_resolution,
-                    "to_world": self.geometry.grid.to_world,
-                    "wrap_mode": str(self.geometry.wrap_mode).lower(),
                 }
             medium = "eoheterogeneous"
 

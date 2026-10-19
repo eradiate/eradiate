@@ -451,6 +451,15 @@ def test_heterogenous_extremum_type(
     elif geometry == "spherical_shell":
         assert "extremum" in template
         assert template["extremum"]["type"] == "extremum_spherical"
+        # The extremum is placed like the sphericalcoordsvolume it bounds
+        np.testing.assert_allclose(
+            template["extremum"]["to_world"].matrix,
+            atmosphere.geometry.atmosphere_volume_to_world.matrix,
+        )
+
+    # The kernel accepts the extremum specification
+    si = default_spectral_index(atmosphere.molecular_atmosphere)
+    check_scene_element(atmosphere, ctx=KernelContext(si=si))
 
 
 @pytest.mark.parametrize(
