@@ -131,7 +131,7 @@ intersphinx_mapping = {
         "https://eradiate.readthedocs.io/projects/mitsuba/latest/",
         None,
     ),
-    "axsdb": ("https://axsdb.readthedocs.io/en/latest/", None),
+    "axsdb": ("https://axsdb.readthedocs.io/latest/", None),
     "cachetools": ("https://cachetools.readthedocs.io/en/stable/", None),
     "dateutil": ("https://dateutil.readthedocs.io/en/stable/", None),
     "dessinemoi": ("https://dessinemoi.readthedocs.io/en/stable/", None),

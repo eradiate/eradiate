@@ -53,7 +53,7 @@ def _clip_and_interp(
 class ParticleProfile:
     """
     Dense, per-voxel description of a spatially varying particle field, in
-    the :ref:`Pfd-Core v1 <sec-data-formats-pfd_core_v1>` format.
+    the :ref:`Pfd-Core v1 <sec-data_formats-pfd_core_v1>` format.
     """
 
     data: xr.Dataset = documented(

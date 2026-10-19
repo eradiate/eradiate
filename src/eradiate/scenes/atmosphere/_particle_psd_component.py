@@ -108,7 +108,7 @@ class ParticleStateComponent(ParticleComponent):
     profile: ParticleProfile = documented(
         attrs.field(kw_only=True, converter=ParticleProfile.convert),
         doc="Dense volumetric state profile, in the "
-        ":ref:`Pfd-Core v1 <sec-data-formats-pfd_core_v1>` format. "
+        ":ref:`Pfd-Core v1 <sec-data_formats-pfd_core_v1>` format. "
         "This parameter has no default.",
         type="ParticleProfile",
         init_type="ParticleProfile or Dataset or path-like",
@@ -117,7 +117,7 @@ class ParticleStateComponent(ParticleComponent):
     properties: ParticleProperties = documented(
         attrs.field(kw_only=True, converter=ParticleProperties.convert),
         doc="Particle properties, in the "
-        ":ref:`Prt-psd v1 <sec-data-formats-prt_psd_v1>` format. "
+        ":ref:`Prt-psd v1 <sec-data_formats-prt_psd_v1>` format. "
         "This parameter has no default.",
         type="ParticleProperties",
         init_type="ParticleProperties or Dataset or path-like or str",
@@ -537,8 +537,8 @@ class ParticlePSDComponent(ParticleStateComponent):
 
     The particle component is defined by a dense volumetric *profile*
     (per-voxel microphysical properties, in the
-    :ref:`Pfd-core v1 <sec-data-formats-pfd_core_v1>` format) and particle
-    properties (in the :ref:`Prt-Psd v1 <sec-data-formats-prt_psd_v1>` format).
+    :ref:`Pfd-core v1 <sec-data_formats-pfd_core_v1>` format) and particle
+    properties (in the :ref:`Prt-Psd v1 <sec-data_formats-prt_psd_v1>` format).
     """
 
     amount: str | None = documented(

@@ -932,7 +932,7 @@ class TestLibradtranToAerCoreV2:
             np.testing.assert_array_equal(ds_result["nangles"].values, [5, 5])
 
     class TestReff:
-        """Tests for the multi-``reff`` input path, which produces Prt-Psd v1."""
+        """Tests for the multi-``reff`` input path, which produces Prt-PSD v1."""
 
         PARAM_ALPHA = 5.0
 

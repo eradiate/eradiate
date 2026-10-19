@@ -334,7 +334,7 @@ class TestParticleProperties:
     def test_has_size_distribution_false_for_aer_core_v2(self, pp):
         assert pp.has_size_distribution is False
 
-    def test_has_size_distribution_true_for_prt_cloud_v1(self):
+    def test_has_size_distribution_true_for_prt_psd_v1(self):
         pp = ParticleProperties(data=make_size_distribution_dataset())
         assert pp.has_size_distribution is True
 

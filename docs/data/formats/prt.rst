@@ -2,7 +2,7 @@ Particles (Prt)
 ===============
 
 
-.. _sec-data-formats-prt_core_v1:
+.. _sec-data_formats-prt_core_v1:
 
 Prt-Core v1 [``prt_core_v1``]
 -----------------------------
@@ -124,15 +124,15 @@ Normalization conventions
       * ``imom``
       * ``nmommax``
 
-.. see-also::
+.. seealso::
 
    The full specification of the ``aer_core_v2`` format:
-   :ref:`sec-data-formats-aer_core_v2`
+   :ref:`sec-data_formats-aer_core_v2`
 
 
-.. _sec-data-formats-prt_psd_v1:
+.. _sec-data_formats-prt_psd_v1:
 
-Prt-Psd v1 [``prt_psd_v1``]
+Prt-PSD v1 [``prt_psd_v1``]
 ---------------------------
 
 Extension of ``prt_core_v1`` for particle properties. This data format
@@ -162,7 +162,7 @@ Coordinates
       (*e.g.* "11", "12", etc.)
     * ``theta(w, reff, veff, iangle)``: float [angle]: scattering angle θ; NaN-padded beyond
       ``nangles[iw, ireff, iveff]``
-    * ``mu(w, reff, veff, iangle)``: float [—]: value of cos θ; NaN-padded beyond 
+    * ``mu(w, reff, veff, iangle)``: float [—]: value of cos θ; NaN-padded beyond
       ``nangles[iw, ireff, iveff]``
 
 Data variables
@@ -173,7 +173,7 @@ Data variables
     * ``phase(phamat, w, reff, veff, iangle)`` float [1 / sr]: value of the phase matrix;
       NaN-padded beyond ``nangles[iw, ireff, iveff]``
     * ``nangles(w, reff, veff)`` int [—]: number of valid angular samples per wavelength,
-      reff and veff; must be consistent with the NaN padding of ``theta``, ``mu``, and 
+      reff and veff; must be consistent with the NaN padding of ``theta``, ``mu``, and
       ``phase``
     * ``pmom(w, reff, veff, imom)`` float [—], optional: Legendre expansion coefficients
       of the (1,1) phase matrix element; NaN-padded beyond ``nmom[iw, ireff, iveff]``
@@ -188,4 +188,3 @@ Data variables
       regularly spaced
     * ``phamat`` conventions (valid values, and their implication for
       polarization and particle shape) are the same as ``prt_core_v1``
-
