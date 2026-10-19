@@ -1,8 +1,16 @@
+import numpy as np
 import pytest
 
 import eradiate
-from eradiate.experiments._helpers import measure_inside_atmosphere, surface_converter
+from eradiate import unit_registry as ureg
+from eradiate.experiments._helpers import (
+    check_piecewise_compatible,
+    measure_inside_atmosphere,
+    surface_converter,
+)
+from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import HeterogeneousAtmosphere
+from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.surface import BasicSurface
 
 
@@ -36,3 +44,21 @@ def test_helpers_surface_converter(mode_mono):
 
     # A dictionary specifying a BSDF is converted to a surface
     assert isinstance(surface_converter({"type": "lambertian"}), BasicSurface)
+
+
+@pytest.mark.parametrize("n_cells_x, expected", [(1, True), (2, False)])
+def test_helpers_check_piecewise_compatible_grid(
+    mode_mono, atmosphere_us_standard_mono, n_cells_x, expected
+):
+    # The piecewise integrator is rejected for grids with horizontal resolution
+    grid = CartesianGrid(
+        edges_x=np.linspace(-1.0, 1.0, n_cells_x + 1) * ureg.km,
+        edges_y=np.array([-1.0, 1.0]) * ureg.km,
+        levels=np.linspace(0.0, 120.0, 11) * ureg.km,
+    )
+    geometry = PlaneParallelGeometry(grid=grid)
+    atm = HeterogeneousAtmosphere(
+        geometry=geometry, molecular_atmosphere=atmosphere_us_standard_mono
+    )
+    compatible, _ = check_piecewise_compatible(geometry, atm)
+    assert compatible is expected
