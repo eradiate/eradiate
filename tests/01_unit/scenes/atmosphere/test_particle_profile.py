@@ -140,8 +140,8 @@ class TestResampleRegular:
             levels=np.linspace(0.0, 4.0, 5) * ureg.km,
         )
 
-    def test_nearest_neighbour_z(self, profile, grid):
-        """resample_regular picks each target z-layer's nearest source voxel."""
+    def test_containing_layer_z(self, profile, grid):
+        """resample_regular picks the source layer containing each target layer centre."""
         result = profile.resample_regular(grid)
         reff = result.data["reff"].values
         mass_concentration = result.data["mass_concentration"].values
@@ -157,7 +157,31 @@ class TestResampleRegular:
         assert mass_concentration[1, 1, 0] > 0
         np.testing.assert_allclose(reff[2, 1, 0], 12.0)
         assert mass_concentration[2, 1, 0] > 0
-        assert mass_concentration[3, 1, 0] == 0
+        np.testing.assert_allclose(reff[3, 1, 0], 12.0)
+        assert mass_concentration[3, 1, 0] > 0
+
+    def test_z_extent(self):
+        """Target layers inside a single-layer profile are filled, others zeroed."""
+        profile = ParticleProfile(
+            data=make_profile_dataset(
+                reff=10.0,
+                veff=0.1,
+                mass_concentration=1e-3,
+                x_levels=[0.0, 1.0],
+                y_levels=[0.0, 1.0],
+                z_levels=[1.0, 2.0],
+            )
+        )
+        grid = CartesianGrid(
+            edges_x=np.array([0.0, 1.0]) * ureg.km,
+            edges_y=np.array([0.0, 1.0]) * ureg.km,
+            levels=np.linspace(0.0, 3.0, 7) * ureg.km,
+        )
+        result = profile.resample_regular(grid)
+        np.testing.assert_array_equal(
+            result.data["mass_concentration"].values[:, 0, 0],
+            [0.0, 0.0, 1e-3, 1e-3, 0.0, 0.0],
+        )
 
     def test_output_is_regular_on_all_axes(self, profile, grid):
         """The resampled profile's x/y/z levels are all evenly spaced."""
