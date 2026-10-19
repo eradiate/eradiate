@@ -22,7 +22,11 @@ from ._particle_component import ParticleAOTComponent, ParticleComponent
 from ._particle_profile import ParticleProfile
 from ..core import traverse
 from ..geometry import PlaneParallelGeometry
-from ..phase import GriddedParticlePhaseFunction
+from ..phase import (
+    GriddedParticlePhaseFunction,
+    PhaseFunction,
+    phase_function_factory,
+)
 from ...attrs import define, documented, get_doc
 from ...data.convert import make_prt_psd_v1
 from ...grid import CartesianGrid, SpatialGrid
@@ -185,7 +189,23 @@ class ParticleStateComponent(ParticleComponent):
         default="{}",
     )
 
-    _phase: GriddedParticlePhaseFunction = None
+    _phase: PhaseFunction | None = documented(
+        attrs.field(
+            default=None,
+            kw_only=True,
+            converter=attrs.converters.optional(phase_function_factory.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(PhaseFunction)
+            ),
+            repr=False,
+        ),
+        doc="Phase function override. If unset, a "
+        ":class:`.GriddedParticlePhaseFunction` is built from :attr:`profile` "
+        "and :attr:`properties`.",
+        type=".PhaseFunction or None",
+        init_type=".PhaseFunction or dict, optional",
+        default="None",
+    )
 
     @property
     def state_dims(self) -> tuple[str, ...]:
@@ -290,8 +310,8 @@ class ParticleStateComponent(ParticleComponent):
         }
 
     @property
-    def phase(self) -> GriddedParticlePhaseFunction:
-        if self._phase:
+    def phase(self) -> PhaseFunction:
+        if self._phase is not None:
             return self._phase
 
         grid = self.geometry.grid
