@@ -47,7 +47,7 @@ def _create_integrator_surface(
                 "error_handler_config": absorption_database_error_handler_config,
             },
             "particle_components": {
-                "type": "particle_aot",
+                "type": "particle_ot",
                 "bottom": 1 * ureg.km,
                 "top": 2 * ureg.km,
                 "tau_ref": 0.2,
@@ -113,7 +113,7 @@ def create_integrator_canopy(absorption_database_error_handler_config, integrato
                 "error_handler_config": absorption_database_error_handler_config,
             },
             "particle_components": {
-                "type": "particle_aot",
+                "type": "particle_ot",
                 "bottom": 0 * ureg.km,
                 "top": 2 * ureg.km,
                 "distribution": {"type": "uniform"},

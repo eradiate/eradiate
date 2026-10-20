@@ -9,7 +9,7 @@ from eradiate.contexts import KernelContext
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
-    ParticleAOTComponent,
+    ParticleOTComponent,
 )
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import PlaneParallelGeometry, SceneGeometry, WrapMode
@@ -59,7 +59,7 @@ def test_heterogeneous_single_mono(
         kernel_context = KernelContext(si=si)
 
     else:
-        component = ParticleAOTComponent()
+        component = ParticleOTComponent()
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry, particle_components=[component]
         )
@@ -86,7 +86,7 @@ def test_heterogeneous_single_ckd(
         kernel_context = KernelContext(si=si)
 
     else:
-        component = ParticleAOTComponent()
+        component = ParticleOTComponent()
         atmosphere = HeterogeneousAtmosphere(
             geometry=geometry, particle_components=[component]
         )
@@ -106,7 +106,7 @@ def test_heterogeneous_multi_mono(mode_mono, geometry, atmosphere_us_standard_mo
     atmosphere = HeterogeneousAtmosphere(
         geometry=geometry,
         molecular_atmosphere=atmosphere_us_standard_mono,
-        particle_components=[ParticleAOTComponent() for _ in range(2)],
+        particle_components=[ParticleOTComponent() for _ in range(2)],
     )
 
     # The scene element produces valid kernel dictionary specifications
@@ -124,7 +124,7 @@ def test_heterogeneous_multi_ckd(mode_ckd, geometry, atmosphere_us_standard_ckd)
     atmosphere = HeterogeneousAtmosphere(
         geometry={"type": geometry, "grid": np.linspace(0, 120, 121) * ureg.km},
         molecular_atmosphere=atmosphere_us_standard_ckd,
-        particle_components=[ParticleAOTComponent() for _ in range(2)],
+        particle_components=[ParticleOTComponent() for _ in range(2)],
     )
 
     # The scene element produces valid kernel dictionary specifications
@@ -140,9 +140,9 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
     extinction coefficients properly add up.
     """
     with ucc.override(length="km"):
-        component_1 = ParticleAOTComponent(bottom=0.0, top=1.25)
-        component_2 = ParticleAOTComponent(bottom=0.5, top=1.5)
-        component_3 = ParticleAOTComponent(bottom=0.75, top=2.0)
+        component_1 = ParticleOTComponent(bottom=0.0, top=1.25)
+        component_2 = ParticleOTComponent(bottom=0.5, top=1.5)
+        component_3 = ParticleOTComponent(bottom=0.75, top=2.0)
 
     mixed = HeterogeneousAtmosphere(
         geometry={
@@ -224,7 +224,7 @@ def test_heterogeneous_mix_weights(
             if eradiate.mode().is_ckd
             else atmosphere_us_standard_mono
         ),
-        particle_components=ParticleAOTComponent(
+        particle_components=ParticleOTComponent(
             bottom=0.0 * ureg.km,
             top=50.0 * ureg.km,
             distribution={"type": "uniform"},
@@ -248,17 +248,17 @@ def test_heterogeneous_mix_weights(
     mixed = HeterogeneousAtmosphere(
         geometry=geometry,
         particle_components=[
-            ParticleAOTComponent(
+            ParticleOTComponent(
                 bottom=0.0 * ureg.km,
                 top=50.0 * ureg.km,
                 distribution={"type": "uniform"},
             ),
-            ParticleAOTComponent(
+            ParticleOTComponent(
                 bottom=50.0 * ureg.km,
                 top=80.0 * ureg.km,
                 distribution={"type": "uniform"},
             ),
-            ParticleAOTComponent(
+            ParticleOTComponent(
                 bottom=80.0 * ureg.km,
                 top=100.0 * ureg.km,
                 distribution={"type": "uniform"},
@@ -288,13 +288,13 @@ def test_heterogeneous_mix_weights(
     mixed = HeterogeneousAtmosphere(
         geometry=geometry,
         particle_components=[
-            ParticleAOTComponent(
+            ParticleOTComponent(
                 bottom=0.0 * ureg.km,
                 top=100.0 * ureg.km,
                 tau_ref=1.0,
                 distribution={"type": "uniform"},
             ),
-            ParticleAOTComponent(
+            ParticleOTComponent(
                 bottom=50.0 * ureg.km,
                 top=100.0 * ureg.km,
                 tau_ref=0.5,
@@ -320,7 +320,7 @@ def test_heterogeneous_scale(mode_mono, atmosphere_us_standard_mono):
     atmosphere = HeterogeneousAtmosphere(
         geometry="plane_parallel",
         molecular_atmosphere=atmosphere_us_standard_mono,
-        particle_components=[ParticleAOTComponent() for _ in range(2)],
+        particle_components=[ParticleOTComponent() for _ in range(2)],
         scale=2.0,
     )
     template, _ = traverse(atmosphere)
@@ -339,7 +339,7 @@ def test_heterogeneous_blend_switches(
     # Rayleigh-only atmosphere + particle components combination works
     assert HeterogeneousAtmosphere(
         molecular_atmosphere=atmosphere_us_standard_mono,
-        particle_components=[ParticleAOTComponent()],
+        particle_components=[ParticleOTComponent()],
     )
 
 
@@ -360,7 +360,7 @@ def test_heterogeneous_absorbing_mol_atm(
     # Create the heterogeneous atmosphere
     pe_bottom = 1.0 * ureg.km  # arbitrary
     pe_top = 4.0 * ureg.km  # arbitrary
-    particles = ParticleAOTComponent(
+    particles = ParticleOTComponent(
         bottom=pe_bottom, top=pe_top, particle_properties=_particle_radprops
     )
     atmosphere = HeterogeneousAtmosphere(

@@ -9,5 +9,5 @@ consisting of both of molecules and particles.
 
 * at most one instance of :class:`.MolecularAtmosphere`, representing the
   molecular or clear-sky component of a realistic atmospheres.
-* an arbitrary number of instances of :class:`.ParticleAOTComponent`, representing the
+* an arbitrary number of instances of :class:`.ParticleOTComponent`, representing the
   cloud/aerosol components of a realistic atmosphere.

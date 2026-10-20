@@ -7,8 +7,7 @@ Particle components are 3D non-uniform participating media whose scattering beha
 is characterized by a Mie phase function, stored in a lookup table.
 Particle component scene elements are created using :class:`.ParticleComponent` subclasses:
 
- * :class:`.ParticleAOTComponent`
+ * :class:`.ParticleOTComponent`
  * :class:`.ParticleExtinctionComponent`
  * :class:`.ParticleStateComponent`
  * :class:`.ParticlePSDComponent`
-

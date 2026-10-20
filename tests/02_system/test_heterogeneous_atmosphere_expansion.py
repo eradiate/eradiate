@@ -54,7 +54,7 @@ def test_heterogeneous_atmosphere_expansion_particle_component(
         "toa_altitude": top,
     }
     particles = {
-        "type": "particle_aot",
+        "type": "particle_ot",
         "bottom": bottom,
         "top": top,
         "tau_ref": tau_ref,

@@ -11,8 +11,8 @@ from eradiate.grid import CartesianGrid, SpatialGrid
 from eradiate.radprops import ParticleProperties
 from eradiate.scenes.atmosphere import (
     ArrayParticleDistribution,
-    ParticleAOTComponent,
     ParticleComponent,
+    ParticleOTComponent,
     UniformParticleDistribution,
 )
 from eradiate.scenes.core import traverse
@@ -72,12 +72,12 @@ def _make_3d_grid():
     )
 
 
-class TestParticleAOTComponent:
+class TestParticleOTComponent:
     @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
     def test_basic(self, mode_mono, geometry):
         """Basic constructor pattern"""
         # Construct from path
-        layer = ParticleAOTComponent(
+        layer = ParticleOTComponent(
             particle_properties="tests/aerosol/govaerts_2021-desert-aer_core_v2.nc",
             geometry=geometry,
         )
@@ -89,22 +89,22 @@ class TestParticleAOTComponent:
         """Construction succeeds with basic parameters"""
 
         assert (
-            ParticleAOTComponent()
+            ParticleOTComponent()
         )  # should pick up the default dataset from shipped assets
 
     def test_convert_passthrough(self):
         """ParticleComponent.convert returns an existing instance unchanged."""
-        component = ParticleAOTComponent()
-        assert ParticleAOTComponent.convert(component) is component
+        component = ParticleOTComponent()
+        assert ParticleOTComponent.convert(component) is component
         assert ParticleComponent.convert(component) is component
 
-    def test_convert_from_dict_defaults_to_particle_aot(self):
+    def test_convert_from_dict_defaults_to_particle_ot(self):
         """
         Called on the abstract ParticleComponent base, a dict without 'type'
-        defaults to 'particle_aot' and is routed through atmosphere_factory.
+        defaults to 'particle_ot' and is routed through atmosphere_factory.
         """
         result = ParticleComponent.convert({})
-        assert isinstance(result, ParticleAOTComponent)
+        assert isinstance(result, ParticleOTComponent)
 
     def test_convert_rejects_wrong_type(self):
         """A value that is neither a dict nor a ParticleComponent instance is rejected."""
@@ -116,7 +116,7 @@ class TestParticleAOTComponent:
         bottom = 1.2 * ureg.km
         top = 1.8 * ureg.km
         tau_ref = 0.3 * ureg.dimensionless
-        layer = ParticleAOTComponent(
+        layer = ParticleOTComponent(
             geometry={
                 "type": "plane_parallel",
                 "ground_altitude": bottom,
@@ -135,7 +135,7 @@ class TestParticleAOTComponent:
 
     def test_altitude_units(self, particle_dataset_path):
         """Accept different units for bottom and top altitudes."""
-        assert ParticleAOTComponent(
+        assert ParticleOTComponent(
             particle_properties=particle_dataset_path,
             bottom=1.0 * ureg.km,
             top=2000.0 * ureg.m,
@@ -146,7 +146,7 @@ class TestParticleAOTComponent:
         with pytest.raises(
             ValueError, match="bottom altitude must be lower than top altitude"
         ):
-            ParticleAOTComponent(
+            ParticleOTComponent(
                 particle_properties=particle_dataset_path,
                 top=1.2 * ureg.km,
                 bottom=1.8 * ureg.km,
@@ -155,7 +155,7 @@ class TestParticleAOTComponent:
     def test_invalid_tau_ref(self, particle_dataset_path):
         """Raises when 'tau_ref' is invalid."""
         with pytest.raises(ValueError, match="tau_ref must be all positive or zero"):
-            ParticleAOTComponent(
+            ParticleOTComponent(
                 particle_properties=particle_dataset_path,
                 bottom=1.2 * ureg.km,
                 top=1.8 * ureg.km,
@@ -182,7 +182,7 @@ class TestParticleAOTComponent:
         )
 
         with pytest.raises(ValueError, match=r"reff.*veff"):
-            ParticleAOTComponent(
+            ParticleOTComponent(
                 particle_properties=properties_with_size_dist,
                 w_ref=ureg.Quantity(1.0, "micron"),
             )
@@ -196,7 +196,7 @@ class TestParticleAOTComponent:
         """
         bottom = 0.0 * ureg.km
         top = 1.0 * ureg.km
-        layer = ParticleAOTComponent(
+        layer = ParticleOTComponent(
             geometry={
                 "type": "plane_parallel",
                 "ground_altitude": bottom,
@@ -223,7 +223,7 @@ class TestParticleAOTComponent:
         """
         bottom = 0.0 * ureg.km
         top = 1.0 * ureg.km
-        layer = ParticleAOTComponent(
+        layer = ParticleOTComponent(
             geometry={
                 "type": "plane_parallel",
                 "ground_altitude": bottom,
@@ -250,7 +250,7 @@ class TestParticleAOTComponent:
         """
         bottom = 0.0 * ureg.km
         top = 1.0 * ureg.km
-        layer = ParticleAOTComponent(
+        layer = ParticleOTComponent(
             geometry={
                 "type": "plane_parallel",
                 "ground_altitude": bottom,
@@ -271,7 +271,7 @@ class TestParticleAOTComponent:
 
     def test_kernel_scale(self, modes_all_single, particle_properties_test):
         """Scale parameter propagates to kernel dict and latter can be loaded."""
-        particles = ParticleAOTComponent(
+        particles = ParticleOTComponent(
             id="atmosphere", particle_properties=particle_properties_test, scale=2.0
         )
         template, _ = traverse(particles)
@@ -281,7 +281,7 @@ class TestParticleAOTComponent:
         """
         Method 'eval_radprops' returns dataset with expected datavars and coords.
         """
-        layer = ParticleAOTComponent(particle_properties=particle_dataset_path)
+        layer = ParticleOTComponent(particle_properties=particle_dataset_path)
         si = SpectralIndex.new()
         ds = layer.eval_radprops(si)
         expected_data_vars = ["sigma_t", "albedo"]
@@ -294,7 +294,7 @@ class TestParticleAOTComponent:
         "tau_ref", list(np.array([0.6, 1.0, 2.5]) * ureg.dimensionless)
     )
     def test_eval_radprops(self, mode_mono, particle_dataset_path, tau_ref):
-        layer = ParticleAOTComponent(
+        layer = ParticleOTComponent(
             particle_properties=particle_dataset_path,
             bottom=0.5 * ureg.km,  # arbitrary
             top=3.0 * ureg.km,  # arbitrary
@@ -332,7 +332,7 @@ class TestParticleAOTComponent:
         Check correct handling of spectral dependency of extinction.
 
         If σ_t(λ) denotes the extinction coefficient at the wavelength λ, then the
-        optical thickness of a uniform ParticleAOTComponent is τ(λ) = σ_t(λ) Δz, where Δz
+        optical thickness of a uniform ParticleOTComponent is τ(λ) = σ_t(λ) Δz, where Δz
         is the layer's thickness. From that follows:
         τ(λ) / τ(λ_ref) = σ_t(λ) / σ_t(λ_ref).
 
@@ -352,7 +352,7 @@ class TestParticleAOTComponent:
             np.linspace(0, 5, n_layers + 1) * ureg.km
         )
 
-        layer = ParticleAOTComponent(
+        layer = ParticleOTComponent(
             particle_properties=ds,
             geometry={
                 "type": "plane_parallel",
@@ -411,7 +411,7 @@ class TestParticleAOTComponent:
     )
     def test_eval_fractions_shape_and_normalization(self, distribution, bottom, top):
         grid = _make_3d_grid()
-        layer = ParticleAOTComponent(
+        layer = ParticleOTComponent(
             geometry={
                 "type": "plane_parallel",
                 "toa_altitude": grid.levels[-1],
@@ -447,7 +447,7 @@ class TestParticleAOTComponent:
         bottom = np.full((2, 2), grid.levels[0].m) * grid.levels.units
         top = np.full((2, 2), grid.levels[-1].m) * grid.levels.units
 
-        particles = ParticleAOTComponent(
+        particles = ParticleOTComponent(
             geometry={
                 "type": "plane_parallel",
                 "toa_altitude": grid.levels[-1],
@@ -466,7 +466,7 @@ class TestParticleAOTComponent:
 
     def test_eval_fractions_uniform_is_flat(self):
         grid = _make_3d_grid()
-        layer = ParticleAOTComponent(
+        layer = ParticleOTComponent(
             bottom=1.0 * ureg.km, top=4.0 * ureg.km, distribution="uniform"
         )
 
@@ -499,7 +499,7 @@ class TestParticleAOTComponent:
         grid = _make_3d_grid()
         w_ref = 550 * ureg.nm
 
-        layer = ParticleAOTComponent(
+        layer = ParticleOTComponent(
             geometry={
                 "type": "plane_parallel",
                 "toa_altitude": grid.levels[-1],
@@ -582,7 +582,7 @@ class TestParticleAOTComponent:
         try:
             bottom = 0.0 * ureg.km
             top = 1.0 * ureg.km
-            particles = ParticleAOTComponent(
+            particles = ParticleOTComponent(
                 particle_properties=particle_dataset_path,
                 geometry={
                     "type": "plane_parallel",
@@ -641,7 +641,7 @@ class TestParticleAOTComponent:
         particle_properties = particle_properties_test
         w1, w2 = particle_properties.w[[1, 2]]
 
-        assert ParticleAOTComponent(
+        assert ParticleOTComponent(
             particle_properties=particle_properties, tau_ref=1.0, w_ref=w1
         )
 
@@ -649,7 +649,7 @@ class TestParticleAOTComponent:
             UserWarning,
             match="dataset does not contain the selected reference wavelength",
         ):
-            ParticleAOTComponent(
+            ParticleOTComponent(
                 particle_properties=particle_properties,
                 tau_ref=1.0,
                 w_ref=0.5 * (w1 + w2),
@@ -660,7 +660,7 @@ class TestParticleAOTComponent:
         psd = make_particle_psd_component(w=(1.0,))
 
         with pytest.raises(ValueError, match="No cloud voxel"):
-            ParticleAOTComponent.from_psd_voxel(
+            ParticleOTComponent.from_psd_voxel(
                 psd, w=ureg.Quantity(1.0, "micron"), ix=999, iy=999, iz=999
             )
 
@@ -678,9 +678,9 @@ class TestParticleAOTComponent:
         grid = psd.geometry.grid
         w = ureg.Quantity(1.0, "micron")
 
-        layer = ParticleAOTComponent.from_psd_voxel(psd, w=w, ix=0, iy=1, iz=0)
+        layer = ParticleOTComponent.from_psd_voxel(psd, w=w, ix=0, iy=1, iz=0)
 
-        assert isinstance(layer, ParticleAOTComponent)
+        assert isinstance(layer, ParticleOTComponent)
         assert layer.bottom == grid.levels[0]
         assert layer.top == grid.levels[1]
         assert layer.w_ref == w
@@ -718,7 +718,7 @@ class TestParticleAOTComponent:
             amount="lwc",
         )
         w = ureg.Quantity(1.0, "micron")
-        constructor = getattr(ParticleAOTComponent, method)
+        constructor = getattr(ParticleOTComponent, method)
 
         expected = constructor(psd, w=w, **kwargs).tau_ref.m_as("dimensionless")
         result = constructor(renamed, w=w, **kwargs).tau_ref.m_as("dimensionless")
@@ -741,7 +741,7 @@ class TestParticleAOTComponent:
             edges_y=psd.geometry.grid.edges_y,
             levels=np.linspace(0.0, 3.0, 5) * ureg.km,
         ).centered()
-        constructor = getattr(ParticleAOTComponent, method)
+        constructor = getattr(ParticleOTComponent, method)
 
         result = constructor(psd, w=ureg.Quantity(1.0, "micron"), grid=grid, **kwargs)
         assert result.geometry.grid is grid
@@ -765,14 +765,14 @@ class TestParticleAOTComponent:
         w = ureg.Quantity(1.0, "micron")
         si = MonoSpectralIndex(w=w)
 
-        part_aot = ParticleAOTComponent.from_psd_composition(
+        part_aot = ParticleOTComponent.from_psd_composition(
             psd,
             w=w,
             i_reff=0,
             i_veff=0,
         )
 
-        assert isinstance(part_aot, ParticleAOTComponent)
+        assert isinstance(part_aot, ParticleOTComponent)
         assert part_aot.tau_ref.m_as("dimensionless").shape == (
             grid.n_cells_x,
             grid.n_cells_y,
@@ -794,7 +794,7 @@ class TestParticleAOTComponent:
         w = ureg.Quantity(1.0, "micron")
         si = MonoSpectralIndex(w=w)
 
-        part_aot = ParticleAOTComponent.from_psd_composition(
+        part_aot = ParticleOTComponent.from_psd_composition(
             psd,
             w=w,
             i_reff=0,
@@ -806,13 +806,16 @@ class TestParticleAOTComponent:
         np.testing.assert_allclose(sigma_t_aot, sigma_t_psd, rtol=1e-8)
 
     def test_from_psd_composition_zero_density_column(self, mode_mono):
-        """from_psd_composition: a zero mass_concentration field yields a zero tau_ref particle_aot."""
+        """
+        from_psd_composition: a zero mass_concentration field yields a zero
+        tau_ref particle_ot.
+        """
         psd = make_particle_psd_component(
             n_x=2, n_y=1, n_z=2, w=(1.0,), mass_concentration=0.0
         )
         w = ureg.Quantity(1.0, "micron")
 
-        part_aot = ParticleAOTComponent.from_psd_composition(
+        part_aot = ParticleOTComponent.from_psd_composition(
             psd,
             w=w,
             i_reff=0,
@@ -823,7 +826,7 @@ class TestParticleAOTComponent:
 
     def test_spectrally_invariant_cache(self, mode_mono, monkeypatch):
         # Spectrally invariant terms are evaluated once for several wavelengths
-        layer = ParticleAOTComponent(bottom=0.0, top=5.0 * ureg.km)
+        layer = ParticleOTComponent(bottom=0.0, top=5.0 * ureg.km)
         counts = {"distribution": 0, "ext": 0}
         cls_dist, cls_pp = type(layer.distribution), type(layer.particle_properties)
         dist_call, eval_ext = cls_dist.__call__, cls_pp.eval_ext
@@ -851,7 +854,7 @@ class TestParticleAOTComponent:
         # Reassigning a field the cached terms depend on is taken into account
         layer.bottom = 1.0 * ureg.km
         grid = layer.geometry.grid
-        expected = ParticleAOTComponent(
+        expected = ParticleOTComponent(
             bottom=1.0 * ureg.km, top=5.0 * ureg.km
         ).eval_fractions(grid)
         np.testing.assert_allclose(layer.eval_fractions(grid), expected)
