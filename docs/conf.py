@@ -22,7 +22,12 @@ MOCK_MODULES = ["mitsuba", "mitsuba.python.util", "mitsuba.scalar_rgb", "drjit"]
 try:
     import drjit  # noqa: F401
     import mitsuba  # noqa: F401
-except ImportError:
+except (
+    ImportError,  # drjit cannot be found (e.g. in CI)
+    NameError,  # workaround drjit raising NameError on ABI mismatch
+    # (e.g. if dev and docs envs have different Python versions)
+    # TODO: Remove once Dr.Jit issue #548 is solved
+):
     # A failed import leaves partially initialized modules behind, which would
     # shadow the mocks
     for mod_name in list(sys.modules):
