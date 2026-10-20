@@ -337,6 +337,23 @@ def test_heterogeneous_mix_weights(
     assert np.all(weights_1[middle:] == 0.5)
 
 
+@pytest.mark.parametrize(
+    "field, value",
+    [
+        ("use_rrt", False),
+        ("ddis_threshold", 0.1),
+        ("force_majorant", True),
+        ("extremum_resolution", (2, 2, 2)),
+    ],
+)
+def test_heterogeneous_component_ignored_fields(mode_mono, field, value):
+    # Fields with no effect on components trigger a warning
+    with pytest.warns(UserWarning, match=field):
+        HeterogeneousAtmosphere(
+            particle_components=[ParticleOTComponent(**{field: value})]
+        )
+
+
 @pytest.mark.slow
 def test_heterogeneous_scale(mode_mono, atmosphere_us_standard_mono):
     atmosphere = HeterogeneousAtmosphere(

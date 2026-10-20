@@ -48,6 +48,35 @@ def _particles_converter(value):
     return [ParticleComponent.convert(element) for element in value]
 
 
+#: Component fields overridden by the parent :class:`.HeterogeneousAtmosphere`
+_COMPONENT_IGNORED_FIELDS = (
+    "use_rrt",
+    "ddis_threshold",
+    "force_majorant",
+    "extremum_resolution",
+)
+
+
+def _warn_ignored_component_fields(
+    attribute: attrs.Attribute,
+    component: AbstractHeterogeneousAtmosphere,
+) -> None:
+    """
+    Warn if a component sets a field that has no effect when it is nested in a
+    :class:`.HeterogeneousAtmosphere`.
+    """
+    fields = attrs.fields_dict(type(component))
+    for name in _COMPONENT_IGNORED_FIELDS:
+        if not np.array_equal(getattr(component, name), fields[name].default):
+            warnings.warn(
+                f"while validating {attribute.name}: component field "
+                f"'{name}' has no effect and is ignored; set "
+                f"'HeterogeneousAtmosphere.{name}' instead",
+                UserWarning,
+                stacklevel=2,
+            )
+
+
 @renamed_kwargs(
     {"particle_layers": "particle_components"},
     deprecated_in="1.3.0",
@@ -89,6 +118,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 "scaled individually"
             )
 
+        _warn_ignored_component_fields(attribute, value)
+
     particle_components: list[ParticleComponent] = documented(
         attrs.field(
             factory=list,
@@ -113,6 +144,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 f"while validating {attribute.name}: components cannot be "
                 "scaled individually"
             )
+
+        for component in value:
+            _warn_ignored_component_fields(attribute, component)
 
     use_phase_mis: bool = documented(
         attrs.field(default=True, converter=bool, kw_only=True),
