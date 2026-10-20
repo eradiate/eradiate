@@ -1,6 +1,6 @@
 import pytest
 
-from eradiate.data.io import load_aerosol_libradtran
+from eradiate.data.io import load_optprop_libradtran
 
 
 @pytest.mark.parametrize(
@@ -35,15 +35,15 @@ from eradiate.data.io import load_aerosol_libradtran
         "mopsmap_nounits",
     ],
 )
-def test_load_aerosol_libradtran(mode_mono, fname, kwargs, loading_exception):
+def test_load_optprop_libradtran(mode_mono, fname, kwargs, loading_exception):
     """
     Test libRadtran aerosol file loading (automatic conversion) with various
     samples.
     """
     if loading_exception is None:
-        assert load_aerosol_libradtran(fname, **kwargs)
+        assert load_optprop_libradtran(fname, **kwargs)
         # TODO: Add dataset validation once Pandera integration is here
 
     else:
         with pytest.raises(loading_exception):
-            load_aerosol_libradtran(fname, **kwargs)
+            load_optprop_libradtran(fname, **kwargs)
