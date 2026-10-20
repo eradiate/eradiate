@@ -640,41 +640,11 @@ class ParticleOTComponent(ParticleComponent):
         m_extinction = pp.eval_ext(wavelength)[0, i_reff, i_veff]
         sigma_t = (m_extinction * amount_qty).to(col_units)
 
-        layer_height = to_quantity(
-            xr.DataArray(np.diff(grid.levels.m_as(ureg.km)), attrs={"units": "km"})
-        )[iz]
-
-        tgt_edges_x = grid.edges_x.m_as(ureg.km)
-        tgt_edges_y = grid.edges_y.m_as(ureg.km)
-        src_x0, src_x1 = float(tgt_edges_x[ix]), float(tgt_edges_x[ix + 1])
-        src_y0, src_y1 = float(tgt_edges_y[iy]), float(tgt_edges_y[iy + 1])
-
-        def _compute_overlap(
-            src_x0: float,
-            src_x1: float,
-            src_y0: float,
-            src_y1: float,
-            tgt_edges_x: np.ndarray,
-            tgt_edges_y: np.ndarray,
-        ) -> np.ndarray:
-            """Return the ``(n_x, n_y)`` fractional area overlap between the
-            source cell and each target grid cell."""
-            overlap_x = np.maximum(
-                0.0,
-                np.minimum(src_x1, tgt_edges_x[1:])
-                - np.maximum(src_x0, tgt_edges_x[:-1]),
-            ) / (tgt_edges_x[1:] - tgt_edges_x[:-1])
-            overlap_y = np.maximum(
-                0.0,
-                np.minimum(src_y1, tgt_edges_y[1:])
-                - np.maximum(src_y0, tgt_edges_y[:-1]),
-            ) / (tgt_edges_y[1:] - tgt_edges_y[:-1])
-            return np.outer(overlap_x, overlap_y)
-
-        overlap = _compute_overlap(
-            src_x0, src_x1, src_y0, src_y1, tgt_edges_x, tgt_edges_y
-        )
-        tau_ref = (sigma_t * layer_height * overlap).to(ureg.dimensionless)
+        # Non-zero optical thickness only in the selected (x, y) column
+        mask = np.zeros((grid.n_cells_x, grid.n_cells_y))
+        mask[ix, iy] = 1.0
+        layer_height = grid.levels[iz + 1] - grid.levels[iz]
+        tau_ref = (sigma_t * layer_height * mask).to(ureg.dimensionless)
 
         phase_ds = pp.phase_dataset_for_reff_veff(
             wavelength[0], i_reff, i_veff, sigma_t
