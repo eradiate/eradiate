@@ -17,6 +17,7 @@ from ..typing import PathLike
 from ..units import magnitude_as
 from ..units import unit_context_config as ucc
 from ..units import unit_registry as ureg
+from ..util.deprecation import deprecated
 
 
 def _convert_units(value: str):
@@ -32,13 +33,31 @@ def _get_units(ds, var, fallback_units=None):
         return ureg.Unit(_convert_units(fallback_units[var]))
     else:
         raise ValueError(
-            "load_aerosol_libradtran(): The input dataset specifies no units "
+            "load_optprop_libradtran(): The input dataset specifies no units "
             f"for variable '{var}'; this can be addressed by passing them through "
             "the 'fallback_units' parameter."
         )
 
 
+@deprecated(
+    deprecated_in="1.3.0",
+    removed_in="2.0.0",
+    details="Use ``load_optprop_libradtran()`` instead.",
+)
 def load_aerosol_libradtran(
+    data: PathLike | xr.Dataset,
+    tolerance: dict[str, pint.Quantity | float] | None = None,
+    wbounds: tuple = (None, None),
+    fallback_units: dict[str, str] | None = None,
+    **kwargs,
+):
+    """
+    Compatibility alias for :func:`.load_optprop_libradtran`.
+    """
+    return load_optprop_libradtran(data, tolerance, wbounds, fallback_units, **kwargs)
+
+
+def load_optprop_libradtran(
     data: PathLike | xr.Dataset,
     tolerance: dict[str, pint.Quantity | float] | None = None,
     wbounds: tuple = (None, None),
@@ -145,7 +164,7 @@ def load_aerosol_libradtran(
         if len(da) > 1:
             if kwarg not in kwargs:
                 raise TypeError(
-                    f"load_aerosol_libradtran() is missing keyword argument '{kwarg}' "
+                    f"load_optprop_libradtran() is missing keyword argument '{kwarg}' "
                     f"(allowed: {da.values})"
                 )
             else:
@@ -170,7 +189,7 @@ def load_aerosol_libradtran(
 
     if kwargs:
         warnings.warn(
-            "load_aerosol_libradtran() got unexpected keyword arguments "
+            "load_optprop_libradtran() got unexpected keyword arguments "
             f"{list(kwargs.keys())}, which were not used",
             stacklevel=2,
         )
