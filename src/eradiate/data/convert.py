@@ -624,7 +624,7 @@ def concat_particles_veff(datasets: list[xr.Dataset]) -> xr.Dataset:
     )
 
 
-def aer_v1_to_aer_core_v2(
+def aer_v1_to_prt_core_v1(
     ds: xr.Dataset,
     phase_scale: float = 1.0,
     dtype: DTypeLike | None = None,
@@ -727,7 +727,7 @@ def aer_v1_to_aer_core_v2(
     phase = phase[:, :, sort_idx]
 
     attrs = ds.attrs.copy()
-    attrs["format"] = "Aer-Core v2"
+    attrs["format"] = "Prt-Core v1"
     if update_history:
         utcnow = datetime.datetime.now(datetime.timezone.utc).strftime(
             "%Y-%m-%d %H:%M:%S"
@@ -735,7 +735,7 @@ def aer_v1_to_aer_core_v2(
         history = []
         if "history" in attrs:
             history.extend(attrs["history"].split("\n"))
-        history.append(f"{utcnow} - Conversion from Aer v1 to Aer-Core v2")
+        history.append(f"{utcnow} - Conversion from Aer v1 to Prt-Core v1")
         attrs["history"] = "\n".join(history)
 
     if len(_phase_datasets) == 1 or len(_phase_datasets) == 4:
@@ -806,7 +806,7 @@ def libradtran_to_prt(
 
     Notes
     -----
-    * The Aer-Core v2 format has a single angular discretization common to all
+    * The Prt-Core v1 format has a single angular discretization common to all
       phase matrix coefficients, while libRadtran's data aerosol format allows
       for a different one for each coefficient. The angular grid of the output
       dataset is constructed as the union of the libRadtran grids for all

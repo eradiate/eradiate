@@ -9,7 +9,7 @@ import xarray as xr
 from eradiate import unit_registry as ureg
 from eradiate._compat import trapezoid
 from eradiate.data.convert import (
-    aer_v1_to_aer_core_v2,
+    aer_v1_to_prt_core_v1,
     concat_particles_veff,
     libradtran_to_prt,
     make_prt_core_v1,
@@ -784,12 +784,12 @@ class TestAerV1ToAerCoreV2:
         def test_output_mu_ascending(self, ds_descending, ds_ascending):
             """Output mu is always strictly ascending regardless of input order."""
             for ds in [ds_descending, ds_ascending]:
-                result = aer_v1_to_aer_core_v2(ds)
+                result = aer_v1_to_prt_core_v1(ds)
                 assert np.all(np.diff(result["mu"].values[0]) > 0)
 
         def test_phase_consistent_with_mu(self, ds_descending):
             """Phase values are reordered consistently with the mu grid."""
-            result = aer_v1_to_aer_core_v2(ds_descending)
+            result = aer_v1_to_prt_core_v1(ds_descending)
             phase = result["phase"].values[0, 0, :]  # phamat=0, iw=0
             np.testing.assert_allclose(phase, 1.0, rtol=1e-12)
 
@@ -809,7 +809,7 @@ class TestAerV1ToAerCoreV2:
         )
         def test_dtype_handling(self, source_dtype, dtype_arg, expected):
             ds = _make_aer_v1(np.linspace(-1.0, 1.0, 37), dtype=source_dtype)
-            result = aer_v1_to_aer_core_v2(ds, dtype=dtype_arg)
+            result = aer_v1_to_prt_core_v1(ds, dtype=dtype_arg)
             for var in ("ext", "ssa", "phase"):
                 assert result[var].dtype == expected, (
                     f"{var}: expected {expected}, got {result[var].dtype}"
@@ -830,7 +830,7 @@ class TestAerV1ToAerCoreV2:
         @pytest.fixture(scope="class")
         @classmethod
         def ds_result(cls, ds_input):
-            return aer_v1_to_aer_core_v2(ds_input)
+            return aer_v1_to_prt_core_v1(ds_input)
 
         def test_mu_ascending(self, ds_result):
             """Converted dataset has mu strictly ascending for all wavelengths."""

@@ -21,10 +21,10 @@ DS_ID_TO_FNAME = {
 
 def make_minimal_aer_core_v2(nphamat: int) -> xr.Dataset:
     """
-    Build a minimal Aer-Core v2 dataset with ``nphamat`` phase matrix components
+    Build a minimal Prt-Core v1 dataset with ``nphamat`` phase matrix components
     (1: unpolarized, 4: spherical, 6: spheroidal).
     """
-    # Phase matrix component names, in Aer-Core v2 storage order
+    # Phase matrix component names, in Prt-Core v1 storage order
     phamat_names = ["11", "12", "33", "34", "22", "44"]
 
     w = np.array([400.0, 700.0])

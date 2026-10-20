@@ -30,10 +30,10 @@ _PMOM_DATA[:, 2] = [0.1, 0.15, 0.05]
 
 def make_dataset(*, zero_scat_idx: int | None = None) -> xr.Dataset:
     """
-    Build a minimal spec-compliant Aer-Core v2 dataset for ``ParticleProperties``.
+    Build a minimal spec-compliant Prt-Core v1 dataset for ``ParticleProperties``.
 
     Always produces a 2D ``mu(w, iangle)`` coordinate and an ``nangles(w)``
-    variable, as required by the Aer-Core v2 specification.
+    variable, as required by the Prt-Core v1 specification.
 
     Parameters
     ----------
@@ -64,7 +64,7 @@ def make_dataset(*, zero_scat_idx: int | None = None) -> xr.Dataset:
 
 
 def make_single_w_dataset() -> xr.Dataset:
-    """Build a minimal single-wavelength dataset in Aer-Core v2 format."""
+    """Build a minimal single-wavelength dataset in Prt-Core v1 format."""
     # mu shape: (nw=1, nangle=3)
     mu_vals = np.array([MU_1D])
     mu = mu_vals * ureg.dimensionless
@@ -98,8 +98,8 @@ VEFF = np.array([0.05, 0.15])  # dimensionless
 
 def make_size_distribution_dataset() -> xr.Dataset:
     """
-    Build a minimal Prt-Cloud v1-shaped dataset (``reff``/``veff`` dimensions
-    added to the Aer-Core v2 layout) for ``ParticleProperties``.
+    Build a minimal Prt-PSD v1-shaped dataset (``reff``/``veff`` dimensions
+    added to the Prt-Core v1 layout) for ``ParticleProperties``.
 
     ``ext``/``ssa`` take a distinct value at every ``(w, reff, veff)`` grid
     point, so index-based selection can be checked against known values. The
@@ -155,7 +155,7 @@ def make_size_distribution_dataset() -> xr.Dataset:
 
 def make_size_distribution_dataset_ragged() -> xr.Dataset:
     """
-    Prt-Cloud v1-shaped dataset where the native angular grid differs across the
+    Prt-PSD v1-shaped dataset where the native angular grid differs across the
     ``(w, reff, veff)`` grid, to exercise ``eval_phase()``'s per-point
     raggedness/padding handling. Two wavelengths, two ``reff`` points, one
     ``veff`` point.
@@ -530,7 +530,7 @@ class TestParticleProperties:
             np.testing.assert_allclose(result.m, expected, rtol=1e-10)
 
         def test_preserves_reff_veff_dims(self):
-            """On a Prt-Cloud v1 dataset, result keeps the 'reff'/'veff' dimensions."""
+            """On a Prt-PSD v1 dataset, result keeps the 'reff'/'veff' dimensions."""
             ds = make_size_distribution_dataset()
             pp = ParticleProperties(data=ds)
             w = np.array([475.0, 625.0]) * ureg.nm  # midpoints of both segments
@@ -571,7 +571,7 @@ class TestParticleProperties:
             np.testing.assert_allclose(result.m, expected, rtol=1e-10)
 
         def test_preserves_reff_veff_dims(self):
-            """On a Prt-Cloud v1 dataset, result keeps the 'reff'/'veff' dimensions,
+            """On a Prt-PSD v1 dataset, result keeps the 'reff'/'veff' dimensions,
             with the extinction-weighted formula applied independently at
             each (reff, veff) grid point."""
             ds = make_size_distribution_dataset()
@@ -828,7 +828,7 @@ class TestParticleProperties:
             # Default is n_iangle for a fixed grid; stored values reproduced exactly
             _mu_out, phase_out = pp_single.eval_phase(300.0 * ureg.nm)
             assert phase_out.shape == (1, n_iangle)
-            # phase dims in Aer-Core v2: (phamat, w, iangle)
+            # phase dims in Prt-Core v1: (phamat, w, iangle)
             stored_phase = ds["phase"].values[0, 0, :]
             np.testing.assert_allclose(phase_out[0], stored_phase, rtol=1e-12)
 
@@ -838,7 +838,7 @@ class TestParticleProperties:
             values, nleg = pp_single.eval_pmom(300.0 * ureg.nm)
             assert values.shape == (5, 1)
             assert nleg > 0
-            # pmom dims in Aer-Core v2: (w, imom)
+            # pmom dims in Prt-Core v1: (w, imom)
             stored = ds["pmom"].transpose("imom", "w").values
             np.testing.assert_allclose(values, stored, rtol=1e-12)
 

@@ -302,7 +302,7 @@ class ParticleProperties:
         -------
         bool
             ``True`` iff ``data`` has ``reff``/``veff`` dimensions
-            (Prt-Cloud v1 format), ``False`` for a plain Aer-Core v2 dataset.
+            (Prt-PSD v1 format), ``False`` for a plain Prt-Core v1 dataset.
         """
         return "reff" in self.data.dims and "veff" in self.data.dims
 
@@ -1046,7 +1046,7 @@ class ParticleProperties:
         ext: pint.Quantity | None = None,
     ) -> xr.Dataset:
         """
-        Build a single-point Aer-Core v2 phase function dataset at the given
+        Build a single-point Prt-Core v1 phase function dataset at the given
         wavelength, from the exact ``(i_reff, i_veff)`` grid point (no
         interpolation across ``reff``/``veff``).
 
@@ -1066,7 +1066,7 @@ class ParticleProperties:
         Returns
         -------
         xr.Dataset
-            An Aer-Core v2 dataset with no ``reff``/``veff`` dimensions.
+            A Prt-Core v1 dataset with no ``reff``/``veff`` dimensions.
         """
         if not self.has_size_distribution:
             raise ValueError(
