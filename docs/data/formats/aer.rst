@@ -166,25 +166,3 @@ Normalization conventions
 
 Conventions
     * Phase matrix coefficients use C-style indexing (from 0).
-
-Conversion
-----------
-
-The following conversion components are provided:
-
-.. list-table:: List of scattering particle property converters
-    :header-rows: 1
-
-    - * Function
-      * Source format
-      * Target format
-    - * :func:`.aer_v1_to_aer_core_v2`
-      * Aer v1
-      * Aer-Core v2
-    - * :func:`.libradtran_to_aer_core_v2`
-      * libRadtran / MOPSMAP
-      * Aer-Core v2, or :ref:`sec-data_formats-prt_psd_v1` when the input
-        varies over ``reff``
-    - * :func:`.libradtran_to_aer_v1`
-      * libRadtran / MOPSMAP
-      * Aer v1

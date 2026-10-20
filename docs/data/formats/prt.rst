@@ -188,3 +188,92 @@ Data variables
       regularly spaced
     * ``phamat`` conventions (valid values, and their implication for
       polarization and particle shape) are the same as ``prt_core_v1``
+
+.. _sec-data_formats-prt_hum_v1:
+
+Prt-Hum v1 [``prt_hum_v1``]
+---------------------------
+
+Extension of ``prt_core_v1`` for hygroscopic particles. This data format
+indexes properties defined by ``prt_core_v1`` on one extra dimension,
+``hum``, the ambient relative humidity. It is typically used for aerosol
+components whose optical properties depend on humidity through water uptake
+(*e.g.* OPAC components). It shares the same normalization conventions as
+``prt_core_v1``.
+
+Format
+    ``xarray.Dataset`` (in-memory), NetCDF (storage)
+
+Dimensions
+    * ``w``: radiation wavelength
+    * ``hum``: relative humidity
+    * ``phamat``: nonzero coefficients in the phase matrix
+    * ``iangle``: angular data points
+    * ``imom``: Legendre coefficients for the (1,1) phase matrix component
+
+Coordinates
+    *When relevant, units are required and specified in the "units" metadata field.*
+
+    * ``w(w)``: float [length]: wavelength
+    * ``hum(hum)``: float [—]: relative humidity (*e.g.* in percent)
+    * ``phamat(phamat)``: str [—]: row and column indices of the phase matrix coefficient
+      (*e.g.* "11", "12", etc.)
+    * ``theta(w, hum, iangle)``: float [angle]: scattering angle θ; NaN-padded beyond
+      ``nangles[iw, ihum]``
+    * ``mu(w, hum, iangle)``: float [—]: value of cos θ; NaN-padded beyond
+      ``nangles[iw, ihum]``
+
+Data variables
+    *When relevant, units are required and specified in the "units" metadata field.*
+
+    * ``ext(w, hum)`` float [1 / length]: extinction coefficient per unit concentration
+    * ``ssa(w, hum)`` float [—]: single-scattering albedo
+    * ``phase(phamat, w, hum, iangle)`` float [1 / sr]: value of the phase matrix;
+      NaN-padded beyond ``nangles[iw, ihum]``
+    * ``nangles(w, hum)`` int [—]: number of valid angular samples per wavelength
+      and humidity; must be consistent with the NaN padding of ``theta``, ``mu``,
+      and ``phase``
+    * ``pmom(w, hum, imom)`` float [—], optional: Legendre expansion coefficients
+      of the (1,1) phase matrix element; NaN-padded beyond ``nmom[iw, ihum]``
+    * ``nmom(w, hum)`` int [—], required if ``pmom`` is present: number of valid
+      Legendre coefficients per wavelength and humidity; must be consistent with
+      the NaN padding of ``pmom``
+
+.. note::
+
+    * Data are sorted in ascending order of ``w``, ``hum`` and ``mu``
+    * ``hum`` must be strictly increasing, but need not be regularly spaced
+    * ``phamat`` conventions (valid values, and their implication for
+      polarization and particle shape) are the same as ``prt_core_v1``
+
+Creation
+--------
+
+Datasets in all Prt variants are created with :func:`.make_prt_v1`, which
+inserts optional dimensions (``reff`` and ``veff``, ``hum``) between ``w`` and
+the angular and moment dimensions. :func:`.make_prt_core_v1`,
+:func:`.make_prt_psd_v1` and :func:`.make_prt_hum_v1` are shortcuts for each
+variant.
+
+Conversion
+----------
+
+The following conversion components are provided:
+
+.. list-table:: List of scattering particle property converters
+    :header-rows: 1
+
+    - * Function
+      * Source format
+      * Target format
+    - * :func:`.aer_v1_to_prt_core_v1`
+      * :ref:`sec-data_formats-aer_v1`
+      * :ref:`sec-data_formats-prt_core_v1`
+    - * :func:`.libradtran_to_prt`
+      * libRadtran / MOPSMAP
+      * :ref:`sec-data_formats-prt_core_v1`, or
+        :ref:`sec-data_formats-prt_psd_v1` / :ref:`sec-data_formats-prt_hum_v1`
+        when the output varies over ``reff`` / ``hum``
+    - * :func:`.concat_particles_veff`
+      * :ref:`sec-data_formats-prt_psd_v1` (several)
+      * :ref:`sec-data_formats-prt_psd_v1`

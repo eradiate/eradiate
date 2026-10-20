@@ -13,6 +13,7 @@ from eradiate.data.convert import (
     concat_particles_veff,
     libradtran_to_prt,
     make_prt_core_v1,
+    make_prt_hum_v1,
     make_prt_psd_v1,
 )
 
@@ -705,6 +706,30 @@ class TestMakePrtPsdV1:
             make_prt_psd_v1(**args)
 
 
+class TestMakePrtHumV1:
+    @staticmethod
+    def _args(nhum: int = 3) -> dict:
+        """Isotropic core args broadcast along a hum dimension."""
+        args = _isotropic_args(nangle=5)
+        for name in ["mu", "theta", "ext", "ssa", "phase"]:
+            q, axis = args[name], 2 if name == "phase" else 1
+            args[name] = np.repeat(np.expand_dims(q.m, axis), nhum, axis) * q.u
+        args["hum"] = np.linspace(0.0, 90.0, nhum) * ureg.percent
+        return args
+
+    def test_hum_dimension(self):
+        ds = make_prt_hum_v1(**self._args(), nmom=4)
+        assert ds["phase"].dims == ("phamat", "w", "hum", "iangle")
+        assert ds["pmom"].dims == ("w", "hum", "imom")
+        assert ds["hum"].attrs["standard_name"] == "relative_humidity"
+
+    def test_mu_rank_mismatch_raises(self):
+        args = self._args()
+        args["mu"] = args["mu"][:, 0, :]
+        with pytest.raises(ValueError, match="'mu' must have shape"):
+            make_prt_hum_v1(**args)
+
+
 class TestConcatParticlesVeff:
     """Tests for concat_particles_veff()."""
 
@@ -1000,3 +1025,79 @@ class TestLibradtranToAerCoreV2:
                 ds_result["nangles"].values[:, :, 0],
                 ds_input["ntheta"].isel(nphamat=0).values,
             )
+
+        def test_select_reff(self, ds_input):
+            """Selecting a reff point drops the dimension and produces Prt-Core v1."""
+            ds_result = libradtran_to_prt(ds_input, reff=13.0 * ureg.um)
+            assert "reff" not in ds_result.dims
+            np.testing.assert_allclose(
+                ds_result["ext"].values, ds_input["ext"].values[:, 1]
+            )
+
+        def test_select_reff_list(self, ds_input):
+            """Selecting with a list keeps the reff dimension."""
+            ds_result = libradtran_to_prt(ds_input, reff=[13.0] * ureg.um)
+            assert ds_result.sizes["reff"] == 1
+            np.testing.assert_allclose(
+                ds_result["ext"].values[:, :, 0], ds_input["ext"].values[:, [1]]
+            )
+
+        def test_select_reff_tolerance(self, ds_input):
+            with pytest.raises(KeyError):
+                libradtran_to_prt(ds_input, reff=14.0, tolerance={"reff": 0.1})
+
+    def test_wbounds(self, ds_input):
+        ds_result = libradtran_to_prt(ds_input, wbounds=(500.0, None))
+        np.testing.assert_allclose(ds_result["w"].values, [550.0, 700.0])
+
+
+MOPSMAP_UNITS = {
+    "fallback_units": {
+        "reff": "percent",
+        "wavelen": "um",
+        "ext": "m ** 3 / g / km",
+        "ssa": "",
+    }
+}
+
+
+@pytest.mark.parametrize(
+    "fname, kwargs, expected",
+    [
+        ("iprt_waso.mie.cdf", {}, {"reff": 1, "veff": 1}),
+        ("iprt_waso.mie.cdf", {"squeeze": True}, {}),
+        ("waso.mie.cdf", {}, {"hum": 8}),
+        ("waso.mie.cdf", {"hum": 50.0}, {}),
+        ("waso.mie.cdf", {"hum": [50.0, 70.0]}, {"hum": 2}),
+        ("soot.mie.cdf", {}, {"hum": 1}),
+        ("soot.mie.cdf", {"squeeze": True}, {}),
+        ("mopsmap.cdf", MOPSMAP_UNITS, {"reff": 1}),
+        ("mopsmap.cdf", {**MOPSMAP_UNITS, "squeeze": True}, {}),
+        ("mopsmap.cdf", {}, ValueError),
+    ],
+    ids=[
+        "iprt_waso",
+        "iprt_waso_squeeze",
+        "waso",
+        "waso_hum_scalar",
+        "waso_hum_list",
+        "soot",
+        "soot_squeeze",
+        "mopsmap",
+        "mopsmap_squeeze",
+        "mopsmap_nounits",
+    ],
+)
+def test_libradtran_to_prt_samples(fname, kwargs, expected):
+    """
+    libRadtran sample files load from a path; unselected dimensions are kept
+    unless squeezed.
+    """
+    fname = f"tests/libradtran_samples/{fname}"
+    if isinstance(expected, type):
+        with pytest.raises(expected):
+            libradtran_to_prt(fname, **kwargs)
+    else:
+        ds = libradtran_to_prt(fname, **kwargs)
+        extra = {d: n for d, n in ds.sizes.items() if d in {"hum", "reff", "veff"}}
+        assert extra == expected
