@@ -146,7 +146,7 @@ def create_eovolpath_surface(absorption_database_error_handler_config):
 
     """
 
-    integrator = {"type": "eovolpath", "vroom_enable": True, "moment": True}
+    integrator = {"type": "eovolpath", "use_vroom": True, "moment": True}
 
     return _create_integrator_surface(
         absorption_database_error_handler_config, integrator
@@ -174,7 +174,7 @@ def create_eovolpath_canopy(absorption_database_error_handler_config):
 
     """
 
-    integrator = {"type": "eovolpath", "vroom_enable": True, "moment": True}
+    integrator = {"type": "eovolpath", "use_vroom": True, "moment": True}
 
     return create_integrator_canopy(
         absorption_database_error_handler_config, integrator
