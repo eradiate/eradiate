@@ -93,7 +93,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         doc="List of particle components. Elements may be specified as "
         "dictionaries interpreted by :data:`.atmosphere_factory`; in that "
         "case, the ``type`` parameter may be omitted and will automatically "
-        'be set to ``"particle_aot"``.',
+        'be set to ``"particle_ot"``.',
         type="list of .ParticleComponent",
         init_type="list of .ParticleComponent, optional",
         default="[]",

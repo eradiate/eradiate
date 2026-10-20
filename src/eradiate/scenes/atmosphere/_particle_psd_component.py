@@ -18,7 +18,7 @@ import pint
 import xarray as xr
 
 from ._core import atmosphere_factory
-from ._particle_component import ParticleAOTComponent, ParticleComponent
+from ._particle_component import ParticleComponent, ParticleOTComponent
 from ._particle_profile import ParticleProfile
 from ..core import traverse
 from ..geometry import PlaneParallelGeometry
@@ -617,20 +617,20 @@ class ParticlePSDComponent(ParticleStateComponent):
         return atmosphere_factory.convert(value, allowed_cls=cls)
 
     @classmethod
-    def from_particle_aot(
+    def from_particle_ot(
         cls,
-        particle_aot: ParticleAOTComponent,
+        particle_ot: ParticleOTComponent,
         mass_concentration: pint.Quantity,
         reff: pint.Quantity,
         veff: pint.Quantity,
         grid: SpatialGrid | None = None,
     ) -> ParticlePSDComponent:
         """
-        Build a :class:`.ParticlePSDComponent` from a :class:`.ParticleAOTComponent`.
+        Build a :class:`.ParticlePSDComponent` from a :class:`.ParticleOTComponent`.
 
         Parameters
         ----------
-        particle_aot: :class:`.ParticleAOTComponent`
+        particle_ot: :class:`.ParticleOTComponent`
             Source particle aot.
 
         mass_concentration : :class:`pint.Quantity`
@@ -644,7 +644,7 @@ class ParticlePSDComponent(ParticleStateComponent):
 
         grid : :class:`.SpatialGrid`, optional
             Target render grid for the output :class:`.ParticlePSDComponent`.
-            If provided, ``particle_aot``'s radiative properties are
+            If provided, ``particle_ot``'s radiative properties are
             evaluated on it instead of its own geometry's grid.
 
         Returns
@@ -652,13 +652,13 @@ class ParticlePSDComponent(ParticleStateComponent):
         :class:`.ParticlePSDComponent`
         """
         output_geometry = (
-            particle_aot.geometry
+            particle_ot.geometry
             if grid is None
-            else attrs.evolve(particle_aot.geometry, grid=grid)
+            else attrs.evolve(particle_ot.geometry, grid=grid)
         )
         target_grid = output_geometry.grid
-        w_ref = particle_aot.w_ref
-        pp = particle_aot.particle_properties
+        w_ref = particle_ot.w_ref
+        pp = particle_ot.particle_properties
 
         sigma_t_at_wref = pp.eval_ext(w_ref).item()
         albedo_at_wref = pp.eval_ssa(w_ref).item()
@@ -668,7 +668,7 @@ class ParticlePSDComponent(ParticleStateComponent):
         )
 
         si_ref = MonoSpectralIndex(w=w_ref)
-        sigma_t_grid = particle_aot.eval_sigma_t(si_ref, target_grid)
+        sigma_t_grid = particle_ot.eval_sigma_t(si_ref, target_grid)
         sigma_t_grid = ureg.Quantity(
             np.broadcast_to(
                 sigma_t_grid.m,
@@ -753,6 +753,6 @@ class ParticlePSDComponent(ParticleStateComponent):
             profile=profile_ds,
             properties=properties,
             geometry=output_geometry,
-            has_absorption=particle_aot.has_absorption,
-            has_scattering=particle_aot.has_scattering,
+            has_absorption=particle_ot.has_absorption,
+            has_scattering=particle_ot.has_scattering,
         )

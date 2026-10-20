@@ -71,7 +71,7 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmosphere=False)
             },
             "particle_components": [
                 {
-                    "type": "particle_aot",
+                    "type": "particle_ot",
                     "bottom": 0 * ureg.km,
                     "top": 40 * ureg.km,
                     "distribution": {

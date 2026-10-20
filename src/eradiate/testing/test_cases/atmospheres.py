@@ -69,7 +69,7 @@ def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_conf
                 "error_handler_config": absorption_database_error_handler_config,
             },
             "particle_components": {
-                "type": "particle_aot",
+                "type": "particle_ot",
                 "bottom": 1 * ureg.km,
                 "top": 2 * ureg.km,
                 "tau_ref": 0.5,

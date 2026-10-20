@@ -5,7 +5,7 @@ import xarray as xr
 
 from eradiate.data.convert import make_prt_core_v1, make_prt_psd_v1
 from eradiate.grid import CartesianGrid
-from eradiate.scenes.atmosphere import ParticleAOTComponent, ParticlePSDComponent
+from eradiate.scenes.atmosphere import ParticleOTComponent, ParticlePSDComponent
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import (
     GriddedParticlePhaseFunction,
@@ -23,7 +23,7 @@ from ._psd_helpers import (
 )
 
 
-def make_particle_aot(
+def make_particle_ot(
     w_ref=1.0 * ureg.micron,
     sigma_t_val=1.0,
     ssa_val=0.6,
@@ -31,8 +31,8 @@ def make_particle_aot(
     n_mu=5,
     bottom=0.0 * ureg.km,
     top=2.0 * ureg.km,
-) -> ParticleAOTComponent:
-    """Build a minimal single-phamat, spatially-uniform :class:`.ParticleAOTComponent`."""
+) -> ParticleOTComponent:
+    """Build a minimal single-phamat, spatially-uniform :class:`.ParticleOTComponent`."""
     mu = np.linspace(-1.0, 1.0, n_mu)
     theta = np.rad2deg(np.arccos(mu))
 
@@ -54,7 +54,7 @@ def make_particle_aot(
     )
     geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
 
-    return ParticleAOTComponent(
+    return ParticleOTComponent(
         bottom=bottom,
         top=top,
         distribution="uniform",
@@ -400,12 +400,15 @@ class TestParticlePSDComponent:
                 amount="lwc",
             )
 
-    def test_from_particle_aot_roundtrip(self, mode_mono):
-        """from_particle_aot preserves total sigma_t and albedo relative to the source particle_aot."""
-        layer = make_particle_aot(sigma_t_val=1.0, ssa_val=0.6)
+    def test_from_particle_ot_roundtrip(self, mode_mono):
+        """
+        from_particle_ot preserves total sigma_t and albedo relative to the
+        source particle_ot.
+        """
+        layer = make_particle_ot(sigma_t_val=1.0, ssa_val=0.6)
         si_ref = MonoSpectralIndex(w=layer.w_ref)
 
-        component = ParticlePSDComponent.from_particle_aot(
+        component = ParticlePSDComponent.from_particle_ot(
             layer,
             mass_concentration=ureg.Quantity(1e-3, "g/m^3"),
             reff=ureg.Quantity(10.0, "micron"),
@@ -431,16 +434,19 @@ class TestParticlePSDComponent:
             component_albedo.m_as("dimensionless")[mask], 0.6, rtol=1e-6
         )
 
-    def test_from_particle_aot_custom_grid(self, mode_mono):
-        """from_particle_aot evaluates onto an explicitly given grid instead of the particle_aot's own."""
-        layer = make_particle_aot()
+    def test_from_particle_ot_custom_grid(self, mode_mono):
+        """
+        from_particle_ot evaluates onto an explicitly given grid instead of the
+        particle_ot's own.
+        """
+        layer = make_particle_ot()
         custom_grid = CartesianGrid(
             edges_x=np.array([-2.0, 2.0]) * ureg.km,
             edges_y=np.array([-2.0, 2.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
         )
 
-        component = ParticlePSDComponent.from_particle_aot(
+        component = ParticlePSDComponent.from_particle_ot(
             layer,
             mass_concentration=ureg.Quantity(1e-3, "g/m^3"),
             reff=ureg.Quantity(10.0, "micron"),
@@ -453,7 +459,7 @@ class TestParticlePSDComponent:
         )
 
     def test_theta_convention_consistency(self, mode_mono):
-        """composition_to_particle_aot/from_particle_aot preserve theta/mu ordering through a round trip."""
+        """composition_to_particle_ot/from_particle_ot preserve theta/mu ordering through a round trip."""
         theta_values_desc = np.array([180.0, 150.0, 100.0, 20.0, 0.0])
         mu_values_asc = np.cos(np.deg2rad(theta_values_desc))
         n_theta = len(theta_values_desc)
@@ -493,7 +499,7 @@ class TestParticlePSDComponent:
             profile=profile, properties=properties, geometry=geometry
         )
 
-        layer = ParticleAOTComponent.from_psd_voxel(
+        layer = ParticleOTComponent.from_psd_voxel(
             psd, w=ureg.Quantity(1.0, "micron"), ix=0, iy=0, iz=0
         )
 
@@ -502,7 +508,7 @@ class TestParticlePSDComponent:
         assert np.all(np.diff(mu) > 0)
         np.testing.assert_allclose(pp.phase.values[0, :, 0], np.rad2deg(np.arccos(mu)))
 
-        field2 = ParticlePSDComponent.from_particle_aot(
+        field2 = ParticlePSDComponent.from_particle_ot(
             layer,
             mass_concentration=ureg.Quantity(1e-3, "g/m^3"),
             reff=ureg.Quantity(10.0, "micron"),

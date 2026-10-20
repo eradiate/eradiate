@@ -173,7 +173,7 @@ Quick access
    HomogeneousAtmosphere
    HeterogeneousAtmosphere
    MolecularAtmosphere
-   ParticleAOTComponent
+   ParticleOTComponent
    ParticleExtinctionComponent
    ParticlePSDComponent
 

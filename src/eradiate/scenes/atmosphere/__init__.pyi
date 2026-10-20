@@ -4,6 +4,11 @@ from ._core import atmosphere_factory as atmosphere_factory
 from ._heterogeneous import HeterogeneousAtmosphere as HeterogeneousAtmosphere
 from ._homogeneous import HomogeneousAtmosphere as HomogeneousAtmosphere
 from ._molecular import MolecularAtmosphere as MolecularAtmosphere
+from ._particle_component import ParticleComponent as ParticleComponent
+from ._particle_component import (
+    ParticleExtinctionComponent as ParticleExtinctionComponent,
+)
+from ._particle_component import ParticleOTComponent as ParticleOTComponent
 from ._particle_dist import ArrayParticleDistribution as ArrayParticleDistribution
 from ._particle_dist import (
     ExponentialParticleDistribution as ExponentialParticleDistribution,
@@ -17,10 +22,7 @@ from ._particle_dist import UniformParticleDistribution as UniformParticleDistri
 from ._particle_dist import (
     particle_distribution_factory as particle_distribution_factory,
 )
-from ._particle_component import ParticleComponent as ParticleComponent
-from ._particle_component import ParticleAOTComponent as ParticleAOTComponent
-from ._particle_component import ParticleExtinctionComponent as ParticleExtinctionComponent
-from ._particle_psd_component import ParticlePSDComponent as ParticlePSDComponent
 from ._particle_profile import ParticleProfile as ParticleProfile
+from ._particle_psd_component import ParticlePSDComponent as ParticlePSDComponent
 from ._util import eval_transmittance_ckd as eval_transmittance_ckd
 from ._util import eval_transmittance_mono as eval_transmittance_mono

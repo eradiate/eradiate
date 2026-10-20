@@ -59,9 +59,9 @@ atmosphere_factory.register_lazy_batch(
             {},
         ),
         (
-            "_particle_component.ParticleAOTComponent",
-            "particle_aot",
-            {},
+            "_particle_component.ParticleOTComponent",
+            "particle_ot",
+            {"aliases": ["particle_layer"]},
         ),
         (
             "_particle_component.ParticleExtinctionComponent",

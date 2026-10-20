@@ -67,13 +67,13 @@ class ParticleComponent(AbstractHeterogeneousAtmosphere):
         * If value is a ParticleComponent instance, return it unchanged.
         * If value is a dictionary, it is interpreted by
           :data:`.atmosphere_factory`; the ``"type"`` parameter may be
-          omitted and will automatically be set to ``"particle_aot"``.
+          omitted and will automatically be set to ``"particle_ot"``.
           Other types, e.g. ``"particle_psd"``, must set ``"type"``
           explicitly.
         * Otherwise, the value is returned unchanged.
         """
         if isinstance(value, MutableMapping) and "type" not in value:
-            value = {**value, "type": "particle_aot"}
+            value = {**value, "type": "particle_ot"}
         return atmosphere_factory.convert(value, allowed_cls=cls)
 
     has_absorption: bool = documented(
@@ -113,9 +113,9 @@ class ParticleComponent(AbstractHeterogeneousAtmosphere):
 
 
 @define(eq=False, slots=False)
-class ParticleAOTComponent(ParticleComponent):
+class ParticleOTComponent(ParticleComponent):
     """
-    Particle scene element configured by AOT [``particle_aot``].
+    Particle component parametrized by an optical thickness value [``particle_ot``].
 
     The particle medium has a vertical extension specified by a bottom
     altitude (set by ``bottom``) and a top altitude (set by ``top``).
@@ -221,7 +221,7 @@ class ParticleAOTComponent(ParticleComponent):
         w_units = self.particle_properties.w.u
         if not np.any(np.isclose(value.m_as(w_units), self.particle_properties.w.m)):
             warnings.warn(
-                "While initializing ParticleAOTComponent: the provided aerosol "
+                "While initializing ParticleOTComponent: the provided aerosol "
                 "single-scattering property dataset does not contain the selected "
                 f"reference wavelength (w_ref = {value})",
                 stacklevel=2,
@@ -254,7 +254,7 @@ class ParticleAOTComponent(ParticleComponent):
             return
         if value.shape != self.geometry.grid.shape[:2]:
             raise ValueError(
-                "While initialising ParticleAOTComponent: the shape of the "
+                "While initializing ParticleOTComponent: the shape of the "
                 f"{attribute.name} attribute is inconsistent with the "
                 "scene geometry. Expected a scalar value or a "
                 f"{self.geometry.grid.shape[:2]} sized array, "
@@ -276,7 +276,7 @@ class ParticleAOTComponent(ParticleComponent):
     def _particle_properties_validator(self, attribute, value):
         if value.has_size_distribution:
             raise ValueError(
-                "While initializing ParticleAOTComponent: 'particle_properties' "
+                "While initializing ParticleOTComponent: 'particle_properties' "
                 "must not have 'reff'/'veff' dimensions; use ParticlePSDComponent "
                 "for a spatially varying composition"
             )
@@ -570,9 +570,9 @@ class ParticleAOTComponent(ParticleComponent):
         iy: int,
         iz: int,
         grid: SpatialGrid | None = None,
-    ) -> ParticleAOTComponent:
+    ) -> ParticleOTComponent:
         """
-        Build a :class:`.ParticleAOTComponent` representing a single voxel of
+        Build a :class:`.ParticleOTComponent` representing a single voxel of
         the particle PSD component at the given grid location.
 
         Parameters
@@ -591,7 +591,7 @@ class ParticleAOTComponent(ParticleComponent):
 
         Returns
         -------
-        :class:`.ParticleAOTComponent`
+        :class:`.ParticleOTComponent`
 
         Raises
         ------
@@ -707,9 +707,9 @@ class ParticleAOTComponent(ParticleComponent):
         i_veff: int,
         grid: SpatialGrid | None = None,
         ext: pint.Quantity | None = None,
-    ) -> ParticleAOTComponent:
+    ) -> ParticleOTComponent:
         """
-        Build a single :class:`.ParticleAOTComponent` approximating the whole
+        Build a single :class:`.ParticleOTComponent` approximating the whole
         component with one fixed ``(reff, veff)`` grid point.
 
         Every voxel's own ``reff``/``veff`` is ignored in favour of the
@@ -732,7 +732,7 @@ class ParticleAOTComponent(ParticleComponent):
             Target render grid. Defaults to ``particle_psd_component.geometry.grid``.
 
         ext : :class:`pint.Quantity`, optional
-            Extinction coefficient stored in the output ParticleAOTComponent's
+            Extinction coefficient stored in the output ParticleOTComponent's
             ``particle_properties``. Defaults to the native grid value at
             ``(i_reff, i_veff)``. Since that dataset only ever has one
             wavelength point, this value is only ever compared to itself
@@ -740,7 +740,7 @@ class ParticleAOTComponent(ParticleComponent):
 
         Returns
         -------
-        :class:`.ParticleAOTComponent`
+        :class:`.ParticleOTComponent`
         """
         grid = grid or particle_psd_component.geometry.grid
         col_units = uck.get("collision_coefficient")

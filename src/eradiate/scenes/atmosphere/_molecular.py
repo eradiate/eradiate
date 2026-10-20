@@ -30,7 +30,7 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     See Also
     --------
-    :class:`~eradiate.scenes.atmosphere.ParticleAOTComponent`,
+    :class:`~eradiate.scenes.atmosphere.ParticleOTComponent`,
     :class:`~eradiate.scenes.atmosphere.HeterogeneousAtmosphere`.
 
     Notes
