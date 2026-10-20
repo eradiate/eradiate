@@ -58,8 +58,13 @@ def _maybe_cast(q: pint.Quantity, dtype: DTypeLike | None) -> pint.Quantity:
     return q.astype(dtype) if dtype else q
 
 
-@deprecated(deprecated_in="1.3.0")
+@deprecated(
+    deprecated_in="1.3.0",
+    removed_in="2.0.0",
+    details="Use ``make_prt_core_v1()`` instead.",
+)
 def make_aer_core_v2(*args, **kwargs):
+    """Compatibility alias to :func:`.make_prt_core_v1`."""
     return make_prt_core_v1(*args, **kwargs)
 
 
@@ -979,3 +984,19 @@ def libradtran_to_prt(
         normalize=normalize,
         check=check,
     )
+
+
+@deprecated(
+    deprecated_in="1.3.0",
+    removed_in="2.0.0",
+    details="Use ``libradtran_to_prt()`` instead",
+)
+def libradtran_to_aer_core_v2(
+    ds: xr.Dataset,
+    attrs: dict | None = None,
+    fallback_units: dict[str, str] | None = None,
+    normalize: bool = False,
+    check: Literal["none", "fast", "full"] = "full",
+):
+    """Compatibility alias to :func:`libradtran_to_prt`."""
+    return libradtran_to_prt(ds, attrs, fallback_units, normalize, check)
