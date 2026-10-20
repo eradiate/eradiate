@@ -149,7 +149,9 @@ def deprecated(
     should_warn = any([is_deprecated, is_unsupported])
 
     def _wrapper(wrapped):
-        if should_warn:
+        # The docstring is updated even before the deprecation period starts,
+        # so that docs built from development versions show the notice
+        if deprecated_in or removed_in:
             # The various parts of this decorator being optional makes for
             # a number of ways the deprecation notice could go. The following
             # makes for a nicely constructed sentence with or without any
@@ -177,6 +179,7 @@ def deprecated(
             sections["_deprecation"] = deprecation_note
             wrapped.__doc__ = "".join(format_doc(sections))
 
+        if should_warn:
             # Define the actual emitted warning
             warning_cls = UnsupportedWarning if is_unsupported else DeprecatedWarning
             the_warning = warning_cls(
