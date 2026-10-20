@@ -173,17 +173,22 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
         type="float",
     )
 
-    vroom_enable = documented(
+    # Only read by __attrs_post_init__(); the use_vroom property is derived
+    # from use_ddis, use_pbs and use_nle.
+    _use_vroom = documented(
         attrs.field(
             default=False,
             converter=bool,
             validator=attrs.validators.instance_of(bool),
+            repr=False,
         ),
         doc="Activate all VROOM variance reduction methods (DDIS, PBS, and NLE). "
-        "Overrides ``ddis_enable``, ``pbs_enable``, and ``nle_enable``.",
+        "If ``True``, overrides ``use_ddis``, ``use_pbs``, and ``use_nle``.",
+        type="bool",
+        default="False",
     )
 
-    ddis_enable = documented(
+    use_ddis = documented(
         attrs.field(
             default=False,
             converter=bool,
@@ -195,18 +200,18 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
         type="bool",
     )
 
-    ddis_enable_surface = documented(
+    use_ddis_surface = documented(
         attrs.field(
             default=True,
             converter=bool,
             validator=attrs.validators.instance_of(bool),
         ),
-        doc="Apply DDIS to surfaces when ``ddis_enable=True``. Uses the same "
-        "``ddis_threshold`` as mentioned in ``ddis_enable``.",
+        doc="Apply DDIS to surfaces when ``use_ddis=True``. Uses the same "
+        "``ddis_threshold`` as mentioned in ``use_ddis``.",
         type="bool",
     )
 
-    pbs_enable = documented(
+    use_pbs = documented(
         attrs.field(
             default=False,
             converter=bool,
@@ -270,7 +275,7 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
         type="float",
     )
 
-    nle_enable = documented(
+    use_nle = documented(
         attrs.field(
             default=False,
             converter=bool,
@@ -319,6 +324,23 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
         type="int",
     )
 
+    def __attrs_post_init__(self):
+        if self._use_vroom:
+            self.use_vroom = True
+
+    @property
+    def use_vroom(self) -> bool:
+        """
+        ``True`` if all VROOM variance reduction methods (DDIS, PBS, and NLE)
+        are enabled. Setting this property sets ``use_ddis``, ``use_pbs``
+        and ``use_nle`` to the assigned value.
+        """
+        return self.use_ddis and self.use_pbs and self.use_nle
+
+    @use_vroom.setter
+    def use_vroom(self, value: bool) -> None:
+        self.use_ddis = self.use_pbs = self.use_nle = value
+
     @property
     def extremum_compatible(self):
         return True
@@ -331,16 +353,16 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
         result = super()._build_kernel_dict()
         result["rr_factor"] = self.rr_factor
 
-        result["ddis_enable"] = True if self.vroom_enable else self.ddis_enable
-        result["ddis_enable_surface"] = self.ddis_enable_surface
+        result["use_ddis"] = self.use_ddis
+        result["use_ddis_surface"] = self.use_ddis_surface
 
-        result["pbs_enable"] = True if self.vroom_enable else self.pbs_enable
+        result["use_pbs"] = self.use_pbs
         result["pbs_min_split_threshold"] = self.pbs_min_split_threshold
         result["pbs_max_split_count"] = self.pbs_max_split_count
         result["pbs_crit_rr_threshold"] = self.pbs_crit_rr_threshold
         result["pbs_min_rr_threshold"] = self.pbs_min_rr_threshold
 
-        result["nle_enable"] = True if self.vroom_enable else self.nle_enable
+        result["use_nle"] = self.use_nle
         result["nle_first_clone_depth"] = self.nle_first_clone_depth
         result["nle_max_clone_depth"] = self.nle_max_clone_depth
         result["nle_nee_per_clone"] = self.nle_nee_per_clone

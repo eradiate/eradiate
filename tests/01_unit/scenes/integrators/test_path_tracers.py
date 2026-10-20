@@ -61,14 +61,14 @@ def test_path_tracers_construct(modes_all, integrator_cls, kwargs):
                 "max_depth": 5,
                 "rr_depth": 3,
                 "rr_factor": 0.97,
-                "ddis_enable": True,
-                "ddis_enable_surface": True,
-                "pbs_enable": True,
+                "use_ddis": True,
+                "use_ddis_surface": True,
+                "use_pbs": True,
                 "pbs_max_split_count": 50,
                 "pbs_min_split_threshold": 3.0,
                 "pbs_crit_rr_threshold": 0.3,
                 "pbs_min_rr_threshold": 0.22,
-                "nle_enable": True,
+                "use_nle": True,
                 "nle_first_clone_depth": 5,
                 "nle_max_clone_depth": 12,
                 "nle_nee_per_clone": 11,
@@ -244,3 +244,16 @@ def test_stokes_moment_construct(mode_mono_polarized_single, integrator_cls, kwa
 
     kdict_template, _ = traverse(integrator)
     assert kdict_template.data["type"] == "stokes_moment"
+
+
+def test_eovolpath_vroom_overrides(mode_mono):
+    integrator = EOVolPathIntegrator()
+
+    integrator.use_vroom = True
+    assert all([integrator.use_ddis, integrator.use_pbs, integrator.use_nle])
+
+    integrator.use_ddis = False
+    assert integrator.use_vroom is False
+
+    integrator = EOVolPathIntegrator(use_vroom=True, use_ddis=False)
+    assert integrator.use_vroom and integrator.use_ddis
