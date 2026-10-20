@@ -4,12 +4,14 @@ import datetime
 import functools
 import inspect
 import warnings
-from typing import Callable
+from typing import Callable, TypeVar
 
 from packaging import version
 
 from .numpydoc import format_doc, parse_doc
 from .._version import _version
+
+T = TypeVar("T")
 
 # Note: Most of this code is taken from https://github.com/briancurtin/deprecation.
 # Class wrapping code is inspired by https://github.com/tantale/deprecated.
@@ -264,6 +266,74 @@ def substitute(subs: dict[str, tuple[type, dict[str, str]]]) -> Callable:
         raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
     return __getattr__
+
+
+def renamed_kwargs(
+    renames: dict[str, str], **warning_kwargs
+) -> Callable[[type[T]], type[T]]:
+    """
+    Class decorator redirecting deprecated constructor keyword arguments to
+    their current names with a deprecation warning.
+
+    When used with attrs classes, apply it above the attrs decorator so that it
+    wraps the generated ``__init__()``.
+
+    Parameters
+    ----------
+    renames : dict
+        Mapping of outdated keyword argument names to current names.
+
+    **warning_kwargs
+        Keyword arguments passed to the :class:`DeprecatedWarning` constructor.
+
+    Returns
+    -------
+    callable
+        The class decorator.
+
+    Raises
+    ------
+    TypeError
+        If the decorated constructor is called with both the outdated and
+        current names of an argument.
+
+    Example
+    -------
+    .. code-block:: python
+
+        @renamed_kwargs(
+            {"particle_layers": "particle_components"},  # Old name: new name
+            deprecated_in="1.3.0",
+            removed_in="1.4.0",
+        )
+        @define
+        class HeterogeneousAtmosphere: ...
+    """
+
+    def wrapper(cls: type[T]) -> type[T]:
+        init = cls.__init__
+
+        @functools.wraps(init)
+        def __init__(self, *args, **kwargs):
+            for old, new in renames.items():
+                if old in kwargs:
+                    if new in kwargs:
+                        raise TypeError(f"cannot pass both '{old}' and '{new}'")
+                    warnings.warn(
+                        DeprecatedWarning(
+                            component=f"'{cls.__name__}.{old}'",
+                            details=f"Use '{new}' instead.",
+                            **warning_kwargs,
+                        ),
+                        stacklevel=2,
+                    )
+                    kwargs[new] = kwargs.pop(old)
+            init(self, *args, **kwargs)
+
+        cls.__init__ = __init__
+        return cls
+
+    return wrapper
 
 
 class DeprecatedWarning(DeprecationWarning):
