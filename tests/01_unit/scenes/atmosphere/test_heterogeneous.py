@@ -42,6 +42,28 @@ def test_heterogeneous_empty(modes_all_double):
         HeterogeneousAtmosphere()
 
 
+@pytest.mark.parametrize("via_factory", [False, True])
+def test_heterogeneous_particle_layers_deprecated(mode_mono, via_factory):
+    components = [ParticleOTComponent()]
+
+    with pytest.warns(DeprecationWarning, match="particle_layers"):
+        if via_factory:
+            atmosphere = eradiate.scenes.atmosphere.atmosphere_factory.convert(
+                {"type": "heterogeneous", "particle_layers": components}
+            )
+        else:
+            atmosphere = HeterogeneousAtmosphere(particle_layers=components)
+    assert atmosphere.particle_components == components
+
+    with pytest.warns(DeprecationWarning, match="particle_layers"):
+        assert atmosphere.particle_layers is atmosphere.particle_components
+
+    with pytest.raises(TypeError, match="cannot pass both"):
+        HeterogeneousAtmosphere(
+            particle_layers=components, particle_components=components
+        )
+
+
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
 @pytest.mark.parametrize("component", ["molecular", "particle"])
 def test_heterogeneous_single_mono(

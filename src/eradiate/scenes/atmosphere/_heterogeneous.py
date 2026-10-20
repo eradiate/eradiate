@@ -5,6 +5,7 @@ Heterogeneous atmospheres.
 from __future__ import annotations
 
 import logging
+import warnings
 from collections.abc import MutableMapping
 from typing import TYPE_CHECKING
 
@@ -24,6 +25,7 @@ from ...kernel import SearchSceneParameter
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
+from ...util.deprecation import DeprecatedWarning, renamed_kwargs
 from ...util.misc import cache_by_id
 
 if TYPE_CHECKING:
@@ -46,6 +48,11 @@ def _particles_converter(value):
     return [ParticleComponent.convert(element) for element in value]
 
 
+@renamed_kwargs(
+    {"particle_layers": "particle_components"},
+    deprecated_in="1.3.0",
+    removed_in="2.0.0",
+)
 @define(eq=False, slots=False)
 class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     """
@@ -117,9 +124,24 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     )
 
     @property
-    def components(
-        self,
-    ) -> list[MolecularAtmosphere | ParticleComponent]:
+    def particle_layers(self) -> list[ParticleComponent]:
+        """
+        .. deprecated:: 1.3.0
+           Use :attr:`particle_components` instead.
+        """
+        warnings.warn(
+            DeprecatedWarning(
+                component="'HeterogeneousAtmosphere.particle_layers'",
+                deprecated_in="1.3.0",
+                removed_in="2.0.0",
+                details="Use 'particle_components' instead.",
+            ),
+            stacklevel=2,
+        )
+        return self.particle_components
+
+    @property
+    def components(self) -> list[MolecularAtmosphere | ParticleComponent]:
         """
         Returns
         -------
