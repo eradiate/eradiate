@@ -132,7 +132,9 @@ class Atmosphere(CompositeSceneElement, ABC):
         "estimate transmittance for integrators that allow it. "
         "Otherwise, falls back to ratio tracking. "
         "Residual ratio tracking generally reduces variance and can improve "
-        "performance for high optical thickness.",
+        "performance for high optical thickness. "
+        "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
+        "on the parent instead.",
         type="bool",
     )
 
@@ -144,7 +146,9 @@ class Atmosphere(CompositeSceneElement, ABC):
             validator=attrs.validators.instance_of(float),
         ),
         doc="Specifies the probability to importance sample the phase using the "
-        "emitter as incident direction. Set negative to deactivate.",
+        "emitter as incident direction. Set negative to deactivate. "
+        "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
+        "on the parent instead.",
         type="float",
     )
     # --------------------------------------------------------------------------
@@ -370,7 +374,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         doc="If set to true, uses heterogeneous medium, which is compatible with all "
         "integrators except PiecewiseVolpathIntegrator. Otherwise, uses a piecewise medium which "
         "is compatible with PiecewiseVolPathIntegrator and other integrators. This setting "
-        "only affects PlaneParallelGeometry, other geometries use heterogeneous mediums.",
+        "only affects PlaneParallelGeometry, other geometries use heterogeneous mediums. "
+        "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
+        "on the parent instead.",
         type="bool",
         init_type="bool, optional",
     )
@@ -389,7 +395,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         "The default value (1, 1, 1) falls back to a global majorant. In plane "
         "parallel, set to (0,0,0) to trigger an adaptive search of the optimal"
         "resolution. Note that this is an expensive search that triggers at "
-        "spectral update.",
+        "spectral update. "
+        "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
+        "on the parent instead.",
         type="tuple[int, int, int]",
         init_type="tuple[int, int, int]",
         default="(1,1,1)",
