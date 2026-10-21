@@ -8,10 +8,10 @@ from eradiate.scenes.atmosphere import ParticleProfile
 
 
 def make_profile_dataset(
-    reff, veff, mass_concentration, x_edges, y_edges, z_edges
+    reff, veff, mass_concentration, x_edges, y_edges, z_edges, xy_units="km"
 ) -> xr.Dataset:
     """
-    Build a dense Pfd-Core v1 profile dataset. ``reff``/``veff``/
+    Build a dense Ppr-Core v1 profile dataset. ``reff``/``veff``/
     ``mass_concentration`` must be broadcastable to shape
     ``(len(z_edges) - 1, len(y_edges) - 1, len(x_edges) - 1)``.
     """
@@ -33,8 +33,10 @@ def make_profile_dataset(
                 np.broadcast_to(mass_concentration, shape).copy(),
                 {"units": "g/m^3"},
             ),
-            "x_edges": (["x_edges"], np.asarray(x_edges), {"units": "km"}),
-            "y_edges": (["y_edges"], np.asarray(y_edges), {"units": "km"}),
+        },
+        coords={
+            "x_edges": (["x_edges"], np.asarray(x_edges), {"units": xy_units}),
+            "y_edges": (["y_edges"], np.asarray(y_edges), {"units": xy_units}),
             "z_edges": (["z_edges"], np.asarray(z_edges), {"units": "km"}),
         },
     )
@@ -54,7 +56,7 @@ class TestConstruction:
         ParticleProfile(data=ds)
 
     def test_arbitrary_variables(self):
-        """Field variables are not prescribed."""
+        """State variables are not prescribed."""
         ds = make_profile_dataset(
             reff=10.0,
             veff=0.1,
@@ -69,7 +71,7 @@ class TestConstruction:
 
     @pytest.mark.parametrize("missing", ["x_edges", "y_edges", "z_edges"])
     def test_missing_variable_raises(self, missing):
-        """Constructing from a dataset missing a structural variable raises."""
+        """Constructing from a dataset missing an edge coordinate raises."""
         ds = make_profile_dataset(
             reff=10.0,
             veff=0.1,
@@ -78,11 +80,11 @@ class TestConstruction:
             y_edges=[0.0, 1.0],
             z_edges=[0.0, 1.0],
         ).drop_vars(missing)
-        with pytest.raises(ValueError, match="missing required variable"):
+        with pytest.raises(ValueError, match="missing required coordinate"):
             ParticleProfile(data=ds)
 
-    def test_no_field_variable_raises(self):
-        """Constructing from a dataset with only structural variables raises."""
+    def test_no_state_variable_raises(self):
+        """Constructing from a dataset with only edge coordinates raises."""
         ds = make_profile_dataset(
             reff=10.0,
             veff=0.1,
@@ -91,11 +93,11 @@ class TestConstruction:
             y_edges=[0.0, 1.0],
             z_edges=[0.0, 1.0],
         ).drop_vars(["reff", "veff", "mass_concentration"])
-        with pytest.raises(ValueError, match="no variable besides"):
+        with pytest.raises(ValueError, match="no state variable"):
             ParticleProfile(data=ds)
 
     def test_wrong_dims_raises(self):
-        """Constructing from a dataset with a field variable not on (z, y, x) raises."""
+        """Constructing from a dataset with a state variable not on (z, y, x) raises."""
         ds = make_profile_dataset(
             reff=10.0,
             veff=0.1,
@@ -106,6 +108,48 @@ class TestConstruction:
         )
         ds["reff"] = ds["reff"].transpose("x", "y", "z")
         with pytest.raises(ValueError, match=r"offending variable.*reff"):
+            ParticleProfile(data=ds)
+
+    @pytest.mark.parametrize("axis", ["x", "y", "z"])
+    def test_wrong_edges_size_raises(self, axis):
+        """Constructing from a dataset whose edges don't have len(dim) + 1 values raises."""
+        ds = make_profile_dataset(
+            reff=10.0,
+            veff=0.1,
+            mass_concentration=1e-3,
+            x_edges=[0.0, 1.0],
+            y_edges=[0.0, 1.0],
+            z_edges=[0.0, 1.0],
+        )
+        name = f"{axis}_edges"
+        ds = ds.drop_vars(name)
+        ds[name] = ([name], np.array([0.0, 1.0, 2.0]), {"units": "km"})
+        with pytest.raises(ValueError, match=f"'{name}' must have dims"):
+            ParticleProfile(data=ds)
+
+    @pytest.mark.parametrize(
+        "name, values, attrs, match",
+        [
+            ("x_edges", [0.0, 1.0], {}, "'x_edges' has no units"),
+            ("z_edges", [1.0, 0.0], {"units": "km"}, "'z_edges' must be strictly"),
+            ("z_edges", [0.0, 1.0], {"units": "rad"}, "'z_edges' must have length"),
+            ("y_edges", [0.0, 1.0], {"units": "rad"}, "both have length units"),
+            ("x_edges", [0.0, 1.0], {"units": "s"}, "both have length units"),
+        ],
+        ids=["no_units", "decreasing", "z_angle", "xy_mixed", "xy_time"],
+    )
+    def test_invalid_edges_raises(self, name, values, attrs, match):
+        """Constructing from a dataset with invalid edge coordinates raises."""
+        ds = make_profile_dataset(
+            reff=10.0,
+            veff=0.1,
+            mass_concentration=1e-3,
+            x_edges=[0.0, 1.0],
+            y_edges=[0.0, 1.0],
+            z_edges=[0.0, 1.0],
+        )
+        ds = ds.assign_coords({name: ([name], np.array(values), attrs)})
+        with pytest.raises(ValueError, match=match):
             ParticleProfile(data=ds)
 
 
@@ -123,8 +167,8 @@ class TestVariablesAndGetitem:
             )
         )
 
-    def test_variables_excludes_structural(self, profile):
-        """variables lists non-structural data_vars only."""
+    def test_variables_excludes_edges(self, profile):
+        """variables lists state variables only, not edge coordinates."""
         assert set(profile.variables) == {"reff", "veff", "mass_concentration"}
 
     def test_getitem_cached(self, profile):
@@ -133,18 +177,18 @@ class TestVariablesAndGetitem:
             assert profile[name] is profile[name]
         assert profile["reff"].units == ureg.micron
 
-    def test_getitem_rejects_structural_variable(self, profile):
-        """profile[name] raises for a structural (x/y/z_edges) variable."""
+    def test_getitem_rejects_edge_coordinate(self, profile):
+        """profile[name] raises for an edge (x/y/z_edges) coordinate."""
         with pytest.raises(KeyError, match="x_edges"):
             profile["x_edges"]
 
     def test_getitem_rejects_unknown_variable(self, profile):
-        """profile[name] raises for a name that isn't a profile variable at all."""
+        """profile[name] raises for a name that isn't in the profile at all."""
         with pytest.raises(KeyError, match="nonexistent"):
             profile["nonexistent"]
 
 
-class TestResampleRegular:
+class TestResample:
     @pytest.fixture
     def profile(self) -> ParticleProfile:
         reff = [[[10.0, 11.0], [0.0, 0.0]], [[0.0, 0.0], [12.0, 13.0]]]
@@ -172,8 +216,8 @@ class TestResampleRegular:
         )
 
     def test_containing_layer_z(self, profile, grid):
-        """resample_regular picks the source layer containing each target layer centre."""
-        result = profile.resample_regular(grid)
+        """resample picks the source layer containing each target layer centre."""
+        result = profile.resample(grid)
         reff = result.data["reff"].values
         mass_concentration = result.data["mass_concentration"].values
 
@@ -208,7 +252,7 @@ class TestResampleRegular:
             edges_y=np.array([0.0, 1.0]) * ureg.km,
             levels=np.linspace(0.0, 3.0, 7) * ureg.km,
         )
-        result = profile.resample_regular(grid)
+        result = profile.resample(grid)
         np.testing.assert_array_equal(
             result.data["mass_concentration"].values[:, 0, 0],
             [0.0, 0.0, 1e-3, 1e-3, 0.0, 0.0],
@@ -225,14 +269,14 @@ class TestResampleRegular:
         extended = ParticleProfile(data=ds)
         assert extended["number_concentration"].units == ureg("cm^-3").units
 
-        result = extended.resample_regular(grid)
+        result = extended.resample(grid)
         np.testing.assert_allclose(
             result["number_concentration"].m_as("cm^-3"), np.full((4, 2, 2), 5.0)
         )
 
     def test_output_is_regular_on_all_axes(self, profile, grid):
         """The resampled profile's x/y/z edges are all evenly spaced."""
-        result = profile.resample_regular(grid)
+        result = profile.resample(grid)
         for name in ("x_edges", "y_edges", "z_edges"):
             values = result.data[name].values
             step = np.diff(values)
@@ -240,40 +284,40 @@ class TestResampleRegular:
 
     def test_output_dataset_valid(self, profile, grid):
         """The resampled dataset is itself a valid ParticleProfile input."""
-        result = profile.resample_regular(grid)
+        result = profile.resample(grid)
         ParticleProfile(data=result.data)
 
     @pytest.mark.parametrize("axis", ["x_edges", "y_edges"])
     def test_irregular_source_raises(self, profile, grid, axis):
-        """resample_regular rejects a profile with an irregular x_edges/y_edges axis."""
+        """resample rejects a profile with an irregular x_edges/y_edges axis."""
         ds = profile.data.copy()
         ds[axis] = ([axis], np.array([0.0, 1.0, 3.0]), {"units": "km"})
         irregular = ParticleProfile(data=ds)
-        with pytest.raises(ValueError, match=f"'{axis}' must be regularly spaced"):
-            irregular.resample_regular(grid)
+        with pytest.raises(ValueError, match="do not match the target"):
+            irregular.resample(grid)
 
     def test_extent_mismatch_raises(self, profile):
-        """resample_regular rejects a target grid whose extent doesn't match the profile's."""
+        """resample rejects a target grid whose extent doesn't match the profile's."""
         mismatched_grid = CartesianGrid(
             edges_x=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
             edges_y=np.array([0.0, 1.0, 2.0]) * ureg.km,
             levels=np.linspace(0.0, 4.0, 5) * ureg.km,
         )
         with pytest.raises(ValueError, match="do not match the target"):
-            profile.resample_regular(mismatched_grid)
+            profile.resample(mismatched_grid)
 
     def test_resolution_mismatch_raises(self, profile):
-        """resample_regular rejects a target grid whose resolution doesn't match the profile's."""
+        """resample rejects a target grid whose resolution doesn't match the profile's."""
         mismatched_grid = CartesianGrid(
             edges_x=np.array([0.0, 2.0]) * ureg.km,
             edges_y=np.array([0.0, 1.0, 2.0]) * ureg.km,
             levels=np.linspace(0.0, 4.0, 5) * ureg.km,
         )
         with pytest.raises(ValueError, match="do not match the target"):
-            profile.resample_regular(mismatched_grid)
+            profile.resample(mismatched_grid)
 
     def test_spherical_shell_dispatch(self):
-        """resample_regular dispatches to the SphericalGrid implementation."""
+        """resample dispatches to the SphericalGrid implementation."""
         profile = ParticleProfile(
             data=make_profile_dataset(
                 reff=10.0,
@@ -282,15 +326,14 @@ class TestResampleRegular:
                 x_edges=np.linspace(0.0, 2 * np.pi, 3),
                 y_edges=np.linspace(0.0, np.pi, 3),
                 z_edges=[0.0, 1.0],
+                xy_units="radian",
             )
         )
-        profile.data["x_edges"].attrs["units"] = "radian"
-        profile.data["y_edges"].attrs["units"] = "radian"
 
         grid = SphericalGrid(
             levels=np.array([0.0, 1.0]) * ureg.km,
             azimuths=np.linspace(0.0, 2 * np.pi, 3) * ureg.radian,
             colatitudes=np.linspace(0.0, np.pi, 3) * ureg.radian,
         )
-        result = profile.resample_regular(grid)
+        result = profile.resample(grid)
         assert result.data["reff"].shape == (1, 2, 2)

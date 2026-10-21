@@ -608,7 +608,7 @@ class ParticleOTComponent(ParticleComponent):
             cloud (zero amount).
         """
         grid = grid or particle_psd_component.geometry.grid
-        resampled_profile = particle_psd_component.profile.resample_regular(grid).data
+        resampled_profile = particle_psd_component.profile.resample(grid).data
         amount_name = particle_psd_component._amount
         binding = particle_psd_component._binding
 
@@ -733,7 +733,7 @@ class ParticleOTComponent(ParticleComponent):
         # Evaluate on the wavelength axis first, then pick this exact point.
         m_extinction = pp.eval_ext(wavelength)[0, i_reff, i_veff]
 
-        resampled = particle_psd_component.profile.resample_regular(grid)
+        resampled = particle_psd_component.profile.resample(grid)
         amount = resampled[particle_psd_component._amount]
         sigma_t = m_extinction * amount  # (z, y, x)
 

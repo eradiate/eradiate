@@ -160,8 +160,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def particle_layers(self) -> list[ParticleComponent]:
         """
+        Particle components of this atmosphere.
+
         .. deprecated:: 1.3.0
            Use :attr:`particle_components` instead.
+
         """
         warnings.warn(
             DeprecatedWarning(
