@@ -60,5 +60,5 @@ def test_helpers_check_piecewise_compatible_grid(
     atm = HeterogeneousAtmosphere(
         geometry=geometry, molecular_atmosphere=atmosphere_us_standard_mono
     )
-    compatible, _ = check_piecewise_compatible(geometry, atm)
+    compatible, _ = check_piecewise_compatible(atm)
     assert compatible is expected
