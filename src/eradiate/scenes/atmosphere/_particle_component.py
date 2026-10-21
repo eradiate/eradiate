@@ -5,6 +5,7 @@ Particle components.
 from __future__ import annotations
 
 import warnings
+from abc import ABC
 from collections.abc import MutableMapping
 from functools import singledispatchmethod
 from typing import TYPE_CHECKING, Any
@@ -56,19 +57,19 @@ def _particle_distribution_converter(value):
 
 
 @define(eq=False, slots=False)
-class ParticleComponent(AbstractHeterogeneousAtmosphere):
-    """Abstract base class for particulate media"""
+class ParticleComponent(AbstractHeterogeneousAtmosphere, ABC):
+    """Abstract base class for particulate media."""
 
     @classmethod
     def convert(cls, value: Any) -> ParticleComponent:
         """
         Conversion logic:
 
-        * If value is a ParticleComponent instance, return it unchanged.
+        * If value is a :class:`ParticleComponent` instance, return it unchanged.
         * If value is a dictionary, it is interpreted by
           :data:`.atmosphere_factory`; the ``"type"`` parameter may be
           omitted and will automatically be set to ``"particle_ot"``.
-          Other types, e.g. ``"particle_psd"``, must set ``"type"``
+          Other types, *e.g.* ``"particle_psd"``, must set ``"type"``
           explicitly.
         * Otherwise, the value is returned unchanged.
         """
@@ -117,24 +118,29 @@ class ParticleOTComponent(ParticleComponent):
     """
     Particle component parametrized by an optical thickness value [``particle_ot``].
 
-    The particle medium has a vertical extension specified by a bottom
-    altitude (set by ``bottom``) and a top altitude (set by ``top``).
-    Inside the medium, the particles number is distributed according to a
-    distribution (set by ``distribution``).
-    See :mod:`~eradiate.scenes.atmosphere.particle_dist` for the available
-    distribution types and corresponding parameters.
-    The particle number fraction is evaluated on the vertical layers of the
-    render grid (see ``geometry``) to describe its variations with altitude.
-    The particle density in the medium is adjusted so that the particle
-    particles' optical thickness at a specified reference wavelength
-    (``w_ref``) meets a specified value (``tau_ref``).
-    The particles radiative properties are specified by a data set
-    (``dataset``).
+    This component represents a one-dimensional medium parametrized by a
+    vertical extent (``bottom`` and ``top`` levels) and a total layer optical
+    thickness (``tau_ref``). The optical thickness is distributed along the
+    vertical dimension according to a density distribution (``distribution``).
+    The radiative properties of the medium are specified by a
+    :class:`ParticleProperties` instance (``particle_properties``).
 
     Notes
     -----
     If the optical property dataset contains only one spectral data point, the
     data is considered uniform throughout the entire spectrum.
+
+    The medium density is evaluated on the vertical layers of the render grid
+    (see ``geometry``) and normalized to meet the target optical thickness.
+
+    The prescribed optical thickness is enforced at the reference wavelength
+    (``tau_ref``) and scaled by the medium's extinction, normalized at that
+    wavelength.
+
+    See Also
+    --------
+    :mod:`~eradiate.scenes.atmosphere.particle_dist`: available distribution
+    types and parametrizations.
     """
 
     bottom: pint.Quantity = documented(
@@ -771,17 +777,19 @@ def _to_wxyz(value: Any) -> Any:
 @define(eq=False, slots=False)
 class ParticleExtinctionComponent(ParticleComponent):
     """
-    Particle scene element configured by extinction and albedo
+    Particle component parametrized by extinction coefficient and albedo
     [``particle_extinction``].
 
-    This class is parameterized by absolute values of extinction and single
-    -scattering albedo provided through spatially defined data arrays.
+    This component represents a 3D participating medium characterized by
+    extinction coefficient and single-scattering albedo fields, both described
+    as gridded arrays.
 
-    ``sigma_t`` and ``albedo`` must be defined over exactly the ``w``, ``x``,
-    ``y`` and ``z`` dimensions, in any order, with ``w`` wavelength and ``x``/``y``/``z`` spatial axes
-    aligned with the scene geometry's grid. They are interpolated over ``w``
-    and ``z``; ``x``/``y`` are used as-is, so their values must already match
-    the scene geometry's horizontal grid shape.
+    The extinction (``sigma_t``) and albedo (``albedo``) arrays must have
+    exactly the dimensions ``w`` (wavelength) and ``x``, ``y``, ``z`` (space
+    coordinates), in any order. The spatial coordinate axes must be aligned with
+    the scene geometry's grid. Both data arrays are interpolated on the ``w``
+    and ``z`` axes; the ``x`` and ``y`` axes are used as-is, so their values
+    must already match the scene geometry's horizontal grid shape.
 
     This class accepts any factory-convertible phase function specification.
     """
@@ -793,11 +801,10 @@ class ParticleExtinctionComponent(ParticleComponent):
             validator=attrs.validators.instance_of(xr.DataArray),
         ),
         doc="Extinction coefficient. A ``DataArray`` whose dimensions are "
-        "exactly ``w``, ``x``, ``y`` and ``z``, in any order: ``w`` is wavelength, ``x``/``y``/``z`` "
-        "are spatial axes aligned with the scene geometry's grid. Values "
-        "and the ``w``/``z`` coordinates must carry a ``'units'`` entry in "
-        "their ``attrs``, as read by :func:`.to_quantity`. Must have "
-        "matching sizes with ``albedo``.",
+        "exactly ``w`` (wavelength) and ``x``, ``y``, ``z`` (space coordinates), "
+        "in any order. Values and the ``w``/``z`` coordinates must carry a "
+        "``'units'`` entry in their ``attrs``, as read by :func:`.to_quantity`. "
+        "Must have matching sizes with ``albedo``.",
         type="DataArray",
         init_type="DataArray",
     )

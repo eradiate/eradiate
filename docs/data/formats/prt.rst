@@ -21,6 +21,9 @@ a maximum equal to the size of the ``imom`` dimension. When ``pmom`` is present,
 ``nmom`` stores the per-wavelength count; entries beyond ``nmom[iw]`` in
 ``pmom`` are NaN-padded.
 
+The format can be extended with *state dimensions* (see
+:ref:`sec-data_formats-prt_extensions`).
+
 
 Format
     ``xarray.Dataset`` (in-memory), NetCDF (storage)
@@ -44,7 +47,8 @@ Coordinates
 Data variables
     *When relevant, units are required and specified in the "units" metadata field.*
 
-    * ``ext(w)`` float [1 / length]: extinction coefficient per unit concentration
+    * ``ext(w)`` float [any]: extinction coefficient per unit amount (see
+      :ref:`sec-data_formats-prt_ext_units`)
     * ``ssa(w)`` float [—]: single-scattering albedo
     * ``phase(phamat, w, iangle)`` float [1 / sr]: value of the phase matrix;
       NaN-padded beyond ``nangles[iw]``
@@ -129,25 +133,65 @@ Normalization conventions
    The full specification of the ``aer_core_v2`` format:
    :ref:`sec-data_formats-aer_core_v2`
 
+.. _sec-data_formats-prt_ext_units:
+
+Extinction units
+^^^^^^^^^^^^^^^^
+
+The ``ext`` variable holds the extinction coefficient per unit amount of
+particles. Its units are not fixed by the format, but must be specified in the
+"units" metadata field. The component that consumes the dataset sets the
+constraint:
+
+* :class:`.ParticleOTComponent` only uses the spectral ratio
+  :math:`\mathtt{ext}(\lambda) / \mathtt{ext}(\lambda_\mathrm{ref})`, so any
+  units are accepted.
+* :class:`.ParticleStateComponent` multiplies ``ext`` by a profile amount
+  variable (*e.g.* mass concentration in g/m³); their product must have the
+  dimensionality of an inverse length (*e.g.* ``ext`` in m²/g).
+
+.. _sec-data_formats-prt_extensions:
+
+Extensions
+^^^^^^^^^^
+
+Prt-Core v1 can be extended with one or several *state dimensions* on which
+optical properties are indexed (*e.g.* particle size distribution parameters,
+relative humidity). State dimensions are inserted after ``w``: every variable
+and coordinate indexed by ``w`` (``ext``, ``ssa``, ``phase``, ``nangles``,
+``pmom``, ``nmom``, ``mu``, ``theta``) gains the state dimensions, in the same
+order, right after ``w``.
+
+Each state dimension ``d`` comes with a coordinate ``d(d)`` that must be
+strictly increasing, but need not be regularly spaced. Its units are free, but
+must be specified in the "units" metadata field (``dimensionless`` if
+relevant). Data are sorted in ascending order of each state coordinate.
+
+The :ref:`sec-data_formats-prt_psd_v1` and :ref:`sec-data_formats-prt_hum_v1`
+formats are named extensions that fix the name, meaning and units of their
+state dimensions. Datasets with other state dimensions are valid
+extensions; they are created with :func:`.make_prt_v1` and can be consumed by
+:class:`.ParticleStateComponent`.
+
 
 .. _sec-data_formats-prt_psd_v1:
 
 Prt-PSD v1 [``prt_psd_v1``]
 ---------------------------
 
-Extension of ``prt_core_v1`` for particle properties. This data format
-indexes properties defined by ``prt_core_v1`` on two extra dimensions,
-``reff`` and ``veff``, the mean and variance of the particle size
-distribution (PSD), respectively. It shares the same normalization conventions
-as ``prt_core_v1``.
+Named extension of ``prt_core_v1`` for particle properties. This data format
+indexes properties defined by ``prt_core_v1`` on two state dimensions,
+``reff`` and ``veff``, the effective radius and effective variance of the
+particle size distribution (PSD), respectively. It shares the same
+normalization conventions as ``prt_core_v1``.
 
 Format
     ``xarray.Dataset`` (in-memory), NetCDF (storage)
 
 Dimensions
     * ``w``: radiation wavelength
-    * ``reff``: effective radius of the particles
-    * ``veff``: variance of the particles radii
+    * ``reff``: effective radius of the particle size distribution
+    * ``veff``: effective variance of the particle size distribution
     * ``phamat``: nonzero coefficients in the phase matrix
     * ``iangle``: angular data points
     * ``imom``: Legendre coefficients for the (1,1) phase matrix component
@@ -156,8 +200,10 @@ Coordinates
     *When relevant, units are required and specified in the "units" metadata field.*
 
     * ``w(w)``: float [length]: wavelength
-    * ``reff(reff)``: float [length]: effective radius
-    * ``veff(veff)``: float [—]: variance of particles radii
+    * ``reff(reff)``: float [length]: effective radius of the particle size
+      distribution
+    * ``veff(veff)``: float [—]: effective variance of the particle size
+      distribution
     * ``phamat(phamat)``: str [—]: row and column indices of the phase matrix coefficient
       (*e.g.* "11", "12", etc.)
     * ``theta(w, reff, veff, iangle)``: float [angle]: scattering angle θ; NaN-padded beyond
@@ -168,7 +214,8 @@ Coordinates
 Data variables
     *When relevant, units are required and specified in the "units" metadata field.*
 
-    * ``ext(w, reff, veff)`` float [1 / length]: extinction coefficient per unit concentration
+    * ``ext(w, reff, veff)`` float [any]: extinction coefficient per unit amount (see
+      :ref:`sec-data_formats-prt_ext_units`)
     * ``ssa(w, reff, veff)`` float [—]: single-scattering albedo
     * ``phase(phamat, w, reff, veff, iangle)`` float [1 / sr]: value of the phase matrix;
       NaN-padded beyond ``nangles[iw, ireff, iveff]``
@@ -194,8 +241,8 @@ Data variables
 Prt-Hum v1 [``prt_hum_v1``]
 ---------------------------
 
-Extension of ``prt_core_v1`` for hygroscopic particles. This data format
-indexes properties defined by ``prt_core_v1`` on one extra dimension,
+Named extension of ``prt_core_v1`` for hygroscopic particles. This data format
+indexes properties defined by ``prt_core_v1`` on one state dimension,
 ``hum``, the ambient relative humidity. It is typically used for aerosol
 components whose optical properties depend on humidity through water uptake
 (*e.g.* OPAC components). It shares the same normalization conventions as
@@ -226,7 +273,8 @@ Coordinates
 Data variables
     *When relevant, units are required and specified in the "units" metadata field.*
 
-    * ``ext(w, hum)`` float [1 / length]: extinction coefficient per unit concentration
+    * ``ext(w, hum)`` float [any]: extinction coefficient per unit amount (see
+      :ref:`sec-data_formats-prt_ext_units`)
     * ``ssa(w, hum)`` float [—]: single-scattering albedo
     * ``phase(phamat, w, hum, iangle)`` float [1 / sr]: value of the phase matrix;
       NaN-padded beyond ``nangles[iw, ihum]``
@@ -250,8 +298,8 @@ Creation
 --------
 
 Datasets in all Prt variants are created with :func:`.make_prt_v1`, which
-inserts optional dimensions (``reff`` and ``veff``, ``hum``) between ``w`` and
-the angular and moment dimensions. :func:`.make_prt_core_v1`,
+inserts optional state dimensions (*e.g.* ``reff`` and ``veff``, ``hum``)
+between ``w`` and the angular and moment dimensions. :func:`.make_prt_core_v1`,
 :func:`.make_prt_psd_v1` and :func:`.make_prt_hum_v1` are shortcuts for each
 variant.
 
