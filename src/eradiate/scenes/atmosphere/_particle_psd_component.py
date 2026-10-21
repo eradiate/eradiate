@@ -42,56 +42,40 @@ from ...util.misc import cache_by_id
 @define(eq=False, slots=False)
 class ParticleStateComponent(ParticleComponent):
     """
-    Base class for a ParticleComponent defined by a ``profile`` class and a
-    ``properties`` class. The profile defines the variation of a set of
-    ``state_variables`` and ``amount`` in space, used to interpolate the
-    ``properties`` at each location. The ``properties`` defines the mapping
-    from state variables to optical properties such as extinction, albedo and
-    phase function. This class is typically used for complex particle
-    properties varying in space, such as clouds. When evaluated, the
-    ``profile`` is resampled onto the render grid.
+    Generic class for a particulate medium parametrized by one or two state
+    variables that vary as a function of space coordinates.
 
-    The ``amount`` is a special state variable treated separately. It defines
-    the density of the current species at the location. It is used only for
-    scaling the extinction.
+    State variable fields, mapped to space coordinates by the ``profile``,
+    serve as a lookup pivot in the ``properties`` table, which maps state
+    variables to optical properties (extinction, albedo, phase function).
 
-    The class is concrete, although its default (empty) parameters do not
-    allow to properly define an interpolation behavior. It is thus possible to
-    instantiate the class for a profile and properties pair that is not
-    explicitly supported by Eradiate by default. In this case, users must
-    provide the mapping ``state_variables`` and the ``amount`` variable that
-    correspond to the targeted interpolation scheme.
+    Generic by nature, this class carries metadata to specify state
+    variables: the ``state_variables`` mapping links property table state
+    dimension names to the corresponding profile variables supplying their
+    per-voxel values. No specific units are enforced: the state variables
+    exposed by the profile can be any physical quantity, as long as units are
+    compatible between the source (``properties``) and destination
+    (``profile``) variables linked by the ``state_variables`` dictionary.
 
-    No specific units are enforced: the state variables exposed by the profile
-    can be any physical quantity, as long as units are compatible between the
-    source (``properties``) and destination (``profile``) variables linked by
-    the ``state_variables`` dict. The ``amount`` units constraint lies in its
-    combination with the properties dataset's per-``amount`` ``.ext`` quantity:
-    the product of their units must have the dimensionality of an inverse
-    length, expressing an ``amount``-scaled extinction coefficient. These
-    units compatibility requirements are only checked when the component is
-    evaluated (e.g. when computing extinction, albedo or the phase function).
+    The ``amount`` field specifies the profile variable that scales the
+    per-unit-amount extinction (*e.g.* mass or number concentration).
+    Its units must be such that its product with the units of the
+    per-unit-amount extinction in ``properties`` has the dimensionality of an
+    inverse length.
 
-    Interpolation of the ``properties`` against ``state_variables`` is linear.
-    Extinction scaling is linear. Non-linear behaviors must be described by the
-    ``properties``, that is treated as a simple lookup table by this class.
-    Spatial resampling of the profile onto the render grid is axis-dependent:
-    the ``x`` and ``y`` grids are not interpolated and must match the render
-    grid's extent and resolution; each render grid layer takes the values of
-    the profile layer containing its centre, and layers outside the profile's
+    Interpolation of the ``properties`` against ``state_variables`` is linear,
+    and out-of-range state values are clamped.
+    Extinction scaling is linear. When evaluated, the ``profile`` is resampled
+    onto the render grid. This spatial resampling is axis-dependent: the ``x``
+    and ``y`` grids are not interpolated and must be regular and match the
+    render grid's extent and resolution; each render grid cell takes the values of the profile cell
+    containing its centre, and cells whose centre lies outside the profile's
     vertical extent get zero for every variable.
 
     Extinction and albedo are interpolated per voxel in Python; the phase
-    function is interpolated per voxel by the
-    :class:`.GriddedParticlePhaseFunction` kernel plugin at render time.
-    Exactly one or two state dimensions are currently supported.
-
-    Notes
-    -----
-    * The profile may have an irregular z-grid, but its x and y grids must
-      be regular and match the render grid's extent and resolution exactly.
-    * The profile's ``mass_concentration`` is set to zero for any render-grid
-      layer outside its extent.
+    function is interpolated per voxel at render time by the
+    ``particlefieldphase`` kernel plugin, wrapped by
+    :class:`.GriddedParticlePhaseFunction`.
     """
 
     @classmethod
@@ -121,7 +105,9 @@ class ParticleStateComponent(ParticleComponent):
     properties: ParticleProperties = documented(
         attrs.field(kw_only=True, converter=ParticleProperties.convert),
         doc="Particle properties, in the "
-        ":ref:`Prt-psd v1 <sec-data_formats-prt_psd_v1>` format. "
+        ":ref:`Prt-Core v1 <sec-data_formats-prt_core_v1>` format extended "
+        "with 1 or 2 state dimensions (see "
+        ":ref:`sec-data_formats-prt_extensions`). "
         "This parameter has no default.",
         type="ParticleProperties",
         init_type="ParticleProperties or Dataset or path-like or str",
@@ -163,7 +149,7 @@ class ParticleStateComponent(ParticleComponent):
             validator=attrs.validators.optional(attrs.validators.instance_of(str)),
         ),
         doc="Name of the profile variable that scales the per-unit-amount "
-        "extinction (e.g. mass or number concentration). If unset, the "
+        "extinction (*e.g.* mass or number concentration). If unset, the "
         "unique profile variable whose units make ``amount * ext`` an "
         "inverse length is selected automatically.",
         type="str or None",
@@ -562,16 +548,31 @@ class ParticleStateComponent(ParticleComponent):
 @define(eq=False, slots=False)
 class ParticlePSDComponent(ParticleStateComponent):
     """
-    Atmospheric medium representing a particle component with spatially
-    heterogeneous physical properties indexed by effective radius (``reff``)
-    and variance (``veff``). The amount of the species is described by a
-    mass concentration (``mass_concentration``).
+    Particulate medium parametrized by a particle size distribution (PSD)
+    that varies as a function of space coordinates [``particle_psd``].
 
-    The particle component is defined by a dense volumetric *profile*
-    (per-voxel microphysical properties, in the
-    :ref:`Pfd-PSD v1 <sec-data_formats-pfd_psd_v1>` format) and particle
-    properties (in the :ref:`Prt-Psd v1 <sec-data_formats-prt_psd_v1>` format).
+    This :class:`.ParticleStateComponent` specialization uses the effective
+    radius (``reff``) and effective variance (``veff``) of the PSD as state
+    variables, and the mass concentration (``mass_concentration``) as amount.
+    With the default ``state_variables`` and ``amount``, the ``profile`` is
+    expected in the :ref:`Pfd-PSD v1 <sec-data_formats-pfd_psd_v1>` format
+    and the ``properties`` in the
+    :ref:`Prt-PSD v1 <sec-data_formats-prt_psd_v1>` format. The
+    per-unit-amount extinction ``ext`` in ``properties`` is then a mass
+    extinction coefficient (*e.g.* in m²/g).
+
+    Interpolation, extinction scaling and spatial resampling are those of
+    :class:`.ParticleStateComponent`.
     """
+
+    profile: ParticleProfile = documented(
+        attrs.field(kw_only=True, converter=ParticleProfile.convert),
+        doc="Dense volumetric state profile, in the "
+        ":ref:`Pfd-PSD v1 <sec-data_formats-pfd_psd_v1>` format. "
+        "This parameter has no default.",
+        type=get_doc(ParticleStateComponent, "profile", "type"),
+        init_type=get_doc(ParticleStateComponent, "profile", "init_type"),
+    )
 
     amount: str | None = documented(
         attrs.field(
@@ -598,7 +599,7 @@ class ParticlePSDComponent(ParticleStateComponent):
         doc=get_doc(ParticleStateComponent, "state_variables", "doc"),
         type=get_doc(ParticleStateComponent, "state_variables", "type"),
         init_type=get_doc(ParticleStateComponent, "state_variables", "init_type"),
-        default='{ "reff": "reff", "veff": "veff" }',
+        default='{"reff": "reff", "veff": "veff"}',
     )
 
     # Checked here rather than on 'properties', whose validator is inherited
@@ -637,19 +638,29 @@ class ParticlePSDComponent(ParticleStateComponent):
         """
         Build a :class:`.ParticlePSDComponent` from a :class:`.ParticleOTComponent`.
 
+        The output has a spatially uniform PSD and a mass concentration field
+        that reproduces ``particle_ot``'s extinction coefficient at its
+        reference wavelength. Its ``properties`` hold a single wavelength
+        point (``particle_ot.w_ref``) and a single ``(reff, veff)`` point.
+
         Parameters
         ----------
-        particle_ot: :class:`.ParticleOTComponent`
-            Source particle aot.
+        particle_ot : :class:`.ParticleOTComponent`
+            Source particle component. The ``ext`` variable of its
+            ``particle_properties`` must have the dimensionality of an
+            inverse length.
 
         mass_concentration : :class:`pint.Quantity`
-            Mass concentration used to derive the mass extinction coefficient.
+            Mass concentration to which ``particle_ot``'s ``ext`` corresponds;
+            the mass extinction coefficient of the output ``properties`` is
+            ``ext(w_ref) / mass_concentration``.
 
         reff : :class:`pint.Quantity`
-            Effective radius of the particle species.
+            Effective radius of the PSD, assigned to every voxel.
 
         veff : :class:`pint.Quantity`
-            Effective variance (dimensionless) of the particle species.
+            Effective variance (dimensionless) of the PSD, assigned to every
+            voxel.
 
         grid : :class:`.SpatialGrid`, optional
             Target render grid for the output :class:`.ParticlePSDComponent`.

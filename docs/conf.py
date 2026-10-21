@@ -125,6 +125,7 @@ nbsphinx_prolog = """
 # -- Intersphinx configuration for cross-project referencing -------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#configuration
 
+# intersphinx_timeout = 1  # uncomment to avoid getting stuck if inventory files don't resolve
 intersphinx_mapping = {
     "attrs": ("https://www.attrs.org/en/stable/", None),
     "eradiatemitsuba": (
