@@ -1,9 +1,10 @@
-"""Helpers building :class:`.ParticlePSDComponent` test instances."""
+"""Helpers building :class:`.ParticleStateComponent` and
+:class:`.ParticlePSDComponent` test instances."""
 
 import numpy as np
 import xarray as xr
 
-from eradiate.data.convert import make_prt_psd_v1
+from eradiate.data.convert import make_prt_psd_v1, make_prt_v1
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import ParticlePSDComponent
 from eradiate.scenes.geometry import PlaneParallelGeometry
@@ -55,6 +56,79 @@ def make_properties_dataset(
         phase=phase * ureg("1/sr"),
         reff=reff_values * ureg.micron,
         veff=veff_values * ureg.dimensionless,
+    )
+
+
+def make_state_properties_dataset(
+    state_dims: dict,
+    w=(1.0,),
+    n_theta=5,
+    nphamat=4,
+    ssa_value=0.8,
+) -> xr.Dataset:
+    """
+    Build a Prt-Core v1 properties dataset extended with arbitrary state
+    dimensions, with a shared ascending mu grid and an isotropic phase
+    function.
+
+    The per-unit-amount extinction, in km⁻¹ / (g/m³), is
+    ``1 + sum(state coordinate magnitudes)``: linear along every state
+    dimension, so linear interpolation reproduces it exactly.
+
+    Parameters
+    ----------
+    state_dims : dict
+        Mapping of state dimension names to their coordinate values
+        (quantities), forwarded to :func:`.make_prt_v1`.
+    """
+    w_values = np.atleast_1d(np.asarray(w, dtype=float))
+    nw = len(w_values)
+    coords = [v.m for v in state_dims.values()]
+    shape = tuple(len(c) for c in coords)
+
+    ext = 1.0 + sum(np.meshgrid(*coords, indexing="ij"))
+    ext = np.broadcast_to(ext, (nw, *shape)).copy()
+    ssa = np.full((nw, *shape), ssa_value)
+    mu = np.broadcast_to(np.linspace(-1.0, 1.0, n_theta), (nw, *shape, n_theta))
+    phase = np.ones((nphamat, nw, *shape, n_theta))
+
+    return make_prt_v1(
+        w=w_values * ureg.micron,
+        phamat=PHAMAT_LABELS[nphamat],
+        mu=mu * ureg.dimensionless,
+        theta=np.degrees(np.arccos(mu)) * ureg.degree,
+        ext=ext * ureg("km^-1 / (g / m^3)"),
+        ssa=ssa * ureg.dimensionless,
+        phase=phase * ureg("1/sr"),
+        state_dims=state_dims,
+    )
+
+
+def make_state_profile_dataset(grid: CartesianGrid, variables: dict) -> xr.Dataset:
+    """
+    Build a dense, spatially uniform Pfd-Core v1 profile dataset filling every
+    voxel of ``grid``.
+
+    Parameters
+    ----------
+    grid : CartesianGrid
+        Grid whose cells the profile fills.
+
+    variables : dict
+        Mapping of profile variable names to their (scalar) values
+        (quantities).
+    """
+    shape = (grid.n_cells_z, grid.n_cells_y, grid.n_cells_x)
+    return xr.Dataset(
+        data_vars={
+            name: (["z", "y", "x"], np.full(shape, q.m), {"units": str(q.u)})
+            for name, q in variables.items()
+        },
+        coords={
+            "x_edges": (["x_edges"], grid.edges_x.m_as("km"), {"units": "kilometer"}),
+            "y_edges": (["y_edges"], grid.edges_y.m_as("km"), {"units": "kilometer"}),
+            "z_edges": (["z_edges"], grid.levels.m_as("km"), {"units": "kilometer"}),
+        },
     )
 
 

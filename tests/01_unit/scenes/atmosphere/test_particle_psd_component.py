@@ -19,6 +19,8 @@ from ._psd_helpers import (
     make_particle_psd_component,
     make_profile_dataset,
     make_properties_dataset,
+    make_state_profile_dataset,
+    make_state_properties_dataset,
     make_z_profile_particle_psd_component,
 )
 
@@ -278,11 +280,13 @@ class TestParticlePSDComponent:
 
         np.testing.assert_allclose(
             phase.grid_1.m_as("micron"),
-            psd.properties.reff.m_as("micron").astype(np.float64),
+            psd.properties.state_coord("reff").m_as("micron").astype(np.float64),
         )
         np.testing.assert_allclose(
             phase.grid_2.m_as(ureg.dimensionless),
-            psd.properties.veff.m_as(ureg.dimensionless).astype(np.float64),
+            psd.properties.state_coord("veff")
+            .m_as(ureg.dimensionless)
+            .astype(np.float64),
         )
 
     def test_phase_rebuilds_on_each_access(self):
@@ -302,7 +306,7 @@ class TestParticlePSDComponent:
 
         data = psd._eval_phase_data(si)
 
-        n_reff, n_veff = psd.properties.reff.size, psd.properties.veff.size
+        n_reff, n_veff = psd.properties.state_shape
         mu, phase = psd.properties.eval_phase(si.w)
         n_phamat, _, _, max_len = phase.shape
         expected_mu = mu.reshape(n_reff * n_veff, max_len)
@@ -389,16 +393,36 @@ class TestParticlePSDComponent:
                 profile=profile, properties=properties_no_size_dist, geometry=geometry
             )
 
-    def test_state_dims_wrong_order_raises(self):
-        """Properties with state dimensions ordered ('veff', 'reff') are rejected."""
+    @pytest.mark.parametrize("wrong", ["wrong_order", "wrong_name"])
+    def test_state_dims_wrong_raises(self, wrong):
+        """Properties with state dimensions other than ('reff', 'veff'), in
+        that order, are rejected."""
         psd = make_particle_psd_component()
-        properties = psd.properties.data.transpose("phamat", "w", "veff", "reff", ...)
+        kwargs = {}
+        if wrong == "wrong_order":
+            properties = psd.properties.data.transpose(
+                "phamat", "w", "veff", "reff", ...
+            )
+            profile = psd.profile
+        else:
+            properties = make_state_properties_dataset(
+                {"hum": np.array([0.0, 90.0]) * ureg.percent}
+            )
+            profile = make_state_profile_dataset(
+                psd.geometry.grid,
+                {
+                    "hum": 50.0 * ureg.percent,
+                    "mass_concentration": 1.0 * ureg("g/m^3"),
+                },
+            )
+            kwargs["state_variables"] = {"hum": "hum"}
 
         with pytest.raises(ValueError, match=r"state dimensions \('reff', 'veff'\)"):
             ParticlePSDComponent(
-                profile=psd.profile,
+                profile=profile,
                 properties=properties,
                 geometry=psd.geometry,
+                **kwargs,
             )
 
     def test_missing_amount_raises(self):
@@ -428,9 +452,11 @@ class TestParticlePSDComponent:
         )
 
         assert isinstance(component, ParticlePSDComponent)
-        np.testing.assert_allclose(component.properties.reff.m_as("micron"), [10.0])
         np.testing.assert_allclose(
-            component.properties.veff.m_as(ureg.dimensionless), [0.1]
+            component.properties.state_coord("reff").m_as("micron"), [10.0]
+        )
+        np.testing.assert_allclose(
+            component.properties.state_coord("veff").m_as(ureg.dimensionless), [0.1]
         )
 
         layer_sigma_t_sum = layer.eval_sigma_t(si_ref).m_as("1/km").sum()

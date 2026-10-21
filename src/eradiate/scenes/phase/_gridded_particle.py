@@ -35,10 +35,13 @@ class GriddedParticlePhaseFunction(PhaseFunction):
     Phase function for spatially heterogeneous particle components, looked
     up per voxel from one or two state variables.
 
-    Wraps the ``particlefieldphase`` kernel plugin, which performs bilinear
-    interpolation of the phase matrix over its two interpolation slots. When
-    only one state variable is used, the second slot is padded with a
-    degenerate, single-point grid, over which interpolation is a no-op.
+    Wraps the ``particlephase`` kernel plugin, which performs bilinear
+    interpolation of the phase matrix over two state variables. The plugin
+    names its two state variable slots after the effective radius and
+    variance (``r_eff_*``, ``v_eff_*``), but any state variables can be
+    passed. When only one state variable is used, the second slot is padded
+    with a degenerate, single-point grid, over which interpolation is a
+    no-op.
 
     The phase spectral properties are passed through the ``phase_data``
     callable. This callable returns a dict with the following information:
@@ -116,24 +119,6 @@ class GriddedParticlePhaseFunction(PhaseFunction):
                 "'grid_2' and 'volume_2' must have compatible units, got "
                 f"'{value.units}' and '{self.volume_2.units}'"
             )
-
-    var_1: str = documented(
-        attrs.field(kw_only=True, default="r_eff"),
-        doc="Name of the state variable held by :attr:`volume_1`/"
-        ":attr:`grid_1`. Used in the kernel dict generation.",
-        type="str",
-        init_type="str, optional",
-        default='"r_eff"',
-    )
-
-    var_2: str = documented(
-        attrs.field(kw_only=True, default="v_eff"),
-        doc="Name of the state variable held by :attr:`volume_2`/"
-        ":attr:`grid_2`, if set. Used in the kernel dict generation",
-        type="str",
-        init_type="str, optional",
-        default='"v_eff"',
-    )
 
     phase_data: Callable[[SpectralIndex], dict] = documented(
         attrs.field(kw_only=True),
@@ -250,22 +235,24 @@ class GriddedParticlePhaseFunction(PhaseFunction):
         unit_1 = self.grid_1.units
         unit_2 = grid_2.units
 
+        # 'r_eff' and 'v_eff' are the plugin's state variable slots 1 and 2,
+        # whatever the state variables are
         return {
             "type": "particlephase",
-            f"{self.var_1}_volume": generate_gridvolume(
+            "r_eff_volume": generate_gridvolume(
                 self.geometry,
                 lambda ctx: self.volume_1,
                 units=unit_1,
                 dtype=np.float64,
             ),
-            f"{self.var_2}_volume": generate_gridvolume(
+            "v_eff_volume": generate_gridvolume(
                 self.geometry,
                 lambda ctx: volume_2,
                 units=unit_2,
                 dtype=np.float64,
             ),
-            f"{self.var_1}_grid": mi.TensorXf(self.grid_1.m_as(unit_1).reshape(-1, 1)),
-            f"{self.var_2}_grid": mi.TensorXf(grid_2.m_as(unit_2).reshape(-1, 1)),
+            "r_eff_grid": mi.TensorXf(self.grid_1.m_as(unit_1).reshape(-1, 1)),
+            "v_eff_grid": mi.TensorXf(grid_2.m_as(unit_2).reshape(-1, 1)),
             "nodes": DictParameter(self._eval_param("nodes")),
             "phase_mueller": DictParameter(self._eval_param("phase_mueller")),
             "grid_start": DictParameter(self._eval_param("grid_start")),

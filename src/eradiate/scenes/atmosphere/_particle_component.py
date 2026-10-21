@@ -272,7 +272,9 @@ class ParticleOTComponent(ParticleComponent):
             default="govaerts_2021-continental",
             converter=ParticleProperties.convert,
         ),
-        doc="Particle single-scattering properties.",
+        doc="Particle properties, in the "
+        ":ref:`Prt-Core v1 <sec-data_formats-prt_core_v1>` format, without "
+        "state dimension.",
         type="ParticleProperties",
         init_type="ParticleProperties or Dataset or path-like or str",
         default='"govaerts_2021-continental"',
@@ -280,11 +282,11 @@ class ParticleOTComponent(ParticleComponent):
 
     @particle_properties.validator
     def _particle_properties_validator(self, attribute, value):
-        if value.has_size_distribution:
+        if value.state_dims:
             raise ValueError(
                 "While initializing ParticleOTComponent: 'particle_properties' "
-                "must not have 'reff'/'veff' dimensions; use ParticlePSDComponent "
-                "for a spatially varying composition"
+                f"must have no state dimension, got {value.state_dims!r}; use "
+                "ParticleStateComponent for a spatially varying composition"
             )
 
     _phase: ParticlePhaseFunction | None = attrs.field(default=None, init=False)
@@ -632,12 +634,18 @@ class ParticleOTComponent(ParticleComponent):
         amount_qty = to_quantity(profile_point[amount_name]).item()
 
         i_reff = int(
-            np.argmin(np.abs(pp.reff.m_as(ureg.micron) - reff_qty.m_as(ureg.micron)))
+            np.argmin(
+                np.abs(
+                    pp.state_coord("reff").m_as(ureg.micron)
+                    - reff_qty.m_as(ureg.micron)
+                )
+            )
         )
         i_veff = int(
             np.argmin(
                 np.abs(
-                    pp.veff.m_as(ureg.dimensionless) - veff_qty.m_as(ureg.dimensionless)
+                    pp.state_coord("veff").m_as(ureg.dimensionless)
+                    - veff_qty.m_as(ureg.dimensionless)
                 )
             )
         )
@@ -652,9 +660,7 @@ class ParticleOTComponent(ParticleComponent):
         layer_height = grid.levels[iz + 1] - grid.levels[iz]
         tau_ref = (sigma_t * layer_height * mask).to(ureg.dimensionless)
 
-        phase_ds = pp.phase_dataset_for_reff_veff(
-            wavelength[0], i_reff, i_veff, sigma_t
-        )
+        phase_ds = pp.phase_dataset_at(wavelength[0], (i_reff, i_veff), sigma_t)
 
         geometry = (
             particle_psd_component.geometry
@@ -745,7 +751,7 @@ class ParticleOTComponent(ParticleComponent):
             values=tau_per_voxel, coords=z_coords, method="nearest"
         )
 
-        phase_ds = pp.phase_dataset_for_reff_veff(wavelength[0], i_reff, i_veff, ext)
+        phase_ds = pp.phase_dataset_at(wavelength[0], (i_reff, i_veff), ext)
 
         geometry = (
             particle_psd_component.geometry

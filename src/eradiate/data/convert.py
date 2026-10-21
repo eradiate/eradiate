@@ -81,9 +81,9 @@ def make_aer_core_v2(*args, **kwargs):
     return make_prt_core_v1(*args, **kwargs)
 
 
-# Metadata of the optional dimensions inserted by Prt variants between ``w``
+# Metadata of the state dimensions inserted by Prt variants between ``w``
 # and the angular / moment dimensions: (standard_name, long_name)
-_PRT_EXTRA_DIMS = {
+_PRT_STATE_DIMS = {
     "reff": ("effective_radius", "effective radius"),
     "veff": ("effective_variance", "effective variance"),
     "hum": ("relative_humidity", "relative humidity"),
@@ -98,7 +98,7 @@ def make_prt_v1(
     ext: pint.Quantity,
     ssa: pint.Quantity,
     phase: pint.Quantity,
-    extra_dims: dict[str, pint.Quantity] | None = None,
+    state_dims: dict[str, pint.Quantity] | None = None,
     nangles: np.ndarray | None = None,
     pmom: np.ndarray | None = None,
     nmom: int | np.ndarray | None = None,
@@ -111,11 +111,12 @@ def make_prt_v1(
     Create a new dataset in any variant of the Prt v1 format.
 
     All Prt variants share the core dimensions ``w``, ``phamat``, ``iangle``
-    and ``imom``. Variants add optional dimensions, inserted after ``w``:
-    *e.g.* Prt-PSD adds ``reff`` and ``veff``, Prt-Hum adds ``hum``. These are
-    passed through ``extra_dims``; in the shapes below, ``*extra`` stands for
-    their sizes, in the order of ``extra_dims``. Without extra dimensions,
-    the output is in the Prt-Core format.
+    and ``imom``. Variants add state dimensions, inserted after ``w`` (see
+    :ref:`sec-data_formats-prt_extensions`): *e.g.* Prt-PSD adds ``reff`` and
+    ``veff``, Prt-Hum adds ``hum``. These are passed through ``state_dims``;
+    in the shapes below, ``*state`` stands for their sizes, in the order of
+    ``state_dims``. Without state dimensions, the output is in the Prt-Core
+    format.
 
     Parameters
     ----------
@@ -126,29 +127,29 @@ def make_prt_v1(
         Phase matrix component list, shape (nphamat,).
 
     mu : quantity
-        Scattering angle cosine, shape (nw, \\*extra, nangle).
+        Scattering angle cosine, shape (nw, \\*state, nangle).
 
     theta : quantity
-        Scattering angle, shape (nw, \\*extra, nangle).
+        Scattering angle, shape (nw, \\*state, nangle).
 
     ext : quantity
-        Extinction coefficient, shape (nw, \\*extra).
+        Extinction coefficient, shape (nw, \\*state).
 
     ssa : quantity
-        Single-scattering albedo, shape (nw, \\*extra).
+        Single-scattering albedo, shape (nw, \\*state).
 
     phase : quantity
-        Phase matrix values, shape (nphamat, nw, \\*extra, nangle).
+        Phase matrix values, shape (nphamat, nw, \\*state, nangle).
         Integral normalized to 2 (*i.e.* ∫ p(μ) dμ = 2).
 
-    extra_dims : dict, optional
-        Mapping of extra dimension names to their coordinate values, each of
+    state_dims : dict, optional
+        Mapping of state dimension names to their coordinate values, each of
         shape (n,) and strictly increasing (irregular grids are supported).
         Known dimensions (``reff``, ``veff``, ``hum``) get CF metadata;
         unknown ones use their name as standard and long name.
 
     nangles : ndarray, optional
-        Number of valid angular samples, shape (nw, \\*extra), dtype int.
+        Number of valid angular samples, shape (nw, \\*state), dtype int.
         When provided, entries beyond ``nangles`` in ``mu``, ``theta``, and
         ``phase`` must be NaN-padded. The ``nangles`` dataset variable is
         always written; if not provided, it is inferred by counting non-NaN
@@ -156,7 +157,7 @@ def make_prt_v1(
 
     pmom : ndarray, optional
         Legendre polynomials for the (1,1) phase matrix element, shape
-        (nw, \\*extra, nimom). If not provided, they are computed
+        (nw, \\*state, nimom). If not provided, they are computed
         automatically from ``phase`` and ``theta`` using
         :func:`.compute_pmom` with ``coefficients=True``.
 
@@ -171,7 +172,7 @@ def make_prt_v1(
           with the NaN-padding convention.
         * ``int`` — scalar moment count; used as the target for automatic
           computation and stored as a uniform ``nmom`` array.
-        * ``ndarray`` shape ``(nw, *extra)`` — count stored as-is.
+        * ``ndarray`` shape ``(nw, *state)`` — count stored as-is.
           ``pmom`` must be provided explicitly when ``nmom`` is an ndarray.
 
     grid_res : int, default: 3
@@ -210,21 +211,21 @@ def make_prt_v1(
     ------
     ValueError
         If a value check fails, if ``mu`` does not have one dimension per
-        core and extra dimension, or if an extra dimension coordinate is not
+        core and state dimension, or if a state dimension coordinate is not
         strictly increasing.
 
     TypeError
         If ``nmom`` is an ndarray but ``pmom`` is not provided.
     """
-    extra_dims = extra_dims or {}
+    state_dims = state_dims or {}
 
-    if mu.ndim != 2 + len(extra_dims):
+    if mu.ndim != 2 + len(state_dims):
         raise ValueError(
             f"make_prt_v1(): 'mu' must have shape (nw, "
-            f"{''.join(f'n{d}, ' for d in extra_dims)}nangle) -- got {mu.shape}"
+            f"{''.join(f'n{d}, ' for d in state_dims)}nangle) -- got {mu.shape}"
         )
 
-    for name, grid in extra_dims.items():
+    for name, grid in state_dims.items():
         if np.any(np.diff(grid.m) <= 0):
             raise ValueError(f"make_prt_v1(): '{name}' must be strictly increasing")
 
@@ -233,7 +234,7 @@ def make_prt_v1(
     if nangles is None:
         nangles = _count_valid(phase.m[0])
 
-    # Valid consecutive angular sample pairs, shape (nw, *extra, nangle - 1)
+    # Valid consecutive angular sample pairs, shape (nw, *state, nangle - 1)
     valid_pairs = np.arange(mu.shape[-1] - 1) < (nangles[..., None] - 1)
     dmu = np.diff(mu.m, axis=-1)
 
@@ -296,7 +297,7 @@ def make_prt_v1(
     if isinstance(nmom, int):
         nmom = np.full(nangles.shape, nmom, dtype=np.int32)
 
-    grid = ["w", *extra_dims]
+    grid = ["w", *state_dims]
     return xr.Dataset(
         data_vars={
             "ext": _var(grid, ext, "extinction_coefficient", "extinction coefficient"),
@@ -337,8 +338,8 @@ def make_prt_v1(
                 [*grid, "iangle"], theta, "scattering_angle", "scattering angle"
             ),
             **{
-                name: _var(name, values, *_PRT_EXTRA_DIMS.get(name, (name, name)))
-                for name, values in extra_dims.items()
+                name: _var(name, values, *_PRT_STATE_DIMS.get(name, (name, name)))
+                for name, values in state_dims.items()
             },
         },
         attrs=attrs or {},
@@ -358,7 +359,7 @@ def make_prt_core_v1(
     """
     Create a new dataset in the Prt-Core v1 format.
 
-    This is :func:`.make_prt_v1` without extra dimensions: ``mu`` and
+    This is :func:`.make_prt_v1` without state dimensions: ``mu`` and
     ``theta`` have shape (nw, nangle), ``ext`` and ``ssa`` (nw,), ``phase``
     (nphamat, nw, nangle).
 
@@ -392,7 +393,7 @@ def make_prt_psd_v1(
     """
     Create a new dataset in the Prt-PSD v1 format.
 
-    This is :func:`.make_prt_v1` with extra dimensions ``reff`` and ``veff``:
+    This is :func:`.make_prt_v1` with state dimensions ``reff`` and ``veff``:
     ``mu`` and ``theta`` have shape (nw, nreff, nveff, nangle), ``ext`` and
     ``ssa`` (nw, nreff, nveff), ``phase`` (nphamat, nw, nreff, nveff, nangle).
 
@@ -422,7 +423,7 @@ def make_prt_psd_v1(
         ext,
         ssa,
         phase,
-        extra_dims={"reff": reff, "veff": veff},
+        state_dims={"reff": reff, "veff": veff},
         **kwargs,
     )
 
@@ -441,7 +442,7 @@ def make_prt_hum_v1(
     """
     Create a new dataset in the Prt-Hum v1 format.
 
-    This is :func:`.make_prt_v1` with extra dimension ``hum``: ``mu`` and
+    This is :func:`.make_prt_v1` with state dimension ``hum``: ``mu`` and
     ``theta`` have shape (nw, nhum, nangle), ``ext`` and ``ssa`` (nw, nhum),
     ``phase`` (nphamat, nw, nhum, nangle).
 
@@ -461,7 +462,7 @@ def make_prt_hum_v1(
     Dataset
     """
     return make_prt_v1(
-        w, phamat, mu, theta, ext, ssa, phase, extra_dims={"hum": hum}, **kwargs
+        w, phamat, mu, theta, ext, ssa, phase, state_dims={"hum": hum}, **kwargs
     )
 
 
@@ -838,11 +839,11 @@ def libradtran_to_prt(
         if var not in ds.dims:  # Scalar selection
             ds = ds.drop_vars(var)
 
-    # Remaining extra dimensions; libRadtran datasets have either nhum or
+    # Remaining state dimensions; libRadtran datasets have either nhum or
     # nreff, so there is at most one
-    extra = [d for d in ("hum", "reff") if d in ds.dims]
-    extra_shape = tuple(ds.sizes[d] for d in extra)
-    npts = math.prod(extra_shape)
+    state = [d for d in ("hum", "reff") if d in ds.dims]
+    state_shape = tuple(ds.sizes[d] for d in state)
+    npts = math.prod(state_shape)
 
     # Gather wavelengths, restricted to the requested spectral domain
     units_w = _get_units(ds, "wavelen", fallback_units)
@@ -861,17 +862,17 @@ def libradtran_to_prt(
 
     def gather(var: str, *trailing: str) -> np.ndarray:
         # Shape (nw, npts, *trailing)
-        x = ds[var].transpose("nlam", *extra, *trailing).values
-        return x.reshape(nw, npts, *x.shape[1 + len(extra) :])
+        x = ds[var].transpose("nlam", *state, *trailing).values
+        return x.reshape(nw, npts, *x.shape[1 + len(state) :])
 
-    extra_dims = {d: ds[d].values * _get_units(ds, d, fallback_units) for d in extra}
-    if "reff" in extra:
+    state_dims = {d: ds[d].values * _get_units(ds, d, fallback_units) for d in state}
+    if "reff" in state:
         if veff is None and "param_alpha" in ds.attrs:
             veff = 1.0 / (float(ds.attrs["param_alpha"]) + 3.0)
         if veff is not None:
-            extra_dims["veff"] = np.atleast_1d(veff) * ureg.dimensionless
-    # Output shape of extra dimensions; veff is size 1 and lands after reff
-    out_shape = extra_shape + ((1,) if "veff" in extra_dims else ())
+            state_dims["veff"] = np.atleast_1d(veff) * ureg.dimensionless
+    # Output shape of state dimensions; veff is size 1 and lands after reff
+    out_shape = state_shape + ((1,) if "veff" in state_dims else ())
 
     # Gather extinction coefficients and albedo
     units_ext = _get_units(ds, "ext", fallback_units)
@@ -884,7 +885,7 @@ def libradtran_to_prt(
     phamat = [x for x, _ in PHAMAT_TO_IDX[:nphamat]]
 
     # --- Build union angular grid (across all components), at every
-    # (w, extra) point, and interpolate onto it ---
+    # (w, state) point, and interpolate onto it ---
     ntheta_np = gather("ntheta", "nphamat")  # (nw, npts, nphamat)
     theta_np = gather("theta", "nphamat", "nthetamax")  # (nw, npts, nphamat, nthetamax)
     phase_np = gather("phase", "nphamat", "nthetamax")  # (nw, npts, nphamat, nthetamax)
@@ -933,7 +934,7 @@ def libradtran_to_prt(
     pmom = (
         ds["pmom"]
         .isel(nphamat=0)
-        .transpose("nlam", *extra, "nmommax")
+        .transpose("nlam", *state, "nmommax")
         .values.reshape(nw, *out_shape, -1)
     )
     nmom = _count_valid(pmom)  # (nw, *out_shape)
@@ -946,7 +947,7 @@ def libradtran_to_prt(
         ext=ext_np.reshape(nw, *out_shape) * units_ext,
         ssa=ssa_np.reshape(nw, *out_shape) * units_ssa,
         phase=ureg.Quantity(phase_arr, "1/sr"),
-        extra_dims=extra_dims or None,
+        state_dims=state_dims or None,
         nmom=nmom,
         pmom=pmom,
         nangles=nangles_out,

@@ -1099,5 +1099,5 @@ def test_libradtran_to_prt_samples(fname, kwargs, expected):
             libradtran_to_prt(fname, **kwargs)
     else:
         ds = libradtran_to_prt(fname, **kwargs)
-        extra = {d: n for d, n in ds.sizes.items() if d in {"hum", "reff", "veff"}}
-        assert extra == expected
+        state = {d: n for d, n in ds.sizes.items() if d in {"hum", "reff", "veff"}}
+        assert state == expected
