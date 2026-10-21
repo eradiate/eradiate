@@ -1,10 +1,12 @@
 """
-Particle PSD components.
+Particle state and PSD components.
 
-A particle PSD component is an atmospheric medium whose optical properties
+A particle state component is an atmospheric medium whose optical properties
 vary spatially, described by a dense volumetric :class:`.ParticleProfile`
-(per-voxel microphysical properties) and a Prt v1 particle properties
-lookup dataset (wrapped in a :class:`.ParticleProperties`).
+(state variable fields) and a Prt-Core v1 particle properties lookup dataset
+extended with state dimensions (wrapped in a :class:`.ParticleProperties`).
+A particle PSD component is the specialization whose state variables are the
+parameters of a particle size distribution.
 """
 
 from __future__ import annotations
@@ -42,20 +44,22 @@ from ...util.misc import cache_by_id
 @define(eq=False, slots=False)
 class ParticleStateComponent(ParticleComponent):
     """
-    Generic class for a particulate medium parametrized by one or two state
-    variables that vary as a function of space coordinates.
+    Generic class for a particulate medium parametrized by an :term:`amount`
+    and one or two tabulated :term:`state variables <state variable>`, which
+    vary as a function of space coordinates.
 
-    State variable fields, mapped to space coordinates by the ``profile``,
-    serve as a lookup pivot in the ``properties`` table, which maps state
-    variables to optical properties (extinction, albedo, phase function).
+    The ``profile`` holds the :term:`fields <field>` of the state variables.
+    The tabulated ones serve as a lookup pivot in the ``properties`` table,
+    which maps :term:`state dimensions <state dimension>` to per-unit-amount
+    optical properties (extinction, albedo, phase function).
 
-    Generic by nature, this class carries metadata to specify state
-    variables: the ``state_variables`` mapping links property table state
-    dimension names to the corresponding profile variables supplying their
-    per-voxel values. No specific units are enforced: the state variables
-    exposed by the profile can be any physical quantity, as long as units are
-    compatible between the source (``properties``) and destination
-    (``profile``) variables linked by the ``state_variables`` dictionary.
+    Generic by nature, this class carries metadata to specify the tabulated
+    state variables: the ``state_variables`` mapping links ``properties``
+    state dimension names to the profile variables supplying their per-voxel
+    values. No specific units are enforced: the state variables exposed by the
+    profile can be any physical quantity, as long as units are compatible
+    between the state dimension (``properties``) and the profile variable
+    (``profile``) linked by the ``state_variables`` dictionary.
 
     The ``amount`` field specifies the profile variable that scales the
     per-unit-amount extinction (*e.g.* mass or number concentration).
@@ -67,10 +71,10 @@ class ParticleStateComponent(ParticleComponent):
     and out-of-range state values are clamped.
     Extinction scaling is linear. When evaluated, the ``profile`` is resampled
     onto the render grid. This spatial resampling is axis-dependent: the ``x``
-    and ``y`` grids are not interpolated and must be regular and match the
-    render grid's extent and resolution; each render grid cell takes the values of the profile cell
-    containing its centre, and cells whose centre lies outside the profile's
-    vertical extent get zero for every variable.
+    and ``y`` grids are not interpolated and must match the render grid's
+    extent and resolution; each render grid cell takes the values of the
+    profile cell containing its centre, and cells whose centre lies outside
+    the profile's vertical extent get zero for every state variable.
 
     Extinction and albedo are interpolated per voxel in Python; the phase
     function is interpolated per voxel at render time by the
@@ -96,7 +100,7 @@ class ParticleStateComponent(ParticleComponent):
     profile: ParticleProfile = documented(
         attrs.field(kw_only=True, converter=ParticleProfile.convert),
         doc="Dense volumetric state profile, in the "
-        ":ref:`Pfd-Core v1 <sec-data_formats-pfd_core_v1>` format. "
+        ":ref:`Ppr-Core v1 <sec-data_formats-ppr_core_v1>` format. "
         "This parameter has no default.",
         type="ParticleProfile",
         init_type="ParticleProfile or Dataset or path-like",
@@ -167,9 +171,10 @@ class ParticleStateComponent(ParticleComponent):
                 mapping_validator=attrs.validators.instance_of(dict),
             ),
         ),
-        doc="Mapping from a properties table state dimension name to the "
-        "profile variable supplying its per-voxel value. State dimensions "
-        "not listed here default to a profile variable of the same name.",
+        doc="Tabulated state variables, as a mapping from a ``properties`` "
+        "state dimension name to the profile variable supplying its "
+        "per-voxel value. State dimensions not listed here default to a "
+        "profile variable of the same name.",
         type="dict[str, str]",
         init_type="dict[str, str], optional",
         default="{}",
@@ -298,7 +303,7 @@ class ParticleStateComponent(ParticleComponent):
             return self._phase
 
         grid = self.geometry.grid
-        resampled = self.profile.resample_regular(grid)
+        resampled = self.profile.resample(grid)
         amount = resampled[self._amount]
         empty = amount.m <= 0
 
@@ -370,7 +375,7 @@ class ParticleStateComponent(ParticleComponent):
 
         grid = grid or self.geometry.grid
         col_units = uck.get("collision_coefficient")
-        resampled = self.profile.resample_regular(grid)
+        resampled = self.profile.resample(grid)
         ext_grid, _ = self._eval_ext_ssa_grid(si)
 
         amount = resampled[self._amount]
@@ -394,7 +399,7 @@ class ParticleStateComponent(ParticleComponent):
         regardless of :attr:`has_absorption` and :attr:`has_scattering`.
         Empty voxels are set to 0. Axis order is ``(x, y, z)``.
         """
-        resampled = self.profile.resample_regular(grid)
+        resampled = self.profile.resample(grid)
         _, ssa_grid = self._eval_ext_ssa_grid(si)
         amount = resampled[self._amount]
         albedo = self._interp_state(ssa_grid, resampled)
@@ -549,10 +554,10 @@ class ParticlePSDComponent(ParticleStateComponent):
     that varies as a function of space coordinates [``particle_psd``].
 
     This :class:`.ParticleStateComponent` specialization uses the effective
-    radius (``reff``) and effective variance (``veff``) of the PSD as state
-    variables, and the mass concentration (``mass_concentration``) as amount.
+    radius (``reff``) and effective variance (``veff``) of the PSD as tabulated
+    state variables, and the mass concentration (``mass_concentration``) as amount.
     With the default ``state_variables`` and ``amount``, the ``profile`` is
-    expected in the :ref:`Pfd-PSD v1 <sec-data_formats-pfd_psd_v1>` format
+    expected in the :ref:`Ppr-PSD v1 <sec-data_formats-ppr_psd_v1>` format
     and the ``properties`` in the
     :ref:`Prt-PSD v1 <sec-data_formats-prt_psd_v1>` format. The
     per-unit-amount extinction ``ext`` in ``properties`` is then a mass
@@ -565,7 +570,7 @@ class ParticlePSDComponent(ParticleStateComponent):
     profile: ParticleProfile = documented(
         attrs.field(kw_only=True, converter=ParticleProfile.convert),
         doc="Dense volumetric state profile, in the "
-        ":ref:`Pfd-PSD v1 <sec-data_formats-pfd_psd_v1>` format. "
+        ":ref:`Ppr-PSD v1 <sec-data_formats-ppr_psd_v1>` format. "
         "This parameter has no default.",
         type=get_doc(ParticleStateComponent, "profile", "type"),
         init_type=get_doc(ParticleStateComponent, "profile", "init_type"),

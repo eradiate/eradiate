@@ -106,7 +106,7 @@ def make_state_properties_dataset(
 
 def make_state_profile_dataset(grid: CartesianGrid, variables: dict) -> xr.Dataset:
     """
-    Build a dense, spatially uniform Pfd-Core v1 profile dataset filling every
+    Build a dense, spatially uniform Ppr-Core v1 profile dataset filling every
     voxel of ``grid``.
 
     Parameters
@@ -139,7 +139,7 @@ def make_profile_dataset(
     mass_concentration=1e-3,
     z_edges=None,
 ) -> xr.Dataset:
-    """Build a dense Pfd-Core v1 profile dataset filling every voxel of ``grid``."""
+    """Build a dense Ppr-Core v1 profile dataset filling every voxel of ``grid``."""
     n_x, n_y = grid.n_cells_x, grid.n_cells_y
     z_edges_km = (
         np.asarray(z_edges, dtype=float)

@@ -1,9 +1,9 @@
 """
 Particle profiles.
 
-Particle profiles describe the spatial distribution of a particle field:
-a set of named per-voxel variables (e.g. an amount and the state variables
-indexing particle properties) on a regular grid.
+Particle profiles describe the spatial variations of the state variables of
+a particulate medium (e.g. an amount and the variables indexing particle
+properties), each as a field on a voxel grid.
 """
 
 from __future__ import annotations
@@ -19,26 +19,27 @@ import xarray as xr
 from ...attrs import define, documented
 from ...converters import load_dataset
 from ...grid import CartesianGrid, SpatialGrid, SphericalGrid
-from ...units import to_quantity
+from ...units import to_quantity, units_compatible
 from ...units import unit_registry as ureg
 from ...util.misc import cache_by_id
 
-_STRUCTURAL_VARIABLES = ("x_edges", "y_edges", "z_edges")
+_EDGE_COORDS = {"x": "x_edges", "y": "y_edges", "z": "z_edges"}
 
 
 @define(slots=False)
 class ParticleProfile:
     """
-    Dense, per-voxel description of a spatially varying particle field, in
-    the :ref:`Pfd-Core v1 <sec-data_formats-pfd_core_v1>` format.
+    Dense, per-voxel description of the :term:`state variables <state
+    variable>` of a particulate medium (:term:`amount` included), in the
+    :ref:`Ppr-Core v1 <sec-data_formats-ppr_core_v1>` format.
 
-    Variables are accessed by name with ``profile[name]``, which returns a
-    cached :class:`pint.Quantity` of shape ``(n_z, n_y, n_x)``.
+    State variables are accessed by name with ``profile[name]``, which
+    returns a cached :class:`pint.Quantity` of shape ``(n_z, n_y, n_x)``.
     """
 
     data: xr.Dataset = documented(
         attrs.field(validator=attrs.validators.instance_of(xr.Dataset)),
-        doc="Particle profile dataset, in Pfd-Core v1 format.",
+        doc="Particle profile dataset, in Ppr-Core v1 format.",
         type="xarray.Dataset",
         init_type="xarray.Dataset",
     )
@@ -60,17 +61,17 @@ class ParticleProfile:
 
         * If value is a ParticleProfile instance, return it.
         * If value is a Dataset, initialize a ParticleProfile with it.
-        * If value is a path-like, load the dataset and initialize a
-          ParticleProfile with it.
+        * If value is a string or a path-like, interpret it as a file path,
+          load the dataset and initialize a ParticleProfile with it.
         """
-        if isinstance(value, ParticleProfile):
+        if isinstance(value, cls):
             return value
 
         if isinstance(value, xr.Dataset):
-            return ParticleProfile(value)
+            return cls(value)
 
         if isinstance(value, (str, PathLike)):
-            return ParticleProfile(load_dataset(value))
+            return cls(load_dataset(value))
 
         raise TypeError(
             f"could not convert value of type {type(value).__name__} to ParticleProfile"
@@ -78,24 +79,54 @@ class ParticleProfile:
 
     @data.validator
     def _validate_data(self, attribute, value):
-        missing = [name for name in _STRUCTURAL_VARIABLES if name not in value]
+        missing = [name for name in _EDGE_COORDS.values() if name not in value.coords]
         if missing:
             raise ValueError(
-                f"Particle profile dataset is missing required variable(s): {missing}"
+                f"particle profile dataset is missing required coordinate(s): {missing}"
             )
 
-        variables = [v for v in value.data_vars if v not in _STRUCTURAL_VARIABLES]
-        if not variables:
-            raise ValueError(
-                "Particle profile dataset has no variable besides "
-                f"{list(_STRUCTURAL_VARIABLES)}"
-            )
+        if not value.data_vars:
+            raise ValueError("particle profile dataset has no state variable")
 
-        wrong_dims = [v for v in variables if value[v].dims != ("z", "y", "x")]
+        wrong_dims = [v for v in value.data_vars if value[v].dims != ("z", "y", "x")]
         if wrong_dims:
             raise ValueError(
-                "Particle profile variables must have dims ('z', 'y', 'x'); "
+                "particle profile state variables must have dims ('z', 'y', 'x'); "
                 f"offending variable(s): {wrong_dims}"
+            )
+
+        units = {}
+        for dim, name in _EDGE_COORDS.items():
+            edges = value[name]
+            expected = value.sizes[dim] + 1
+            if edges.dims != (name,) or edges.size != expected:
+                raise ValueError(
+                    f"particle profile coordinate '{name}' must have dims "
+                    f"('{name}',) and size len({dim}) + 1 = {expected}, "
+                    f"got dims {edges.dims} and size {edges.size}"
+                )
+            if "units" not in edges.attrs:
+                raise ValueError(f"particle profile coordinate '{name}' has no units")
+            if not np.all(np.diff(edges.values) > 0):
+                raise ValueError(
+                    f"particle profile coordinate '{name}' must be strictly increasing"
+                )
+            units[name] = ureg(edges.attrs["units"]).units
+
+        if not units_compatible(units["z_edges"], ureg.m):
+            raise ValueError(
+                "particle profile coordinate 'z_edges' must have length units, "
+                f"got '{units['z_edges']}'"
+            )
+
+        x_units, y_units = units["x_edges"], units["y_edges"]
+        if not any(
+            units_compatible(x_units, ref) and units_compatible(y_units, ref)
+            for ref in (ureg.m, ureg.rad)
+        ):
+            raise ValueError(
+                "particle profile coordinates 'x_edges'/'y_edges' must both have "
+                f"length units or both angle units, got '{x_units}'/'{y_units}'"
             )
 
     @property
@@ -104,40 +135,35 @@ class ParticleProfile:
         Returns
         -------
         tuple[str, ...]
-            Names of this profile's non-structural variables (``x_edges``,
-            ``y_edges`` and ``z_edges`` excluded).
+            Names of this profile's state variables, *i.e.* its data
+            variables.
         """
-        return tuple(v for v in self.data.data_vars if v not in _STRUCTURAL_VARIABLES)
+        return tuple(self.data.data_vars)
 
     def __getitem__(self, name: str) -> pint.Quantity:
-        """Return the cached per-voxel quantity for a non-structural variable."""
+        """Return the cached per-voxel quantity for a state variable."""
         try:
             return self._quantities[name]
         except KeyError:
             raise KeyError(
-                f"'{name}' is not a variable of this profile: {self.variables}"
+                f"'{name}' is not a state variable of this profile "
+                f"(available: {self.variables})"
             ) from None
 
-    @staticmethod
-    def _check_regular(name: str, values: pint.Quantity) -> None:
-        """Raise if ``values`` isn't evenly spaced."""
-        step = np.diff(values)
-        if not np.allclose(step, step[0]):
-            raise ValueError(f"'{name}' must be regularly spaced")
-
-    def resample_regular(self, grid: SpatialGrid) -> ParticleProfile:
+    def resample(self, grid: SpatialGrid) -> ParticleProfile:
         """
-        Resample the profile onto a regular grid.
+        Resample the profile onto a render grid.
 
-        The profile's own ``x_edges``/``y_edges`` must already be regularly
-        spaced and must match ``grid``'s extent and resolution exactly. Each
-        ``grid`` layer takes the values of the profile layer containing its
-        centre.
+        Only the ``z`` axis is resampled: the profile's ``x_edges``/``y_edges``
+        must match ``grid``'s extent and resolution exactly. Each ``grid``
+        layer takes the values of the profile layer containing its centre;
+        layers whose centre lies outside the profile's vertical extent get
+        zero for every state variable.
 
         Parameters
         ----------
         grid : .SpatialGrid
-            Target regular grid.
+            Target render grid.
 
         Returns
         -------
@@ -147,64 +173,60 @@ class ParticleProfile:
         Raises
         ------
         ValueError
-            If the profile's ``x_edges``/``y_edges`` are not regularly
-            spaced, or do not match ``grid``'s extent and resolution.
+            If the profile's ``x_edges``/``y_edges`` do not match ``grid``'s
+            extent and resolution.
+
+        TypeError
+            If ``grid`` is neither a :class:`.CartesianGrid` nor a
+            :class:`.SphericalGrid`.
         """
 
-        return self._resample_regular_impl(grid)
+        return self._resample_impl(grid)
 
     @cache_by_id
-    def _resample_regular_impl(self, grid: SpatialGrid) -> ParticleProfile:
-
+    def _resample_impl(self, grid: SpatialGrid) -> ParticleProfile:
+        # Grids are regular by construction, so an exact match with the target
+        # edges also guarantees regular source edges
         if isinstance(grid, CartesianGrid):
-            x_edges = to_quantity(self.data["x_edges"])
-            y_edges = to_quantity(self.data["y_edges"])
-            x_grid_edges = grid.edges_x
-            y_grid_edges = grid.edges_y
+            x_edges_tgt, y_edges_tgt = grid.edges_x, grid.edges_y
         elif isinstance(grid, SphericalGrid):
-            x_edges = to_quantity(self.data["x_edges"])
-            y_edges = to_quantity(self.data["y_edges"])
-            x_grid_edges = grid.azimuths
-            y_grid_edges = grid.colatitudes
+            x_edges_tgt, y_edges_tgt = grid.azimuths, grid.colatitudes
         else:
             raise TypeError(f"unsupported grid type {type(grid).__name__}")
 
-        self._check_regular("x_edges", x_edges)
-        self._check_regular("y_edges", y_edges)
-
-        x_edges_m = x_edges.m_as(x_grid_edges.units)
-        y_edges_m = y_edges.m_as(y_grid_edges.units)
+        x_edges_src = to_quantity(self.data["x_edges"]).m_as(x_edges_tgt.units)
+        y_edges_src = to_quantity(self.data["y_edges"]).m_as(y_edges_tgt.units)
 
         if (
-            x_edges_m.shape != x_grid_edges.shape
-            or y_edges_m.shape != y_grid_edges.shape
-            or not np.allclose(x_edges_m, x_grid_edges.m)
-            or not np.allclose(y_edges_m, y_grid_edges.m)
+            x_edges_src.shape != x_edges_tgt.shape
+            or y_edges_src.shape != y_edges_tgt.shape
+            or not np.allclose(x_edges_src, x_edges_tgt.m)
+            or not np.allclose(y_edges_src, y_edges_tgt.m)
         ):
             raise ValueError(
-                "Profile 'x_edges'/'y_edges' do not match the target "
-                "grid's extent and resolution."
+                "profile 'x_edges'/'y_edges' do not match the target "
+                "grid's extent and resolution"
             )
 
-        return self._resample_z(grid, x_grid_edges, y_grid_edges)
+        return self._resample_z(grid, x_edges_tgt, y_edges_tgt)
 
     def _resample_z(
         self,
         grid: SpatialGrid,
-        x_edges_out: pint.Quantity,
-        y_edges_out: pint.Quantity,
+        x_edges_tgt: pint.Quantity,
+        y_edges_tgt: pint.Quantity,
     ) -> ParticleProfile:
         """
         Resample this profile onto ``grid``'s ``z`` layers. Each target layer
         takes the values of the source layer containing its centre; target
         layers whose centre lies outside the profile's extent get zero for
-        every variable.
+        every state variable.
 
         Parameters
         ----------
         grid : .SpatialGrid
             Target grid providing ``z`` layer centres.
-        x_edges_out, y_edges_out : :class:`pint.Quantity`
+        x_edges_tgt, y_edges_tgt : :class:`pint.Quantity`
             Horizontal cell edges to store on the output profile, as-is.
 
         Returns
@@ -217,7 +239,7 @@ class ParticleProfile:
         n_z_src = len(z_edges_src) - 1
 
         # Look up the source layer containing each target layer centre
-        inn = np.clip(
+        i_src = np.clip(
             np.searchsorted(z_edges_src, z_centers_tgt, side="right") - 1,
             0,
             n_z_src - 1,
@@ -229,7 +251,7 @@ class ParticleProfile:
         data_vars = {}
         for name in self.variables:
             value = self[name]  # (z, y, x)
-            value_tgt = value.m[inn, :, :]
+            value_tgt = value.m[i_src, :, :]
             value_tgt[out_of_range, :, :] = 0.0
             data_vars[name] = (
                 ["z", "y", "x"],
@@ -237,24 +259,13 @@ class ParticleProfile:
                 {"units": str(value.units)},
             )
 
-        data_vars.update(
-            {
-                "x_edges": (
-                    ["x_edges"],
-                    x_edges_out.m,
-                    {"units": str(x_edges_out.units)},
-                ),
-                "y_edges": (
-                    ["y_edges"],
-                    y_edges_out.m,
-                    {"units": str(y_edges_out.units)},
-                ),
-                "z_edges": (
-                    ["z_edges"],
-                    grid.levels.m,
-                    {"units": str(grid.levels.units)},
-                ),
-            }
-        )
+        coords = {
+            name: ([name], edges.m, {"units": str(edges.units)})
+            for name, edges in [
+                ("x_edges", x_edges_tgt),
+                ("y_edges", y_edges_tgt),
+                ("z_edges", grid.levels),
+            ]
+        }
 
-        return ParticleProfile(data=xr.Dataset(data_vars=data_vars))
+        return ParticleProfile(data=xr.Dataset(data_vars=data_vars, coords=coords))

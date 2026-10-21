@@ -130,5 +130,6 @@ Glossary
 
 .. seealso::
 
-   The :ref:`sec-user_guide-radiometric_kernel_interface` section contains
-   an additional specific glossary.
+   The :ref:`sec-user_guide-radiometric_kernel_interface` and
+   :ref:`sec-particle_components-terminology` sections contain additional
+   specific glossaries.
