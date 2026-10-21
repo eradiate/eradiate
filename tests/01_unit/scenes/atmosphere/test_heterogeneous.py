@@ -15,6 +15,7 @@ from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import PlaneParallelGeometry, SceneGeometry, WrapMode
 from eradiate.spectral.index import SpectralIndex
 from eradiate.testing.types import check_scene_element
+from eradiate.util.deprecation import DeprecatedWarning
 
 
 def _find_nearest(array, value):
@@ -46,7 +47,7 @@ def test_heterogeneous_empty(modes_all_double):
 def test_heterogeneous_particle_layers_deprecated(mode_mono, via_factory):
     components = [ParticleOTComponent()]
 
-    with pytest.warns(DeprecationWarning, match="particle_layers"):
+    with pytest.warns(DeprecatedWarning, match="particle_layers"):
         if via_factory:
             atmosphere = eradiate.scenes.atmosphere.atmosphere_factory.convert(
                 {"type": "heterogeneous", "particle_layers": components}
@@ -55,7 +56,7 @@ def test_heterogeneous_particle_layers_deprecated(mode_mono, via_factory):
             atmosphere = HeterogeneousAtmosphere(particle_layers=components)
     assert atmosphere.particle_components == components
 
-    with pytest.warns(DeprecationWarning, match="particle_layers"):
+    with pytest.warns(DeprecatedWarning, match="particle_layers"):
         assert atmosphere.particle_layers is atmosphere.particle_components
 
     with pytest.raises(TypeError, match="cannot pass both"):

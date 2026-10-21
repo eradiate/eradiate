@@ -32,10 +32,10 @@ def deprecated(
     * The docstring of the method will be modified to include a notice
       about deprecation, *e.g.* "Deprecated since 0.9.11. Use foo instead."
     * Raises a :class:`.DeprecatedWarning` via the :mod:`warnings` module,
-      which is a subclass of the built-in :class:`DeprecationWarning`. Note that
-      built-in :class:`DeprecationWarning`\ s are ignored by default, so for users
-      to be informed of said warnings they will need to enable them---see
-      the :mod:`warnings` module documentation for more details.
+      which is a subclass of the built-in :class:`FutureWarning`. Unlike
+      :class:`DeprecationWarning`, it is displayed by default, including when
+      it is triggered from library code (*e.g.* a factory converting a
+      dictionary).
 
     Parameters
     ----------
@@ -193,9 +193,7 @@ def deprecated(
 
             def wrapped_cls(cls, *args, **kwargs):
                 if should_warn:
-                    warnings.warn(
-                        the_warning, category=DeprecationWarning, stacklevel=2
-                    )
+                    warnings.warn(the_warning, stacklevel=2)
 
                 if old_new is object.__new__:
                     return old_new(cls)
@@ -212,9 +210,7 @@ def deprecated(
             @functools.wraps(wrapped)
             def _inner(*args, **kwargs):
                 if should_warn:
-                    warnings.warn(
-                        the_warning, category=DeprecationWarning, stacklevel=2
-                    )
+                    warnings.warn(the_warning, stacklevel=2)
 
                 return wrapped(*args, **kwargs)
 
@@ -339,12 +335,13 @@ def renamed_kwargs(
     return wrapper
 
 
-class DeprecatedWarning(DeprecationWarning):
+class DeprecatedWarning(FutureWarning):
     """
     A warning class for deprecated methods
 
-    This is a specialization of the built-in :class:`DeprecationWarning`,
-    adding parameters that allow us to get information into the ``__str__``
+    This is a specialization of the built-in :class:`FutureWarning`, which,
+    unlike :class:`DeprecationWarning`, is displayed by default. It adds
+    parameters that allow us to get information into the ``__str__``
     that ends up being sent through the :mod:`warnings` system.
     The attributes aren't able to be retrieved after the warning gets
     raised and passed through the system as only the class--not the
