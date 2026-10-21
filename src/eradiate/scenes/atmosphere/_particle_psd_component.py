@@ -587,7 +587,7 @@ class ParticlePSDComponent(ParticleStateComponent):
 
     state_variables: dict[str, str] = documented(
         attrs.field(
-            default={"reff": "reff", "veff": "veff"},
+            factory=lambda: {"reff": "reff", "veff": "veff"},
             kw_only=True,
             validator=attrs.validators.deep_mapping(
                 key_validator=attrs.validators.instance_of(str),
@@ -600,6 +600,15 @@ class ParticlePSDComponent(ParticleStateComponent):
         init_type=get_doc(ParticleStateComponent, "state_variables", "init_type"),
         default='{ "reff": "reff", "veff": "veff" }',
     )
+
+    # Checked here rather than on 'properties', whose validator is inherited
+    @state_variables.validator
+    def _state_variables_validator(self, attribute, value):
+        if self.state_dims != ("reff", "veff"):
+            raise ValueError(
+                "'properties' must have state dimensions ('reff', 'veff'), "
+                f"got {self.state_dims!r}"
+            )
 
     @classmethod
     def convert(cls, value: Any) -> ParticlePSDComponent:
@@ -744,7 +753,6 @@ class ParticlePSDComponent(ParticleStateComponent):
             phase=ureg.Quantity(
                 phase_compact.reshape(n_phamat, 1, 1, 1, n_theta), ureg.steradians**-1
             ),
-            pmom=np.zeros((1, 1, 1, 1)),
             reff=np.atleast_1d(reff),
             veff=np.atleast_1d(veff),
         )
