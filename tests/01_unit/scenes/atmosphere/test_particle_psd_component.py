@@ -389,6 +389,18 @@ class TestParticlePSDComponent:
                 profile=profile, properties=properties_no_size_dist, geometry=geometry
             )
 
+    def test_state_dims_wrong_order_raises(self):
+        """Properties with state dimensions ordered ('veff', 'reff') are rejected."""
+        psd = make_particle_psd_component()
+        properties = psd.properties.data.transpose("phamat", "w", "veff", "reff", ...)
+
+        with pytest.raises(ValueError, match=r"state dimensions \('reff', 'veff'\)"):
+            ParticlePSDComponent(
+                profile=psd.profile,
+                properties=properties,
+                geometry=psd.geometry,
+            )
+
     def test_missing_amount_raises(self):
         """Constructing with an amount absent from the profile raises."""
         psd = make_particle_psd_component()
@@ -458,6 +470,8 @@ class TestParticlePSDComponent:
             component.geometry.grid.edges_x.m_as("km"), custom_grid.edges_x.m_as("km")
         )
 
+    # from_particle_ot() computes pmom from the deliberately unnormalized phase
+    @pytest.mark.filterwarnings("ignore:Phase function not normalized")
     def test_theta_convention_consistency(self, mode_mono):
         """composition_to_particle_ot/from_particle_ot preserve theta/mu ordering through a round trip."""
         theta_values_desc = np.array([180.0, 150.0, 100.0, 20.0, 0.0])
