@@ -191,6 +191,13 @@ class ParticleProperties:
 
     This class manages scattering particle radiative properties and implements
     interpolation routines to produce kernel-level input data.
+
+    The wrapped dataset is in the
+    :ref:`Prt-Core v1 <sec-data_formats-prt_core_v1>` format, optionally
+    extended with any number of state dimensions inserted right after ``w``
+    (see :ref:`sec-data_formats-prt_extensions`). Evaluation methods return
+    one value per state-dimension grid point; interpolation along state
+    dimensions is left to the caller (see :meth:`interp`).
     """
 
     # TODO: Validate data format
@@ -224,15 +231,23 @@ class ParticleProperties:
     _particle_shape: str | None = attrs.field(default=None, init=False, repr=True)
     # -- Fixed mu grid flag
     _has_fixed_mu_grid: bool | None = attrs.field(default=None, init=False, repr=False)
-    # -- Effective radius (size-distribution datasets only)
-    _reff: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
-    # -- Effective variance (size-distribution datasets only)
-    _veff: pint.Quantity | None = attrs.field(default=None, init=False, repr=False)
     # -- Worst-case _eval_phase_interp_spectral() flat size across adjacent
     # -- wavelength pairs
     _max_union_size: int | None = attrs.field(default=None, init=False, repr=False)
 
     def __attrs_post_init__(self):
+        # The state dimensions must directly follow 'w', in the same order, in
+        # every variable indexed by 'w'. 'phase' and 'pmom' are transposed on
+        # caching; the other variables are indexed positionally.
+        expected = ("w", *self.state_dims)
+        for name in ["ssa", "nangles", "mu"]:
+            dims = self.data[name].dims[: len(expected)]
+            if dims != expected:
+                raise ValueError(
+                    f"'{name}' must have leading dimensions {expected}, got "
+                    f"{self.data[name].dims}"
+                )
+
         # Resolve all cached attributes
         for attr in [
             "w",
@@ -244,8 +259,6 @@ class ParticleProperties:
             "pmom",
             "particle_shape",
             "has_fixed_mu_grid",
-            "reff",
-            "veff",
         ]:
             getattr(self, attr)
 
@@ -296,45 +309,51 @@ class ParticleProperties:
         )
 
     @property
-    def has_size_distribution(self) -> bool:
+    def state_dims(self) -> tuple[str, ...]:
         """
         Returns
         -------
-        bool
-            ``True`` iff ``data`` has ``reff``/``veff`` dimensions
-            (Prt-PSD v1 format), ``False`` for a plain Prt-Core v1 dataset.
+        tuple[str, ...]
+            Names of ``data``'s state dimensions: its ``ext`` variable's
+            dimensions, excluding ``w``. Empty for a plain Prt-Core v1
+            dataset.
         """
-        return "reff" in self.data.dims and "veff" in self.data.dims
+        return tuple(d for d in self.data["ext"].dims if d != "w")
 
     @property
-    def reff(self) -> pint.Quantity | None:
+    def state_shape(self) -> tuple[int, ...]:
         """
         Returns
         -------
-        pint.Quantity or None
-            Effective radius grid, cached to minimize overhead. ``None`` if
-            :attr:`has_size_distribution` is ``False``.
+        tuple[int, ...]
+            Sizes of :attr:`state_dims`, in the same order.
         """
-        if self._reff is None:
-            if not self.has_size_distribution:
-                return None
-            self._reff = to_quantity(self.data["reff"])
-        return self._reff
+        return tuple(self.data.sizes[d] for d in self.state_dims)
 
-    @property
-    def veff(self) -> pint.Quantity | None:
+    def state_coord(self, name: str) -> pint.Quantity:
         """
+        Get the coordinate values of a state dimension.
+
+        Parameters
+        ----------
+        name : str
+            Name of the requested state dimension.
+
         Returns
         -------
-        pint.Quantity or None
-            Effective variance grid, cached to minimize overhead. ``None`` if
-            :attr:`has_size_distribution` is ``False``.
+        quantity
+            Coordinate values of state dimension ``name``.
+
+        Raises
+        ------
+        ValueError
+            If ``name`` is not one of :attr:`state_dims`.
         """
-        if self._veff is None:
-            if not self.has_size_distribution:
-                return None
-            self._veff = to_quantity(self.data["veff"])
-        return self._veff
+        if name not in self.state_dims:
+            raise ValueError(
+                f"'{name}' is not a state dimension (available: {self.state_dims})"
+            )
+        return to_quantity(self.data[name])
 
     @property
     def w(self) -> pint.Quantity:
@@ -402,16 +421,14 @@ class ParticleProperties:
         Returns
         -------
         xarray.DataArray
-            The ``phase`` variable of ``data``, transposed to ensure a correct
-            layout during interpolation, cached to minimize overhead.
+            The ``phase`` variable of ``data``, transposed to
+            ``(phamat, iangle, w, *state_dims)`` to ensure a correct layout
+            during interpolation, cached to minimize overhead.
         """
         if self._phase is None:
-            if self.has_size_distribution:
-                self._phase = self.data["phase"].transpose(
-                    "phamat", "iangle", "w", "reff", "veff"
-                )
-            else:
-                self._phase = self.data["phase"].transpose("phamat", "iangle", "w")
+            self._phase = self.data["phase"].transpose(
+                "phamat", "iangle", "w", *self.state_dims
+            )
         return self._phase
 
     @property
@@ -419,16 +436,15 @@ class ParticleProperties:
         """
         Returns
         -------
-        xarray.DataArray
-            The ``pmom`` variable of ``data``, cached to minimize overhead.
+        xarray.DataArray or None
+            The ``pmom`` variable of ``data``, transposed to
+            ``(imom, w, *state_dims)``, cached to minimize overhead. ``None``
+            if ``data`` has no ``pmom`` variable.
         """
         if self._pmom is None:
             if "pmom" not in self.data:
                 return None
-            elif self.has_size_distribution:
-                self._pmom = self.data["pmom"].transpose("imom", "w", "reff", "veff")
-            else:
-                self._pmom = self.data["pmom"].transpose("imom", "w")
+            self._pmom = self.data["pmom"].transpose("imom", "w", *self.state_dims)
 
         return self._pmom
 
@@ -467,46 +483,21 @@ class ParticleProperties:
         Returns
         -------
         bool
-            ``True`` iff all wavelengths share an identical mu grid (same
-            ``nangles`` and same ``mu`` values). When ``True``, ``eval_phase``
-            uses ``n_iangle`` output points instead of ``2 * n_iangle``,
-            preserving the original grid exactly.
+            ``True`` iff all wavelengths and state-dimension grid points
+            share an identical mu grid (same ``nangles`` and same ``mu``
+            values). When ``True``, ``eval_phase`` uses ``n_iangle`` output
+            points instead of ``2 * n_iangle``, preserving the original grid
+            exactly.
         """
         if self._has_fixed_mu_grid is None:
-            self._has_fixed_mu_grid = self._has_fixed_mu_grid_at()
+            n_iangle = self.data.sizes["iangle"]
+            nangles = self.data["nangles"].values
+            mu = self.data["mu"].values.reshape(-1, n_iangle)
+            self._has_fixed_mu_grid = bool(np.all(nangles == n_iangle)) and bool(
+                np.all(mu == mu[[0]])
+            )
 
         return self._has_fixed_mu_grid
-
-    def _has_fixed_mu_grid_at(
-        self, reff_idx: int | None = None, veff_idx: int | None = None
-    ) -> bool:
-        """
-        Check whether all wavelengths share an identical angular grid (same
-        ``nangles`` and ``mu`` values), optionally restricted to a single
-        ``(reff, veff)`` grid point.
-
-        Parameters
-        ----------
-        reff_idx, veff_idx : int, optional
-            If given, restrict the check to this ``(reff, veff)`` grid point.
-
-        Returns
-        -------
-        bool
-            ``True`` iff all wavelengths share an identical mu grid.
-        """
-        ds = self.data
-        n_iangle = ds.sizes["iangle"]
-
-        if reff_idx is None:
-            nangles = ds["nangles"].values
-            mu_vals = ds["mu"].values
-        else:
-            nangles = ds["nangles"].values[:, reff_idx, veff_idx]
-            mu_vals = ds["mu"].values[:, reff_idx, veff_idx, :]
-
-        all_full = bool(np.all(nangles == n_iangle))
-        return all_full and bool(np.all(mu_vals == mu_vals[[0]]))
 
     def interp(
         self, grid: pint.Quantity, query: dict[str, pint.Quantity]
@@ -582,8 +573,7 @@ class ParticleProperties:
         Returns
         -------
         quantity
-            Extinction coefficient. Shape ``(nw,)`` if ``data`` has no
-            ``reff``/``veff`` dimensions, ``(nw, nreff, nveff)`` otherwise.
+            Extinction coefficient, shape ``(nw, *state_shape)``.
         """
         idx_l, idx_r, t = self._locate(w)
         ext = self.ext.m
@@ -604,8 +594,7 @@ class ParticleProperties:
         Returns
         -------
         quantity
-            Dimensionless SSA. Shape ``(nw,)`` if ``data`` has no
-            ``reff``/``veff`` dimensions, ``(nw, nreff, nveff)`` otherwise.
+            Dimensionless SSA, shape ``(nw, *state_shape)``.
 
         Notes
         -----
@@ -634,14 +623,11 @@ class ParticleProperties:
         return ssa_interp * ureg.dimensionless
 
     def _get_mu_phase(
-        self,
-        w_idx: int,
-        reff_idx: int | None = None,
-        veff_idx: int | None = None,
+        self, w_idx: int, state_idx: tuple[int, ...] = ()
     ) -> tuple[np.ndarray, np.ndarray]:
         """
         Extract the valid mu grid and phase values for a single wavelength
-        index, optionally at a single ``(reff, veff)`` grid point.
+        index and state-dimension grid point.
 
         Strips NaN-padding using ``nangles``.
 
@@ -650,9 +636,9 @@ class ParticleProperties:
         w_idx : int
             Index along the ``w`` dimension.
 
-        reff_idx, veff_idx : int, optional
-            Index along the ``reff``/``veff`` dimensions. Both must be set
-            iff ``data`` has ``reff``/``veff`` dimensions.
+        state_idx : tuple[int, ...], optional
+            Index along each of :attr:`state_dims`, in the same order. Empty
+            (default) for a dataset without state dimensions.
 
         Returns
         -------
@@ -662,19 +648,11 @@ class ParticleProperties:
         phase : ndarray
             Phase values, shape ``(n_phamat, nangles)``.
         """
-        ds = self.data
-
-        if reff_idx is None:
-            nangles = int(ds["nangles"].values[w_idx])
-            mu = ds["mu"].values[w_idx, :nangles]
-            # phase is cached as (phamat, iangle, w)
-            phase = self.phase.values[:, :nangles, w_idx]  # (n_phamat, nangles)
-        else:
-            nangles = int(ds["nangles"].values[w_idx, reff_idx, veff_idx])
-            mu = ds["mu"].values[w_idx, reff_idx, veff_idx, :nangles]
-            # phase is cached as (phamat, iangle, w, reff, veff)
-            phase = self.phase.values[:, :nangles, w_idx, reff_idx, veff_idx]
-
+        idx = (w_idx, *state_idx)
+        nangles = int(self.data["nangles"].values[idx])
+        mu = self.data["mu"].values[idx][:nangles]
+        # phase is cached as (phamat, iangle, w, *state_dims)
+        phase = self.phase.values[(slice(None), slice(None, nangles), *idx)]
         return mu, phase
 
     def _locate(self, w: pint.Quantity) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -799,9 +777,9 @@ class ParticleProperties:
         """
         Evaluate the phase function at a single wavelength by linearly
         combining its two bracketing dataset wavelengths, weighted by
-        scattering coefficient. Each grid point keeps its own union of the
-        two wavelengths' native mu grids, as-is (no resampling to a common
-        point count).
+        scattering coefficient. Each state-dimension grid point keeps its own
+        union of the two wavelengths' native mu grids, as-is (no resampling
+        to a common point count).
 
         Parameters
         ----------
@@ -811,15 +789,13 @@ class ParticleProperties:
         Returns
         -------
         mu : ndarray
-            Scattering angle cosines. Shape ``(max_len,)`` if ``data`` has
-            no ``reff``/``veff`` dimensions, else ``(n_reff, n_veff,
-            max_len)``, NaN-padded past each grid point's own native union
-            length (``max_len`` is the widest point's length).
+            Scattering angle cosines, shape ``(*state_shape, max_len)``,
+            NaN-padded past each grid point's own native union length
+            (``max_len`` is the widest point's length).
 
         phase : ndarray
-            Phase function values in sr⁻¹, ``phamat`` leading. Shape
-            ``(n_phamat, max_len)``, or ``(n_phamat, n_reff, n_veff,
-            max_len)`` with a size distribution. NaN-padded like ``mu``.
+            Phase function values in sr⁻¹, ``phamat`` leading, shape
+            ``(n_phamat, *state_shape, max_len)``. NaN-padded like ``mu``.
         """
         w_arr = np.atleast_1d(w)
         if w_arr.size != 1:
@@ -830,40 +806,24 @@ class ParticleProperties:
         idx_l_arr, idx_r_arr, w0_arr, w1_arr, _ = self._bracket_and_weights(w_arr)
         idx_l = int(idx_l_arr[0])
         idx_r = int(idx_r_arr[0])
-
-        if self.has_size_distribution:
-            n_reff = self.data.sizes["reff"]
-            n_veff = self.data.sizes["veff"]
-            w0_grid = w0_arr[0]  # (n_reff, n_veff)
-            w1_grid = w1_arr[0]
-            points = [
-                (ireff, iveff) for ireff in range(n_reff) for iveff in range(n_veff)
-            ]
-
-            def weight_at(ireff, iveff):
-                return float(w0_grid[ireff, iveff]), float(w1_grid[ireff, iveff])
-
-        else:
-            w0_scalar = float(w0_arr[0])
-            w1_scalar = float(w1_arr[0])
-            points = [(None, None)]
-
-            def weight_at(ireff, iveff):
-                return w0_scalar, w1_scalar
+        w0_grid = w0_arr[0]  # state_shape
+        w1_grid = w1_arr[0]
+        state_shape = self.state_shape
 
         mu_list: list[np.ndarray] = []
         phase_list: list[np.ndarray] = []
 
-        for ireff, iveff in points:
-            mu1, phase1 = self._get_mu_phase(idx_l, ireff, iveff)
-            mu2, phase2 = self._get_mu_phase(idx_r, ireff, iveff)
+        for state_idx in np.ndindex(state_shape):
+            mu1, phase1 = self._get_mu_phase(idx_l, state_idx)
+            mu2, phase2 = self._get_mu_phase(idx_r, state_idx)
 
             mu_union = np.union1d(mu1, mu2)
             phase1_union = interp1d(mu1, phase1, mu_union, bounds="clamp")
             phase2_union = interp1d(mu2, phase2, mu_union, bounds="clamp")
 
-            w0_pt, w1_pt = weight_at(ireff, iveff)
-            phase_union = w0_pt * phase1_union + w1_pt * phase2_union
+            phase_union = (
+                w0_grid[state_idx] * phase1_union + w1_grid[state_idx] * phase2_union
+            )
 
             mu_list.append(mu_union)
             phase_list.append(phase_union)
@@ -888,11 +848,8 @@ class ParticleProperties:
             ]
         )
 
-        if not self.has_size_distribution:
-            return mu_pad[0], phase_pad[0]
-
-        mu = mu_pad.reshape(n_reff, n_veff, max_len)
-        phase = np.moveaxis(phase_pad.reshape(n_reff, n_veff, -1, max_len), 2, 0)
+        mu = mu_pad.reshape(*state_shape, max_len)
+        phase = np.moveaxis(phase_pad.reshape(*state_shape, -1, max_len), -2, 0)
         return mu, phase
 
     def _eval_phase_resample_mu(
@@ -904,8 +861,9 @@ class ParticleProperties:
         """
         Resample ``mu``/``phase`` — as returned by
         :meth:`_eval_phase_interp_spectral`, possibly NaN-padded past each
-        grid point's own native union length — onto a common, fixed-size mu
-        grid of ``n_mu`` points, applied independently to every grid point.
+        state-dimension grid point's own native union length — onto a common,
+        fixed-size mu grid of ``n_mu`` points, applied independently to every
+        grid point.
 
         Each point is decimated with a greedy log-space RDP algorithm where
         its native grid is larger than ``n_mu``, or upsampled with linear
@@ -927,12 +885,10 @@ class ParticleProperties:
         Returns
         -------
         mu : ndarray
-            Shape ``(n_mu,)``, or ``(n_reff, n_veff, n_mu)`` with a size
-            distribution.
+            Shape ``(*state_shape, n_mu)``.
 
         phase : ndarray
-            ``phamat`` leading. Shape ``(n_phamat, n_mu)``, or
-            ``(n_phamat, n_reff, n_veff, n_mu)`` with a size distribution.
+            ``phamat`` leading, shape ``(n_phamat, *state_shape, n_mu)``.
         """
         n_iangle = self.data.sizes["iangle"]
         if n_mu is None:
@@ -957,22 +913,15 @@ class ParticleProperties:
             else:
                 return mu_native, phase_native
 
-        if mu.ndim == 1:
-            return resample_point(mu, phase)
+        state_shape = mu.shape[:-1]
+        mu_out = np.empty((*state_shape, n_mu))
+        phase_out = np.empty((phase.shape[0], *state_shape, n_mu))
 
-        n_reff, n_veff = mu.shape[:2]
-        n_phamat = phase.shape[0]
-
-        mu_out = np.empty((n_reff, n_veff, n_mu))
-        phase_out = np.empty((n_phamat, n_reff, n_veff, n_mu))
-
-        for ireff in range(n_reff):
-            for iveff in range(n_veff):
-                mu_pt, phase_pt = resample_point(
-                    mu[ireff, iveff], phase[:, ireff, iveff]
-                )
-                mu_out[ireff, iveff] = mu_pt
-                phase_out[:, ireff, iveff] = phase_pt
+        for state_idx in np.ndindex(state_shape):
+            phase_idx = (slice(None), *state_idx)
+            mu_out[state_idx], phase_out[phase_idx] = resample_point(
+                mu[state_idx], phase[phase_idx]
+            )
 
         return mu_out, phase_out
 
@@ -995,8 +944,9 @@ class ParticleProperties:
             wavelengths, if ever needed, is left to the caller.
 
         resample_mu : bool, optional
-            If ``False`` (default), return each grid point's own union of
-            its two bracketing wavelengths' native mu grids, as-is (see
+            If ``False`` (default), return each state-dimension grid
+            point's own union of its two bracketing wavelengths' native mu
+            grids, as-is (see
             :meth:`_eval_phase_interp_spectral`). If ``True``, additionally
             resample every grid point onto a common, fixed-size mu grid of
             ``n_mu`` points (see :meth:`_eval_phase_resample_mu`).
@@ -1009,20 +959,13 @@ class ParticleProperties:
         Returns
         -------
         mu : ndarray
-            Scattering angle cosines.
-
-            * No size distribution: shape ``(n_mu,)`` (or ``(max_len,)``
-              when ``resample_mu=False``).
-            * Size distribution: shape ``(n_reff, n_veff, n_mu)`` (or
-              ``(n_reff, n_veff, max_len)``, NaN-padded past each grid
-              point's own native length, when ``resample_mu=False``).
+            Scattering angle cosines, shape ``(*state_shape, n_mu)``, or
+            ``(*state_shape, max_len)`` when ``resample_mu=False``,
+            NaN-padded past each grid point's own native length.
 
         phase : ndarray
-            Phase function values in sr⁻¹, ``phamat`` leading, with the
-            same trailing shape as ``mu``: ``(n_phamat, n_mu)`` (or
-            ``(n_phamat, max_len)``) without a size distribution,
-            ``(n_phamat, n_reff, n_veff, n_mu)`` (or
-            ``(n_phamat, n_reff, n_veff, max_len)``) with one.
+            Phase function values in sr⁻¹, ``phamat`` leading, shape
+            ``(n_phamat, *mu.shape)``.
 
         Notes
         -----
@@ -1038,17 +981,16 @@ class ParticleProperties:
 
         return self._eval_phase_resample_mu(mu, phase, n_mu)
 
-    def phase_dataset_for_reff_veff(
+    def phase_dataset_at(
         self,
         w: pint.Quantity,
-        i_reff: int,
-        i_veff: int,
+        state_idx: tuple[int, ...] = (),
         ext: pint.Quantity | None = None,
     ) -> xr.Dataset:
         """
-        Build a single-point Prt-Core v1 phase function dataset at the given
-        wavelength, from the exact ``(i_reff, i_veff)`` grid point (no
-        interpolation across ``reff``/``veff``).
+        Build a single-point Prt-Core v1 dataset at the given wavelength, from
+        the exact state-dimension grid point ``state_idx`` (no interpolation
+        along state dimensions).
 
         Parameters
         ----------
@@ -1056,35 +998,41 @@ class ParticleProperties:
             Wavelength at which ``ext``/``ssa``/the phase function are
             evaluated (interpolated along the wavelength axis only).
 
-        i_reff, i_veff : int
-            Index along this dataset's own ``reff``/``veff`` dimensions.
+        state_idx : tuple[int, ...], optional
+            Index along each of :attr:`state_dims`, in the same order. Empty
+            (default) for a dataset without state dimensions.
 
         ext : quantity, optional
             Extinction coefficient stored in the output dataset. Defaults
-            to the native grid value at ``(i_reff, i_veff)``.
+            to the value interpolated at ``w`` at grid point ``state_idx``.
 
         Returns
         -------
         xr.Dataset
-            A Prt-Core v1 dataset with no ``reff``/``veff`` dimensions.
+            A Prt-Core v1 dataset with a single wavelength and no state
+            dimension.
+
+        Raises
+        ------
+        ValueError
+            If ``state_idx`` does not have one entry per state dimension.
         """
-        if not self.has_size_distribution:
+        if len(state_idx) != len(self.state_dims):
             raise ValueError(
-                "phase_dataset_for_reff_veff() requires a dataset with "
-                "'reff'/'veff' dimensions"
+                f"'state_idx' must have one entry per state dimension "
+                f"{self.state_dims}, got {state_idx!r}"
             )
 
         wavelength = np.atleast_1d(w)
-        ext_grid = self.eval_ext(wavelength)
-        ssa_grid = self.eval_ssa(wavelength)
-        ssa = ssa_grid[0, i_reff, i_veff]
+        idx = (0, *state_idx)
+        ssa = self.eval_ssa(wavelength)[idx]
         if ext is None:
-            ext = ext_grid[0, i_reff, i_veff]
+            ext = self.eval_ext(wavelength)[idx]
 
         mu_grid, phase_grid = self.eval_phase(wavelength[0])
-        n = int((~np.isnan(mu_grid[i_reff, i_veff])).sum())
-        mu = mu_grid[i_reff, i_veff, :n]
-        phase_vals = phase_grid[:, i_reff, i_veff, :n]  # (nphamat, n_mu)
+        n = int((~np.isnan(mu_grid[state_idx])).sum())
+        mu = mu_grid[state_idx][:n]
+        phase_vals = phase_grid[(slice(None), *state_idx)][:, :n]  # (nphamat, n_mu)
         theta = np.rad2deg(np.arccos(mu))
         assert theta[0] > theta[-1], "expected descending theta"
 
@@ -1122,30 +1070,31 @@ class ParticleProperties:
         -------
         values : ndarray
             Legendre moment array for the (1,1) phase matrix element, shape
-            ``(nmom, nw)`` or ``(nleg, nw)`` when ``clip=True``.
+            ``(nmom, nw, *state_shape)``, or ``(nleg, nw, *state_shape)``
+            when ``clip=True``.
 
         nleg : int
             Index of the last nonzero moment (+ 1) across all queried
-            wavelengths.
+            wavelengths and state-dimension grid points.
         """
         idx_l, idx_r, w0, w1, scat_denom = self._bracket_and_weights(w)
 
-        pmom = self.pmom  # (imom, w_data)
+        pmom = self.pmom  # (imom, w_data, *state_shape)
         if pmom is None:
             raise ValueError(
                 "ParticleProperties.eval_pmom(): No Legendre moments found in loaded data"
             )
 
-        v_l = np.nan_to_num(pmom.values[:, idx_l])  # (imom, nw)
+        v_l = np.nan_to_num(pmom.values[:, idx_l])  # (imom, nw, *state_shape)
         v_r = np.nan_to_num(pmom.values[:, idx_r])
 
-        values = w0[np.newaxis, :] * v_l + w1[np.newaxis, :] * v_r  # (imom, nw)
+        values = w0[np.newaxis] * v_l + w1[np.newaxis] * v_r
 
         # zero out wavelengths with no scattering
-        values = np.where((scat_denom == 0.0)[np.newaxis, :], 0.0, values)
+        values = np.where((scat_denom == 0.0)[np.newaxis], 0.0, values)
 
-        # Index of last nonzero moment (across all wavelengths) + 1
-        nonzero_rows = np.any(values != 0.0, axis=1)  # (imom,)
+        # Index of last nonzero moment (across all other axes) + 1
+        nonzero_rows = np.any(values != 0.0, axis=tuple(range(1, values.ndim)))
         nleg = int(np.flatnonzero(nonzero_rows)[-1] + 1) if nonzero_rows.any() else 0
 
         return values[:nleg, :] if clip else values, nleg

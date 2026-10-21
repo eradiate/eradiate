@@ -74,7 +74,7 @@ class ParticleStateComponent(ParticleComponent):
 
     Extinction and albedo are interpolated per voxel in Python; the phase
     function is interpolated per voxel at render time by the
-    ``particlefieldphase`` kernel plugin, wrapped by
+    ``particlephase`` kernel plugin, wrapped by
     :class:`.GriddedParticlePhaseFunction`.
     """
 
@@ -199,12 +199,10 @@ class ParticleStateComponent(ParticleComponent):
         Returns
         -------
         tuple[str, ...]
-            Names of :attr:`properties`' state dimensions: its ``ext``
-            variable's dimensions, excluding ``w``, ``phamat``, ``iangle``
-            and ``imom``.
+            Names of :attr:`properties`' state dimensions (see
+            :attr:`.ParticleProperties.state_dims`).
         """
-        non_state = {"w", "phamat", "iangle", "imom"}
-        return tuple(d for d in self.properties.data["ext"].dims if d not in non_state)
+        return self.properties.state_dims
 
     @property
     def _binding(self) -> dict[str, str]:
@@ -278,8 +276,7 @@ class ParticleStateComponent(ParticleComponent):
         ``phase_data`` callable: ``mu``/``phase`` flattened to one row per
         state-dimension combination, combined with :meth:`_eval_ext_ssa_grid`.
         """
-        state_shape = tuple(self.properties.data.sizes[d] for d in self.state_dims)
-        n_pts = int(np.prod(state_shape)) if state_shape else 1
+        n_pts = int(np.prod(self.properties.state_shape))
 
         mu, phase = self.properties.eval_phase(si.w)
         n_phamat, *_, max_len = phase.shape
@@ -311,7 +308,7 @@ class ParticleStateComponent(ParticleComponent):
             value = resampled[self._binding[d]]
             volume_zyx = np.where(empty, np.nan, value.m)
             volumes.append(np.transpose(volume_zyx, (2, 1, 0)) * value.units)
-            grids.append(to_quantity(self.properties.data[d]))
+            grids.append(self.properties.state_coord(d))
 
         kwargs = {
             "geometry": self.geometry,

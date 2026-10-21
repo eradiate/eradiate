@@ -24,5 +24,8 @@ from ._particle_dist import (
 )
 from ._particle_profile import ParticleProfile as ParticleProfile
 from ._particle_psd_component import ParticlePSDComponent as ParticlePSDComponent
+from ._particle_psd_component import (
+    ParticleStateComponent as ParticleStateComponent,
+)
 from ._util import eval_transmittance_ckd as eval_transmittance_ckd
 from ._util import eval_transmittance_mono as eval_transmittance_mono

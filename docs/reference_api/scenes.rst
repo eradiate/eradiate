@@ -175,6 +175,7 @@ Quick access
    MolecularAtmosphere
    ParticleOTComponent
    ParticleExtinctionComponent
+   ParticleStateComponent
    ParticlePSDComponent
 
 **Particle distributions**

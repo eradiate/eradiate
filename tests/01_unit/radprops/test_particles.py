@@ -7,7 +7,7 @@ import pytest
 import xarray as xr
 
 from eradiate import unit_registry as ureg
-from eradiate.data.convert import make_prt_core_v1
+from eradiate.data.convert import make_prt_core_v1, make_prt_v1
 from eradiate.radprops._particles import ParticleProperties, _rdp1d_log, _upsample_mu
 
 W_NM = np.array([400.0, 550.0, 700.0])
@@ -222,6 +222,60 @@ def make_size_distribution_dataset_ragged() -> xr.Dataset:
     )
 
 
+HUM = np.array([0.0, 50.0, 90.0])  # percent
+
+
+def make_state_dataset(state_dims: dict) -> xr.Dataset:
+    """
+    Build a Prt-Core v1 dataset extended with arbitrary state dimensions, by
+    broadcasting :func:`make_dataset`'s data over them.
+
+    ``ext`` is scaled by a distinct factor at every state-dimension grid point
+    (``1 + flat index``), so index-based selection can be checked against
+    known values.
+
+    Parameters
+    ----------
+    state_dims : dict
+        Mapping of state dimension names to their coordinate values
+        (quantities), forwarded to :func:`.make_prt_v1`.
+    """
+    shape = tuple(len(v) for v in state_dims.values())
+
+    def bcast(x):
+        # (nw, ...) -> (nw, *shape, ...)
+        x = np.expand_dims(x, tuple(range(1, 1 + len(shape))))
+        return np.broadcast_to(x, (x.shape[0], *shape, *x.shape[1 + len(shape) :]))
+
+    scale = 1.0 + np.arange(int(np.prod(shape))).reshape(shape)
+    mu = bcast(np.tile(MU_1D, (len(W_NM), 1)))
+    phase = np.moveaxis(bcast(np.moveaxis(_PHASE_DATA, 0, 1)), 1 + len(shape), 0)
+
+    return make_prt_v1(
+        w=W_NM * ureg.nm,
+        phamat=["11"],
+        mu=mu * ureg.dimensionless,
+        theta=np.degrees(np.arccos(mu)) * ureg.deg,
+        ext=bcast(EXT) * scale * ureg("km^-1"),
+        ssa=bcast(SSA).copy() * ureg.dimensionless,
+        phase=phase.copy() * ureg("1/sr"),
+        pmom=bcast(_PMOM_DATA).copy(),
+        state_dims=state_dims,
+    )
+
+
+def make_hum_dataset() -> xr.Dataset:
+    """Prt-Hum v1 dataset built by :func:`make_state_dataset`."""
+    return make_state_dataset({"hum": HUM * ureg.percent})
+
+
+def make_two_state_dataset() -> xr.Dataset:
+    """Dataset with two arbitrary state dimensions ``a`` and ``b``."""
+    return make_state_dataset(
+        {"a": np.array([1.0, 2.0]) * ureg.m, "b": np.array([0.1, 0.2, 0.3]) * ureg.s}
+    )
+
+
 @pytest.fixture
 def pp() -> ParticleProperties:
     return ParticleProperties(data=make_dataset())
@@ -331,12 +385,105 @@ class TestParticleProperties:
     def test_has_polarization(self, pp):
         assert pp.has_polarization is False
 
-    def test_has_size_distribution_false_for_aer_core_v2(self, pp):
-        assert pp.has_size_distribution is False
+    @pytest.mark.parametrize(
+        "make, expected_dims",
+        [
+            (make_dataset, ()),
+            (make_size_distribution_dataset, ("reff", "veff")),
+            (make_hum_dataset, ("hum",)),
+            (make_two_state_dataset, ("a", "b")),
+        ],
+        ids=["core", "psd", "hum", "two_state"],
+    )
+    def test_state_dims(self, make, expected_dims):
+        """State dimensions are read from 'ext', in dataset order; 'phase'
+        and 'pmom' are cached in the matching layout."""
+        ds = make()
+        pp = ParticleProperties(data=ds)
+        assert pp.state_dims == expected_dims
+        assert pp.state_shape == tuple(ds.sizes[d] for d in expected_dims)
+        assert pp.phase.dims == ("phamat", "iangle", "w", *expected_dims)
+        if "pmom" in ds:
+            assert pp.pmom.dims == ("imom", "w", *expected_dims)
 
-    def test_has_size_distribution_true_for_prt_psd_v1(self):
-        pp = ParticleProperties(data=make_size_distribution_dataset())
-        assert pp.has_size_distribution is True
+    def test_state_coord(self):
+        pp = ParticleProperties(data=make_hum_dataset())
+        np.testing.assert_array_equal(pp.state_coord("hum").m_as("percent"), HUM)
+        with pytest.raises(ValueError, match="'reff' is not a state dimension"):
+            pp.state_coord("reff")
+
+    def test_inconsistent_state_dim_order_raises(self):
+        """State dimensions ordered differently in 'ext' and 'mu' are rejected."""
+        ds = make_two_state_dataset()
+        ds["mu"] = ds["mu"].transpose("w", "b", "a", "iangle")
+        with pytest.raises(ValueError, match="'mu' must have leading dimensions"):
+            ParticleProperties(data=ds)
+
+    @pytest.mark.parametrize(
+        "make", [make_hum_dataset, make_two_state_dataset], ids=["hum", "two_state"]
+    )
+    @pytest.mark.parametrize("resample_mu", [False, True])
+    def test_eval_phase_matches_isel(self, make, resample_mu):
+        """Each state-dimension grid point matches eval_phase() on a manually
+        isel'd dataset."""
+        ds = make()
+        pp = ParticleProperties(data=ds)
+        w = 475.0 * ureg.nm
+        mu_grid, phase_grid = pp.eval_phase(w, resample_mu=resample_mu)
+        assert mu_grid.shape[:-1] == pp.state_shape
+        assert phase_grid.shape[1:-1] == pp.state_shape
+
+        for state_idx in np.ndindex(pp.state_shape):
+            single = ParticleProperties(
+                data=ds.isel(dict(zip(pp.state_dims, state_idx)), drop=True)
+            )
+            mu_expected, phase_expected = single.eval_phase(w, resample_mu=resample_mu)
+            np.testing.assert_allclose(mu_grid[state_idx], mu_expected, rtol=1e-12)
+            np.testing.assert_allclose(
+                phase_grid[(slice(None), *state_idx)], phase_expected, rtol=1e-10
+            )
+
+    def test_eval_pmom_state_dims(self):
+        """eval_pmom() keeps state dimensions and computes nleg across them."""
+        pp = ParticleProperties(data=make_hum_dataset())
+        values, nleg = pp.eval_pmom(np.array([475.0, 625.0]) * ureg.nm)
+        assert values.shape == (_PMOM_DATA.shape[1], 2, len(HUM))
+        assert nleg == 3
+
+    class TestPhaseDatasetAt:
+        @pytest.mark.parametrize(
+            "make, state_idx",
+            [
+                (make_dataset, ()),
+                (make_hum_dataset, (1,)),
+                (make_two_state_dataset, (1, 2)),
+            ],
+            ids=["core", "hum", "two_state"],
+        )
+        def test_matches_grid_point(self, make, state_idx):
+            """Output is a Prt-Core v1 dataset holding the selected grid point."""
+            pp = ParticleProperties(data=make())
+            w = 475.0 * ureg.nm
+            ds = pp.phase_dataset_at(w, state_idx)
+            single = ParticleProperties(data=ds)
+
+            assert single.state_dims == ()
+            idx = (0, *state_idx)
+            np.testing.assert_allclose(
+                single.ext.m, pp.eval_ext(np.atleast_1d(w)).m[idx], rtol=1e-12
+            )
+            np.testing.assert_allclose(
+                single.ssa.m, pp.eval_ssa(np.atleast_1d(w)).m[idx], rtol=1e-12
+            )
+            _, phase = pp.eval_phase(w)
+            np.testing.assert_allclose(
+                single.phase.values[:, :, 0], phase[(slice(None), *state_idx)]
+            )
+
+        def test_wrong_state_idx_length_raises(self):
+            pp = ParticleProperties(data=make_two_state_dataset())
+            with pytest.raises(ValueError, match="one entry per state dimension"):
+                pp.phase_dataset_at(475.0 * ureg.nm, (0,))
 
     class TestEvalPhaseInterpSpectral:
         """Tests for the private _eval_phase_interp_spectral() helper."""

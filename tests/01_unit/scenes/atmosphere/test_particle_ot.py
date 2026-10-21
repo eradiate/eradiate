@@ -6,7 +6,6 @@ import xarray as xr
 
 from eradiate import fresolver
 from eradiate import unit_registry as ureg
-from eradiate.data.convert import make_prt_psd_v1
 from eradiate.grid import CartesianGrid, SpatialGrid
 from eradiate.radprops import ParticleProperties
 from eradiate.scenes.atmosphere import (
@@ -22,6 +21,7 @@ from eradiate.units import to_quantity
 
 from ._psd_helpers import (
     make_particle_psd_component,
+    make_state_properties_dataset,
     make_z_profile_particle_psd_component,
 )
 
@@ -162,28 +162,22 @@ class TestParticleOTComponent:
                 tau_ref=-0.1 * ureg.dimensionless,
             )
 
-    def test_particle_properties_rejects_size_distribution(self):
-        """Raises when 'particle_properties' has 'reff'/'veff' dimensions."""
-        mu = np.linspace(-1.0, 1.0, 5)
-        theta = np.rad2deg(np.arccos(mu))
-        properties_with_size_dist = make_prt_psd_v1(
-            w=ureg.Quantity([1.0], "micron"),
-            phamat=["11"],
-            mu=ureg.Quantity(
-                mu[np.newaxis, np.newaxis, np.newaxis, :], "dimensionless"
-            ),
-            theta=ureg.Quantity(theta[np.newaxis, np.newaxis, np.newaxis, :], "degree"),
-            ext=ureg.Quantity([[[1.0]]], "1/km"),
-            ssa=ureg.Quantity([[[0.6]]], "dimensionless"),
-            phase=ureg.Quantity(np.ones((1, 1, 1, 1, 5)), "1/sr"),
-            pmom=np.zeros((1, 1, 1, 1)),
-            reff=ureg.Quantity([10.0], "micron"),
-            veff=ureg.Quantity([0.1], "dimensionless"),
-        )
-
-        with pytest.raises(ValueError, match=r"reff.*veff"):
+    @pytest.mark.parametrize(
+        "state_dims",
+        [
+            {
+                "reff": np.array([10.0]) * ureg.micron,
+                "veff": np.array([0.1]) * ureg.dimensionless,
+            },
+            {"hum": np.array([0.0, 90.0]) * ureg.percent},
+        ],
+        ids=["psd", "hum"],
+    )
+    def test_particle_properties_rejects_state_dims(self, state_dims):
+        """Raises when 'particle_properties' has any state dimension."""
+        with pytest.raises(ValueError, match="must have no state dimension"):
             ParticleOTComponent(
-                particle_properties=properties_with_size_dist,
+                particle_properties=make_state_properties_dataset(state_dims),
                 w_ref=ureg.Quantity(1.0, "micron"),
             )
 

@@ -170,8 +170,14 @@ relevant). Data are sorted in ascending order of each state coordinate.
 The :ref:`sec-data_formats-prt_psd_v1` and :ref:`sec-data_formats-prt_hum_v1`
 formats are named extensions that fix the name, meaning and units of their
 state dimensions. Datasets with other state dimensions are valid
-extensions; they are created with :func:`.make_prt_v1` and can be consumed by
-:class:`.ParticleStateComponent`.
+extensions; they are created with :func:`.make_prt_v1`.
+
+:class:`.ParticleProperties` loads datasets with any number of state
+dimensions. Components set further constraints:
+:class:`.ParticleOTComponent` requires a dataset without state dimension, and
+:class:`.ParticleStateComponent` requires 1 or 2 state dimensions, which is the
+number of state variables the ``particlephase`` kernel plugin interpolates
+over.
 
 
 .. _sec-data_formats-prt_psd_v1:
