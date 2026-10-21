@@ -394,9 +394,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         "(first dimension). Also note than in plane parallel the dimensions are "
         "[x, y, z] and in spherical shell [r, theta, phi]. "
         "The default value (1, 1, 1) falls back to a global majorant. In plane "
-        "parallel, set to (0,0,0) to trigger an adaptive search of the optimal"
+        "parallel, set to (0,0,0) to trigger an adaptive search of the optimal "
         "resolution. Note that this is an expensive search that triggers at "
-        "spectral update. "
+        "spectral update. Ignored by piecewise media (plane parallel with a "
+        "1D grid and ``force_majorant`` unset). "
         "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
         "on the parent instead.",
         type="tuple[int, int, int]",
@@ -408,6 +409,21 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         """
         Update internal state.
         """
+
+    @property
+    def is_piecewise(self) -> bool:
+        """
+        ``True`` if this atmosphere is rendered with a ``piecewise`` medium,
+        which requires a :class:`.PlaneParallelGeometry` with a 1D grid and
+        ``force_majorant`` unset. Only this medium is compatible with
+        :class:`.PiecewiseVolPathIntegrator`; it ignores
+        ``extremum_resolution`` and ``use_rrt``.
+        """
+        return (
+            isinstance(self.geometry, PlaneParallelGeometry)
+            and not self.force_majorant
+            and self.geometry.grid.is_1d
+        )
 
     # --------------------------------------------------------------------------
     #                    Spatial and thermophysical properties
@@ -726,11 +742,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         }
         sigma_t_id = f"{self.id}_sigma_t"
 
-        piecewise = (
-            isinstance(self.geometry, PlaneParallelGeometry)
-            and not self.force_majorant
-            and self.geometry.grid.is_1d
-        )
+        piecewise = self.is_piecewise
 
         aabb_conf = {}
         if isinstance(self.geometry, SphericalShellGeometry):

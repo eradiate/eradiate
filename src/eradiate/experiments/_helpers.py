@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import warnings
+
 from ..scenes.atmosphere import (
     AbstractHeterogeneousAtmosphere,
     Atmosphere,
     MolecularAtmosphere,
 )
 from ..scenes.bsdfs import BSDF, bsdf_factory
-from ..scenes.geometry import SceneGeometry, SphericalShellGeometry
+from ..scenes.geometry import SceneGeometry
+from ..scenes.integrators import Integrator
 from ..scenes.measure import (
     AbstractDistantMeasure,
     Measure,
@@ -124,18 +127,14 @@ def check_geometry_atmosphere(
         )
 
 
-def check_piecewise_compatible(
-    geometry: SceneGeometry, atmosphere: Atmosphere | None
-) -> tuple[bool, str]:
+def check_piecewise_compatible(atmosphere: Atmosphere | None) -> tuple[bool, str]:
     """
     Check that the piecewise integrator is compatible with the experiment's
-    atmosphere and geometry.
+    atmosphere. The atmosphere's geometry is expected to have been overridden
+    by the experiment's.
 
     Parameters
     ----------
-    geometry : SceneGeometry
-        An experiment geometry.
-
     atmosphere : Atmosphere
         The scene's atmosphere configuration.
 
@@ -146,30 +145,57 @@ def check_piecewise_compatible(
         The message is empty if the flag is raised.
     """
 
-    if isinstance(geometry, SphericalShellGeometry):
-        debug_message = (
-            "Piecewise integrator not compatible with spherical shell geometry."
-        )
-        return False, debug_message
-
-    if not geometry.grid.is_1d:
-        debug_message = (
-            "Piecewise integrator not compatible with a grid with horizontal "
-            "resolution."
-        )
-        return False, debug_message
-
     if atmosphere is None or not isinstance(
         atmosphere, AbstractHeterogeneousAtmosphere
     ):
         debug_message = f"Piecewise integrator not compatible with medium type : {type(atmosphere)}."
         return False, debug_message
 
-    if atmosphere.force_majorant:
-        debug_message = "Piecewise integrator not compatible with a medium that has force_majorant = True."
+    if not atmosphere.is_piecewise:
+        debug_message = (
+            "Piecewise integrator requires a piecewise medium, which needs a "
+            "plane parallel geometry with a 1D grid and force_majorant = False."
+        )
         return False, debug_message
 
     return True, ""
+
+
+def warn_ignored_extremum(
+    atmosphere: Atmosphere | None, integrator: Integrator
+) -> None:
+    """
+    Warn if the atmosphere requests an extremum structure that will not be
+    used, either because its medium is piecewise or because the integrator
+    cannot consume it.
+
+    Parameters
+    ----------
+    atmosphere : Atmosphere
+        The scene's atmosphere configuration.
+
+    integrator : Integrator
+        The resolved (non-``AUTO``) integrator.
+    """
+    if not isinstance(atmosphere, AbstractHeterogeneousAtmosphere) or (
+        atmosphere.extremum_resolution == (1, 1, 1)
+    ):
+        return
+
+    if atmosphere.is_piecewise:
+        msg = (
+            "Extremum structures are not used by piecewise media and will be "
+            "ignored; set 'force_majorant=True' to use them."
+        )
+    elif not integrator.extremum_compatible:
+        msg = (
+            "Extremum structures are not compatible with "
+            f"{type(integrator).__name__} and will be ignored."
+        )
+    else:
+        return
+
+    warnings.warn(UserWarning(msg), stacklevel=3)
 
 
 def check_path_compatible(atmosphere: Atmosphere | None) -> tuple[bool, str]:

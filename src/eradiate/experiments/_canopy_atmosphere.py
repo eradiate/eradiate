@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import warnings
 from typing import Any
 
 import attrs
@@ -13,11 +12,11 @@ from ._helpers import (
     check_piecewise_compatible,
     measure_inside_atmosphere,
     surface_converter,
+    warn_ignored_extremum,
 )
 from .. import validators
 from ..attrs import AUTO, define, documented
 from ..scenes.atmosphere import (
-    AbstractHeterogeneousAtmosphere,
     Atmosphere,
     HeterogeneousAtmosphere,
     HomogeneousAtmosphere,
@@ -216,21 +215,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         """
         Ensures that the integrator is compatible with the atmosphere and geometry.
         """
-        if isinstance(self.atmosphere, AbstractHeterogeneousAtmosphere) and (
-            self.atmosphere.extremum_resolution != (1, 1, 1)
-            and not self.integrator.extremum_compatible
-        ):
-            warnings.warn(
-                UserWarning(
-                    "Extremum structures are not compatible with "
-                    f"{type(self.integrator).__name__} and will be ignored."
-                ),
-                stacklevel=2,
-            )
-
-        piecewise_compatible, pw_msg = check_piecewise_compatible(
-            self.geometry, self.atmosphere
-        )
+        piecewise_compatible, pw_msg = check_piecewise_compatible(self.atmosphere)
         path_compatible, path_msg = check_path_compatible(self.atmosphere)
 
         if self.integrator is AUTO:
@@ -251,6 +236,8 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
 
             if msg:
                 raise ValueError(msg)
+
+        warn_ignored_extremum(self.atmosphere, self.integrator)
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         result = super()._dataset_metadata(measure)

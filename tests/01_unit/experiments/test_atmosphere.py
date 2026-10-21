@@ -1,3 +1,5 @@
+import warnings
+
 import mitsuba as mi
 import numpy as np
 import pytest
@@ -5,9 +7,15 @@ import xarray as xr
 
 import eradiate
 from eradiate import unit_registry as ureg
+from eradiate.attrs import AUTO
 from eradiate.constants import EARTH_RADIUS
 from eradiate.experiments import AtmosphereExperiment
-from eradiate.scenes.atmosphere import HomogeneousAtmosphere
+from eradiate.scenes.atmosphere import HeterogeneousAtmosphere, HomogeneousAtmosphere
+from eradiate.scenes.integrators import (
+    EOVolPathIntegrator,
+    PiecewiseVolPathIntegrator,
+    VolPathIntegrator,
+)
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.shapes import RectangleShape
 from eradiate.spectral.response import DeltaSRF
@@ -279,3 +287,40 @@ def test_atmosphere_experiment_custom_atmosphere(mode_ckd, atmosphere_cams_lybia
 
     # We just check that we record something as expected
     assert np.all(results["radiance"].data > 0.0)
+
+
+@pytest.mark.parametrize(
+    "integrator, force_majorant, expected_integrator, warns",
+    [
+        (AUTO, False, PiecewiseVolPathIntegrator, True),
+        (AUTO, True, VolPathIntegrator, True),
+        ({"type": "eovolpath"}, False, EOVolPathIntegrator, True),
+        ({"type": "eovolpath"}, True, EOVolPathIntegrator, False),
+    ],
+    ids=[
+        "auto_piecewise",
+        "auto_majorant",
+        "eovolpath_piecewise",
+        "eovolpath_majorant",
+    ],
+)
+def test_atmosphere_experiment_extremum_ignored(
+    mode_mono,
+    atmosphere_us_standard_mono,
+    integrator,
+    force_majorant,
+    expected_integrator,
+    warns,
+):
+    # Unused extremum structures trigger a warning, including with AUTO
+    atmosphere = HeterogeneousAtmosphere(
+        molecular_atmosphere=atmosphere_us_standard_mono,
+        extremum_resolution=(1, 1, 10),
+        force_majorant=force_majorant,
+    )
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        exp = AtmosphereExperiment(atmosphere=atmosphere, integrator=integrator)
+
+    assert isinstance(exp.integrator, expected_integrator)
+    assert any("Extremum structures" in str(w.message) for w in record) is warns
