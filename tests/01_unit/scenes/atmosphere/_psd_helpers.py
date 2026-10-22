@@ -118,15 +118,15 @@ def make_state_profile_dataset(grid: CartesianGrid, variables: dict) -> xr.Datas
         Mapping of profile variable names to their (scalar) values
         (quantities).
     """
-    shape = (grid.n_cells_z, grid.n_cells_y, grid.n_cells_x)
+    shape = (grid.n_z_cells, grid.n_y_cells, grid.n_x_cells)
     return xr.Dataset(
         data_vars={
             name: (["z", "y", "x"], np.full(shape, q.m), {"units": str(q.u)})
             for name, q in variables.items()
         },
         coords={
-            "x_edges": (["x_edges"], grid.edges_x.m_as("km"), {"units": "kilometer"}),
-            "y_edges": (["y_edges"], grid.edges_y.m_as("km"), {"units": "kilometer"}),
+            "x_edges": (["x_edges"], grid.x_edges.m_as("km"), {"units": "kilometer"}),
+            "y_edges": (["y_edges"], grid.y_edges.m_as("km"), {"units": "kilometer"}),
             "z_edges": (["z_edges"], grid.levels.m_as("km"), {"units": "kilometer"}),
         },
     )
@@ -140,7 +140,7 @@ def make_profile_dataset(
     z_edges=None,
 ) -> xr.Dataset:
     """Build a dense Ppr-Core v1 profile dataset filling every voxel of ``grid``."""
-    n_x, n_y = grid.n_cells_x, grid.n_cells_y
+    n_x, n_y = grid.n_x_cells, grid.n_y_cells
     z_edges_km = (
         np.asarray(z_edges, dtype=float)
         if z_edges is not None
@@ -165,8 +165,8 @@ def make_profile_dataset(
         ),
     }
     coords = {
-        "x_edges": (["x_edges"], grid.edges_x.m_as("km"), {"units": "kilometer"}),
-        "y_edges": (["y_edges"], grid.edges_y.m_as("km"), {"units": "kilometer"}),
+        "x_edges": (["x_edges"], grid.x_edges.m_as("km"), {"units": "kilometer"}),
+        "y_edges": (["y_edges"], grid.y_edges.m_as("km"), {"units": "kilometer"}),
         "z_edges": (["z_edges"], z_edges_km, {"units": "kilometer"}),
     }
 
@@ -191,8 +191,8 @@ def make_particle_psd_component(
 ) -> ParticlePSDComponent:
     """Build a dense, spatially-uniform :class:`.ParticlePSDComponent`."""
     grid = CartesianGrid(
-        edges_x=np.linspace(0.0, x_extent.m_as("km"), n_x + 1) * ureg.km,
-        edges_y=np.linspace(0.0, y_extent.m_as("km"), n_y + 1) * ureg.km,
+        x_edges=np.linspace(0.0, x_extent.m_as("km"), n_x + 1) * ureg.km,
+        y_edges=np.linspace(0.0, y_extent.m_as("km"), n_y + 1) * ureg.km,
         levels=np.linspace(0.0, z_extent.m_as("km"), n_z + 1) * ureg.km,
     ).centered()
     geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
@@ -217,8 +217,8 @@ def make_z_profile_particle_psd_component(z_edges_src, target_levels):
     z_centers_src = 0.5 * (z_edges_src[:-1] + z_edges_src[1:])
 
     target_grid = CartesianGrid(
-        edges_x=np.array([-1.0, 1.0]) * ureg.km,
-        edges_y=np.array([-1.0, 1.0]) * ureg.km,
+        x_edges=np.array([-1.0, 1.0]) * ureg.km,
+        y_edges=np.array([-1.0, 1.0]) * ureg.km,
         levels=np.asarray(target_levels, dtype=float) * ureg.km,
     )
     geometry = PlaneParallelGeometry(

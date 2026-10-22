@@ -210,8 +210,8 @@ class TestResample:
     @pytest.fixture
     def grid(self) -> CartesianGrid:
         return CartesianGrid(
-            edges_x=np.array([0.0, 1.0, 2.0]) * ureg.km,
-            edges_y=np.array([0.0, 1.0, 2.0]) * ureg.km,
+            x_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
+            y_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
             levels=np.linspace(0.0, 4.0, 5) * ureg.km,
         )
 
@@ -248,8 +248,8 @@ class TestResample:
             )
         )
         grid = CartesianGrid(
-            edges_x=np.array([0.0, 1.0]) * ureg.km,
-            edges_y=np.array([0.0, 1.0]) * ureg.km,
+            x_edges=np.array([0.0, 1.0]) * ureg.km,
+            y_edges=np.array([0.0, 1.0]) * ureg.km,
             levels=np.linspace(0.0, 3.0, 7) * ureg.km,
         )
         result = profile.resample(grid)
@@ -299,8 +299,8 @@ class TestResample:
     def test_extent_mismatch_raises(self, profile):
         """resample rejects a target grid whose extent doesn't match the profile's."""
         mismatched_grid = CartesianGrid(
-            edges_x=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
-            edges_y=np.array([0.0, 1.0, 2.0]) * ureg.km,
+            x_edges=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
+            y_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
             levels=np.linspace(0.0, 4.0, 5) * ureg.km,
         )
         with pytest.raises(ValueError, match="do not match the target"):
@@ -309,8 +309,8 @@ class TestResample:
     def test_resolution_mismatch_raises(self, profile):
         """resample rejects a target grid whose resolution doesn't match the profile's."""
         mismatched_grid = CartesianGrid(
-            edges_x=np.array([0.0, 2.0]) * ureg.km,
-            edges_y=np.array([0.0, 1.0, 2.0]) * ureg.km,
+            x_edges=np.array([0.0, 2.0]) * ureg.km,
+            y_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
             levels=np.linspace(0.0, 4.0, 5) * ureg.km,
         )
         with pytest.raises(ValueError, match="do not match the target"):

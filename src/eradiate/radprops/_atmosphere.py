@@ -16,7 +16,7 @@ from ._core import RadProfile, make_dataset
 from .rayleigh import compute_sigma_s_air, depolarization_bates, depolarization_bodhaine
 from .. import converters
 from ..attrs import define, documented
-from ..grid import SpatialGrid
+from ..grid import CartesianGrid, SpatialGrid
 from ..units import to_quantity
 from ..units import unit_registry as ureg
 from ..util.misc import cache_by_id, summary_repr
@@ -37,7 +37,7 @@ def _validate_thermoprops_grid_shape(
         return thermoprops
 
     result = thermoprops.transpose(..., "z")
-    expected_sizes = {"x": grid.n_cells_x, "y": grid.n_cells_y}
+    expected_sizes = {"x": grid.n_x_cells, "y": grid.n_y_cells}
     for dim in horizontal_dims:
         if result.sizes[dim] != expected_sizes[dim]:
             raise ValueError(
@@ -173,7 +173,7 @@ class AtmosphereRadProfile(RadProfile):
 
     def update(self) -> None:
         if self._grid is None:
-            self._grid = SpatialGrid.make_default()
+            self._grid = CartesianGrid.default()
 
     @property
     def zbounds(self) -> tuple[pint.Quantity, pint.Quantity]:

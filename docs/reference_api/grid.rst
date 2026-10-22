@@ -3,3 +3,4 @@
 
 .. automodule:: eradiate.grid
    :members:
+   :member-order: bysource

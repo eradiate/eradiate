@@ -42,7 +42,7 @@ def test_gridded_empty(modes_all_double):
 @pytest.mark.parametrize(
     "geometry",
     [
-        PlaneParallelGeometry(grid=CartesianGrid.make_default().resampled(3, 3)),
+        PlaneParallelGeometry(grid=CartesianGrid.default().with_cell_counts(3, 3)),
         # SphericalShellGeometry(), TBD convenience factories
     ],
     ids=[

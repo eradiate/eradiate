@@ -172,8 +172,8 @@ def test_multi_kernel_dict_2_components(mode_mono, weights, use_small_grid):
     kwargs = {}
     if use_small_grid:
         grid = CartesianGrid(
-            edges_x=np.array([-1.0, 1.0]) * ureg.km,
-            edges_y=np.array([-1.0, 1.0]) * ureg.km,
+            x_edges=np.array([-1.0, 1.0]) * ureg.km,
+            y_edges=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.linspace(0.0, 4.0, 5) * ureg.km,
         )
         kwargs["geometry"] = PlaneParallelGeometry(
@@ -260,8 +260,8 @@ def test_multi_kernel_dict_3_components(mode_mono):
 
 def _make_small_geometry():
     grid = CartesianGrid(
-        edges_x=np.array([-1.0, 0.0, 1.0]) * ureg.km,
-        edges_y=np.array([-1.0, 0.0, 1.0]) * ureg.km,
+        x_edges=np.array([-1.0, 0.0, 1.0]) * ureg.km,
+        y_edges=np.array([-1.0, 0.0, 1.0]) * ureg.km,
         levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
     )
     return PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
@@ -274,9 +274,9 @@ def test_multi_full_3d_weights(mode_mono):
     """
     geometry = _make_small_geometry()
     n_x, n_y, n_z = (
-        geometry.grid.n_cells_x,
-        geometry.grid.n_cells_y,
-        geometry.grid.n_cells_z,
+        geometry.grid.n_x_cells,
+        geometry.grid.n_y_cells,
+        geometry.grid.n_z_cells,
     )
 
     w0 = np.arange(n_x * n_y * n_z, dtype=np.float64).reshape(n_x, n_y, n_z)
@@ -306,7 +306,7 @@ def test_multi_partial_broadcast_weights_raises(mode_mono):
     match.
     """
     geometry = _make_small_geometry()
-    n_y, n_z = geometry.grid.n_cells_y, geometry.grid.n_cells_z
+    n_y, n_z = geometry.grid.n_y_cells, geometry.grid.n_z_cells
 
     w0 = np.arange(n_y * n_z, dtype=np.float64).reshape(1, n_y, n_z)
     w1 = 5.0 - w0

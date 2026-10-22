@@ -39,8 +39,8 @@ CASES = {
 
 def make_geometry() -> PlaneParallelGeometry:
     grid = CartesianGrid(
-        edges_x=np.array([-1.0, 0.0, 1.0]) * ureg.km,
-        edges_y=np.array([-1.0, 1.0]) * ureg.km,
+        x_edges=np.array([-1.0, 0.0, 1.0]) * ureg.km,
+        y_edges=np.array([-1.0, 1.0]) * ureg.km,
         levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
     )
     return PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])

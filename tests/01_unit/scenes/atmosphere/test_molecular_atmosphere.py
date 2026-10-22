@@ -185,10 +185,10 @@ def test_molecular_atmosphere_depolarization(mode_ckd):
     assert len(depol) == atmosphere.geometry.grid.n_layers
 
 
-def _make_grid(n_cells_x, n_cells_y):
+def _make_grid(n_x_cells, n_y_cells):
     return CartesianGrid(
-        edges_x=np.linspace(-1.0, 1.0, n_cells_x + 1) * ureg.km,
-        edges_y=np.linspace(-1.0, 1.0, n_cells_y + 1) * ureg.km,
+        x_edges=np.linspace(-1.0, 1.0, n_x_cells + 1) * ureg.km,
+        y_edges=np.linspace(-1.0, 1.0, n_y_cells + 1) * ureg.km,
         levels=np.linspace(0.0, 5.0, 6) * ureg.km,
     )
 
@@ -199,13 +199,13 @@ def test_validate_thermoprops_grid_shape_z_only_passthrough():
 
 
 @pytest.mark.parametrize(
-    "n_cells_x, n_cells_y, match",
+    "n_x_cells, n_y_cells, match",
     [(3, 3, "'x'"), (2, 5, "'y'")],
 )
-def test_validate_thermoprops_grid_shape_mismatch_raises(n_cells_x, n_cells_y, match):
+def test_validate_thermoprops_grid_shape_mismatch_raises(n_x_cells, n_y_cells, match):
     ds = xr.Dataset({"n": (["x", "y", "z"], np.zeros((2, 3, 5)))})
     with pytest.raises(ValueError, match=match):
-        _validate_thermoprops_grid_shape(ds, _make_grid(n_cells_x, n_cells_y))
+        _validate_thermoprops_grid_shape(ds, _make_grid(n_x_cells, n_y_cells))
 
 
 def test_average_adjacent_levels_generalizes_to_xyz():

@@ -655,7 +655,7 @@ class ParticleOTComponent(ParticleComponent):
         sigma_t = (m_extinction * amount_qty).to(col_units)
 
         # Non-zero optical thickness only in the selected (x, y) column
-        mask = np.zeros((grid.n_cells_x, grid.n_cells_y))
+        mask = np.zeros((grid.n_x_cells, grid.n_y_cells))
         mask[ix, iy] = 1.0
         layer_height = grid.levels[iz + 1] - grid.levels[iz]
         tau_ref = (sigma_t * layer_height * mask).to(ureg.dimensionless)
@@ -760,8 +760,8 @@ class ParticleOTComponent(ParticleComponent):
         )
 
         return cls(
-            bottom=np.broadcast_to(grid.levels[0], (grid.n_cells_x, grid.n_cells_y)),
-            top=np.broadcast_to(grid.levels[-1], (grid.n_cells_x, grid.n_cells_y)),
+            bottom=np.broadcast_to(grid.levels[0], (grid.n_x_cells, grid.n_y_cells)),
+            top=np.broadcast_to(grid.levels[-1], (grid.n_x_cells, grid.n_y_cells)),
             distribution=distribution,
             w_ref=wavelength[0],
             tau_ref=tau_ref,

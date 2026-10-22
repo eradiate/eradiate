@@ -47,8 +47,8 @@ def eval_transmittance_mono(
         Shape ``(x_cells, y_cells, w)``.
     """
     wavelengths = spectral_grid.wavelengths
-    n_cells_x, n_cells_y, _ = atmosphere.geometry.grid.shape
-    transmittance = np.full((n_cells_x, n_cells_y, wavelengths.size), np.nan)
+    n_x_cells, n_y_cells, _ = atmosphere.geometry.grid.shape
+    transmittance = np.full((n_x_cells, n_y_cells, wavelengths.size), np.nan)
 
     for i, w in tqdm(
         list(enumerate(spectral_grid.wavelengths)),
@@ -123,7 +123,7 @@ def eval_transmittance_ckd(
     else:
         pass
 
-    n_cells_x, n_cells_y, _ = atmosphere.geometry.grid.shape
+    n_x_cells, n_y_cells, _ = atmosphere.geometry.grid.shape
 
     transmittance = {}
     sis = list(spectral_grid.walk_indices(ckd_quad_config, abs_db))
@@ -143,7 +143,7 @@ def eval_transmittance_ckd(
     # For each bin, compute quadrature per column and store the result
     wavelengths = spectral_grid.wavelengths
     w_u = ucc.get("wavelength")
-    result = np.full((n_cells_x, n_cells_y, wavelengths.size), np.nan)
+    result = np.full((n_x_cells, n_y_cells, wavelengths.size), np.nan)
 
     for i, (w, quad) in enumerate(spectral_grid.walk_quads(ckd_quad_config)):
         values_at_nodes = da.sel(w=w.m).values

@@ -544,18 +544,18 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             coords={
                 "x_cell": (
                     "x_cell",
-                    grid.cells_x.magnitude,
+                    grid.x_centers.magnitude,
                     {
-                        "units": f"{symbol(grid.cells_x.units)}",
+                        "units": f"{symbol(grid.x_centers.units)}",
                         "standard_name": "cells_x",
                         "long_name": "cells x position",
                     },
                 ),
                 "y_cell": (
                     "y_cell",
-                    grid.cells_y.magnitude,
+                    grid.y_centers.magnitude,
                     {
-                        "units": f"{symbol(grid.cells_y.units)}",
+                        "units": f"{symbol(grid.y_centers.units)}",
                         "standard_name": "cells_y",
                         "long_name": "cells y position",
                     },
