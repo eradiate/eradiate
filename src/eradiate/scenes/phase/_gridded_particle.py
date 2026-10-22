@@ -66,7 +66,7 @@ class GriddedParticlePhaseFunction(PhaseFunction):
     volume_1: pint.Quantity = documented(
         attrs.field(kw_only=True),
         doc="Dense ``(n_x, n_y, n_z)`` quantity of the first state "
-        "variable on the render grid. NaN marks empty cells.",
+        "variable on the render grid. Values must lie within :attr:`grid_1`.",
         type="quantity",
     )
 
@@ -89,7 +89,7 @@ class GriddedParticlePhaseFunction(PhaseFunction):
     volume_2: pint.Quantity | None = documented(
         attrs.field(kw_only=True, default=None),
         doc="Dense ``(n_x, n_y, n_z)`` quantity of the second state "
-        "variable on the render grid, if any. NaN marks empty cells.",
+        "variable on the render grid, if any. Values must lie within :attr:`grid_2`.",
         type="quantity or None",
         init_type="quantity, optional",
         default="None",

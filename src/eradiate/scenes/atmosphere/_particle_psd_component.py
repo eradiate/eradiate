@@ -311,9 +311,15 @@ class ParticleStateComponent(ParticleComponent):
         grids = []
         for d in self.state_dims:
             value = resampled[self._binding[d]]
-            volume_zyx = np.where(empty, np.nan, value.m)
+            state_grid = self.properties.state_coord(d)
+            # Empty cells get the first grid value rather than NaN: the
+            # particlephase plugin's range check uses the volume min/max,
+            # which a single NaN cell turns to NaN. Extinction is zero there,
+            # so this value is never looked up.
+            fill = state_grid[0].m_as(value.units)
+            volume_zyx = np.where(empty, fill, value.m)
             volumes.append(np.transpose(volume_zyx, (2, 1, 0)) * value.units)
-            grids.append(self.properties.state_coord(d))
+            grids.append(state_grid)
 
         kwargs = {
             "geometry": self.geometry,
