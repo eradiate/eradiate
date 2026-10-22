@@ -622,8 +622,8 @@ def grid_repr_html(grid) -> str | None:
     try:
         if isinstance(grid, CartesianGrid):
             axes = [
-                ("x (width)", grid.edges_x),
-                ("y (length)", grid.edges_y),
+                ("x", grid.x_edges),
+                ("y", grid.y_edges),
                 ("z (altitude)", grid.levels),
             ]
         elif isinstance(grid, SphericalGrid):
@@ -708,8 +708,8 @@ def geometry_repr_html(geometry) -> str | None:
         if isinstance(geometry, PlaneParallelGeometry):
             diagram = nested_cuboid(
                 geometry.width,
-                geometry.grid.total_width,
-                geometry.grid.total_length,
+                geometry.grid.x_extent,
+                geometry.grid.y_extent,
                 geometry.ground_altitude,
                 geometry.toa_altitude,
             )

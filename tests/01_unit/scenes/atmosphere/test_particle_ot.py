@@ -6,7 +6,7 @@ import xarray as xr
 
 from eradiate import fresolver
 from eradiate import unit_registry as ureg
-from eradiate.grid import CartesianGrid, SpatialGrid
+from eradiate.grid import CartesianGrid
 from eradiate.radprops import ParticleProperties
 from eradiate.scenes.atmosphere import (
     ArrayParticleDistribution,
@@ -66,8 +66,8 @@ def particle_properties(particle_dataset):
 
 def _make_3d_grid():
     return CartesianGrid(
-        edges_x=np.array([0.0, 1.0, 2.0]) * ureg.km,
-        edges_y=np.array([0.0, 1.0, 2.0]) * ureg.km,
+        x_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
+        y_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
         levels=np.linspace(0.0, 5.0, 11) * ureg.km,
     )
 
@@ -342,9 +342,7 @@ class TestParticleOTComponent:
         n_wavelengths = 3
         n_layers = 10
         wavelengths = np.linspace(500.0, 1500.0, n_wavelengths) * ureg.nm
-        grid = SpatialGrid.make_1d_from_levels(
-            np.linspace(0, 5, n_layers + 1) * ureg.km
-        )
+        grid = CartesianGrid.from_levels(np.linspace(0, 5, n_layers + 1) * ureg.km)
 
         layer = ParticleOTComponent(
             particle_properties=ds,
@@ -680,7 +678,7 @@ class TestParticleOTComponent:
         assert layer.w_ref == w
 
         tau_ref = layer.tau_ref.m_as("dimensionless")
-        assert tau_ref.shape == (grid.n_cells_x, grid.n_cells_y)
+        assert tau_ref.shape == (grid.n_x_cells, grid.n_y_cells)
 
         mask = np.zeros_like(tau_ref, dtype=bool)
         mask[0, 1] = True
@@ -731,8 +729,8 @@ class TestParticleOTComponent:
             n_x=2, n_y=2, n_z=2, w=(1.0,), has_absorption=False
         )
         grid = CartesianGrid(
-            edges_x=psd.geometry.grid.edges_x,
-            edges_y=psd.geometry.grid.edges_y,
+            x_edges=psd.geometry.grid.x_edges,
+            y_edges=psd.geometry.grid.y_edges,
             levels=np.linspace(0.0, 3.0, 5) * ureg.km,
         ).centered()
         constructor = getattr(ParticleOTComponent, method)
@@ -768,8 +766,8 @@ class TestParticleOTComponent:
 
         assert isinstance(part_aot, ParticleOTComponent)
         assert part_aot.tau_ref.m_as("dimensionless").shape == (
-            grid.n_cells_x,
-            grid.n_cells_y,
+            grid.n_x_cells,
+            grid.n_y_cells,
         )
         assert np.all(part_aot.bottom == grid.levels[0])
         assert np.all(part_aot.top == grid.levels[-1])

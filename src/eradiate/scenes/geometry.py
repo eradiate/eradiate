@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 import attrs
 import mitsuba as mi
@@ -13,7 +13,7 @@ import pinttrs
 from .shapes import CuboidShape, RectangleShape, Shape, SphereShape
 from ..attrs import define, documented
 from ..constants import EARTH_RADIUS
-from ..grid import SpatialGrid, SphericalGrid
+from ..grid import CartesianGrid, SpatialGrid, SphericalGrid
 from ..kernel import map_cube, map_unit_cube
 from ..units import unit_context_config as ucc
 from ..units import unit_context_kernel as uck
@@ -57,6 +57,9 @@ class SceneGeometry(ABC):
     ``grid`` extent.
     """
 
+    #: Grid type built from array values passed as ``grid``.
+    _GRID_TYPE: ClassVar[type[SpatialGrid]] = SpatialGrid
+
     toa_altitude: pint.Quantity | None = documented(
         pinttrs.field(default=None, units=ucc.deferred("length")),
         doc="Top-of-atmosphere level altitude. If unset, defaults to the "
@@ -80,21 +83,26 @@ class SceneGeometry(ABC):
     grid: SpatialGrid | None = documented(
         attrs.field(
             default=None,
-            converter=attrs.converters.optional(
-                lambda x: (
-                    SpatialGrid.convert(x) if not isinstance(x, SpatialGrid) else x
-                )
+            converter=attrs.Converter(
+                lambda value, self: (
+                    None if value is None else self._GRID_TYPE.convert(value)
+                ),
+                takes_self=True,
             ),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(SpatialGrid)
             ),
         ),
-        doc="The altitude mesh on which the radiative properties of "
-        "heterogeneous atmosphere components are evaluated. "
-        "If unset, a default grid with one layer per 100 m (or 10 layers if "
-        "the atmosphere object height is less than 100 m) is used.",
+        doc="Grid on which the radiative properties of heterogeneous "
+        "atmosphere components are evaluated. Other values are converted with "
+        "the ``convert()`` method of the grid type matching the geometry "
+        "(:class:`.CartesianGrid` for plane-parallel, :class:`.SphericalGrid` "
+        "for spherical-shell): a 1D array is interpreted as altitude levels "
+        "and a sequence of three 1D arrays as ``(x_edges, y_edges, z_edges)``. "
+        "If unset, a single-column grid with 100 m layers (or 10 layers if "
+        "the atmosphere is less than 1 km high) is used.",
         type=".SpatialGrid",
-        init_type=".SpatialGrid, quantity or ndarray, optional",
+        init_type=".SpatialGrid, dict, str, quantity or ndarray, optional",
     )
 
     filter_type: FilterType = documented(
@@ -148,6 +156,16 @@ class SceneGeometry(ABC):
                 self.ground_altitude = 0.0 * ureg.km
             if self.toa_altitude is None:
                 self.toa_altitude = 120.0 * ureg.km
+
+    def _default_levels(self) -> pint.Quantity:
+        """
+        Levels of the default grid: 100 m layers, or 10 layers if the
+        atmosphere is less than 1 km high.
+        """
+        bottom = self.ground_altitude.m_as(ureg.m)
+        top = self.toa_altitude.m_as(ureg.m)
+        step = min(100.0, (top - bottom) / 10.0)
+        return np.arange(bottom, top + step * 0.1, step) * ureg.m
 
     @classmethod
     def convert(cls, value: Any) -> Any:
@@ -240,6 +258,8 @@ class PlaneParallelGeometry(SceneGeometry):
     the `width` field.
     """
 
+    _GRID_TYPE = CartesianGrid
+
     width: pint.Quantity = documented(
         pinttrs.field(default=1e6 * ureg.km, units=ucc.deferred("length")),
         doc="Cuboid shape width.",
@@ -277,11 +297,13 @@ class PlaneParallelGeometry(SceneGeometry):
         super().__attrs_post_init__()
 
         if self.grid is None:
-            bottom = self.ground_altitude
-            top = self.toa_altitude
-            step = min(100.0 * ureg.m, (top - bottom) / 10.0)
-
-            self.grid = SpatialGrid.make_1d_arange(top, bottom, step, self.width)
+            self.grid = CartesianGrid.from_extent_and_resolution(
+                levels=self._default_levels(),
+                x_extent=self.width,
+                y_extent=self.width,
+                n_x_cells=1,
+                n_y_cells=1,
+            )
 
 
 @define
@@ -293,6 +315,8 @@ class SphericalShellGeometry(SceneGeometry):
     it with a finite 3D geometry consisting of a sphere. By default, the
     sphere's radius is set equal to Earth's radius.
     """
+
+    _GRID_TYPE = SphericalGrid
 
     planet_radius: pint.Quantity = documented(
         pinttrs.field(default=EARTH_RADIUS, units=ucc.deferred("length")),
@@ -339,15 +363,4 @@ class SphericalShellGeometry(SceneGeometry):
         super().__attrs_post_init__()
 
         if self.grid is None:
-            bottom = self.ground_altitude.m_as(ureg.m)
-            top = self.toa_altitude.m_as(ureg.m)
-            step = min(100.0, (top - bottom) / 10.0)
-            self.grid = SphericalGrid(
-                levels=ureg.convert(
-                    np.arange(bottom, top + step * 0.1, step),
-                    ureg.m,
-                    ucc.get("length"),
-                ),
-                azimuths=np.asarray([0.0, 360.0]) * ureg.degree,
-                colatitudes=np.asarray([0.0, 180.0]) * ureg.degree,
-            )
+            self.grid = SphericalGrid.from_levels(self._default_levels())

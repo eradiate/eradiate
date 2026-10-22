@@ -18,8 +18,8 @@ from eradiate.units import symbol
 
 def _make_grid():
     return CartesianGrid(
-        edges_x=np.array([0.0, 1.0, 2.0]) * ureg.km,
-        edges_y=np.array([0.0, 1.0, 2.0]) * ureg.km,
+        x_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
+        y_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
         levels=np.linspace(0.0, 4.0, 5) * ureg.km,
     )
 
@@ -195,8 +195,8 @@ class TestParticleExtinctionComponent:
         ds = particles.eval_radprops(SpectralIndex.new(w=550.0 * ureg.nm))
         assert dict(ds.sizes) == {"x_cell": 2, "y_cell": 2, "z_layer": 4}
         for dim, cells in [
-            ("x_cell", grid.cells_x),
-            ("y_cell", grid.cells_y),
+            ("x_cell", grid.x_centers),
+            ("y_cell", grid.y_centers),
             ("z_layer", grid.layers),
         ]:
             assert ds[dim].attrs["units"] == symbol(cells.units)

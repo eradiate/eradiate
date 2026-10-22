@@ -359,7 +359,7 @@ class ParticleStateComponent(ParticleComponent):
         -------
         :class:`pint.Quantity`
             Extinction coefficient array of shape
-            ``(n_cells_x, n_cells_y, n_cells_z)``, in units of
+            ``(n_x_cells, n_y_cells, n_z_cells)``, in units of
             :math:`\\mathrm{km}^{-1}`.
 
         Raises
@@ -424,7 +424,7 @@ class ParticleStateComponent(ParticleComponent):
         -------
         :class:`pint.Quantity`
             Single-scattering albedo array of shape
-            ``(n_cells_x, n_cells_y, n_cells_z)``, dimensionless.
+            ``(n_x_cells, n_y_cells, n_z_cells)``, dimensionless.
 
         Raises
         ------
@@ -463,7 +463,7 @@ class ParticleStateComponent(ParticleComponent):
         -------
         :class:`pint.Quantity`
             Scattering coefficient array of shape
-            ``(n_cells_x, n_cells_y, n_cells_z)``, in units of
+            ``(n_x_cells, n_y_cells, n_z_cells)``, in units of
             :math:`\\mathrm{km}^{-1}`.
         """
         grid = grid or self.geometry.grid
@@ -492,7 +492,7 @@ class ParticleStateComponent(ParticleComponent):
         -------
         :class:`pint.Quantity`
             Absorption coefficient array of shape
-            ``(n_cells_x, n_cells_y, n_cells_z)``, in units of
+            ``(n_x_cells, n_y_cells, n_z_cells)``, in units of
             :math:`\\mathrm{km}^{-1}`.
         """
         grid = grid or self.geometry.grid
@@ -528,8 +528,8 @@ class ParticleStateComponent(ParticleComponent):
         )
 
         return CartesianGrid(
-            edges_x=x_edges,
-            edges_y=y_edges,
+            x_edges=x_edges,
+            y_edges=y_edges,
             levels=z_edges,
         ).centered()
 
@@ -694,7 +694,7 @@ class ParticlePSDComponent(ParticleStateComponent):
         sigma_t_grid = ureg.Quantity(
             np.broadcast_to(
                 sigma_t_grid.m,
-                (target_grid.n_cells_x, target_grid.n_cells_y, target_grid.n_cells_z),
+                (target_grid.n_x_cells, target_grid.n_y_cells, target_grid.n_z_cells),
             ),
             sigma_t_grid.units,
         )
@@ -721,12 +721,12 @@ class ParticlePSDComponent(ParticleStateComponent):
             coords={
                 "x_edges": (
                     ["x_edges"],
-                    target_grid.edges_x.m_as(ureg.kilometer),
+                    target_grid.x_edges.m_as(ureg.kilometer),
                     level_units,
                 ),
                 "y_edges": (
                     ["y_edges"],
-                    target_grid.edges_y.m_as(ureg.kilometer),
+                    target_grid.y_edges.m_as(ureg.kilometer),
                     level_units,
                 ),
                 "z_edges": (

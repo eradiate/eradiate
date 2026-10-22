@@ -188,7 +188,7 @@ class ParticleProfile:
         # Grids are regular by construction, so an exact match with the target
         # edges also guarantees regular source edges
         if isinstance(grid, CartesianGrid):
-            x_edges_tgt, y_edges_tgt = grid.edges_x, grid.edges_y
+            x_edges_tgt, y_edges_tgt = grid.x_edges, grid.y_edges
         elif isinstance(grid, SphericalGrid):
             x_edges_tgt, y_edges_tgt = grid.azimuths, grid.colatitudes
         else:

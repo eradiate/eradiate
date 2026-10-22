@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any, ClassVar
 
+import attrs
 import mitsuba as mi
 import numpy as np
 import pint
-import pinttrs
 import xarray as xr
 from pinttrs.util import ensure_units
 
@@ -17,739 +18,774 @@ from .units import unit_context_kernel as uck
 from .units import unit_registry as ureg
 from .util import _repr_diagrams
 
+#: Horizontal extent of single-column grids built by :meth:`.CartesianGrid.from_levels`.
+_DEFAULT_HORIZONTAL_EXTENT = 1e6 * ureg.km
+
+
+def _either(value: Any, alias: Any, name: str, alias_name: str) -> tuple[Any, str]:
+    """
+    Select exactly one of an argument and its alias.
+
+    Returns
+    -------
+    value : object
+        The value that is set.
+    name : str
+        Name of the argument that is set.
+
+    Raises
+    ------
+    TypeError
+        If both or neither are set.
+    """
+    if (value is None) == (alias is None):
+        raise TypeError(f"exactly one of '{name}' or '{alias_name}' must be set")
+    return (value, name) if value is not None else (alias, alias_name)
+
+
+def _regular_edges(
+    edges: pint.Quantity | xr.DataArray | np.typing.ArrayLike,
+    default_units: pint.Unit,
+    name: str,
+) -> tuple[pint.Quantity, pint.Quantity, pint.Quantity]:
+    """
+    Validate a regularly spaced edge array and derive its cell centres and step.
+
+    Parameters
+    ----------
+    edges
+        Cell edge coordinates. Unitless values are interpreted in
+        ``default_units``.
+    default_units
+        Units applied to unitless ``edges``.
+    name
+        Name used in error messages.
+
+    Returns
+    -------
+    edges, centers, step : quantity
+        Edges with units, cell centres and (scalar) cell size.
+
+    Raises
+    ------
+    ValueError
+        If units are incompatible with ``default_units``, if there are fewer
+        than 2 edges or if they are not regularly spaced.
+    """
+    if isinstance(edges, xr.DataArray):
+        edges = to_quantity(edges)
+    edges = ensure_units(edges, default_units=default_units)
+    if not edges.is_compatible_with(default_units):
+        raise ValueError(
+            f"{name} has units '{edges.units:~P}', expected units compatible "
+            f"with '{default_units:~P}'"
+        )
+    if edges.size < 2:
+        raise ValueError(f"{name} must have at least 2 values")
+    step = np.diff(edges)
+    if not np.allclose(step, step[0]):
+        raise ValueError(f"{name} must be regularly spaced")
+    return edges, edges[:-1] + 0.5 * step, step[0]
+
+
+def _n_cells(
+    extent: pint.Quantity,
+    cell_size: pint.Quantity,
+    atol: pint.Quantity | None,
+) -> int:
+    """
+    Compute the number of cells of size ``cell_size`` fitting in ``extent``.
+
+    Parameters
+    ----------
+    extent
+        Length to fill.
+    cell_size
+        Cell size.
+    atol
+        Absolute tolerance on the remainder. If ``None``, the remainder is
+        ignored.
+
+    Returns
+    -------
+    int
+        Number of whole cells fitting in ``extent``.
+
+    Raises
+    ------
+    ValueError
+        If ``atol`` is set and the remainder exceeds it.
+    """
+    ratio = (extent / cell_size).m_as(ureg.dimensionless)
+    n = int(np.floor(ratio))
+    remainder = (ratio - n) * cell_size
+    if atol is not None and remainder > atol:
+        raise ValueError(
+            f"extent ({extent}) is not a multiple of the cell size "
+            f"({cell_size}) within tolerance ({atol}); remainder: {remainder}"
+        )
+    return n
+
+
+def _edges_field(axis: str) -> attrs.Attribute:
+    return documented(
+        attrs.field(),
+        type="pint.Quantity",
+        init_type="quantity or array-like",
+        doc=f"Cell edges along the {axis} axis, regularly spaced. Unitless "
+        "values are interpreted in the axis's default units (see the class "
+        "description).",
+    )
+
 
 @frozen(eq=False, init=False)
 class SpatialGrid(ABC):
     """
-    Abstract coordinate grid for an atmosphere, expressed in 3 dimensions (X, Y and Z).
+    Abstract base class for regular 3D grids on which atmospheric radiative
+    properties are evaluated.
 
-    Eradiate's coordinate systems are made to conveniently locate objects
-    in a 3D scene. It does not map to an actual coordinate system used in
-    Earth Observation or to a specific projection explicitly.
+    A grid is defined by its cell edges along three axes X, Y and Z. All grids
+    store the same data and expose it through axis-generic accessors
+    (:attr:`x_edges`, :attr:`x_centers`, :attr:`x_cell_size`,
+    :attr:`x_extent`, :attr:`n_x_cells`, etc.). Subclasses set the meaning
+    and units of each axis and add aliases named after it:
 
-    Two coordinate systems are used internally, one for spherical shell
-    atmospheric geometries and another for plane parallel geometries.
+    * :class:`.CartesianGrid` (plane-parallel geometry): local Cartesian frame
+      (X: position [length], Y: position [length], Z: altitude [length]).
+    * :class:`.SphericalGrid` (spherical-shell geometry): geocentric
+      spherical frame (X: azimuth [angle], Y: colatitude [angle],
+      Z: altitude [length]).
 
-    Specializations of this class may implement their own logic to map their
-    coordinate system to one of the internal grid coordinates of Eradiate:
+    The Z axis is altitude for all grids, with aliases :attr:`levels` (edges),
+    :attr:`layers` (centres), :attr:`layer_height` (cell size) and
+    :attr:`total_height` (extent).
 
-    * Plane parallel: a local Cartesian frame
-      (X: local position [L], Y: local position [L], Z: altitude [L])
-    * Spherical shell: a geocentric spherical frame
-      (X: azimuth [dimensionless], Y: colatitude [dimensionless], Z: radius [L])
+    These frames locate objects in the scene; they are not geodetic
+    coordinate systems or map projections.
+
+    Edges are regularly spaced along each axis, with independent spacing per
+    axis.
 
     Notes
     -----
     * Instances are immutable.
-    * Instances are hashable by ID. This is required to allow for using them as
-      an argument of an LRU-cached function.
-    * This class is used as the argument of the ``eval()`` family of methods.
+    * Instances are hashed by ID, so they can be passed to LRU-cached
+      functions.
+    * Instances are passed to the ``eval()`` family of methods of atmosphere
+      components.
     """
 
-    levels: pint.Quantity = documented(
-        pinttrs.field(
-            units=ucc.deferred("length"),
-            on_setattr=None,
-        ),
-        type="pint.Quantity",
-        init_type="quantity or array-like",
-        doc="Grid node altitudes.\n\nUnit-enabled field (default: ``ucc['length']``).",
-    )
+    #: Unit context keys of the X, Y and Z axes.
+    _AXIS_UNITS: ClassVar[tuple[str, str, str]]
 
-    _layers: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("length"),
-        on_setattr=None,
-    )
+    x_edges: pint.Quantity = _edges_field("X")
+    y_edges: pint.Quantity = _edges_field("Y")
+    z_edges: pint.Quantity = _edges_field("Z")
+    _x_centers: pint.Quantity = attrs.field()
+    _y_centers: pint.Quantity = attrs.field()
+    _z_centers: pint.Quantity = attrs.field()
+    _x_cell_size: pint.Quantity = attrs.field()
+    _y_cell_size: pint.Quantity = attrs.field()
+    _z_cell_size: pint.Quantity = attrs.field()
 
-    _layer_height: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("length"),
-        on_setattr=None,
-    )
-
-    @_layer_height.validator
-    def _layer_height_validator(self, attribute, value):
-        if not np.isscalar(value.magnitude):
-            raise ValueError("layer height must be a scalar")
-
-    _total_height: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("length"),
-        on_setattr=None,
-    )
-
-    @staticmethod
-    def make_1d_from_levels(levels: pint.Quantity):
+    def _init_edges(self, *axes: tuple[Any, str]) -> None:
         """
-        Build a plane parallel 1D SpatialGrid using provided ``levels`` to
-        define the vertical extent and the horizontal extent comes from
-        Eradiate's default atmosphere width
-        """
-
-        ensure_units(levels, default_units=ucc.get("length"))
-
-        default = SpatialGrid.make_default()
-
-        return CartesianGrid(
-            levels=levels,
-            edges_x=default.edges_x,
-            edges_y=default.edges_y,
-        )
-
-    @staticmethod
-    def make_1d_arange(
-        top: pint.Quantity,
-        bottom: pint.Quantity,
-        step: pint.Quantity,
-        width: pint.Quantity,
-    ):
-        """
-        Build a plane parallel 1D SpatialGrid using ``width`` for horizontal
-        extents and the provided ``top`` and ``bottom`` altitude for the vertical coordinate.
+        Validate edges and initialize all fields.
 
         Parameters
         ----------
-        top
-            Top of the atmosphere altitude
-        bottom
-            Ground altitude
-        step
-            Regular layer height
-        width
-            Grid width
+        *axes
+            ``(edges, name)`` pairs for the X, Y and Z axes, where ``name`` is
+            the argument name used in error messages.
 
-        Returns
-        -------
-        CartesianGrid
-            Constructed coords grid
+        Raises
+        ------
+        TypeError
+            If edges are missing along an axis.
         """
-
-        units_length = ucc.get("length")
-        ensure_units(top, default_units=units_length)
-        ensure_units(bottom, default_units=units_length)
-        ensure_units(width, default_units=units_length)
-
-        levels = ureg.convert(
-            np.arange(
-                bottom.m_as(ureg.m), (top + step * 0.1).m_as(ureg.m), step.m_as(ureg.m)
-            ),
-            ureg.m,
-            units_length,
-        )
-
-        return CartesianGrid.from_extent_and_resolution(
-            levels=levels,
-            extent_x=width,
-            extent_y=width,
-            n_cells_x=1,
-            n_cells_y=1,
-        )
-
-    @staticmethod
-    def make_default() -> SpatialGrid:
-        """
-        Build the default plane parallel 1D SpatialGrid for Eradiate
-        atmospheres.
-
-        Bottom altitude is set to zero and top at 120 km. Each layer is 100m high.
-        The horizontal extent is 1e6 km.
-        """
-
-        bottom = 0.0 * ureg.km
-        top = 120.0 * ureg.km
-        step = 100.0 * ureg.m
-        width = 1e6 * ureg.km
-
-        return SpatialGrid.make_1d_arange(top, bottom, step, width)
+        kwargs = {}
+        for axis, (value, name), units in zip("xyz", axes, self._AXIS_UNITS):
+            if value is None:
+                raise TypeError(f"'{name}' must be set")
+            edges, centers, cell_size = _regular_edges(value, ucc.get(units), name)
+            kwargs[f"{axis}_edges"] = edges
+            kwargs[f"{axis}_centers"] = centers
+            kwargs[f"{axis}_cell_size"] = cell_size
+        self.__attrs_init__(**kwargs)
 
     @classmethod
     def convert(cls, value: Any) -> Any:
         """
-        Attempt conversion of a value to a ``SpatialGrid``.
+        Convert a value to a :class:`.SpatialGrid`, if possible.
 
         Parameters
         ----------
         value
-            The value for which conversion is attempted.
+            Value to convert. Conversion rules:
+
+            * ``"cartesian"``: return :meth:`.CartesianGrid.default`.
+            * 1D quantity, array or list of numbers: interpret as altitude
+              levels and return ``from_levels(value)``.
+            * Sequence of three 1D quantities or arrays (or 2D array with
+              three rows): interpret as ``(x_edges, y_edges, z_edges)`` and
+              pass them to the constructor.
+            * Dictionary: its ``"type"`` entry (``"cartesian"`` or
+              ``"spherical"``) selects the grid class; other entries are
+              passed to its constructor.
+            * Anything else is returned unchanged.
+
+            Array rules build an instance of the class this method is called
+            on, or a :class:`.CartesianGrid` if it is called on
+            :class:`.SpatialGrid`. Unitless arrays are interpreted in the
+            default units of each axis.
 
         Returns
         -------
-        CartesianGrid or SphericalGrid
+        SpatialGrid or object
+            Converted grid, or ``value`` if no rule applies.
 
-        Notes
-        -----
-        Conversion rules are as follows:
-
-        * If ``value`` is ``"plane_parallel_grid_coords"``, return a default
-          plane parallel ``CartesianGrid``.
-        * If value is a ``pint.Quantity``, attempt to construct a 1D
-          ``CartesianGrid`` with the layer altitudes contained in the quantity.
-        * If value is a ``np.ndarray``, interpret it as an array of layer
-          altitudes in meters and construct a 1D ``CartesianGrid`` using it.
-        * If value is a dict, expects a ``"type"`` key with the value
-          ``"plane_parallel_coords"`` or ``"spherical_shell_geometry"``.
-          Other keys are passed to the relevant subclass constructor.
-        * Otherwise, do not convert.
+        Raises
+        ------
+        ValueError
+            If ``value`` is a string other than ``"cartesian"`` or a dictionary
+            with an unknown ``"type"``.
         """
         if isinstance(value, str):
-            if value == "plane_parallel_coords":
-                return cls.make_default()
-            raise ValueError(f"No default factory for the type id {type}")
+            if value == "cartesian":
+                return CartesianGrid.default()
+            raise ValueError(
+                f"cannot convert string {value!r} to a grid (expected 'cartesian')"
+            )
         elif isinstance(value, dict):
             value = value.copy()
-            value_t = value.pop("type")
-            if value_t == "plane_parallel_coords":
-                return CartesianGrid(**value)
-            elif value_t == "spherical_shell_coords":
-                return SphericalGrid(**value)
-        elif isinstance(value, pint.Quantity):
-            return cls.make_1d_from_levels(value)
-        elif isinstance(value, np.ndarray):
-            return cls.make_1d_from_levels(value * ureg.m)
+            grid_type = value.pop("type")
+            grid_cls = {"cartesian": CartesianGrid, "spherical": SphericalGrid}.get(
+                grid_type
+            )
+            if grid_cls is None:
+                raise ValueError(
+                    f"unknown grid type {grid_type!r} "
+                    "(expected 'cartesian' or 'spherical')"
+                )
+            return grid_cls(**value)
+        grid_cls = CartesianGrid if cls is SpatialGrid else cls
+        if isinstance(value, list) and all(np.ndim(v) == 0 for v in value):
+            value = np.asarray(value)
+        if isinstance(value, (pint.Quantity, np.ndarray)) and value.ndim == 1:
+            return grid_cls.from_levels(value)
+        elif (
+            isinstance(value, (tuple, list, pint.Quantity, np.ndarray))
+            and len(value) == 3
+            and all(np.ndim(v) == 1 for v in value)
+        ):
+            return grid_cls(*value)
 
         return value
 
-    @property
-    def layers(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Vector of altitudes of layer centres.
-        """
-        return self._layers
+    # --------------------------------------------------------------------------
+    #                           Axis-generic accessors
+    # --------------------------------------------------------------------------
 
     @property
-    def layer_height(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Layer height.
-        """
-        return self._layer_height
+    def x_centers(self) -> pint.Quantity:
+        """Cell centres along the X axis."""
+        return self._x_centers
 
     @property
-    def total_height(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Total height covered by the altitude grid.
-        """
-        return self._total_height
+    def y_centers(self) -> pint.Quantity:
+        """Cell centres along the Y axis."""
+        return self._y_centers
 
     @property
-    def n_levels(self) -> int:
-        """
-        Returns
-        -------
-        int
-            Number of levels (Z edges).
-        """
-        return len(self.levels)
+    def z_centers(self) -> pint.Quantity:
+        """Cell centres along the Z axis."""
+        return self._z_centers
 
     @property
-    def n_layers(self) -> int:
-        """
-        Returns
-        -------
-        int
-            Number of layers (Z cells).
-        """
-        return len(self.layers)
+    def x_cell_size(self) -> pint.Quantity:
+        """Uniform cell size along the X axis."""
+        return self._x_cell_size
 
     @property
-    @abstractmethod
-    def cells_x(self) -> pint.Quantity:
-        raise NotImplementedError()
+    def y_cell_size(self) -> pint.Quantity:
+        """Uniform cell size along the Y axis."""
+        return self._y_cell_size
 
     @property
-    @abstractmethod
-    def cells_y(self) -> pint.Quantity:
-        raise NotImplementedError()
+    def z_cell_size(self) -> pint.Quantity:
+        """Uniform cell size along the Z axis."""
+        return self._z_cell_size
 
     @property
-    @abstractmethod
-    def n_cells_x(self) -> int:
-        """Number of cells in the X direction."""
-        raise NotImplementedError()
+    def x_extent(self) -> pint.Quantity:
+        """Grid extent along the X axis."""
+        return self.x_edges[-1] - self.x_edges[0]
 
     @property
-    @abstractmethod
-    def n_cells_y(self) -> int:
-        """Number of cells in the Y direction."""
-        raise NotImplementedError()
+    def y_extent(self) -> pint.Quantity:
+        """Grid extent along the Y axis."""
+        return self.y_edges[-1] - self.y_edges[0]
 
     @property
-    @abstractmethod
-    def n_edges_x(self) -> int:
-        """Number of edges in the X direction."""
-        raise NotImplementedError()
+    def z_extent(self) -> pint.Quantity:
+        """Grid extent along the Z axis."""
+        return self.z_edges[-1] - self.z_edges[0]
 
     @property
-    @abstractmethod
-    def n_edges_y(self) -> int:
-        """Number of edges in the Y direction."""
-        raise NotImplementedError()
+    def n_x_cells(self) -> int:
+        """Number of cells along the X axis."""
+        return len(self._x_centers)
 
     @property
-    def n_cells_z(self) -> int:
-        """Number of cells in the Z direction (equal to number of layers)."""
-        return self.n_layers
+    def n_y_cells(self) -> int:
+        """Number of cells along the Y axis."""
+        return len(self._y_centers)
 
     @property
-    def n_edges_z(self) -> int:
-        """Number of edges in the Z direction (equal to number of levels)."""
-        return self.n_levels
+    def n_z_cells(self) -> int:
+        """Number of cells along the Z axis."""
+        return len(self._z_centers)
+
+    @property
+    def n_x_edges(self) -> int:
+        """Number of edges along the X axis."""
+        return len(self.x_edges)
+
+    @property
+    def n_y_edges(self) -> int:
+        """Number of edges along the Y axis."""
+        return len(self.y_edges)
+
+    @property
+    def n_z_edges(self) -> int:
+        """Number of edges along the Z axis."""
+        return len(self.z_edges)
 
     @property
     def shape(self) -> tuple[int, int, int]:
-        """Grid dimensions sizes, or numpy shape. (X, Y, Z) order."""
-        return (self.n_cells_x, self.n_cells_y, self.n_cells_z)
+        """Number of cells along each axis, in (X, Y, Z) order."""
+        return (self.n_x_cells, self.n_y_cells, self.n_z_cells)
 
     @property
     def is_1d(self) -> bool:
-        """Is this grid suitable for expressing properties of a 1D atmosphere."""
-        return self.n_cells_x == 1 and self.n_cells_y == 1
+        """``True`` if the grid has a single cell in X and Y."""
+        return self.n_x_cells == 1 and self.n_y_cells == 1
+
+    # --------------------------------------------------------------------------
+    #                              Z-axis aliases
+    # --------------------------------------------------------------------------
+
+    @property
+    def levels(self) -> pint.Quantity:
+        """Altitude levels (alias of :attr:`z_edges`)."""
+        return self.z_edges
+
+    @property
+    def layers(self) -> pint.Quantity:
+        """Altitudes of layer centres (alias of :attr:`z_centers`)."""
+        return self._z_centers
+
+    @property
+    def layer_height(self) -> pint.Quantity:
+        """Uniform layer height (alias of :attr:`z_cell_size`)."""
+        return self._z_cell_size
+
+    @property
+    def total_height(self) -> pint.Quantity:
+        """Distance between the lowest and highest levels (alias of :attr:`z_extent`)."""
+        return self.z_extent
+
+    @property
+    def n_levels(self) -> int:
+        """Number of levels (alias of :attr:`n_z_edges`)."""
+        return self.n_z_edges
+
+    @property
+    def n_layers(self) -> int:
+        """Number of layers (alias of :attr:`n_z_cells`)."""
+        return self.n_z_cells
+
+    # --------------------------------------------------------------------------
+    #                              Modified copies
+    # --------------------------------------------------------------------------
+
+    def with_cell_counts(
+        self,
+        n_x_cells: int | None = None,
+        n_y_cells: int | None = None,
+        n_z_cells: int | None = None,
+    ) -> SpatialGrid:
+        """
+        Return a copy with the same bounds and new cell counts.
+
+        Parameters
+        ----------
+        n_x_cells, n_y_cells, n_z_cells
+            Number of cells along each axis. If ``None``, the axis is left
+            unchanged.
+
+        Returns
+        -------
+        SpatialGrid
+            Grid of the same type as this one.
+        """
+        edges = []
+        for axis, n in zip("xyz", (n_x_cells, n_y_cells, n_z_cells)):
+            e = getattr(self, f"{axis}_edges")
+            edges.append(e if n is None else np.linspace(e[0], e[-1], n + 1))
+        return self.__class__(*edges)
+
+    def with_cell_sizes(
+        self,
+        x_cell_size: pint.Quantity | float | None = None,
+        y_cell_size: pint.Quantity | float | None = None,
+        z_cell_size: pint.Quantity | float | None = None,
+        x_atol: pint.Quantity | float | None = None,
+        y_atol: pint.Quantity | float | None = None,
+        z_atol: pint.Quantity | float | None = None,
+    ) -> SpatialGrid:
+        """
+        Return a copy with the same bounds and new cell sizes.
+
+        The cell count along each axis is the number of whole cells of the
+        requested size fitting in the extent; the cell size is then adjusted so
+        that the cells fill the extent exactly.
+
+        Parameters
+        ----------
+        x_cell_size, y_cell_size, z_cell_size
+            Target cell size along each axis. If ``None``, the axis is left
+            unchanged. Unitless values are interpreted in the axis's default
+            units.
+        x_atol, y_atol, z_atol
+            Absolute tolerance on the remainder left when dividing the extent
+            by the cell size along each axis. If ``None``, the remainder is
+            ignored. Unitless values are interpreted in the axis's default
+            units.
+
+        Returns
+        -------
+        SpatialGrid
+            Grid of the same type as this one.
+
+        Raises
+        ------
+        ValueError
+            If a tolerance is set and the remainder along that axis exceeds it.
+        """
+        n_cells = []
+        for axis, cell_size, atol, units in zip(
+            "xyz",
+            (x_cell_size, y_cell_size, z_cell_size),
+            (x_atol, y_atol, z_atol),
+            self._AXIS_UNITS,
+        ):
+            if cell_size is None:
+                n_cells.append(None)
+                continue
+            units = ucc.get(units)
+            cell_size = ensure_units(cell_size, default_units=units)
+            if atol is not None:
+                atol = ensure_units(atol, default_units=units)
+            n_cells.append(_n_cells(getattr(self, f"{axis}_extent"), cell_size, atol))
+        return self.with_cell_counts(*n_cells)
+
+    # --------------------------------------------------------------------------
+    #                                  Misc
+    # --------------------------------------------------------------------------
 
     @property
     @abstractmethod
     def to_world(self) -> mi.ScalarTransform4f:
-        """Grid to_world"""
+        """
+        Transform from the unit cube to the grid's volume, in kernel units,
+        used as the ``to_world`` parameter of the kernel volume plugin.
+        """
+
+    def __rich_repr__(self):
+        for axis in "xyz":
+            for name in ["edges", "centers", "cell_size", "extent"]:
+                yield f"{axis}_{name}", getattr(self, f"{axis}_{name}")
+        yield "shape", self.shape
 
     def _repr_html_(self) -> str | None:
         return _repr_diagrams.grid_repr_html(self)
 
 
-@frozen(eq=False, init=False, repr=False)
+@frozen(eq=False, init=False)
 class CartesianGrid(SpatialGrid):
     """
-    Plane parallel grid coordinates [``plane_parallel_coords``].
+    Cartesian grid [``cartesian``].
 
-    Implements the internal coordinate system for Eradiate plane parallel
-    geometries, using a local Cartesian reference frame.
-    (X: local position [L], Y: local position [L], Z: altitude [L])
+    Grid for plane-parallel geometries, in a local Cartesian frame
+    (X: position [length], Y: position [length], Z: altitude [length]).
+    Unitless edges are interpreted in ``ucc['length']`` on all axes.
 
-    The grid is regular: cells have uniform width in X and uniform length in Y,
-    but these two spacings are independent.
+    The constructor takes cell edges along each axis; Z edges can
+    alternatively be passed as ``levels`` (exclusive with ``z_edges``). The
+    ``from_*`` class methods build grids centred horizontally at the origin
+    from extents, cell sizes and cell counts; the ``with_*`` and ``*ed``
+    methods return modified copies.
     """
 
-    edges_x: pint.Quantity = documented(
-        pinttrs.field(
-            units=ucc.deferred("length"),
-            on_setattr=None,
-        ),
-        type="pint.Quantity",
-        init_type="quantity or array-like",
-        doc="Grid node positions in the X direction.\n\nUnit-enabled field (default: ``ucc['length']``).",
-    )
-
-    edges_y: pint.Quantity = documented(
-        pinttrs.field(
-            units=ucc.deferred("length"),
-            on_setattr=None,
-        ),
-        type="pint.Quantity",
-        init_type="quantity or array-like",
-        doc="Grid node positions in the Y direction.\n\nUnit-enabled field (default: ``ucc['length']``).",
-    )
-
-    _centers_x: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("length"),
-        on_setattr=None,
-    )
-
-    _centers_y: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("length"),
-        on_setattr=None,
-    )
-
-    _cell_width: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("length"),
-        on_setattr=None,
-    )
-
-    _cell_length: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("length"),
-        on_setattr=None,
-    )
-
-    _total_width: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("length"),
-        on_setattr=None,
-    )
-
-    _total_length: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("length"),
-        on_setattr=None,
-    )
-
-    def __rich_repr__(self):
-        yield "levels", self.levels
-        yield "layers", self.layers
-        yield "layer_height", self.layer_height
-        yield "total_height", self.total_height
-
-        yield "edges_x", self.edges_x
-        yield "centers_x", self.centers_x
-        yield "cell_width", self.cell_width
-        yield "total_width", self.total_width
-
-        yield "edges_y", self.edges_y
-        yield "centers_y", self.centers_y
-        yield "cell_length", self.cell_length
-        yield "total_length", self._total_length
-
-        yield "shape", self.shape
-
-    @_cell_width.validator
-    @_cell_length.validator
-    def _cell_extent_validator(self, attribute, value):
-        if not np.isscalar(value.magnitude):
-            raise ValueError("cell extent must be a scalar")
+    _AXIS_UNITS = ("length", "length", "length")
 
     def __init__(
         self,
-        levels: pint.Quantity | xr.DataArray,
-        edges_x: pint.Quantity | xr.DataArray,
-        edges_y: pint.Quantity | xr.DataArray,
+        x_edges: pint.Quantity | xr.DataArray | None = None,
+        y_edges: pint.Quantity | xr.DataArray | None = None,
+        z_edges: pint.Quantity | xr.DataArray | None = None,
+        *,
+        levels: pint.Quantity | xr.DataArray | None = None,
     ):
-        if isinstance(levels, xr.DataArray):
-            levels = to_quantity(levels)
-        if isinstance(edges_x, xr.DataArray):
-            edges_x = to_quantity(edges_x)
-        if isinstance(edges_y, xr.DataArray):
-            edges_y = to_quantity(edges_y)
-
-        levels = ensure_units(levels, default_units=ucc.get("length"))
-        layer_height = np.diff(levels)
-        if not np.allclose(layer_height, layer_height[0]):
-            raise ValueError("levels must be regularly spaced")
-        layers = levels[:-1] + 0.5 * layer_height
-
-        edges_x = ensure_units(edges_x, default_units=ucc.get("length"))
-        edges_y = ensure_units(edges_y, default_units=ucc.get("length"))
-
-        def _centers_and_step(edges, axis):
-            step = np.diff(edges)
-            if not np.allclose(step, step[0]):
-                raise ValueError(f"edges_{axis} must be regularly spaced")
-            return edges[:-1] + 0.5 * step, step[0]
-
-        centers_x, cell_width = _centers_and_step(edges_x, "x")
-        centers_y, cell_length = _centers_and_step(edges_y, "y")
-
-        self.__attrs_init__(
-            levels=levels,
-            layers=layers,
-            layer_height=layer_height[0],
-            total_height=levels[-1] - levels[0],
-            edges_x=edges_x,
-            edges_y=edges_y,
-            centers_x=centers_x,
-            centers_y=centers_y,
-            cell_width=cell_width,
-            cell_length=cell_length,
-            total_width=edges_x[-1] - edges_x[0],
-            total_length=edges_y[-1] - edges_y[0],
+        self._init_edges(
+            (x_edges, "x_edges"),
+            (y_edges, "y_edges"),
+            _either(z_edges, levels, "z_edges", "levels"),
         )
 
     @property
     def to_world(self) -> mi.ScalarTransform4f:
-        """Grid to_world in cartesian coordinates"""
         unit = uck.get("length")
         return map_unit_cube(
-            self.edges_x.min().m_as(unit),
-            self.edges_x.max().m_as(unit),
-            self.edges_y.min().m_as(unit),
-            self.edges_y.max().m_as(unit),
-            self.levels.min().m_as(unit),
-            self.levels.max().m_as(unit),
+            self.x_edges.min().m_as(unit),
+            self.x_edges.max().m_as(unit),
+            self.y_edges.min().m_as(unit),
+            self.y_edges.max().m_as(unit),
+            self.z_edges.min().m_as(unit),
+            self.z_edges.max().m_as(unit),
         )
-
-    @property
-    def centers_x(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Vector of cell centre positions in the X direction.
-        """
-        return self._centers_x
-
-    @property
-    def centers_y(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Vector of cell centre positions in the Y direction.
-        """
-        return self._centers_y
-
-    @property
-    def cell_width(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Uniform cell width in the X direction.
-        """
-        return self._cell_width
-
-    @property
-    def cell_length(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Uniform cell length in the Y direction.
-        """
-        return self._cell_length
-
-    @property
-    def total_width(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Total extent of the grid in the X direction.
-        """
-        return self._total_width
-
-    @property
-    def total_length(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Total extent of the grid in the Y direction.
-        """
-        return self._total_length
-
-    @property
-    def n_cells_x(self) -> int:
-        """Number of cells in the X direction."""
-        return len(self._centers_x)
-
-    @property
-    def n_cells_y(self) -> int:
-        """Number of cells in the Y direction."""
-        return len(self._centers_y)
-
-    @property
-    def n_edges_x(self) -> int:
-        """Number of edges in the X direction."""
-        return len(self.edges_x)
-
-    @property
-    def n_edges_y(self) -> int:
-        """Number of edges in the Y direction."""
-        return len(self.edges_y)
 
     def __repr__(self) -> str:
         return (
             "<CartesianGrid "
-            f"x={self.edges_x[[0, -1]]:~P} ({self.n_cells_x} cells) "
-            f"y={self.edges_y[[0, -1]]:~P} ({self.n_cells_y} cells) "
-            f"z={self.levels[[0, -1]]:~P} ({self.n_layers} layers) "
+            f"x={self.x_edges[[0, -1]]:~P} ({self.n_x_cells} cells) "
+            f"y={self.y_edges[[0, -1]]:~P} ({self.n_y_cells} cells) "
+            f"z={self.z_edges[[0, -1]]:~P} ({self.n_z_cells} layers)"
             ">"
         )
 
     @staticmethod
-    def _make_centered_edges(extent: pint.Quantity, n_cells: int) -> pint.Quantity:
+    def _centered_edges(extent: pint.Quantity, n_cells: int) -> pint.Quantity:
         """Return regularly spaced edges centred at zero."""
         half = extent / 2.0
         return np.linspace(-half, half, n_cells + 1)
 
-    @staticmethod
-    def _cells_from_extent_and_size(
-        extent: pint.Quantity,
-        cell_size: pint.Quantity,
-        atol: pint.Quantity | None,
-    ) -> int:
-        """
-        Derive the number of cells fitting in *extent* given *cell_size*.
+    # --------------------------------------------------------------------------
+    #                                 Factories
+    # --------------------------------------------------------------------------
 
-        Parameters
-        ----------
-        extent
-            Total extent of the domain.
-        cell_size
-            Desired cell size.
-        atol
-            Absolute tolerance on the remainder. If ``None``, the remainder is
-            silently ignored and the floor count is returned. Otherwise a
-            ``ValueError`` is raised when the remainder exceeds *atol*.
+    @classmethod
+    def default(cls) -> CartesianGrid:
+        """
+        Build the default grid for Eradiate atmospheres.
+
+        Levels span 0 to 120 km with 100 m layers; the grid has a single
+        horizontal cell spanning 10⁶ km in X and Y.
 
         Returns
         -------
-        int
-            Number of cells.
+        CartesianGrid
         """
-        ratio = (extent / cell_size).m_as(ureg.dimensionless)
-        n = int(np.floor(ratio))
-        remainder = (ratio - n) * cell_size
-        if atol is not None and remainder > atol:
-            raise ValueError(
-                f"extent {extent} is not a multiple of cell size {cell_size} "
-                f"within tolerance {atol} (remainder: {remainder})"
-            )
-        return n
+        return cls.from_levels(np.linspace(0.0, 120.0, 1201) * ureg.km)
+
+    @classmethod
+    def from_levels(cls, levels: pint.Quantity | np.typing.ArrayLike) -> CartesianGrid:
+        """
+        Build a single-column grid from altitude levels.
+
+        The single horizontal cell spans 10⁶ km in X and Y, centred at the
+        origin.
+
+        Parameters
+        ----------
+        levels
+            Altitude levels (Z edges). Unitless values are interpreted in
+            ``ucc['length']``.
+
+        Returns
+        -------
+        CartesianGrid
+        """
+        return cls.from_extent_and_resolution(
+            x_extent=_DEFAULT_HORIZONTAL_EXTENT,
+            y_extent=_DEFAULT_HORIZONTAL_EXTENT,
+            n_x_cells=1,
+            n_y_cells=1,
+            levels=levels,
+        )
 
     @classmethod
     def from_extent_and_resolution(
         cls,
-        levels: pint.Quantity,
-        extent_x: pint.Quantity,
-        extent_y: pint.Quantity,
-        n_cells_x: int,
-        n_cells_y: int,
+        x_extent: pint.Quantity | float,
+        y_extent: pint.Quantity | float,
+        n_x_cells: int,
+        n_y_cells: int,
+        z_edges: pint.Quantity | None = None,
+        *,
+        levels: pint.Quantity | None = None,
     ) -> CartesianGrid:
         """
-        Construct from domain extents and cell counts, centred at the origin.
+        Build a grid centred horizontally at the origin from extents and cell
+        counts.
 
         Parameters
         ----------
+        x_extent, y_extent
+            Grid extent along the X and Y axes. Unitless values are
+            interpreted in ``ucc['length']``.
+        n_x_cells, n_y_cells
+            Number of cells along the X and Y axes.
+        z_edges
+            Cell edges along the Z axis. Unitless values are interpreted in
+            ``ucc['length']``.
         levels
-            Altitude levels (Z edges).
-        extent_x
-            Total extent of the domain in the X direction.
-        extent_y
-            Total extent of the domain in the Y direction.
-        n_cells_x
-            Number of cells in the X direction.
-        n_cells_y
-            Number of cells in the Y direction.
+            Alias of ``z_edges`` (exclusive).
 
         Returns
         -------
         CartesianGrid
         """
-        extent_x = ensure_units(extent_x, default_units=ucc.get("length"))
-        extent_y = ensure_units(extent_y, default_units=ucc.get("length"))
+        x_extent = ensure_units(x_extent, default_units=ucc.get("length"))
+        y_extent = ensure_units(y_extent, default_units=ucc.get("length"))
 
-        edges_x = cls._make_centered_edges(extent_x, n_cells_x)
-        edges_y = cls._make_centered_edges(extent_y, n_cells_y)
-
-        return cls(levels=levels, edges_x=edges_x, edges_y=edges_y)
+        return cls(
+            cls._centered_edges(x_extent, n_x_cells),
+            cls._centered_edges(y_extent, n_y_cells),
+            z_edges,
+            levels=levels,
+        )
 
     @classmethod
     def from_extent_and_cell_size(
         cls,
-        levels: pint.Quantity,
-        extent_x: pint.Quantity,
-        extent_y: pint.Quantity,
-        cell_width: pint.Quantity,
-        cell_length: pint.Quantity,
-        atol: pint.Quantity | None = None,
+        x_extent: pint.Quantity | float,
+        y_extent: pint.Quantity | float,
+        x_cell_size: pint.Quantity | float,
+        y_cell_size: pint.Quantity | float,
+        z_edges: pint.Quantity | None = None,
+        *,
+        levels: pint.Quantity | None = None,
+        x_atol: pint.Quantity | float | None = None,
+        y_atol: pint.Quantity | float | None = None,
     ) -> CartesianGrid:
         """
-        Construct from domain extents and cell sizes, centred at the origin.
+        Build a grid centred horizontally at the origin from extents and cell
+        sizes.
 
-        The number of cells is derived from the extent and cell size. If the
-        extent is not an exact multiple of the cell size, the behaviour depends
-        on *atol*: if ``None``, the largest fitting number of cells is used;
-        otherwise a ``ValueError`` is raised when the remainder exceeds *atol*.
+        The cell count along each axis is the number of whole cells of the
+        requested size fitting in the extent; the cell size is then adjusted so
+        that the cells fill the extent exactly.
 
         Parameters
         ----------
+        x_extent, y_extent
+            Grid extent along the X and Y axes. Unitless values are
+            interpreted in ``ucc['length']``.
+        x_cell_size, y_cell_size
+            Cell size along the X and Y axes. Unitless values are interpreted
+            in ``ucc['length']``.
+        z_edges
+            Cell edges along the Z axis. Unitless values are interpreted in
+            ``ucc['length']``.
         levels
-            Altitude levels (Z edges).
-        extent_x
-            Total extent of the domain in the X direction.
-        extent_y
-            Total extent of the domain in the Y direction.
-        cell_width
-            Desired cell width in the X direction.
-        cell_length
-            Desired cell length in the Y direction.
-        atol
-            Absolute tolerance on the remainder extent. Unit-enabled.
+            Alias of ``z_edges`` (exclusive).
+        x_atol, y_atol
+            Absolute tolerance on the remainder left when dividing the extent
+            by the cell size along the X and Y axes. If ``None``, the remainder
+            is ignored. Unitless values are interpreted in ``ucc['length']``.
 
         Returns
         -------
         CartesianGrid
+
+        Raises
+        ------
+        ValueError
+            If a tolerance is set and the remainder along that axis exceeds it.
         """
-        extent_x = ensure_units(extent_x, default_units=ucc.get("length"))
-        extent_y = ensure_units(extent_y, default_units=ucc.get("length"))
-        cell_width = ensure_units(cell_width, default_units=ucc.get("length"))
-        cell_length = ensure_units(cell_length, default_units=ucc.get("length"))
-        if atol is not None:
-            atol = ensure_units(atol, default_units=ucc.get("length"))
+        length = ucc.get("length")
+        n_cells = []
+        for extent, cell_size, atol in [
+            (x_extent, x_cell_size, x_atol),
+            (y_extent, y_cell_size, y_atol),
+        ]:
+            extent = ensure_units(extent, default_units=length)
+            cell_size = ensure_units(cell_size, default_units=length)
+            if atol is not None:
+                atol = ensure_units(atol, default_units=length)
+            n_cells.append(_n_cells(extent, cell_size, atol))
 
-        n_cells_x = cls._cells_from_extent_and_size(extent_x, cell_width, atol)
-        n_cells_y = cls._cells_from_extent_and_size(extent_y, cell_length, atol)
-
-        edges_x = cls._make_centered_edges(extent_x, n_cells_x)
-        edges_y = cls._make_centered_edges(extent_y, n_cells_y)
-
-        return cls(levels=levels, edges_x=edges_x, edges_y=edges_y)
+        return cls.from_extent_and_resolution(
+            x_extent, y_extent, *n_cells, z_edges, levels=levels
+        )
 
     @classmethod
-    def from_cell_size_and_count(
+    def from_cell_size_and_resolution(
         cls,
-        levels: pint.Quantity,
-        cell_width: pint.Quantity,
-        cell_length: pint.Quantity,
-        n_cells_x: int,
-        n_cells_y: int,
+        x_cell_size: pint.Quantity | float,
+        y_cell_size: pint.Quantity | float,
+        n_x_cells: int,
+        n_y_cells: int,
+        z_edges: pint.Quantity | None = None,
+        *,
+        levels: pint.Quantity | None = None,
     ) -> CartesianGrid:
         """
-        Construct from cell sizes and counts, centred at the origin.
+        Build a grid centred horizontally at the origin from cell sizes and
+        counts.
 
-        The domain extent is derived as ``cell_size * n_cells``.
+        The extent along each axis is ``cell_size * n_cells``.
 
         Parameters
         ----------
+        x_cell_size, y_cell_size
+            Cell size along the X and Y axes. Unitless values are interpreted
+            in ``ucc['length']``.
+        n_x_cells, n_y_cells
+            Number of cells along the X and Y axes.
+        z_edges
+            Cell edges along the Z axis. Unitless values are interpreted in
+            ``ucc['length']``.
         levels
-            Altitude levels (Z edges).
-        cell_width
-            Cell width in the X direction.
-        cell_length
-            Cell length in the Y direction.
-        n_cells_x
-            Number of cells in the X direction.
-        n_cells_y
-            Number of cells in the Y direction.
+            Alias of ``z_edges`` (exclusive).
 
         Returns
         -------
         CartesianGrid
         """
-        cell_width = ensure_units(cell_width, default_units=ucc.get("length"))
-        cell_length = ensure_units(cell_length, default_units=ucc.get("length"))
+        x_cell_size = ensure_units(x_cell_size, default_units=ucc.get("length"))
+        y_cell_size = ensure_units(y_cell_size, default_units=ucc.get("length"))
 
-        extent_x = cell_width * n_cells_x
-        extent_y = cell_length * n_cells_y
+        return cls.from_extent_and_resolution(
+            x_cell_size * n_x_cells,
+            y_cell_size * n_y_cells,
+            n_x_cells,
+            n_y_cells,
+            z_edges,
+            levels=levels,
+        )
 
-        edges_x = cls._make_centered_edges(extent_x, n_cells_x)
-        edges_y = cls._make_centered_edges(extent_y, n_cells_y)
+    # --------------------------------------------------------------------------
+    #                              Modified copies
+    # --------------------------------------------------------------------------
 
-        return cls(levels=levels, edges_x=edges_x, edges_y=edges_y)
-
-    def extended_by_cells(
-        self,
-        n_x: int,
-        n_y: int,
-    ) -> CartesianGrid:
+    def extended_by_cells(self, n_x_cells: int, n_y_cells: int) -> CartesianGrid:
         """
-        Extend the grid symmetrically by appending cells on each side.
+        Return a copy extended symmetrically by whole cells.
 
-        The cell size is preserved. ``n_x`` cells are added on each side in X,
-        and ``n_y`` cells on each side in Y, so the total cell count grows by
-        ``2 * n_x`` and ``2 * n_y`` respectively.
+        The cell size is preserved; the cell count grows by ``2 * n_x_cells``
+        in X and ``2 * n_y_cells`` in Y.
 
         Parameters
         ----------
-        n_x
-            Number of cells to add on each side in the X direction.
-        n_y
-            Number of cells to add on each side in the Y direction.
+        n_x_cells, n_y_cells
+            Number of cells added on each side along the X and Y axes.
 
         Returns
         -------
         CartesianGrid
-            New instance with extended edges.
         """
 
         def _extend(edges, step, n):
@@ -757,317 +793,234 @@ class CartesianGrid(SpatialGrid):
             append = edges[-1] + step * np.arange(1, n + 1)
             return np.concatenate([prepend, edges, append])
 
-        edges_x = _extend(self.edges_x, self.cell_width, n_x)
-        edges_y = _extend(self.edges_y, self.cell_length, n_y)
-
-        return self.__class__(levels=self.levels, edges_x=edges_x, edges_y=edges_y)
-
-    def extended_by_extent(
-        self,
-        extent_x: pint.Quantity,
-        extent_y: pint.Quantity,
-        atol: pint.Quantity | None = None,
-    ) -> CartesianGrid:
-        """
-        Extend the grid symmetrically by a physical margin on each side.
-
-        The cell size is preserved. The number of cells added is derived from
-        the margin and cell size. If the margin is not an exact multiple of the
-        cell size, the behaviour depends on *atol*.
-
-        Parameters
-        ----------
-        extent_x
-            Physical margin to add on each side in the X direction.
-        extent_y
-            Physical margin to add on each side in the Y direction.
-        atol
-            Absolute tolerance on the remainder extent.
-
-        Returns
-        -------
-        CartesianGrid
-            New instance with extended edges.
-        """
-        extent_x = ensure_units(extent_x, default_units=ucc.get("length"))
-        extent_y = ensure_units(extent_y, default_units=ucc.get("length"))
-        if atol is not None:
-            atol = ensure_units(atol, default_units=ucc.get("length"))
-
-        n_x = self._cells_from_extent_and_size(extent_x, self.cell_width, atol)
-        n_y = self._cells_from_extent_and_size(extent_y, self.cell_length, atol)
-
-        return self.extended_by_cells(n_x, n_y)
-
-    def resampled(
-        self,
-        n_cells_x: int,
-        n_cells_y: int,
-    ) -> CartesianGrid:
-        """
-        Resample the grid to a new resolution, preserving the extent.
-
-        Parameters
-        ----------
-        n_cells_x
-            New number of cells in the X direction.
-        n_cells_y
-            New number of cells in the Y direction.
-
-        Returns
-        -------
-        CartesianGrid
-            New instance with the same extent but different resolution.
-        """
-        edges_x = np.linspace(self.edges_x[0], self.edges_x[-1], n_cells_x + 1)
-        edges_y = np.linspace(self.edges_y[0], self.edges_y[-1], n_cells_y + 1)
-
-        return self.__class__(levels=self.levels, edges_x=edges_x, edges_y=edges_y)
-
-    def resampled_to_cell_size(
-        self,
-        cell_width: pint.Quantity,
-        cell_length: pint.Quantity,
-        atol: pint.Quantity | None = None,
-    ) -> CartesianGrid:
-        """
-        Resample the grid to a new cell size, preserving the extent.
-
-        Parameters
-        ----------
-        cell_width
-            New cell width in the X direction.
-        cell_length
-            New cell length in the Y direction.
-        atol
-            Absolute tolerance on the remainder extent.
-
-        Returns
-        -------
-        CartesianGrid
-            New instance with the same extent but different cell size.
-        """
-        cell_width = ensure_units(cell_width, default_units=ucc.get("length"))
-        cell_length = ensure_units(cell_length, default_units=ucc.get("length"))
-        if atol is not None:
-            atol = ensure_units(atol, default_units=ucc.get("length"))
-
-        n_cells_x = self._cells_from_extent_and_size(self.total_width, cell_width, atol)
-        n_cells_y = self._cells_from_extent_and_size(
-            self.total_length, cell_length, atol
+        return self.__class__(
+            _extend(self.x_edges, self.x_cell_size, n_x_cells),
+            _extend(self.y_edges, self.y_cell_size, n_y_cells),
+            self.z_edges,
         )
 
-        return self.resampled(n_cells_x, n_cells_y)
-
-    def cropped(
+    def extended_by_margin(
         self,
-        extent_x: pint.Quantity,
-        extent_y: pint.Quantity,
+        x_margin: pint.Quantity | float,
+        y_margin: pint.Quantity | float,
+        x_atol: pint.Quantity | float | None = None,
+        y_atol: pint.Quantity | float | None = None,
     ) -> CartesianGrid:
         """
-        Crop the grid symmetrically to a smaller extent.
+        Return a copy extended symmetrically by a margin on each side.
 
-        Snaps to the nearest existing edge inward. Raises if the requested
-        extent exceeds the current domain.
+        The cell size is preserved. The margin is rounded down to a whole
+        number of cells.
 
         Parameters
         ----------
-        extent_x
-            Target extent in the X direction.
-        extent_y
-            Target extent in the Y direction.
+        x_margin, y_margin
+            Margin added on each side along the X and Y axes. Unitless values
+            are interpreted in ``ucc['length']``.
+        x_atol, y_atol
+            Absolute tolerance on the remainder left when dividing the margin
+            by the cell size along the X and Y axes. If ``None``, the remainder
+            is ignored. Unitless values are interpreted in ``ucc['length']``.
 
         Returns
         -------
         CartesianGrid
-            New instance with reduced extent.
 
         Raises
         ------
         ValueError
-            If the requested extent exceeds the current domain in either
-            direction.
+            If a tolerance is set and the remainder along that axis exceeds it.
         """
-        extent_x = ensure_units(extent_x, default_units=ucc.get("length"))
-        extent_y = ensure_units(extent_y, default_units=ucc.get("length"))
+        length = ucc.get("length")
+        n_cells = []
+        for margin, cell_size, atol in [
+            (x_margin, self.x_cell_size, x_atol),
+            (y_margin, self.y_cell_size, y_atol),
+        ]:
+            margin = ensure_units(margin, default_units=length)
+            if atol is not None:
+                atol = ensure_units(atol, default_units=length)
+            n_cells.append(_n_cells(margin, cell_size, atol))
 
-        if extent_x > self.total_width:
-            raise ValueError(
-                f"requested extent_x {extent_x} exceeds current domain width {self.total_width}"
-            )
-        if extent_y > self.total_length:
-            raise ValueError(
-                f"requested extent_y {extent_y} exceeds current domain length {self.total_length}"
-            )
+        return self.extended_by_cells(*n_cells)
 
-        def _crop_edges(edges, n_drop):
-            return edges[n_drop : len(edges) - n_drop]
+    def cropped(
+        self,
+        x_extent: pint.Quantity | float,
+        y_extent: pint.Quantity | float,
+    ) -> CartesianGrid:
+        """
+        Return a copy cropped symmetrically to a smaller extent.
 
-        def _n_drop(total_cells, target_cells):
-            drop, remainder = divmod(total_cells - target_cells, 2)
+        Cells are removed in equal numbers on both sides; the requested extent
+        is rounded down to a whole number of cells.
+
+        Parameters
+        ----------
+        x_extent, y_extent
+            Target extent along the X and Y axes. Unitless values are
+            interpreted in ``ucc['length']``.
+
+        Returns
+        -------
+        CartesianGrid
+
+        Raises
+        ------
+        ValueError
+            If a target extent exceeds the grid extent, or if the number of
+            cells to remove along an axis is odd.
+        """
+        edges = []
+        for axis, extent in [("x", x_extent), ("y", y_extent)]:
+            extent = ensure_units(extent, default_units=ucc.get("length"))
+            current_extent = getattr(self, f"{axis}_extent")
+            if extent > current_extent:
+                raise ValueError(
+                    f"{axis}_extent ({extent}) exceeds the grid extent "
+                    f"({current_extent})"
+                )
+            n_cells = _n_cells(extent, getattr(self, f"{axis}_cell_size"), None)
+            n_drop, remainder = divmod(getattr(self, f"n_{axis}_cells") - n_cells, 2)
             if remainder != 0:
                 raise ValueError(
-                    f"cannot crop symmetrically: difference in cell count "
-                    f"({total_cells - target_cells}) is odd"
+                    "cannot crop symmetrically: the number of cells to remove "
+                    f"along {axis.upper()} is odd"
                 )
-            return drop
+            axis_edges = getattr(self, f"{axis}_edges")
+            edges.append(axis_edges[n_drop : len(axis_edges) - n_drop])
 
-        n_cells_x = self._cells_from_extent_and_size(
-            extent_x, self.cell_width, atol=None
-        )
-        n_cells_y = self._cells_from_extent_and_size(
-            extent_y, self.cell_length, atol=None
-        )
-
-        drop_x = _n_drop(self.n_cells_x, n_cells_x)
-        drop_y = _n_drop(self.n_cells_y, n_cells_y)
-
-        edges_x = _crop_edges(self.edges_x, drop_x)
-        edges_y = _crop_edges(self.edges_y, drop_y)
-
-        return self.__class__(levels=self.levels, edges_x=edges_x, edges_y=edges_y)
+        return self.__class__(*edges, self.z_edges)
 
     def centered(self) -> CartesianGrid:
         """
-        Return a new grid with the same cell size and count, centred at zero.
+        Return a copy translated horizontally so that it is centred at the
+        origin.
 
         Returns
         -------
         CartesianGrid
-            New instance centred at the origin.
         """
-        edges_x = self._make_centered_edges(self.total_width, self.n_cells_x)
-        edges_y = self._make_centered_edges(self.total_length, self.n_cells_y)
-
-        return self.__class__(levels=self.levels, edges_x=edges_x, edges_y=edges_y)
+        return self.__class__(
+            self._centered_edges(self.x_extent, self.n_x_cells),
+            self._centered_edges(self.y_extent, self.n_y_cells),
+            self.z_edges,
+        )
 
     def single_column(self) -> CartesianGrid:
         """
-        Collapse the grid to a single horizontal cell.
-
-        Useful when treating a 3D grid as a 1D vertical profile. The single
-        cell spans the full extent of the original grid.
+        Return a copy with a single horizontal cell spanning the grid extent.
 
         Returns
         -------
         CartesianGrid
-            New instance with a single cell in X and Y.
         """
-        return self.__class__(
-            levels=self.levels,
-            edges_x=self.edges_x[[0, -1]],
-            edges_y=self.edges_y[[0, -1]],
-        )
-
-    @property
-    def cells_x(self):
-        return self.centers_x
-
-    @property
-    def cells_y(self):
-        return self.centers_y
+        return self.with_cell_counts(n_x_cells=1, n_y_cells=1)
 
 
-@frozen(eq=False, init=False, frozen=False)
+@frozen(eq=False, init=False)
 class SphericalGrid(SpatialGrid):
     """
-    Spherical shell grid coordinates [``spherical_shell_coords``].
+    Spherical grid [``spherical``].
 
-    Implements the internal coordinate system for Eradiate spherical shell
-    atmospheric geometries, using a geocentric spherical convention.
-    (X: azimuth [dimensionless], Y: colatitude [dimensionless], Z: radius [L])
+    Grid for spherical-shell geometries, in a geocentric spherical frame
+    (X: azimuth [angle], Y: colatitude [angle], Z: altitude [length]).
+    Unitless edges are interpreted in ``ucc['angle']`` along X and Y and in
+    ``ucc['length']`` along Z.
 
-    Both X and Y coordinates are dimensionless angles (radians in SI).
-    The grid is regular in both directions, and independently sized.
+    The constructor takes cell edges along each axis, or their aliases
+    (exclusive with the generic arguments): ``azimuths`` (X), ``colatitudes``
+    (Y) and ``levels`` (Z). Cells along X are called *sectors* and cells
+    along Y are called *bands*.
+
+    The azimuth range must be at most 360° wide; see :meth:`kernel_azimuths`
+    for the ranges accepted by the kernel.
     """
 
-    azimuths: pint.Quantity = documented(
-        pinttrs.field(
-            units=ucc.deferred("angle"),
-            on_setattr=None,
-        ),
-        type="pint.Quantity",
-        init_type="quantity or array-like",
-        doc="Grid node azimuths (X edges).\n\nUnit-enabled field (default: ``ucc['angle']``).",
-    )
-
-    colatitudes: pint.Quantity = documented(
-        pinttrs.field(
-            units=ucc.deferred("angle"),
-            on_setattr=None,
-        ),
-        type="pint.Quantity",
-        init_type="quantity or array-like",
-        doc="Grid node colatitudes (Y edges).\n\nUnit-enabled field (default: ``ucc['angle']``).",
-    )
-
-    _sectors: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("angle"),
-        on_setattr=None,
-    )
-
-    _bands: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("angle"),
-        on_setattr=None,
-    )
-
-    _sector_width: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("angle"),
-        on_setattr=None,
-    )
-
-    _band_width: pint.Quantity = pinttrs.field(
-        units=ucc.deferred("angle"),
-        on_setattr=None,
-    )
-
-    @_sector_width.validator
-    @_band_width.validator
-    def _angular_extent_validator(self, attribute, value):
-        if not np.isscalar(value.magnitude):
-            raise ValueError("angular cell extent must be a scalar")
+    _AXIS_UNITS = ("angle", "angle", "length")
 
     def __init__(
         self,
-        levels: pint.Quantity,
-        azimuths: pint.Quantity,
-        colatitudes: pint.Quantity,
+        x_edges: pint.Quantity | xr.DataArray | None = None,
+        y_edges: pint.Quantity | xr.DataArray | None = None,
+        z_edges: pint.Quantity | xr.DataArray | None = None,
+        *,
+        azimuths: pint.Quantity | xr.DataArray | None = None,
+        colatitudes: pint.Quantity | xr.DataArray | None = None,
+        levels: pint.Quantity | xr.DataArray | None = None,
     ):
-        levels = ensure_units(levels, default_units=ucc.get("length"))
-        layer_height = np.diff(levels)
-        if not np.allclose(layer_height, layer_height[0]):
-            raise ValueError("levels must be regularly spaced")
-        layers = levels[:-1] + 0.5 * layer_height
-
-        azimuths = ensure_units(azimuths, default_units=ucc.get("angle"))
-        colatitudes = ensure_units(colatitudes, default_units=ucc.get("angle"))
-
-        def _centers_and_step(edges, name):
-            step = np.diff(edges)
-            if not np.allclose(step, step[0]):
-                raise ValueError(f"{name} must be regularly spaced")
-            return edges[:-1] + 0.5 * step, step[0]
-
-        sectors, sector_width = _centers_and_step(azimuths, "azimuths")
-        bands, band_width = _centers_and_step(colatitudes, "colatitudes")
-
-        self.__attrs_init__(
-            levels=levels,
-            layers=layers,
-            layer_height=layer_height[0],
-            total_height=levels[-1] - levels[0],
-            azimuths=azimuths,
-            colatitudes=colatitudes,
-            sectors=sectors,
-            bands=bands,
-            sector_width=sector_width,
-            band_width=band_width,
+        self._init_edges(
+            _either(x_edges, azimuths, "x_edges", "azimuths"),
+            _either(y_edges, colatitudes, "y_edges", "colatitudes"),
+            _either(z_edges, levels, "z_edges", "levels"),
         )
         self.kernel_azimuths()  # Raises if the azimuth range is unsupported
 
+    @classmethod
+    def from_levels(cls, levels: pint.Quantity | np.typing.ArrayLike) -> SphericalGrid:
+        """
+        Build a single-column grid from altitude levels.
+
+        The single cell spans the whole sphere (azimuths 0° to 360°,
+        colatitudes 0° to 180°).
+
+        Parameters
+        ----------
+        levels
+            Altitude levels (Z edges). Unitless values are interpreted in
+            ``ucc['length']``.
+
+        Returns
+        -------
+        SphericalGrid
+        """
+        return cls(
+            azimuths=np.asarray([0.0, 360.0]) * ureg.degree,
+            colatitudes=np.asarray([0.0, 180.0]) * ureg.degree,
+            levels=levels,
+        )
+
+    # --------------------------------------------------------------------------
+    #                              X/Y-axis aliases
+    # --------------------------------------------------------------------------
+
+    @property
+    def azimuths(self) -> pint.Quantity:
+        """Azimuths of sector edges (alias of :attr:`x_edges`)."""
+        return self.x_edges
+
+    @property
+    def sectors(self) -> pint.Quantity:
+        """Azimuths of sector centres (alias of :attr:`x_centers`)."""
+        return self.x_centers
+
+    @property
+    def sector_width(self) -> pint.Quantity:
+        """Uniform sector width (alias of :attr:`x_cell_size`)."""
+        return self.x_cell_size
+
+    @property
+    def colatitudes(self) -> pint.Quantity:
+        """Colatitudes of band edges (alias of :attr:`y_edges`)."""
+        return self.y_edges
+
+    @property
+    def bands(self) -> pint.Quantity:
+        """Colatitudes of band centres (alias of :attr:`y_centers`)."""
+        return self.y_centers
+
+    @property
+    def band_width(self) -> pint.Quantity:
+        """Uniform band width (alias of :attr:`y_cell_size`)."""
+        return self.y_cell_size
+
+    # --------------------------------------------------------------------------
+    #                                  Misc
+    # --------------------------------------------------------------------------
+
     def kernel_azimuths(self) -> tuple[float, float, int]:
         """
-        Placement of the azimuth range in the kernel's [-π, π] convention.
+        Map the azimuth range to the kernel's [-π, π] convention.
 
         ``sphericalcoordsvolume`` maps the azimuth
         :math:`\\varphi = \\operatorname{atan2}(y, x) \\in [-\\pi, \\pi]` to the
@@ -1085,8 +1038,7 @@ class SphericalGrid(SpatialGrid):
         Returns
         -------
         phi_min, phi_max : float
-            Kernel-side azimuth bounds in radian.
-
+            Kernel-side azimuth bounds in radians.
         n_roll : int
             Number of cells by which volume data must be rolled backwards
             along the azimuth axis (``np.roll(data, -n_roll, axis=0)``).
@@ -1094,8 +1046,8 @@ class SphericalGrid(SpatialGrid):
         Raises
         ------
         ValueError
-            If the range is wider than 2π, or crosses the ±π cut without
-            being a full circle with the cut on a cell edge.
+            If the range is wider than 2π, or crosses the ±π cut without being a
+            full circle with the cut on a cell edge.
         """
         a0, a1 = self.azimuths[[0, -1]].m_as(ureg.rad)
         width = a1 - a0
@@ -1115,135 +1067,50 @@ class SphericalGrid(SpatialGrid):
             return float(phi_min), float(phi_max), 0
 
         if full:
-            if self.n_cells_x == 1:
+            if self.n_x_cells == 1:
                 return -np.pi, np.pi, 0
             n_roll = (np.pi - phi_min) / self.sector_width.m_as(ureg.rad)
             if np.isclose(n_roll, np.round(n_roll)):
-                return -np.pi, np.pi, int(np.round(n_roll)) % self.n_cells_x
+                return -np.pi, np.pi, int(np.round(n_roll)) % self.n_x_cells
 
         raise ValueError(
-            f"azimuth range {self.azimuths[[0, -1]]:~P} crosses the ±180° cut "
-            "of the kernel's [-180°, 180°] azimuth convention; only full-circle "
-            "ranges with the cut on a cell edge can cross it"
+            f"azimuth range {self.azimuths[[0, -1]]:~P} crosses the ±π cut of "
+            "the kernel's [-π, π] azimuth convention; only full-circle ranges "
+            "with the cut on a cell edge may cross it"
         )
-
-    @property
-    def sectors(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Vector of azimuthal cell centres (X cells).
-        """
-        return self._sectors
-
-    @property
-    def bands(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Vector of colatitudinal cell centres (Y cells).
-        """
-        return self._bands
-
-    @property
-    def sector_width(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Uniform azimuthal cell width.
-        """
-        return self._sector_width
-
-    @property
-    def band_width(self) -> pint.Quantity:
-        """
-        Returns
-        -------
-        quantity
-            Uniform colatitudinal cell width.
-        """
-        return self._band_width
-
-    @property
-    def n_cells_x(self) -> int:
-        """Number of cells in the X (azimuthal) direction."""
-        return len(self._sectors)
-
-    @property
-    def n_cells_y(self) -> int:
-        """Number of cells in the Y (colatitudinal) direction."""
-        return len(self._bands)
-
-    @property
-    def n_edges_x(self) -> int:
-        """Number of edges in the X (azimuthal) direction."""
-        return len(self.azimuths)
-
-    @property
-    def n_edges_y(self) -> int:
-        """Number of edges in the Y (colatitudinal) direction."""
-        return len(self.colatitudes)
-
-    def __repr__(self) -> str:
-        return (
-            "<SphericalGrid "
-            f"azimuth={self.azimuths[[0, -1]]:~P} ({self.n_cells_x} sectors) "
-            f"colatitude={self.colatitudes[[0, -1]]:~P} ({self.n_cells_y} bands) "
-            f"z={self.levels[[0, -1]]:~P} ({self.n_layers} layers) "
-            ">"
-        )
-
-    @property
-    def cells_x(self):
-        return self.sectors
-
-    @property
-    def cells_y(self):
-        return self.bands
 
     @property
     def to_world(self) -> mi.ScalarTransform4f:
         """
-        Spherical grid to_world
+        Transform from the unit cube to the part of ``sphericalcoordsvolume``'s
+        normalized coordinate space covered by the grid.
 
-        This to_world is a portion of the unit cube representing
-        the complete extent of geocentric coordinate system.
-
-        This portion corresponds to the extent of the grid colatitudes,
-        azimuths and altitude.
+        The kernel's volume coordinates are (radius, colatitude, azimuth),
+        each normalized to [0, 1]. The grid always covers the full radius
+        range; the colatitude and azimuth ranges are those of the grid edges
+        (see :meth:`kernel_azimuths`).
         """
-
         phi_min, phi_max, _ = self.kernel_azimuths()
         theta_min = self.colatitudes.min().m_as(ureg.rad)
         theta_max = self.colatitudes.max().m_as(ureg.rad)
 
-        # SphericalCoordsVolume outputs:
-        #   y = theta / pi        → colatitude normalized to [0, 1]
-        #   z = phi / (2*pi) + 0.5 → azimuth normalized to [0, 1]
+        # sphericalcoordsvolume normalized coordinates:
+        #   y = theta / pi           (colatitude)
+        #   z = phi / (2 * pi) + 0.5 (azimuth)
         return map_unit_cube(
             xmin=0.0,
-            xmax=1.0,  # radius: always spans full [0, 1]
+            xmax=1.0,  # Radius: always spans [0, 1]
             ymin=theta_min / np.pi,
             ymax=theta_max / np.pi,
             zmin=phi_min / (2 * np.pi) + 0.5,
             zmax=phi_max / (2 * np.pi) + 0.5,
         )
 
-    def __rich_repr__(self):
-        yield "levels", self.levels
-        yield "layers", self.layers
-        yield "layer_height", self.layer_height
-        yield "total_height", self.total_height
-
-        yield "azimuths", self.azimuths
-        yield "sectors", self.sectors
-        yield "sector_width", self.sector_width
-
-        yield "colatitudes", self.colatitudes
-        yield "bands", self.bands
-        yield "band_width", self.band_width
-
-        yield "shape", self.shape
+    def __repr__(self) -> str:
+        return (
+            "<SphericalGrid "
+            f"azimuth={self.azimuths[[0, -1]]:~P} ({self.n_x_cells} sectors) "
+            f"colatitude={self.colatitudes[[0, -1]]:~P} ({self.n_y_cells} bands) "
+            f"z={self.levels[[0, -1]]:~P} ({self.n_layers} layers)"
+            ">"
+        )

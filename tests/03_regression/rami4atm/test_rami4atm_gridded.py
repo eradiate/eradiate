@@ -52,10 +52,10 @@ def test_rami4atm_gridded(mode_ckd_double, case):
         geometry = PlaneParallelGeometry(
             grid=CartesianGrid.from_extent_and_resolution(
                 levels=exp.geometry.grid.levels,
-                extent_x=GRID_EXTENT,
-                extent_y=GRID_EXTENT,
-                n_cells_x=resx,
-                n_cells_y=resy,
+                x_extent=GRID_EXTENT,
+                y_extent=GRID_EXTENT,
+                n_x_cells=resx,
+                n_y_cells=resy,
             ),
         )
 

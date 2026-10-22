@@ -41,25 +41,25 @@ def make_phase_data():
 
 def make_particle_phase(r_eff_volume=None, v_eff_volume=None, **kwargs):
     """Build a minimal 2-reff by 1-veff :class:`.GriddedParticlePhaseFunction`."""
-    # n_cells_x != n_cells_z on purpose: r_eff_volume/v_eff_volume must be
-    # shaped (n_cells_x, n_cells_y, n_cells_z), matching GridCoords.shape.
-    # With n_cells_x == n_cells_z (as a 1x1xN grid would give), a wrongly
+    # n_x_cells != n_z_cells on purpose: r_eff_volume/v_eff_volume must be
+    # shaped (n_x_cells, n_y_cells, n_z_cells), matching GridCoords.shape.
+    # With n_x_cells == n_z_cells (as a 1x1xN grid would give), a wrongly
     # transposed array is still broadcast-compatible and the mismatch goes
     # undetected; making them different forces the exact-shape check in
     # _prepare_grid() to actually run.
     grid = CartesianGrid(
-        edges_x=np.array([-1.0, 0.0, 1.0]) * ureg.km,
-        edges_y=np.array([-1.0, 1.0]) * ureg.km,
+        x_edges=np.array([-1.0, 0.0, 1.0]) * ureg.km,
+        y_edges=np.array([-1.0, 1.0]) * ureg.km,
         levels=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
     )
     geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
     if r_eff_volume is None:
         r_eff_volume = ureg.Quantity(
-            np.full((grid.n_cells_x, grid.n_cells_y, grid.n_cells_z), 10.0), "micron"
+            np.full((grid.n_x_cells, grid.n_y_cells, grid.n_z_cells), 10.0), "micron"
         )
     if v_eff_volume is None:
         v_eff_volume = ureg.Quantity(
-            np.full((grid.n_cells_x, grid.n_cells_y, grid.n_cells_z), 0.1),
+            np.full((grid.n_x_cells, grid.n_y_cells, grid.n_z_cells), 0.1),
             "dimensionless",
         )
     phase_data_dict = make_phase_data()
@@ -124,16 +124,16 @@ class TestGriddedParticlePhaseFunction:
         )
 
     def test_r_eff_volume_wrong_axis_order_raises(self, mode_mono):
-        """r_eff_volume/v_eff_volume must be (n_cells_x, n_cells_y, n_cells_z);
-        a (n_cells_z, n_cells_y, n_cells_x) array must be rejected, not silently
+        """r_eff_volume/v_eff_volume must be (n_x_cells, n_y_cells, n_z_cells);
+        a (n_z_cells, n_y_cells, n_x_cells) array must be rejected, not silently
         broadcast."""
         grid = CartesianGrid(
-            edges_x=np.array([-1.0, 0.0, 1.0]) * ureg.km,
-            edges_y=np.array([-1.0, 1.0]) * ureg.km,
+            x_edges=np.array([-1.0, 0.0, 1.0]) * ureg.km,
+            y_edges=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
         )
         wrong_order = ureg.Quantity(
-            np.full((grid.n_cells_z, grid.n_cells_y, grid.n_cells_x), 10.0), "micron"
+            np.full((grid.n_z_cells, grid.n_y_cells, grid.n_x_cells), 10.0), "micron"
         )
         phase = make_particle_phase(r_eff_volume=wrong_order)
 

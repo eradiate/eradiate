@@ -46,14 +46,14 @@ def test_helpers_surface_converter(mode_mono):
     assert isinstance(surface_converter({"type": "lambertian"}), BasicSurface)
 
 
-@pytest.mark.parametrize("n_cells_x, expected", [(1, True), (2, False)])
+@pytest.mark.parametrize("n_x_cells, expected", [(1, True), (2, False)])
 def test_helpers_check_piecewise_compatible_grid(
-    mode_mono, atmosphere_us_standard_mono, n_cells_x, expected
+    mode_mono, atmosphere_us_standard_mono, n_x_cells, expected
 ):
     # The piecewise integrator is rejected for grids with horizontal resolution
     grid = CartesianGrid(
-        edges_x=np.linspace(-1.0, 1.0, n_cells_x + 1) * ureg.km,
-        edges_y=np.array([-1.0, 1.0]) * ureg.km,
+        x_edges=np.linspace(-1.0, 1.0, n_x_cells + 1) * ureg.km,
+        y_edges=np.array([-1.0, 1.0]) * ureg.km,
         levels=np.linspace(0.0, 120.0, 11) * ureg.km,
     )
     geometry = PlaneParallelGeometry(grid=grid)

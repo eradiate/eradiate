@@ -50,8 +50,8 @@ def make_particle_ot(
     )
 
     grid = CartesianGrid(
-        edges_x=np.array([-1.0, 1.0]) * ureg.km,
-        edges_y=np.array([-1.0, 1.0]) * ureg.km,
+        x_edges=np.array([-1.0, 1.0]) * ureg.km,
+        y_edges=np.array([-1.0, 1.0]) * ureg.km,
         levels=np.array([bottom.m_as("km"), top.m_as("km")]) * ureg.km,
     )
     geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
@@ -81,8 +81,8 @@ class TestParticlePSDComponent:
         """A dict (with 'type' omitted) is routed through atmosphere_factory,
         defaulting to the 'particle_psd' type id, to build a ParticlePSDComponent."""
         grid = CartesianGrid(
-            edges_x=np.array([0.0, 1.0, 2.0]) * ureg.km,
-            edges_y=np.array([0.0, 1.0, 2.0]) * ureg.km,
+            x_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
+            y_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
         )
         geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
@@ -109,8 +109,8 @@ class TestParticlePSDComponent:
     def test_profile_regular_grid(self, z_edges):
         """_profile_regular_grid halves the profile's smallest z-gap and preserves x/y extent."""
         grid = CartesianGrid(
-            edges_x=np.array([0.0, 2.0, 4.0]) * ureg.km,
-            edges_y=np.array([1.0, 3.0]) * ureg.km,
+            x_edges=np.array([0.0, 2.0, 4.0]) * ureg.km,
+            y_edges=np.array([1.0, 3.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0, 3.0, 4.0]) * ureg.km,
         )
         geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
@@ -129,10 +129,10 @@ class TestParticlePSDComponent:
         np.testing.assert_allclose(levels_km[-1], z_edges[-1])
         np.testing.assert_allclose(np.diff(levels_km), min_gap / 2.0)
 
-        assert reg_grid.n_cells_x == grid.n_cells_x
-        assert reg_grid.n_cells_y == grid.n_cells_y
-        edges_x_km = reg_grid.edges_x.m_as("km")
-        np.testing.assert_allclose(edges_x_km[0], -edges_x_km[-1])
+        assert reg_grid.n_x_cells == grid.n_x_cells
+        assert reg_grid.n_y_cells == grid.n_y_cells
+        x_edges_km = reg_grid.x_edges.m_as("km")
+        np.testing.assert_allclose(x_edges_km[0], -x_edges_km[-1])
 
     @pytest.mark.parametrize(
         "has_absorption, has_scattering, expected",
@@ -167,9 +167,9 @@ class TestParticlePSDComponent:
         )
         si = MonoSpectralIndex(w=ureg.Quantity(1.0, "micron"))
         shape = (
-            psd.geometry.grid.n_cells_x,
-            psd.geometry.grid.n_cells_y,
-            psd.geometry.grid.n_cells_z,
+            psd.geometry.grid.n_x_cells,
+            psd.geometry.grid.n_y_cells,
+            psd.geometry.grid.n_z_cells,
         )
 
         sigma_t = psd.eval_sigma_t(si)
@@ -214,8 +214,8 @@ class TestParticlePSDComponent:
         properties grid range are clipped rather than turning into NaN.
         """
         grid = CartesianGrid(
-            edges_x=np.array([-1.0, 0.0, 1.0]) * ureg.km,
-            edges_y=np.array([-1.0, 1.0]) * ureg.km,
+            x_edges=np.array([-1.0, 0.0, 1.0]) * ureg.km,
+            y_edges=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.array([0.0, 1.0]) * ureg.km,
         )
         geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
@@ -235,12 +235,12 @@ class TestParticlePSDComponent:
             coords={
                 "x_edges": (
                     ["x_edges"],
-                    grid.edges_x.m_as("km"),
+                    grid.x_edges.m_as("km"),
                     {"units": "kilometer"},
                 ),
                 "y_edges": (
                     ["y_edges"],
-                    grid.edges_y.m_as("km"),
+                    grid.y_edges.m_as("km"),
                     {"units": "kilometer"},
                 ),
                 "z_edges": (
@@ -368,8 +368,8 @@ class TestParticlePSDComponent:
     def test_properties_requires_size_distribution(self):
         """Constructing a ParticlePSDComponent with a properties dataset lacking reff/veff raises."""
         grid = CartesianGrid(
-            edges_x=np.array([-1.0, 1.0]) * ureg.km,
-            edges_y=np.array([-1.0, 1.0]) * ureg.km,
+            x_edges=np.array([-1.0, 1.0]) * ureg.km,
+            y_edges=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.array([0.0, 1.0]) * ureg.km,
         ).centered()
         geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
@@ -479,8 +479,8 @@ class TestParticlePSDComponent:
         """
         layer = make_particle_ot()
         custom_grid = CartesianGrid(
-            edges_x=np.array([-2.0, 2.0]) * ureg.km,
-            edges_y=np.array([-2.0, 2.0]) * ureg.km,
+            x_edges=np.array([-2.0, 2.0]) * ureg.km,
+            y_edges=np.array([-2.0, 2.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
         )
 
@@ -493,7 +493,7 @@ class TestParticlePSDComponent:
         )
 
         np.testing.assert_allclose(
-            component.geometry.grid.edges_x.m_as("km"), custom_grid.edges_x.m_as("km")
+            component.geometry.grid.x_edges.m_as("km"), custom_grid.x_edges.m_as("km")
         )
 
     # from_particle_ot() computes pmom from the deliberately unnormalized phase
@@ -505,8 +505,8 @@ class TestParticlePSDComponent:
         n_theta = len(theta_values_desc)
 
         grid = CartesianGrid(
-            edges_x=np.array([-1.0, 1.0]) * ureg.km,
-            edges_y=np.array([-1.0, 1.0]) * ureg.km,
+            x_edges=np.array([-1.0, 1.0]) * ureg.km,
+            y_edges=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
         )
         geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
@@ -598,8 +598,8 @@ class TestParticlePSDComponent:
         assert properties.sizes["w"] == 3
 
         grid = CartesianGrid(
-            edges_x=np.array([-1.0, 1.0]) * ureg.km,
-            edges_y=np.array([-1.0, 1.0]) * ureg.km,
+            x_edges=np.array([-1.0, 1.0]) * ureg.km,
+            y_edges=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
         ).centered()
         geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
@@ -613,7 +613,7 @@ class TestParticlePSDComponent:
         )
 
         si = MonoSpectralIndex(w=ureg.Quantity(0.8, "micron"))
-        shape = (grid.n_cells_x, grid.n_cells_y, grid.n_cells_z)
+        shape = (grid.n_x_cells, grid.n_y_cells, grid.n_z_cells)
 
         expected_ext = 0.5 * 2.0 + 0.5 * 3.0
         expected_ssa = 0.5 * 0.6 + 0.5 * 0.9
