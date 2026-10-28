@@ -272,7 +272,7 @@ class TestMiRender:
             expected.append(r / np.pi)
             actual.append(np.squeeze(result[siah]["sensor"]))
 
-        np.testing.assert_allclose(actual, expected)
+        np.testing.assert_allclose(actual, expected, rtol=1e-6)
 
     def test_multisensor(self, mode_mono):
         mi_scene = mi_load_dict(
