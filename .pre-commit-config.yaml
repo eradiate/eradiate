@@ -20,6 +20,7 @@ repos:
     rev: 0.9.1
     hooks:
       - id: nbstripout
+        exclude: ^docs/user_guide/
   - repo: https://github.com/ComPWA/taplo-pre-commit
     rev: v0.9.3
     hooks:
