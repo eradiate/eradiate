@@ -12,7 +12,7 @@ from eradiate.scenes.atmosphere import (
     ParticleOTComponent,
 )
 from eradiate.scenes.core import traverse
-from eradiate.scenes.geometry import PlaneParallelGeometry, SceneGeometry, WrapMode
+from eradiate.scenes.geometry import PlaneParallelGeometry, SceneGeometry
 from eradiate.spectral.index import SpectralIndex
 from eradiate.testing.types import check_scene_element
 from eradiate.util.deprecation import DeprecatedWarning
@@ -485,41 +485,16 @@ def test_heterogenous_extremum_type(
     if geometry == "plane_parallel":
         if force_majorant:
             assert "extremum" in template
-            assert template["extremum"]["type"] == "extremum_grid"
+            assert template["extremum"]["type"] == "gridextremum"
         else:
             assert "extremum" not in template
     elif geometry == "spherical_shell":
         assert "extremum" in template
-        assert template["extremum"]["type"] == "extremum_spherical"
-        # The extremum is placed like the sphericalcoordsvolume it bounds
-        np.testing.assert_allclose(
-            template["extremum"]["to_world"].matrix,
-            atmosphere.geometry.atmosphere_volume_to_world.matrix,
-        )
+        assert template["extremum"]["type"] == "sphericalcoordsextremum"
 
     # The kernel accepts the extremum specification
     si = default_spectral_index(atmosphere.molecular_atmosphere)
     check_scene_element(atmosphere, ctx=KernelContext(si=si))
-
-
-@pytest.mark.parametrize(
-    "wrap_mode", [WrapMode.CLAMP, WrapMode.REPEAT, WrapMode.MIRROR]
-)
-def test_heterogeneous_extremum_wrap_mode(
-    mode_mono, wrap_mode, atmosphere_us_standard_mono
-):
-    """
-    The extremum structure's wrap_mode always mirrors the geometry's
-    wrap_mode, for each of the three supported modes.
-    """
-    atmosphere = HeterogeneousAtmosphere(
-        geometry={"type": "plane_parallel", "wrap_mode": wrap_mode},
-        molecular_atmosphere=atmosphere_us_standard_mono,
-        force_majorant=True,
-        extremum_resolution=(1, 1, 12),
-    )
-    template = atmosphere._template_medium
-    assert template["extremum"]["wrap_mode"] == str(wrap_mode)
 
 
 def test_heterogeneous_medium_aabb(mode_mono, atmosphere_us_standard_mono):

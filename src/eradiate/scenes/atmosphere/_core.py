@@ -746,17 +746,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         aabb_conf = {}
         if isinstance(self.geometry, SphericalShellGeometry):
-            extr_conf = {
-                "type": "extremum_spherical",
-                "rmin": self.geometry.atmosphere_volume_rmin,
-                "to_world": self.geometry.atmosphere_volume_to_world,
-            }
+            extr_conf = {"type": "sphericalcoordsextremum"}
         elif not piecewise:
-            extr_conf = {
-                "type": "extremum_grid",
-                "to_world": self.geometry.grid.to_world,
-                "wrap_mode": str(self.geometry.wrap_mode).lower(),
-            }
+            extr_conf = {"type": "gridextremum"}
+
             aabb_min = self.geometry.bbox.min.m_as(length_units)
             # The geometry bbox inserts a sub-surface padding. We want the data to be
             # evaluated on the entire geometry extent in x and y directions, but we
@@ -773,7 +766,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             if self.extremum_resolution != (1, 1, 1):
                 extremum = {
                     **extr_conf,
-                    "volume": {"type": "ref", "id": sigma_t_id},
                     "resolution": self.extremum_resolution,
                 }
             medium = "eoheterogeneous"
