@@ -140,16 +140,42 @@ class Atmosphere(CompositeSceneElement, ABC):
 
     ddis_threshold: float = documented(
         attrs.field(
-            default=0.0,
+            default=0.1,
             kw_only=True,
             converter=float,
-            validator=attrs.validators.instance_of(float),
+            validator=[
+                attrs.validators.instance_of(float),
+                attrs.validators.ge(0.0),
+                attrs.validators.le(1.0),
+            ],
         ),
         doc="Specifies the probability to importance sample the phase using the "
-        "emitter as incident direction. Set negative to deactivate. "
+        "emitter as incident direction. Set <= 0. to deactivate. "
         "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
         "on the parent instead.",
         type="float",
+    )
+
+    rr_threshold: float = documented(
+        attrs.field(
+            default=0.1,
+            kw_only=True,
+            converter=float,
+            validator=[
+                attrs.validators.instance_of(float),
+                attrs.validators.ge(0.0),
+                attrs.validators.le(1.0),
+            ],
+        ),
+        doc="Apply russian roulette to conditionally terminate the sample, "
+        "when its transmittance is below this threshold. This helps increase "
+        "performance at the cost of variance. Set to 0. to disable. Not "
+        "applied on media that have the piecewise optimization. "
+        "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
+        "on the parent instead.",
+        type="float",
+        init_type="float",
+        default="0.1",
     )
 
     # --------------------------------------------------------------------------
@@ -385,19 +411,18 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     extremum_resolution: tuple[int, int, int] = documented(
         attrs.field(
             default=(1, 1, 1),
+            kw_only=True,
             converter=tuple,
             validator=validators.is_vector3,
         ),
         doc="[EXPERIMENTAL] Resolution of the extremum structure. Applies to "
-        "both plane parallel and spherical shell geometries but the latter only "
-        "accepts a resolution greater than one along its radial dimension "
-        "(first dimension). Also note than in plane parallel the dimensions are "
-        "[x, y, z] and in spherical shell [r, theta, phi]. "
-        "The default value (1, 1, 1) falls back to a global majorant. In plane "
-        "parallel, set to (0,0,0) to trigger an adaptive search of the optimal "
-        "resolution. Note that this is an expensive search that triggers at "
-        "spectral update. Ignored by piecewise media (plane parallel with a "
-        "1D grid and ``force_majorant`` unset). "
+        "both plane parallel and spherical shell geometries. Also note that in "
+        "plane parallel the dimensions are [x, y, z] and in spherical shell "
+        "[r, theta, phi]. The default value (1, 1, 1) falls back to a global "
+        "majorant. In plane parallel, set to (0,0,0) to trigger an adaptive "
+        "search of the optimal resolution. Note that this is an expensive "
+        "search that triggers at spectral update. Ignored by piecewise media "
+        "(plane parallel with a 1D grid and ``force_majorant`` unset). "
         "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
         "on the parent instead.",
         type="tuple[int, int, int]",
@@ -740,30 +765,21 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 units=collision_coefficient_units,
             ),
         }
-        sigma_t_id = f"{self.id}_sigma_t"
 
         piecewise = self.is_piecewise
 
         aabb_conf = {}
         if isinstance(self.geometry, SphericalShellGeometry):
-            # The extremum_spherical plugin only implements radial traversal
-            if tuple(self.extremum_resolution[1:]) != (1, 1):
+            if any(r < 1 for r in self.extremum_resolution):
                 raise ValueError(
-                    "in spherical shell geometry, 'extremum_resolution' "
-                    "[r, theta, phi] only supports variations along r: "
-                    f"expected (n_r, 1, 1), got {self.extremum_resolution}"
+                    "in spherical shell geometry, 'extremum_resolution' must "
+                    "be >= 1 in all dimensions. got "
+                    f"{self.extremum_resolution}."
                 )
-            extr_conf = {
-                "type": "extremum_spherical",
-                "rmin": self.geometry.atmosphere_volume_rmin,
-                "to_world": self.geometry.atmosphere_volume_to_world,
-            }
+            extr_conf = {"type": "sphericalcoordsextremum"}
         elif not piecewise:
-            extr_conf = {
-                "type": "extremum_grid",
-                "to_world": self.geometry.grid.to_world,
-                "wrap_mode": str(self.geometry.wrap_mode).lower(),
-            }
+            extr_conf = {"type": "gridextremum"}
+
             aabb_min = self.geometry.bbox.min.m_as(length_units)
             # The geometry bbox inserts a sub-surface padding. We want the data to be
             # evaluated on the entire geometry extent in x and y directions, but we
@@ -780,7 +796,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             if self.extremum_resolution != (1, 1, 1):
                 extremum = {
                     **extr_conf,
-                    "volume": {"type": "ref", "id": sigma_t_id},
                     "resolution": self.extremum_resolution,
                 }
             medium = "eoheterogeneous"
@@ -793,6 +808,9 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 # hack fix by setting to True when we have a piecewise medium
                 (not get_mode().check(mi_color_mode="mono")) or (medium == "piecewise")
             ),
+            "rr_threshold": self.rr_threshold,
+            "use_rrt": self.use_rrt,
+            "ddis_threshold": self.ddis_threshold,
             **aabb_conf,
             **volumes,
             # Note: "phase" is deliberately unset, this is left to the
@@ -804,12 +822,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         if extremum is not None:
             result["extremum"] = extremum
-            result["sigma_t"]["id"] = sigma_t_id
-
-        if medium == "eoheterogeneous":
-            result["use_rrt"] = self.use_rrt
-
-        result["ddis_threshold"] = self.ddis_threshold
 
         return result
 

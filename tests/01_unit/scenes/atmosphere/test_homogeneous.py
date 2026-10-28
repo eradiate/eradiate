@@ -65,7 +65,7 @@ def test_homogeneous_atmosphere_params(mode_mono):
             {
                 "bbox_min": [-500.0, -500.0, -10.0],
                 "bbox_max": [500.0, 500.0, 1000.0],
-                "atmosphere_shape_type_name": "Cube",
+                "atmosphere_shape_type_name": "AnalyticalCube",
             },
         ),
         (
