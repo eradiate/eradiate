@@ -11,7 +11,7 @@ from eradiate.testing.regression import ZTest
 @pytest.mark.regression
 @pytest.mark.slow
 def test_spherical(mode_ckd_double, dataset_regression):
-    spp = 1000
+    spp = 160_000
     config = {
         "geometry": "spherical_shell",
         "surface": {

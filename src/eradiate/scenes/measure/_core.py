@@ -11,6 +11,7 @@ from ..core import NodeSceneElement
 from ... import validators
 from ..._factory import Factory
 from ...attrs import define, documented, get_doc
+from ...config._settings import SampleAllocation
 from ...kernel import DictParameter
 from ...spectral.response import DeltaSRF, SpectralResponseFunction
 from ...units import unit_registry as ureg
@@ -174,9 +175,40 @@ class Measure(NodeSceneElement, ABC):
 
     spp: int = documented(
         attrs.field(default=1000, converter=int, validator=validators.is_positive),
-        doc="Number of samples per pixel.",
+        doc='Sample count target. With the default ``"weighted"`` allocation '
+        "policy (see :attr:`spp_allocation`), it is the number of samples per "
+        "pixel spent on each output value: every wavelength (mono), every "
+        "spectral bin (ckd, split across its g-points), or the band as a "
+        "whole for a :class:`.BandSRF` in ckd mode. With the "
+        '``"uniform"`` policy, it applies in full to every spectral loop '
+        'iteration. Samplers other than ``"independent"`` may round '
+        "per-iteration counts up. See :func:`.srf_spp_distribution` and "
+        ":ref:`sec-user_guide-spectral_discretization-sample_allocation` for "
+        "details.",
         type="int",
         default="1000",
+    )
+
+    spp_allocation: SampleAllocation | None = documented(
+        attrs.field(
+            default=None,
+            converter=attrs.converters.optional(SampleAllocation.convert),
+        ),
+        doc="Policy distributing :attr:`spp` across spectral loop iterations. "
+        "If unset, the ``sample_allocation`` setting (environment variable "
+        "``ERADIATE_SAMPLE_ALLOCATION``) is used when processing.",
+        type=".SampleAllocation or None",
+        init_type='.SampleAllocation or {"weighted", "uniform"}, optional',
+        default="None",
+    )
+
+    mi_spp_allocation: SampleAllocation | None = documented(
+        attrs.field(default=None, init=False),
+        doc="Allocation policy used to compute :attr:`mi_results`, resolved "
+        "from :attr:`spp_allocation` and the ``sample_allocation`` setting "
+        "when processing. Unset if the measure has not been processed.",
+        type=".SampleAllocation or None",
+        default="None",
     )
 
     @spp.validator
@@ -271,6 +303,10 @@ class Measure(NodeSceneElement, ABC):
         Returns
         -------
         dict
-            Dataset attributes. Empty by default.
+            Dataset attributes. Holds by default the ``sample_allocation``
+            policy used to compute :attr:`mi_results`, if the measure was
+            processed.
         """
-        return {}
+        if self.mi_spp_allocation is None:
+            return {}
+        return {"sample_allocation": self.mi_spp_allocation.value}

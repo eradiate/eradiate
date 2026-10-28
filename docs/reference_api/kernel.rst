@@ -31,6 +31,7 @@ Mitsuba scene initialization, traversal and rendering
    :toctree: generated/autosummary/
 
    MitsubaObjectWrapper
+   effective_spp
    mi_load_dict
    mi_traverse
    mi_render

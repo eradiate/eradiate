@@ -62,10 +62,10 @@ def get_experiment(mode_id, srf, measure):
     if experiment_setup not in EXPERIMENTS:
         if srf == "delta":
             srf_dict = {"type": "delta", "wavelengths": 550.0 * ureg.nm}
-            spp = 256
+            spp = 4096  # distributed among all g-points
         elif srf == "sentinel_2a-msi-3":
             srf_dict = "sentinel_2a-msi-3"
-            spp = 32
+            spp = 4096  # distributed among all g-points
         else:
             raise NotImplementedError(srf)
 
@@ -468,13 +468,23 @@ def test_07_radiosity(mode, gather_bitmaps):
     # Initialize test data
     irradiance = 2.0
     sector_radiosity = gather_bitmaps["sector_radiosity_raw"]
+    spp = gather_bitmaps["spp"]
 
     # Configure and apply step
     result = logic.radiosity(sector_radiosity=sector_radiosity)
     # Check that radiosity dimensions are correct
     assert not {"x_index", "y_index"}.issubset(result.dims)
-    # This setup conserves energy
-    assert np.allclose(irradiance, result, rtol=1e-3)
+
+    # This setup conserves energy: computed radiosity values are expected to be
+    # equal to the spectral irradiance for all spectral points
+    # -- With a BandSRF, sample count allocation is weighted by the SRF response
+    #    so low-weight spectral loop iterations get fewer samples and are
+    #    correspondingly noisier -> scale tolerance by expected Monte Carlo
+    #    standard error (~ 1 / sqrt(spp)) relative to the best-sampled
+    #    iteration
+    rtol = 1e-3 * np.sqrt(spp.max() / spp)
+    error = np.abs(result - irradiance) / irradiance
+    assert np.all(error <= rtol)
 
 
 @pytest.mark.parametrize("mode_id", ["mono"])
@@ -513,6 +523,19 @@ def test_10_valid_mask():
     assert np.array_equal(result.y_index, np.arange(6))
     assert np.array_equal(result.x_index, np.arange(4))
     assert np.array_equal(result, valid)
+
+
+def test_moment2_to_variance_unbiased():
+    # Two samples {0, 2}: E = 1, m2 = 2, unbiased sample variance 2, variance
+    # of the mean 2 / 2 = 1. A single sample leaves the variance undefined.
+    expectation = xr.DataArray([1.0, 3.0], dims="w", name="radiance")
+    m2 = xr.DataArray([2.0, 9.0], dims="w", name="radiance_m2")
+    spp = xr.DataArray([2, 1], dims="w")
+
+    result = logic.moment2_to_variance(expectation, m2, spp, False)
+
+    assert result.name == "radiance_var"
+    np.testing.assert_array_equal(result, [1.0, np.nan])
 
 
 @pytest.mark.parametrize("complete", [True, False], ids=["complete", "missing"])

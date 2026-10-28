@@ -13,6 +13,7 @@ from ...cfconventions import ATTRIBUTES
 from ...spectral import (
     CKDQuadConfig,
     CKDSpectralGrid,
+    CKDSpectralIndex,
     MonoSpectralGrid,
     MonoSpectralIndex,
 )
@@ -125,9 +126,15 @@ def eval_transmittance_ckd(
 
     n_x_cells, n_y_cells, _ = atmosphere.geometry.grid.shape
 
-    transmittance = {}
-    sis = list(spectral_grid.walk_indices(ckd_quad_config, abs_db))
+    # Build quadrature rules once: adaptive policies need abs_db
+    quads = [quad for _, quad in spectral_grid.walk_quads(ckd_quad_config, abs_db)]
+    sis = [
+        CKDSpectralIndex(w=w, g=g)
+        for w, quad in zip(spectral_grid.wcenters, quads)
+        for g in quad.eval_nodes([0, 1])
+    ]
 
+    transmittance = {}
     for si in tqdm(sis, desc="Evaluating transmittance (CKD)"):
         transmittance[si.as_hashable] = atmosphere.eval_transmittance(
             si=si, interaction=interaction
@@ -145,7 +152,7 @@ def eval_transmittance_ckd(
     w_u = ucc.get("wavelength")
     result = np.full((n_x_cells, n_y_cells, wavelengths.size), np.nan)
 
-    for i, (w, quad) in enumerate(spectral_grid.walk_quads(ckd_quad_config)):
+    for i, (w, quad) in enumerate(zip(spectral_grid.wcenters, quads)):
         values_at_nodes = da.sel(w=w.m).values
 
         # Rationale: Avoid using xarray's indexing in this loop for

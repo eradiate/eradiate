@@ -37,10 +37,10 @@ cases = [
 @pytest.mark.parametrize("case", cases)
 def test_rami4atm_gridded(mode_ckd_double, case):
     case_obj = rami4atm.CASES[case]
-    variables = ["radiance"]
+    variables = ["radiance_srf"]
     threshold = 0.005
 
-    exps = case_obj.make_experiments(spp=1000)
+    exps = case_obj.make_experiments(spp=160_000)
     exps_3d = []
 
     resolution = (2, 3)

@@ -268,9 +268,10 @@ class TestMiRender:
         actual = []
         for _, (r, w) in enumerate(zip(reflectances, wavelengths)):
             siah = SpectralIndex.new(w=w).as_hashable
-            assert isinstance(result[siah]["sensor"], mi.Bitmap)
+            bitmap, _ = result[siah]["sensor"]
+            assert isinstance(bitmap, mi.Bitmap)
             expected.append(r / np.pi)
-            actual.append(np.squeeze(result[siah]["sensor"]))
+            actual.append(np.squeeze(bitmap))
 
         np.testing.assert_allclose(actual, expected)
 
@@ -345,6 +346,31 @@ class TestMiRender:
         ]:
             assert set(result[spectral_key].keys()) == set(sensor_keys)
             assert all(
-                isinstance(result[spectral_key][sensor_key], mi.Bitmap)
+                isinstance(result[spectral_key][sensor_key][0], mi.Bitmap)
                 for sensor_key in sensor_keys
             )
+
+    def test_spp_override_restored(self, mode_mono):
+        """Sample count overrides do not leak into the scene's sampler."""
+        mi_scene = mi_load_dict(
+            {
+                "type": "scene",
+                "sensor": {
+                    "type": "distant",
+                    "film": {"type": "hdrfilm", "width": 1, "height": 1},
+                    "sampler": {"type": "independent", "sample_count": 8},
+                },
+                "integrator": {"type": "path"},
+            }
+        )
+        mi_wrapper = mi_traverse(mi_scene)
+        sampler = mi_scene.sensors()[0].sampler()
+
+        result = mi_render(mi_wrapper, ctxs=[KernelContext(spp={0: 3})])
+        assert next(iter(result.values()))["sensor"][1] == 3
+        assert sampler.sample_count() == 8
+        result = mi_render(mi_wrapper, ctxs=[KernelContext()], spp=5)
+        assert next(iter(result.values()))["sensor"][1] == 5
+        assert sampler.sample_count() == 8
+        result = mi_render(mi_wrapper, ctxs=[KernelContext()])
+        assert next(iter(result.values()))["sensor"][1] == 8

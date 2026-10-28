@@ -89,7 +89,7 @@ def test_maximum_scene_size(modes_all_mono, json_metadata):
         )
 
         result = np.squeeze(
-            mi_render(mi_wrapper, ctxs=[KernelContext()])[550.0]["measure"]
+            mi_render(mi_wrapper, ctxs=[KernelContext()])[550.0]["measure"][0]
         )
         passed[i] = np.allclose(result, expected)
 

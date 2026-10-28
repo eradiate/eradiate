@@ -144,6 +144,34 @@ class MitsubaObjectWrapper:
             self.parameters.keep(keys)
 
 
+def effective_spp(sampler: mi.Sampler, spp: int) -> int:
+    """
+    Return the sample count a Mitsuba sampler actually uses when asked for
+    ``spp`` samples.
+
+    Samplers other than ``independent`` round the requested sample count up
+    (*e.g.* to a square number for ``stratified``). :func:`mitsuba.render`
+    applies the same rounding.
+
+    Parameters
+    ----------
+    sampler : mitsuba.Sampler
+        Sampler to query. It is left unmodified.
+
+    spp : int
+        Requested sample count.
+
+    Returns
+    -------
+    int
+        Sample count used by ``sampler``.
+    """
+    # Work on a copy: set_sample_count() mutates the sampler
+    sampler = sampler.fork()
+    sampler.set_sample_count(spp)
+    return sampler.sample_count()
+
+
 def mi_load_dict(dict: dict, parallel: bool = True, optimize: bool = False) -> object:
     """
     Load a Mitsuba scene or object from a Python dictionary.
@@ -269,8 +297,11 @@ def mi_render(
         iteration.
 
     spp : int, optional, default: 0
-        Number of samples per pixel. If set to 0 (default), the value set in the
-        original scene definition takes precedence.
+        Number of samples per pixel, applied uniformly to every context and
+        sensor. If set to 0 (default), each context's
+        :attr:`.KernelContext.spp` mapping is consulted for a per-sensor
+        sample count; if that mapping has no entry for a given sensor either,
+        the value set in the original scene definition takes precedence.
 
     seed_state : .SeedState, optional
         Seed state used to generate seeds to initialize Mitsuba's RNG at
@@ -279,8 +310,10 @@ def mi_render(
     Returns
     -------
     dict
-        A nested dictionary mapping context and sensor indices to rendered
-        bitmaps.
+        A nested dictionary mapping context and sensor indices to
+        ``(bitmap, spp)`` pairs, where ``spp`` is the sample count actually
+        rendered (samplers other than ``independent`` may round the requested
+        count up, see :func:`.effective_spp`).
 
     Notes
     -----
@@ -324,16 +357,27 @@ def mi_render(
             for i_sensor, mi_sensor in mi_sensors:
                 # Render sensor
                 seed = int(seed_state.next().squeeze())
+                sensor_spp = spp if spp > 0 else ctx.spp.get(i_sensor, 0)
                 logger.debug(
-                    'Running Mitsuba for sensor "%s" with seed value %s',
+                    'Running Mitsuba for sensor "%s" with seed value %s and spp %s',
                     mi_sensor.id(),
                     seed,
+                    sensor_spp,
                 )
-                mi.render(mi_scene.obj, sensor=i_sensor, seed=seed, spp=spp)
+                # mi.render() sets the sample count of the sensor's sampler:
+                # restore it so that later calls fall back to the scene's value
+                sampler = mi_sensor.sampler()
+                scene_spp = sampler.sample_count()
+                try:
+                    mi.render(mi_scene.obj, sensor=i_sensor, seed=seed, spp=sensor_spp)
+                    rendered_spp = sampler.sample_count()
+                finally:
+                    sampler.set_sample_count(scene_spp)
 
                 # Store result in a new Bitmap object
-                results.setdefault(siah, {})[mi_sensor.id()] = mi.Bitmap(
-                    mi_sensor.film().bitmap()
+                results.setdefault(siah, {})[mi_sensor.id()] = (
+                    mi.Bitmap(mi_sensor.film().bitmap()),
+                    rendered_spp,
                 )
 
             pbar.update()
