@@ -196,6 +196,9 @@ class HomogeneousAtmosphere(Atmosphere):
             "albedo": DictParameter(
                 lambda ctx: self.eval_albedo(ctx.si).m_as(uck.get("albedo"))
             ),
+            "use_rrt": self.use_rrt,
+            "rr_threshold": self.rr_threshold,
+            "ddis_threshold": self.ddis_threshold,
             # Note: "phase" is deliberately unset, this is left to the
             # Atmosphere.template property
         }
