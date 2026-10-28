@@ -230,7 +230,7 @@ class CuboidShape(ShapeNode):
             ) @ mi.ScalarTransform4f().scale(0.5 * self.edges.m_as(length_units))
 
         return {
-            "type": "cube",
+            "type": "acube",
             "to_world": to_world,
         }
 

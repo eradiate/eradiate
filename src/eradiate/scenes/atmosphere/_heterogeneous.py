@@ -54,6 +54,7 @@ _COMPONENT_IGNORED_FIELDS = (
     "ddis_threshold",
     "force_majorant",
     "extremum_resolution",
+    "rr_threshold",
 )
 
 
