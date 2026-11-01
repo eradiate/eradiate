@@ -19,7 +19,7 @@ def test_rpv_afgl1986_brfpp(mode_ckd_double, exp, dataset_regression):
     Simulation results are compared to a reference obtained with a prior
     version. Comparison is done with a Z-test with a threshold of 0.05.
     """
-    result = eradiate.run(exp, spp=10000)
+    result = eradiate.run(exp, spp=160_000)
 
     dataset_regression.check(
         result,

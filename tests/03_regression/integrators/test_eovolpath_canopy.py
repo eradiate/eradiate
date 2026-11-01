@@ -23,10 +23,10 @@ def test_eovolpath_canopy(
     if dataset_regression.reference_path("eovolpath_canopy_ref") is None:
         # Ensure that volpath is used when creating a reference
         exp = create_volpath_canopy(absorption_database_error_handler_config)
-        spp = int(1e5)
+        spp = 1_600_000
     else:
         exp = create_eovolpath_canopy(absorption_database_error_handler_config)
-        spp = int(1e4)
+        spp = 160_000
 
     result = eradiate.run(exp, spp=spp)
     report_logger.html(result._repr_html_())
