@@ -22,6 +22,15 @@ progress = "spectral_loop"
 ## Offline mode switch: if true, data download attempts will be suppressed
 offline = false
 
+## Default sample count allocation policy across spectral loop iterations,
+## overridden by Measure.spp_allocation
+## * "weighted": a measure's sample count is spent on each output value
+##   (wavelength, CKD bin or, in CKD mode with a band SRF, the band), split
+##   across CKD g-points and bins proportionally to quadrature and SRF weights
+## * "uniform": a measure's sample count applies in full to every spectral loop
+##   iteration (behaviour of Eradiate v1.2 and earlier)
+sample_allocation = "weighted"
+
 ## Seed for the RNG seeding sequence
 ## By default (if this parameter is unset), the seed sequence is seeded with a
 ## default value. This ensures the reproducibility of results. A user-defined

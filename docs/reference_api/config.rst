@@ -50,3 +50,6 @@ Utility
 
 .. autoclass:: ProgressLevel
    :members:
+
+.. autoclass:: SampleAllocation
+   :members:

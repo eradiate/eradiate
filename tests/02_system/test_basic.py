@@ -118,5 +118,7 @@ def test_radiometric_accuracy(modes_all_mono, illumination, spp, li, ert_seed_st
     scene = Scene(objects=objects)
     mi_wrapper = check_scene_element(scene, mi.Scene)
 
-    result = np.squeeze(mi_render(mi_wrapper, ctxs=[KernelContext()])[550.0]["measure"])
+    result = np.squeeze(
+        mi_render(mi_wrapper, ctxs=[KernelContext()])[550.0]["measure"][0]
+    )
     np.testing.assert_allclose(result, theoretical_solution, rtol=rtol)

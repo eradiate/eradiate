@@ -5,8 +5,8 @@ import eradiate
 from eradiate.testing.report import report_logger
 from eradiate.testing.test_cases import rami4atm
 
-#: Sample count shared by every case of the suite
-SPP = 1_000
+#: Sample count shared by every case of the suite.
+SPP = 160_000
 
 
 @pytest.mark.regression

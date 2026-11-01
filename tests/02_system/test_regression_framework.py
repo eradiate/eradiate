@@ -19,7 +19,7 @@ from eradiate.testing.test_cases import rami4atm
 CASE = "hom00_bla_sd2s_m03_z30a000_brfpp"
 
 # Sample count, matching the production regression test (test_rami4atm)
-SPP = 1000
+SPP = 160_000
 
 # Family-wise significance level. The type I error rate of the framework is
 # this value by construction, so keep it low enough for the check not to be
@@ -35,13 +35,14 @@ VARIABLE = "radiance_srf"
 #  most extreme of n = 76 comparisons, so at ``THRESHOLD`` the Šidák-corrected
 #  per-comparison level is ~1.3e-6, i.e. a rejection past ~4.85 sigma; the
 #  detection floor is that many standard errors of the paired difference,
-#  √2 × the per-pixel standard error. At this sample count the per-pixel
-#  relative standard error measures 0.6 % (0.33 % to 0.81 % across viewing
-#  angles) and the paired difference 0.87 %, band integration over the CKD bins
-#  having shrunk it well below the ~2 % the per-bin radiance carried.
+#  √2 × the per-pixel standard error. At this sample count (a band total, split
+#  across the 256 CKD spectral loop iterations by the 'weighted' allocation
+#  policy) the per-pixel relative standard error measures 0.62 % (0.33 % to
+#  0.87 % across viewing angles) and the paired difference 0.88 % (0.48 % at
+#  the least noisy angle, which drives detection).
 #
-#  Measured family p-values, single realization: bias 0 → 0.11, 1 % → 9e-4
-#  (accepted), 2 % → 2e-6, 3 % → 5e-11, 5 % → 6e-29, 10 % → 7e-110. Detection
+#  Measured family p-values, single realization: bias 0 → 0.74, 1 % → 0.027
+#  (accepted), 2 % → 3e-5, 3 % → 1e-9, 5 % → 2e-24, 10 % → 1e-93. Detection
 #  therefore sets in just under 2 %, and this bias clears the floor by a wide
 #  margin — the check is about the framework working at all, not about
 #  pinpointing its sensitivity.

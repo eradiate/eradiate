@@ -134,7 +134,8 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmosphere=False)
         "atmosphere": atmosphere,
         "integrator": {"type": "piecewise_volpath", "moment": True}
         if has_atmosphere
-        else {"type": "volpath", "moment": True},
+        # Single-sample render: no variance estimate
+        else {"type": "volpath"},
     }
 
     return AtmosphereExperiment(**config)

@@ -34,6 +34,15 @@ Spectral response utilities
 
    response.make_gaussian
 
+Sample count allocation
+-----------------------
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   srf_spp_distribution
+   spectral_response_weights
+
 Spectral indexes
 ----------------
 
