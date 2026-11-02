@@ -167,7 +167,7 @@ strictly increasing, but need not be regularly spaced. Its units are free, but
 must be specified in the "units" metadata field (``dimensionless`` if
 relevant). Data are sorted in ascending order of each state coordinate.
 
-The :ref:`sec-data_formats-prt_psd_v1` and :ref:`sec-data_formats-prt_hum_v1`
+The :ref:`sec-data_formats-prt_ms_v1` and :ref:`sec-data_formats-prt_hum_v1`
 formats are named extensions that fix the name, meaning and units of their
 state dimensions. Datasets with other state dimensions are valid
 extensions; they are created with :func:`.make_prt_v1`.
@@ -180,10 +180,10 @@ number of state variables the ``particlephase`` kernel plugin interpolates
 over.
 
 
-.. _sec-data_formats-prt_psd_v1:
+.. _sec-data_formats-prt_ms_v1:
 
-Prt-PSD v1 [``prt_psd_v1``]
----------------------------
+Prt-PSD v1 [``prt_ms_v1``]
+--------------------------
 
 Named extension of ``prt_core_v1`` for particle properties. This data format
 indexes properties defined by ``prt_core_v1`` on two state dimensions,
@@ -306,7 +306,7 @@ Creation
 Datasets in all Prt variants are created with :func:`.make_prt_v1`, which
 inserts optional state dimensions (*e.g.* ``reff`` and ``veff``, ``hum``)
 between ``w`` and the angular and moment dimensions. :func:`.make_prt_core_v1`,
-:func:`.make_prt_psd_v1` and :func:`.make_prt_hum_v1` are shortcuts for each
+:func:`.make_prt_ms_v1` and :func:`.make_prt_hum_v1` are shortcuts for each
 variant.
 
 Conversion
@@ -326,8 +326,8 @@ The following conversion components are provided:
     - * :func:`.libradtran_to_prt`
       * libRadtran / MOPSMAP
       * :ref:`sec-data_formats-prt_core_v1`, or
-        :ref:`sec-data_formats-prt_psd_v1` / :ref:`sec-data_formats-prt_hum_v1`
+        :ref:`sec-data_formats-prt_ms_v1` / :ref:`sec-data_formats-prt_hum_v1`
         when the output varies over ``reff`` / ``hum``
     - * :func:`.concat_particles_veff`
-      * :ref:`sec-data_formats-prt_psd_v1` (several)
-      * :ref:`sec-data_formats-prt_psd_v1`
+      * :ref:`sec-data_formats-prt_ms_v1` (several)
+      * :ref:`sec-data_formats-prt_ms_v1`

@@ -30,7 +30,7 @@ from ..phase import (
     phase_function_factory,
 )
 from ...attrs import define, documented, get_doc
-from ...data.convert import make_prt_psd_v1
+from ...data.convert import make_prt_ms_v1
 from ...grid import CartesianGrid, SpatialGrid
 from ...kernel import SceneParameter
 from ...radprops._particles import ParticleProperties
@@ -554,18 +554,18 @@ class ParticleStateComponent(ParticleComponent):
 
 
 @define(eq=False, slots=False)
-class ParticlePSDComponent(ParticleStateComponent):
+class ParticleMSComponent(ParticleStateComponent):
     """
-    Particulate medium parametrized by a particle size distribution (PSD)
-    that varies as a function of space coordinates [``particle_psd``].
+    Particulate medium parametrized by a mass concentration and   (MS)
+    that varies as a function of space coordinates [``particle_ms``].
 
     This :class:`.ParticleStateComponent` specialization uses the effective
     radius (``reff``) and effective variance (``veff``) of the PSD as tabulated
     state variables, and the mass concentration (``mass_concentration``) as amount.
     With the default ``state_variables`` and ``amount``, the ``profile`` is
-    expected in the :ref:`Ppr-PSD v1 <sec-data_formats-ppr_psd_v1>` format
+    expected in the :ref:`Ppr-PSD v1 <sec-data_formats-ppr_ms_v1>` format
     and the ``properties`` in the
-    :ref:`Prt-PSD v1 <sec-data_formats-prt_psd_v1>` format. The
+    :ref:`Prt-PSD v1 <sec-data_formats-prt_ms_v1>` format. The
     per-unit-amount extinction ``ext`` in ``properties`` is then a mass
     extinction coefficient (*e.g.* in m²/g).
 
@@ -576,7 +576,7 @@ class ParticlePSDComponent(ParticleStateComponent):
     profile: ParticleProfile = documented(
         attrs.field(kw_only=True, converter=ParticleProfile.convert),
         doc="Dense volumetric state profile, in the "
-        ":ref:`Ppr-PSD v1 <sec-data_formats-ppr_psd_v1>` format. "
+        ":ref:`Ppr-PSD v1 <sec-data_formats-ppr_ms_v1>` format. "
         "This parameter has no default.",
         type=get_doc(ParticleStateComponent, "profile", "type"),
         init_type=get_doc(ParticleStateComponent, "profile", "init_type"),
@@ -620,18 +620,18 @@ class ParticlePSDComponent(ParticleStateComponent):
             )
 
     @classmethod
-    def convert(cls, value: Any) -> ParticlePSDComponent:
+    def convert(cls, value: Any) -> ParticleMSComponent:
         """
         Conversion logic:
 
-        * If value is a ParticlePSDComponent instance, return it unchanged.
+        * If value is a ParticleMSComponent instance, return it unchanged.
         * If value is a dictionary, it is interpreted by
           :data:`.atmosphere_factory`; the ``"type"`` parameter may be
-          omitted and will automatically be set to ``"particle_psd"``.
+          omitted and will automatically be set to ``"particle_ms"``.
         * Otherwise, the value is returned unchanged.
         """
         if isinstance(value, MutableMapping) and "type" not in value:
-            value = {**value, "type": "particle_psd"}
+            value = {**value, "type": "particle_ms"}
         return atmosphere_factory.convert(value, allowed_cls=cls)
 
     @classmethod
@@ -642,9 +642,9 @@ class ParticlePSDComponent(ParticleStateComponent):
         reff: pint.Quantity,
         veff: pint.Quantity,
         grid: SpatialGrid | None = None,
-    ) -> ParticlePSDComponent:
+    ) -> ParticleMSComponent:
         """
-        Build a :class:`.ParticlePSDComponent` from a :class:`.ParticleOTComponent`.
+        Build a :class:`.ParticleMSComponent` from a :class:`.ParticleOTComponent`.
 
         The output has a spatially uniform PSD and a mass concentration field
         that reproduces ``particle_ot``'s extinction coefficient at its
@@ -671,13 +671,13 @@ class ParticlePSDComponent(ParticleStateComponent):
             voxel.
 
         grid : :class:`.SpatialGrid`, optional
-            Target render grid for the output :class:`.ParticlePSDComponent`.
+            Target render grid for the output :class:`.ParticleMSComponent`.
             If provided, ``particle_ot``'s radiative properties are
             evaluated on it instead of its own geometry's grid.
 
         Returns
         -------
-        :class:`.ParticlePSDComponent`
+        :class:`.ParticleMSComponent`
         """
         output_geometry = (
             particle_ot.geometry
@@ -757,7 +757,7 @@ class ParticlePSDComponent(ParticleStateComponent):
         n_theta = len(theta_sorted)
         n_phamat = phase_compact.shape[0]
 
-        properties = make_prt_psd_v1(
+        properties = make_prt_ms_v1(
             w=np.atleast_1d(w_ref),
             phamat=list(pp.data["phamat"].values),
             mu=ureg.Quantity(

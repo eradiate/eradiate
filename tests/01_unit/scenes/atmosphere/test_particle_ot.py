@@ -19,10 +19,10 @@ from eradiate.spectral.index import MonoSpectralIndex, SpectralIndex
 from eradiate.testing.types import check_scene_element
 from eradiate.units import to_quantity
 
-from ._psd_helpers import (
-    make_particle_psd_component,
+from ._particle_state_helpers import (
+    make_particle_ms_component,
     make_state_properties_dataset,
-    make_z_profile_particle_psd_component,
+    make_z_profile_particle_ms_component,
 )
 
 # ------------------------------------------------------------------------------
@@ -171,7 +171,7 @@ class TestParticleOTComponent:
             },
             {"hum": np.array([0.0, 90.0]) * ureg.percent},
         ],
-        ids=["psd", "hum"],
+        ids=["ms", "hum"],
     )
     def test_particle_properties_rejects_state_dims(self, state_dims):
         """Raises when 'particle_properties' has any state dimension."""
@@ -647,18 +647,18 @@ class TestParticleOTComponent:
                 w_ref=0.5 * (w1 + w2),
             )
 
-    def test_from_psd_voxel_invalid_voxel_raises(self):
-        """from_psd_voxel raises when the requested voxel index has no cloud."""
-        psd = make_particle_psd_component(w=(1.0,))
+    def test_from_ms_voxel_invalid_voxel_raises(self):
+        """from_ms_voxel raises when the requested voxel index has no cloud."""
+        ms = make_particle_ms_component(w=(1.0,))
 
         with pytest.raises(ValueError, match="No cloud voxel"):
-            ParticleOTComponent.from_psd_voxel(
-                psd, w=ureg.Quantity(1.0, "micron"), ix=999, iy=999, iz=999
+            ParticleOTComponent.from_ms_voxel(
+                ms, w=ureg.Quantity(1.0, "micron"), ix=999, iy=999, iz=999
             )
 
-    def test_from_psd_voxel_tau_ref_concentrated_at_voxel(self, mode_mono):
-        """from_psd_voxel places the whole voxel's tau_ref at its own (x, y) cell, zero elsewhere."""
-        psd = make_particle_psd_component(
+    def test_from_ms_voxel_tau_ref_concentrated_at_voxel(self, mode_mono):
+        """from_ms_voxel places the whole voxel's tau_ref at its own (x, y) cell, zero elsewhere."""
+        ms = make_particle_ms_component(
             n_x=2,
             n_y=2,
             n_z=2,
@@ -667,10 +667,10 @@ class TestParticleOTComponent:
             ext_value=2.0,
             ssa_value=0.6,
         )
-        grid = psd.geometry.grid
+        grid = ms.geometry.grid
         w = ureg.Quantity(1.0, "micron")
 
-        layer = ParticleOTComponent.from_psd_voxel(psd, w=w, ix=0, iy=1, iz=0)
+        layer = ParticleOTComponent.from_ms_voxel(ms, w=w, ix=0, iy=1, iz=0)
 
         assert isinstance(layer, ParticleOTComponent)
         assert layer.bottom == grid.levels[0]
@@ -692,18 +692,18 @@ class TestParticleOTComponent:
     @pytest.mark.parametrize(
         "method, kwargs",
         [
-            ("from_psd_voxel", {"ix": 0, "iy": 1, "iz": 0}),
-            ("from_psd_composition", {"i_reff": 0, "i_veff": 0}),
+            ("from_ms_voxel", {"ix": 0, "iy": 1, "iz": 0}),
+            ("from_ms_composition", {"i_reff": 0, "i_veff": 0}),
         ],
     )
-    def test_from_psd_custom_bindings(self, mode_mono, method, kwargs):
-        """from_psd_* read profile variables through the component's amount and state variable bindings."""
-        psd = make_particle_psd_component(
+    def test_from_ms_custom_bindings(self, mode_mono, method, kwargs):
+        """from_ms_* read profile variables through the component's amount and state variable bindings."""
+        ms = make_particle_ms_component(
             n_x=2, n_y=2, n_z=2, w=(1.0,), mass_concentration=0.5, ext_value=2.0
         )
         renamed = attrs.evolve(
-            psd,
-            profile=psd.profile.data.rename(
+            ms,
+            profile=ms.profile.data.rename(
                 {"reff": "r_eff", "veff": "v_eff", "mass_concentration": "lwc"}
             ),
             state_variables={"reff": "r_eff", "veff": "v_eff"},
@@ -712,37 +712,37 @@ class TestParticleOTComponent:
         w = ureg.Quantity(1.0, "micron")
         constructor = getattr(ParticleOTComponent, method)
 
-        expected = constructor(psd, w=w, **kwargs).tau_ref.m_as("dimensionless")
+        expected = constructor(ms, w=w, **kwargs).tau_ref.m_as("dimensionless")
         result = constructor(renamed, w=w, **kwargs).tau_ref.m_as("dimensionless")
         np.testing.assert_allclose(result, expected)
 
     @pytest.mark.parametrize(
         "method, kwargs",
         [
-            ("from_psd_voxel", {"ix": 0, "iy": 1, "iz": 0}),
-            ("from_psd_composition", {"i_reff": 0, "i_veff": 0}),
+            ("from_ms_voxel", {"ix": 0, "iy": 1, "iz": 0}),
+            ("from_ms_composition", {"i_reff": 0, "i_veff": 0}),
         ],
     )
-    def test_from_psd_forwards_grid_and_interactions(self, mode_mono, method, kwargs):
-        """from_psd_* use the custom grid in the output geometry and forward has_absorption/has_scattering."""
-        psd = make_particle_psd_component(
+    def test_from_ms_forwards_grid_and_interactions(self, mode_mono, method, kwargs):
+        """from_ms_* use the custom grid in the output geometry and forward has_absorption/has_scattering."""
+        ms = make_particle_ms_component(
             n_x=2, n_y=2, n_z=2, w=(1.0,), has_absorption=False
         )
         grid = CartesianGrid(
-            x_edges=psd.geometry.grid.x_edges,
-            y_edges=psd.geometry.grid.y_edges,
+            x_edges=ms.geometry.grid.x_edges,
+            y_edges=ms.geometry.grid.y_edges,
             levels=np.linspace(0.0, 3.0, 5) * ureg.km,
         ).centered()
         constructor = getattr(ParticleOTComponent, method)
 
-        result = constructor(psd, w=ureg.Quantity(1.0, "micron"), grid=grid, **kwargs)
+        result = constructor(ms, w=ureg.Quantity(1.0, "micron"), grid=grid, **kwargs)
         assert result.geometry.grid is grid
         assert not result.has_absorption
         assert result.has_scattering
 
-    def test_from_psd_composition_matches_psd_component(self, mode_mono):
-        """from_psd_composition: when the fixed (reff, veff) matches the component's own composition, per-voxel sigma_t matches exactly."""
-        psd = make_particle_psd_component(
+    def test_from_ms_composition_matches_ms_component(self, mode_mono):
+        """from_ms_composition: when the fixed (reff, veff) matches the component's own composition, per-voxel sigma_t matches exactly."""
+        ms = make_particle_ms_component(
             n_x=2,
             n_y=2,
             n_z=3,
@@ -753,66 +753,51 @@ class TestParticleOTComponent:
             ext_value=2.0,
             ssa_value=0.6,
         )
-        grid = psd.geometry.grid
+        grid = ms.geometry.grid
         w = ureg.Quantity(1.0, "micron")
         si = MonoSpectralIndex(w=w)
 
-        part_aot = ParticleOTComponent.from_psd_composition(
-            psd,
-            w=w,
-            i_reff=0,
-            i_veff=0,
-        )
+        part_ot = ParticleOTComponent.from_ms_composition(ms, w=w, i_reff=0, i_veff=0)
 
-        assert isinstance(part_aot, ParticleOTComponent)
-        assert part_aot.tau_ref.m_as("dimensionless").shape == (
+        assert isinstance(part_ot, ParticleOTComponent)
+        assert part_ot.tau_ref.m_as("dimensionless").shape == (
             grid.n_x_cells,
             grid.n_y_cells,
         )
-        assert np.all(part_aot.bottom == grid.levels[0])
-        assert np.all(part_aot.top == grid.levels[-1])
+        assert np.all(part_ot.bottom == grid.levels[0])
+        assert np.all(part_ot.top == grid.levels[-1])
 
-        sigma_t_psd = psd.eval_sigma_t(si, grid).m_as("1/km")
-        sigma_t_aot = part_aot.eval_sigma_t(si, grid).m_as("1/km")
-        np.testing.assert_allclose(sigma_t_aot, sigma_t_psd, rtol=1e-8)
+        sigma_t_ms = ms.eval_sigma_t(si, grid).m_as("1/km")
+        sigma_t_ot = part_ot.eval_sigma_t(si, grid).m_as("1/km")
+        np.testing.assert_allclose(sigma_t_ot, sigma_t_ms, rtol=1e-8)
 
-    def test_from_psd_composition_irregular_z(self, mode_mono):
-        """from_psd_composition preserves density exactly when the source profile has an irregular z-grid."""
+    def test_from_ms_composition_irregular_z(self, mode_mono):
+        """from_ms_composition preserves density exactly when the source profile has an irregular z-grid."""
         z_edges_src = [0.0, 1.0, 1.5, 4.0]
         target_levels = np.linspace(0.0, 4.0, 9)
-        psd, grid = make_z_profile_particle_psd_component(
+        ms, grid = make_z_profile_particle_ms_component(
             z_edges_src, target_levels=target_levels
         )
         w = ureg.Quantity(1.0, "micron")
         si = MonoSpectralIndex(w=w)
 
-        part_aot = ParticleOTComponent.from_psd_composition(
-            psd,
-            w=w,
-            i_reff=0,
-            i_veff=0,
-        )
+        part_ot = ParticleOTComponent.from_ms_composition(ms, w=w, i_reff=0, i_veff=0)
 
-        sigma_t_psd = psd.eval_sigma_t(si, grid).m_as("1/km")
-        sigma_t_aot = part_aot.eval_sigma_t(si, grid).m_as("1/km")
-        np.testing.assert_allclose(sigma_t_aot, sigma_t_psd, rtol=1e-8)
+        sigma_t_ms = ms.eval_sigma_t(si, grid).m_as("1/km")
+        sigma_t_ot = part_ot.eval_sigma_t(si, grid).m_as("1/km")
+        np.testing.assert_allclose(sigma_t_ot, sigma_t_ms, rtol=1e-8)
 
-    def test_from_psd_composition_zero_density_column(self, mode_mono):
+    def test_from_ms_composition_zero_density_column(self, mode_mono):
         """
-        from_psd_composition: a zero mass_concentration field yields a zero
+        from_ms_composition: a zero mass_concentration field yields a zero
         tau_ref particle_ot.
         """
-        psd = make_particle_psd_component(
+        ms = make_particle_ms_component(
             n_x=2, n_y=1, n_z=2, w=(1.0,), mass_concentration=0.0
         )
         w = ureg.Quantity(1.0, "micron")
 
-        part_aot = ParticleOTComponent.from_psd_composition(
-            psd,
-            w=w,
-            i_reff=0,
-            i_veff=0,
-        )
+        part_aot = ParticleOTComponent.from_ms_composition(ms, w=w, i_reff=0, i_veff=0)
 
         np.testing.assert_allclose(part_aot.tau_ref.m_as("dimensionless"), 0.0)
 

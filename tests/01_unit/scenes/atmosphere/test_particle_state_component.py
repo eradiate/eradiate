@@ -8,7 +8,10 @@ from eradiate.scenes.phase import GriddedParticlePhaseFunction
 from eradiate.spectral.index import MonoSpectralIndex
 from eradiate.units import unit_registry as ureg
 
-from ._psd_helpers import make_state_profile_dataset, make_state_properties_dataset
+from ._particle_state_helpers import (
+    make_state_profile_dataset,
+    make_state_properties_dataset,
+)
 
 MASS_CONCENTRATION = 2.0 * ureg("g/m^3")
 SSA = 0.8

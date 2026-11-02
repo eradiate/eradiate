@@ -3,9 +3,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from eradiate.data.convert import make_prt_core_v1, make_prt_psd_v1
+from eradiate.data.convert import make_prt_core_v1, make_prt_ms_v1
 from eradiate.grid import CartesianGrid
-from eradiate.scenes.atmosphere import ParticleOTComponent, ParticlePSDComponent
+from eradiate.scenes.atmosphere import ParticleMSComponent, ParticleOTComponent
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import (
     GriddedParticlePhaseFunction,
@@ -14,14 +14,14 @@ from eradiate.scenes.phase import (
 from eradiate.spectral.index import MonoSpectralIndex
 from eradiate.units import unit_registry as ureg
 
-from ._psd_helpers import (
+from ._particle_state_helpers import (
     PHAMAT_LABELS,
-    make_particle_psd_component,
+    make_particle_ms_component,
     make_profile_dataset,
     make_properties_dataset,
     make_state_profile_dataset,
     make_state_properties_dataset,
-    make_z_profile_particle_psd_component,
+    make_z_profile_particle_ms_component,
 )
 
 
@@ -67,19 +67,19 @@ def make_particle_ot(
     )
 
 
-class TestParticlePSDComponent:
+class TestParticleMSComponent:
     def test_construct(self):
-        """A ParticlePSDComponent can be constructed from a profile and a properties dataset."""
-        assert isinstance(make_particle_psd_component(), ParticlePSDComponent)
+        """A ParticleMSComponent can be constructed from a profile and a properties dataset."""
+        assert isinstance(make_particle_ms_component(), ParticleMSComponent)
 
     def test_convert_passthrough(self):
-        """ParticlePSDComponent.convert returns an existing instance unchanged."""
-        component = make_particle_psd_component()
-        assert ParticlePSDComponent.convert(component) is component
+        """ParticleMSComponent.convert returns an existing instance unchanged."""
+        component = make_particle_ms_component()
+        assert ParticleMSComponent.convert(component) is component
 
     def test_convert_from_dict(self):
         """A dict (with 'type' omitted) is routed through atmosphere_factory,
-        defaulting to the 'particle_psd' type id, to build a ParticlePSDComponent."""
+        defaulting to the 'particle_ms' type id, to build a ParticleMSComponent."""
         grid = CartesianGrid(
             x_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
             y_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
@@ -87,19 +87,19 @@ class TestParticlePSDComponent:
         )
         geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
 
-        result = ParticlePSDComponent.convert(
+        result = ParticleMSComponent.convert(
             {
                 "profile": make_profile_dataset(grid),
                 "properties": make_properties_dataset(),
                 "geometry": geometry,
             }
         )
-        assert isinstance(result, ParticlePSDComponent)
+        assert isinstance(result, ParticleMSComponent)
 
     def test_convert_rejects_wrong_type(self):
-        """A value that is neither a dict nor a ParticlePSDComponent instance is rejected."""
+        """A value that is neither a dict nor a ParticleMSComponent instance is rejected."""
         with pytest.raises(TypeError):
-            ParticlePSDComponent.convert(object())
+            ParticleMSComponent.convert(object())
 
     @pytest.mark.parametrize(
         "z_edges",
@@ -115,11 +115,11 @@ class TestParticlePSDComponent:
         )
         geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
         profile = make_profile_dataset(grid, z_edges=z_edges)
-        psd = ParticlePSDComponent(
+        ms = ParticleMSComponent(
             profile=profile, properties=make_properties_dataset(), geometry=geometry
         )
 
-        reg_grid = psd._profile_regular_grid()
+        reg_grid = ms._profile_regular_grid()
 
         z_edges = np.asarray(z_edges)
         min_gap = np.diff(z_edges).min()
@@ -157,7 +157,7 @@ class TestParticlePSDComponent:
     )
     def test_eval_family_values(self, has_absorption, has_scattering, expected):
         """sigma_t/albedo/sigma_s/sigma_a are consistent under all has_absorption/has_scattering combinations."""
-        psd = make_particle_psd_component(
+        ms = make_particle_ms_component(
             w=(1.0,),
             mass_concentration=0.5,
             ext_value=2.0,
@@ -167,42 +167,42 @@ class TestParticlePSDComponent:
         )
         si = MonoSpectralIndex(w=ureg.Quantity(1.0, "micron"))
         shape = (
-            psd.geometry.grid.n_x_cells,
-            psd.geometry.grid.n_y_cells,
-            psd.geometry.grid.n_z_cells,
+            ms.geometry.grid.n_x_cells,
+            ms.geometry.grid.n_y_cells,
+            ms.geometry.grid.n_z_cells,
         )
 
-        sigma_t = psd.eval_sigma_t(si)
+        sigma_t = ms.eval_sigma_t(si)
         assert sigma_t.shape == shape
         np.testing.assert_allclose(sigma_t.m_as("1/km"), expected["sigma_t"])
 
-        albedo = psd.eval_albedo(si)
+        albedo = ms.eval_albedo(si)
         assert albedo.units == ureg.dimensionless
         np.testing.assert_allclose(albedo.m_as("dimensionless"), expected["albedo"])
 
-        sigma_s = psd.eval_sigma_s(si)
+        sigma_s = ms.eval_sigma_s(si)
         assert sigma_s.shape == shape
         np.testing.assert_allclose(sigma_s.m_as("1/km"), expected["sigma_s"])
 
-        sigma_a = psd.eval_sigma_a(si)
+        sigma_a = ms.eval_sigma_a(si)
         assert sigma_a.shape == shape
         np.testing.assert_allclose(sigma_a.m_as("1/km"), expected["sigma_a"])
 
     def test_eval_family_no_absorption_no_scattering(self):
         """Disabling both has_absorption and has_scattering raises at construction."""
         with pytest.raises(ValueError, match="at least one"):
-            make_particle_psd_component(
+            make_particle_ms_component(
                 w=(1.0,), has_absorption=False, has_scattering=False
             )
 
     def test_eval_sigma_t_outside_cloud(self):
         """Voxels outside the profile's z-extent get zero sigma_t."""
-        psd, target_grid = make_z_profile_particle_psd_component(
+        ms, target_grid = make_z_profile_particle_ms_component(
             [0.0, 1.0, 2.0, 3.0, 4.0, 5.0], np.arange(-1.0, 6.1, 1.0)
         )
         si = MonoSpectralIndex(w=ureg.Quantity(1.0, "micron"))
 
-        sigma_t = psd.eval_sigma_t(si, target_grid).m_as("1/km").ravel()
+        sigma_t = ms.eval_sigma_t(si, target_grid).m_as("1/km").ravel()
 
         np.testing.assert_allclose(sigma_t[[0, -1]], 0.0)
         assert np.all(sigma_t[1:-1] > 0.0)
@@ -257,12 +257,12 @@ class TestParticlePSDComponent:
             ext_value=np.array([2.0, 4.0]).reshape(1, 2, 1),
         )
 
-        psd = ParticlePSDComponent(
+        ms = ParticleMSComponent(
             profile=profile, properties=properties, geometry=geometry
         )
         si = MonoSpectralIndex(w=ureg.Quantity(1.0, "micron"))
 
-        sigma_t = psd.eval_sigma_t(si).m_as("1/km")
+        sigma_t = ms.eval_sigma_t(si).m_as("1/km")
         assert np.all(np.isfinite(sigma_t))
 
         # Voxel 0 (reff=15, midway between 10 and 20): linearly interpolated.
@@ -272,48 +272,48 @@ class TestParticlePSDComponent:
 
     def test_phase_returns_particle_phase(self):
         """The phase property builds a GriddedParticlePhaseFunction matching the component's own grids."""
-        psd = make_particle_psd_component(w=(1.0,))
+        ms = make_particle_ms_component(w=(1.0,))
 
-        phase = psd.phase
+        phase = ms.phase
 
         assert isinstance(phase, GriddedParticlePhaseFunction)
 
         np.testing.assert_allclose(
             phase.grid_1.m_as("micron"),
-            psd.properties.state_coord("reff").m_as("micron").astype(np.float64),
+            ms.properties.state_coord("reff").m_as("micron").astype(np.float64),
         )
         np.testing.assert_allclose(
             phase.grid_2.m_as(ureg.dimensionless),
-            psd.properties.state_coord("veff")
+            ms.properties.state_coord("veff")
             .m_as(ureg.dimensionless)
             .astype(np.float64),
         )
 
     def test_phase_rebuilds_on_each_access(self):
         """Each access to phase builds a fresh GriddedParticlePhaseFunction instance."""
-        psd = make_particle_psd_component(w=(1.0,))
-        assert psd.phase is not psd.phase
+        ms = make_particle_ms_component(w=(1.0,))
+        assert ms.phase is not ms.phase
 
     def test_phase_override_bypasses_construction(self):
         """Setting phase short-circuits the phase property's normal construction."""
-        psd = attrs.evolve(make_particle_psd_component(w=(1.0,)), phase={"type": "hg"})
-        assert isinstance(psd.phase, HenyeyGreensteinPhaseFunction)
+        ms = attrs.evolve(make_particle_ms_component(w=(1.0,)), phase={"type": "hg"})
+        assert isinstance(ms.phase, HenyeyGreensteinPhaseFunction)
 
     def test_eval_phase_data_matches_grid_evals(self):
         """_eval_phase_data flattens eval_phase's result and combines it with _eval_ext_ssa_grid's."""
-        psd = make_particle_psd_component(w=(1.0,))
+        ms = make_particle_ms_component(w=(1.0,))
         si = MonoSpectralIndex(w=ureg.Quantity(1.0, "micron"))
 
-        data = psd._eval_phase_data(si)
+        data = ms._eval_phase_data(si)
 
-        n_reff, n_veff = psd.properties.state_shape
-        mu, phase = psd.properties.eval_phase(si.w)
+        n_reff, n_veff = ms.properties.state_shape
+        mu, phase = ms.properties.eval_phase(si.w)
         n_phamat, _, _, max_len = phase.shape
         expected_mu = mu.reshape(n_reff * n_veff, max_len)
         expected_phase = phase.reshape(n_phamat, n_reff * n_veff, max_len).transpose(
             1, 0, 2
         )
-        expected_ext, expected_ssa = psd._eval_ext_ssa_grid(si)
+        expected_ext, expected_ssa = ms._eval_ext_ssa_grid(si)
 
         np.testing.assert_allclose(data["mu"], expected_mu)
         np.testing.assert_allclose(data["phase"], expected_phase)
@@ -324,13 +324,13 @@ class TestParticlePSDComponent:
         np.testing.assert_allclose(
             data["ssa"].m_as(ureg.dimensionless), expected_ssa.m_as(ureg.dimensionless)
         )
-        assert data["max_union_size"] == psd.properties.max_union_size
+        assert data["max_union_size"] == ms.properties.max_union_size
 
     def test_template_and_params_phase_keys(self, mode_mono):
         """_template_phase/_params_phase expose the expected kernel dict keys."""
-        psd = make_particle_psd_component(w=(1.0,))
+        ms = make_particle_ms_component(w=(1.0,))
 
-        template = psd._template_phase
+        template = ms._template_phase
         for key in [
             "type",
             "r_eff_volume.grid",
@@ -343,30 +343,30 @@ class TestParticlePSDComponent:
         ]:
             assert key in template
 
-        params = psd._params_phase
+        params = ms._params_phase
         for key in ["nodes", "phase_mueller", "grid_start"]:
             assert key in params
 
     def test_to_profile_regular_grid(self):
         """to_profile_regular_grid returns a copy with a regularized geometry, sharing profile/properties."""
-        psd = make_particle_psd_component(w=(1.0,))
+        ms = make_particle_ms_component(w=(1.0,))
 
-        result = psd.to_profile_regular_grid()
+        result = ms.to_profile_regular_grid()
 
-        assert result is not psd
-        assert isinstance(result, ParticlePSDComponent)
-        expected_grid = psd._profile_regular_grid()
+        assert result is not ms
+        assert isinstance(result, ParticleMSComponent)
+        expected_grid = ms._profile_regular_grid()
         np.testing.assert_allclose(
             result.geometry.grid.levels.m_as("km"), expected_grid.levels.m_as("km")
         )
         np.testing.assert_allclose(
-            result.geometry.width.m_as("km"), psd.geometry.width.m_as("km")
+            result.geometry.width.m_as("km"), ms.geometry.width.m_as("km")
         )
-        assert result.profile is psd.profile
-        assert result.properties is psd.properties
+        assert result.profile is ms.profile
+        assert result.properties is ms.properties
 
     def test_properties_requires_size_distribution(self):
-        """Constructing a ParticlePSDComponent with a properties dataset lacking reff/veff raises."""
+        """Constructing a ParticleMSComponent with a properties dataset lacking reff/veff raises."""
         grid = CartesianGrid(
             x_edges=np.array([-1.0, 1.0]) * ureg.km,
             y_edges=np.array([-1.0, 1.0]) * ureg.km,
@@ -389,7 +389,7 @@ class TestParticlePSDComponent:
         )
 
         with pytest.raises(ValueError, match=r"reff.*veff"):
-            ParticlePSDComponent(
+            ParticleMSComponent(
                 profile=profile, properties=properties_no_size_dist, geometry=geometry
             )
 
@@ -397,19 +397,19 @@ class TestParticlePSDComponent:
     def test_state_dims_wrong_raises(self, wrong):
         """Properties with state dimensions other than ('reff', 'veff'), in
         that order, are rejected."""
-        psd = make_particle_psd_component()
+        ms = make_particle_ms_component()
         kwargs = {}
         if wrong == "wrong_order":
-            properties = psd.properties.data.transpose(
+            properties = ms.properties.data.transpose(
                 "phamat", "w", "veff", "reff", ...
             )
-            profile = psd.profile
+            profile = ms.profile
         else:
             properties = make_state_properties_dataset(
                 {"hum": np.array([0.0, 90.0]) * ureg.percent}
             )
             profile = make_state_profile_dataset(
-                psd.geometry.grid,
+                ms.geometry.grid,
                 {
                     "hum": 50.0 * ureg.percent,
                     "mass_concentration": 1.0 * ureg("g/m^3"),
@@ -418,21 +418,21 @@ class TestParticlePSDComponent:
             kwargs["state_variables"] = {"hum": "hum"}
 
         with pytest.raises(ValueError, match=r"state dimensions \('reff', 'veff'\)"):
-            ParticlePSDComponent(
+            ParticleMSComponent(
                 profile=profile,
                 properties=properties,
-                geometry=psd.geometry,
+                geometry=ms.geometry,
                 **kwargs,
             )
 
     def test_missing_amount_raises(self):
         """Constructing with an amount absent from the profile raises."""
-        psd = make_particle_psd_component()
+        ms = make_particle_ms_component()
         with pytest.raises(ValueError, match="no amount variable 'lwc'"):
-            ParticlePSDComponent(
-                profile=psd.profile,
-                properties=psd.properties,
-                geometry=psd.geometry,
+            ParticleMSComponent(
+                profile=ms.profile,
+                properties=ms.properties,
+                geometry=ms.geometry,
                 amount="lwc",
             )
 
@@ -444,14 +444,14 @@ class TestParticlePSDComponent:
         layer = make_particle_ot(sigma_t_val=1.0, ssa_val=0.6)
         si_ref = MonoSpectralIndex(w=layer.w_ref)
 
-        component = ParticlePSDComponent.from_particle_ot(
+        component = ParticleMSComponent.from_particle_ot(
             layer,
             mass_concentration=ureg.Quantity(1e-3, "g/m^3"),
             reff=ureg.Quantity(10.0, "micron"),
             veff=ureg.Quantity(0.1, "dimensionless"),
         )
 
-        assert isinstance(component, ParticlePSDComponent)
+        assert isinstance(component, ParticleMSComponent)
         np.testing.assert_allclose(
             component.properties.state_coord("reff").m_as("micron"), [10.0]
         )
@@ -484,7 +484,7 @@ class TestParticlePSDComponent:
             levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
         )
 
-        component = ParticlePSDComponent.from_particle_ot(
+        component = ParticleMSComponent.from_particle_ot(
             layer,
             mass_concentration=ureg.Quantity(1e-3, "g/m^3"),
             reff=ureg.Quantity(10.0, "micron"),
@@ -514,7 +514,7 @@ class TestParticlePSDComponent:
             grid, reff=10.0, veff=0.1, mass_concentration=1e-3
         )
 
-        properties = make_prt_psd_v1(
+        properties = make_prt_ms_v1(
             w=np.array([1.0]) * ureg.micron,
             phamat=PHAMAT_LABELS[4],
             mu=ureg.Quantity(
@@ -535,12 +535,12 @@ class TestParticlePSDComponent:
             reff=np.array([10.0]) * ureg.micron,
             veff=np.array([0.1]) * ureg.dimensionless,
         )
-        psd = ParticlePSDComponent(
+        ms = ParticleMSComponent(
             profile=profile, properties=properties, geometry=geometry
         )
 
-        layer = ParticleOTComponent.from_psd_voxel(
-            psd, w=ureg.Quantity(1.0, "micron"), ix=0, iy=0, iz=0
+        layer = ParticleOTComponent.from_ms_voxel(
+            ms, w=ureg.Quantity(1.0, "micron"), ix=0, iy=0, iz=0
         )
 
         pp = layer.particle_properties
@@ -548,7 +548,7 @@ class TestParticlePSDComponent:
         assert np.all(np.diff(mu) > 0)
         np.testing.assert_allclose(pp.phase.values[0, :, 0], np.rad2deg(np.arccos(mu)))
 
-        field2 = ParticlePSDComponent.from_particle_ot(
+        field2 = ParticleMSComponent.from_particle_ot(
             layer,
             mass_concentration=ureg.Quantity(1e-3, "g/m^3"),
             reff=ureg.Quantity(10.0, "micron"),
@@ -582,7 +582,7 @@ class TestParticlePSDComponent:
         ssa[:, :, 0] = 0.6
         ssa[:, :, 1] = 0.9
 
-        properties = make_prt_psd_v1(
+        properties = make_prt_ms_v1(
             w=w_nodes * ureg.micron,
             phamat=PHAMAT_LABELS[4],
             mu=mu * ureg.dimensionless,
@@ -608,7 +608,7 @@ class TestParticlePSDComponent:
             grid, reff=10.0, veff=0.15, mass_concentration=0.5
         )
 
-        psd = ParticlePSDComponent(
+        ms = ParticleMSComponent(
             profile=profile, properties=properties, geometry=geometry
         )
 
@@ -618,21 +618,21 @@ class TestParticlePSDComponent:
         expected_ext = 0.5 * 2.0 + 0.5 * 3.0
         expected_ssa = 0.5 * 0.6 + 0.5 * 0.9
 
-        sigma_t = psd.eval_sigma_t(si)
+        sigma_t = ms.eval_sigma_t(si)
         assert sigma_t.shape == shape
         np.testing.assert_allclose(sigma_t.m_as("1/km"), expected_ext * 0.5, rtol=1e-6)
 
-        albedo = psd.eval_albedo(si)
+        albedo = ms.eval_albedo(si)
         assert albedo.shape == shape
         np.testing.assert_allclose(
             albedo.m_as("dimensionless"), expected_ssa, rtol=1e-6
         )
 
-        phase = psd.phase
+        phase = ms.phase
         assert isinstance(phase, GriddedParticlePhaseFunction)
         np.testing.assert_allclose(phase.grid_1.m_as("micron"), reff_vals)
         np.testing.assert_allclose(phase.grid_2.m_as(ureg.dimensionless), veff_vals)
 
-        params = psd._params_phase
+        params = ms._params_phase
         for key in ["nodes", "phase_mueller", "grid_start", "sigma_s_weight"]:
             assert key in params

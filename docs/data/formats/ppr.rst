@@ -48,15 +48,15 @@ Data variables
       The variable used as the amount is zero where no particles are present;
       other variables are then irrelevant and may take any value.
 
-.. _sec-data_formats-ppr_psd_v1:
+.. _sec-data_formats-ppr_ms_v1:
 
-Ppr-PSD v1 [``ppr_psd_v1``]
----------------------------
+Ppr-MS v1 [``ppr_ms_v1``]
+-------------------------
 
-Extension of ``ppr_core_v1`` describing a particle profile by its particle size
-distribution (PSD) parameters and mass concentration. It is the profile
-counterpart of :ref:`Prt-PSD v1 <sec-data_formats-prt_psd_v1>` and the format
-expected by :class:`.ParticlePSDComponent` with its default bindings.
+Extension of ``ppr_core_v1`` describing a particle profile with a mass
+concentration and particle size parameters (MS). It is the profile counterpart
+of :ref:`Prt-MS v1 <sec-data_formats-prt_ms_v1>` and the format
+expected by :class:`.ParticleMSComponent` with its default bindings.
 
 Data variables
     In addition to the ``ppr_core_v1`` variables:

@@ -28,11 +28,7 @@ from ...attrs import define, documented
 from ...grid import SpatialGrid
 from ...kernel import SceneParameter
 from ...radprops import ParticleProperties
-from ...spectral.index import (
-    CKDSpectralIndex,
-    MonoSpectralIndex,
-    SpectralIndex,
-)
+from ...spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ...units import to_quantity
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -41,7 +37,7 @@ from ...util.misc import cache_by_id
 from ...validators import all_positive, is_positive
 
 if TYPE_CHECKING:
-    from ._particle_psd_component import ParticlePSDComponent
+    from ._particle_state_component import ParticleMSComponent
 
 
 def _particle_distribution_converter(value):
@@ -69,7 +65,7 @@ class ParticleComponent(AbstractHeterogeneousAtmosphere, ABC):
         * If value is a dictionary, it is interpreted by
           :data:`.atmosphere_factory`; the ``"type"`` parameter may be
           omitted and will automatically be set to ``"particle_ot"``.
-          Other types, *e.g.* ``"particle_psd"``, must set ``"type"``
+          Other types, *e.g.* ``"particle_ms"``, must set ``"type"``
           explicitly.
         * Otherwise, the value is returned unchanged.
         """
@@ -570,9 +566,9 @@ class ParticleOTComponent(ParticleComponent):
         return result.data
 
     @classmethod
-    def from_psd_voxel(
+    def from_ms_voxel(
         cls,
-        particle_psd_component: ParticlePSDComponent,
+        particle_ms_component: ParticleMSComponent,
         w: pint.Quantity,
         ix: int,
         iy: int,
@@ -585,7 +581,7 @@ class ParticleOTComponent(ParticleComponent):
 
         Parameters
         ----------
-        particle_psd_component : :class:`.ParticlePSDComponent`
+        particle_ms_component : :class:`.ParticleMSComponent`
             Source particle PSD component.
 
         w : :class:`pint.Quantity`
@@ -595,7 +591,7 @@ class ParticleOTComponent(ParticleComponent):
             Voxel indices in the render grid.
 
         grid : :class:`.SpatialGrid`, optional
-            Target render grid. Defaults to ``particle_psd_component.geometry.grid``.
+            Target render grid. Defaults to ``particle_ms_component.geometry.grid``.
 
         Returns
         -------
@@ -607,10 +603,10 @@ class ParticleOTComponent(ParticleComponent):
             If ``(ix, iy, iz)`` is out of bounds, or the voxel there has no
             cloud (zero amount).
         """
-        grid = grid or particle_psd_component.geometry.grid
-        resampled_profile = particle_psd_component.profile.resample(grid).data
-        amount_name = particle_psd_component._amount
-        binding = particle_psd_component._binding
+        grid = grid or particle_ms_component.geometry.grid
+        resampled_profile = particle_ms_component.profile.resample(grid).data
+        amount_name = particle_ms_component._amount
+        binding = particle_ms_component._binding
 
         sizes = resampled_profile.sizes
         in_bounds = (
@@ -627,7 +623,7 @@ class ParticleOTComponent(ParticleComponent):
 
         col_units = uck.get("collision_coefficient")
         wavelength = np.atleast_1d(w)
-        pp = particle_psd_component.properties
+        pp = particle_ms_component.properties
 
         reff_qty = to_quantity(profile_point[binding["reff"]]).item()
         veff_qty = to_quantity(profile_point[binding["veff"]]).item()
@@ -663,9 +659,9 @@ class ParticleOTComponent(ParticleComponent):
         phase_ds = pp.phase_dataset_at(wavelength[0], (i_reff, i_veff), sigma_t)
 
         geometry = (
-            particle_psd_component.geometry
-            if grid is particle_psd_component.geometry.grid
-            else attrs.evolve(particle_psd_component.geometry, grid=grid)
+            particle_ms_component.geometry
+            if grid is particle_ms_component.geometry.grid
+            else attrs.evolve(particle_ms_component.geometry, grid=grid)
         )
 
         return cls(
@@ -676,14 +672,14 @@ class ParticleOTComponent(ParticleComponent):
             tau_ref=tau_ref,
             particle_properties=phase_ds,
             geometry=geometry,
-            has_absorption=particle_psd_component.has_absorption,
-            has_scattering=particle_psd_component.has_scattering,
+            has_absorption=particle_ms_component.has_absorption,
+            has_scattering=particle_ms_component.has_scattering,
         )
 
     @classmethod
-    def from_psd_composition(
+    def from_ms_composition(
         cls,
-        particle_psd_component: ParticlePSDComponent,
+        particle_ms_component: ParticleMSComponent,
         w: pint.Quantity,
         i_reff: int,
         i_veff: int,
@@ -700,18 +696,18 @@ class ParticleOTComponent(ParticleComponent):
 
         Parameters
         ----------
-        particle_psd_component : :class:`.ParticlePSDComponent`
-            Source particle PSD component.
+        particle_ms_component : :class:`.ParticleMSComponent`
+            Source particle MS component.
 
         w : :class:`pint.Quantity`
             Evaluation wavelength.
 
         i_reff, i_veff : int
-            Index along ``particle_psd_component.properties``'s ``reff``/``veff``
+            Index along ``particle_ms_component.properties``'s ``reff``/``veff``
             dimensions, assumed constant across the whole component.
 
         grid : :class:`.SpatialGrid`, optional
-            Target render grid. Defaults to ``particle_psd_component.geometry.grid``.
+            Target render grid. Defaults to ``particle_ms_component.geometry.grid``.
 
         ext : :class:`pint.Quantity`, optional
             Extinction coefficient stored in the output ParticleOTComponent's
@@ -724,17 +720,17 @@ class ParticleOTComponent(ParticleComponent):
         -------
         :class:`.ParticleOTComponent`
         """
-        grid = grid or particle_psd_component.geometry.grid
+        grid = grid or particle_ms_component.geometry.grid
         col_units = uck.get("collision_coefficient")
         length_units = uck.get("length")
         wavelength = np.atleast_1d(w)
-        pp = particle_psd_component.properties
+        pp = particle_ms_component.properties
 
         # Evaluate on the wavelength axis first, then pick this exact point.
         m_extinction = pp.eval_ext(wavelength)[0, i_reff, i_veff]
 
-        resampled = particle_psd_component.profile.resample(grid)
-        amount = resampled[particle_psd_component._amount]
+        resampled = particle_ms_component.profile.resample(grid)
+        amount = resampled[particle_ms_component._amount]
         sigma_t = m_extinction * amount  # (z, y, x)
 
         sigma_t_grid = np.transpose(sigma_t.m_as(col_units), (2, 1, 0))  # ->(x,y,z)
@@ -754,9 +750,9 @@ class ParticleOTComponent(ParticleComponent):
         phase_ds = pp.phase_dataset_at(wavelength[0], (i_reff, i_veff), ext)
 
         geometry = (
-            particle_psd_component.geometry
-            if grid is particle_psd_component.geometry.grid
-            else attrs.evolve(particle_psd_component.geometry, grid=grid)
+            particle_ms_component.geometry
+            if grid is particle_ms_component.geometry.grid
+            else attrs.evolve(particle_ms_component.geometry, grid=grid)
         )
 
         return cls(
@@ -767,8 +763,8 @@ class ParticleOTComponent(ParticleComponent):
             tau_ref=tau_ref,
             particle_properties=phase_ds,
             geometry=geometry,
-            has_absorption=particle_psd_component.has_absorption,
-            has_scattering=particle_psd_component.has_scattering,
+            has_absorption=particle_ms_component.has_absorption,
+            has_scattering=particle_ms_component.has_scattering,
         )
 
 
