@@ -26,7 +26,7 @@ from ...spectral.index import SpectralIndex
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...util.deprecation import DeprecatedWarning, renamed_kwargs
-from ...util.misc import cache_by_id
+from ...util.misc import cache_by_id, flatten
 
 if TYPE_CHECKING:
     from axsdb import AbsorptionDatabase
@@ -61,6 +61,7 @@ _COMPONENT_IGNORED_FIELDS = (
 def _warn_ignored_component_fields(
     attribute: attrs.Attribute,
     component: AbstractHeterogeneousAtmosphere,
+    overlap: bool = False,
 ) -> None:
     """
     Warn if a component sets a field that has no effect when it is nested in a
@@ -68,6 +69,9 @@ def _warn_ignored_component_fields(
     """
     fields = attrs.fields_dict(type(component))
     for name in _COMPONENT_IGNORED_FIELDS:
+        if overlap and name == "extremum_resolution":
+            continue
+
         if not np.array_equal(getattr(component, name), fields[name].default):
             warnings.warn(
                 f"while validating {attribute.name}: component field "
@@ -147,7 +151,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             )
 
         for component in value:
-            _warn_ignored_component_fields(attribute, component)
+            _warn_ignored_component_fields(attribute, component, self.overlap)
 
     use_phase_mis: bool = documented(
         attrs.field(default=True, converter=bool, kw_only=True),
@@ -156,6 +160,14 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         type="bool",
         init_type="bool",
         default="True",
+    )
+
+    overlap: bool = documented(
+        attrs.field(default=False, converter=bool, kw_only=True),
+        doc="Use the overlapping media instead of merging ",
+        type="bool",
+        init_type="bool",
+        default="False",
     )
 
     @property
@@ -199,13 +211,15 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         for i, component in enumerate(self.components):
             component.update()
             component.id = f"{self.id}_component_{i}"
-            logger.debug(
-                "Override the geometry of component '%s' to %s (was %s)",
-                component.id,
-                self.geometry,
-                component.geometry,
-            )
-            component.geometry = self.geometry
+
+            if not self.overlap:
+                logger.debug(
+                    "Override the geometry of component '%s' to %s (was %s)",
+                    component.id,
+                    self.geometry,
+                    component.geometry,
+                )
+                component.geometry = self.geometry
 
     # --------------------------------------------------------------------------
     #              Spatial extension and thermophysical properties
@@ -328,6 +342,43 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         )
 
     @property
+    def template(self) -> dict:
+        # Inherit docstring
+
+        if not self.overlap:
+            return super().template
+
+        # Override the template so that we discard the phase function
+
+        result = {
+            self.medium_id: self._template_medium,
+            self.shape_id: self._template_shape,
+        }
+
+        if not self.overlap:
+            result[self.phase_id] = self._template_phase
+        else:
+            # Add phase to the top level and the corresponding id to each medium
+            for i, component in enumerate(self.components):
+                result[component.phase_id] = component._template_phase
+                result[self.medium_id][f"component{i}"]["phase_function"] = {
+                    "type": "ref",
+                    "id": component.phase_id,
+                }
+
+        result = flatten(result)
+
+        result.update(
+            {
+                f"{self.shape_id}.bsdf.type": "null",
+                f"{self.shape_id}.interior.type": "ref",
+                f"{self.shape_id}.interior.id": self.medium_id,
+            }
+        )
+
+        return result
+
+    @property
     def _template_phase(self) -> dict:
         # Inherit docstring
         return traverse(self.phase)[0].data
@@ -335,19 +386,69 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def _params_phase(self) -> dict:
         # Inherit docstring
-        umap = traverse(self.phase)[1].data
+        if not self.overlap:
+            umap = traverse(self.phase)[1].data
 
-        # Add prefix and lookup strategy to all entries
+            # Add prefix and lookup strategy to all entries
+            result = {}
+
+            for uparam_key, uparam in umap.items():
+                result[uparam_key] = attrs.evolve(
+                    uparam,
+                    search=SearchSceneParameter(
+                        node_type=mi.PhaseFunction,
+                        node_id=self.phase_id,
+                        parameter_relpath=uparam_key,
+                    ),
+                )
+
+            return result
+
+        else:
+            # Add prefix and lookup strategy to all entries
+            result = {}
+            for component in self.components:
+                for key, uparam in component._params_phase.items():
+                    result[f"{component.phase_id}.{key}"] = attrs.evolve(
+                        uparam,
+                        search=SearchSceneParameter(
+                            node_type=mi.PhaseFunction,
+                            node_id=component.phase_id,
+                            parameter_relpath=key,
+                        ),
+                    )
+
+            return result
+
+    @property
+    def _template_medium(self) -> dict:
+        if not self.overlap:
+            return super()._template_medium
+
+        result = {
+            "type": "overlap",
+            "ddis_threshold": self.ddis_threshold,
+        }
+
+        for i, comp in enumerate(self.components):
+            comp_dict = comp._template_medium
+            comp_dict["id"] = comp.medium_id
+            comp_dict["phase_function"] = comp._template_phase
+            result[f"component{i}"] = comp_dict
+
+        return result
+
+    @property
+    def _params_medium(self) -> dict:
+        if not self.overlap:
+            return super()._params_medium
+
         result = {}
-
-        for uparam_key, uparam in umap.items():
-            result[uparam_key] = attrs.evolve(
-                uparam,
-                search=SearchSceneParameter(
-                    node_type=mi.PhaseFunction,
-                    node_id=self.phase_id,
-                    parameter_relpath=uparam_key,
-                ),
+        for component in self.components:
+            result.update(
+                {
+                    f"{component.medium_id}.{k}": v
+                    for k, v in component._params_medium.items()
+                }
             )
-
         return result
