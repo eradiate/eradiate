@@ -268,8 +268,26 @@ class PlaneParallelGeometry(SceneGeometry):
         default="1,000,000 km",
     )
 
+    crop_to_grid: bool = documented(
+        attrs.field(default=False, converter=bool, kw_only=True),
+        doc="If ``True``, the atmosphere cuboid spans the grid extent instead "
+        "of ``width``.",
+        type="bool",
+        init_type="bool",
+        default="False",
+    )
+
     @property
     def atmosphere_shape(self) -> CuboidShape:
+        if self.crop_to_grid:
+            # replace once components get a proper sub-domain parametrization
+            edges = (self.grid.x_edges, self.grid.y_edges, self.grid.z_edges)
+            lo = np.array([e.min().m_as(ureg.m) for e in edges])
+            hi = np.array([e.max().m_as(ureg.m) for e in edges])
+            return CuboidShape(
+                center=0.5 * (lo + hi) * ureg.m, edges=(hi - lo) * ureg.m
+            )
+
         return CuboidShape.atmosphere(
             top=self.toa_altitude, bottom=0.0 * ureg.km, width=self.width
         )
