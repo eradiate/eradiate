@@ -393,7 +393,7 @@ class TestParticleProperties:
             (make_hum_dataset, ("hum",)),
             (make_two_state_dataset, ("a", "b")),
         ],
-        ids=["core", "psd", "hum", "two_state"],
+        ids=["core", "ms", "hum", "two_state"],
     )
     def test_state_dims(self, make, expected_dims):
         """State dimensions are read from 'ext', in dataset order; 'phase'

@@ -10,7 +10,7 @@ Particle component scene elements are created using :class:`.ParticleComponent` 
  * :class:`.ParticleOTComponent`
  * :class:`.ParticleExtinctionComponent`
  * :class:`.ParticleStateComponent`
- * :class:`.ParticlePSDComponent`
+ * :class:`.ParticleMSComponent`
 
 .. _sec-particle_components-terminology:
 

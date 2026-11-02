@@ -112,7 +112,7 @@ def make_prt_v1(
 
     All Prt variants share the core dimensions ``w``, ``phamat``, ``iangle``
     and ``imom``. Variants add state dimensions, inserted after ``w`` (see
-    :ref:`sec-data_formats-prt_extensions`): *e.g.* Prt-PSD adds ``reff`` and
+    :ref:`sec-data_formats-prt_extensions`): *e.g.* Prt-MS adds ``reff`` and
     ``veff``, Prt-Hum adds ``hum``. These are passed through ``state_dims``;
     in the shapes below, ``*state`` stands for their sizes, in the order of
     ``state_dims``. Without state dimensions, the output is in the Prt-Core
@@ -378,7 +378,7 @@ def make_prt_core_v1(
     return make_prt_v1(w, phamat, mu, theta, ext, ssa, phase, **kwargs)
 
 
-def make_prt_psd_v1(
+def make_prt_ms_v1(
     w: pint.Quantity,
     phamat: list[str],
     mu: pint.Quantity,
@@ -391,7 +391,7 @@ def make_prt_psd_v1(
     **kwargs,
 ) -> xr.Dataset:
     """
-    Create a new dataset in the Prt-PSD v1 format.
+    Create a new dataset in the Prt-MS v1 format.
 
     This is :func:`.make_prt_v1` with state dimensions ``reff`` and ``veff``:
     ``mu`` and ``theta`` have shape (nw, nreff, nveff, nangle), ``ext`` and
@@ -478,12 +478,12 @@ def _shared_attrs(datasets: list[xr.Dataset]) -> dict:
 
 def concat_particles_veff(datasets: list[xr.Dataset]) -> xr.Dataset:
     """
-    Concatenate several Prt-PSD v1 datasets along the ``veff`` dimension.
+    Concatenate several Prt-MS v1 datasets along the ``veff`` dimension.
 
     Parameters
     ----------
     datasets : list of xr.Dataset
-        Prt-PSD v1 datasets (as produced by :func:`make_prt_psd_v1`),
+        Prt-MS v1 datasets (as produced by :func:`make_prt_ms_v1`),
         each with a ``reff``/``veff``-dimensioned layout. Every dataset may
         cover one or several ``veff`` values. All datasets must share the
         same ``w``, ``reff``, and ``phamat`` coordinates.
@@ -491,7 +491,7 @@ def concat_particles_veff(datasets: list[xr.Dataset]) -> xr.Dataset:
     Returns
     -------
     xr.Dataset
-        Prt-PSD v1 dataset with a ``veff`` dimension spanning the concatenation
+        Prt-MS v1 dataset with a ``veff`` dimension spanning the concatenation
         of all input datasets' ``veff`` values. ``iangle``/``imom`` are
         padded to the largest size found across inputs. Only attributes common
         to all input datasets are retained.
@@ -537,7 +537,7 @@ def concat_particles_veff(datasets: list[xr.Dataset]) -> xr.Dataset:
     nmom = np.concatenate([ds["nmom"].values for ds in datasets], axis=2)
     veff = np.concatenate([ds["veff"].values for ds in datasets])
 
-    return make_prt_psd_v1(
+    return make_prt_ms_v1(
         w=to_quantity(ref["w"]),
         phamat=list(ref["phamat"].values),
         mu=mu * ureg(ref["mu"].attrs["units"]),
@@ -707,7 +707,7 @@ def libradtran_to_prt(
     Convert a libRadtran scattering particle property dataset to Prt v1.
 
     The output variant depends on the dimensions remaining after point
-    selection (see ``reff`` and ``hum``): Prt-PSD v1 if a ``reff`` dimension
+    selection (see ``reff`` and ``hum``): Prt-MS v1 if a ``reff`` dimension
     remains, Prt-Hum v1 if a ``hum`` dimension remains, Prt-Core v1 otherwise.
 
     Parameters
@@ -739,7 +739,7 @@ def libradtran_to_prt(
         kept (see ``squeeze``). Unitless values are interpreted in µm.
 
     veff : float, optional
-        The effective variance attached to Prt-PSD v1 output, as a size-1
+        The effective variance attached to Prt-MS v1 output, as a size-1
         ``veff`` dimension. If unset, it defaults to ``1 / (param_alpha + 3)``,
         the standard gamma-distribution relation, computed from
         ``ds.attrs["param_alpha"]``; if that attribute is missing, the output

@@ -176,7 +176,7 @@ Quick access
    ParticleOTComponent
    ParticleExtinctionComponent
    ParticleStateComponent
-   ParticlePSDComponent
+   ParticleMSComponent
 
 **Particle distributions**
 

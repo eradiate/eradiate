@@ -1,12 +1,12 @@
 """Helpers building :class:`.ParticleStateComponent` and
-:class:`.ParticlePSDComponent` test instances."""
+:class:`.ParticleMSComponent` test instances."""
 
 import numpy as np
 import xarray as xr
 
-from eradiate.data.convert import make_prt_psd_v1, make_prt_v1
+from eradiate.data.convert import make_prt_ms_v1, make_prt_v1
 from eradiate.grid import CartesianGrid
-from eradiate.scenes.atmosphere import ParticlePSDComponent
+from eradiate.scenes.atmosphere import ParticleMSComponent
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.units import unit_registry as ureg
 
@@ -46,7 +46,7 @@ def make_properties_dataset(
         np.asarray(phase_value, dtype=float), (nphamat, nw, nreff, nveff, n_theta)
     ).copy()
 
-    return make_prt_psd_v1(
+    return make_prt_ms_v1(
         w=w_values * ureg.micron,
         phamat=PHAMAT_LABELS[nphamat],
         mu=mu * ureg.dimensionless,
@@ -173,7 +173,7 @@ def make_profile_dataset(
     return xr.Dataset(data_vars=data_vars, coords=coords)
 
 
-def make_particle_psd_component(
+def make_particle_ms_component(
     n_x: int = 2,
     n_y: int = 2,
     n_z: int = 3,
@@ -188,8 +188,8 @@ def make_particle_psd_component(
     ssa_value=0.8,
     has_absorption=True,
     has_scattering=True,
-) -> ParticlePSDComponent:
-    """Build a dense, spatially-uniform :class:`.ParticlePSDComponent`."""
+) -> ParticleMSComponent:
+    """Build a dense, spatially-uniform :class:`.ParticleMSComponent`."""
     grid = CartesianGrid(
         x_edges=np.linspace(0.0, x_extent.m_as("km"), n_x + 1) * ureg.km,
         y_edges=np.linspace(0.0, y_extent.m_as("km"), n_y + 1) * ureg.km,
@@ -197,7 +197,7 @@ def make_particle_psd_component(
     ).centered()
     geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
 
-    return ParticlePSDComponent(
+    return ParticleMSComponent(
         profile=make_profile_dataset(
             grid, reff=reff, veff=veff, mass_concentration=mass_concentration
         ),
@@ -210,8 +210,8 @@ def make_particle_psd_component(
     )
 
 
-def make_z_profile_particle_psd_component(z_edges_src, target_levels):
-    """Build a single-reff/veff :class:`.ParticlePSDComponent` with a z-varying
+def make_z_profile_particle_ms_component(z_edges_src, target_levels):
+    """Build a single-reff/veff :class:`.ParticleMSComponent` with a z-varying
     profile, resampled onto ``target_levels``."""
     z_edges_src = np.asarray(z_edges_src, dtype=float)
     z_centers_src = 0.5 * (z_edges_src[:-1] + z_edges_src[1:])
@@ -236,7 +236,7 @@ def make_z_profile_particle_psd_component(z_edges_src, target_levels):
     # Properties has a single reff/veff point, so ext/ssa interpolation is
     # constant regardless of the profile's own per-voxel reff, which is
     # therefore free to vary with z here.
-    psd = ParticlePSDComponent(
+    ms = ParticleMSComponent(
         profile=profile, properties=make_properties_dataset(), geometry=geometry
     )
-    return psd, target_grid
+    return ms, target_grid
