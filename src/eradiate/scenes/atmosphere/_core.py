@@ -746,6 +746,13 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
 
         aabb_conf = {}
         if isinstance(self.geometry, SphericalShellGeometry):
+            # The extremum_spherical plugin only implements radial traversal
+            if tuple(self.extremum_resolution[1:]) != (1, 1):
+                raise ValueError(
+                    "in spherical shell geometry, 'extremum_resolution' "
+                    "[r, theta, phi] only supports variations along r: "
+                    f"expected (n_r, 1, 1), got {self.extremum_resolution}"
+                )
             extr_conf = {
                 "type": "extremum_spherical",
                 "rmin": self.geometry.atmosphere_volume_rmin,

@@ -502,6 +502,24 @@ def test_heterogenous_extremum_type(
     check_scene_element(atmosphere, ctx=KernelContext(si=si))
 
 
+@pytest.mark.parametrize("extremum_resolution", [(12, 2, 1), (12, 1, 2), (1, 25, 25)])
+def test_heterogeneous_extremum_spherical_angular_resolution_raises(
+    mode_mono, extremum_resolution, atmosphere_us_standard_mono
+):
+    """
+    In spherical shell geometry, an extremum resolution varying along theta
+    or phi is rejected before reaching the kernel, which only implements
+    radial traversal.
+    """
+    atmosphere = HeterogeneousAtmosphere(
+        geometry="spherical_shell",
+        molecular_atmosphere=atmosphere_us_standard_mono,
+        extremum_resolution=extremum_resolution,
+    )
+    with pytest.raises(ValueError, match="only supports variations along r"):
+        _ = atmosphere._template_medium
+
+
 @pytest.mark.parametrize(
     "wrap_mode", [WrapMode.CLAMP, WrapMode.REPEAT, WrapMode.MIRROR]
 )
