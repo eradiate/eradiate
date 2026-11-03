@@ -144,10 +144,12 @@ def _postprocess_template(
     partial_factory: Callable,
     filter_type_kw: str,
     wrap_mode_kw: str,
+    fill_value: float | None = None,
 ) -> dict:
     """
     Build a Mitsuba kernel dict for a gridvolume plugin, wrapping it in a
-    ``sphericalcoordsvolume`` for :class:`.SphericalShellGeometry`.
+    ``sphericalcoordsvolume`` for :class:`.SphericalShellGeometry`, with
+    ``fill_value`` (if set) as its out-of-shell value.
     """
     gridvolume = {
         "type": "gridvolume",
@@ -160,12 +162,16 @@ def _postprocess_template(
         to_world = geometry.grid.to_world
         gridvolume["to_world"] = to_world
     if isinstance(geometry, SphericalShellGeometry):
-        return {
+        result = {
             "type": "sphericalcoordsvolume",
             "volume": gridvolume,
             "rmin": geometry.atmosphere_volume_rmin,
             "to_world": geometry.atmosphere_volume_to_world,
         }
+        if fill_value is not None:
+            result["fillmin"] = fill_value
+            result["fillmax"] = fill_value
+        return result
     return gridvolume
 
 
@@ -180,6 +186,7 @@ def generate_gridvolume(
     units=None,
     dtype: type | None = None,
     extra_kwargs: dict | None = None,
+    fill_value: float | None = None,
 ) -> dict | SceneParameter:
     """
     Generate a gridvolume kernel dict or a scene parameter update object.
@@ -233,6 +240,13 @@ def generate_gridvolume(
     extra_kwargs : dict, optional
         Additional keyword arguments forwarded to ``eval_grid``.
 
+    fill_value : float, optional
+        Value returned outside the spherical shell, in the units of the grid
+        data. The ``sphericalcoordsvolume`` plugin defaults it to 0 and
+        includes it in the volume's min/max. Set it when 0 is not a valid
+        value. Only used with :class:`.SphericalShellGeometry`, when ``flag``
+        is ``None``.
+
     Returns
     -------
     dict
@@ -285,4 +299,5 @@ def generate_gridvolume(
         pf,
         filter_type,
         wrap_mode,
+        fill_value=fill_value,
     )

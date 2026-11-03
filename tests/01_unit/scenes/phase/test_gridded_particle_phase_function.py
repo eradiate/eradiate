@@ -6,7 +6,7 @@ from eradiate import KernelContext
 from eradiate import unit_registry as ureg
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.core import traverse
-from eradiate.scenes.geometry import PlaneParallelGeometry
+from eradiate.scenes.geometry import PlaneParallelGeometry, SphericalShellGeometry
 from eradiate.scenes.phase import GriddedParticlePhaseFunction
 from eradiate.spectral.index import MonoSpectralIndex
 from eradiate.testing.types import check_scene_element
@@ -39,7 +39,18 @@ def make_phase_data():
     return {"mu": mu, "phase": phase, "ext": ext, "ssa": ssa, "max_union_size": 5}
 
 
-def make_particle_phase(r_eff_volume=None, v_eff_volume=None, **kwargs):
+def make_spherical_geometry():
+    """Build a minimal spherical shell geometry with n_x_cells != n_z_cells."""
+    return SphericalShellGeometry(
+        grid=[
+            np.array([-180.0, 0.0, 180.0]) * ureg.deg,
+            np.array([0.0, 180.0]) * ureg.deg,
+            np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
+        ]
+    )
+
+
+def make_particle_phase(r_eff_volume=None, v_eff_volume=None, geometry=None, **kwargs):
     """Build a minimal 2-reff by 1-veff :class:`.GriddedParticlePhaseFunction`."""
     # n_x_cells != n_z_cells on purpose: r_eff_volume/v_eff_volume must be
     # shaped (n_x_cells, n_y_cells, n_z_cells), matching GridCoords.shape.
@@ -47,21 +58,18 @@ def make_particle_phase(r_eff_volume=None, v_eff_volume=None, **kwargs):
     # transposed array is still broadcast-compatible and the mismatch goes
     # undetected; making them different forces the exact-shape check in
     # _prepare_grid() to actually run.
-    grid = CartesianGrid(
-        x_edges=np.array([-1.0, 0.0, 1.0]) * ureg.km,
-        y_edges=np.array([-1.0, 1.0]) * ureg.km,
-        levels=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
-    )
-    geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
+    if geometry is None:
+        grid = CartesianGrid(
+            x_edges=np.array([-1.0, 0.0, 1.0]) * ureg.km,
+            y_edges=np.array([-1.0, 1.0]) * ureg.km,
+            levels=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
+        )
+        geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
+    shape = geometry.grid.shape
     if r_eff_volume is None:
-        r_eff_volume = ureg.Quantity(
-            np.full((grid.n_x_cells, grid.n_y_cells, grid.n_z_cells), 10.0), "micron"
-        )
+        r_eff_volume = ureg.Quantity(np.full(shape, 10.0), "micron")
     if v_eff_volume is None:
-        v_eff_volume = ureg.Quantity(
-            np.full((grid.n_x_cells, grid.n_y_cells, grid.n_z_cells), 0.1),
-            "dimensionless",
-        )
+        v_eff_volume = ureg.Quantity(np.full(shape, 0.1), "dimensionless")
     phase_data_dict = make_phase_data()
 
     kwargs.setdefault("grid_1", ureg.Quantity(np.array([10.0, 20.0]), "micron"))
@@ -77,9 +85,19 @@ def make_particle_phase(r_eff_volume=None, v_eff_volume=None, **kwargs):
 
 
 class TestGriddedParticlePhaseFunction:
-    def test_kernel_dict(self, mode_mono):
-        """The kernel template/params expose the expected type, fields and grids."""
-        phase = make_particle_phase()
+    @pytest.mark.parametrize(
+        "make_geometry",
+        [lambda: None, make_spherical_geometry],
+        ids=["plane_parallel", "spherical_shell"],
+    )
+    def test_kernel_dict(self, mode_mono, make_geometry):
+        """
+        The kernel template/params expose the expected type, fields and grids.
+        In spherical shell geometry, the out-of-shell fill value must not
+        push the state volumes' range outside the grids (default fill is 0,
+        outside the [10, 20] r_eff grid).
+        """
+        phase = make_particle_phase(geometry=make_geometry())
         check_scene_element(phase, mi.PhaseFunction)
 
         template, params = traverse(phase)

@@ -236,7 +236,9 @@ class GriddedParticlePhaseFunction(PhaseFunction):
         unit_2 = grid_2.units
 
         # 'r_eff' and 'v_eff' are the plugin's state variable slots 1 and 2,
-        # whatever the state variables are
+        # whatever the state variables are. Out-of-shell fill values (spherical
+        # geometry) are set to the first grid node: the plugin rejects volumes
+        # whose min/max fall outside the grid, and the default fill is 0
         return {
             "type": "particlephase",
             "r_eff_volume": generate_gridvolume(
@@ -244,12 +246,14 @@ class GriddedParticlePhaseFunction(PhaseFunction):
                 lambda ctx: self.volume_1,
                 units=unit_1,
                 dtype=np.float64,
+                fill_value=float(self.grid_1[0].m_as(unit_1)),
             ),
             "v_eff_volume": generate_gridvolume(
                 self.geometry,
                 lambda ctx: volume_2,
                 units=unit_2,
                 dtype=np.float64,
+                fill_value=float(grid_2[0].m_as(unit_2)),
             ),
             "r_eff_grid": mi.TensorXf(self.grid_1.m_as(unit_1).reshape(-1, 1)),
             "v_eff_grid": mi.TensorXf(grid_2.m_as(unit_2).reshape(-1, 1)),
