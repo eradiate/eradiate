@@ -10,9 +10,9 @@ resources: # List of resource aliases
   aerosol: aerosol/core-v2
   bsdf: bsdf/core-v1
   constant: constant/core-v1
-  gecko: absorption_mono/gecko-v1
+  gecko: absorption_mono/gecko-v2
   solar_irradiance: solar_irradiance/core-v1
-  komodo: absorption_mono/komodo-v1
+  komodo: absorption_mono/komodo-v2
   monotropa: absorption_ckd/monotropa-v1
   mycena: absorption_ckd/mycena-v2
   panellus: absorption_ckd/panellus-v1
