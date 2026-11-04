@@ -170,6 +170,19 @@ class TestSphericalGrid:
         with pytest.raises(ValueError):
             _spherical_grid(azimuths)
 
+    @pytest.mark.parametrize(
+        "colatitudes",
+        [[-90.0, 0.0, 90.0], [90.0, 270.0]],
+        ids=["latitudes", "beyond_south_pole"],
+    )
+    def test_colatitudes_invalid(self, colatitudes):
+        with pytest.raises(ValueError, match="colatitudes"):
+            SphericalGrid(
+                levels=[0.0, 1.0] * ureg.km,
+                azimuths=[0.0, 360.0] * ureg.deg,
+                colatitudes=colatitudes * ureg.deg,
+            )
+
     def test_to_world(self, mode_mono):
         """to_world maps the azimuth range to its place in [0, 1]."""
         to_world = _spherical_grid([200.0, 225.0, 250.0]).to_world
