@@ -93,6 +93,14 @@ equation.
   This allows for more accurate results at high illumination and viewing
   angles.
   </details>
+
+  <details>
+  <summary>
+  Spatially varying particulate media
+  </summary>
+  3D clouds in plane-parallel and spherical geometries, with flexible
+  parametrizations.
+  </details>
   </li>
 
   <li><strong>Surface</strong>
