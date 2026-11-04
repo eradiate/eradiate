@@ -577,12 +577,12 @@ class ParticleOTComponent(ParticleComponent):
     ) -> ParticleOTComponent:
         """
         Build a :class:`.ParticleOTComponent` representing a single voxel of
-        the particle PSD component at the given grid location.
+        the particle MS component at the given grid location.
 
         Parameters
         ----------
         particle_ms_component : :class:`.ParticleMSComponent`
-            Source particle PSD component.
+            Source particle MS component.
 
         w : :class:`pint.Quantity`
             Evaluation wavelength.
