@@ -182,14 +182,14 @@ over.
 
 .. _sec-data_formats-prt_ms_v1:
 
-Prt-PSD v1 [``prt_ms_v1``]
+Prt-MS v1 [``prt_ms_v1``]
 --------------------------
 
 Named extension of ``prt_core_v1`` for particle properties. This data format
 indexes properties defined by ``prt_core_v1`` on two state dimensions,
 ``reff`` and ``veff``, the effective radius and effective variance of the
-particle size distribution (PSD), respectively. It shares the same
-normalization conventions as ``prt_core_v1``.
+particle size distribution, respectively. It shares the same normalization
+conventions as ``prt_core_v1``.
 
 Format
     ``xarray.Dataset`` (in-memory), NetCDF (storage)

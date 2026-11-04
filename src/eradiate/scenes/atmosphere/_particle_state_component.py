@@ -1,11 +1,11 @@
 """
-Particle state and PSD components.
+Particle state and MS components.
 
 A particle state component is an atmospheric medium whose optical properties
 vary spatially, described by a dense volumetric :class:`.ParticleProfile`
 (state variable fields) and a Prt-Core v1 particle properties lookup dataset
 extended with state dimensions (wrapped in a :class:`.ParticleProperties`).
-A particle PSD component is the specialization whose state variables are the
+A particle MS component is the specialization whose state variables are the
 parameters of a particle size distribution.
 """
 
@@ -560,12 +560,12 @@ class ParticleMSComponent(ParticleStateComponent):
     that varies as a function of space coordinates [``particle_ms``].
 
     This :class:`.ParticleStateComponent` specialization uses the effective
-    radius (``reff``) and effective variance (``veff``) of the PSD as tabulated
+    radius (``reff``) and effective variance (``veff``) of the MS as tabulated
     state variables, and the mass concentration (``mass_concentration``) as amount.
     With the default ``state_variables`` and ``amount``, the ``profile`` is
-    expected in the :ref:`Ppr-PSD v1 <sec-data_formats-ppr_ms_v1>` format
+    expected in the :ref:`Ppr-MS v1 <sec-data_formats-ppr_ms_v1>` format
     and the ``properties`` in the
-    :ref:`Prt-PSD v1 <sec-data_formats-prt_ms_v1>` format. The
+    :ref:`Prt-MS v1 <sec-data_formats-prt_ms_v1>` format. The
     per-unit-amount extinction ``ext`` in ``properties`` is then a mass
     extinction coefficient (*e.g.* in m²/g).
 
@@ -576,7 +576,7 @@ class ParticleMSComponent(ParticleStateComponent):
     profile: ParticleProfile = documented(
         attrs.field(kw_only=True, converter=ParticleProfile.convert),
         doc="Dense volumetric state profile, in the "
-        ":ref:`Ppr-PSD v1 <sec-data_formats-ppr_ms_v1>` format. "
+        ":ref:`Ppr-MS v1 <sec-data_formats-ppr_ms_v1>` format. "
         "This parameter has no default.",
         type=get_doc(ParticleStateComponent, "profile", "type"),
         init_type=get_doc(ParticleStateComponent, "profile", "init_type"),
@@ -646,10 +646,11 @@ class ParticleMSComponent(ParticleStateComponent):
         """
         Build a :class:`.ParticleMSComponent` from a :class:`.ParticleOTComponent`.
 
-        The output has a spatially uniform PSD and a mass concentration field
-        that reproduces ``particle_ot``'s extinction coefficient at its
-        reference wavelength. Its ``properties`` hold a single wavelength
-        point (``particle_ot.w_ref``) and a single ``(reff, veff)`` point.
+        The output has a spatially uniform particle size distribution and a mass
+        concentration field that reproduces ``particle_ot``'s extinction
+        coefficient at its reference wavelength. Its ``properties`` hold a
+        single wavelength point (``particle_ot.w_ref``) and a single
+        ``(reff, veff)`` point.
 
         Parameters
         ----------
@@ -664,11 +665,12 @@ class ParticleMSComponent(ParticleStateComponent):
             ``ext(w_ref) / mass_concentration``.
 
         reff : :class:`pint.Quantity`
-            Effective radius of the PSD, assigned to every voxel.
+            Effective radius of the particle size distribution, assigned to
+            every voxel.
 
         veff : :class:`pint.Quantity`
-            Effective variance (dimensionless) of the PSD, assigned to every
-            voxel.
+            Effective variance (dimensionless) of the particle size
+            distribution, assigned to every voxel.
 
         grid : :class:`.SpatialGrid`, optional
             Target render grid for the output :class:`.ParticleMSComponent`.
