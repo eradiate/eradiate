@@ -934,7 +934,8 @@ class SphericalGrid(SpatialGrid):
     along Y are called *bands*.
 
     The azimuth range must be at most 360° wide; see :meth:`kernel_azimuths`
-    for the ranges accepted by the kernel.
+    for the ranges accepted by the kernel. Colatitudes must lie in
+    [0°, 180°].
     """
 
     _AXIS_UNITS = ("angle", "angle", "length")
@@ -955,6 +956,15 @@ class SphericalGrid(SpatialGrid):
             _either(z_edges, levels, "z_edges", "levels"),
         )
         self.kernel_azimuths()  # Raises if the azimuth range is unsupported
+
+        theta = self.colatitudes.m_as(ureg.deg)
+        if (theta.min() < 0.0 and not np.isclose(theta.min(), 0.0)) or (
+            theta.max() > 180.0 and not np.isclose(theta.max(), 180.0)
+        ):
+            raise ValueError(
+                "colatitudes must lie in [0°, 180°], got "
+                f"{self.colatitudes[[0, -1]]:~P}"
+            )
 
     @classmethod
     def from_levels(cls, levels: pint.Quantity | np.typing.ArrayLike) -> SphericalGrid:
