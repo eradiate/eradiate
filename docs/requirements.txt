@@ -14,6 +14,8 @@ anyio==4.16.0
     #   jupyter-server
     #   starlette
     #   watchfiles
+appnope==1.0.0
+    # via ipykernel
 argon2-cffi==25.1.0
     # via jupyter-server
 argon2-cffi-bindings==26.1.0
@@ -33,7 +35,7 @@ attrs==26.1.0
     #   jsonschema
     #   pinttrs
     #   referencing
-axsdb==0.1.2
+axsdb==0.2.0
     # via eradiate (pyproject.toml)
 babel==2.18.0
     # via
@@ -266,6 +268,7 @@ numba==0.68.1
 numpy==2.4.6
     # via
     #   eradiate (pyproject.toml)
+    #   axsdb
     #   cftime
     #   contourpy
     #   joseki
@@ -295,7 +298,7 @@ packaging==26.3
     #   pytest
     #   sphinx
     #   xarray
-pandas==3.1.0
+pandas==3.1.1
     # via
     #   joseki
     #   seaborn
@@ -316,7 +319,7 @@ pint==0.25.3
     #   pinttrs
 pinttrs==26.1.0
     # via eradiate (pyproject.toml)
-platformdirs==4.14.3
+platformdirs==4.14.5
     # via
     #   jupyter-core
     #   pint
@@ -388,7 +391,7 @@ pyyaml==6.0.3
     #   myst-parser
     #   pybtex
     #   pytest-regressions
-pyzmq==27.2.0
+pyzmq==27.3.0
     # via
     #   ipykernel
     #   jupyter-client
