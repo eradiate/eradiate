@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import warnings
 
 from ..scenes.atmosphere import (
@@ -18,6 +19,8 @@ from ..scenes.measure import (
 )
 from ..scenes.shapes import RectangleShape
 from ..scenes.surface import BasicSurface, Surface, surface_factory
+
+logger = logging.getLogger(__name__)
 
 
 def measure_inside_atmosphere(atmosphere: Atmosphere, measure: Measure) -> bool:
@@ -127,38 +130,24 @@ def check_geometry_atmosphere(
         )
 
 
-def check_piecewise_compatible(atmosphere: Atmosphere | None) -> tuple[bool, str]:
+def log_piecewise_not_compatible(
+    atmosphere: Atmosphere | None, integrator: Integrator
+) -> None:
     """
-    Check that the piecewise integrator is compatible with the experiment's
-    atmosphere. The atmosphere's geometry is expected to have been overridden
-    by the experiment's.
-
-    Parameters
-    ----------
-    atmosphere : Atmosphere
-        The scene's atmosphere configuration.
-
-    Returns
-    -------
-    tuple[bool, str]
-        Piecewise compatible flag and an exception message if the flag is not raised.
-        The message is empty if the flag is raised.
+    Log if the atmosphere uses a piecewise medium and the integrator does
+    not use the corresponding optimization.
     """
 
-    if atmosphere is None or not isinstance(
-        atmosphere, AbstractHeterogeneousAtmosphere
+    if (
+        isinstance(atmosphere, AbstractHeterogeneousAtmosphere)
+        and atmosphere.is_piecewise
+        and not integrator.uses_eo_medium_api
     ):
-        debug_message = f"Piecewise integrator not compatible with medium type : {type(atmosphere)}."
-        return False, debug_message
-
-    if not atmosphere.is_piecewise:
-        debug_message = (
-            "Piecewise integrator requires a piecewise medium, which needs a "
-            "plane parallel geometry with a 1D grid and force_majorant = False."
+        logger.debug(
+            "%s does not use medium tracking: the piecewise medium falls back "
+            "to its global majorant",
+            type(integrator).__name__,
         )
-        return False, debug_message
-
-    return True, ""
 
 
 def warn_ignored_extremum(
@@ -182,15 +171,15 @@ def warn_ignored_extremum(
     ):
         return
 
-    if atmosphere.is_piecewise:
-        msg = (
-            "Extremum structures are not used by piecewise media and will be "
-            "ignored; set 'force_majorant=True' to use them."
-        )
-    elif not integrator.extremum_compatible:
+    if not integrator.uses_eo_medium_api:
         msg = (
             "Extremum structures are not compatible with "
             f"{type(integrator).__name__} and will be ignored."
+        )
+    elif atmosphere.is_piecewise:
+        msg = (
+            "Extremum structures are not used by piecewise media and will be "
+            "ignored; set 'force_majorant=True' to use them."
         )
     else:
         return

@@ -12,7 +12,7 @@ from eradiate.scenes.atmosphere import (
     ParticleOTComponent,
 )
 from eradiate.scenes.core import traverse
-from eradiate.scenes.geometry import PlaneParallelGeometry, SceneGeometry
+from eradiate.scenes.geometry import FilterType, PlaneParallelGeometry, SceneGeometry
 from eradiate.spectral.index import SpectralIndex
 from eradiate.testing.types import check_scene_element
 from eradiate.util.deprecation import DeprecatedWarning
@@ -460,6 +460,19 @@ def test_heterogeneous_medium_type(
         assert template["type"] == "eoheterogeneous"
 
 
+def test_heterogeneous_medium_type_trilinear(mode_mono, atmosphere_us_standard_mono):
+    """
+    Trilinear filtering breaks the piecewise-constant layers assumed by the
+    piecewise medium, which falls back to eoheterogeneous.
+    """
+    atmosphere = HeterogeneousAtmosphere(
+        geometry=PlaneParallelGeometry(filter_type=FilterType.TRILINEAR),
+        molecular_atmosphere=atmosphere_us_standard_mono,
+    )
+    assert not atmosphere.is_piecewise
+    assert atmosphere._template_medium["type"] == "eoheterogeneous"
+
+
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
 @pytest.mark.parametrize("force_majorant", [False, True])
 def test_heterogenous_extremum_type(
@@ -484,11 +497,8 @@ def test_heterogenous_extremum_type(
     template = atmosphere._template_medium
 
     if geometry == "plane_parallel":
-        if force_majorant:
-            assert "extremum" in template
-            assert template["extremum"]["type"] == "gridextremum"
-        else:
-            assert "extremum" not in template
+        assert "extremum" in template
+        assert template["extremum"]["type"] == "gridextremum"
     elif geometry == "spherical_shell":
         assert "extremum" in template
         assert template["extremum"]["type"] == "sphericalcoordsextremum"

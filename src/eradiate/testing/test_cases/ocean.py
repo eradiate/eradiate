@@ -132,7 +132,7 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmosphere=False)
             "toa_altitude": 40 * ureg.km,
         },
         "atmosphere": atmosphere,
-        "integrator": {"type": "piecewise_volpath", "moment": True}
+        "integrator": {"type": "eovolpath", "moment": True}
         if has_atmosphere
         # Single-sample render: no variance estimate
         else {"type": "volpath"},

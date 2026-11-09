@@ -17,6 +17,7 @@ from ..core import (
     traverse,
 )
 from ..geometry import (
+    FilterType,
     PlaneParallelGeometry,
     SceneGeometry,
     SphericalShellGeometry,
@@ -25,7 +26,6 @@ from ..phase import PhaseFunction
 from ..shapes import Shape
 from ... import validators
 from ..._factory import Factory
-from ..._mode import get_mode
 from ...attrs import define, documented, get_doc
 from ...grid import SpatialGrid
 from ...kernel import (
@@ -398,10 +398,11 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             converter=attrs.converters.optional(bool),
             validator=attrs.validators.optional(attrs.validators.instance_of(bool)),
         ),
-        doc="If set to true, uses heterogeneous medium, which is compatible with all "
-        "integrators except PiecewiseVolpathIntegrator. Otherwise, uses a piecewise medium which "
-        "is compatible with PiecewiseVolPathIntegrator and other integrators. This setting "
-        "only affects PlaneParallelGeometry, other geometries use heterogeneous mediums. "
+        doc="If set to true, uses heterogeneous medium, which does not do "
+        "piecewise optimization on 1D atmospheres. The piecewise optimization "
+        "is only available for PlaneParallelGeometry with integrators "
+        "that support piecewise traversal (e.g. :class:`.EOVolPathIntegrator`), "
+        "other geometries use heterogeneous media. "
         "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
         "on the parent instead.",
         type="bool",
@@ -416,13 +417,14 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             validator=validators.is_vector3,
         ),
         doc="[EXPERIMENTAL] Resolution of the extremum structure. Applies to "
-        "both plane parallel and spherical shell geometries. Also note that in "
+        "both plane parallel and spherical shell geometries. Note that in "
         "plane parallel the dimensions are [x, y, z] and in spherical shell "
         "[r, theta, phi]. The default value (1, 1, 1) falls back to a global "
         "majorant. In plane parallel, set to (0,0,0) to trigger an adaptive "
         "search of the optimal resolution. Note that this is an expensive "
         "search that triggers at spectral update. Ignored by piecewise media "
-        "(plane parallel with a 1D grid and ``force_majorant`` unset). "
+        "(plane parallel with a 1D grid and ``force_majorant`` unset, see "
+        "``is_piecewise``). "
         "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
         "on the parent instead.",
         type="tuple[int, int, int]",
@@ -439,15 +441,16 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def is_piecewise(self) -> bool:
         """
         ``True`` if this atmosphere is rendered with a ``piecewise`` medium,
-        which requires a :class:`.PlaneParallelGeometry` with a 1D grid and
-        ``force_majorant`` unset. Only this medium is compatible with
-        :class:`.PiecewiseVolPathIntegrator`; it ignores
-        ``extremum_resolution`` and ``use_rrt``.
+        which requires a :class:`.PlaneParallelGeometry` with a 1D grid, the
+        nearest filter type, and ``force_majorant`` unset. Piecewise media
+        get optimized during traversal when used with integrators that support
+        it (see :attr:`.EOVolPathIntegrator.uses_eo_medium_api`).
         """
         return (
             isinstance(self.geometry, PlaneParallelGeometry)
             and not self.force_majorant
             and self.geometry.grid.is_1d
+            and self.geometry.filter_type is FilterType.NEAREST
         )
 
     # --------------------------------------------------------------------------
@@ -766,7 +769,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             ),
         }
 
-        piecewise = self.is_piecewise
+        medium = "piecewise" if self.is_piecewise else "eoheterogeneous"
 
         aabb_conf = {}
         if isinstance(self.geometry, SphericalShellGeometry):
@@ -777,7 +780,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     f"{self.extremum_resolution}."
                 )
             extr_conf = {"type": "sphericalcoordsextremum"}
-        elif not piecewise:
+        elif isinstance(self.geometry, PlaneParallelGeometry):
             extr_conf = {"type": "gridextremum"}
 
             aabb_min = self.geometry.bbox.min.m_as(length_units)
@@ -790,24 +793,16 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                 "aabb_max": self.geometry.bbox.max.m_as(length_units),
             }
 
-        if piecewise:
-            medium = "piecewise"
-        else:
-            if self.extremum_resolution != (1, 1, 1):
-                extremum = {
-                    **extr_conf,
-                    "resolution": self.extremum_resolution,
-                }
-            medium = "eoheterogeneous"
+        if self.extremum_resolution != (1, 1, 1):
+            extremum = {
+                **extr_conf,
+                "resolution": self.extremum_resolution,
+            }
 
         # Create medium dictionary
         result = {
             "type": medium,
-            "has_spectral_extinction": (
-                # piecewise volpath currently only works with spectral extinction true
-                # hack fix by setting to True when we have a piecewise medium
-                (not get_mode().check(mi_color_mode="mono")) or (medium == "piecewise")
-            ),
+            "has_spectral_extinction": False,
             "rr_threshold": self.rr_threshold,
             "use_rrt": self.use_rrt,
             "ddis_threshold": self.ddis_threshold,
