@@ -8,7 +8,7 @@ import attrs
 from ._core import EarthObservationExperiment
 from ._helpers import (
     check_geometry_atmosphere,
-    check_piecewise_compatible,
+    log_piecewise_not_compatible,
     measure_inside_atmosphere,
     surface_converter,
     warn_ignored_extremum,
@@ -29,8 +29,7 @@ from ..scenes.geometry import (
     SphericalShellGeometry,
 )
 from ..scenes.integrators import (
-    PiecewiseVolPathIntegrator,
-    VolPathIntegrator,
+    EOVolPathIntegrator,
 )
 from ..scenes.measure import AbstractDistantMeasure, Measure, TargetPoint
 from ..scenes.surface import BasicSurface
@@ -169,20 +168,11 @@ class AtmosphereExperiment(EarthObservationExperiment):
         """
         Ensures that the integrator is compatible with the atmosphere and geometry.
         """
-        piecewise_compatible, msg = check_piecewise_compatible(self.atmosphere)
 
         if self.integrator is AUTO:
-            if piecewise_compatible:
-                self.integrator = PiecewiseVolPathIntegrator()
-            else:
-                self.integrator = VolPathIntegrator()
-        else:
-            if (
-                isinstance(self.integrator, PiecewiseVolPathIntegrator)
-                and not piecewise_compatible
-            ):
-                raise ValueError(msg)
+            self.integrator = EOVolPathIntegrator()
 
+        log_piecewise_not_compatible(self.atmosphere, self.integrator)
         warn_ignored_extremum(self.atmosphere, self.integrator)
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:

@@ -241,6 +241,7 @@ def test_compare_canopy_atmosphere_vs_canopy(
         atmosphere=None,
         canopy=canopy,
         measures=measure,
+        integrator={"type": "volpath"},  # pinned for exact comparison
     )
 
     ert_seed_state.reset()

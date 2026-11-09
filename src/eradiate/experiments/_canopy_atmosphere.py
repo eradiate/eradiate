@@ -9,7 +9,7 @@ from ._core import EarthObservationExperiment
 from ._helpers import (
     check_geometry_atmosphere,
     check_path_compatible,
-    check_piecewise_compatible,
+    log_piecewise_not_compatible,
     measure_inside_atmosphere,
     surface_converter,
     warn_ignored_extremum,
@@ -31,9 +31,8 @@ from ..scenes.geometry import (
     SceneGeometry,
 )
 from ..scenes.integrators import (
+    EOVolPathIntegrator,
     PathIntegrator,
-    PiecewiseVolPathIntegrator,
-    VolPathIntegrator,
 )
 from ..scenes.measure import AbstractDistantMeasure, Measure
 from ..scenes.shapes import RectangleShape
@@ -215,21 +214,12 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
         """
         Ensures that the integrator is compatible with the atmosphere and geometry.
         """
-        piecewise_compatible, pw_msg = check_piecewise_compatible(self.atmosphere)
-        path_compatible, path_msg = check_path_compatible(self.atmosphere)
 
         if self.integrator is AUTO:
-            if piecewise_compatible:
-                self.integrator = PiecewiseVolPathIntegrator()
-            else:
-                self.integrator = VolPathIntegrator()
+            self.integrator = EOVolPathIntegrator()
         else:
             msg = ""
-            if (
-                isinstance(self.integrator, PiecewiseVolPathIntegrator)
-                and not piecewise_compatible
-            ):
-                msg = pw_msg
+            path_compatible, path_msg = check_path_compatible(self.atmosphere)
 
             if isinstance(self.integrator, PathIntegrator) and not path_compatible:
                 msg = path_msg
@@ -237,6 +227,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
             if msg:
                 raise ValueError(msg)
 
+        log_piecewise_not_compatible(self.atmosphere, self.integrator)
         warn_ignored_extremum(self.atmosphere, self.integrator)
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
