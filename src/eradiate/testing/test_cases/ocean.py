@@ -59,17 +59,17 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmosphere=False)
 
         spp = 10000
         atmosphere = {
-            "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "type": "molecular",
-                "has_absorption": False,
-                "thermoprops": joseki.make(
-                    identifier="afgl_1986-us_standard",
-                    z=np.arange(0, 40 + 0.1, 0.1) * ureg.km,
-                ).joseki.rescale_to({"CO2": 360 * ureg.ppm}),
-                "rayleigh_depolarization": 0.0,
-            },
-            "particle_components": [
+            "type": "atmosphere",
+            "components": [
+                {
+                    "type": "molecular",
+                    "has_absorption": False,
+                    "thermoprops": joseki.make(
+                        identifier="afgl_1986-us_standard",
+                        z=np.arange(0, 40 + 0.1, 0.1) * ureg.km,
+                    ).joseki.rescale_to({"CO2": 360 * ureg.ppm}),
+                    "rayleigh_depolarization": 0.0,
+                },
                 {
                     "type": "particle_ot",
                     "bottom": 0 * ureg.km,
@@ -82,7 +82,7 @@ def create_ocean_grasp(water_body_reflectance, wind_speed, has_atmosphere=False)
                     "w_ref": 550 * ureg.nm,
                     "has_absorption": True,
                     "particle_properties": UB,
-                }
+                },
             ],
         }
     else:

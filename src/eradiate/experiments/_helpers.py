@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import logging
 import warnings
+from collections.abc import MutableMapping
 
 from ..scenes.atmosphere import (
-    AbstractHeterogeneousAtmosphere,
     Atmosphere,
-    MolecularAtmosphere,
+    AtmosphereComponent,
+    MolecularComponent,
+    atmosphere_factory,
 )
 from ..scenes.bsdfs import BSDF, bsdf_factory
 from ..scenes.geometry import SceneGeometry
@@ -91,8 +93,33 @@ def surface_converter(value: dict | Surface | BSDF) -> Surface:
     return value
 
 
+def atmosphere_converter(
+    value: dict | Atmosphere | AtmosphereComponent | list,
+) -> Atmosphere:
+    """
+    Attempt to convert the atmosphere specification into an atmosphere type.
+
+    A dictionary without a ``type`` entry is interpreted as an
+    :class:`.Atmosphere`. A single component is wrapped into an
+    :class:`.Atmosphere` with the same ID, and a list of components into an
+    :class:`.Atmosphere` with default settings.
+    """
+    if isinstance(value, (list, tuple)):
+        return Atmosphere(components=value)
+
+    if isinstance(value, MutableMapping) and "type" not in value:
+        value = {**value, "type": "atmosphere"}
+
+    value = atmosphere_factory.convert(value)
+
+    if isinstance(value, AtmosphereComponent):
+        return Atmosphere(id=value.id, components=[value])
+
+    return value
+
+
 def check_geometry_atmosphere(
-    geometry: SceneGeometry, atmosphere: MolecularAtmosphere
+    geometry: SceneGeometry, atmosphere: MolecularComponent
 ) -> None:
     """
     Check that the experiment geometry is compatible with the vertical extent of
@@ -103,8 +130,8 @@ def check_geometry_atmosphere(
     geometry : SceneGeometry
         An experiment geometry.
 
-    atmosphere : MolecularAtmosphere
-        A molecular atmosphere.
+    atmosphere : MolecularComponent
+        A molecular atmosphere component.
 
     Raises
     ------
@@ -139,7 +166,7 @@ def log_piecewise_not_compatible(
     """
 
     if (
-        isinstance(atmosphere, AbstractHeterogeneousAtmosphere)
+        atmosphere is not None
         and atmosphere.is_piecewise
         and not integrator.uses_eo_medium_api
     ):
@@ -155,8 +182,8 @@ def warn_ignored_extremum(
 ) -> None:
     """
     Warn if the atmosphere requests an extremum structure that will not be
-    used, either because its medium is piecewise or because the integrator
-    cannot consume it.
+    used, either because its medium is homogeneous or piecewise, or because
+    the integrator cannot consume it.
 
     Parameters
     ----------
@@ -166,12 +193,15 @@ def warn_ignored_extremum(
     integrator : Integrator
         The resolved (non-``AUTO``) integrator.
     """
-    if not isinstance(atmosphere, AbstractHeterogeneousAtmosphere) or (
-        atmosphere.extremum_resolution == (1, 1, 1)
-    ):
+    if atmosphere is None or atmosphere.extremum_resolution == (1, 1, 1):
         return
 
-    if not integrator.uses_eo_medium_api:
+    if atmosphere.is_homogeneous:
+        msg = (
+            "Extremum structures are not used by homogeneous atmospheres and "
+            "will be ignored."
+        )
+    elif not integrator.uses_eo_medium_api:
         msg = (
             "Extremum structures are not compatible with "
             f"{type(integrator).__name__} and will be ignored; set the "

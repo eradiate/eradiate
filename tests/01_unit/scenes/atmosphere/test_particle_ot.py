@@ -10,6 +10,7 @@ from eradiate.grid import CartesianGrid
 from eradiate.radprops import ParticleProperties
 from eradiate.scenes.atmosphere import (
     ArrayParticleDistribution,
+    Atmosphere,
     ParticleComponent,
     ParticleOTComponent,
     UniformParticleDistribution,
@@ -79,11 +80,10 @@ class TestParticleOTComponent:
         # Construct from path
         layer = ParticleOTComponent(
             particle_properties="tests/aerosol/govaerts_2021-desert-aer_core_v2.nc",
-            geometry=geometry,
         )
 
         # Check if kernel dictionary is well-formed
-        check_scene_element(layer)
+        check_scene_element(Atmosphere(geometry=geometry, components=[layer]))
 
     def test_construct_noargs(self):
         """Construction succeeds with basic parameters"""
@@ -128,8 +128,6 @@ class TestParticleOTComponent:
             tau_ref=tau_ref,
             particle_properties=particle_properties_test,
         )
-        assert layer.bottom_altitude == bottom  # inherited from Atmosphere
-        assert layer.top_altitude == top  # inherited from Atmosphere
         assert isinstance(layer.distribution, UniformParticleDistribution)
         assert layer.tau_ref == tau_ref
 
@@ -265,10 +263,8 @@ class TestParticleOTComponent:
 
     def test_kernel_scale(self, modes_all_single, particle_properties_test):
         """Scale parameter propagates to kernel dict and latter can be loaded."""
-        particles = ParticleOTComponent(
-            id="atmosphere", particle_properties=particle_properties_test, scale=2.0
-        )
-        template, _ = traverse(particles)
+        particles = ParticleOTComponent(particle_properties=particle_properties_test)
+        template, _ = traverse(Atmosphere(components=[particles], scale=2.0))
         assert template["medium_atmosphere.scale"] == 2.0
 
     def test_eval_radprops_format(self, modes_all_single, particle_dataset_path):

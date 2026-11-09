@@ -18,7 +18,7 @@ from eradiate.radprops._atmosphere import (
     _layers_from_levels,
     _validate_thermoprops_grid_shape,
 )
-from eradiate.scenes.atmosphere import MolecularAtmosphere
+from eradiate.scenes.atmosphere import Atmosphere, MolecularComponent
 from eradiate.scenes.core import Scene, traverse
 from eradiate.spectral import CKDSpectralIndex, SpectralIndex
 
@@ -43,25 +43,25 @@ def _default_spectral_index(atmosphere):
 
 
 def test_molecular_atmosphere_default_mono(modes_all_unpolarized_double):
-    atmosphere = MolecularAtmosphere()
+    atmosphere = MolecularComponent()
     si = _default_spectral_index(atmosphere)
-    template, _ = traverse(atmosphere)
+    template, _ = traverse(Atmosphere(components=[atmosphere]))
     assert template.render(KernelContext(si=si))
 
 
 def test_molecular_atmosphere_absorption_data_param_error(modes_all_unpolarized_double):
     # Must not raise
-    MolecularAtmosphere()
+    MolecularComponent()
 
     # Must raise with a comprehensive message
     with pytest.raises(DataError, match="Could not load molecular absorption database"):
-        MolecularAtmosphere(absorption_data="doesnt_exist")
+        MolecularComponent(absorption_data="doesnt_exist")
 
 
 def test_molecular_atmosphere_scale(
     mode_mono, absorption_database_error_handler_config
 ):
-    atmosphere = MolecularAtmosphere(
+    atmosphere = MolecularComponent(
         thermoprops={
             "identifier": "afgl_1986-us_standard",
             "z": np.linspace(0, 120, 121) * ureg.km,
@@ -69,9 +69,8 @@ def test_molecular_atmosphere_scale(
         },
         absorption_data="komodo",
         error_handler_config=absorption_database_error_handler_config,
-        scale=2.0,
     )
-    template, _ = traverse(atmosphere)
+    template, _ = traverse(Atmosphere(components=[atmosphere], scale=2.0))
     si = _default_spectral_index(atmosphere)
     kernel_dict = template.render(KernelContext(si=si))
     assert kernel_dict["medium_atmosphere"]["scale"] == 2.0
@@ -82,7 +81,7 @@ def test_molecular_atmosphere_kernel_dict(
 ):
     """Constructor produces a valid kernel dictionary."""
 
-    atmosphere = MolecularAtmosphere(
+    atmosphere = MolecularComponent(
         thermoprops={
             "identifier": "afgl_1986-us_standard",
             "z": np.linspace(0, 80, 41) * ureg.km,
@@ -90,6 +89,9 @@ def test_molecular_atmosphere_kernel_dict(
         },
         absorption_data="monotropa",
         error_handler_config=absorption_database_error_handler_config,
+    )
+    atmosphere = Atmosphere(
+        components=[atmosphere],
         geometry={
             "type": "spherical_shell",
             "ground_altitude": 0 * ureg.km,
@@ -116,7 +118,7 @@ def test_molecular_atmosphere_switches(
     mode_mono, absorption_database_error_handler_config
 ):
     # Absorption can be deactivated
-    atmosphere = MolecularAtmosphere(
+    atmosphere = MolecularComponent(
         absorption_data="komodo",
         has_absorption=False,
         error_handler_config=absorption_database_error_handler_config,
@@ -126,7 +128,7 @@ def test_molecular_atmosphere_switches(
     npt.assert_allclose(radprops.sigma_a, 0.0)
 
     # Scattering can be deactivated
-    atmosphere = MolecularAtmosphere(
+    atmosphere = MolecularComponent(
         absorption_data="komodo",
         thermoprops={
             "identifier": "afgl_1986-us_standard",
@@ -143,7 +145,7 @@ def test_molecular_atmosphere_switches(
 
     # At least one must be active
     with pytest.raises(ValueError):
-        MolecularAtmosphere(
+        MolecularComponent(
             absorption_data="komodo",
             has_absorption=False,
             has_scattering=False,
@@ -152,34 +154,34 @@ def test_molecular_atmosphere_switches(
 
 
 def test_molecular_atmosphere_depolarization(mode_ckd):
-    atmosphere = MolecularAtmosphere(rayleigh_depolarization=0.5)
+    atmosphere = MolecularComponent(rayleigh_depolarization=0.5)
     si = _default_spectral_index(atmosphere)
     depol = atmosphere.eval_depolarization_factor(si)
-    template, _ = traverse(atmosphere)
+    template, _ = traverse(Atmosphere(components=[atmosphere]))
     assert template.render(KernelContext(si=si))
     assert isinstance(depol, pint.Quantity)
     assert len(depol) == 1
 
-    atmosphere = MolecularAtmosphere(rayleigh_depolarization=[0.1, 0.3, 0.6])
+    atmosphere = MolecularComponent(rayleigh_depolarization=[0.1, 0.3, 0.6])
     si = _default_spectral_index(atmosphere)
     depol = atmosphere.eval_depolarization_factor(si)
-    template, _ = traverse(atmosphere)
+    template, _ = traverse(Atmosphere(components=[atmosphere]))
     assert template.render(KernelContext(si=si))
     assert isinstance(depol, pint.Quantity)
     assert len(depol) == 3
 
-    atmosphere = MolecularAtmosphere(rayleigh_depolarization="bates")
+    atmosphere = MolecularComponent(rayleigh_depolarization="bates")
     si = _default_spectral_index(atmosphere)
     depol = atmosphere.eval_depolarization_factor(si)
-    template, _ = traverse(atmosphere)
+    template, _ = traverse(Atmosphere(components=[atmosphere]))
     assert template.render(KernelContext(si=si))
     assert isinstance(depol, pint.Quantity)
     assert len(depol) == 1
 
-    atmosphere = MolecularAtmosphere(rayleigh_depolarization="bodhaine")
+    atmosphere = MolecularComponent(rayleigh_depolarization="bodhaine")
     si = _default_spectral_index(atmosphere)
     depol = atmosphere.eval_depolarization_factor(si)
-    template, _ = traverse(atmosphere)
+    template, _ = traverse(Atmosphere(components=[atmosphere]))
     assert template.render(KernelContext(si=si))
     assert isinstance(depol, pint.Quantity)
     assert len(depol) == atmosphere.geometry.grid.n_layers
@@ -242,9 +244,9 @@ def test_layers_from_levels_generalizes_to_scrambled_xyz():
 def test_molecular_atmosphere_eval_count(modes_all_unpolarized_double, monkeypatch):
     # Rendering the parameter map for one spectral index queries the absorption
     # database and evaluates Rayleigh scattering once each
-    atmosphere = MolecularAtmosphere()
+    atmosphere = MolecularComponent()
     si = _default_spectral_index(atmosphere)
-    _, params = traverse(atmosphere)
+    _, params = traverse(Atmosphere(components=[atmosphere]))
 
     counts = {"sigma_a": 0, "sigma_s": 0}
 
@@ -271,7 +273,7 @@ def test_molecular_atmosphere_eval_count(modes_all_unpolarized_double, monkeypat
 def test_molecular_atmosphere_eval_count_g_points(mode_ckd, monkeypatch):
     # g-independent quantities are evaluated once for consecutive g-points
     # sharing the same wavelength
-    atmosphere = MolecularAtmosphere(rayleigh_depolarization="bodhaine")
+    atmosphere = MolecularComponent(rayleigh_depolarization="bodhaine")
     w = _default_spectral_index(atmosphere).w
     counts = {"compute_sigma_s_air": 0, "depolarization_bodhaine": 0}
 

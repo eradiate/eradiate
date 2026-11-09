@@ -82,8 +82,8 @@ def test_compare_canopy_atmosphere_vs_atmosphere(
     molecular_atmosphere = atmosphere_us_standard_ckd
     molecular_atmosphere.update({"has_absorption": False})
     atmosphere = {
-        "type": "heterogeneous",
-        "molecular_atmosphere": molecular_atmosphere,
+        "type": "atmosphere",
+        "components": [molecular_atmosphere],
     }
     measure = {
         "type": "mdistant",

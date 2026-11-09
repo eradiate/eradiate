@@ -35,24 +35,26 @@ def _create_integrator_surface(
             "srf": {"type": "delta", "wavelengths": 550 * ureg.nm},
         },
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "type": "molecular",
-                "thermoprops": {
-                    "identifier": "afgl_1986-us_standard",
-                    "z": np.arange(0, 120.1, 0.1) * ureg.km,
-                    "additional_molecules": False,
+            "type": "atmosphere",
+            "components": [
+                {
+                    "type": "molecular",
+                    "thermoprops": {
+                        "identifier": "afgl_1986-us_standard",
+                        "z": np.arange(0, 120.1, 0.1) * ureg.km,
+                        "additional_molecules": False,
+                    },
+                    "absorption_data": "monotropa",
+                    "error_handler_config": absorption_database_error_handler_config,
                 },
-                "absorption_data": "monotropa",
-                "error_handler_config": absorption_database_error_handler_config,
-            },
-            "particle_components": {
-                "type": "particle_ot",
-                "bottom": 1 * ureg.km,
-                "top": 2 * ureg.km,
-                "tau_ref": 0.2,
-                "particle_properties": "govaerts_2021-continental",
-            },
+                {
+                    "type": "particle_ot",
+                    "bottom": 1 * ureg.km,
+                    "top": 2 * ureg.km,
+                    "tau_ref": 0.2,
+                    "particle_properties": "govaerts_2021-continental",
+                },
+            ],
             "ddis_threshold": 0.1,
         },
         integrator=integrator_dict,
@@ -101,25 +103,27 @@ def create_integrator_canopy(absorption_database_error_handler_config, integrato
             }
         ],
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "type": "molecular",
-                "thermoprops": {
-                    "identifier": "afgl_1986-us_standard",
-                    "z": np.arange(0, 120.1, 0.1) * ureg.km,
-                    "additional_molecules": False,
+            "type": "atmosphere",
+            "components": [
+                {
+                    "type": "molecular",
+                    "thermoprops": {
+                        "identifier": "afgl_1986-us_standard",
+                        "z": np.arange(0, 120.1, 0.1) * ureg.km,
+                        "additional_molecules": False,
+                    },
+                    "absorption_data": "monotropa",
+                    "error_handler_config": absorption_database_error_handler_config,
                 },
-                "absorption_data": "monotropa",
-                "error_handler_config": absorption_database_error_handler_config,
-            },
-            "particle_components": {
-                "type": "particle_ot",
-                "bottom": 0 * ureg.km,
-                "top": 2 * ureg.km,
-                "distribution": {"type": "uniform"},
-                "tau_ref": 0.2,
-                "particle_properties": "govaerts_2021-continental",
-            },
+                {
+                    "type": "particle_ot",
+                    "bottom": 0 * ureg.km,
+                    "top": 2 * ureg.km,
+                    "distribution": {"type": "uniform"},
+                    "tau_ref": 0.2,
+                    "particle_properties": "govaerts_2021-continental",
+                },
+            ],
             "ddis_threshold": 0.1,
         },
         canopy={

@@ -2,20 +2,27 @@ import pytest
 
 import eradiate
 from eradiate.experiments._helpers import (
+    atmosphere_converter,
     measure_inside_atmosphere,
     surface_converter,
 )
-from eradiate.scenes.atmosphere import HeterogeneousAtmosphere
+from eradiate.scenes.atmosphere import (
+    Atmosphere,
+    HomogeneousComponent,
+    MolecularComponent,
+    ParticleOTComponent,
+)
 from eradiate.scenes.surface import BasicSurface
+from eradiate.util.deprecation import DeprecatedWarning
 
 
 def test_helpers_measure_inside_atmosphere(
     mode_mono,
     atmosphere_us_standard_mono,
 ):
-    atm = HeterogeneousAtmosphere(
+    atm = Atmosphere(
         geometry="plane_parallel",
-        molecular_atmosphere=atmosphere_us_standard_mono,
+        components=[atmosphere_us_standard_mono],
     )
 
     s1 = eradiate.scenes.measure.MultiDistantMeasure()
@@ -39,3 +46,35 @@ def test_helpers_surface_converter(mode_mono):
 
     # A dictionary specifying a BSDF is converted to a surface
     assert isinstance(surface_converter({"type": "lambertian"}), BasicSurface)
+
+
+def test_helpers_atmosphere_converter(mode_mono):
+    # Atmospheres pass through, the 'type' entry defaults to 'atmosphere'
+    for spec in [
+        {"type": "atmosphere", "components": [{"type": "homogeneous"}]},
+        {"components": [{"type": "homogeneous"}]},
+    ]:
+        atmosphere = atmosphere_converter(spec)
+        assert isinstance(atmosphere, Atmosphere)
+        assert isinstance(atmosphere.components[0], HomogeneousComponent)
+
+    # A legacy homogeneous atmosphere is wrapped, its medium options are ignored
+    with pytest.warns(DeprecatedWarning, match="'HomogeneousComponent.use_rrt'"):
+        atmosphere = atmosphere_converter({"type": "homogeneous", "use_rrt": False})
+    assert isinstance(atmosphere, Atmosphere)
+    assert atmosphere.use_rrt
+    assert isinstance(atmosphere.components[0], HomogeneousComponent)
+
+    # A single component is wrapped, keeping its ID
+    component = ParticleOTComponent(id="aerosols")
+    atmosphere = atmosphere_converter(component)
+    assert isinstance(atmosphere, Atmosphere)
+    assert atmosphere.id == "aerosols"
+    assert isinstance(atmosphere.components[0], ParticleOTComponent)
+
+    # A list of components is wrapped, keeping their order
+    atmosphere = atmosphere_converter([{"type": "molecular"}, component])
+    assert isinstance(atmosphere, Atmosphere)
+    assert atmosphere.id == "atmosphere"
+    assert isinstance(atmosphere.components[0], MolecularComponent)
+    assert atmosphere.components[1] is component

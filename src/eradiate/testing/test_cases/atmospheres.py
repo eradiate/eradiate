@@ -57,24 +57,26 @@ def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_conf
             "srf": {"type": "delta", "wavelengths": 550 * ureg.nm},
         },
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "type": "molecular",
-                "thermoprops": {
-                    "identifier": "afgl_1986-us_standard",
-                    "z": np.arange(0, 120.1, 0.1) * ureg.km,
-                    "additional_molecules": False,
+            "type": "atmosphere",
+            "components": [
+                {
+                    "type": "molecular",
+                    "thermoprops": {
+                        "identifier": "afgl_1986-us_standard",
+                        "z": np.arange(0, 120.1, 0.1) * ureg.km,
+                        "additional_molecules": False,
+                    },
+                    "absorption_data": "monotropa",
+                    "error_handler_config": absorption_database_error_handler_config,
                 },
-                "absorption_data": "monotropa",
-                "error_handler_config": absorption_database_error_handler_config,
-            },
-            "particle_components": {
-                "type": "particle_ot",
-                "bottom": 1 * ureg.km,
-                "top": 2 * ureg.km,
-                "tau_ref": 0.5,
-                "particle_properties": "govaerts_2021-continental",
-            },
+                {
+                    "type": "particle_ot",
+                    "bottom": 1 * ureg.km,
+                    "top": 2 * ureg.km,
+                    "tau_ref": 0.5,
+                    "particle_properties": "govaerts_2021-continental",
+                },
+            ],
         },
         integrator={"type": "eovolpath", "moment": True},
     )
@@ -109,17 +111,19 @@ def create_rpv_afgl1986_brfpp(absorption_database_error_handler_config):
             }
         ],
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": {
-                "type": "molecular",
-                "thermoprops": {
-                    "identifier": "afgl_1986-us_standard",
-                    "z": np.linspace(0, 120, 61) * ureg.km,
-                    "additional_molecules": False,
+            "type": "atmosphere",
+            "components": [
+                {
+                    "type": "molecular",
+                    "thermoprops": {
+                        "identifier": "afgl_1986-us_standard",
+                        "z": np.linspace(0, 120, 61) * ureg.km,
+                        "additional_molecules": False,
+                    },
+                    "absorption_data": "monotropa",
+                    "error_handler_config": absorption_database_error_handler_config,
                 },
-                "absorption_data": "monotropa",
-                "error_handler_config": absorption_database_error_handler_config,
-            },
+            ],
         },
         ckd_quad_config={"ng_max": 16},
         integrator={"type": "eovolpath", "moment": True},

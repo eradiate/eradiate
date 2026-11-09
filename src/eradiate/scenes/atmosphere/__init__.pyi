@@ -1,9 +1,15 @@
-from ._core import AbstractHeterogeneousAtmosphere as AbstractHeterogeneousAtmosphere
-from ._core import Atmosphere as Atmosphere
+from ._atmosphere import Atmosphere as Atmosphere
+from ._core import AtmosphereComponent as AtmosphereComponent
+from ._core import AtmosphereComponentFlag as AtmosphereComponentFlag
 from ._core import atmosphere_factory as atmosphere_factory
+from ._heterogeneous import (
+    AbstractHeterogeneousAtmosphere as AbstractHeterogeneousAtmosphere,
+)
 from ._heterogeneous import HeterogeneousAtmosphere as HeterogeneousAtmosphere
 from ._homogeneous import HomogeneousAtmosphere as HomogeneousAtmosphere
+from ._homogeneous import HomogeneousComponent as HomogeneousComponent
 from ._molecular import MolecularAtmosphere as MolecularAtmosphere
+from ._molecular import MolecularComponent as MolecularComponent
 from ._particle_component import ParticleComponent as ParticleComponent
 from ._particle_component import (
     ParticleExtinctionComponent as ParticleExtinctionComponent,

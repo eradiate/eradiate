@@ -156,8 +156,8 @@ Quick access
 .. autosummary::
    :toctree: generated/autosummary/
 
-   Atmosphere
-   AbstractHeterogeneousAtmosphere
+   AtmosphereComponent
+   AtmosphereComponentFlag
    ParticleDistribution
 
 **Factories**
@@ -170,9 +170,15 @@ Quick access
 .. autosummary::
    :toctree: generated/autosummary/
 
-   HomogeneousAtmosphere
-   HeterogeneousAtmosphere
-   MolecularAtmosphere
+   Atmosphere
+
+**Atmosphere components**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   HomogeneousComponent
+   MolecularComponent
    ParticleOTComponent
    ParticleExtinctionComponent
    ParticleStateComponent

@@ -7,6 +7,7 @@ import attrs
 
 from ._core import EarthObservationExperiment
 from ._helpers import (
+    atmosphere_converter,
     check_geometry_atmosphere,
     log_piecewise_not_compatible,
     measure_inside_atmosphere,
@@ -14,13 +15,7 @@ from ._helpers import (
     warn_ignored_extremum,
 )
 from ..attrs import AUTO, define, documented
-from ..scenes.atmosphere import (
-    Atmosphere,
-    HeterogeneousAtmosphere,
-    HomogeneousAtmosphere,
-    MolecularAtmosphere,
-    atmosphere_factory,
-)
+from ..scenes.atmosphere import Atmosphere, HomogeneousComponent
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import SceneElement
 from ..scenes.geometry import (
@@ -76,8 +71,8 @@ class AtmosphereExperiment(EarthObservationExperiment):
 
     atmosphere: Atmosphere | None = documented(
         attrs.field(
-            factory=HomogeneousAtmosphere,
-            converter=attrs.converters.optional(atmosphere_factory.convert),
+            factory=lambda: Atmosphere(components=[HomogeneousComponent()]),
+            converter=attrs.converters.optional(atmosphere_converter),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(Atmosphere)
             ),
@@ -85,10 +80,13 @@ class AtmosphereExperiment(EarthObservationExperiment):
         doc="Atmosphere specification. If set to ``None``, no atmosphere will "
         "be added. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.atmosphere_factory`.",
+        "interpreted by :data:`.atmosphere_factory`. Its ``type`` defaults to "
+        '``"atmosphere"``. A single atmosphere component (*e.g.* a '
+        ":class:`.MolecularComponent`) or a list of components is wrapped into "
+        "an :class:`.Atmosphere`.",
         type=":class:`.Atmosphere` or None",
-        init_type=":class:`.Atmosphere` or dict or None",
-        default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
+        init_type=":class:`.Atmosphere` or dict or list or None",
+        default=":class:`Atmosphere(components=[HomogeneousComponent()]) <.Atmosphere>`",
     )
 
     surface: BasicSurface | None = documented(
@@ -118,25 +116,19 @@ class AtmosphereExperiment(EarthObservationExperiment):
         Enforce the experiment geometry on the atmosphere component(s).
         """
         if self.atmosphere is not None:
-            # Since 'MolecularAtmosphere' cannot evaluate outside of its
+            # Since 'MolecularComponent' cannot evaluate outside of its
             # vertical extent, we verify here that the experiment's geometry
             # comply with the atmosphere's vertical extent.
-            if isinstance(self.atmosphere, MolecularAtmosphere):
-                check_geometry_atmosphere(self.geometry, self.atmosphere)
-            if (
-                isinstance(self.atmosphere, HeterogeneousAtmosphere)
-                and self.atmosphere.molecular_atmosphere is not None
-            ):
+            if self.atmosphere.molecular_component is not None:
                 check_geometry_atmosphere(
-                    self.geometry, self.atmosphere.molecular_atmosphere
+                    self.geometry, self.atmosphere.molecular_component
                 )
 
             # Override atmosphere geometry with experiment geometry
             self.atmosphere.geometry = self.geometry
 
-            # The below call to update is required in the case of a
-            # HeterogeneousAtmosphere, as it will propagate the geometry
-            # override to its components.
+            # The below call to update propagates the geometry override to
+            # the atmosphere components.
             self.atmosphere.update()
 
     def _normalize_measures(self) -> None:

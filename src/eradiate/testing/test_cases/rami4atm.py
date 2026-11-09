@@ -243,10 +243,11 @@ def create_toa(case_id: str, spp: int, padding: int = 5) -> CanopyAtmosphereExpe
     if profile_id != "s":
         raise ValueError(f"Unhandled atmospheric profile id '{profile_id}'")
 
+    if particles:
+        particles["type"] = "particle_ot"
     atmosphere = {
-        "type": "heterogeneous",
-        "molecular_atmosphere": molecular_atmosphere,
-        "particle_components": [particles] if particles else [],
+        "type": "atmosphere",
+        "components": [c for c in [molecular_atmosphere, particles] if c],
     }
 
     return CanopyAtmosphereExperiment(

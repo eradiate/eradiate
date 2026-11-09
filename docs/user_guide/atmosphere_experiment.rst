@@ -118,19 +118,18 @@ Distant fluxmeter [:class:`.DistantFluxMeasure`, ``distant_flux``]
 Atmosphere [``atmosphere``]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-An atmosphere can be optionally added to the scene. Currently, two types of
-atmosphere are supported.
+An atmosphere can be optionally added to the scene. It is an
+:class:`.Atmosphere` [``atmosphere``], configured by a list of components:
 
-Homogeneous atmosphere [:class:`.HomogeneousAtmosphere`, ``homogeneous``]
-    The atmosphere has spatially invariant radiative properties.
+* homogeneous components (:class:`.HomogeneousComponent`), with spatially
+  invariant radiative properties,
+* at most one molecular component (:class:`.MolecularComponent`), describing
+  absorption and scattering by atmospheric gases,
+* an arbitrary number of aerosol layers (*e.g.* :class:`.ParticleOTComponent`).
 
-Heterogeneous atmosphere [:class:`.HeterogeneousAtmosphere`, ``heterogeneous``]
-    The atmosphere has spatially varying radiative properties along the
-    altitude coordinate. The :class:`.HeterogeneousAtmosphere` class is
-    configured by specifying a molecular component
-    (:class:`.MolecularAtmosphere`), describing absorption and  scattering by
-    atmospheric gases, and an arbitrary number of aerosol layers
-    (:class:`.ParticleOTComponent`).
+The ``type`` entry of a dictionary atmosphere specification defaults to
+``"atmosphere"``. A single component or a list of components passed as the
+experiment atmosphere is wrapped into an :class:`.Atmosphere`.
 
 Surface [``surface``]
 ^^^^^^^^^^^^^^^^^^^^^
