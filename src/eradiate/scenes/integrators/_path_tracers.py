@@ -7,6 +7,7 @@ import eradiate
 from ._core import Integrator
 from ...attrs import define, documented
 from ...exceptions import UnsupportedModeError
+from ...util.deprecation import deprecated
 
 
 @define(eq=False, slots=False)
@@ -45,12 +46,13 @@ class MonteCarloIntegrator(Integrator):
     )
 
     @property
-    def extremum_compatible(self):
+    def uses_eo_medium_api(self):
         """
         Returns
         -------
         bool
-            Flags whether the integrator can consume extremum structures.
+            Flags whether the integrator uses the medium API that allows the use
+            of extremum structures and piecewise media.
         """
         return False
 
@@ -342,7 +344,7 @@ class EOVolPathIntegrator(MonteCarloIntegrator):
         self.use_ddis = self.use_pbs = self.use_nle = value
 
     @property
-    def extremum_compatible(self):
+    def uses_eo_medium_api(self):
         return True
 
     @property
@@ -394,6 +396,11 @@ class VolPathMISIntegrator(MonteCarloIntegrator):
         return result
 
 
+@deprecated(
+    deprecated_in="1.3.1",
+    removed_in="1.5.0",
+    details="Use `EOVolPathIntegrator` instead.",
+)
 @define(eq=False, slots=False)
 class PiecewiseVolPathIntegrator(EOVolPathIntegrator):
     """

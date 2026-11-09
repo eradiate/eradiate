@@ -18,10 +18,9 @@ from eradiate.testing.types import check_scene_element
         PathIntegrator,
         VolPathIntegrator,
         VolPathMISIntegrator,
-        PiecewiseVolPathIntegrator,
         EOVolPathIntegrator,
     ],
-    ids=["path", "volpath", "volpathmis", "piecewise_volpath", "eovolpath"],
+    ids=["path", "volpath", "volpathmis", "eovolpath"],
 )
 @pytest.mark.parametrize(
     "kwargs",
@@ -48,14 +47,6 @@ def test_path_tracers_construct(modes_all, integrator_cls, kwargs):
             },
         ),
         (
-            PiecewiseVolPathIntegrator,
-            {
-                "max_depth": 5,
-                "rr_depth": 3,
-                "hide_emitters": False,
-            },
-        ),
-        (
             EOVolPathIntegrator,
             {
                 "max_depth": 5,
@@ -76,7 +67,7 @@ def test_path_tracers_construct(modes_all, integrator_cls, kwargs):
             },
         ),
     ],
-    ids=["path", "volpath", "volpathmis", "piecewise_volpath", "eovolpath"],
+    ids=["path", "volpath", "volpathmis", "eovolpath"],
 )
 def test_path_tracers_kernel_dict(mode_mono, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
@@ -104,15 +95,6 @@ def test_path_tracers_kernel_dict(mode_mono, integrator_cls, kwargs):
             },
         ),
         (
-            PiecewiseVolPathIntegrator,
-            {
-                "max_depth": 5,
-                "rr_depth": 3,
-                "hide_emitters": False,
-                "moment": True,
-            },
-        ),
-        (
             EOVolPathIntegrator,
             {
                 "max_depth": 5,
@@ -122,7 +104,7 @@ def test_path_tracers_kernel_dict(mode_mono, integrator_cls, kwargs):
             },
         ),
     ],
-    ids=["path", "volpath", "volpathmis", "piecewise_volpath", "eovolpath"],
+    ids=["path", "volpath", "volpathmis", "eovolpath"],
 )
 def test_moment_construct(mode_mono, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
@@ -151,15 +133,6 @@ def test_moment_construct(mode_mono, integrator_cls, kwargs):
             },
         ),
         (
-            PiecewiseVolPathIntegrator,
-            {
-                "max_depth": 5,
-                "rr_depth": 3,
-                "hide_emitters": False,
-                "stokes": True,
-            },
-        ),
-        (
             EOVolPathIntegrator,
             {
                 "max_depth": 5,
@@ -169,7 +142,7 @@ def test_moment_construct(mode_mono, integrator_cls, kwargs):
             },
         ),
     ],
-    ids=["path", "volpath", "volpathmis", "piecewise_volpath", "eovolpath"],
+    ids=["path", "volpath", "volpathmis", "eovolpath"],
 )
 def test_stokes_construct(mode_mono_polarized_single, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
@@ -216,16 +189,6 @@ def test_stokes_construct(mode_mono_polarized_single, integrator_cls, kwargs):
             },
         ),
         (
-            PiecewiseVolPathIntegrator,
-            {
-                "max_depth": 5,
-                "rr_depth": 3,
-                "hide_emitters": False,
-                "stokes": True,
-                "moment": True,
-            },
-        ),
-        (
             EOVolPathIntegrator,
             {
                 "max_depth": 5,
@@ -236,7 +199,7 @@ def test_stokes_construct(mode_mono_polarized_single, integrator_cls, kwargs):
             },
         ),
     ],
-    ids=["path", "volpath", "volpathmis", "piecewise_volpath", "eovolpath"],
+    ids=["path", "volpath", "volpathmis", "eovolpath"],
 )
 def test_stokes_moment_construct(mode_mono_polarized_single, integrator_cls, kwargs):
     integrator = integrator_cls(**kwargs)
@@ -257,3 +220,8 @@ def test_eovolpath_vroom_overrides(mode_mono):
 
     integrator = EOVolPathIntegrator(use_vroom=True, use_ddis=False)
     assert integrator.use_vroom and integrator.use_ddis
+
+
+def test_piecewise_volpath_deprecated(mode_mono):
+    integrator = PiecewiseVolPathIntegrator()
+    assert integrator.kernel_type == "eovolpath"

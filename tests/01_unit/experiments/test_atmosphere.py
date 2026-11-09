@@ -13,7 +13,6 @@ from eradiate.experiments import AtmosphereExperiment
 from eradiate.scenes.atmosphere import HeterogeneousAtmosphere, HomogeneousAtmosphere
 from eradiate.scenes.integrators import (
     EOVolPathIntegrator,
-    PiecewiseVolPathIntegrator,
     VolPathIntegrator,
 )
 from eradiate.scenes.measure import MultiDistantMeasure
@@ -292,16 +291,16 @@ def test_atmosphere_experiment_custom_atmosphere(mode_ckd, atmosphere_cams_lybia
 @pytest.mark.parametrize(
     "integrator, force_majorant, expected_integrator, warns",
     [
-        (AUTO, False, PiecewiseVolPathIntegrator, True),
-        (AUTO, True, VolPathIntegrator, True),
-        ({"type": "eovolpath"}, False, EOVolPathIntegrator, True),
-        ({"type": "eovolpath"}, True, EOVolPathIntegrator, False),
+        (AUTO, False, EOVolPathIntegrator, True),
+        (AUTO, True, EOVolPathIntegrator, False),
+        ({"type": "volpath"}, False, VolPathIntegrator, True),
+        ({"type": "volpath"}, True, VolPathIntegrator, True),
     ],
     ids=[
         "auto_piecewise",
         "auto_majorant",
-        "eovolpath_piecewise",
-        "eovolpath_majorant",
+        "volpath_piecewise",
+        "volpath_majorant",
     ],
 )
 def test_atmosphere_experiment_extremum_ignored(

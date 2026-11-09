@@ -76,7 +76,7 @@ def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_conf
                 "particle_properties": "govaerts_2021-continental",
             },
         },
-        integrator={"type": "piecewise_volpath", "moment": True},
+        integrator={"type": "eovolpath", "moment": True},
     )
 
 
@@ -122,5 +122,5 @@ def create_rpv_afgl1986_brfpp(absorption_database_error_handler_config):
             },
         },
         ckd_quad_config={"ng_max": 16},
-        integrator={"type": "piecewise_volpath", "moment": True},
+        integrator={"type": "eovolpath", "moment": True},
     )
