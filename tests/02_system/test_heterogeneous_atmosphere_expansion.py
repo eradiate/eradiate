@@ -73,7 +73,7 @@ def test_heterogeneous_atmosphere_expansion_particle_component(
         geometry=geometry,
         atmosphere={
             "type": "heterogeneous",
-            "particle_components": [particles],
+            "components": [particles],
         },
         measures=[measure],
     )
@@ -139,7 +139,7 @@ def test_heterogeneous_atmosphere_expansion_molecular_atmosphere(
     exp2 = eradiate.experiments.AtmosphereExperiment(
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": molecular_atmosphere,
+            "components": [molecular_atmosphere],
         },
         measures=[measure],
     )

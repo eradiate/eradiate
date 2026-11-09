@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
 from typing import Literal
 
@@ -38,6 +39,7 @@ from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
+from ...util.deprecation import DeprecatedWarning
 from ...util.misc import flatten
 
 atmosphere_factory = Factory()
@@ -54,7 +56,7 @@ atmosphere_factory.register_lazy_batch(
             {},
         ),
         (
-            "_molecular.MolecularAtmosphere",
+            "_molecular.MolecularComponent",
             "molecular",
             {},
         ),
@@ -132,9 +134,7 @@ class Atmosphere(CompositeSceneElement, ABC):
         "estimate transmittance for integrators that allow it. "
         "Otherwise, falls back to ratio tracking. "
         "Residual ratio tracking generally reduces variance and can improve "
-        "performance for high optical thickness. "
-        "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
-        "on the parent instead.",
+        "performance for high optical thickness.",
         type="bool",
     )
 
@@ -150,9 +150,7 @@ class Atmosphere(CompositeSceneElement, ABC):
             ],
         ),
         doc="Specifies the probability to importance sample the phase using the "
-        "emitter as incident direction. Set <= 0. to deactivate. "
-        "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
-        "on the parent instead.",
+        "emitter as incident direction. Set <= 0. to deactivate.",
         type="float",
     )
 
@@ -170,9 +168,7 @@ class Atmosphere(CompositeSceneElement, ABC):
         doc="Apply russian roulette to conditionally terminate the sample, "
         "when its transmittance is below this threshold. This helps increase "
         "performance at the cost of variance. Set to 0. to disable. Not "
-        "applied on media that have the piecewise optimization. "
-        "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
-        "on the parent instead.",
+        "applied on media that have the piecewise optimization.",
         type="float",
         init_type="float",
         default="0.1",
@@ -372,96 +368,12 @@ class Atmosphere(CompositeSceneElement, ABC):
         )
 
 
-@define(eq=False, slots=False)
-class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
+class _RadProps(ABC):
     """
-    Abstract base class for heterogeneous atmospheres.
+    Radiative property evaluation interface shared by heterogeneous
+    atmospheres and atmosphere components. Implementors must have a
+    ``geometry`` attribute.
     """
-
-    scale: float | None = documented(
-        attrs.field(
-            default=None,
-            kw_only=True,
-            converter=attrs.converters.optional(float),
-            validator=attrs.validators.optional(attrs.validators.instance_of(float)),
-        ),
-        doc="If set, the extinction coefficient is scaled by the corresponding "
-        "amount during computation.",
-        type="float or None",
-        init_type="float, optional",
-    )
-
-    force_majorant: bool = documented(
-        attrs.field(
-            default=False,
-            kw_only=True,
-            converter=attrs.converters.optional(bool),
-            validator=attrs.validators.optional(attrs.validators.instance_of(bool)),
-        ),
-        doc="If set to true, uses heterogeneous medium, which does not do "
-        "piecewise optimization on 1D atmospheres. The piecewise optimization "
-        "is only available for :class:`.PlaneParallelGeometry` with integrators "
-        "that support piecewise traversal (e.g. :class:`.EOVolPathIntegrator`), "
-        "other geometries use heterogeneous media. "
-        "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
-        "on the parent instead.",
-        type="bool",
-        init_type="bool, optional",
-    )
-
-    extremum_resolution: tuple[int, int, int] = documented(
-        attrs.field(
-            default=(1, 1, 1),
-            kw_only=True,
-            converter=tuple,
-            validator=validators.is_vector3,
-        ),
-        doc="[EXPERIMENTAL] Resolution of the extremum structure. Applies to "
-        "both plane parallel and spherical shell geometries. Note that in "
-        "plane parallel the dimensions are [x, y, z] and in spherical shell "
-        "[r, theta, phi]. The default value (1, 1, 1) falls back to a global "
-        "majorant. In plane parallel, set to (0,0,0) to trigger an adaptive "
-        "search of the optimal resolution. Note that this is an expensive "
-        "search that triggers at spectral update. Ignored by piecewise media "
-        "(plane parallel with a 1D grid and ``force_majorant`` unset, see "
-        "``is_piecewise``). "
-        "Ignored on components of a :class:`.HeterogeneousAtmosphere`; set it "
-        "on the parent instead.",
-        type="tuple[int, int, int]",
-        init_type="tuple[int, int, int]",
-        default="(1,1,1)",
-    )
-
-    def update(self) -> None:
-        """
-        Update internal state.
-        """
-
-    @property
-    def is_piecewise(self) -> bool:
-        """
-        ``True`` if this atmosphere is rendered with a ``piecewise`` medium,
-        which requires a :class:`.PlaneParallelGeometry` with a 1D grid, the
-        ``nearest`` filter type, and ``force_majorant`` unset. Piecewise media
-        get optimized during traversal when used with integrators that support
-        it (see :attr:`.EOVolPathIntegrator.uses_eo_medium_api`).
-        """
-        return (
-            isinstance(self.geometry, PlaneParallelGeometry)
-            and not self.force_majorant
-            and self.geometry.grid.is_1d
-            and self.geometry.filter_type is FilterType.NEAREST
-        )
-
-    # --------------------------------------------------------------------------
-    #                    Spatial and thermophysical properties
-    # --------------------------------------------------------------------------
-
-    # Nothing at the moment
-
-    # --------------------------------------------------------------------------
-    #                       Radiative properties
-    # --------------------------------------------------------------------------
 
     @property
     def absorption_data(self) -> AbsorptionDatabase | None:
@@ -743,6 +655,84 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     def eval_transmittance_s(self, si: SpectralIndex) -> pint.Quantity:
         return self.eval_transmittance(si=si, interaction="scattering")
 
+
+@define(eq=False, slots=False)
+class AbstractHeterogeneousAtmosphere(Atmosphere, _RadProps, ABC):
+    """
+    Abstract base class for heterogeneous atmospheres.
+    """
+
+    scale: float | None = documented(
+        attrs.field(
+            default=None,
+            kw_only=True,
+            converter=attrs.converters.optional(float),
+            validator=attrs.validators.optional(attrs.validators.instance_of(float)),
+        ),
+        doc="If set, the extinction coefficient is scaled by the corresponding "
+        "amount during computation.",
+        type="float or None",
+        init_type="float, optional",
+    )
+
+    force_majorant: bool = documented(
+        attrs.field(
+            default=False,
+            kw_only=True,
+            converter=attrs.converters.optional(bool),
+            validator=attrs.validators.optional(attrs.validators.instance_of(bool)),
+        ),
+        doc="If set to true, uses heterogeneous medium, which does not do "
+        "piecewise optimization on 1D atmospheres. The piecewise optimization "
+        "is only available for :class:`.PlaneParallelGeometry` with integrators "
+        "that support piecewise traversal (e.g. :class:`.EOVolPathIntegrator`), "
+        "other geometries use heterogeneous media.",
+        type="bool",
+        init_type="bool, optional",
+    )
+
+    extremum_resolution: tuple[int, int, int] = documented(
+        attrs.field(
+            default=(1, 1, 1),
+            kw_only=True,
+            converter=tuple,
+            validator=validators.is_vector3,
+        ),
+        doc="[EXPERIMENTAL] Resolution of the extremum structure. Applies to "
+        "both plane parallel and spherical shell geometries. Note that in "
+        "plane parallel the dimensions are [x, y, z] and in spherical shell "
+        "[r, theta, phi]. The default value (1, 1, 1) falls back to a global "
+        "majorant. In plane parallel, set to (0,0,0) to trigger an adaptive "
+        "search of the optimal resolution. Note that this is an expensive "
+        "search that triggers at spectral update. Ignored by piecewise media "
+        "(plane parallel with a 1D grid and ``force_majorant`` unset, see "
+        "``is_piecewise``).",
+        type="tuple[int, int, int]",
+        init_type="tuple[int, int, int]",
+        default="(1,1,1)",
+    )
+
+    def update(self) -> None:
+        """
+        Update internal state.
+        """
+
+    @property
+    def is_piecewise(self) -> bool:
+        """
+        ``True`` if this atmosphere is rendered with a ``piecewise`` medium,
+        which requires a :class:`.PlaneParallelGeometry` with a 1D grid, the
+        ``nearest`` filter type, and ``force_majorant`` unset. Piecewise media
+        get optimized during traversal when used with integrators that support
+        it (see :attr:`.EOVolPathIntegrator.uses_eo_medium_api`).
+        """
+        return (
+            isinstance(self.geometry, PlaneParallelGeometry)
+            and not self.force_majorant
+            and self.geometry.grid.is_1d
+            and self.geometry.filter_type is FilterType.NEAREST
+        )
+
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
     # --------------------------------------------------------------------------
@@ -750,21 +740,40 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     @property
     def _template_medium(self) -> dict:
         # Inherit docstring
+        return self._build_medium_template(self)
 
+    def _build_medium_template(self, source: _RadProps) -> dict:
+        """
+        Generate a medium template from the radiative properties of ``source``,
+        evaluated on the geometry of ``source``. Medium options are taken from
+        this atmosphere.
+
+        Parameters
+        ----------
+        source : .AbstractHeterogeneousAtmosphere or .AtmosphereComponent
+            Radiative property source, *e.g.* this atmosphere itself or one of
+            its components.
+
+        Returns
+        -------
+        dict
+            Medium template.
+        """
         collision_coefficient_units = uck.get("collision_coefficient")
         length_units = uck.get("length")
 
         extremum = None
+        geometry = source.geometry
 
         volumes = {
             "albedo": generate_gridvolume(
-                self.geometry,
-                self.eval_albedo,
+                geometry,
+                source.eval_albedo,
                 units=ureg.dimensionless,
             ),
             "sigma_t": generate_gridvolume(
-                self.geometry,
-                self.eval_sigma_t,
+                geometry,
+                source.eval_sigma_t,
                 units=collision_coefficient_units,
             ),
         }
@@ -772,7 +781,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
         medium = "piecewise" if self.is_piecewise else "eoheterogeneous"
 
         aabb_conf = {}
-        if isinstance(self.geometry, SphericalShellGeometry):
+        if isinstance(geometry, SphericalShellGeometry):
             if any(r < 1 for r in self.extremum_resolution):
                 raise ValueError(
                     "in spherical shell geometry, 'extremum_resolution' must "
@@ -780,17 +789,17 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
                     f"{self.extremum_resolution}."
                 )
             extr_conf = {"type": "sphericalcoordsextremum"}
-        elif isinstance(self.geometry, PlaneParallelGeometry):
+        elif isinstance(geometry, PlaneParallelGeometry):
             extr_conf = {"type": "gridextremum"}
 
-            aabb_min = self.geometry.bbox.min.m_as(length_units)
+            aabb_min = geometry.bbox.min.m_as(length_units)
             # The geometry bbox inserts a sub-surface padding. We want the data to be
             # evaluated on the entire geometry extent in x and y directions, but we
             # should avoid the wrap_mode affecting the z direction.
-            aabb_min[2] = self.geometry.grid.levels[0].m_as(length_units)
+            aabb_min[2] = geometry.grid.levels[0].m_as(length_units)
             aabb_conf = {
                 "aabb_min": aabb_min,
-                "aabb_max": self.geometry.bbox.max.m_as(length_units),
+                "aabb_max": geometry.bbox.max.m_as(length_units),
             }
 
         if self.extremum_resolution != (1, 1, 1):
@@ -823,36 +832,58 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
     @property
     def _params_medium(self) -> dict[str, SceneParameter]:
         # Inherit docstring
+        return self._build_medium_params(self, self.medium_id)
 
+    def _build_medium_params(
+        self, source: _RadProps, medium_id: str
+    ) -> dict[str, SceneParameter]:
+        """
+        Generate the parameter update map of a medium created with
+        :meth:`_medium_template`.
+
+        Parameters
+        ----------
+        source : .AbstractHeterogeneousAtmosphere or .AtmosphereComponent
+            Object whose radiative properties are evaluated.
+
+        medium_id : str
+            ID of the target medium in the Mitsuba scene tree.
+
+        Returns
+        -------
+        dict
+            Parameter update map.
+        """
         collision_coefficient_units = uck.get("collision_coefficient")
+        geometry = source.geometry
 
-        if isinstance(self.geometry, PlaneParallelGeometry):
+        if isinstance(geometry, PlaneParallelGeometry):
             albedo_key = "albedo.data"
             sigma_t_key = "sigma_t.data"
-        elif isinstance(self.geometry, SphericalShellGeometry):
+        elif isinstance(geometry, SphericalShellGeometry):
             albedo_key = "albedo.volume.data"
             sigma_t_key = "sigma_t.volume.data"
         else:
             raise TypeError(
-                f"unhandled scene geometry type '{type(self.geometry).__name__}'"
+                f"unhandled scene geometry type '{type(geometry).__name__}'"
             )
 
         albedo_search = SearchSceneParameter(
-            node_type=mi.Medium, node_id=self.medium_id, parameter_relpath=albedo_key
+            node_type=mi.Medium, node_id=medium_id, parameter_relpath=albedo_key
         )
         sigma_t_search = SearchSceneParameter(
-            node_type=mi.Medium, node_id=self.medium_id, parameter_relpath=sigma_t_key
+            node_type=mi.Medium, node_id=medium_id, parameter_relpath=sigma_t_key
         )
         albedo_grid = generate_gridvolume(
-            self.geometry,
-            self.eval_albedo,
+            geometry,
+            source.eval_albedo,
             units=ureg.dimensionless,
             search=albedo_search,
             flag=KernelSceneParameterFlags.SPECTRAL,
         )
         sigma_t_grid = generate_gridvolume(
-            self.geometry,
-            self.eval_sigma_t,
+            geometry,
+            source.eval_sigma_t,
             units=collision_coefficient_units,
             search=sigma_t_search,
             flag=KernelSceneParameterFlags.SPECTRAL,
@@ -862,3 +893,122 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, ABC):
             albedo_key: albedo_grid,
             sigma_t_key: sigma_t_grid,
         }
+
+
+# Parameters which components accept for backward compatibility only
+_DEPRECATED_COMPONENT_PARAMETERS = (
+    "use_rrt",
+    "ddis_threshold",
+    "rr_threshold",
+    "scale",
+    "force_majorant",
+    "extremum_resolution",
+)
+
+
+def _deprecated_option(converter=None, validator=None):
+    return documented(
+        attrs.field(
+            default=None,
+            kw_only=True,
+            converter=attrs.converters.optional(converter) if converter else None,
+            validator=attrs.validators.optional(validator) if validator else None,
+            repr=False,
+        ),
+        doc="Deprecated, set it on :class:`.HeterogeneousAtmosphere` instead.",
+        type="None",
+        default="None",
+    )
+
+
+@define(eq=False, slots=False)
+class AtmosphereComponent(_RadProps, ABC):
+    """
+    Abstract base class for atmosphere components.
+
+    Components provide radiative properties and a phase function. They are
+    assembled by a :class:`.HeterogeneousAtmosphere`, which generates the
+    corresponding kernel scene dictionary.
+    """
+
+    id: str | None = documented(
+        attrs.field(
+            default="atmosphere",
+            validator=attrs.validators.optional(attrs.validators.instance_of(str)),
+        ),
+        doc="Component identifier. Overridden by the parent "
+        ":class:`.HeterogeneousAtmosphere`.",
+        type="str or None",
+        init_type="str, optional",
+        default='"atmosphere"',
+    )
+
+    geometry: SceneGeometry = documented(
+        attrs.field(
+            default="plane_parallel",
+            converter=SceneGeometry.convert,
+            validator=attrs.validators.instance_of(SceneGeometry),
+        ),
+        doc="Scene geometry on which radiative properties are evaluated. "
+        "Overridden by the parent :class:`.HeterogeneousAtmosphere`.",
+        type=".SceneGeometry",
+        init_type=".SceneGeometry or dict or str, optional",
+        default='"plane_parallel"',
+    )
+
+    # Deprecated Parameters
+    use_rrt: bool | None = _deprecated_option(bool)
+    ddis_threshold: float | None = _deprecated_option(float)
+    rr_threshold: float | None = _deprecated_option(float)
+    scale: float | None = _deprecated_option(float)
+    force_majorant: bool | None = _deprecated_option(bool)
+    extremum_resolution: tuple[int, int, int] | None = _deprecated_option(
+        tuple, validators.is_vector3
+    )
+
+    def __attrs_post_init__(self):
+        deprecated_options = [
+            f"'{name}'"
+            for name in _DEPRECATED_COMPONENT_PARAMETERS
+            if getattr(self, name) is not None
+        ]
+
+        if deprecated_options:
+            deprecated_list = ",".join(deprecated_options)
+            warnings.warn(
+                DeprecatedWarning(
+                    component=f"Setting {{{deprecated_list}}} on '{type(self).__name__}'",
+                    deprecated_in="1.3.1",
+                    removed_in="2.0.0",
+                    details="It will have no effect and will be ignored, set "
+                    "them on 'HeterogeneousAtmosphere' instead.",
+                ),
+                stacklevel=3,
+            )
+
+        self.update()
+
+    def update(self) -> None:
+        """
+        Update internal state.
+        """
+
+    @property
+    def phase_id(self) -> str:
+        """
+        Returns
+        -------
+        str
+            ID of the phase function associated with the component.
+        """
+        return f"phase_{self.id}"
+
+    @property
+    @abstractmethod
+    def phase(self) -> PhaseFunction:
+        """
+        Returns
+        -------
+        .PhaseFunction
+            Phase function associated with the component.
+        """

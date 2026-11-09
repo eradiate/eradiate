@@ -158,6 +158,7 @@ Quick access
 
    Atmosphere
    AbstractHeterogeneousAtmosphere
+   AtmosphereComponent
    ParticleDistribution
 
 **Factories**
@@ -172,7 +173,13 @@ Quick access
 
    HomogeneousAtmosphere
    HeterogeneousAtmosphere
-   MolecularAtmosphere
+
+**Atmosphere components**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   MolecularComponent
    ParticleOTComponent
    ParticleExtinctionComponent
    ParticleStateComponent

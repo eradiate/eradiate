@@ -219,7 +219,9 @@ def deprecated(
     return _wrapper
 
 
-def substitute(subs: dict[str, tuple[type, dict[str, str]]]) -> Callable:
+def substitute(
+    subs: dict[str, tuple[type, dict[str, str]]], stacklevel: int = 2
+) -> Callable:
     """
     Generate a simple module :func:`__getattr__` which redirects outdated
     attribute lookups to current values with a deprecation warning.
@@ -230,6 +232,9 @@ def substitute(subs: dict[str, tuple[type, dict[str, str]]]) -> Callable:
         A dictionary with outdated names as keys. Values are 2-tuples consisting
         of the current substitute and a dictionary of keyword arguments passed
         to the :class:`DeprecatedWarning` constructor.
+
+    stacklevel: int
+        Determines where the warning is emitted by climbing the stack.
 
     Returns
     -------
@@ -252,13 +257,14 @@ def substitute(subs: dict[str, tuple[type, dict[str, str]]]) -> Callable:
     def __getattr__(name):
         if name in subs:
             new_type, kwargs = subs[name]
+
             warnings.warn(
                 DeprecatedWarning(
                     component=f"'{name}'",
                     details=f"Use '{new_type.__name__}' instead.",
                     **kwargs,
                 ),
-                stacklevel=2,
+                stacklevel=stacklevel,
             )
             return new_type
 

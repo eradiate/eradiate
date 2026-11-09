@@ -8,6 +8,7 @@ import attrs
 
 from ._core import EarthObservationExperiment
 from ._helpers import (
+    atmosphere_converter,
     check_geometry_atmosphere,
     log_piecewise_not_compatible,
     measure_inside_atmosphere,
@@ -19,8 +20,6 @@ from ..scenes.atmosphere import (
     Atmosphere,
     HeterogeneousAtmosphere,
     HomogeneousAtmosphere,
-    MolecularAtmosphere,
-    atmosphere_factory,
 )
 from ..scenes.bsdfs import LambertianBSDF
 from ..scenes.core import SceneElement
@@ -83,7 +82,7 @@ class DEMExperiment(EarthObservationExperiment):
     atmosphere: Atmosphere | None = documented(
         attrs.field(
             factory=HomogeneousAtmosphere,
-            converter=attrs.converters.optional(atmosphere_factory.convert),
+            converter=attrs.converters.optional(atmosphere_converter),
             validator=attrs.validators.optional(
                 attrs.validators.instance_of(Atmosphere)
             ),
@@ -91,9 +90,11 @@ class DEMExperiment(EarthObservationExperiment):
         doc="Atmosphere specification. If set to ``None``, no atmosphere will "
         "be added. "
         "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.atmosphere_factory`.",
+        "interpreted by :data:`.atmosphere_factory`. A single atmosphere "
+        "component (*e.g.* a :class:`.MolecularComponent`) or a list of "
+        "components is wrapped into a :class:`.HeterogeneousAtmosphere`.",
         type=".Atmosphere or None",
-        init_type=".Atmosphere or dict or None",
+        init_type=".Atmosphere or dict or list or None",
         default=":class:`HomogeneousAtmosphere() <.HomogeneousAtmosphere>`",
     )
 
@@ -124,14 +125,11 @@ class DEMExperiment(EarthObservationExperiment):
         Enforce the experiment geometry on the atmosphere component(s).
         """
         if self.atmosphere is not None:
-            # Since 'MolecularAtmosphere' cannot evaluate outside of its
+            # Since 'MolecularComponent' cannot evaluate outside of its
             # vertical extent, we verify here that the experiment's geometry
             # comply with the atmosphere's vertical extent.
-            if isinstance(self.atmosphere, MolecularAtmosphere):
-                check_geometry_atmosphere(self.geometry, self.atmosphere)
-            if (
-                isinstance(self.atmosphere, HeterogeneousAtmosphere)
-                and self.atmosphere.molecular_atmosphere is not None
+            if isinstance(self.atmosphere, HeterogeneousAtmosphere) and (
+                self.atmosphere.molecular_atmosphere is not None
             ):
                 check_geometry_atmosphere(
                     self.geometry, self.atmosphere.molecular_atmosphere

@@ -22,7 +22,6 @@ import xarray as xr
 from ._core import atmosphere_factory
 from ._particle_component import ParticleComponent, ParticleOTComponent
 from ._particle_profile import ParticleProfile
-from ..core import traverse
 from ..geometry import PlaneParallelGeometry
 from ..phase import (
     GriddedParticlePhaseFunction,
@@ -32,7 +31,6 @@ from ..phase import (
 from ...attrs import define, documented, get_doc
 from ...data.convert import make_prt_ms_v1
 from ...grid import CartesianGrid, SpatialGrid
-from ...kernel import SceneParameter
 from ...radprops._particles import ParticleProperties
 from ...spectral.index import MonoSpectralIndex, SpectralIndex
 from ...units import to_quantity, units_compatible
@@ -332,16 +330,6 @@ class ParticleStateComponent(ParticleComponent):
             kwargs["grid_2"] = grids[1]
 
         return GriddedParticlePhaseFunction(**kwargs)
-
-    @property
-    def _template_phase(self) -> dict:
-        result, _ = traverse(self.phase)
-        return result.data
-
-    @property
-    def _params_phase(self) -> dict[str, SceneParameter]:
-        _, result = traverse(self.phase)
-        return result.data
 
     # --------------------------------------------------------------------------
     #                       Radiative properties

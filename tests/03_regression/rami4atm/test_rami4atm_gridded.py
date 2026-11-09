@@ -9,7 +9,7 @@ from eradiate.attrs import AUTO
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
-    MolecularAtmosphere,
+    MolecularComponent,
 )
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.testing.regression import RegressionTestFailure, ZTest
@@ -47,7 +47,10 @@ def test_rami4atm_gridded(mode_ckd_double, case):
     resx, resy = resolution
 
     for exp in exps:
-        mol_atm_1d = exp.atmosphere.molecular_atmosphere
+        mol_atm_1d = next(
+            (c for c in exp.atmosphere.components if isinstance(c, MolecularComponent)),
+            None,
+        )
 
         geometry = PlaneParallelGeometry(
             grid=CartesianGrid.from_extent_and_resolution(
@@ -61,7 +64,7 @@ def test_rami4atm_gridded(mode_ckd_double, case):
 
         mol_atm_3d = None
         if mol_atm_1d:
-            mol_atm_3d = MolecularAtmosphere(
+            mol_atm_3d = MolecularComponent(
                 geometry=geometry,
                 absorption_data=mol_atm_1d.absorption_data,
                 thermoprops=mol_atm_1d.thermoprops,
@@ -71,14 +74,15 @@ def test_rami4atm_gridded(mode_ckd_double, case):
 
         atm = HeterogeneousAtmosphere(
             geometry=geometry,
-            molecular_atmosphere=mol_atm_3d,
-            particle_components=[
+            components=[c for c in [mol_atm_3d] if c]
+            + [
                 attrs.evolve(
                     ensemble,
                     tau_ref=ensemble.tau_ref * np.ones(resolution),
                     geometry=geometry,
                 )
-                for ensemble in exp.atmosphere.particle_components
+                for ensemble in exp.atmosphere.components
+                if not isinstance(ensemble, MolecularComponent)
             ],
         )
 

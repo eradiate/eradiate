@@ -3,11 +3,17 @@ from __future__ import annotations
 import logging
 import warnings
 
+import attrs
+
 from ..scenes.atmosphere import (
     AbstractHeterogeneousAtmosphere,
     Atmosphere,
-    MolecularAtmosphere,
+    AtmosphereComponent,
+    HeterogeneousAtmosphere,
+    MolecularComponent,
+    atmosphere_factory,
 )
+from ..scenes.atmosphere._core import _DEPRECATED_COMPONENT_PARAMETERS
 from ..scenes.bsdfs import BSDF, bsdf_factory
 from ..scenes.geometry import SceneGeometry
 from ..scenes.integrators import Integrator
@@ -91,8 +97,41 @@ def surface_converter(value: dict | Surface | BSDF) -> Surface:
     return value
 
 
+def atmosphere_converter(
+    value: dict | Atmosphere | AtmosphereComponent | list,
+) -> Atmosphere:
+    """
+    Attempt to convert the atmosphere specification into an atmosphere type.
+
+    Atmospheres can be defined by a single component, in which case it is
+    wrapped into a :class:`.HeterogeneousAtmosphere` with the same ID.
+
+    For backward compatibility, medium parameters set on the component are moved
+    to the wrapping atmosphere. A list of components is wrapped into a
+    :class:`.HeterogeneousAtmosphere` with default settings.
+    """
+    if isinstance(value, (list, tuple)):
+        return HeterogeneousAtmosphere(components=value)
+
+    value = atmosphere_factory.convert(value)
+
+    # Lift parameters from the component and set them to the wrapping
+    # HeterogeneousAtmosphere for backward compatibility
+    if isinstance(value, AtmosphereComponent):
+        params = {
+            name: getattr(value, name)
+            for name in _DEPRECATED_COMPONENT_PARAMETERS
+            if getattr(value, name) is not None
+        }
+        # Wrap a copy of the component
+        component = attrs.evolve(value, **dict.fromkeys(params))
+        return HeterogeneousAtmosphere(id=value.id, components=[component], **params)
+
+    return value
+
+
 def check_geometry_atmosphere(
-    geometry: SceneGeometry, atmosphere: MolecularAtmosphere
+    geometry: SceneGeometry, atmosphere: MolecularComponent
 ) -> None:
     """
     Check that the experiment geometry is compatible with the vertical extent of
@@ -103,8 +142,8 @@ def check_geometry_atmosphere(
     geometry : SceneGeometry
         An experiment geometry.
 
-    atmosphere : MolecularAtmosphere
-        A molecular atmosphere.
+    atmosphere : MolecularComponent
+        A molecular atmosphere component.
 
     Raises
     ------

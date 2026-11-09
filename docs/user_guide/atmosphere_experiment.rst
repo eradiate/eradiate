@@ -127,10 +127,11 @@ Homogeneous atmosphere [:class:`.HomogeneousAtmosphere`, ``homogeneous``]
 Heterogeneous atmosphere [:class:`.HeterogeneousAtmosphere`, ``heterogeneous``]
     The atmosphere has spatially varying radiative properties along the
     altitude coordinate. The :class:`.HeterogeneousAtmosphere` class is
-    configured by specifying a molecular component
-    (:class:`.MolecularAtmosphere`), describing absorption and  scattering by
+    configured by a list of components: at most one molecular component
+    (:class:`.MolecularComponent`), describing absorption and scattering by
     atmospheric gases, and an arbitrary number of aerosol layers
-    (:class:`.ParticleOTComponent`).
+    (*e.g.* :class:`.ParticleOTComponent`). A single component passed as the
+    experiment atmosphere is wrapped into a :class:`.HeterogeneousAtmosphere`.
 
 Surface [``surface``]
 ^^^^^^^^^^^^^^^^^^^^^

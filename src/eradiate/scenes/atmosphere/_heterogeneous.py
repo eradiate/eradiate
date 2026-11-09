@@ -14,8 +14,12 @@ import mitsuba as mi
 import numpy as np
 import pint
 
-from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
-from ._molecular import MolecularAtmosphere
+from ._core import (
+    AbstractHeterogeneousAtmosphere,
+    AtmosphereComponent,
+    atmosphere_factory,
+)
+from ._molecular import MolecularComponent
 from ._particle_component import ParticleComponent
 from ..core import traverse
 from ..phase import MultiPhaseFunction, PhaseFunction
@@ -37,7 +41,7 @@ logger = logging.getLogger(__name__)
 def _molecular_converter(value):
     if isinstance(value, MutableMapping) and ("type" not in value):
         value["type"] = "molecular"
-    return atmosphere_factory.convert(value, allowed_cls=MolecularAtmosphere)
+    return atmosphere_factory.convert(value, allowed_cls=MolecularComponent)
 
 
 def _particles_converter(value):
@@ -48,34 +52,15 @@ def _particles_converter(value):
     return [ParticleComponent.convert(element) for element in value]
 
 
-#: Component fields overridden by the parent :class:`.HeterogeneousAtmosphere`
-_COMPONENT_IGNORED_FIELDS = (
-    "use_rrt",
-    "ddis_threshold",
-    "force_majorant",
-    "extremum_resolution",
-    "rr_threshold",
-)
-
-
-def _warn_ignored_component_fields(
-    attribute: attrs.Attribute,
-    component: AbstractHeterogeneousAtmosphere,
-) -> None:
-    """
-    Warn if a component sets a field that has no effect when it is nested in a
-    :class:`.HeterogeneousAtmosphere`.
-    """
-    fields = attrs.fields_dict(type(component))
-    for name in _COMPONENT_IGNORED_FIELDS:
-        if not np.array_equal(getattr(component, name), fields[name].default):
-            warnings.warn(
-                f"while validating {attribute.name}: component field "
-                f"'{name}' has no effect and is ignored; set "
-                f"'HeterogeneousAtmosphere.{name}' instead",
-                UserWarning,
-                stacklevel=2,
-            )
+def _components_converter(value):
+    if not value:
+        return []
+    if not isinstance(value, (list, tuple)):
+        value = [value]
+    return [
+        atmosphere_factory.convert(element, allowed_cls=AtmosphereComponent)
+        for element in value
+    ]
 
 
 @renamed_kwargs(
@@ -92,62 +77,37 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     configurations.
     """
 
-    molecular_atmosphere: MolecularAtmosphere | None = documented(
-        attrs.field(
-            default=None,
-            converter=attrs.converters.optional(_molecular_converter),
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(MolecularAtmosphere)
-            ),
-        ),
-        doc="Molecular atmosphere. May be specified as a dictionary interpreted "
-        'by :data:`.atmosphere_factory`; in that case, the ``"type"`` parameter '
-        'may be omitted and will automatically be set to ``"molecular"``.',
-        type=".MolecularAtmosphere or None",
-        init_type=".MolecularAtmosphere or dict, optional",
-        default="None",
-    )
-
-    @molecular_atmosphere.validator
-    def _molecular_atmosphere_validator(self, attribute, value):
-        if value is None:
-            return
-
-        if value.scale is not None:
-            raise ValueError(
-                f"while validating {attribute.name}: components cannot be "
-                "scaled individually"
-            )
-
-        _warn_ignored_component_fields(attribute, value)
-
-    particle_components: list[ParticleComponent] = documented(
+    components: list[AtmosphereComponent] = documented(
         attrs.field(
             factory=list,
-            converter=_particles_converter,
+            converter=_components_converter,
             validator=attrs.validators.deep_iterable(
-                attrs.validators.instance_of(ParticleComponent)
+                attrs.validators.instance_of(AtmosphereComponent)
             ),
         ),
-        doc="List of particle components. Elements may be specified as "
-        "dictionaries interpreted by :data:`.atmosphere_factory`; in that "
-        "case, the ``type`` parameter may be omitted and will automatically "
-        'be set to ``"particle_ot"``.',
-        type="list of .ParticleComponent",
-        init_type="list of .ParticleComponent, optional",
+        doc="List of atmosphere components, *i.e.* a :class:`.MolecularComponent` "
+        ":class:`.ParticleComponent`. Elements may be specified as dictionaries "
+        "interpreted by :data:`.atmosphere_factory`; in that case, the "
+        "``type`` parameter is required. At most one "
+        ":class:`.MolecularComponent` is allowed.",
+        type="list of .AtmosphereComponent",
+        init_type="list of .AtmosphereComponent or dict, optional",
         default="[]",
     )
 
-    @particle_components.validator
-    def _particles_validator(self, attribute, value):
+    @components.validator
+    def _components_validator(self, attribute, value):
+        if sum(isinstance(c, MolecularComponent) for c in value) > 1:
+            raise ValueError(
+                f"while validating {attribute.name}: at most one "
+                "MolecularComponent is allowed"
+            )
+
         if not all(component.scale is None for component in value):
             raise ValueError(
                 f"while validating {attribute.name}: components cannot be "
                 "scaled individually"
             )
-
-        for component in value:
-            _warn_ignored_component_fields(attribute, component)
 
     use_phase_mis: bool = documented(
         attrs.field(default=True, converter=bool, kw_only=True),
@@ -158,6 +118,57 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         default="True",
     )
 
+    def __init__(
+        self, *args, molecular_atmosphere=None, particle_components=None, **kwargs
+    ):
+        if molecular_atmosphere is not None or particle_components is not None:
+            if "components" in kwargs:
+                raise TypeError(
+                    "cannot pass 'components' together with "
+                    "'molecular_atmosphere' or 'particle_components'"
+                )
+
+            for name, value in [
+                ("molecular_atmosphere", molecular_atmosphere),
+                ("particle_components", particle_components),
+            ]:
+                if value is not None:
+                    warnings.warn(
+                        DeprecatedWarning(
+                            component=f"'HeterogeneousAtmosphere.{name}'",
+                            deprecated_in="1.3.1",
+                            removed_in="2.0.0",
+                            details="Use 'components' instead.",
+                        ),
+                        stacklevel=3,
+                    )
+
+            # Molecular first in order to match legacy input
+            components = []
+            if molecular_atmosphere is not None:
+                components.append(_molecular_converter(molecular_atmosphere))
+            components += _particles_converter(particle_components)
+
+            kwargs["components"] = components
+
+        self.__attrs_init__(*args, **kwargs)
+
+    @property
+    def molecular_atmosphere(self) -> MolecularComponent | None:
+        """
+        Molecular component of this atmosphere, if any.
+        """
+        return next(
+            (c for c in self.components if isinstance(c, MolecularComponent)), None
+        )
+
+    @property
+    def particle_components(self) -> list[AtmosphereComponent]:
+        """
+        Particle components of this atmosphere, if any.
+        """
+        return [c for c in self.components if not isinstance(c, MolecularComponent)]
+
     @property
     def particle_layers(self) -> list[ParticleComponent]:
         """
@@ -165,7 +176,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
         .. deprecated:: 1.3.0
            Use :attr:`particle_components` instead.
-
         """
         warnings.warn(
             DeprecatedWarning(
@@ -177,18 +187,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             stacklevel=2,
         )
         return self.particle_components
-
-    @property
-    def components(self) -> list[MolecularAtmosphere | ParticleComponent]:
-        """
-        Returns
-        -------
-        list of .MolecularAtmosphere or .ParticleComponent
-            The list of all registered atmospheric components.
-        """
-        result = [self.molecular_atmosphere] if self.molecular_atmosphere else []
-        result.extend(self.particle_components)
-        return result
 
     def update(self):
         # Inherit docstring
@@ -208,20 +206,6 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             component.geometry = self.geometry
 
     # --------------------------------------------------------------------------
-    #              Spatial extension and thermophysical properties
-    # --------------------------------------------------------------------------
-
-    @property
-    def bottom(self) -> pint.Quantity:
-        # Inherit docstring
-        return min([component.bottom for component in self.components])
-
-    @property
-    def top(self) -> pint.Quantity:
-        # Inherit docstring
-        return max([component.top for component in self.components])
-
-    # --------------------------------------------------------------------------
     #                       Radiative properties
     # --------------------------------------------------------------------------
 
@@ -229,7 +213,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     def absorption_data(self) -> AbsorptionDatabase | None:
         # Inherit docstring
         if self.molecular_atmosphere is not None:
-            return self.molecular_atmosphere._absorption_data
+            return self.molecular_atmosphere.absorption_data
         else:
             return None
 

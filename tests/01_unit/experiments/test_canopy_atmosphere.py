@@ -179,7 +179,7 @@ def test_canopy_atmosphere_experiment_real_life(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "components": [atmosphere_us_standard_mono],
         },
         canopy={
             "type": "discrete_canopy",
@@ -258,7 +258,7 @@ def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "components": [atmosphere_us_standard_mono],
         },
         canopy={
             "type": "discrete_canopy",

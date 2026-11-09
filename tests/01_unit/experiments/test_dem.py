@@ -97,7 +97,7 @@ def test_dem_experiment_real_life(mode_mono, atmosphere_us_standard_mono):
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "components": [atmosphere_us_standard_mono],
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
@@ -127,7 +127,7 @@ def test_dem_experiment_inconsistent_multiradiancemeter(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "components": [atmosphere_us_standard_mono],
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[

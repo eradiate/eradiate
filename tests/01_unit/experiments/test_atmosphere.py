@@ -149,7 +149,7 @@ def test_atmosphere_experiment_real_life(
         surface={"type": "rpv"},
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "components": [atmosphere_us_standard_mono],
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
@@ -178,8 +178,7 @@ def test_atmosphere_experiment_run_basic(
     exp = AtmosphereExperiment(
         atmosphere={
             "type": "heterogeneous",
-            "molecular_atmosphere": molecular_atmosphere,
-            "particle_components": [{"type": "particle_ot"}],
+            "components": [molecular_atmosphere, {"type": "particle_ot"}],
         },
         surface={"type": "lambertian"},
         measures={
@@ -313,7 +312,7 @@ def test_atmosphere_experiment_extremum_ignored(
 ):
     # Unused extremum structures trigger a warning, including with AUTO
     atmosphere = HeterogeneousAtmosphere(
-        molecular_atmosphere=atmosphere_us_standard_mono,
+        components=[atmosphere_us_standard_mono],
         extremum_resolution=(1, 1, 10),
         force_majorant=force_majorant,
     )
