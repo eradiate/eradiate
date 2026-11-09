@@ -270,7 +270,7 @@ def create_toa(case_id: str, spp: int, padding: int = 5) -> CanopyAtmosphereExpe
             }
         ],
         ckd_quad_config={"type": "gauss_legendre", "ng_max": 16, "policy": "fixed"},
-        integrator={"type": "piecewise_volpath", "moment": True},
+        integrator={"type": "eovolpath", "moment": True},
     )
 
 
