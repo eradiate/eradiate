@@ -90,6 +90,39 @@ class TestAllocate:
             _allocate(9, [1.0, 1.0], floor=[2, 8])
 
 
+@pytest.mark.parametrize(
+    "srf",
+    [
+        # Piecewise linear on a 1 nm mesh
+        BandSRF(
+            wavelengths=np.arange(500.0, 521.0) * ureg.nm,
+            values=1.0 - np.abs(np.arange(500.0, 521.0) - 510.0) / 10.0,
+        ),
+        UniformSRF(wmin=503.5 * ureg.nm, wmax=516.0 * ureg.nm),
+    ],
+    ids=["band", "uniform"],
+)
+def test_bin_weights(srf):
+    """
+    Bin weights are exact SRF integrals over each bin, also when bin bounds
+    fall between SRF nodes.
+    """
+    wmins = 498.0 + 3.2 * np.arange(8)
+    grid = CKDSpectralGrid(wmins, wmins + 3.2)
+    expected = np.array(
+        [
+            # Exact: trapezoid on a mesh holding the SRF nodes and bin bounds
+            srf.integrate(a * ureg.nm, b * ureg.nm).m_as("nm")
+            if isinstance(srf, BandSRF)
+            else max(0.0, min(b, 516.0) - max(a, 503.5))
+            for a, b in zip(wmins, wmins + 3.2)
+        ]
+    )
+    np.testing.assert_allclose(
+        _bin_weights(srf, grid), expected / expected.sum(), rtol=1e-12
+    )
+
+
 @pytest.mark.parametrize("allocation", ["weighted", "uniform"])
 @pytest.mark.parametrize("srf", SRFS.values(), ids=SRFS.keys())
 def test_mono(srf, allocation):

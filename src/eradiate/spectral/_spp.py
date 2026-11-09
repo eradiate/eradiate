@@ -5,6 +5,7 @@ Sample count (spp) distribution across spectral loop iterations.
 from __future__ import annotations
 
 import numpy as np
+import scipy.integrate as spi
 import xarray as xr
 from numpy.typing import ArrayLike
 
@@ -138,9 +139,12 @@ def spectral_response_weights(
     -----
     SRF weighting turns a set of per-bin values :math:`x_i` into a single band
     value :math:`\sum_i c_i x_i`. This function computes the coefficients
-    :math:`c_i`. They are computed by feeding a unit impulse on each bin (*i.e.*
-    considering the :math:`x_i = 1`, all other values set to zero) through the
-    resampling and integration steps that are to be applied to the actual data.
+    :math:`c_i`. The spectral data is assumed constant over each bin, so
+    :math:`c_i` is the integral of the SRF over bin :math:`i`, divided by its
+    integral over the interval spanned by all bins. The SRF is piecewise
+    linear between its nodes (:class:`.BandSRF`) or constant on its support
+    (:class:`.UniformSRF`), so the trapezoid rule on a mesh holding the SRF
+    nodes and the bin bounds computes these integrals exactly.
     Computed weights are consumed by
     :func:`.pipelines.logic.apply_spectral_response`, allowing different usage
     depending on whether the mean or variance of a variable is processed, and
@@ -151,51 +155,38 @@ def spectral_response_weights(
             "input data is missing 'bin_wmin' and/or 'bin_wmax' coordinates"
         )
 
-    # Evaluate integral of spectral response function within selected interval
-    wmin = to_quantity(spectral_data.coords["bin_wmin"]).min()
-    wmax = to_quantity(spectral_data.coords["bin_wmax"]).max()
-    srf_int = srf.integrate(wmin, wmax)
+    bin_wmin = to_quantity(spectral_data.coords["bin_wmin"])
+    w_units = bin_wmin.units
+    bin_wmin = np.atleast_1d(bin_wmin.m_as(w_units))
+    bin_wmax = np.atleast_1d(
+        to_quantity(spectral_data.coords["bin_wmax"]).m_as(w_units)
+    )
 
     if isinstance(srf, BandSRF):
-        srf_w = srf.wavelengths
+        srf_w = srf.wavelengths.m_as(w_units)
     elif isinstance(srf, UniformSRF):
-        srf_w = np.array([wmin.m_as(ureg.nm), wmax.m_as(ureg.nm)]) * ureg.nm
+        srf_w = np.array([srf.wmin.m_as(w_units), srf.wmax.m_as(w_units)])
     else:
         raise TypeError(f"unhandled SRF type '{srf.__class__.__name__}'")
 
-    data_w = to_quantity(spectral_data.coords["w"])
-
-    # Spectral grid is the finest between data and SRF grids
-    w_units = data_w.units
-    w_m = np.array(sorted(set(data_w.m_as(w_units)) | set(srf_w.m_as(w_units))))
-
-    # One row per spectral bin, each holding a unit impulse on that bin. Only
-    # the spectral coordinate is carried over: the others play no part here and
-    # would only be resampled for nothing.
-    basis = xr.DataArray(
-        np.eye(spectral_data.sizes["w"]),
-        dims=("bin", "w"),
-        coords={"w": spectral_data.coords["w"].values},
+    # The SRF vanishes outside [srf_w[0], srf_w[-1]]: clipping the bounds to
+    # this interval keeps the UniformSRF discontinuities out of the mesh
+    # intervals, where the trapezoid rule would smear them
+    lo = np.clip(bin_wmin, srf_w[0], srf_w[-1])
+    hi = np.clip(bin_wmax, srf_w[0], srf_w[-1])
+    w_m = np.unique(np.concatenate((lo, hi, srf_w)))
+    cumint = np.concatenate(
+        ([0.0], spi.cumulative_trapezoid(srf.eval(w_m * w_units).m, w_m))
     )
 
-    # If data var has length 1 on spectral dimension, directly select
-    # the value instead of using interpolation (it's a known scipy issue)
-    if spectral_data.sizes["w"] == 1:
-        basis_values = basis.isel(w=0, drop=True).expand_dims(w=w_m, axis=1)
+    # Bounds are mesh nodes: these lookups are exact
+    bin_int = cumint[np.searchsorted(w_m, hi)] - cumint[np.searchsorted(w_m, lo)]
+    srf_int = (
+        cumint[np.searchsorted(w_m, hi.max())] - cumint[np.searchsorted(w_m, lo.min())]
+    )
 
-    # Otherwise, use nearest neighbour interpolation (we assume that the
-    # spectral data is constant over each spectral bin)
-    else:
-        basis_values = basis.interp(
-            w=w_m, method="nearest", kwargs={"fill_value": "extrapolate"}
-        )
-
-    srf_values = xr.DataArray(srf.eval(w_m * w_units).magnitude, dims="w")
-    weights = (basis_values * srf_values).integrate("w") / srf_int.m_as(w_units)
-
-    # Rows of the identity are the bins of the input grid, in its own order
     return xr.DataArray(
-        weights.values, dims="w", coords={"w": spectral_data.coords["w"].values}
+        bin_int / srf_int, dims="w", coords={"w": spectral_data.coords["w"].values}
     )
 
 
