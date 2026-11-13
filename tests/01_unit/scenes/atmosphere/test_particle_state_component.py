@@ -3,6 +3,7 @@ import pytest
 
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import ParticleStateComponent
+from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import GriddedParticlePhaseFunction
 from eradiate.spectral.index import MonoSpectralIndex
@@ -125,7 +126,7 @@ class TestParticleStateComponent:
     def test_template_phase(self, case, mode_mono):
         """The kernel dict maps state variables to the plugin's slots."""
         component, _, _ = case
-        template = component._template_phase
+        template = traverse(component.phase)[0].data
         assert template["type"] == "particlephase"
         for key in [
             "r_eff_volume.grid",

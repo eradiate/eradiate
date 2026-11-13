@@ -1,5 +1,5 @@
 """
-Molecular atmospheres.
+Molecular atmosphere component.
 """
 
 from __future__ import annotations
@@ -11,8 +11,7 @@ import pint
 import xarray as xr
 from axsdb import AbsorptionDatabase, ErrorHandlingConfiguration
 
-from ._core import AbstractHeterogeneousAtmosphere
-from ..core import traverse
+from ._core import AtmosphereComponent
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ... import converters
 from ...attrs import define, documented
@@ -20,13 +19,14 @@ from ...grid import SpatialGrid
 from ...radprops import AtmosphereRadProfile, RadProfile, get_default_absdb
 from ...spectral.index import SpectralIndex
 from ...units import unit_registry as ureg
+from ...util.deprecation import substitute
 from ...util.misc import summary_repr
 
 
 @define(eq=False, slots=False)
-class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
+class MolecularComponent(AtmosphereComponent):
     """
-    Molecular atmosphere scene element [``molecular``].
+    Molecular atmosphere component [``molecular``].
 
     See Also
     --------
@@ -287,18 +287,13 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             grid=self.geometry.grid if grid is None else grid,
         )
 
-    # --------------------------------------------------------------------------
-    #                             Kernel dictionary
-    # --------------------------------------------------------------------------
 
-    @property
-    def _template_phase(self) -> dict:
-        # Inherit docstring
-        result, _ = traverse(self.phase)
-        return result.data
-
-    @property
-    def _params_phase(self) -> dict:
-        # Inherit docstring
-        _, result = traverse(self.phase)
-        return result.data
+__getattr__ = substitute(
+    {
+        "MolecularAtmosphere": (
+            MolecularComponent,
+            {"deprecated_in": "1.3.1", "removed_in": "2.0.0"},
+        )
+    },
+    stacklevel=3,
+)

@@ -7,8 +7,7 @@ import pandas as pd
 import xarray as xr
 from tqdm.auto import tqdm
 
-from ._core import AbstractHeterogeneousAtmosphere
-from ._heterogeneous import HeterogeneousAtmosphere
+from ._core import AbstractHeterogeneousAtmosphere, AtmosphereComponent
 from ...cfconventions import ATTRIBUTES
 from ...spectral import (
     CKDQuadConfig,
@@ -23,7 +22,7 @@ from ...units import unit_registry as ureg
 
 
 def eval_transmittance_mono(
-    atmosphere: AbstractHeterogeneousAtmosphere,
+    atmosphere: AbstractHeterogeneousAtmosphere | AtmosphereComponent,
     spectral_grid: MonoSpectralGrid,
     interaction: Literal["extinction", "absorption", "scattering"] = "extinction",
 ) -> xr.DataArray:
@@ -33,7 +32,7 @@ def eval_transmittance_mono(
 
     Parameters
     ----------
-    atmosphere : .AbstractHeterogeneousAtmosphere
+    atmosphere : .AbstractHeterogeneousAtmosphere or .AtmosphereComponent
         Atmosphere for which transmittance is evaluated.
 
     spectral_grid : .MonoSpectralGrid
@@ -77,7 +76,7 @@ def eval_transmittance_mono(
 
 
 def eval_transmittance_ckd(
-    atmosphere: AbstractHeterogeneousAtmosphere,
+    atmosphere: AbstractHeterogeneousAtmosphere | AtmosphereComponent,
     spectral_grid: CKDSpectralGrid,
     ckd_quad_config: CKDQuadConfig | None = None,
     interaction: Literal["extinction", "absorption", "scattering"] = "extinction",
@@ -87,7 +86,7 @@ def eval_transmittance_ckd(
 
     Parameters
     ----------
-    atmosphere : .AbstractHeterogeneousAtmosphere
+    atmosphere : .AbstractHeterogeneousAtmosphere or .AtmosphereComponent
         Atmosphere for which transmittance is evaluated.
 
     spectral_grid : .CKDSpectralGrid
@@ -118,11 +117,7 @@ def eval_transmittance_ckd(
         ckd_quad_config = CKDQuadConfig(**ckd_quad_config)
 
     # Check if a molecular absorption database is available
-    abs_db = None
-    if isinstance(atmosphere, HeterogeneousAtmosphere):
-        abs_db = atmosphere.absorption_data
-    else:
-        pass
+    abs_db = atmosphere.absorption_data
 
     n_x_cells, n_y_cells, _ = atmosphere.geometry.grid.shape
 
