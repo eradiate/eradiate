@@ -328,12 +328,9 @@ def test_04_apply_spectral_response_weights(experiment, aggregate_ckd_quad):
     weights = logic.spectral_response_weights(aggregate_ckd_quad, srf)
     assert np.all(weights.values >= 0.0)
 
-    # Weights sum to 1 only up to discretization: they integrate the SRF on the
-    # union of the data and SRF grids, while the normalization term
-    # integrates it on the SRF grid alone, over the slightly wider interval
-    # spanned by the outer bin bounds
+    # Contiguous bins covering the SRF support: weights sum to 1
     total = float(weights.sum())
-    np.testing.assert_allclose(total, 1.0, rtol=5e-2)
+    np.testing.assert_allclose(total, 1.0, rtol=1e-12)
 
     constant = xr.ones_like(aggregate_ckd_quad)
 
