@@ -473,22 +473,29 @@ class EarthObservationExperiment(Experiment, ABC):
         default="None",
     )
 
-    illumination: AbstractDirectionalIllumination | ConstantIllumination = documented(
-        attrs.field(
-            factory=DirectionalIllumination,
-            converter=illumination_factory.convert,
-            validator=attrs.validators.instance_of(
-                (AbstractDirectionalIllumination, ConstantIllumination)
+    illumination: AbstractDirectionalIllumination | ConstantIllumination | None = (
+        documented(
+            attrs.field(
+                factory=DirectionalIllumination,
+                converter=attrs.converters.optional(illumination_factory.convert),
+                validator=attrs.validators.optional(
+                    attrs.validators.instance_of(
+                        (AbstractDirectionalIllumination, ConstantIllumination)
+                    )
+                ),
             ),
-        ),
-        doc="Illumination specification. "
-        "This parameter can be specified as a dictionary which will be "
-        "interpreted by :data:`.illumination_factory`.",
-        type=":class:`.AbstractDirectionalIllumination` or "
-        ":class:`.ConstantIllumination`",
-        init_type=":class:`.DirectionalIllumination` or "
-        ":class:`.ConstantIllumination` or dict",
-        default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
+            doc="Illumination specification. "
+            "This parameter can be specified as a dictionary which will be "
+            "interpreted by :data:`.illumination_factory`. Use ``None`` to "
+            "insert no emitter in the scene; no check is made for other "
+            "emitters (*e.g.* in ``extra_objects``) and post-processing "
+            "records a zero irradiance.",
+            type=":class:`.AbstractDirectionalIllumination` or "
+            ":class:`.ConstantIllumination` or ``None``",
+            init_type=":class:`.DirectionalIllumination` or "
+            ":class:`.ConstantIllumination` or dict or ``None``",
+            default=":class:`DirectionalIllumination() <.DirectionalIllumination>`",
+        )
     )
 
     kdict: KernelDict = documented(
@@ -683,7 +690,6 @@ class EarthObservationExperiment(Experiment, ABC):
         return result
 
     @property
-    @abstractmethod
     def scene_objects(self) -> dict[str, SceneElement]:
         """
         Return a dictionary of string identifiers to the :class:`.SceneElement`
@@ -697,6 +703,7 @@ class EarthObservationExperiment(Experiment, ABC):
         your own :class:`.EarthObservationExperiment` subclass, this property is
         critical.
         """
+        return {} if self.illumination is None else {"illumination": self.illumination}
 
     @property
     def scene(self) -> Scene:

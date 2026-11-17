@@ -441,6 +441,7 @@ def test_05_apply_spectral_response_irradiance(irradiance, experiment):
     [
         ("directional", ["sza", "saa"], True),
         ("constant", [], False),
+        (None, [], False),
     ],
 )
 def test_06_extract_irradiance(
@@ -450,6 +451,8 @@ def test_06_extract_irradiance(
         illumination = DirectionalIllumination(zenith=30.0, azimuth=45.0)
     elif illumination_type == "constant":
         illumination = ConstantIllumination()
+    elif illumination_type is None:
+        illumination = None
     else:
         raise ValueError
 
@@ -481,6 +484,9 @@ def test_06_extract_irradiance(
     if eradiate.mode().is_ckd:
         expected_coords |= {"bin_wmin", "bin_wmax"}
     assert set(result["irradiance"].coords) == expected_coords
+
+    if illumination is None:
+        np.testing.assert_array_equal(result["irradiance"].values, 0.0)
 
 
 @pytest.mark.parametrize("measure", ["distantflux"])

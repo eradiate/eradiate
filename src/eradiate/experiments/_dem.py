@@ -211,7 +211,7 @@ class DEMExperiment(EarthObservationExperiment):
     def scene_objects(self) -> dict[str, SceneElement]:
         # Inherit docstring
 
-        objects = {}
+        objects = super().scene_objects
 
         # Process atmosphere
         if self.atmosphere is not None:
@@ -230,7 +230,6 @@ class DEMExperiment(EarthObservationExperiment):
 
         objects.update(
             {
-                "illumination": self.illumination,
                 **{measure.id: measure for measure in self.measures},
                 "integrator": self.integrator,
             }

@@ -33,7 +33,7 @@ class ConstantIllumination(Illumination):
 
     @property
     def template(self) -> dict:
-        return {"type": "constant"}
+        return {"type": "constant", **super().template}
 
     @property
     def objects(self) -> dict[str, NodeSceneElement]:
