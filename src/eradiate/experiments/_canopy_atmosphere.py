@@ -266,7 +266,7 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
     def scene_objects(self) -> dict[str, SceneElement]:
         # Inherit docstring
 
-        objects = {}
+        objects = super().scene_objects
 
         # Note: Object size computation logic
         # - The atmosphere, if set, must be the largest object in the
@@ -337,7 +337,6 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
 
         objects.update(
             {
-                "illumination": self.illumination,
                 **{measure.id: measure for measure in self.measures},
                 "integrator": self.integrator,
             }
