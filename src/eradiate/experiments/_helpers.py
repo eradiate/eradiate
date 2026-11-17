@@ -190,7 +190,8 @@ def warn_ignored_extremum(
     elif not integrator.extremum_compatible:
         msg = (
             "Extremum structures are not compatible with "
-            f"{type(integrator).__name__} and will be ignored."
+            f"{type(integrator).__name__} and will be ignored; set the "
+            "integrator to EOVolpathIntegrator to use them."
         )
     else:
         return
