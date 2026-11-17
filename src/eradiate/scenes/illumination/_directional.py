@@ -16,7 +16,7 @@ class DirectionalIllumination(AbstractDirectionalIllumination):
 
     @property
     def template(self) -> dict:
-        return {"type": "directional", "to_world": self._to_world}
+        return {"type": "directional", "to_world": self._to_world, **super().template}
 
     @property
     def objects(self) -> dict[str, NodeSceneElement]:

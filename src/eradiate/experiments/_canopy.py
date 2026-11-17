@@ -131,7 +131,7 @@ class CanopyExperiment(EarthObservationExperiment):
     def scene_objects(self) -> dict[str, SceneElement]:
         # Inherit docstring
 
-        objects = {}
+        objects = super().scene_objects
 
         # Process canopy and surface
         if self.canopy is not None:
@@ -155,7 +155,6 @@ class CanopyExperiment(EarthObservationExperiment):
 
         objects.update(
             {
-                "illumination": self.illumination,
                 **{measure.id: measure for measure in self.measures},
                 "integrator": self.integrator,
             }

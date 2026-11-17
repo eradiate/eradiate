@@ -211,19 +211,21 @@ class SpotIllumination(Illumination):
 
     @property
     def template(self) -> dict:
-        retdict = {
+        result = {
             "type": "spot",
             "beam_width": self.beam_width.m_as(uck.get("angle")),
             "cutoff_angle": self.beam_width.m_as(uck.get("angle")),
             "to_world": self._to_world,
+            **super().template,
         }
 
         if self.beam_profile is not None:
-            retdict["texture"] = {
+            result["texture"] = {
                 "type": "bitmap",
                 "filename": str(self.beam_profile),
             }
-        return retdict
+
+        return result
 
     @property
     def objects(self) -> dict[str, NodeSceneElement]:

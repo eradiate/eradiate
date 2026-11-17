@@ -361,7 +361,7 @@ def compute_bidirectional_reflectance(
 
 
 def extract_irradiance(
-    mode_id: str, illumination: Illumination, spectral_grid: SpectralGrid
+    mode_id: str, illumination: Illumination | None, spectral_grid: SpectralGrid
 ) -> dict:
     """
     Derive an irradiance dataset from the irradiance spectrum of an illuminant,
@@ -372,8 +372,9 @@ def extract_irradiance(
     mode_id : str
         Eradiate mode for which this pipeline step is to be configured.
 
-    illumination : Illumination
-        The illuminant whose irradiance is to be evaluated.
+    illumination : Illumination or None
+        The illuminant whose irradiance is to be evaluated. If ``None``, the
+        irradiance is set to 0.
 
     spectral_grid : .SpectralGrid
         Spectral grid driving the simulation.
@@ -511,6 +512,14 @@ def extract_irradiance(
         # Create irradiance variable
         irradiance = xr.DataArray(
             data=np.pi * radiances.reshape((len(radiances),)),
+            dims=("w",),
+            coords=spectral_coords,
+            name="irradiance",
+        )
+
+    elif illumination is None:
+        irradiance = xr.DataArray(
+            data=np.zeros((len(wavelengths),)),
             dims=("w",),
             coords=spectral_coords,
             name="irradiance",

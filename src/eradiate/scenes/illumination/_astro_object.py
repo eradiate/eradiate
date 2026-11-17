@@ -73,6 +73,7 @@ class AstroObjectIllumination(AbstractDirectionalIllumination):
             "type": "astroobject",
             "to_world": self._to_world,
             "angular_diameter": self.angular_diameter.m_as("degree"),
+            **super().template,
         }
 
     @property

@@ -57,6 +57,23 @@ class Illumination(NodeSceneElement, ABC):
         default='"illumination"',
     )
 
+    sampling_weight: float | None = documented(
+        attrs.field(default=None, converter=attrs.converters.optional(float)),
+        doc="Emitter sampling weight. If unset, keep Mitsuba's default sampling "
+        "(all emitters using the same weight).",
+        type="float or None",
+        init_type="float, optional",
+        default="None",
+    )
+
+    @property
+    def template(self) -> dict:
+        return (
+            {}
+            if self.sampling_weight is None
+            else {"sampling_weight": self.sampling_weight}
+        )
+
 
 def _azimuth_converter(value):
     if not 0.0 <= value.m_as("deg") < 360.0:
