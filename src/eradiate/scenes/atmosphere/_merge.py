@@ -12,7 +12,7 @@ import attrs
 import numpy as np
 import pint
 
-from ._core import AtmosphereComponent, atmosphere_factory
+from ._core import AtmosphereComponent, atmosphere_factory, geometry_on_grid
 from ..geometry import SceneGeometry
 from ..phase import MultiPhaseFunction, PhaseFunction
 from ..._factory import Factory
@@ -39,10 +39,14 @@ class MergedComponent(AtmosphereComponent):
     """
     Merged atmosphere component [``merged``].
 
-    Sums the radiative properties of its members on its own geometry and
+    Sums the radiative properties of its members on its own grid and
     blends their phase functions. A :class:`.HeterogeneousAtmosphere` renders
     each merged component as one medium; several merged components are
     rendered as overlapping media.
+
+    The ``geometry`` field holds the render geometry: the parent
+    :class:`.HeterogeneousAtmosphere` sets it on every update to its own
+    geometry, with its grid replaced by ``grid`` if set.
     """
 
     components: list[AtmosphereComponent] = documented(
@@ -56,8 +60,9 @@ class MergedComponent(AtmosphereComponent):
         doc="Merged atmosphere components. Elements may be specified as "
         "dictionaries interpreted by :data:`.atmosphere_factory`. Merged "
         "components cannot be nested. Radiative properties of members are "
-        "evaluated on the grid of the merged component; members without a "
-        "geometry of their own get the geometry of the merged component.",
+        "evaluated on the grid of the merged component; phase functions of "
+        "members are built on their own grid if set, on the geometry of the "
+        "merged component otherwise.",
         type="list of .AtmosphereComponent",
         init_type="list of .AtmosphereComponent or dict",
     )
@@ -93,6 +98,14 @@ class MergedComponent(AtmosphereComponent):
             ID of the medium generated for this merged component.
         """
         return f"medium_{self.id}"
+
+    @property
+    def default_geometry(self) -> SceneGeometry:
+        # Inherit docstring
+        # Plain property: the render geometry is reassigned on every update
+        if self.geometry is not None:
+            return self.geometry
+        return super().default_geometry
 
     # --------------------------------------------------------------------------
     #                       Radiative properties
@@ -148,7 +161,7 @@ class MergedComponent(AtmosphereComponent):
         self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        grid = self.geometry.grid if grid is None else grid
+        grid = self.default_geometry.grid if grid is None else grid
         return self._eval_sigma_t_impl(si, grid).sum(axis=0)
 
     def eval_sigma_a(
@@ -161,35 +174,41 @@ class MergedComponent(AtmosphereComponent):
         self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        grid = self.geometry.grid if grid is None else grid
+        grid = self.default_geometry.grid if grid is None else grid
         return self._eval_sigma_s_impl(si, grid).sum(axis=0)
 
     # --------------------------------------------------------------------------
     #                       Phase function
     # --------------------------------------------------------------------------
 
-    @property
-    def phase(self) -> PhaseFunction:
+    def get_phase(self, geometry: SceneGeometry | None = None) -> PhaseFunction:
         # Inherit docstring
-        if len(self.components) == 1:
-            return self.components[0].phase
+        geometry = self.default_geometry if geometry is None else geometry
+        phases = [
+            component.get_phase(
+                geometry_on_grid(geometry, component.grid, component.crop_to_grid)
+            )
+            for component in self.components
+        ]
 
-        components, weights = [], []
+        if len(phases) == 1:
+            return phases[0]
+
+        weights = []
         sigma_units = ucc.get("collision_coefficient")
 
-        for i, component in enumerate(self.components):
-            components.append(component.phase)
+        for i in range(len(phases)):
 
             def eval_sigma_s(si: SpectralIndex, n_component: int = i) -> np.ndarray:
-                sigma_s = self._eval_sigma_s_impl(si, self.geometry.grid)
+                sigma_s = self._eval_sigma_s_impl(si, geometry.grid)
                 return sigma_s[n_component].m_as(sigma_units)
 
             weights.append(eval_sigma_s)
 
         return MultiPhaseFunction(
-            components=components,
+            components=phases,
             weights=weights,
-            geometry=self.geometry,
+            geometry=geometry,
             use_mis=self.use_phase_mis,
         )
 
@@ -209,35 +228,33 @@ merge_policy_factory.register_lazy_batch(
 )
 
 
-def _same_geometry(a: SceneGeometry, b: SceneGeometry) -> bool:
+def _same_grid(a: SpatialGrid | None, b: SpatialGrid | None) -> bool:
     """
-    ``True`` if both geometries have the same type, the same grid edges and
-    the same values for all other fields. Grids are compared by value since
-    they do not implement equality.
+    ``True`` if both grids have the same type and the same edges. Grids are
+    compared by value since they do not implement equality. ``None`` only
+    matches ``None``.
     """
     if a is b:
         return True
 
-    if type(a) is not type(b) or type(a.grid) is not type(b.grid):
+    if a is None or b is None or type(a) is not type(b):
         return False
 
-    for name in ("x_edges", "y_edges", "z_edges"):
-        edges_a, edges_b = getattr(a.grid, name), getattr(b.grid, name)
-        if not np.array_equal(edges_a.magnitude, edges_b.m_as(edges_a.units)):
-            return False
-
     return all(
-        np.all(getattr(a, field.name) == getattr(b, field.name))
-        for field in attrs.fields(type(a))
-        if field.name != "grid"
+        np.array_equal(
+            getattr(a, name).magnitude, getattr(b, name).m_as(getattr(a, name).units)
+        )
+        for name in ("x_edges", "y_edges", "z_edges")
     )
 
 
 def _merge(
-    components: list[AtmosphereComponent], geometry: SceneGeometry
+    components: list[AtmosphereComponent],
+    grid: SpatialGrid | None = None,
+    crop_to_grid: str = "",
 ) -> MergedComponent:
     """
-    Merge components on ``geometry``. The merged component uses the extremum
+    Merge components on ``grid``. The merged component uses the extremum
     resolution shared by all components; if they differ, it falls back to the
     resolution of the parent atmosphere.
     """
@@ -257,7 +274,8 @@ def _merge(
 
     return MergedComponent(
         components=components,
-        geometry=geometry,
+        grid=grid,
+        crop_to_grid=crop_to_grid,
         extremum_resolution=extremum_resolution,
     )
 
@@ -282,11 +300,11 @@ class MergePolicy(ABC):
         Parameters
         ----------
         components : list of .AtmosphereComponent
-            Components to merge, each set to its own geometry or, if it has
-            none, to the geometry of the parent atmosphere.
+            Components to merge.
 
         geometry : .SceneGeometry
-            Geometry of the parent atmosphere.
+            Geometry of the parent atmosphere, which merged components are
+            rendered on with their own grid.
 
         Returns
         -------
@@ -303,47 +321,51 @@ class MergeAll(MergePolicy):
 
     def merge(self, components, geometry):
         # Inherit docstring
-        return [_merge(components, geometry)]
+        return [_merge(components)]
 
 
 @define
 class OverlapAll(MergePolicy):
     """
-    Render each component as its own medium, evaluated on its own geometry
+    Render each component as its own medium, evaluated on its own grid
     [``overlap_all``].
     """
 
     def merge(self, components, geometry):
         # Inherit docstring
-        return [_merge([component], component.geometry) for component in components]
+        return [
+            _merge([component], component.grid, component.crop_to_grid)
+            for component in components
+        ]
 
 
 @define
 class MergeByGrid(MergePolicy):
     """
-    Merge components which share the same geometry, including its grid
-    [``merge_by_grid``].
+    Merge components which share the same grid and ``crop_to_grid`` value
+    [``merge_by_grid``]. Components without a grid are merged together.
     """
 
     def merge(self, components, geometry):
         # Inherit docstring
-        groups: list[list[AtmosphereComponent]] = []
+        groups: list[tuple[SpatialGrid | None, str, list[AtmosphereComponent]]] = []
 
         for component in components:
             group = next(
                 (
-                    g
-                    for g in groups
-                    if _same_geometry(g[0].geometry, component.geometry)
+                    members
+                    for grid, crop_to_grid, members in groups
+                    if _same_grid(grid, component.grid)
+                    and crop_to_grid == component.crop_to_grid
                 ),
                 None,
             )
             if group is None:
-                groups.append([component])
+                groups.append((component.grid, component.crop_to_grid, [component]))
             else:
                 group.append(component)
 
-        return [_merge(group, group[0].geometry) for group in groups]
+        return [_merge(members, grid, crop) for grid, crop, members in groups]
 
 
 def merge_policy_converter(value: MergePolicy | dict | str) -> MergePolicy:

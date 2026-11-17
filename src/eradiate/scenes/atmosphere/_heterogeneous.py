@@ -4,7 +4,6 @@ Heterogeneous atmospheres.
 
 from __future__ import annotations
 
-import logging
 import warnings
 from collections.abc import MutableMapping
 from typing import TYPE_CHECKING
@@ -17,6 +16,7 @@ from ._core import (
     AbstractHeterogeneousAtmosphere,
     AtmosphereComponent,
     atmosphere_factory,
+    geometry_on_grid,
 )
 from ._merge import (
     MergeAll,
@@ -28,7 +28,11 @@ from ._molecular import MolecularComponent
 from ._particle_component import ParticleComponent
 from .._gridvolume import generate_gridvolume
 from ..core import traverse
-from ..geometry import FilterType, PlaneParallelGeometry, SphericalShellGeometry
+from ..geometry import (
+    FilterType,
+    PlaneParallelGeometry,
+    SphericalShellGeometry,
+)
 from ..phase import PhaseFunction
 from ...attrs import define, documented
 from ...grid import SpatialGrid
@@ -41,8 +45,6 @@ from ...util.misc import flatten
 
 if TYPE_CHECKING:
     from axsdb import AbsorptionDatabase
-
-logger = logging.getLogger(__name__)
 
 
 def _molecular_converter(value):
@@ -283,23 +285,13 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         for i, component in enumerate(self.components):
             component.update()
             component.id = f"{self.id}_component_{i}"
-            if component._own_geometry is None:
-                logger.debug(
-                    "Override the geometry of component '%s' to %s (was %s)",
-                    component.id,
-                    self.geometry,
-                    component.geometry,
-                )
-                component.geometry = self.geometry
-            else:
-                component.geometry = component._own_geometry
 
         self._merged_all = MergedComponent(
             id=self.id,
             components=self.components,
-            geometry=self.geometry,
             use_phase_mis=self.use_phase_mis,
         )
+        self._merged_all.geometry = self.geometry
         self.merge_components()
 
     def merge_components(self) -> None:
@@ -307,9 +299,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         Populate :attr:`components_merged`: components which are not part of a
         :class:`.MergedComponent` are merged according to
         :attr:`merge_policy`, then merged components passed by the user are
-        appended. Merged components without a geometry get the geometry of
-        this atmosphere; members without a geometry get the geometry of their
-        merged component.
+        appended. Each merged component gets its render geometry: the
+        geometry of this atmosphere, with its grid replaced by the grid of the
+        merged component if set.
 
         This method is called by :meth:`update`.
         """
@@ -320,24 +312,40 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         self.components_merged = []
 
         for i, group in enumerate(groups):
-            geometry = (
-                self.geometry if group._own_geometry is None else group._own_geometry
+            group.geometry = geometry_on_grid(
+                self.geometry, group.grid, group.crop_to_grid
             )
-            if type(geometry) is not type(self.geometry):
-                raise ValueError(
-                    f"merged component geometry type '{type(geometry).__name__}' "
-                    f"differs from the atmosphere geometry type "
-                    f"'{type(self.geometry).__name__}'"
-                )
-
+            # Fail early on member grids which do not match the frame
             for member in group.components:
-                if member._own_geometry is None:
-                    member.geometry = geometry
+                geometry_on_grid(self.geometry, member.grid)
 
             group.id = f"{self.id}_group_{i}"
-            group.geometry = geometry
             group.use_phase_mis = self.use_phase_mis
             self.components_merged.append(group)
+
+    def check_geometry(self) -> None:
+        """
+        Check that each component can be evaluated on the geometries it is
+        rendered on: the render geometry of its merged component (radiative
+        properties) and, if it has its own grid, that grid (phase function).
+
+        Not called by :meth:`update`, since the geometry is final only once
+        set by the experiment.
+
+        Raises
+        ------
+        ValueError
+            If a component cannot be evaluated on one of these geometries.
+        """
+        for group in self.components_merged:
+            for member in group.components:
+                member.check_geometry(group.geometry)
+                if member.grid is not None:
+                    member.check_geometry(
+                        geometry_on_grid(
+                            group.geometry, member.grid, member.crop_to_grid
+                        )
+                    )
 
     # --------------------------------------------------------------------------
     #                       Radiative properties
@@ -390,10 +398,11 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         if not self.is_overlapping:
             return super().template
 
-        phases = {
-            group.phase_id: traverse(group.phase)[0].data
-            for group in self.components_merged
-        }
+        phases = {}
+        for group in self.components_merged:
+            phase = group.get_phase(group.geometry)
+            phases[group.phase_id] = traverse(phase)[0].data
+
         result = flatten(
             {
                 **phases,
@@ -414,7 +423,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def _template_phase(self) -> dict:
         # Inherit docstring
-        return traverse(self.components_merged[0].phase)[0].data
+        group = self.components_merged[0]
+        return traverse(group.get_phase(group.geometry))[0].data
 
     @property
     def _template_medium(self) -> dict:
@@ -444,7 +454,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             else:
                 phase_id, prefix = self.phase_id, ""
 
-            for uparam_key, uparam in traverse(group.phase)[1].data.items():
+            phase = group.get_phase(group.geometry)
+            for uparam_key, uparam in traverse(phase)[1].data.items():
                 result[f"{prefix}{uparam_key}"] = attrs.evolve(
                     uparam,
                     search=SearchSceneParameter(
@@ -473,7 +484,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     def _build_medium_template(self, group: MergedComponent) -> dict:
         """
         Generate a medium template from the radiative properties of ``group``,
-        evaluated on the geometry of ``group``. Medium options are taken from
+        evaluated on its render geometry. Medium options are taken from
         this atmosphere, except ``extremum_resolution``, which ``group`` may
         override. The medium is ``piecewise`` if :attr:`is_piecewise` is
         ``True``, ``eoheterogeneous`` otherwise.
@@ -500,11 +511,13 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 geometry,
                 group.eval_albedo,
                 units=ureg.dimensionless,
+                extra_kwargs={"grid": geometry.grid},
             ),
             "sigma_t": generate_gridvolume(
                 geometry,
                 group.eval_sigma_t,
                 units=collision_coefficient_units,
+                extra_kwargs={"grid": geometry.grid},
             ),
         }
 
@@ -605,6 +618,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             units=ureg.dimensionless,
             search=albedo_search,
             flag=KernelSceneParameterFlags.SPECTRAL,
+            extra_kwargs={"grid": geometry.grid},
         )
         sigma_t_grid = generate_gridvolume(
             geometry,
@@ -612,6 +626,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
             units=collision_coefficient_units,
             search=sigma_t_search,
             flag=KernelSceneParameterFlags.SPECTRAL,
+            extra_kwargs={"grid": geometry.grid},
         )
 
         return {

@@ -7,7 +7,6 @@ from eradiate.data.convert import make_prt_core_v1, make_prt_ms_v1
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import ParticleMSComponent, ParticleOTComponent
 from eradiate.scenes.core import traverse
-from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import (
     GriddedParticlePhaseFunction,
     HenyeyGreensteinPhaseFunction,
@@ -55,7 +54,6 @@ def make_particle_ot(
         y_edges=np.array([-1.0, 1.0]) * ureg.km,
         levels=np.array([bottom.m_as("km"), top.m_as("km")]) * ureg.km,
     )
-    geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
 
     return ParticleOTComponent(
         bottom=bottom,
@@ -64,7 +62,7 @@ def make_particle_ot(
         w_ref=w_ref,
         tau_ref=ureg.Quantity(tau_ref, "dimensionless"),
         particle_properties=pp_ds,
-        geometry=geometry,
+        grid=grid,
     )
 
 
@@ -86,13 +84,12 @@ class TestParticleMSComponent:
             y_edges=np.array([0.0, 1.0, 2.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0, 3.0]) * ureg.km,
         )
-        geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
 
         result = ParticleMSComponent.convert(
             {
                 "profile": make_profile_dataset(grid),
                 "properties": make_properties_dataset(),
-                "geometry": geometry,
+                "grid": grid,
             }
         )
         assert isinstance(result, ParticleMSComponent)
@@ -114,10 +111,9 @@ class TestParticleMSComponent:
             y_edges=np.array([1.0, 3.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0, 3.0, 4.0]) * ureg.km,
         )
-        geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
         profile = make_profile_dataset(grid, z_edges=z_edges)
         ms = ParticleMSComponent(
-            profile=profile, properties=make_properties_dataset(), geometry=geometry
+            profile=profile, properties=make_properties_dataset(), grid=grid
         )
 
         reg_grid = ms._profile_regular_grid()
@@ -168,9 +164,9 @@ class TestParticleMSComponent:
         )
         si = MonoSpectralIndex(w=ureg.Quantity(1.0, "micron"))
         shape = (
-            ms.geometry.grid.n_x_cells,
-            ms.geometry.grid.n_y_cells,
-            ms.geometry.grid.n_z_cells,
+            ms.grid.n_x_cells,
+            ms.grid.n_y_cells,
+            ms.grid.n_z_cells,
         )
 
         sigma_t = ms.eval_sigma_t(si)
@@ -219,7 +215,6 @@ class TestParticleMSComponent:
             y_edges=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.array([0.0, 1.0]) * ureg.km,
         )
-        geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
 
         # One voxel with reff inside the grid (interpolated), one with reff far
         # outside the grid range (must clip, not NaN).
@@ -258,9 +253,7 @@ class TestParticleMSComponent:
             ext_value=np.array([2.0, 4.0]).reshape(1, 2, 1),
         )
 
-        ms = ParticleMSComponent(
-            profile=profile, properties=properties, geometry=geometry
-        )
+        ms = ParticleMSComponent(profile=profile, properties=properties, grid=grid)
         si = MonoSpectralIndex(w=ureg.Quantity(1.0, "micron"))
 
         sigma_t = ms.eval_sigma_t(si).m_as("1/km")
@@ -349,7 +342,7 @@ class TestParticleMSComponent:
             assert key in params
 
     def test_to_profile_regular_grid(self):
-        """to_profile_regular_grid returns a copy with a regularized geometry, sharing profile/properties."""
+        """to_profile_regular_grid returns a copy with a regularized grid, sharing profile/properties."""
         ms = make_particle_ms_component(w=(1.0,))
 
         result = ms.to_profile_regular_grid()
@@ -358,10 +351,11 @@ class TestParticleMSComponent:
         assert isinstance(result, ParticleMSComponent)
         expected_grid = ms._profile_regular_grid()
         np.testing.assert_allclose(
-            result.geometry.grid.levels.m_as("km"), expected_grid.levels.m_as("km")
+            result.grid.levels.m_as("km"), expected_grid.levels.m_as("km")
         )
         np.testing.assert_allclose(
-            result.geometry.width.m_as("km"), ms.geometry.width.m_as("km")
+            result.default_geometry.width.m_as("km"),
+            ms.default_geometry.width.m_as("km"),
         )
         assert result.profile is ms.profile
         assert result.properties is ms.properties
@@ -373,7 +367,6 @@ class TestParticleMSComponent:
             y_edges=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.array([0.0, 1.0]) * ureg.km,
         ).centered()
-        geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
         profile = make_profile_dataset(grid)
 
         mu = np.linspace(-1.0, 1.0, 5)
@@ -391,7 +384,7 @@ class TestParticleMSComponent:
 
         with pytest.raises(ValueError, match=r"reff.*veff"):
             ParticleMSComponent(
-                profile=profile, properties=properties_no_size_dist, geometry=geometry
+                profile=profile, properties=properties_no_size_dist, grid=grid
             )
 
     @pytest.mark.parametrize("wrong", ["wrong_order", "wrong_name"])
@@ -410,7 +403,7 @@ class TestParticleMSComponent:
                 {"hum": np.array([0.0, 90.0]) * ureg.percent}
             )
             profile = make_state_profile_dataset(
-                ms.geometry.grid,
+                ms.grid,
                 {
                     "hum": 50.0 * ureg.percent,
                     "mass_concentration": 1.0 * ureg("g/m^3"),
@@ -422,7 +415,7 @@ class TestParticleMSComponent:
             ParticleMSComponent(
                 profile=profile,
                 properties=properties,
-                geometry=ms.geometry,
+                grid=ms.grid,
                 **kwargs,
             )
 
@@ -433,7 +426,7 @@ class TestParticleMSComponent:
             ParticleMSComponent(
                 profile=ms.profile,
                 properties=ms.properties,
-                geometry=ms.geometry,
+                grid=ms.grid,
                 amount="lwc",
             )
 
@@ -494,7 +487,7 @@ class TestParticleMSComponent:
         )
 
         np.testing.assert_allclose(
-            component.geometry.grid.x_edges.m_as("km"), custom_grid.x_edges.m_as("km")
+            component.grid.x_edges.m_as("km"), custom_grid.x_edges.m_as("km")
         )
 
     # from_particle_ot() computes pmom from the deliberately unnormalized phase
@@ -510,7 +503,6 @@ class TestParticleMSComponent:
             y_edges=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
         )
-        geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
         profile = make_profile_dataset(
             grid, reff=10.0, veff=0.1, mass_concentration=1e-3
         )
@@ -536,9 +528,7 @@ class TestParticleMSComponent:
             reff=np.array([10.0]) * ureg.micron,
             veff=np.array([0.1]) * ureg.dimensionless,
         )
-        ms = ParticleMSComponent(
-            profile=profile, properties=properties, geometry=geometry
-        )
+        ms = ParticleMSComponent(profile=profile, properties=properties, grid=grid)
 
         layer = ParticleOTComponent.from_ms_voxel(
             ms, w=ureg.Quantity(1.0, "micron"), ix=0, iy=0, iz=0
@@ -603,15 +593,12 @@ class TestParticleMSComponent:
             y_edges=np.array([-1.0, 1.0]) * ureg.km,
             levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
         ).centered()
-        geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
 
         profile = make_profile_dataset(
             grid, reff=10.0, veff=0.15, mass_concentration=0.5
         )
 
-        ms = ParticleMSComponent(
-            profile=profile, properties=properties, geometry=geometry
-        )
+        ms = ParticleMSComponent(profile=profile, properties=properties, grid=grid)
 
         si = MonoSpectralIndex(w=ureg.Quantity(0.8, "micron"))
         shape = (grid.n_x_cells, grid.n_y_cells, grid.n_z_cells)

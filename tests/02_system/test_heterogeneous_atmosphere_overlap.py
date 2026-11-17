@@ -42,7 +42,8 @@ def cloud():
         "tau_ref": 2.0,
         "bottom": 1.0 * ureg.km,
         "top": 3.0 * ureg.km,
-        "geometry": {"type": "plane_parallel", "grid": grid, "crop_to_grid": "xyz"},
+        "grid": grid,
+        "crop_to_grid": "xyz",
     }
 
 

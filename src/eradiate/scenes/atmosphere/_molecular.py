@@ -12,6 +12,7 @@ import xarray as xr
 from axsdb import AbsorptionDatabase, ErrorHandlingConfiguration
 
 from ._core import AtmosphereComponent
+from ..geometry import SceneGeometry
 from ..phase import PhaseFunction, RayleighPhaseFunction, phase_function_factory
 from ... import converters
 from ...attrs import define, documented
@@ -221,22 +222,38 @@ class MolecularComponent(AtmosphereComponent):
         # Inherit docstring
         return self._absorption_data
 
-    @property
-    def phase(self) -> PhaseFunction:
+    def get_phase(self, geometry: SceneGeometry | None = None) -> PhaseFunction:
         # Inherit docstring
+        if self._phase is not None:
+            return self._phase
 
-        if self._phase is None:
+        geometry = self.default_geometry if geometry is None else geometry
 
-            def eval_depolarization_factor(si: SpectralIndex) -> np.ndarray:
-                return self.eval_depolarization_factor(si).m_as("dimensionless")
-
-            # pass callable for depolarization to phase function for InitParams and UpdateParams.
-            return RayleighPhaseFunction(
-                depolarization=eval_depolarization_factor, geometry=self.geometry
+        def eval_depolarization_factor(si: SpectralIndex) -> np.ndarray:
+            return self.eval_depolarization_factor(si, geometry.grid).m_as(
+                "dimensionless"
             )
 
-        else:
-            return self._phase
+        # pass callable for depolarization to phase function for InitParams and UpdateParams.
+        return RayleighPhaseFunction(
+            depolarization=eval_depolarization_factor, geometry=geometry
+        )
+
+    def check_geometry(self, geometry: SceneGeometry) -> None:
+        # Inherit docstring
+        radprops_zbounds = self.radprops_profile.zbounds
+        geometry_zbounds = geometry.grid.levels[[0, -1]]
+        if (geometry_zbounds[0] < radprops_zbounds[0]) or (
+            geometry_zbounds[1] > radprops_zbounds[1]
+        ):
+            raise ValueError(
+                "Attributes 'geometry' and 'atmosphere' are incompatible: "
+                f"'geometry.grid' bounds ({geometry_zbounds}) go beyond the "
+                f"bounds of 'atmosphere.radprops_profile.zbounds' "
+                f"({radprops_zbounds}). Try to set the experiment geometry so "
+                "that it does not go beyond the vertical extent of the "
+                "molecular atmosphere."
+            )
 
     @property
     def radprops_profile(self) -> RadProfile:
@@ -249,7 +266,7 @@ class MolecularComponent(AtmosphereComponent):
         # Inherit docstring
         return self.radprops_profile.eval_albedo(
             si,
-            grid=self.geometry.grid if grid is None else grid,
+            grid=self.default_geometry.grid if grid is None else grid,
         )
 
     def eval_sigma_t(
@@ -258,7 +275,7 @@ class MolecularComponent(AtmosphereComponent):
         # Inherit docstring
         return self.radprops_profile.eval_sigma_t(
             si,
-            grid=self.geometry.grid if grid is None else grid,
+            grid=self.default_geometry.grid if grid is None else grid,
         )
 
     def eval_sigma_a(
@@ -267,7 +284,7 @@ class MolecularComponent(AtmosphereComponent):
         # Inherit docstring
         return self.radprops_profile.eval_sigma_a(
             si,
-            grid=self.geometry.grid if grid is None else grid,
+            grid=self.default_geometry.grid if grid is None else grid,
         )
 
     def eval_sigma_s(
@@ -276,7 +293,7 @@ class MolecularComponent(AtmosphereComponent):
         # Inherit docstring
         return self.radprops_profile.eval_sigma_s(
             si,
-            grid=self.geometry.grid if grid is None else grid,
+            grid=self.default_geometry.grid if grid is None else grid,
         )
 
     def eval_depolarization_factor(
@@ -284,7 +301,7 @@ class MolecularComponent(AtmosphereComponent):
     ) -> pint.Quantity:
         return self.radprops_profile.eval_depolarization_factor(
             si,
-            grid=self.geometry.grid if grid is None else grid,
+            grid=self.default_geometry.grid if grid is None else grid,
         )
 
 

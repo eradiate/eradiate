@@ -10,12 +10,10 @@ from ..scenes.atmosphere import (
     Atmosphere,
     AtmosphereComponent,
     HeterogeneousAtmosphere,
-    MolecularComponent,
     atmosphere_factory,
 )
 from ..scenes.atmosphere._core import _DEPRECATED_COMPONENT_PARAMETERS
 from ..scenes.bsdfs import BSDF, bsdf_factory
-from ..scenes.geometry import SceneGeometry
 from ..scenes.integrators import Integrator
 from ..scenes.measure import (
     AbstractDistantMeasure,
@@ -124,51 +122,10 @@ def atmosphere_converter(
             if getattr(value, name) is not None
         }
         # Wrap a copy of the component
-        component = attrs.evolve(
-            value, geometry=value._own_geometry, **dict.fromkeys(params)
-        )
+        component = attrs.evolve(value, **dict.fromkeys(params))
         return HeterogeneousAtmosphere(id=value.id, components=[component], **params)
 
     return value
-
-
-def check_geometry_atmosphere(
-    geometry: SceneGeometry, atmosphere: MolecularComponent
-) -> None:
-    """
-    Check that the experiment geometry is compatible with the vertical extent of
-    the molecular atmosphere.
-
-    Parameters
-    ----------
-    geometry : SceneGeometry
-        An experiment geometry.
-
-    atmosphere : MolecularComponent
-        A molecular atmosphere component.
-
-    Raises
-    ------
-    ValueError
-        If the geometry vertical extent exceeds the atmosphere vertical
-        extent.
-    """
-
-    radprops_zbounds = atmosphere.radprops_profile.zbounds
-    geometry_zbounds = geometry.grid.levels[[0, -1]]
-    suggested_solution = (
-        "Try to set the experiment geometry so that it does not go beyond "
-        "the vertical extent of the molecular atmosphere."
-    )
-    if (geometry_zbounds[0] < radprops_zbounds[0]) or (
-        geometry_zbounds[1] > radprops_zbounds[1]
-    ):
-        raise ValueError(
-            "Attributes 'geometry' and 'atmosphere' are incompatible: "
-            f"'geometry.grid' bounds ({geometry_zbounds}) go beyond the "
-            f"bounds of 'atmosphere.radprops_profile.zbounds' ({radprops_zbounds}). "
-            f"{suggested_solution}"
-        )
 
 
 def log_piecewise_not_compatible(

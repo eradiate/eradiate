@@ -65,7 +65,7 @@ def test_rami4atm_gridded(mode_ckd_double, case):
         mol_atm_3d = None
         if mol_atm_1d:
             mol_atm_3d = MolecularComponent(
-                geometry=geometry,
+                grid=geometry.grid,
                 absorption_data=mol_atm_1d.absorption_data,
                 thermoprops=mol_atm_1d.thermoprops,
                 has_absorption=mol_atm_1d.has_absorption,
@@ -79,7 +79,7 @@ def test_rami4atm_gridded(mode_ckd_double, case):
                 attrs.evolve(
                     ensemble,
                     tau_ref=ensemble.tau_ref * np.ones(resolution),
-                    geometry=geometry,
+                    grid=geometry.grid,
                 )
                 for ensemble in exp.atmosphere.components
                 if not isinstance(ensemble, MolecularComponent)
@@ -90,7 +90,7 @@ def test_rami4atm_gridded(mode_ckd_double, case):
             attrs.evolve(
                 exp,
                 atmosphere=atm,
-                geometry=geometry,
+                grid=geometry.grid,
                 integrator={"type": "volpath", "moment": True},
                 background_spectral_grid=AUTO,
             )

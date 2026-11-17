@@ -22,6 +22,7 @@ from ._particle_dist import (
     ParticleDistribution,
     particle_distribution_factory,
 )
+from ..geometry import SceneGeometry
 from ..phase import ParticlePhaseFunction, PhaseFunction, phase_function_factory
 from ...attrs import define, documented
 from ...grid import SpatialGrid
@@ -125,7 +126,7 @@ class ParticleOTComponent(ParticleComponent):
     data is considered uniform throughout the entire spectrum.
 
     The medium density is evaluated on the vertical layers of the render grid
-    (see ``geometry``) and normalized to meet the target optical thickness.
+    (see ``grid``) and normalized to meet the target optical thickness.
 
     The prescribed optical thickness is enforced at the reference wavelength
     (``tau_ref``) and scaled by the medium's extinction, normalized at that
@@ -248,16 +249,16 @@ class ParticleOTComponent(ParticleComponent):
     @bottom.validator
     @top.validator
     def _xy_shape_validator(self, attribute, value):
-        if self.geometry is None:
+        # Runs before the deprecated geometry is converted to a grid
+        grid = self.grid if self.geometry is None else self.geometry.grid
+        if grid is None or np.size(value) == 1:
             return
-        if np.size(value) == 1:
-            return
-        if value.shape != self.geometry.grid.shape[:2]:
+        if value.shape != grid.shape[:2]:
             raise ValueError(
                 "While initializing ParticleOTComponent: the shape of the "
                 f"{attribute.name} attribute is inconsistent with the "
-                "scene geometry. Expected a scalar value or a "
-                f"{self.geometry.grid.shape[:2]} sized array, "
+                "grid. Expected a scalar value or a "
+                f"{grid.shape[:2]} sized array, "
                 f"received a {value.shape} sized array."
             )
 
@@ -429,13 +430,15 @@ class ParticleOTComponent(ParticleComponent):
 
     @eval_albedo.register(MonoSpectralIndex)
     def _(self, si, grid: SpatialGrid | None = None) -> pint.Quantity:
-        return self.eval_albedo_mono(si, self.geometry.grid if grid is None else grid)
+        return self.eval_albedo_mono(
+            si, self.default_geometry.grid if grid is None else grid
+        )
 
     @eval_albedo.register(CKDSpectralIndex)
     def _(self, si, grid: SpatialGrid | None = None) -> pint.Quantity:
         return self.eval_albedo_ckd(
             si=si,
-            grid=self.geometry.grid if grid is None else grid,
+            grid=self.default_geometry.grid if grid is None else grid,
         )
 
     @cache_by_id
@@ -466,13 +469,15 @@ class ParticleOTComponent(ParticleComponent):
 
     @eval_sigma_t.register(MonoSpectralIndex)
     def _(self, si, grid: SpatialGrid | None = None) -> pint.Quantity:
-        return self.eval_sigma_t_mono(si, self.geometry.grid if grid is None else grid)
+        return self.eval_sigma_t_mono(
+            si, self.default_geometry.grid if grid is None else grid
+        )
 
     @eval_sigma_t.register(CKDSpectralIndex)
     def _(self, si, grid: SpatialGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_t_ckd(
             si=si,
-            grid=self.geometry.grid if grid is None else grid,
+            grid=self.default_geometry.grid if grid is None else grid,
         )
 
     @cache_by_id
@@ -501,13 +506,15 @@ class ParticleOTComponent(ParticleComponent):
 
     @eval_sigma_a.register(MonoSpectralIndex)
     def _(self, si, grid: SpatialGrid | None = None) -> pint.Quantity:
-        return self.eval_sigma_a_mono(si, self.geometry.grid if grid is None else grid)
+        return self.eval_sigma_a_mono(
+            si, self.default_geometry.grid if grid is None else grid
+        )
 
     @eval_sigma_a.register(CKDSpectralIndex)
     def _(self, si, grid: SpatialGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_a_ckd(
             si=si,
-            grid=self.geometry.grid if grid is None else grid,
+            grid=self.default_geometry.grid if grid is None else grid,
         )
 
     @cache_by_id
@@ -527,13 +534,15 @@ class ParticleOTComponent(ParticleComponent):
 
     @eval_sigma_s.register(MonoSpectralIndex)
     def _(self, si, grid: SpatialGrid | None = None) -> pint.Quantity:
-        return self.eval_sigma_s_mono(si, self.geometry.grid if grid is None else grid)
+        return self.eval_sigma_s_mono(
+            si, self.default_geometry.grid if grid is None else grid
+        )
 
     @eval_sigma_s.register(CKDSpectralIndex)
     def _(self, si, grid: SpatialGrid | None = None) -> pint.Quantity:
         return self.eval_sigma_s_ckd(
             si=si,
-            grid=self.geometry.grid if grid is None else grid,
+            grid=self.default_geometry.grid if grid is None else grid,
         )
 
     @cache_by_id
@@ -548,8 +557,7 @@ class ParticleOTComponent(ParticleComponent):
     #                             Phase function
     # --------------------------------------------------------------------------
 
-    @property
-    def phase(self) -> ParticlePhaseFunction:
+    def get_phase(self, geometry: SceneGeometry | None = None) -> ParticlePhaseFunction:
         # Inherit docstring
         return self._phase
 
@@ -579,7 +587,8 @@ class ParticleOTComponent(ParticleComponent):
             Voxel indices in the render grid.
 
         grid : :class:`.SpatialGrid`, optional
-            Target render grid. Defaults to ``particle_ms_component.geometry.grid``.
+            Target render grid. Defaults to
+            ``particle_ms_component.default_geometry.grid``.
 
         Returns
         -------
@@ -591,7 +600,7 @@ class ParticleOTComponent(ParticleComponent):
             If ``(ix, iy, iz)`` is out of bounds, or the voxel there has no
             cloud (zero amount).
         """
-        grid = grid or particle_ms_component.geometry.grid
+        grid = grid or particle_ms_component.default_geometry.grid
         resampled_profile = particle_ms_component.profile.resample(grid).data
         amount_name = particle_ms_component._amount
         binding = particle_ms_component._binding
@@ -646,12 +655,6 @@ class ParticleOTComponent(ParticleComponent):
 
         phase_ds = pp.phase_dataset_at(wavelength[0], (i_reff, i_veff), sigma_t)
 
-        geometry = (
-            particle_ms_component.geometry
-            if grid is particle_ms_component.geometry.grid
-            else attrs.evolve(particle_ms_component.geometry, grid=grid)
-        )
-
         return cls(
             bottom=grid.levels[iz],
             top=grid.levels[iz + 1],
@@ -659,7 +662,8 @@ class ParticleOTComponent(ParticleComponent):
             w_ref=wavelength[0],
             tau_ref=tau_ref,
             particle_properties=phase_ds,
-            geometry=geometry,
+            grid=grid,
+            crop_to_grid=particle_ms_component.crop_to_grid,
             has_absorption=particle_ms_component.has_absorption,
             has_scattering=particle_ms_component.has_scattering,
         )
@@ -695,7 +699,8 @@ class ParticleOTComponent(ParticleComponent):
             dimensions, assumed constant across the whole component.
 
         grid : :class:`.SpatialGrid`, optional
-            Target render grid. Defaults to ``particle_ms_component.geometry.grid``.
+            Target render grid. Defaults to
+            ``particle_ms_component.default_geometry.grid``.
 
         ext : :class:`pint.Quantity`, optional
             Extinction coefficient stored in the output ParticleOTComponent's
@@ -708,7 +713,7 @@ class ParticleOTComponent(ParticleComponent):
         -------
         :class:`.ParticleOTComponent`
         """
-        grid = grid or particle_ms_component.geometry.grid
+        grid = grid or particle_ms_component.default_geometry.grid
         col_units = uck.get("collision_coefficient")
         length_units = uck.get("length")
         wavelength = np.atleast_1d(w)
@@ -737,12 +742,6 @@ class ParticleOTComponent(ParticleComponent):
 
         phase_ds = pp.phase_dataset_at(wavelength[0], (i_reff, i_veff), ext)
 
-        geometry = (
-            particle_ms_component.geometry
-            if grid is particle_ms_component.geometry.grid
-            else attrs.evolve(particle_ms_component.geometry, grid=grid)
-        )
-
         return cls(
             bottom=np.broadcast_to(grid.levels[0], (grid.n_x_cells, grid.n_y_cells)),
             top=np.broadcast_to(grid.levels[-1], (grid.n_x_cells, grid.n_y_cells)),
@@ -750,7 +749,8 @@ class ParticleOTComponent(ParticleComponent):
             w_ref=wavelength[0],
             tau_ref=tau_ref,
             particle_properties=phase_ds,
-            geometry=geometry,
+            grid=grid,
+            crop_to_grid=particle_ms_component.crop_to_grid,
             has_absorption=particle_ms_component.has_absorption,
             has_scattering=particle_ms_component.has_scattering,
         )
@@ -885,7 +885,7 @@ class ParticleExtinctionComponent(ParticleComponent):
         self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        grid = self.geometry.grid if grid is None else grid
+        grid = self.default_geometry.grid if grid is None else grid
         result = self._interp(self.sigma_t, si, grid)
 
         if self.has_absorption and self.has_scattering:
@@ -899,7 +899,7 @@ class ParticleExtinctionComponent(ParticleComponent):
         self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        grid = self.geometry.grid if grid is None else grid
+        grid = self.default_geometry.grid if grid is None else grid
         value = self._eval_sigma_a_impl(si, grid)
         return value if self.has_absorption else np.zeros_like(value) * value.units
 
@@ -907,7 +907,7 @@ class ParticleExtinctionComponent(ParticleComponent):
         self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        grid = self.geometry.grid if grid is None else grid
+        grid = self.default_geometry.grid if grid is None else grid
         value = self._eval_sigma_s_impl(si, grid)
         return value if self.has_scattering else np.zeros_like(value) * value.units
 
@@ -915,7 +915,7 @@ class ParticleExtinctionComponent(ParticleComponent):
         self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        grid = self.geometry.grid if grid is None else grid
+        grid = self.default_geometry.grid if grid is None else grid
 
         if self.has_absorption and self.has_scattering:
             return self._interp(self.albedo, si, grid)
@@ -930,7 +930,6 @@ class ParticleExtinctionComponent(ParticleComponent):
     #                             Phase function
     # --------------------------------------------------------------------------
 
-    @property
-    def phase(self) -> PhaseFunction:
+    def get_phase(self, geometry: SceneGeometry | None = None) -> PhaseFunction:
         # Inherit docstring
         return self._phase

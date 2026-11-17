@@ -7,7 +7,6 @@ import xarray as xr
 from eradiate.data.convert import make_prt_ms_v1, make_prt_v1
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import ParticleMSComponent
-from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.units import unit_registry as ureg
 
 PHAMAT_LABELS = {
@@ -195,8 +194,6 @@ def make_particle_ms_component(
         y_edges=np.linspace(0.0, y_extent.m_as("km"), n_y + 1) * ureg.km,
         levels=np.linspace(0.0, z_extent.m_as("km"), n_z + 1) * ureg.km,
     ).centered()
-    geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
-
     return ParticleMSComponent(
         profile=make_profile_dataset(
             grid, reff=reff, veff=veff, mass_concentration=mass_concentration
@@ -204,7 +201,7 @@ def make_particle_ms_component(
         properties=make_properties_dataset(
             reff=reff, veff=veff, w=w, ext_value=ext_value, ssa_value=ssa_value
         ),
-        geometry=geometry,
+        grid=grid,
         has_absorption=has_absorption,
         has_scattering=has_scattering,
     )
@@ -221,11 +218,6 @@ def make_z_profile_particle_ms_component(z_edges_src, target_levels):
         y_edges=np.array([-1.0, 1.0]) * ureg.km,
         levels=np.asarray(target_levels, dtype=float) * ureg.km,
     )
-    geometry = PlaneParallelGeometry(
-        grid=target_grid,
-        toa_altitude=target_grid.levels[-1],
-        ground_altitude=target_grid.levels[0],
-    )
     profile = make_profile_dataset(
         target_grid,
         reff=10.0 + z_centers_src,
@@ -237,6 +229,6 @@ def make_z_profile_particle_ms_component(z_edges_src, target_levels):
     # constant regardless of the profile's own per-voxel reff, which is
     # therefore free to vary with z here.
     ms = ParticleMSComponent(
-        profile=profile, properties=make_properties_dataset(), geometry=geometry
+        profile=profile, properties=make_properties_dataset(), grid=target_grid
     )
     return ms, target_grid

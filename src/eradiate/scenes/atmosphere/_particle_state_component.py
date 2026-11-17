@@ -22,7 +22,7 @@ import xarray as xr
 from ._core import atmosphere_factory
 from ._particle_component import ParticleComponent, ParticleOTComponent
 from ._particle_profile import ParticleProfile
-from ..geometry import PlaneParallelGeometry
+from ..geometry import SceneGeometry
 from ..phase import (
     GriddedParticlePhaseFunction,
     PhaseFunction,
@@ -295,12 +295,13 @@ class ParticleStateComponent(ParticleComponent):
             "max_union_size": self.properties.max_union_size,
         }
 
-    @property
-    def phase(self) -> PhaseFunction:
+    def get_phase(self, geometry: SceneGeometry | None = None) -> PhaseFunction:
+        # Inherit docstring
         if self._phase is not None:
             return self._phase
 
-        grid = self.geometry.grid
+        geometry = self.default_geometry if geometry is None else geometry
+        grid = geometry.grid
         resampled = self.profile.resample(grid)
         amount = resampled[self._amount]
         empty = amount.m <= 0
@@ -320,7 +321,7 @@ class ParticleStateComponent(ParticleComponent):
             grids.append(state_grid)
 
         kwargs = {
-            "geometry": self.geometry,
+            "geometry": geometry,
             "phase_data": self._eval_phase_data,
             "volume_1": volumes[0],
             "grid_1": grids[0],
@@ -347,7 +348,7 @@ class ParticleStateComponent(ParticleComponent):
             Spectral index at which to evaluate.
 
         grid : :class:`.SpatialGrid`, optional
-            Target render grid.  Defaults to ``self.geometry.grid``.
+            Target render grid.  Defaults to ``self.default_geometry.grid``.
 
         Returns
         -------
@@ -367,7 +368,7 @@ class ParticleStateComponent(ParticleComponent):
                 "At least one of 'has_absorption' or 'has_scattering' must be True."
             )
 
-        grid = grid or self.geometry.grid
+        grid = grid or self.default_geometry.grid
         col_units = uck.get("collision_coefficient")
         resampled = self.profile.resample(grid)
         ext_grid, _ = self._eval_ext_ssa_grid(si)
@@ -412,7 +413,7 @@ class ParticleStateComponent(ParticleComponent):
             Spectral index at which to evaluate.
 
         grid : :class:`.SpatialGrid`, optional
-            Target render grid.  Defaults to ``self.geometry.grid``.
+            Target render grid.  Defaults to ``self.default_geometry.grid``.
 
         Returns
         -------
@@ -427,7 +428,7 @@ class ParticleStateComponent(ParticleComponent):
             ``False``.
         """
         if self.has_absorption and self.has_scattering:
-            grid = grid or self.geometry.grid
+            grid = grid or self.default_geometry.grid
             return self._eval_ssa(si, grid) * ureg.dimensionless
 
         if self.has_absorption:
@@ -451,7 +452,7 @@ class ParticleStateComponent(ParticleComponent):
             Spectral index at which to evaluate.
 
         grid : :class:`.SpatialGrid`, optional
-            Target render grid.  Defaults to ``self.geometry.grid``.
+            Target render grid.  Defaults to ``self.default_geometry.grid``.
 
         Returns
         -------
@@ -460,7 +461,7 @@ class ParticleStateComponent(ParticleComponent):
             ``(n_x_cells, n_y_cells, n_z_cells)``, in units of
             :math:`\\mathrm{km}^{-1}`.
         """
-        grid = grid or self.geometry.grid
+        grid = grid or self.default_geometry.grid
         units = uck.get("collision_coefficient")
         if not self.has_scattering:
             return ureg.Quantity(np.zeros(grid.shape, dtype=np.float64), units)
@@ -480,7 +481,7 @@ class ParticleStateComponent(ParticleComponent):
             Spectral index at which to evaluate.
 
         grid : :class:`.SpatialGrid`, optional
-            Target render grid.  Defaults to ``self.geometry.grid``.
+            Target render grid.  Defaults to ``self.default_geometry.grid``.
 
         Returns
         -------
@@ -489,7 +490,7 @@ class ParticleStateComponent(ParticleComponent):
             ``(n_x_cells, n_y_cells, n_z_cells)``, in units of
             :math:`\\mathrm{km}^{-1}`.
         """
-        grid = grid or self.geometry.grid
+        grid = grid or self.default_geometry.grid
         if not self.has_absorption:
             units = uck.get("collision_coefficient")
             return ureg.Quantity(np.zeros(grid.shape, dtype=np.float64), units)
@@ -529,16 +530,10 @@ class ParticleStateComponent(ParticleComponent):
 
     def to_profile_regular_grid(self):
         """
-        Return a copy of this :class:`ParticleStateComponent` with its geometry set to
+        Return a copy of this :class:`ParticleStateComponent` with its grid set to
         a regular grid aligned with the profile.
         """
-        grid = self._profile_regular_grid()
-        geometry = PlaneParallelGeometry(
-            grid=grid,
-            toa_altitude=grid.levels[-1],
-            width=self.geometry.width,
-        )
-        return attrs.evolve(self, geometry=geometry)
+        return attrs.evolve(self, grid=self._profile_regular_grid())
 
 
 @define(eq=False, slots=False)
@@ -663,18 +658,13 @@ class ParticleMSComponent(ParticleStateComponent):
         grid : :class:`.SpatialGrid`, optional
             Target render grid for the output :class:`.ParticleMSComponent`.
             If provided, ``particle_ot``'s radiative properties are
-            evaluated on it instead of its own geometry's grid.
+            evaluated on it instead of its own default grid.
 
         Returns
         -------
         :class:`.ParticleMSComponent`
         """
-        output_geometry = (
-            particle_ot.geometry
-            if grid is None
-            else attrs.evolve(particle_ot.geometry, grid=grid)
-        )
-        target_grid = output_geometry.grid
+        target_grid = particle_ot.default_geometry.grid if grid is None else grid
         w_ref = particle_ot.w_ref
         pp = particle_ot.particle_properties
 
@@ -769,7 +759,8 @@ class ParticleMSComponent(ParticleStateComponent):
         return cls(
             profile=profile_ds,
             properties=properties,
-            geometry=output_geometry,
+            grid=target_grid,
+            crop_to_grid=particle_ot.crop_to_grid,
             has_absorption=particle_ot.has_absorption,
             has_scattering=particle_ot.has_scattering,
         )

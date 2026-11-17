@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
+from functools import cached_property
 from typing import Literal
 
 import attrs
@@ -18,13 +19,14 @@ from ..core import (
 from ..geometry import (
     PlaneParallelGeometry,
     SceneGeometry,
+    SphericalShellGeometry,
 )
 from ..phase import PhaseFunction
 from ..shapes import Shape
 from ... import validators
 from ..._factory import Factory
 from ...attrs import define, documented, get_doc
-from ...grid import SpatialGrid
+from ...grid import SpatialGrid, SphericalGrid
 from ...kernel import (
     SceneParameter,
 )
@@ -374,6 +376,16 @@ class _RadProps(ABC):
     """
 
     @property
+    def default_geometry(self) -> SceneGeometry:
+        """
+        Returns
+        -------
+        .SceneGeometry
+            Geometry used when no grid is passed to evaluation methods.
+        """
+        return self.geometry
+
+    @property
     def absorption_data(self) -> AbsorptionDatabase | None:
         """
         Returns
@@ -424,7 +436,7 @@ class _RadProps(ABC):
             * ``z_layer``: layer centre altitude.
         """
         if grid is None:
-            grid = self.geometry.grid
+            grid = self.default_geometry.grid
 
         sigma_units = ucc.get("collision_coefficient")
         sigma_t = self.eval_sigma_t(si, grid)
@@ -640,7 +652,7 @@ class _RadProps(ABC):
                 f"supported: {list(eval_sigma.keys())}"
             ) from e
         sigma = eval_sigma_func(si=si)
-        dz = np.diff(self.geometry.grid.levels)
+        dz = np.diff(self.default_geometry.grid.levels)
         tau = np.sum(np.multiply(sigma, dz).to("1"), axis=-1)
         return np.exp(-tau)
 
@@ -736,6 +748,50 @@ _DEPRECATED_COMPONENT_PARAMETERS = (
 )
 
 
+def geometry_on_grid(
+    frame: SceneGeometry, grid: SpatialGrid | None, crop_to_grid: str = ""
+) -> SceneGeometry:
+    """
+    Return ``frame`` with its grid replaced by ``grid``; ``frame`` itself if
+    ``grid`` is ``None``. Altitudes are derived from ``grid``.
+    ``crop_to_grid`` applies to a plane parallel ``frame`` only.
+
+    Raises
+    ------
+    ValueError
+        If ``grid`` does not match the grid type of ``frame``.
+    """
+    if grid is None:
+        # Returning the frame itself keeps grid-keyed caches hitting
+        return frame
+
+    if not isinstance(grid, frame._GRID_TYPE):
+        raise ValueError(
+            f"grid type '{type(grid).__name__}' does not match the atmosphere "
+            f"geometry type '{type(frame).__name__}'"
+        )
+
+    kwargs = {}
+    if isinstance(frame, PlaneParallelGeometry):
+        kwargs["crop_to_grid"] = crop_to_grid
+    elif crop_to_grid:
+        warnings.warn(
+            "'crop_to_grid' is ignored in spherical shell geometry",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    return attrs.evolve(
+        frame, grid=grid, ground_altitude=None, toa_altitude=None, **kwargs
+    )
+
+
+def _grid_converter(value):
+    # Arrays are not converted: their grid type depends on the frame, which
+    # the component does not know
+    return SpatialGrid.convert(value) if isinstance(value, dict) else value
+
+
 def _deprecated_option(converter):
     return documented(
         attrs.field(
@@ -780,17 +836,53 @@ class AtmosphereComponent(_RadProps, ABC):
                 attrs.validators.instance_of(SceneGeometry)
             ),
         ),
-        doc="Scene geometry on which radiative properties are evaluated. If "
-        "unset, a default plane parallel geometry is used, and the parent "
-        ":class:`.HeterogeneousAtmosphere` overrides it with the geometry of "
-        "the merged component it belongs to. If set, it is never overridden "
-        "and is used to group components "
-        "(see :attr:`.HeterogeneousAtmosphere.merge_policy`). In all cases, "
-        "radiative properties are rendered on the grid of the merged "
-        "component.",
-        type=".SceneGeometry",
+        doc="Deprecated, use ``grid`` and ``crop_to_grid`` instead. If set, "
+        "its grid (and ``crop_to_grid`` for a plane parallel geometry) is "
+        "moved to ``grid`` (and ``crop_to_grid``) and the field is reset to "
+        "``None``.",
+        type="None",
         init_type=".SceneGeometry or dict or str, optional",
         default="None",
+    )
+
+    grid: SpatialGrid | None = documented(
+        attrs.field(
+            default=None,
+            converter=_grid_converter,
+            kw_only=True,
+        ),
+        doc="Grid on which this component is rendered when it is not merged "
+        "with components on another grid (see "
+        ":attr:`.HeterogeneousAtmosphere.merge_policy`), and on which its "
+        "phase function is built. If unset, the grid of the merged component "
+        "is used. The scene frame (geometry type, extent, planet radius) "
+        "always comes from the parent atmosphere.",
+        type=".SpatialGrid or None",
+        init_type=".SpatialGrid or dict, optional",
+        default="None",
+    )
+
+    @grid.validator
+    def _grid_validator(self, attribute, value):
+        if value is not None and not isinstance(value, SpatialGrid):
+            raise TypeError(
+                f"while validating '{attribute.name}': expected a SpatialGrid "
+                f"or a dictionary, got a {type(value).__name__}; build arrays "
+                "into a CartesianGrid or a SphericalGrid"
+            )
+
+    crop_to_grid: str = documented(
+        attrs.field(
+            default="",
+            validator=attrs.validators.matches_re("x?y?z?"),
+            kw_only=True,
+        ),
+        doc="Axes along which the medium of this component spans the extent "
+        "of ``grid`` (see :attr:`.PlaneParallelGeometry.crop_to_grid`). "
+        "Ignored if ``grid`` is unset or in spherical shell geometry.",
+        type="str",
+        init_type="str",
+        default='""',
     )
 
     extremum_resolution: tuple[int, int, int] | None = documented(
@@ -817,9 +909,33 @@ class AtmosphereComponent(_RadProps, ABC):
     force_majorant: bool | None = _deprecated_option(bool)
 
     def __attrs_post_init__(self):
-        self._own_geometry = self.geometry
-        if self.geometry is None:
-            self.geometry = PlaneParallelGeometry()
+        if self.geometry is not None:
+            if self.grid is not None:
+                raise ValueError("cannot set both 'geometry' and 'grid'")
+            warnings.warn(
+                DeprecatedWarning(
+                    component=f"Setting 'geometry' on '{type(self).__name__}'",
+                    deprecated_in="1.3.1",
+                    removed_in="2.0.0",
+                    details="Use 'grid' and 'crop_to_grid' instead. Only the "
+                    "grid and crop of the geometry are kept; the frame "
+                    "(geometry type, altitudes, width, planet radius) comes "
+                    "from the parent atmosphere, and standalone spherical "
+                    "shell components use the default planet radius.",
+                ),
+                stacklevel=3,
+            )
+            self.grid = self.geometry.grid
+            if isinstance(self.geometry, PlaneParallelGeometry):
+                self.crop_to_grid = self.geometry.crop_to_grid
+            self.geometry = None
+
+        if self.crop_to_grid and self.grid is None:
+            warnings.warn(
+                f"'{type(self).__name__}.crop_to_grid' is ignored since 'grid' is unset",
+                UserWarning,
+                stacklevel=3,
+            )
 
         deprecated_options = [
             f"'{name}'"
@@ -857,12 +973,57 @@ class AtmosphereComponent(_RadProps, ABC):
         """
         return f"phase_{self.id}"
 
+    @cached_property
+    def default_geometry(self) -> SceneGeometry:
+        """
+        Returns
+        -------
+        .SceneGeometry
+            Geometry used when none is passed to evaluation methods: a default
+            geometry built on :attr:`grid`, spherical shell for a
+            :class:`.SphericalGrid` and plane parallel otherwise.
+        """
+        frame = (
+            SphericalShellGeometry()
+            if isinstance(self.grid, SphericalGrid)
+            else PlaneParallelGeometry()
+        )
+        return geometry_on_grid(frame, self.grid, self.crop_to_grid)
+
     @property
-    @abstractmethod
     def phase(self) -> PhaseFunction:
         """
         Returns
         -------
         .PhaseFunction
-            Phase function associated with the component.
+            Phase function associated with the component, built on
+            :attr:`default_geometry`.
+        """
+        return self.get_phase()
+
+    @abstractmethod
+    def get_phase(self, geometry: SceneGeometry | None = None) -> PhaseFunction:
+        """
+        Build the phase function associated with the component.
+
+        Parameters
+        ----------
+        geometry : .SceneGeometry, optional
+            Geometry on which the phase function is defined. If unset,
+            :attr:`default_geometry` is used.
+
+        Returns
+        -------
+        .PhaseFunction
+        """
+
+    def check_geometry(self, geometry: SceneGeometry) -> None:
+        """
+        Check that this component can be evaluated on ``geometry``. Does
+        nothing by default; components with a bounded extent override it.
+
+        Raises
+        ------
+        ValueError
+            If this component cannot be evaluated on ``geometry``.
         """

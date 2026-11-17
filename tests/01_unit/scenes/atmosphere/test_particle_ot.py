@@ -16,6 +16,7 @@ from eradiate.scenes.atmosphere import (
     UniformParticleDistribution,
 )
 from eradiate.scenes.core import traverse
+from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.spectral.index import MonoSpectralIndex, SpectralIndex
 from eradiate.testing.types import check_scene_element
 from eradiate.units import to_quantity
@@ -119,11 +120,7 @@ class TestParticleOTComponent:
         top = 1.8 * ureg.km
         tau_ref = 0.3 * ureg.dimensionless
         layer = ParticleOTComponent(
-            geometry={
-                "type": "plane_parallel",
-                "ground_altitude": bottom,
-                "toa_altitude": top,
-            },
+            grid=PlaneParallelGeometry(ground_altitude=bottom, toa_altitude=top).grid,
             bottom=bottom,
             top=top,
             distribution={"type": "uniform"},
@@ -191,11 +188,7 @@ class TestParticleOTComponent:
         bottom = 0.0 * ureg.km
         top = 1.0 * ureg.km
         layer = ParticleOTComponent(
-            geometry={
-                "type": "plane_parallel",
-                "ground_altitude": bottom,
-                "toa_altitude": top,
-            },
+            grid=PlaneParallelGeometry(ground_altitude=bottom, toa_altitude=top).grid,
             particle_properties=particle_properties_absorbing_only,
             tau_ref=0.2,
             w_ref=550.0,
@@ -218,11 +211,7 @@ class TestParticleOTComponent:
         bottom = 0.0 * ureg.km
         top = 1.0 * ureg.km
         layer = ParticleOTComponent(
-            geometry={
-                "type": "plane_parallel",
-                "ground_altitude": bottom,
-                "toa_altitude": top,
-            },
+            grid=PlaneParallelGeometry(ground_altitude=bottom, toa_altitude=top).grid,
             particle_properties=particle_properties_scattering_only,
             tau_ref=0.2,
             w_ref=550.0,
@@ -245,11 +234,7 @@ class TestParticleOTComponent:
         bottom = 0.0 * ureg.km
         top = 1.0 * ureg.km
         layer = ParticleOTComponent(
-            geometry={
-                "type": "plane_parallel",
-                "ground_altitude": bottom,
-                "toa_altitude": top,
-            },
+            grid=PlaneParallelGeometry(ground_altitude=bottom, toa_altitude=top).grid,
             particle_properties=particle_properties_test,
             tau_ref=1.0,
             w_ref=550.0,
@@ -300,7 +285,7 @@ class TestParticleOTComponent:
         # and check it matches the input tau_ref
         si = SpectralIndex.new(w=layer.w_ref)
         radprops = layer.eval_radprops(si)
-        delta_z = layer.geometry.grid.layer_height
+        delta_z = layer.default_geometry.grid.layer_height
 
         with xr.set_options(keep_attrs=True):
             tau = to_quantity(radprops.sigma_t.sum()) * delta_z
@@ -346,11 +331,7 @@ class TestParticleOTComponent:
 
         layer = ParticleOTComponent(
             particle_properties=ds,
-            geometry={
-                "type": "plane_parallel",
-                "toa_altitude": grid.levels[-1],
-                "grid": grid,
-            },
+            grid=grid,
             bottom=bottom,
             top=top,
             distribution=distribution,
@@ -360,14 +341,14 @@ class TestParticleOTComponent:
 
         # Compute layer optical thickness at current wavelengths based on sigma_t
         # evaluation routine
-        sigma_t = layer._eval_sigma_t_impl(wavelengths, layer.geometry.grid)
+        sigma_t = layer._eval_sigma_t_impl(wavelengths, layer.default_geometry.grid)
         assert sigma_t.units.is_compatible_with(ureg("m**-1"))
         assert sigma_t.shape == (n_wavelengths, 1, 1, n_layers)
         # -- Integrate sigma_t * dz vs space coordinate using rectangle method
         # (bottom/top are scalar here, so the x, y axes are trivial)
-        tau = np.sum(sigma_t * layer.geometry.grid.layer_height, axis=-1).squeeze(
-            axis=(1, 2)
-        )
+        tau = np.sum(
+            sigma_t * layer.default_geometry.grid.layer_height, axis=-1
+        ).squeeze(axis=(1, 2))
 
         # Manually compute extinction at running and reference wavelengths
         w_units = ureg(ds["w"].attrs["units"])
@@ -404,11 +385,7 @@ class TestParticleOTComponent:
     def test_eval_fractions_shape_and_normalization(self, distribution, bottom, top):
         grid = _make_3d_grid()
         layer = ParticleOTComponent(
-            geometry={
-                "type": "plane_parallel",
-                "toa_altitude": grid.levels[-1],
-                "grid": grid,
-            },
+            grid=grid,
             bottom=bottom,
             top=top,
             distribution=distribution,
@@ -440,11 +417,7 @@ class TestParticleOTComponent:
         top = np.full((2, 2), grid.levels[-1].m) * grid.levels.units
 
         particles = ParticleOTComponent(
-            geometry={
-                "type": "plane_parallel",
-                "toa_altitude": grid.levels[-1],
-                "grid": grid,
-            },
+            grid=grid,
             bottom=bottom,
             top=top,
             distribution=ArrayParticleDistribution(values=values, method="nearest"),
@@ -492,11 +465,7 @@ class TestParticleOTComponent:
         w_ref = 550 * ureg.nm
 
         layer = ParticleOTComponent(
-            geometry={
-                "type": "plane_parallel",
-                "toa_altitude": grid.levels[-1],
-                "grid": grid,
-            },
+            grid=grid,
             particle_properties=particle_dataset_path,
             bottom=bottom,
             top=top,
@@ -576,16 +545,14 @@ class TestParticleOTComponent:
             top = 1.0 * ureg.km
             particles = ParticleOTComponent(
                 particle_properties=particle_dataset_path,
-                geometry={
-                    "type": "plane_parallel",
-                    "ground_altitude": bottom,
-                    "toa_altitude": top,
-                },
+                grid=PlaneParallelGeometry(
+                    ground_altitude=bottom, toa_altitude=top
+                ).grid,
                 tau_ref=1.0,
                 has_absorption=has_absorption,
                 has_scattering=has_scattering,
             )
-            grid = particles.geometry.grid
+            grid = particles.default_geometry.grid
             si = SpectralIndex.new(w=550.0 * ureg.nm)
 
             for field in ["albedo", "sigma_t", "sigma_a", "sigma_s"]:
@@ -667,7 +634,7 @@ class TestParticleOTComponent:
             ext_value=2.0,
             ssa_value=0.6,
         )
-        grid = ms.geometry.grid
+        grid = ms.grid
         w = ureg.Quantity(1.0, "micron")
 
         layer = ParticleOTComponent.from_ms_voxel(ms, w=w, ix=0, iy=1, iz=0)
@@ -724,19 +691,19 @@ class TestParticleOTComponent:
         ],
     )
     def test_from_ms_forwards_grid_and_interactions(self, mode_mono, method, kwargs):
-        """from_ms_* use the custom grid in the output geometry and forward has_absorption/has_scattering."""
+        """from_ms_* use the custom grid in the output component and forward has_absorption/has_scattering."""
         ms = make_particle_ms_component(
             n_x=2, n_y=2, n_z=2, w=(1.0,), has_absorption=False
         )
         grid = CartesianGrid(
-            x_edges=ms.geometry.grid.x_edges,
-            y_edges=ms.geometry.grid.y_edges,
+            x_edges=ms.grid.x_edges,
+            y_edges=ms.grid.y_edges,
             levels=np.linspace(0.0, 3.0, 5) * ureg.km,
         ).centered()
         constructor = getattr(ParticleOTComponent, method)
 
         result = constructor(ms, w=ureg.Quantity(1.0, "micron"), grid=grid, **kwargs)
-        assert result.geometry.grid is grid
+        assert result.grid is grid
         assert not result.has_absorption
         assert result.has_scattering
 
@@ -753,7 +720,7 @@ class TestParticleOTComponent:
             ext_value=2.0,
             ssa_value=0.6,
         )
-        grid = ms.geometry.grid
+        grid = ms.grid
         w = ureg.Quantity(1.0, "micron")
         si = MonoSpectralIndex(w=w)
 
@@ -830,7 +797,7 @@ class TestParticleOTComponent:
 
         # Reassigning a field the cached terms depend on is taken into account
         layer.bottom = 1.0 * ureg.km
-        grid = layer.geometry.grid
+        grid = layer.default_geometry.grid
         expected = ParticleOTComponent(
             bottom=1.0 * ureg.km, top=5.0 * ureg.km
         ).eval_fractions(grid)

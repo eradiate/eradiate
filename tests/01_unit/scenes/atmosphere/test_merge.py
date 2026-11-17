@@ -6,7 +6,8 @@ from eradiate import unit_context_config as ucc
 from eradiate import unit_context_kernel as uck
 from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
-from eradiate.grid import CartesianGrid
+from eradiate.experiments import AtmosphereExperiment
+from eradiate.grid import CartesianGrid, SphericalGrid
 from eradiate.scenes.atmosphere import (
     HeterogeneousAtmosphere,
     MergeAll,
@@ -16,27 +17,82 @@ from eradiate.scenes.atmosphere import (
     OverlapAll,
     ParticleOTComponent,
 )
+from eradiate.scenes.atmosphere._core import geometry_on_grid
 from eradiate.scenes.core import traverse
-from eradiate.scenes.geometry import PlaneParallelGeometry
+from eradiate.scenes.geometry import PlaneParallelGeometry, SphericalShellGeometry
 from eradiate.scenes.phase import MultiPhaseFunction
 from eradiate.testing.types import check_scene_element
+from eradiate.util.deprecation import DeprecatedWarning
 
 from .test_heterogeneous import default_spectral_index
 
 
-def cloud_geometry():
-    grid = CartesianGrid(
+def cloud_grid():
+    return CartesianGrid(
         x_edges=[-1.0, 0.0, 1.0] * ureg.km,
         y_edges=[-1.0, 0.0, 1.0] * ureg.km,
         z_edges=np.linspace(1.0, 3.0, 5) * ureg.km,
     )
-    return PlaneParallelGeometry(grid=grid, crop_to_grid="xyz")
 
 
 def cloud(**kwargs):
     return ParticleOTComponent(
-        bottom=1.0 * ureg.km, top=3.0 * ureg.km, geometry=cloud_geometry(), **kwargs
+        bottom=1.0 * ureg.km,
+        top=3.0 * ureg.km,
+        grid=cloud_grid(),
+        crop_to_grid="xyz",
+        **kwargs,
     )
+
+
+def test_geometry_on_grid(mode_mono):
+    frame = PlaneParallelGeometry(toa_altitude=50.0 * ureg.km)
+    assert geometry_on_grid(frame, None) is frame
+
+    grid = cloud_grid()
+    geometry = geometry_on_grid(frame, grid, "xyz")
+    assert geometry.grid is grid and geometry.crop_to_grid == "xyz"
+    assert geometry.width == frame.width
+    assert geometry.ground_altitude == 1.0 * ureg.km
+    assert geometry.toa_altitude == 3.0 * ureg.km
+
+    with pytest.raises(ValueError, match="does not match"):
+        geometry_on_grid(SphericalShellGeometry(), grid)
+    with pytest.raises(ValueError, match="does not match"):
+        geometry_on_grid(frame, SphericalGrid.from_levels([0.0, 1.0, 2.0] * ureg.km))
+
+
+def test_component_grid(mode_mono):
+    with pytest.raises(TypeError, match="CartesianGrid"):
+        ParticleOTComponent(grid=[0.0, 1.0] * ureg.km)
+
+    component = ParticleOTComponent(
+        grid={
+            "type": "cartesian",
+            "x_edges": [-1.0, 1.0] * ureg.km,
+            "y_edges": [-1.0, 1.0] * ureg.km,
+            "z_edges": [0.0, 1.0] * ureg.km,
+        }
+    )
+    assert isinstance(component.grid, CartesianGrid)
+
+    with pytest.warns(UserWarning, match="'grid' is unset"):
+        ParticleOTComponent(crop_to_grid="z")
+
+    grid = SphericalGrid.from_levels([0.0, 1.0, 2.0] * ureg.km)
+    assert isinstance(
+        MolecularComponent(grid=grid).default_geometry, SphericalShellGeometry
+    )
+
+
+def test_component_geometry_deprecated(mode_mono):
+    geometry = PlaneParallelGeometry(grid=cloud_grid(), crop_to_grid="xyz")
+    with pytest.warns(DeprecatedWarning, match="'grid' and 'crop_to_grid'"):
+        component = ParticleOTComponent(geometry=geometry)
+
+    assert component.geometry is None
+    assert component.grid is geometry.grid
+    assert component.crop_to_grid == "xyz"
 
 
 def test_merged_component_validation(mode_mono):
@@ -53,7 +109,7 @@ def test_merged_component_radprops(mode_mono):
     particle = ParticleOTComponent()
     merged = MergedComponent(components=[molecular, particle])
     si = KernelContext().si
-    grid = merged.geometry.grid
+    grid = merged.default_geometry.grid
     units = ucc.get("collision_coefficient")
 
     for name in ["sigma_t", "sigma_s"]:
@@ -83,14 +139,14 @@ def test_merge_policy_conversion(mode_mono):
 
 
 @pytest.mark.parametrize(
-    "policy, expected",
+    "policy, expected, expected_cloud_groups",
     [
-        ("merge_all", [[0, 1, 2]]),
-        ("overlap_all", [[0], [1], [2]]),
-        ("merge_by_grid", [[0, 1], [2]]),
+        ("merge_all", [[0, 1, 2]], []),
+        ("overlap_all", [[0], [1], [2]], [2]),
+        ("merge_by_grid", [[0, 1], [2]], [1]),
     ],
 )
-def test_merge_policy_groups(mode_mono, policy, expected):
+def test_merge_policy_groups(mode_mono, policy, expected, expected_cloud_groups):
     components = [MolecularComponent(), ParticleOTComponent(), cloud()]
     atmosphere = HeterogeneousAtmosphere(components=components, merge_policy=policy)
 
@@ -103,13 +159,15 @@ def test_merge_policy_groups(mode_mono, policy, expected):
         f"atmosphere_group_{i}" for i in range(len(expected))
     ]
 
-    for group in atmosphere.components_merged:
-        for member in group.components:
-            expected_geometry = member._own_geometry or group.geometry
-            assert member.geometry is expected_geometry
-
-    if policy == "merge_all":
-        assert atmosphere.components_merged[0].geometry is atmosphere.geometry
+    # Groups are rendered on the cloud grid or on the atmosphere geometry
+    for i, group in enumerate(atmosphere.components_merged):
+        if i in expected_cloud_groups:
+            assert group.grid is components[2].grid
+            assert group.geometry.grid is components[2].grid
+            assert group.geometry.crop_to_grid == "xyz"
+        else:
+            assert group.grid is None
+            assert group.geometry is atmosphere.geometry
 
 
 def test_merge_extremum_resolution(mode_mono):
@@ -129,23 +187,46 @@ def test_merge_extremum_resolution(mode_mono):
     assert atmosphere.components_merged[0].extremum_resolution is None
 
 
-def test_merge_geometry_override_idempotent(mode_mono):
-    particle, particle_cloud = ParticleOTComponent(), cloud()
+def test_merge_geometry_override(mode_mono):
+    molecular, particle_cloud = MolecularComponent(), cloud()
     atmosphere = HeterogeneousAtmosphere(
-        components=[particle, particle_cloud], merge_policy="overlap_all"
+        components=[molecular, particle_cloud], merge_policy="overlap_all"
     )
 
     # Mimic the experiment geometry override
-    geometry = PlaneParallelGeometry(toa_altitude=50.0 * ureg.km)
-    atmosphere.geometry = geometry
-    atmosphere.update()
-    atmosphere.update()
+    for geometry in [
+        PlaneParallelGeometry(toa_altitude=50.0 * ureg.km, width=10.0 * ureg.km),
+        PlaneParallelGeometry(toa_altitude=80.0 * ureg.km),
+    ]:
+        atmosphere.geometry = geometry
+        atmosphere.update()
 
-    group, group_cloud = atmosphere.components_merged
-    assert len(atmosphere.components_merged) == 2
-    assert group.geometry is geometry and particle.geometry is geometry
-    assert group_cloud.geometry is particle_cloud._own_geometry
-    assert particle.id == "atmosphere_component_0"
+        group, group_cloud = atmosphere.components_merged
+        assert group.geometry is geometry and molecular.geometry is None
+        assert group_cloud.geometry.grid is particle_cloud.grid
+        assert group_cloud.geometry.width == geometry.width
+        assert group_cloud.geometry.toa_altitude == 3.0 * ureg.km
+        assert molecular.id == "atmosphere_component_0"
+
+        # Phase functions of components without a grid use the group geometry
+        assert group.get_phase(geometry).geometry is geometry
+
+    # Frame type change: the cloud grid no longer fits
+    atmosphere.geometry = SphericalShellGeometry()
+    with pytest.raises(ValueError, match="does not match"):
+        atmosphere.update()
+
+
+def test_merge_member_grid(mode_mono):
+    grid = CartesianGrid.from_levels(np.linspace(0.0, 10.0, 11) * ureg.km)
+    molecular = MolecularComponent(grid=grid)
+    atmosphere = HeterogeneousAtmosphere(components=[molecular, ParticleOTComponent()])
+
+    # The group is rendered on the frame; the member phase uses its own grid
+    (group,) = atmosphere.components_merged
+    assert group.geometry is atmosphere.geometry
+    phase = group.get_phase(group.geometry)
+    assert phase.components[0].geometry.grid is grid
 
 
 def test_merge_user_groups(mode_mono):
@@ -174,6 +255,17 @@ def test_merge_user_groups(mode_mono):
         components=[{"type": "merged", "components": [{"type": "particle_ot"}]}]
     )
     assert isinstance(atmosphere.components_merged[0], MergedComponent)
+
+    # User group with its own grid
+    grid = cloud_grid()
+    atmosphere = HeterogeneousAtmosphere(
+        components=[
+            molecular,
+            MergedComponent(components=[cloud()], grid=grid, crop_to_grid="xyz"),
+        ]
+    )
+    group = atmosphere.components_merged[1]
+    assert group.geometry.grid is grid and group.geometry.crop_to_grid == "xyz"
 
 
 def test_merge_duplicate_component(mode_mono):
@@ -237,3 +329,44 @@ def test_merge_overlap_ckd(mode_ckd, atmosphere_us_standard_ckd):
     assert atmosphere.is_overlapping
     si = default_spectral_index(atmosphere)
     check_scene_element(atmosphere, ctx=KernelContext(si=si))
+
+
+def test_merge_spherical_polarized(mode_mono_polarized):
+    # The molecular component has no grid: its phase uses the experiment frame
+    exp = AtmosphereExperiment(
+        geometry="spherical_shell", atmosphere={"type": "molecular"}
+    )
+    _, params = traverse(exp.atmosphere)
+    assert "phase_atmosphere.depolarization.volume.data" in params.data
+
+
+def test_check_geometry(mode_mono):
+    thermoprops = {
+        "identifier": "afgl_1986-us_standard",
+        "z": np.linspace(0.0, 80.0, 41) * ureg.km,
+        "additional_molecules": False,
+    }
+
+    # Not checked at construction, on the default 120 km frame
+    atmosphere = HeterogeneousAtmosphere(
+        components=[MolecularComponent(thermoprops=thermoprops)]
+    )
+    with pytest.raises(ValueError, match="go beyond"):
+        atmosphere.check_geometry()
+
+    # Checked by experiments once the frame is set
+    AtmosphereExperiment(
+        geometry={"type": "plane_parallel", "toa_altitude": 80.0 * ureg.km},
+        atmosphere=atmosphere,
+    )
+    with pytest.raises(ValueError, match="go beyond"):
+        AtmosphereExperiment(atmosphere=atmosphere)
+
+    # The own grid of a member is checked, too
+    grid = CartesianGrid.from_levels(np.linspace(0.0, 100.0, 11) * ureg.km)
+    atmosphere = HeterogeneousAtmosphere(
+        geometry={"type": "plane_parallel", "toa_altitude": 80.0 * ureg.km},
+        components=[MolecularComponent(thermoprops=thermoprops, grid=grid)],
+    )
+    with pytest.raises(ValueError, match="go beyond"):
+        atmosphere.check_geometry()

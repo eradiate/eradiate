@@ -82,7 +82,7 @@ class TestParticleExtinctionComponent:
         grid = _make_grid()
         sigma_t, albedo = _make_data(grid, [550.0] * ureg.nm, 1.0, 0.8)
         particles = ParticleExtinctionComponent(
-            geometry=_make_geometry(grid),
+            grid=grid,
             sigma_t=sigma_t,
             albedo=albedo,
             phase_spec=IsotropicPhaseFunction(),
@@ -98,7 +98,7 @@ class TestParticleExtinctionComponent:
 
         with pytest.raises(ValueError, match="dimensions must be exactly"):
             ParticleExtinctionComponent(
-                geometry=_make_geometry(grid),
+                grid=grid,
                 sigma_t=sigma_t,
                 albedo=albedo,
                 phase_spec={"type": "isotropic"},
@@ -112,7 +112,7 @@ class TestParticleExtinctionComponent:
 
         with pytest.raises(ValueError, match="must have matching sizes"):
             ParticleExtinctionComponent(
-                geometry=_make_geometry(grid),
+                grid=grid,
                 sigma_t=sigma_t,
                 albedo=albedo,
                 phase_spec={"type": "isotropic"},
@@ -125,7 +125,7 @@ class TestParticleExtinctionComponent:
 
         with pytest.raises(ValueError, match=r"Albedo must be lower or equal to 1\.0"):
             ParticleExtinctionComponent(
-                geometry=_make_geometry(grid),
+                grid=grid,
                 sigma_t=sigma_t,
                 albedo=albedo,
                 phase_spec={"type": "isotropic"},
@@ -138,7 +138,7 @@ class TestParticleExtinctionComponent:
 
         with pytest.raises(ValueError, match="at least one of"):
             ParticleExtinctionComponent(
-                geometry=_make_geometry(grid),
+                grid=grid,
                 sigma_t=sigma_t,
                 albedo=albedo,
                 phase_spec={"type": "isotropic"},
@@ -168,7 +168,7 @@ class TestParticleExtinctionComponent:
         grid = _make_grid()
         sigma_t, albedo = _make_data(grid, [550.0] * ureg.nm, 1.0, 0.8)
         particles = ParticleExtinctionComponent(
-            geometry=_make_geometry(grid),
+            grid=grid,
             sigma_t=sigma_t,
             albedo=albedo,
             phase_spec={"type": "isotropic"},
@@ -192,7 +192,7 @@ class TestParticleExtinctionComponent:
         grid = _make_grid()
         sigma_t, albedo = _make_data(grid, [550.0] * ureg.nm, 1.0, 0.8)
         particles = ParticleExtinctionComponent(
-            geometry=_make_geometry(grid),
+            grid=grid,
             sigma_t=sigma_t,
             albedo=albedo,
             phase_spec={"type": "isotropic"},
@@ -220,7 +220,7 @@ class TestParticleExtinctionComponent:
         sigma_t, albedo = _make_data(grid, w, sigma_t_values, 0.5)
 
         particles = ParticleExtinctionComponent(
-            geometry=_make_geometry(grid),
+            grid=grid,
             sigma_t=sigma_t,
             albedo=albedo,
             phase_spec={"type": "isotropic"},
@@ -258,7 +258,7 @@ class TestParticleExtinctionComponent:
         albedo["z"].attrs["units"] = "km"
 
         particles = ParticleExtinctionComponent(
-            geometry=_make_geometry(grid),
+            grid=grid,
             sigma_t=sigma_t,
             albedo=albedo,
             phase_spec={"type": "isotropic"},
@@ -281,7 +281,7 @@ class TestParticleExtinctionComponent:
         sigma_t, albedo = _make_data(grid, [550.0] * ureg.nm, sigma_t_values, 0.5)
 
         particles = ParticleExtinctionComponent(
-            geometry=_make_geometry(grid),
+            grid=grid,
             sigma_t=sigma_t.transpose(*dims),
             albedo=albedo.transpose(*dims),
             phase_spec={"type": "isotropic"},

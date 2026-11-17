@@ -47,7 +47,7 @@ def eval_transmittance_mono(
         Shape ``(x_cells, y_cells, w)``.
     """
     wavelengths = spectral_grid.wavelengths
-    n_x_cells, n_y_cells, _ = atmosphere.geometry.grid.shape
+    n_x_cells, n_y_cells, _ = atmosphere.default_geometry.grid.shape
     transmittance = np.full((n_x_cells, n_y_cells, wavelengths.size), np.nan)
 
     for i, w in tqdm(
@@ -119,7 +119,7 @@ def eval_transmittance_ckd(
     # Check if a molecular absorption database is available
     abs_db = atmosphere.absorption_data
 
-    n_x_cells, n_y_cells, _ = atmosphere.geometry.grid.shape
+    n_x_cells, n_y_cells, _ = atmosphere.default_geometry.grid.shape
 
     # Build quadrature rules once: adaptive policies need abs_db
     quads = [quad for _, quad in spectral_grid.walk_quads(ckd_quad_config, abs_db)]

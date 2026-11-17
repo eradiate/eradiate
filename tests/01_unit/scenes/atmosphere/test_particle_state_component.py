@@ -4,7 +4,6 @@ import pytest
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import ParticleStateComponent
 from eradiate.scenes.core import traverse
-from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import GriddedParticlePhaseFunction
 from eradiate.spectral.index import MonoSpectralIndex
 from eradiate.units import unit_registry as ureg
@@ -41,25 +40,24 @@ CASES = {
 }
 
 
-def make_geometry() -> PlaneParallelGeometry:
-    grid = CartesianGrid(
+def make_grid() -> CartesianGrid:
+    return CartesianGrid(
         x_edges=np.array([-1.0, 0.0, 1.0]) * ureg.km,
         y_edges=np.array([-1.0, 1.0]) * ureg.km,
         levels=np.array([0.0, 1.0, 2.0]) * ureg.km,
     )
-    return PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
 
 
 def make_component(state_dims, profile_vars, state_variables, **kwargs):
-    geometry = make_geometry()
+    grid = make_grid()
     profile = make_state_profile_dataset(
-        geometry.grid, {**profile_vars, "mass_concentration": MASS_CONCENTRATION}
+        grid, {**profile_vars, "mass_concentration": MASS_CONCENTRATION}
     )
     return ParticleStateComponent(
         profile=profile,
         properties=make_state_properties_dataset(state_dims, ssa_value=SSA),
         state_variables=state_variables,
-        geometry=geometry,
+        grid=grid,
         **kwargs,
     )
 

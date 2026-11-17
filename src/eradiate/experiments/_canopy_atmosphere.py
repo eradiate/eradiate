@@ -8,7 +8,6 @@ import attrs
 from ._core import EarthObservationExperiment
 from ._helpers import (
     atmosphere_converter,
-    check_geometry_atmosphere,
     check_overlap_compatible,
     check_path_compatible,
     log_piecewise_not_compatible,
@@ -173,18 +172,14 @@ class CanopyAtmosphereExperiment(EarthObservationExperiment):
             self.atmosphere.geometry = self.geometry
 
             # The below call to update is required in the case of a
-            # HeterogeneousAtmosphere, as it will propagate the geometry
-            # override to its components.
+            # HeterogeneousAtmosphere, as it rebuilds its merged components on
+            # the overridden geometry.
             self.atmosphere.update()
 
-            # Since 'MolecularComponent' cannot evaluate outside of its
-            # vertical extent, we verify here that the geometry it is evaluated
-            # on complies with the atmosphere's vertical extent.
-            if isinstance(self.atmosphere, HeterogeneousAtmosphere) and (
-                self.atmosphere.molecular_atmosphere is not None
-            ):
-                molecular = self.atmosphere.molecular_atmosphere
-                check_geometry_atmosphere(molecular.geometry, molecular)
+            # Components may not be evaluable on the overridden geometry, e.g.
+            # beyond the vertical extent of a 'MolecularComponent'
+            if isinstance(self.atmosphere, HeterogeneousAtmosphere):
+                self.atmosphere.check_geometry()
 
     def _normalize_measures(self) -> None:
         """
