@@ -5,13 +5,11 @@ from abc import ABC, abstractmethod
 from typing import Literal
 
 import attrs
-import mitsuba as mi
 import numpy as np
 import pint
 import xarray as xr
 from axsdb import AbsorptionDatabase
 
-from .._gridvolume import generate_gridvolume
 from ..core import (
     CompositeSceneElement,
     SceneElement,
@@ -20,7 +18,6 @@ from ..core import (
 from ..geometry import (
     PlaneParallelGeometry,
     SceneGeometry,
-    SphericalShellGeometry,
 )
 from ..phase import PhaseFunction
 from ..shapes import Shape
@@ -29,14 +26,11 @@ from ..._factory import Factory
 from ...attrs import define, documented, get_doc
 from ...grid import SpatialGrid
 from ...kernel import (
-    KernelSceneParameterFlags,
     SceneParameter,
-    SearchSceneParameter,
 )
 from ...spectral.index import SpectralIndex
 from ...units import symbol
 from ...units import unit_context_config as ucc
-from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
 from ...util.deprecation import DeprecatedWarning
 from ...util.misc import flatten
@@ -730,173 +724,6 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, _RadProps, ABC):
         (see :attr:`.EOVolPathIntegrator.uses_eo_medium_api`).
         """
         return False
-
-    # --------------------------------------------------------------------------
-    #                       Kernel dictionary generation
-    # --------------------------------------------------------------------------
-
-    @property
-    def _template_medium(self) -> dict:
-        # Inherit docstring
-        return self._build_medium_template(self, piecewise=self.is_piecewise)
-
-    def _build_medium_template(self, source: _RadProps, piecewise: bool) -> dict:
-        """
-        Generate a medium template from the radiative properties of ``source``,
-        evaluated on the geometry of ``source``. Medium options are taken from
-        this atmosphere, except ``extremum_resolution``, which ``source`` may
-        override.
-
-        Parameters
-        ----------
-        source : .AbstractHeterogeneousAtmosphere or .AtmosphereComponent
-            Radiative property source, *e.g.* this atmosphere itself or one of
-            its components.
-
-        piecewise : bool
-            If ``True``, a ``piecewise`` medium is generated; otherwise, an
-            ``eoheterogeneous`` medium is generated.
-
-        Returns
-        -------
-        dict
-            Medium template.
-        """
-        collision_coefficient_units = uck.get("collision_coefficient")
-        length_units = uck.get("length")
-
-        extremum = None
-        geometry = source.geometry
-        extremum_resolution = source.extremum_resolution or self.extremum_resolution
-
-        volumes = {
-            "albedo": generate_gridvolume(
-                geometry,
-                source.eval_albedo,
-                units=ureg.dimensionless,
-            ),
-            "sigma_t": generate_gridvolume(
-                geometry,
-                source.eval_sigma_t,
-                units=collision_coefficient_units,
-            ),
-        }
-
-        medium = "piecewise" if piecewise else "eoheterogeneous"
-
-        aabb_conf = {}
-        if isinstance(geometry, SphericalShellGeometry):
-            if any(r < 1 for r in extremum_resolution):
-                raise ValueError(
-                    "in spherical shell geometry, 'extremum_resolution' must "
-                    "be >= 1 in all dimensions. got "
-                    f"{extremum_resolution}."
-                )
-            extr_conf = {"type": "sphericalcoordsextremum"}
-        elif isinstance(geometry, PlaneParallelGeometry):
-            extr_conf = {"type": "gridextremum"}
-
-            aabb_min = geometry.bbox.min.m_as(length_units)
-            # The geometry bbox inserts a sub-surface padding. We want the data to be
-            # evaluated on the entire geometry extent in x and y directions, but we
-            # should avoid the wrap_mode affecting the z direction.
-            aabb_min[2] = geometry.grid.levels[0].m_as(length_units)
-            aabb_conf = {
-                "aabb_min": aabb_min,
-                "aabb_max": geometry.bbox.max.m_as(length_units),
-            }
-
-        if extremum_resolution != (1, 1, 1):
-            extremum = {
-                **extr_conf,
-                "resolution": extremum_resolution,
-            }
-
-        # Create medium dictionary
-        result = {
-            "type": medium,
-            "has_spectral_extinction": False,
-            "rr_threshold": self.rr_threshold,
-            "use_rrt": self.use_rrt,
-            "ddis_threshold": self.ddis_threshold,
-            **aabb_conf,
-            **volumes,
-            # Note: "phase" is deliberately unset, this is left to the
-            # Atmosphere.template property
-        }
-
-        if self.scale is not None:
-            result["scale"] = self.scale
-
-        if extremum is not None:
-            result["extremum"] = extremum
-
-        return result
-
-    @property
-    def _params_medium(self) -> dict[str, SceneParameter]:
-        # Inherit docstring
-        return self._build_medium_params(self, self.medium_id)
-
-    def _build_medium_params(
-        self, source: _RadProps, medium_id: str
-    ) -> dict[str, SceneParameter]:
-        """
-        Generate the parameter update map of a medium created with
-        :meth:`_medium_template`.
-
-        Parameters
-        ----------
-        source : .AbstractHeterogeneousAtmosphere or .AtmosphereComponent
-            Object whose radiative properties are evaluated.
-
-        medium_id : str
-            ID of the target medium in the Mitsuba scene tree.
-
-        Returns
-        -------
-        dict
-            Parameter update map.
-        """
-        collision_coefficient_units = uck.get("collision_coefficient")
-        geometry = source.geometry
-
-        if isinstance(geometry, PlaneParallelGeometry):
-            albedo_key = "albedo.data"
-            sigma_t_key = "sigma_t.data"
-        elif isinstance(geometry, SphericalShellGeometry):
-            albedo_key = "albedo.volume.data"
-            sigma_t_key = "sigma_t.volume.data"
-        else:
-            raise TypeError(
-                f"unhandled scene geometry type '{type(geometry).__name__}'"
-            )
-
-        albedo_search = SearchSceneParameter(
-            node_type=mi.Medium, node_id=medium_id, parameter_relpath=albedo_key
-        )
-        sigma_t_search = SearchSceneParameter(
-            node_type=mi.Medium, node_id=medium_id, parameter_relpath=sigma_t_key
-        )
-        albedo_grid = generate_gridvolume(
-            geometry,
-            source.eval_albedo,
-            units=ureg.dimensionless,
-            search=albedo_search,
-            flag=KernelSceneParameterFlags.SPECTRAL,
-        )
-        sigma_t_grid = generate_gridvolume(
-            geometry,
-            source.eval_sigma_t,
-            units=collision_coefficient_units,
-            search=sigma_t_search,
-            flag=KernelSceneParameterFlags.SPECTRAL,
-        )
-
-        return {
-            albedo_key: albedo_grid,
-            sigma_t_key: sigma_t_grid,
-        }
 
 
 # Parameters which components accept for backward compatibility only
