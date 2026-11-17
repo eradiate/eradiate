@@ -556,16 +556,16 @@ class ParticleStateComponent(ParticleComponent):
 @define(eq=False, slots=False)
 class ParticleMSComponent(ParticleStateComponent):
     """
-    Particulate medium parametrized by a mass concentration and   (MS)
-    that varies as a function of space coordinates [``particle_ms``].
+    Particulate medium parametrized by spatially varying mass concentration and
+    particle size distribution (MS) [``particle_ms``].
 
     This :class:`.ParticleStateComponent` specialization uses the effective
-    radius (``reff``) and effective variance (``veff``) of the MS as tabulated
-    state variables, and the mass concentration (``mass_concentration``) as amount.
-    With the default ``state_variables`` and ``amount``, the ``profile`` is
-    expected in the :ref:`Ppr-MS v1 <sec-data_formats-ppr_ms_v1>` format
-    and the ``properties`` in the
-    :ref:`Prt-MS v1 <sec-data_formats-prt_ms_v1>` format. The
+    radius (``reff``) and effective variance (``veff``) of the particle size
+    distribution as tabulated state variables, and the mass concentration
+    (``mass_concentration``) as amount. With the default ``state_variables`` and
+    ``amount``, the ``profile`` is expected in the
+    :ref:`Ppr-MS v1 <sec-data_formats-ppr_ms_v1>` format and the ``properties``
+    in the :ref:`Prt-MS v1 <sec-data_formats-prt_ms_v1>` format. The
     per-unit-amount extinction ``ext`` in ``properties`` is then a mass
     extinction coefficient (*e.g.* in m²/g).
 
