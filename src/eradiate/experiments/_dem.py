@@ -10,6 +10,7 @@ from ._core import EarthObservationExperiment
 from ._helpers import (
     atmosphere_converter,
     check_geometry_atmosphere,
+    check_overlap_compatible,
     log_piecewise_not_compatible,
     measure_inside_atmosphere,
     surface_converter,
@@ -125,16 +126,6 @@ class DEMExperiment(EarthObservationExperiment):
         Enforce the experiment geometry on the atmosphere component(s).
         """
         if self.atmosphere is not None:
-            # Since 'MolecularComponent' cannot evaluate outside of its
-            # vertical extent, we verify here that the experiment's geometry
-            # comply with the atmosphere's vertical extent.
-            if isinstance(self.atmosphere, HeterogeneousAtmosphere) and (
-                self.atmosphere.molecular_atmosphere is not None
-            ):
-                check_geometry_atmosphere(
-                    self.geometry, self.atmosphere.molecular_atmosphere
-                )
-
             # Override atmosphere geometry with experiment geometry
             self.atmosphere.geometry = self.geometry
 
@@ -142,6 +133,15 @@ class DEMExperiment(EarthObservationExperiment):
             # HeterogeneousAtmosphere, as it will propagate the geometry
             # override to its components.
             self.atmosphere.update()
+
+            # Since 'MolecularComponent' cannot evaluate outside of its
+            # vertical extent, we verify here that the geometry it is evaluated
+            # on complies with the atmosphere's vertical extent.
+            if isinstance(self.atmosphere, HeterogeneousAtmosphere) and (
+                self.atmosphere.molecular_atmosphere is not None
+            ):
+                molecular = self.atmosphere.molecular_atmosphere
+                check_geometry_atmosphere(molecular.geometry, molecular)
 
     def _normalize_measures(self) -> None:
         """
@@ -185,6 +185,7 @@ class DEMExperiment(EarthObservationExperiment):
 
         log_piecewise_not_compatible(self.atmosphere, self.integrator)
         warn_ignored_extremum(self.atmosphere, self.integrator)
+        check_overlap_compatible(self.atmosphere, self.integrator)
 
     def _dataset_metadata(self, measure: Measure) -> dict[str, str]:
         result = super()._dataset_metadata(measure)

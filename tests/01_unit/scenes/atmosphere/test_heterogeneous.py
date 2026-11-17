@@ -408,7 +408,6 @@ def test_heterogeneous_mix_weights(
         ("use_rrt", False),
         ("ddis_threshold", 0.2),
         ("force_majorant", True),
-        ("extremum_resolution", (2, 2, 2)),
         ("rr_threshold", 0.2),
     ],
 )

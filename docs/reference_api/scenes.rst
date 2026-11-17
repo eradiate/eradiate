@@ -159,12 +159,14 @@ Quick access
    Atmosphere
    AbstractHeterogeneousAtmosphere
    AtmosphereComponent
+   MergePolicy
    ParticleDistribution
 
 **Factories**
 
 * :data:`atmosphere_factory`
 * :data:`particle_distribution_factory`
+* :data:`merge_policy_factory`
 
 **Scene elements**
 
@@ -184,6 +186,16 @@ Quick access
    ParticleExtinctionComponent
    ParticleStateComponent
    ParticleMSComponent
+   MergedComponent
+
+**Merge policies**
+
+.. autosummary::
+   :toctree: generated/autosummary/
+
+   MergeAll
+   OverlapAll
+   MergeByGrid
 
 **Particle distributions**
 

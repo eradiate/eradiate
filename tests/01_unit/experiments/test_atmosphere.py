@@ -322,3 +322,26 @@ def test_atmosphere_experiment_extremum_ignored(
 
     assert isinstance(exp.integrator, expected_integrator)
     assert any("Extremum structures" in str(w.message) for w in record) is warns
+
+
+@pytest.mark.parametrize(
+    "integrator, raises",
+    [(AUTO, False), ({"type": "volpath"}, True)],
+    ids=["auto", "volpath"],
+)
+def test_atmosphere_experiment_overlap_integrator(
+    mode_mono, atmosphere_us_standard_mono, integrator, raises
+):
+    # Overlapping media require an integrator using the medium API
+    atmosphere = HeterogeneousAtmosphere(
+        components=[atmosphere_us_standard_mono, {"type": "particle_ot"}],
+        merge_policy="overlap_all",
+    )
+
+    if raises:
+        with pytest.raises(ValueError, match="overlapping media"):
+            AtmosphereExperiment(atmosphere=atmosphere, integrator=integrator)
+    else:
+        exp = AtmosphereExperiment(atmosphere=atmosphere, integrator=integrator)
+        assert exp.atmosphere.is_overlapping
+        assert exp.atmosphere.components_merged[0].geometry is exp.geometry

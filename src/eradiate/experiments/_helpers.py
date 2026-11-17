@@ -124,7 +124,9 @@ def atmosphere_converter(
             if getattr(value, name) is not None
         }
         # Wrap a copy of the component
-        component = attrs.evolve(value, **dict.fromkeys(params))
+        component = attrs.evolve(
+            value, geometry=value._own_geometry, **dict.fromkeys(params)
+        )
         return HeterogeneousAtmosphere(id=value.id, components=[component], **params)
 
     return value
@@ -205,8 +207,9 @@ def warn_ignored_extremum(
     integrator : Integrator
         The resolved (non-``AUTO``) integrator.
     """
-    if not isinstance(atmosphere, AbstractHeterogeneousAtmosphere) or (
-        atmosphere.extremum_resolution == (1, 1, 1)
+    if not isinstance(atmosphere, HeterogeneousAtmosphere) or all(
+        (group.extremum_resolution or atmosphere.extremum_resolution) == (1, 1, 1)
+        for group in atmosphere.components_merged
     ):
         return
 
@@ -225,6 +228,41 @@ def warn_ignored_extremum(
         return
 
     warnings.warn(UserWarning(msg), stacklevel=3)
+
+
+def check_overlap_compatible(
+    atmosphere: Atmosphere | None, integrator: Integrator
+) -> None:
+    """
+    Check that the integrator supports overlapping media if the atmosphere is
+    rendered as such.
+
+    Parameters
+    ----------
+    atmosphere : Atmosphere
+        The scene's atmosphere configuration.
+
+    integrator : Integrator
+        The resolved (non-``AUTO``) integrator.
+
+    Raises
+    ------
+    ValueError
+        If the atmosphere is rendered as overlapping media and the integrator
+        does not use the medium API they require.
+    """
+    if (
+        isinstance(atmosphere, HeterogeneousAtmosphere)
+        and atmosphere.is_overlapping
+        and not integrator.uses_eo_medium_api
+    ):
+        raise ValueError(
+            f"{type(integrator).__name__} does not support overlapping media "
+            f"({len(atmosphere.components_merged)} merged components); use "
+            "an integrator which uses the medium API (e.g. "
+            "EOVolPathIntegrator) or a merge policy producing a single merged "
+            "component."
+        )
 
 
 def check_path_compatible(atmosphere: Atmosphere | None) -> tuple[bool, str]:

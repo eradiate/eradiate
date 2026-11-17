@@ -4,6 +4,12 @@ from ._core import AtmosphereComponent as AtmosphereComponent
 from ._core import atmosphere_factory as atmosphere_factory
 from ._heterogeneous import HeterogeneousAtmosphere as HeterogeneousAtmosphere
 from ._homogeneous import HomogeneousAtmosphere as HomogeneousAtmosphere
+from ._merge import MergeAll as MergeAll
+from ._merge import MergeByGrid as MergeByGrid
+from ._merge import MergedComponent as MergedComponent
+from ._merge import MergePolicy as MergePolicy
+from ._merge import OverlapAll as OverlapAll
+from ._merge import merge_policy_factory as merge_policy_factory
 from ._molecular import MolecularAtmosphere as MolecularAtmosphere
 from ._molecular import MolecularComponent as MolecularComponent
 from ._particle_component import ParticleComponent as ParticleComponent

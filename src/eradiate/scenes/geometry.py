@@ -268,11 +268,39 @@ class PlaneParallelGeometry(SceneGeometry):
         default="1,000,000 km",
     )
 
+    crop_to_grid: str = documented(
+        attrs.field(
+            default="",
+            validator=attrs.validators.matches_re("x?y?z?"),
+            kw_only=True,
+        ),
+        doc="Axes along which the atmosphere cuboid spans the grid extent "
+        "instead of the default extent (``width`` horizontally, up to "
+        '``toa_altitude`` vertically), *e.g.* ``"xyz"`` or ``"z"``. '
+        'Cropping only ``"z"`` keeps the full horizontal extent, over '
+        "which the grid data is repeated according to ``wrap_mode``.",
+        type="str",
+        init_type="str",
+        default='""',
+    )
+
     @property
     def atmosphere_shape(self) -> CuboidShape:
-        return CuboidShape.atmosphere(
+        shape = CuboidShape.atmosphere(
             top=self.toa_altitude, bottom=0.0 * ureg.km, width=self.width
         )
+        if not self.crop_to_grid:
+            return shape
+
+        bbox = shape.bbox
+        lo, hi = bbox.min.m_as(ureg.m), bbox.max.m_as(ureg.m)
+        edges = (self.grid.x_edges, self.grid.y_edges, self.grid.z_edges)
+        for i, axis in enumerate("xyz"):
+            if axis in self.crop_to_grid:
+                lo[i] = edges[i].min().m_as(ureg.m)
+                hi[i] = edges[i].max().m_as(ureg.m)
+
+        return CuboidShape(center=0.5 * (lo + hi) * ureg.m, edges=(hi - lo) * ureg.m)
 
     @property
     def atmosphere_volume_to_world(self) -> mi.ScalarTransform4f:

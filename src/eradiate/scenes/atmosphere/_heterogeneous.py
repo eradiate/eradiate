@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 
 import attrs
 import mitsuba as mi
-import numpy as np
 import pint
 
 from ._core import (
@@ -19,18 +18,23 @@ from ._core import (
     AtmosphereComponent,
     atmosphere_factory,
 )
+from ._merge import (
+    MergeAll,
+    MergedComponent,
+    MergePolicy,
+    _same_geometry,
+    merge_policy_converter,
+)
 from ._molecular import MolecularComponent
 from ._particle_component import ParticleComponent
 from ..core import traverse
-from ..phase import MultiPhaseFunction, PhaseFunction
+from ..phase import PhaseFunction
 from ...attrs import define, documented
 from ...grid import SpatialGrid
 from ...kernel import SearchSceneParameter
 from ...spectral.index import SpectralIndex
-from ...units import unit_context_config as ucc
-from ...units import unit_registry as ureg
 from ...util.deprecation import DeprecatedWarning, renamed_kwargs
-from ...util.misc import cache_by_id
+from ...util.misc import flatten
 
 if TYPE_CHECKING:
     from axsdb import AbsorptionDatabase
@@ -63,6 +67,20 @@ def _components_converter(value):
     ]
 
 
+def _flatten_components(
+    components: list[AtmosphereComponent],
+) -> list[AtmosphereComponent]:
+    return [
+        member
+        for component in components
+        for member in (
+            component.components
+            if isinstance(component, MergedComponent)
+            else [component]
+        )
+    ]
+
+
 @renamed_kwargs(
     {"particle_layers": "particle_components"},
     deprecated_in="1.3.0",
@@ -89,7 +107,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         ":class:`.ParticleComponent`. Elements may be specified as dictionaries "
         "interpreted by :data:`.atmosphere_factory`; in that case, the "
         "``type`` parameter is required. At most one "
-        ":class:`.MolecularComponent` is allowed.",
+        ":class:`.MolecularComponent` is allowed. :class:`.MergedComponent` "
+        "elements are kept as they are; ``merge_policy`` applies to the other "
+        "components.",
         type="list of .AtmosphereComponent",
         init_type="list of .AtmosphereComponent or dict, optional",
         default="[]",
@@ -97,17 +117,42 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
     @components.validator
     def _components_validator(self, attribute, value):
-        if sum(isinstance(c, MolecularComponent) for c in value) > 1:
+        members = _flatten_components(value)
+
+        if sum(isinstance(c, MolecularComponent) for c in members) > 1:
             raise ValueError(
                 f"while validating {attribute.name}: at most one "
                 "MolecularComponent is allowed"
             )
 
-        if not all(component.scale is None for component in value):
+        if len({id(c) for c in members}) != len(members):
+            raise ValueError(
+                f"while validating {attribute.name}: a component may appear only once"
+            )
+
+        if not all(component.scale is None for component in [*value, *members]):
             raise ValueError(
                 f"while validating {attribute.name}: components cannot be "
                 "scaled individually"
             )
+
+    merge_policy: MergePolicy = documented(
+        attrs.field(
+            factory=MergeAll,
+            converter=merge_policy_converter,
+            validator=attrs.validators.instance_of(MergePolicy),
+            kw_only=True,
+        ),
+        doc="Policy merging the components which are not already part of a "
+        ":class:`.MergedComponent`. Each merged component is rendered as one "
+        "medium; several merged components are rendered as overlapping media. "
+        "May be specified as a dictionary interpreted by "
+        ":data:`.merge_policy_factory` or as a registered type ID, *e.g.* "
+        '``"merge_all"``, ``"overlap_all"``, ``"merge_by_grid"``.',
+        type=".MergePolicy",
+        init_type=".MergePolicy or dict or str, optional",
+        default=":class:`MergeAll() <.MergeAll>`",
+    )
 
     use_phase_mis: bool = documented(
         attrs.field(default=True, converter=bool, kw_only=True),
@@ -116,6 +161,13 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         type="bool",
         init_type="bool",
         default="True",
+    )
+
+    components_merged: list[MergedComponent] = documented(
+        attrs.field(factory=list, init=False, repr=False),
+        doc="Merged components generated from ``components`` by "
+        ":meth:`merge_components`.",
+        type="list of .MergedComponent",
     )
 
     def __init__(
@@ -159,7 +211,12 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         Molecular component of this atmosphere, if any.
         """
         return next(
-            (c for c in self.components if isinstance(c, MolecularComponent)), None
+            (
+                c
+                for c in _flatten_components(self.components)
+                if isinstance(c, MolecularComponent)
+            ),
+            None,
         )
 
     @property
@@ -167,7 +224,31 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         """
         Particle components of this atmosphere, if any.
         """
-        return [c for c in self.components if not isinstance(c, MolecularComponent)]
+        return [
+            c
+            for c in _flatten_components(self.components)
+            if not isinstance(c, MolecularComponent)
+        ]
+
+    @property
+    def is_overlapping(self) -> bool:
+        """
+        ``True`` if this atmosphere is rendered as overlapping media, *i.e.*
+        if it has more than one merged component.
+        """
+        return len(self.components_merged) > 1
+
+    @property
+    def is_piecewise(self) -> bool:
+        """
+        ``True`` if this atmosphere is rendered with a single ``piecewise``
+        medium (see :attr:`.AbstractHeterogeneousAtmosphere.is_piecewise`),
+        evaluated on the geometry of its merged component. Overlapping media
+        are never piecewise.
+        """
+        return not self.is_overlapping and self._is_piecewise_on(
+            self.components_merged[0].geometry
+        )
 
     @property
     def particle_layers(self) -> list[ParticleComponent]:
@@ -193,17 +274,77 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         if not self.components:
             raise ValueError("HeterogeneousAtmosphere must have at least one component")
 
-        # Force component IDs
-        for i, component in enumerate(self.components):
+        members = _flatten_components(self.components)
+
+        for i, component in enumerate(members):
             component.update()
             component.id = f"{self.id}_component_{i}"
-            logger.debug(
-                "Override the geometry of component '%s' to %s (was %s)",
-                component.id,
-                self.geometry,
-                component.geometry,
+            if component._own_geometry is None:
+                logger.debug(
+                    "Override the geometry of component '%s' to %s (was %s)",
+                    component.id,
+                    self.geometry,
+                    component.geometry,
+                )
+                component.geometry = self.geometry
+            else:
+                component.geometry = component._own_geometry
+
+        self._merged_all = MergedComponent(
+            id=self.id,
+            components=members,
+            geometry=self.geometry,
+            use_phase_mis=self.use_phase_mis,
+        )
+        self.merge_components()
+
+    def merge_components(self) -> None:
+        """
+        Populate :attr:`components_merged`: components which are not part of a
+        :class:`.MergedComponent` are merged according to
+        :attr:`merge_policy`, then merged components from :attr:`components`
+        are appended. Merged components without a geometry get the geometry of
+        this atmosphere, and their members are evaluated on it.
+
+        This method is called by :meth:`update`.
+        """
+        loose = [c for c in self.components if not isinstance(c, MergedComponent)]
+        groups = self.merge_policy.merge(loose, self.geometry) if loose else []
+        groups += [c for c in self.components if isinstance(c, MergedComponent)]
+
+        self.components_merged = []
+
+        for i, group in enumerate(groups):
+            geometry = (
+                self.geometry if group._own_geometry is None else group._own_geometry
             )
-            component.geometry = self.geometry
+            if type(geometry) is not type(self.geometry):
+                raise ValueError(
+                    f"merged component geometry type '{type(geometry).__name__}' "
+                    f"differs from the atmosphere geometry type "
+                    f"'{type(self.geometry).__name__}'"
+                )
+
+            for member in group.components:
+                if member._own_geometry is not None and not _same_geometry(
+                    member._own_geometry, geometry
+                ):
+                    warnings.warn(
+                        f"component '{member.id}' is evaluated on the geometry "
+                        "of its merged component instead of its own",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+                member.geometry = geometry
+
+            self.components_merged.append(
+                attrs.evolve(
+                    group,
+                    id=f"{self.id}_group_{i}",
+                    geometry=geometry,
+                    use_phase_mis=self.use_phase_mis,
+                )
+            )
 
     # --------------------------------------------------------------------------
     #                       Radiative properties
@@ -221,67 +362,25 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if grid is not None and grid is not self.geometry.grid:
-            raise ValueError("grid must be left unset or set to self.geometry.grid")
-
-        units = ucc.get("collision_coefficient")
-        sigma_s = self.eval_sigma_s(si).m_as(units)
-        sigma_t = self.eval_sigma_t(si).m_as(units)
-        albedo = np.zeros_like(sigma_s)
-        np.divide(sigma_s, sigma_t, where=sigma_t != 0.0, out=albedo)
-
-        return albedo * ureg.dimensionless
-
-    @cache_by_id
-    def _eval_sigma_t_impl(self, si: SpectralIndex) -> pint.Quantity:
-        sigma_units = ucc.get("collision_coefficient")
-        result = []
-        for component in self.components:
-            cmp_result = component.eval_sigma_t(si, self.geometry.grid)
-            result.append(
-                np.broadcast_to(cmp_result.m_as(sigma_units), self.geometry.grid.shape)
-            )
-        return np.stack(result) * sigma_units
+        return self._merged_all.eval_albedo(si, grid)
 
     def eval_sigma_t(
         self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if grid is not None and grid is not self.geometry.grid:
-            raise ValueError("grid must be left unset or set to self.geometry.grid")
-        return self._eval_sigma_t_impl(si).sum(axis=0)
+        return self._merged_all.eval_sigma_t(si, grid)
 
     def eval_sigma_a(
         self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if grid is not None and grid is not self.geometry.grid:
-            raise ValueError("grid must be left unset or set to self.geometry.grid")
-        return self.eval_sigma_t(si) - self.eval_sigma_s(si)
-
-    @cache_by_id
-    def _eval_sigma_s_impl(self, si: SpectralIndex) -> pint.Quantity:
-        sigma_units = ucc.get("collision_coefficient")
-        result = []
-        for component in self.components:
-            cmp_result = component.eval_sigma_s(si, self.geometry.grid)
-            result.append(
-                np.broadcast_to(cmp_result.m_as(sigma_units), self.geometry.grid.shape)
-            )
-        return np.stack(result) * sigma_units
-
-    def _eval_sigma_s_component(
-        self, si: SpectralIndex, n_component: int
-    ) -> pint.Quantity:
-        return self._eval_sigma_s_impl(si)[n_component]
+        return self._merged_all.eval_sigma_a(si, grid)
 
     def eval_sigma_s(
         self, si: SpectralIndex, grid: SpatialGrid | None = None
     ) -> pint.Quantity:
         # Inherit docstring
-        if grid is not None and grid is not self.geometry.grid:
-            raise ValueError("grid must be left unset or set to self.geometry.grid")
-        return self._eval_sigma_s_impl(si).sum(axis=0)
+        return self._merged_all.eval_sigma_s(si, grid)
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
@@ -290,48 +389,92 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     @property
     def phase(self) -> PhaseFunction:
         # Inherit docstring
-        if len(self.components) == 1:
-            return self.components[0].phase
+        return self._merged_all.phase
 
-        components, weights = [], []
-        sigma_units = ucc.get("collision_coefficient")
+    @property
+    def template(self) -> dict:
+        # Inherit docstring
+        if not self.is_overlapping:
+            return super().template
 
-        for i, component in enumerate(self.components):
-            components.append(component.phase)
-
-            def eval_sigma_s(si: SpectralIndex, n_component: int = i) -> np.ndarray:
-                return self._eval_sigma_s_component(si, n_component).m_as(sigma_units)
-
-            weights.append(eval_sigma_s)
-
-        return MultiPhaseFunction(
-            components=components,
-            weights=weights,
-            geometry=self.geometry,
-            use_mis=self.use_phase_mis,
+        phases = {
+            group.phase_id: traverse(group.phase)[0].data
+            for group in self.components_merged
+        }
+        result = flatten(
+            {
+                **phases,
+                self.medium_id: self._template_medium,
+                self.shape_id: self._template_shape,
+            }
         )
+        result.update(
+            {
+                f"{self.shape_id}.bsdf.type": "null",
+                f"{self.shape_id}.interior.type": "ref",
+                f"{self.shape_id}.interior.id": self.medium_id,
+            }
+        )
+
+        return result
 
     @property
     def _template_phase(self) -> dict:
         # Inherit docstring
-        return traverse(self.phase)[0].data
+        return traverse(self.components_merged[0].phase)[0].data
+
+    @property
+    def _template_medium(self) -> dict:
+        # Inherit docstring
+        if not self.is_overlapping:
+            return self._build_medium_template(
+                self.components_merged[0], piecewise=self.is_piecewise
+            )
+
+        result = {"type": "overlap", "ddis_threshold": self.ddis_threshold}
+
+        for i, group in enumerate(self.components_merged):
+            result[f"component{i}"] = {
+                **self._build_medium_template(group, piecewise=False),
+                "id": group.medium_id,
+                "phase": {"type": "ref", "id": group.phase_id},
+            }
+
+        return result
 
     @property
     def _params_phase(self) -> dict:
         # Inherit docstring
-        umap = traverse(self.phase)[1].data
-
-        # Add prefix and lookup strategy to all entries
         result = {}
 
-        for uparam_key, uparam in umap.items():
-            result[uparam_key] = attrs.evolve(
-                uparam,
-                search=SearchSceneParameter(
-                    node_type=mi.PhaseFunction,
-                    node_id=self.phase_id,
-                    parameter_relpath=uparam_key,
-                ),
-            )
+        for group in self.components_merged:
+            if self.is_overlapping:
+                phase_id, prefix = group.phase_id, f"{group.phase_id}."
+            else:
+                phase_id, prefix = self.phase_id, ""
+
+            for uparam_key, uparam in traverse(group.phase)[1].data.items():
+                result[f"{prefix}{uparam_key}"] = attrs.evolve(
+                    uparam,
+                    search=SearchSceneParameter(
+                        node_type=mi.PhaseFunction,
+                        node_id=phase_id,
+                        parameter_relpath=uparam_key,
+                    ),
+                )
+
+        return result
+
+    @property
+    def _params_medium(self) -> dict:
+        # Inherit docstring
+        if not self.is_overlapping:
+            return self._build_medium_params(self.components_merged[0], self.medium_id)
+
+        result = {}
+
+        for group in self.components_merged:
+            params = self._build_medium_params(group, group.medium_id)
+            result.update({f"{group.medium_id}.{k}": v for k, v in params.items()})
 
         return result

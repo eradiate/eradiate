@@ -56,6 +56,11 @@ atmosphere_factory.register_lazy_batch(
             {},
         ),
         (
+            "_merge.MergedComponent",
+            "merged",
+            {},
+        ),
+        (
             "_molecular.MolecularComponent",
             "molecular",
             {},
@@ -726,11 +731,18 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, _RadProps, ABC):
         get optimized during traversal when used with integrators that support
         it (see :attr:`.EOVolPathIntegrator.uses_eo_medium_api`).
         """
+        return self._is_piecewise_on(self.geometry)
+
+    def _is_piecewise_on(self, geometry: SceneGeometry) -> bool:
+        """
+        ``True`` if a medium evaluated on ``geometry`` qualifies for the
+        ``piecewise`` medium type (see :attr:`is_piecewise`).
+        """
         return (
-            isinstance(self.geometry, PlaneParallelGeometry)
+            isinstance(geometry, PlaneParallelGeometry)
             and not self.force_majorant
-            and self.geometry.grid.is_1d
-            and self.geometry.filter_type is FilterType.NEAREST
+            and geometry.grid.is_1d
+            and geometry.filter_type is FilterType.NEAREST
         )
 
     # --------------------------------------------------------------------------
@@ -740,19 +752,24 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, _RadProps, ABC):
     @property
     def _template_medium(self) -> dict:
         # Inherit docstring
-        return self._build_medium_template(self)
+        return self._build_medium_template(self, piecewise=self.is_piecewise)
 
-    def _build_medium_template(self, source: _RadProps) -> dict:
+    def _build_medium_template(self, source: _RadProps, piecewise: bool) -> dict:
         """
         Generate a medium template from the radiative properties of ``source``,
         evaluated on the geometry of ``source``. Medium options are taken from
-        this atmosphere.
+        this atmosphere, except ``extremum_resolution``, which ``source`` may
+        override.
 
         Parameters
         ----------
         source : .AbstractHeterogeneousAtmosphere or .AtmosphereComponent
             Radiative property source, *e.g.* this atmosphere itself or one of
             its components.
+
+        piecewise : bool
+            If ``True``, a ``piecewise`` medium is generated; otherwise, an
+            ``eoheterogeneous`` medium is generated.
 
         Returns
         -------
@@ -764,6 +781,7 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, _RadProps, ABC):
 
         extremum = None
         geometry = source.geometry
+        extremum_resolution = source.extremum_resolution or self.extremum_resolution
 
         volumes = {
             "albedo": generate_gridvolume(
@@ -778,15 +796,15 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, _RadProps, ABC):
             ),
         }
 
-        medium = "piecewise" if self.is_piecewise else "eoheterogeneous"
+        medium = "piecewise" if piecewise else "eoheterogeneous"
 
         aabb_conf = {}
         if isinstance(geometry, SphericalShellGeometry):
-            if any(r < 1 for r in self.extremum_resolution):
+            if any(r < 1 for r in extremum_resolution):
                 raise ValueError(
                     "in spherical shell geometry, 'extremum_resolution' must "
                     "be >= 1 in all dimensions. got "
-                    f"{self.extremum_resolution}."
+                    f"{extremum_resolution}."
                 )
             extr_conf = {"type": "sphericalcoordsextremum"}
         elif isinstance(geometry, PlaneParallelGeometry):
@@ -802,10 +820,10 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, _RadProps, ABC):
                 "aabb_max": geometry.bbox.max.m_as(length_units),
             }
 
-        if self.extremum_resolution != (1, 1, 1):
+        if extremum_resolution != (1, 1, 1):
             extremum = {
                 **extr_conf,
-                "resolution": self.extremum_resolution,
+                "resolution": extremum_resolution,
             }
 
         # Create medium dictionary
@@ -902,17 +920,15 @@ _DEPRECATED_COMPONENT_PARAMETERS = (
     "rr_threshold",
     "scale",
     "force_majorant",
-    "extremum_resolution",
 )
 
 
-def _deprecated_option(converter=None, validator=None):
+def _deprecated_option(converter):
     return documented(
         attrs.field(
             default=None,
             kw_only=True,
-            converter=attrs.converters.optional(converter) if converter else None,
-            validator=attrs.validators.optional(validator) if validator else None,
+            converter=attrs.converters.optional(converter),
             repr=False,
         ),
         doc="Deprecated, set it on :class:`.HeterogeneousAtmosphere` instead.",
@@ -943,17 +959,39 @@ class AtmosphereComponent(_RadProps, ABC):
         default='"atmosphere"',
     )
 
-    geometry: SceneGeometry = documented(
+    geometry: SceneGeometry | None = documented(
         attrs.field(
-            default="plane_parallel",
-            converter=SceneGeometry.convert,
-            validator=attrs.validators.instance_of(SceneGeometry),
+            default=None,
+            converter=attrs.converters.optional(SceneGeometry.convert),
+            validator=attrs.validators.optional(
+                attrs.validators.instance_of(SceneGeometry)
+            ),
         ),
-        doc="Scene geometry on which radiative properties are evaluated. "
-        "Overridden by the parent :class:`.HeterogeneousAtmosphere`.",
+        doc="Scene geometry on which radiative properties are evaluated. If "
+        "unset, a default plane parallel geometry is used, and the parent "
+        ":class:`.HeterogeneousAtmosphere` overrides it with its own geometry. "
+        "If set, the parent keeps it to group components "
+        "(see :attr:`.HeterogeneousAtmosphere.merge_policy`). Components "
+        "merged with others are evaluated on the geometry of their group.",
         type=".SceneGeometry",
         init_type=".SceneGeometry or dict or str, optional",
-        default='"plane_parallel"',
+        default="None",
+    )
+
+    extremum_resolution: tuple[int, int, int] | None = documented(
+        attrs.field(
+            default=None,
+            kw_only=True,
+            converter=attrs.converters.optional(tuple),
+            validator=attrs.validators.optional(validators.is_vector3),
+        ),
+        doc="[EXPERIMENTAL] Resolution of the extremum structure of the medium "
+        "generated for this component when it is not merged with other "
+        "components. If unset, the resolution of the parent "
+        ":class:`.HeterogeneousAtmosphere` is used.",
+        type="tuple[int, int, int] or None",
+        init_type="tuple[int, int, int], optional",
+        default="None",
     )
 
     # Deprecated Parameters
@@ -962,11 +1000,12 @@ class AtmosphereComponent(_RadProps, ABC):
     rr_threshold: float | None = _deprecated_option(float)
     scale: float | None = _deprecated_option(float)
     force_majorant: bool | None = _deprecated_option(bool)
-    extremum_resolution: tuple[int, int, int] | None = _deprecated_option(
-        tuple, validators.is_vector3
-    )
 
     def __attrs_post_init__(self):
+        self._own_geometry = self.geometry
+        if self.geometry is None:
+            self.geometry = PlaneParallelGeometry()
+
         deprecated_options = [
             f"'{name}'"
             for name in _DEPRECATED_COMPONENT_PARAMETERS

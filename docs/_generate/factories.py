@@ -23,6 +23,7 @@ class FactoryInfo:
 FACTORIES = [
     ("eradiate.scenes.atmosphere", "atmosphere_factory"),
     ("eradiate.scenes.atmosphere", "particle_distribution_factory"),
+    ("eradiate.scenes.atmosphere", "merge_policy_factory"),
     ("eradiate.scenes.biosphere", "biosphere_factory"),
     ("eradiate.scenes.bsdfs", "bsdf_factory"),
     ("eradiate.scenes.illumination", "illumination_factory"),
