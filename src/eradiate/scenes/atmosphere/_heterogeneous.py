@@ -22,12 +22,12 @@ from ._merge import (
     MergeAll,
     MergedComponent,
     MergePolicy,
-    _same_geometry,
     merge_policy_converter,
 )
 from ._molecular import MolecularComponent
 from ._particle_component import ParticleComponent
 from ..core import traverse
+from ..geometry import FilterType, PlaneParallelGeometry
 from ..phase import PhaseFunction
 from ...attrs import define, documented
 from ...grid import SpatialGrid
@@ -67,20 +67,6 @@ def _components_converter(value):
     ]
 
 
-def _flatten_components(
-    components: list[AtmosphereComponent],
-) -> list[AtmosphereComponent]:
-    return [
-        member
-        for component in components
-        for member in (
-            component.components
-            if isinstance(component, MergedComponent)
-            else [component]
-        )
-    ]
-
-
 @renamed_kwargs(
     {"particle_layers": "particle_components"},
     deprecated_in="1.3.0",
@@ -95,7 +81,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     configurations.
     """
 
-    components: list[AtmosphereComponent] = documented(
+    _components: list[AtmosphereComponent] = documented(
         attrs.field(
             factory=list,
             converter=_components_converter,
@@ -115,9 +101,9 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         default="[]",
     )
 
-    @components.validator
+    @_components.validator
     def _components_validator(self, attribute, value):
-        members = _flatten_components(value)
+        members = self.components
 
         if sum(isinstance(c, MolecularComponent) for c in members) > 1:
             raise ValueError(
@@ -206,16 +192,28 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         self.__attrs_init__(*args, **kwargs)
 
     @property
+    def components(self) -> list[AtmosphereComponent]:
+        """
+        Atmosphere components, with the members of user-defined
+        :class:`.MergedComponent` elements in place of the merged components.
+        """
+        return [
+            member
+            for component in self._components
+            for member in (
+                component.components
+                if isinstance(component, MergedComponent)
+                else [component]
+            )
+        ]
+
+    @property
     def molecular_atmosphere(self) -> MolecularComponent | None:
         """
         Molecular component of this atmosphere, if any.
         """
         return next(
-            (
-                c
-                for c in _flatten_components(self.components)
-                if isinstance(c, MolecularComponent)
-            ),
+            (c for c in self.components if isinstance(c, MolecularComponent)),
             None,
         )
 
@@ -224,11 +222,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         """
         Particle components of this atmosphere, if any.
         """
-        return [
-            c
-            for c in _flatten_components(self.components)
-            if not isinstance(c, MolecularComponent)
-        ]
+        return [c for c in self.components if not isinstance(c, MolecularComponent)]
 
     @property
     def is_overlapping(self) -> bool:
@@ -242,12 +236,21 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
     def is_piecewise(self) -> bool:
         """
         ``True`` if this atmosphere is rendered with a single ``piecewise``
-        medium (see :attr:`.AbstractHeterogeneousAtmosphere.is_piecewise`),
-        evaluated on the geometry of its merged component. Overlapping media
-        are never piecewise.
+        medium, which requires a single merged component whose geometry is a
+        :class:`.PlaneParallelGeometry` with a 1D grid and the ``nearest``
+        filter type, and ``force_majorant`` unset. Piecewise media get
+        optimized during traversal when used with integrators that support it
+        (see :attr:`.EOVolPathIntegrator.uses_eo_medium_api`).
         """
-        return not self.is_overlapping and self._is_piecewise_on(
-            self.components_merged[0].geometry
+        if self.is_overlapping:
+            return False
+
+        geometry = self.components_merged[0].geometry
+        return (
+            isinstance(geometry, PlaneParallelGeometry)
+            and not self.force_majorant
+            and geometry.grid.is_1d
+            and geometry.filter_type is FilterType.NEAREST
         )
 
     @property
@@ -274,9 +277,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         if not self.components:
             raise ValueError("HeterogeneousAtmosphere must have at least one component")
 
-        members = _flatten_components(self.components)
-
-        for i, component in enumerate(members):
+        for i, component in enumerate(self.components):
             component.update()
             component.id = f"{self.id}_component_{i}"
             if component._own_geometry is None:
@@ -292,7 +293,7 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
 
         self._merged_all = MergedComponent(
             id=self.id,
-            components=members,
+            components=self.components,
             geometry=self.geometry,
             use_phase_mis=self.use_phase_mis,
         )
@@ -302,15 +303,16 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
         """
         Populate :attr:`components_merged`: components which are not part of a
         :class:`.MergedComponent` are merged according to
-        :attr:`merge_policy`, then merged components from :attr:`components`
-        are appended. Merged components without a geometry get the geometry of
-        this atmosphere, and their members are evaluated on it.
+        :attr:`merge_policy`, then merged components passed by the user are
+        appended. Merged components without a geometry get the geometry of
+        this atmosphere; members without a geometry get the geometry of their
+        merged component.
 
         This method is called by :meth:`update`.
         """
-        loose = [c for c in self.components if not isinstance(c, MergedComponent)]
+        loose = [c for c in self._components if not isinstance(c, MergedComponent)]
         groups = self.merge_policy.merge(loose, self.geometry) if loose else []
-        groups += [c for c in self.components if isinstance(c, MergedComponent)]
+        groups += [c for c in self._components if isinstance(c, MergedComponent)]
 
         self.components_merged = []
 
@@ -326,16 +328,8 @@ class HeterogeneousAtmosphere(AbstractHeterogeneousAtmosphere):
                 )
 
             for member in group.components:
-                if member._own_geometry is not None and not _same_geometry(
-                    member._own_geometry, geometry
-                ):
-                    warnings.warn(
-                        f"component '{member.id}' is evaluated on the geometry "
-                        "of its merged component instead of its own",
-                        UserWarning,
-                        stacklevel=2,
-                    )
-                member.geometry = geometry
+                if member._own_geometry is None:
+                    member.geometry = geometry
 
             self.components_merged.append(
                 attrs.evolve(

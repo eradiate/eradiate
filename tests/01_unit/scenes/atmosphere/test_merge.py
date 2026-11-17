@@ -1,3 +1,4 @@
+import attrs
 import numpy as np
 import pytest
 
@@ -91,13 +92,7 @@ def test_merge_policy_conversion(mode_mono):
 )
 def test_merge_policy_groups(mode_mono, policy, expected):
     components = [MolecularComponent(), ParticleOTComponent(), cloud()]
-    if policy == "merge_all":
-        with pytest.warns(UserWarning, match="evaluated on the geometry"):
-            atmosphere = HeterogeneousAtmosphere(
-                components=components, merge_policy=policy
-            )
-    else:
-        atmosphere = HeterogeneousAtmosphere(components=components, merge_policy=policy)
+    atmosphere = HeterogeneousAtmosphere(components=components, merge_policy=policy)
 
     groups = [
         [components.index(member) for member in group.components]
@@ -110,7 +105,11 @@ def test_merge_policy_groups(mode_mono, policy, expected):
 
     for group in atmosphere.components_merged:
         for member in group.components:
-            assert member.geometry is group.geometry
+            expected_geometry = member._own_geometry or group.geometry
+            assert member.geometry is expected_geometry
+
+    if policy == "merge_all":
+        assert atmosphere.components_merged[0].geometry is atmosphere.geometry
 
 
 def test_merge_extremum_resolution(mode_mono):
@@ -162,8 +161,13 @@ def test_merge_user_groups(mode_mono):
     assert group_particles.components == particles
     assert group_particles.extremum_resolution == (1, 1, 2)
     assert group_particles.geometry is atmosphere.geometry
+    assert atmosphere.components == [molecular, *particles]
     assert atmosphere.molecular_atmosphere is molecular
     assert atmosphere.particle_components == particles
+
+    # Copies keep user groups, as done by experiments
+    evolved = attrs.evolve(atmosphere, geometry=PlaneParallelGeometry())
+    assert evolved.components_merged[1].components == particles
 
     # Dictionary specification
     atmosphere = HeterogeneousAtmosphere(

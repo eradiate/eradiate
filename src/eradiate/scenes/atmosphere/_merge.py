@@ -55,8 +55,9 @@ class MergedComponent(AtmosphereComponent):
         ),
         doc="Merged atmosphere components. Elements may be specified as "
         "dictionaries interpreted by :data:`.atmosphere_factory`. Merged "
-        "components cannot be nested. Members are evaluated on the geometry "
-        "of the merged component.",
+        "components cannot be nested. Radiative properties of members are "
+        "evaluated on the grid of the merged component; members without a "
+        "geometry of their own get the geometry of the merged component.",
         type="list of .AtmosphereComponent",
         init_type="list of .AtmosphereComponent or dict",
     )
@@ -296,18 +297,12 @@ class MergePolicy(ABC):
 @define
 class MergeAll(MergePolicy):
     """
-    Merge all components into a single medium [``merge_all``].
-
-    Components are evaluated on their shared geometry if they all have the
-    same; otherwise, on the geometry of the parent atmosphere.
+    Merge all components into a single medium, evaluated on the geometry of
+    the parent atmosphere [``merge_all``].
     """
 
     def merge(self, components, geometry):
         # Inherit docstring
-        first = components[0].geometry
-        if all(_same_geometry(first, c.geometry) for c in components[1:]):
-            geometry = first
-
         return [_merge(components, geometry)]
 
 

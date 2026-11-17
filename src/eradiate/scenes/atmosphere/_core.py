@@ -18,7 +18,6 @@ from ..core import (
     traverse,
 )
 from ..geometry import (
-    FilterType,
     PlaneParallelGeometry,
     SceneGeometry,
     SphericalShellGeometry,
@@ -725,25 +724,12 @@ class AbstractHeterogeneousAtmosphere(Atmosphere, _RadProps, ABC):
     @property
     def is_piecewise(self) -> bool:
         """
-        ``True`` if this atmosphere is rendered with a ``piecewise`` medium,
-        which requires a :class:`.PlaneParallelGeometry` with a 1D grid, the
-        ``nearest`` filter type, and ``force_majorant`` unset. Piecewise media
-        get optimized during traversal when used with integrators that support
-        it (see :attr:`.EOVolPathIntegrator.uses_eo_medium_api`).
+        ``True`` if this atmosphere is rendered with a ``piecewise`` medium.
+        Piecewise media get optimized during traversal when used with
+        integrators that support it
+        (see :attr:`.EOVolPathIntegrator.uses_eo_medium_api`).
         """
-        return self._is_piecewise_on(self.geometry)
-
-    def _is_piecewise_on(self, geometry: SceneGeometry) -> bool:
-        """
-        ``True`` if a medium evaluated on ``geometry`` qualifies for the
-        ``piecewise`` medium type (see :attr:`is_piecewise`).
-        """
-        return (
-            isinstance(geometry, PlaneParallelGeometry)
-            and not self.force_majorant
-            and geometry.grid.is_1d
-            and geometry.filter_type is FilterType.NEAREST
-        )
+        return False
 
     # --------------------------------------------------------------------------
     #                       Kernel dictionary generation
@@ -969,10 +955,12 @@ class AtmosphereComponent(_RadProps, ABC):
         ),
         doc="Scene geometry on which radiative properties are evaluated. If "
         "unset, a default plane parallel geometry is used, and the parent "
-        ":class:`.HeterogeneousAtmosphere` overrides it with its own geometry. "
-        "If set, the parent keeps it to group components "
-        "(see :attr:`.HeterogeneousAtmosphere.merge_policy`). Components "
-        "merged with others are evaluated on the geometry of their group.",
+        ":class:`.HeterogeneousAtmosphere` overrides it with the geometry of "
+        "the merged component it belongs to. If set, it is never overridden "
+        "and is used to group components "
+        "(see :attr:`.HeterogeneousAtmosphere.merge_policy`). In all cases, "
+        "radiative properties are rendered on the grid of the merged "
+        "component.",
         type=".SceneGeometry",
         init_type=".SceneGeometry or dict or str, optional",
         default="None",
