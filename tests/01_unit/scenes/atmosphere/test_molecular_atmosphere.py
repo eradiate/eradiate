@@ -6,6 +6,7 @@ import numpy.testing as npt
 import pint
 import pytest
 import xarray as xr
+from axsdb import ErrorHandlingConfiguration
 
 import eradiate
 import eradiate.radprops._atmosphere as atmosphere_module
@@ -13,6 +14,7 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
 from eradiate.exceptions import DataError
 from eradiate.grid import CartesianGrid
+from eradiate.radprops._absorption import get_error_handling_config
 from eradiate.radprops._atmosphere import (
     _average_adjacent_levels,
     _layers_from_levels,
@@ -290,3 +292,23 @@ def test_molecular_atmosphere_eval_count_g_points(mode_ckd, monkeypatch):
         atmosphere.eval_depolarization_factor(si)
 
     assert counts == {"compute_sigma_s_air": 1, "depolarization_bodhaine": 1}
+
+
+def test_molecular_atmosphere_error_handler_config(modes_all_unpolarized_double):
+    # Unset: the database keeps its configuration
+    atmosphere = MolecularAtmosphere()
+    assert atmosphere.absorption_data.error_handling_config == (
+        get_error_handling_config()
+    )
+
+    # Set: the configuration is assigned to the database
+    config = {
+        "x": {"missing": "ignore", "scalar": "ignore", "bounds": "ignore"},
+        "p": {"missing": "raise", "scalar": "raise", "bounds": "ignore"},
+        "t": {"missing": "raise", "scalar": "raise", "bounds": "ignore"},
+    }
+    atmosphere = MolecularAtmosphere(error_handler_config=config)
+    assert (
+        atmosphere.absorption_data.error_handling_config
+        == ErrorHandlingConfiguration.convert(config)
+    )

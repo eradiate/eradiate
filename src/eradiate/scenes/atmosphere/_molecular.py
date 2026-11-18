@@ -168,8 +168,12 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
             ),
         ),
         doc="Error handler configuration for absorption data interpolation. If "
-        "unset, the global configuration specified in the "
-        "``absorption_database.error_handling`` section is used. ",
+        "set, it is assigned to the ``error_handling_config`` attribute of "
+        "``absorption_data``; an :class:`.AbsorptionDatabase` instance passed "
+        "by the user is therefore mutated. If unset, the database's "
+        "configuration is left unchanged (for databases loaded by name or by "
+        "default, it is the global configuration specified in the "
+        "``absorption_database.error_handling`` section).",
         type=".ErrorHandlingConfiguration or None",
         init_type="dict or .ErrorHandlingConfiguration, optional",
     )
@@ -193,6 +197,9 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     def update(self) -> None:
         # Inherit docstring
         self.phase.id = self.phase_id
+
+        if self.error_handler_config is not None:
+            self._absorption_data.error_handling_config = self.error_handler_config
 
         if self.thermoprops is not None:
             self._radprops_profile = AtmosphereRadProfile(
