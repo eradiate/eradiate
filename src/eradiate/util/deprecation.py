@@ -267,23 +267,33 @@ def substitute(subs: dict[str, tuple[type, dict[str, str]]]) -> Callable:
     return __getattr__
 
 
-def renamed_kwargs(
-    renames: dict[str, str], **warning_kwargs
+def deprecated_kwargs(
+    renames: dict[str, str | None],
+    deprecated_in: str | None = None,
+    removed_in: str | datetime.date | None = None,
 ) -> Callable[[type[T]], type[T]]:
     """
-    Class decorator redirecting deprecated constructor keyword arguments to
-    their current names with a deprecation warning.
+    Class decorator handling deprecated constructor keyword arguments with a
+    deprecation warning.
+
+    Deprecated arguments mapped to a current name are redirected to it;
+    deprecated arguments mapped to ``None`` or ``""`` are discarded.
 
     When used with attrs classes, apply it above the attrs decorator so that it
-    wraps the generated ``__init__()``.
+    wraps the generated ``__init__()``. The ``__init__()`` of attrs subclasses
+    is wrapped as well, using the ``__attrs_init_subclass__()`` hook.
 
     Parameters
     ----------
     renames : dict
-        Mapping of outdated keyword argument names to current names.
+        Mapping of outdated keyword argument names to current names, or to
+        ``None`` or ``""`` for arguments that are no longer used.
 
-    **warning_kwargs
-        Keyword arguments passed to the :class:`DeprecatedWarning` constructor.
+    deprecated_in : str, optional
+        The version from which the arguments are deprecated.
+
+    removed_in : str or datetime.date, optional
+        The version or date when the arguments will be removed.
 
     Returns
     -------
@@ -300,36 +310,63 @@ def renamed_kwargs(
     -------
     .. code-block:: python
 
-        @renamed_kwargs(
-            {"particle_layers": "particle_components"},  # Old name: new name
+        @deprecated_kwargs(
+            {
+                "foo": None,  # Removed
+                "old_name": "new_name",  # Renamed
+            },
             deprecated_in="1.3.0",
             removed_in="1.4.0",
         )
         @define
-        class HeterogeneousAtmosphere: ...
+        class MyClass: ...
     """
 
-    def wrapper(cls: type[T]) -> type[T]:
+    def wrap_init(cls: type) -> None:
         init = cls.__init__
 
         @functools.wraps(init)
         def __init__(self, *args, **kwargs):
             for old, new in renames.items():
-                if old in kwargs:
-                    if new in kwargs:
-                        raise TypeError(f"cannot pass both '{old}' and '{new}'")
-                    warnings.warn(
-                        DeprecatedWarning(
-                            component=f"'{cls.__name__}.{old}'",
-                            details=f"Use '{new}' instead.",
-                            **warning_kwargs,
-                        ),
-                        stacklevel=2,
-                    )
-                    kwargs[new] = kwargs.pop(old)
+                if old not in kwargs:
+                    continue
+                if new and new in kwargs:
+                    raise TypeError(f"cannot pass both '{old}' and '{new}'")
+                warnings.warn(
+                    DeprecatedWarning(
+                        component=f"'{type(self).__name__}.{old}'",
+                        details=f"Use '{new}' instead." if new else "It is ignored.",
+                        deprecated_in=deprecated_in,
+                        removed_in=removed_in,
+                    ),
+                    stacklevel=2,
+                )
+                value = kwargs.pop(old)
+                if new:
+                    kwargs[new] = value
             init(self, *args, **kwargs)
 
         cls.__init__ = __init__
+
+    def wrapper(cls: type[T]) -> type[T]:
+        wrap_init(cls)
+        own_hook = cls.__dict__.get("__attrs_init_subclass__")
+
+        # Called by attrs once a subclass is fully built, including its
+        # generated __init__()
+        @classmethod
+        def __attrs_init_subclass__(sub):
+            # Subclasses with init=False inherit the already wrapped __init__()
+            if "__init__" in sub.__dict__:
+                wrap_init(sub)
+            if own_hook is not None:
+                own_hook.__get__(None, sub)()
+            else:
+                parent_hook = getattr(super(cls, sub), "__attrs_init_subclass__", None)
+                if parent_hook is not None:
+                    parent_hook()
+
+        cls.__attrs_init_subclass__ = __attrs_init_subclass__
         return cls
 
     return wrapper
