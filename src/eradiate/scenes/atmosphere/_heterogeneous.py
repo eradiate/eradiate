@@ -25,7 +25,7 @@ from ...kernel import SearchSceneParameter
 from ...spectral.index import SpectralIndex
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
-from ...util.deprecation import DeprecatedWarning, renamed_kwargs
+from ...util.deprecation import DeprecatedWarning, deprecated_kwargs
 from ...util.misc import cache_by_id
 
 if TYPE_CHECKING:
@@ -78,7 +78,7 @@ def _warn_ignored_component_fields(
             )
 
 
-@renamed_kwargs(
+@deprecated_kwargs(
     {"particle_layers": "particle_components"},
     deprecated_in="1.3.0",
     removed_in="2.0.0",
