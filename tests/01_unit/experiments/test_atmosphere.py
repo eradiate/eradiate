@@ -10,7 +10,7 @@ from eradiate import unit_registry as ureg
 from eradiate.attrs import AUTO
 from eradiate.constants import EARTH_RADIUS
 from eradiate.experiments import AtmosphereExperiment
-from eradiate.scenes.atmosphere import HeterogeneousAtmosphere, HomogeneousAtmosphere
+from eradiate.scenes.atmosphere import Atmosphere, HomogeneousComponent
 from eradiate.scenes.integrators import (
     EOVolPathIntegrator,
     VolPathIntegrator,
@@ -102,7 +102,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
     # With an atmosphere
     exp = AtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0, "width_units": "km"},
-        atmosphere=HomogeneousAtmosphere(),
+        atmosphere=HomogeneousComponent(),
         measures={"type": "mdistant"},
     )
     mi_wrapper = check_scene_element(
@@ -148,8 +148,8 @@ def test_atmosphere_experiment_real_life(
     exp = AtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "type": "atmosphere",
+            "components": [atmosphere_us_standard_mono],
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
@@ -177,9 +177,8 @@ def test_atmosphere_experiment_run_basic(
 
     exp = AtmosphereExperiment(
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": molecular_atmosphere,
-            "particle_components": [{"type": "particle_ot"}],
+            "type": "atmosphere",
+            "components": [molecular_atmosphere, {"type": "particle_ot"}],
         },
         surface={"type": "lambertian"},
         measures={
@@ -312,8 +311,8 @@ def test_atmosphere_experiment_extremum_ignored(
     warns,
 ):
     # Unused extremum structures trigger a warning, including with AUTO
-    atmosphere = HeterogeneousAtmosphere(
-        molecular_atmosphere=atmosphere_us_standard_mono,
+    atmosphere = Atmosphere(
+        components=[atmosphere_us_standard_mono],
         extremum_resolution=(1, 1, 10),
         force_majorant=force_majorant,
     )

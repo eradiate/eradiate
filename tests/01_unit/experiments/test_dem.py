@@ -6,7 +6,7 @@ import xarray as xr
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.experiments import DEMExperiment
-from eradiate.scenes.atmosphere import HomogeneousAtmosphere
+from eradiate.scenes.atmosphere import HomogeneousComponent
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import DEMSurface, mesh_from_dem
@@ -45,7 +45,7 @@ def test_dem_experiment_construct_normalize_measures(mode_mono):
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
     # When atmosphere is set, measure target is at ground level
-    exp = DEMExperiment(atmosphere=HomogeneousAtmosphere())
+    exp = DEMExperiment(atmosphere=HomogeneousComponent())
     assert np.allclose(exp.measures[0].target.xyz, [0, 0, 0] * ureg.m)
 
 
@@ -96,8 +96,8 @@ def test_dem_experiment_real_life(mode_mono, atmosphere_us_standard_mono):
     exp = DEMExperiment(
         surface={"type": "rpv"},
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "type": "atmosphere",
+            "components": [atmosphere_us_standard_mono],
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[
@@ -126,8 +126,8 @@ def test_dem_experiment_inconsistent_multiradiancemeter(
     exp = DEMExperiment(
         surface={"type": "rpv"},
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "type": "atmosphere",
+            "components": [atmosphere_us_standard_mono],
         },
         illumination={"type": "directional", "zenith": 45.0},
         measures=[

@@ -8,8 +8,12 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import (
-    HeterogeneousAtmosphere,
+    Atmosphere,
+    AtmosphereComponentFlag,
+    HomogeneousComponent,
+    MolecularComponent,
     ParticleOTComponent,
+    atmosphere_factory,
 )
 from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import FilterType, PlaneParallelGeometry, SceneGeometry
@@ -40,29 +44,151 @@ def default_spectral_index(atmosphere):
 def test_heterogeneous_empty(modes_all_double):
     # Passing no component is not allowed
     with pytest.raises(ValueError):
-        HeterogeneousAtmosphere()
+        Atmosphere()
+
+
+def test_heterogeneous_absorption_data(mode_mono):
+    # Found regardless of the molecular component's position
+    molecular = MolecularComponent()
+    atmosphere = Atmosphere(components=[ParticleOTComponent(), molecular])
+    assert atmosphere.absorption_data is molecular.absorption_data
+
+    # No molecular component, no absorption database
+    atmosphere = Atmosphere(components=[ParticleOTComponent()])
+    assert atmosphere.absorption_data is None
 
 
 @pytest.mark.parametrize("via_factory", [False, True])
-def test_heterogeneous_particle_layers_deprecated(mode_mono, via_factory):
-    components = [ParticleOTComponent()]
+def test_heterogeneous_legacy_kwargs(mode_mono, via_factory):
+    molecular = MolecularComponent()
+    particles = [ParticleOTComponent(), ParticleOTComponent()]
+    kwargs = {"particle_components": particles, "molecular_atmosphere": molecular}
 
-    with pytest.warns(DeprecatedWarning, match="particle_layers"):
+    # Legacy fields are merged into 'components', molecular first
+    with pytest.warns(DeprecatedWarning) as record:
         if via_factory:
             atmosphere = eradiate.scenes.atmosphere.atmosphere_factory.convert(
-                {"type": "heterogeneous", "particle_layers": components}
+                {"type": "atmosphere", **kwargs}
             )
         else:
-            atmosphere = HeterogeneousAtmosphere(particle_layers=components)
-    assert atmosphere.particle_components == components
+            atmosphere = Atmosphere(**kwargs)
+    messages = " ".join(str(w.message) for w in record)
+    assert "molecular_atmosphere" in messages and "particle_components" in messages
+    assert atmosphere.components == [molecular, *particles]
+
+    # Legacy dicts keep their default component types
+    with pytest.warns(DeprecatedWarning):
+        atmosphere = Atmosphere(molecular_atmosphere={}, particle_components=[{}])
+    assert [type(c) for c in atmosphere.components] == [
+        MolecularComponent,
+        ParticleOTComponent,
+    ]
+
+    # Read-only accessors, no warning
+    assert atmosphere.molecular_component is atmosphere.components[0]
+    assert atmosphere.particle_components == atmosphere.components[1:]
+
+    with pytest.warns(DeprecatedWarning, match="'Atmosphere.molecular_atmosphere'"):
+        assert atmosphere.molecular_atmosphere is atmosphere.components[0]
+
+    # Legacy and new fields cannot be mixed
+    with pytest.raises(TypeError, match="cannot pass 'components'"):
+        Atmosphere(components=particles, particle_components=particles)
+
+
+def test_heterogeneous_particle_layers_deprecated(mode_mono):
+    components = [ParticleOTComponent()]
+
+    with pytest.warns(DeprecatedWarning, match="'Atmosphere.particle_layers'"):
+        atmosphere = Atmosphere(particle_layers=components)
+    assert atmosphere.components == components
 
     with pytest.warns(DeprecatedWarning, match="particle_layers"):
-        assert atmosphere.particle_layers is atmosphere.particle_components
+        assert atmosphere.particle_layers == components
 
-    with pytest.raises(TypeError, match="cannot pass both"):
-        HeterogeneousAtmosphere(
-            particle_layers=components, particle_components=components
+    # Combined with 'particle_components', layers are appended
+    layers = [ParticleOTComponent()]
+    with pytest.warns(DeprecatedWarning):
+        atmosphere = Atmosphere(particle_components=components, particle_layers=layers)
+    assert atmosphere.components == [*components, *layers]
+
+
+def test_heterogeneous_molecular_alias(mode_mono):
+    with pytest.warns(DeprecatedWarning, match="MolecularAtmosphere"):
+        from eradiate.scenes.atmosphere import MolecularAtmosphere
+    assert MolecularAtmosphere is MolecularComponent
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("HeterogeneousAtmosphere", Atmosphere),
+        ("AbstractHeterogeneousAtmosphere", Atmosphere),
+        ("HomogeneousAtmosphere", HomogeneousComponent),
+    ],
+)
+def test_heterogeneous_atmosphere_aliases(mode_mono, name, expected):
+    with pytest.warns(DeprecatedWarning, match=name):
+        assert getattr(eradiate.scenes.atmosphere, name) is expected
+
+
+def test_heterogeneous_type_id_deprecated(mode_mono):
+    with pytest.warns(DeprecatedWarning, match="'HeterogeneousAtmosphere'"):
+        atmosphere = atmosphere_factory.convert(
+            {"type": "heterogeneous", "components": [{"type": "homogeneous"}]}
         )
+    assert isinstance(atmosphere, Atmosphere)
+
+
+def test_heterogeneous_flags(mode_mono):
+    homogeneous = HomogeneousComponent()
+    particle = ParticleOTComponent()
+    molecular = MolecularComponent()
+    atmosphere = Atmosphere(components=[homogeneous, particle, molecular])
+    assert atmosphere.molecular_component is molecular
+    assert atmosphere.particle_components == [particle]
+    assert not atmosphere.is_homogeneous
+    assert Atmosphere(components=[homogeneous]).is_homogeneous
+    assert AtmosphereComponentFlag.HOMOGENEOUS in homogeneous.flags
+
+
+def test_heterogeneous_homogeneous_mixed(mode_mono):
+    sigma_s = 1e-5 * ureg.m**-1
+    homogeneous = HomogeneousComponent(sigma_s=sigma_s, sigma_a=0.0)
+    particle = ParticleOTComponent()
+    atmosphere = Atmosphere(components=[homogeneous, particle])
+    si = SpectralIndex.new()
+
+    # The homogeneous component is broadcast to the grid and summed
+    expected = sigma_s + particle.eval_sigma_s(si, atmosphere.geometry.grid)
+    np.testing.assert_allclose(
+        atmosphere.eval_sigma_s(si).m_as("1/m"),
+        np.broadcast_to(expected.m_as("1/m"), atmosphere.geometry.grid.shape),
+    )
+    check_scene_element(atmosphere)
+
+
+def test_heterogeneous_homogeneous_extremum_ignored(mode_mono):
+    atmosphere = Atmosphere(
+        components=[HomogeneousComponent()],
+        force_majorant=True,
+        extremum_resolution=(1, 1, 10),
+    )
+    assert atmosphere._template_medium["type"] == "homogeneous"
+    assert "extremum" not in atmosphere._template_medium
+
+    with pytest.warns(UserWarning, match="homogeneous atmospheres"):
+        eradiate.experiments.AtmosphereExperiment(atmosphere=atmosphere)
+
+
+def test_heterogeneous_components_validation(mode_mono):
+    # At most one molecular component
+    with pytest.raises(ValueError, match="at most one molecular component"):
+        Atmosphere(components=[MolecularComponent(), MolecularComponent()])
+
+    # Dicts require an explicit type
+    with pytest.raises(ValueError, match="missing 'type'"):
+        Atmosphere(components=[{"bottom": 0.0, "top": 1.0}])
 
 
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
@@ -71,21 +197,19 @@ def test_heterogeneous_single_mono(
     mode_mono, geometry, component, atmosphere_us_standard_mono
 ):
     """
-    Unit tests for a HeterogeneousAtmosphere with a single component.
+    Unit tests for a Atmosphere with a single component.
     """
     # Construct succeeds
     if component == "molecular":
-        atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, molecular_atmosphere=atmosphere_us_standard_mono
+        atmosphere = Atmosphere(
+            geometry=geometry, components=[atmosphere_us_standard_mono]
         )
-        si = default_spectral_index(atmosphere.molecular_atmosphere)
+        si = default_spectral_index(atmosphere)
         kernel_context = KernelContext(si=si)
 
     else:
         component = ParticleOTComponent()
-        atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, particle_components=[component]
-        )
+        atmosphere = Atmosphere(geometry=geometry, components=[component])
         kernel_context = KernelContext()
 
     # The scene element produces valid kernel dictionary specifications
@@ -98,21 +222,19 @@ def test_heterogeneous_single_ckd(
     mode_ckd, geometry, component, atmosphere_us_standard_ckd
 ):
     """
-    Unit tests for a HeterogeneousAtmosphere with a single component.
+    Unit tests for a Atmosphere with a single component.
     """
     # Construct succeeds
     if component == "molecular":
-        atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, molecular_atmosphere=atmosphere_us_standard_ckd
+        atmosphere = Atmosphere(
+            geometry=geometry, components=[atmosphere_us_standard_ckd]
         )
-        si = default_spectral_index(atmosphere.molecular_atmosphere)
+        si = default_spectral_index(atmosphere)
         kernel_context = KernelContext(si=si)
 
     else:
         component = ParticleOTComponent()
-        atmosphere = HeterogeneousAtmosphere(
-            geometry=geometry, particle_components=[component]
-        )
+        atmosphere = Atmosphere(geometry=geometry, components=[component])
         kernel_context = KernelContext()
 
     # The scene element produces valid kernel dictionary specifications
@@ -123,17 +245,19 @@ def test_heterogeneous_single_ckd(
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
 def test_heterogeneous_multi_mono(mode_mono, geometry, atmosphere_us_standard_mono):
     """
-    Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
+    Unit tests for a Atmosphere with multiple (2+) components.
     """
     # Construct succeeds
-    atmosphere = HeterogeneousAtmosphere(
+    atmosphere = Atmosphere(
         geometry=geometry,
-        molecular_atmosphere=atmosphere_us_standard_mono,
-        particle_components=[ParticleOTComponent() for _ in range(2)],
+        components=[
+            atmosphere_us_standard_mono,
+            *(ParticleOTComponent() for _ in range(2)),
+        ],
     )
 
     # The scene element produces valid kernel dictionary specifications
-    si = default_spectral_index(atmosphere.molecular_atmosphere)
+    si = default_spectral_index(atmosphere)
     kernel_context = KernelContext(si=si)
     check_scene_element(atmosphere, ctx=kernel_context)
 
@@ -141,17 +265,19 @@ def test_heterogeneous_multi_mono(mode_mono, geometry, atmosphere_us_standard_mo
 @pytest.mark.parametrize("geometry", ["plane_parallel", "spherical_shell"])
 def test_heterogeneous_multi_ckd(mode_ckd, geometry, atmosphere_us_standard_ckd):
     """
-    Unit tests for a HeterogeneousAtmosphere with multiple (2+) components.
+    Unit tests for a Atmosphere with multiple (2+) components.
     """
     # Construct succeeds
-    atmosphere = HeterogeneousAtmosphere(
+    atmosphere = Atmosphere(
         geometry={"type": geometry, "grid": np.linspace(0, 120, 121) * ureg.km},
-        molecular_atmosphere=atmosphere_us_standard_ckd,
-        particle_components=[ParticleOTComponent() for _ in range(2)],
+        components=[
+            atmosphere_us_standard_ckd,
+            *(ParticleOTComponent() for _ in range(2)),
+        ],
     )
 
     # The scene element produces valid kernel dictionary specifications
-    si = default_spectral_index(atmosphere.molecular_atmosphere)
+    si = default_spectral_index(atmosphere)
     kernel_context = KernelContext(si=si)
     check_scene_element(atmosphere, ctx=kernel_context)
 
@@ -167,12 +293,12 @@ def test_heterogeneous_mix_collision_coefficients(modes_all_double, field):
         component_2 = ParticleOTComponent(bottom=0.5, top=1.5)
         component_3 = ParticleOTComponent(bottom=0.75, top=2.0)
 
-    mixed = HeterogeneousAtmosphere(
+    mixed = Atmosphere(
         geometry={
             "type": "plane_parallel",
             "grid": np.linspace(0, 120, 1201) * ureg.km,
         },
-        particle_components=[component_1, component_2, component_3],
+        components=[component_1, component_2, component_3],
     )
     ctx = KernelContext()
     grid = mixed.geometry.grid
@@ -240,18 +366,20 @@ def test_heterogeneous_mix_weights(
     )
 
     # Fist basic check: a uniform layer and a molecular atmosphere
-    mixed = HeterogeneousAtmosphere(
+    mixed = Atmosphere(
         geometry=geometry,
-        molecular_atmosphere=(
-            atmosphere_us_standard_ckd
-            if eradiate.mode().is_ckd
-            else atmosphere_us_standard_mono
-        ),
-        particle_components=ParticleOTComponent(
-            bottom=0.0 * ureg.km,
-            top=50.0 * ureg.km,
-            distribution={"type": "uniform"},
-        ),
+        components=[
+            (
+                atmosphere_us_standard_ckd
+                if eradiate.mode().is_ckd
+                else atmosphere_us_standard_mono
+            ),
+            ParticleOTComponent(
+                bottom=0.0 * ureg.km,
+                top=50.0 * ureg.km,
+                distribution={"type": "uniform"},
+            ),
+        ],
     )
     template, _ = traverse(mixed.phase)
     mi_phase = mi.load_dict(template.render(ctx))
@@ -268,9 +396,9 @@ def test_heterogeneous_mix_weights(
     assert np.all(weights[middle:] == 0.0)
 
     # Second check: simple disjoint components, more than 1
-    mixed = HeterogeneousAtmosphere(
+    mixed = Atmosphere(
         geometry=geometry,
-        particle_components=[
+        components=[
             ParticleOTComponent(
                 bottom=0.0 * ureg.km,
                 top=50.0 * ureg.km,
@@ -308,9 +436,9 @@ def test_heterogeneous_mix_weights(
     # Third check: overlapping components
     # Component 1 has twice the optical thickness and extent of component 2,
     # therefore they have the same extinction coefficient
-    mixed = HeterogeneousAtmosphere(
+    mixed = Atmosphere(
         geometry=geometry,
-        particle_components=[
+        components=[
             ParticleOTComponent(
                 bottom=0.0 * ureg.km,
                 top=100.0 * ureg.km,
@@ -343,32 +471,34 @@ def test_heterogeneous_mix_weights(
     [
         ("use_rrt", False),
         ("ddis_threshold", 0.2),
+        ("rr_threshold", 0.2),
+        ("scale", 2.0),
         ("force_majorant", True),
         ("extremum_resolution", (2, 2, 2)),
-        ("rr_threshold", 0.2),
     ],
 )
-def test_heterogeneous_component_ignored_fields(mode_mono, field, value):
-    # Fields with no effect on components trigger a warning
-    with pytest.warns(UserWarning, match=field):
-        HeterogeneousAtmosphere(
-            particle_components=[ParticleOTComponent(**{field: value})]
-        )
+def test_heterogeneous_component_deprecated_fields(mode_mono, field, value):
+    # Medium options on components are deprecated and ignored
+    with pytest.warns(DeprecatedWarning, match=f"'ParticleOTComponent.{field}'"):
+        component = ParticleOTComponent(**{field: value})
+    assert not hasattr(component, field)
 
 
 @pytest.mark.slow
 def test_heterogeneous_scale(mode_mono, atmosphere_us_standard_mono):
-    atmosphere = HeterogeneousAtmosphere(
+    atmosphere = Atmosphere(
         geometry="plane_parallel",
-        molecular_atmosphere=atmosphere_us_standard_mono,
-        particle_components=[ParticleOTComponent() for _ in range(2)],
+        components=[
+            atmosphere_us_standard_mono,
+            *(ParticleOTComponent() for _ in range(2)),
+        ],
         scale=2.0,
     )
     template, _ = traverse(atmosphere)
     assert template["medium_atmosphere.scale"] == 2.0
 
     # The scene element produces valid kernel dictionary specifications
-    si = default_spectral_index(atmosphere.molecular_atmosphere)
+    si = default_spectral_index(atmosphere)
     kernel_context = KernelContext(si=si)
     check_scene_element(atmosphere, ctx=kernel_context)
 
@@ -378,9 +508,8 @@ def test_heterogeneous_blend_switches(
     atmosphere_us_standard_mono,
 ):
     # Rayleigh-only atmosphere + particle components combination works
-    assert HeterogeneousAtmosphere(
-        molecular_atmosphere=atmosphere_us_standard_mono,
-        particle_components=[ParticleOTComponent()],
+    assert Atmosphere(
+        components=[atmosphere_us_standard_mono, ParticleOTComponent()],
     )
 
 
@@ -404,9 +533,8 @@ def test_heterogeneous_absorbing_mol_atm(
     particles = ParticleOTComponent(
         bottom=pe_bottom, top=pe_top, particle_properties=_particle_radprops
     )
-    atmosphere = HeterogeneousAtmosphere(
-        molecular_atmosphere=atmosphere_us_standard_ckd,
-        particle_components=particles,
+    atmosphere = Atmosphere(
+        components=[atmosphere_us_standard_ckd, particles],
         geometry={
             "type": "spherical_shell",  # arbitrary
             "grid": np.linspace(0, 120, 121) * ureg.km,
@@ -444,9 +572,9 @@ def test_heterogeneous_absorbing_mol_atm(
 def test_heterogeneous_medium_type(
     mode_mono, geometry, force_majorant, atmosphere_us_standard_mono
 ):
-    atmosphere = HeterogeneousAtmosphere(
+    atmosphere = Atmosphere(
         geometry=geometry,
-        molecular_atmosphere=atmosphere_us_standard_mono,
+        components=[atmosphere_us_standard_mono],
         force_majorant=force_majorant,
     )
     template = atmosphere._template_medium
@@ -465,9 +593,9 @@ def test_heterogeneous_medium_type_trilinear(mode_mono, atmosphere_us_standard_m
     Trilinear filtering breaks the piecewise-constant layers assumed by the
     piecewise medium, which falls back to eoheterogeneous.
     """
-    atmosphere = HeterogeneousAtmosphere(
+    atmosphere = Atmosphere(
         geometry=PlaneParallelGeometry(filter_type=FilterType.TRILINEAR),
-        molecular_atmosphere=atmosphere_us_standard_mono,
+        components=[atmosphere_us_standard_mono],
     )
     assert not atmosphere.is_piecewise
     assert atmosphere._template_medium["type"] == "eoheterogeneous"
@@ -478,9 +606,9 @@ def test_heterogeneous_medium_type_trilinear(mode_mono, atmosphere_us_standard_m
 def test_heterogenous_extremum_type(
     mode_mono, geometry, force_majorant, atmosphere_us_standard_mono
 ):
-    atmosphere = HeterogeneousAtmosphere(
+    atmosphere = Atmosphere(
         geometry=geometry,
-        molecular_atmosphere=atmosphere_us_standard_mono,
+        components=[atmosphere_us_standard_mono],
         force_majorant=force_majorant,
         extremum_resolution=(1, 1, 1),
     )
@@ -488,9 +616,9 @@ def test_heterogenous_extremum_type(
     template = atmosphere._template_medium
     assert "extremum" not in template
 
-    atmosphere = HeterogeneousAtmosphere(
+    atmosphere = Atmosphere(
         geometry=geometry,
-        molecular_atmosphere=atmosphere_us_standard_mono,
+        components=[atmosphere_us_standard_mono],
         force_majorant=force_majorant,
         extremum_resolution=(1, 1, 12) if geometry == "plane_parallel" else (12, 1, 1),
     )
@@ -504,7 +632,7 @@ def test_heterogenous_extremum_type(
         assert template["extremum"]["type"] == "sphericalcoordsextremum"
 
     # The kernel accepts the extremum specification
-    si = default_spectral_index(atmosphere.molecular_atmosphere)
+    si = default_spectral_index(atmosphere)
     check_scene_element(atmosphere, ctx=KernelContext(si=si))
 
 
@@ -516,9 +644,9 @@ def test_heterogeneous_extremum_spherical_angular_resolution_raises(
     In spherical shell geometry, an extremum resolution equal to zero should
     raise.
     """
-    atmosphere = HeterogeneousAtmosphere(
+    atmosphere = Atmosphere(
         geometry="spherical_shell",
-        molecular_atmosphere=atmosphere_us_standard_mono,
+        components=[atmosphere_us_standard_mono],
         extremum_resolution=extremum_resolution,
     )
     with pytest.raises(ValueError, match="must be >= 1 in all"):
@@ -530,9 +658,9 @@ def test_heterogeneous_medium_aabb(mode_mono, atmosphere_us_standard_mono):
     The medium AABB matches the geometry bbox horizontally; its vertical
     minimum is the grid's bottom level, not the shape bbox's own minimum.
     """
-    atmosphere = HeterogeneousAtmosphere(
+    atmosphere = Atmosphere(
         geometry="plane_parallel",
-        molecular_atmosphere=atmosphere_us_standard_mono,
+        components=[atmosphere_us_standard_mono],
         force_majorant=True,
     )
     template = atmosphere._template_medium
@@ -565,9 +693,9 @@ def test_heterogeneous_medium_type_genuine_3d_grid(
     geometry = PlaneParallelGeometry(grid=grid, toa_altitude=grid.levels[-1])
     assert not geometry.grid.is_1d
 
-    atmosphere = HeterogeneousAtmosphere(
+    atmosphere = Atmosphere(
         geometry=geometry,
-        molecular_atmosphere=atmosphere_us_standard_mono,
+        components=[atmosphere_us_standard_mono],
     )
     template = atmosphere._template_medium
 

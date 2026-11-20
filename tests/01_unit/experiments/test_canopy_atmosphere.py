@@ -5,7 +5,7 @@ import pytest
 import eradiate
 from eradiate import unit_registry as ureg
 from eradiate.experiments import CanopyAtmosphereExperiment
-from eradiate.scenes.atmosphere import HomogeneousAtmosphere
+from eradiate.scenes.atmosphere import HomogeneousComponent
 from eradiate.scenes.biosphere import DiscreteCanopy
 from eradiate.scenes.measure import MultiDistantMeasure
 from eradiate.scenes.surface import CentralPatchSurface
@@ -63,7 +63,7 @@ def test_canopy_atmosphere_experiment_construct_normalize_measures(mode_mono, pa
     # The measure target does not depend on the atmosphere
     exp = CanopyAtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
-        atmosphere=HomogeneousAtmosphere(),
+        atmosphere=HomogeneousComponent(),
         canopy=DiscreteCanopy.homogeneous(
             lai=3.0,
             leaf_radius=0.1 * ureg.m,
@@ -115,7 +115,7 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
     # Surface width is appropriately inherited from atmosphere
     exp = CanopyAtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
-        atmosphere=HomogeneousAtmosphere(),
+        atmosphere=HomogeneousComponent(),
         canopy=DiscreteCanopy.homogeneous(
             lai=3.0,
             leaf_radius=0.1 * ureg.m,
@@ -142,7 +142,7 @@ def test_canopy_atmosphere_experiment_surface_adjustment(mode_mono):
     """
     exp = CanopyAtmosphereExperiment(
         geometry={"type": "plane_parallel", "width": 42.0 * ureg.km},
-        atmosphere=HomogeneousAtmosphere(),
+        atmosphere=HomogeneousComponent(),
         canopy=DiscreteCanopy.homogeneous(
             lai=3.0,
             leaf_radius=0.1 * ureg.m,
@@ -178,8 +178,8 @@ def test_canopy_atmosphere_experiment_real_life(
     exp = CanopyAtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "type": "atmosphere",
+            "components": [atmosphere_us_standard_mono],
         },
         canopy={
             "type": "discrete_canopy",
@@ -257,8 +257,8 @@ def test_canopy_atmosphere_experiment_inconsistent_multiradiancemeter(
     exp = CanopyAtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": atmosphere_us_standard_mono,
+            "type": "atmosphere",
+            "components": [atmosphere_us_standard_mono],
         },
         canopy={
             "type": "discrete_canopy",

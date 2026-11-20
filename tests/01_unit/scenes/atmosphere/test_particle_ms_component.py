@@ -6,6 +6,7 @@ import xarray as xr
 from eradiate.data.convert import make_prt_core_v1, make_prt_ms_v1
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import ParticleMSComponent, ParticleOTComponent
+from eradiate.scenes.core import traverse
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import (
     GriddedParticlePhaseFunction,
@@ -327,10 +328,10 @@ class TestParticleMSComponent:
         assert data["max_union_size"] == ms.properties.max_union_size
 
     def test_template_and_params_phase_keys(self, mode_mono):
-        """_template_phase/_params_phase expose the expected kernel dict keys."""
+        """The phase function exposes the expected kernel dict keys."""
         ms = make_particle_ms_component(w=(1.0,))
 
-        template = ms._template_phase
+        template = traverse(ms.phase)[0].data
         for key in [
             "type",
             "r_eff_volume.grid",
@@ -343,7 +344,7 @@ class TestParticleMSComponent:
         ]:
             assert key in template
 
-        params = ms._params_phase
+        params = traverse(ms.phase)[1].data
         for key in ["nodes", "phase_mueller", "grid_start"]:
             assert key in params
 
@@ -633,6 +634,6 @@ class TestParticleMSComponent:
         np.testing.assert_allclose(phase.grid_1.m_as("micron"), reff_vals)
         np.testing.assert_allclose(phase.grid_2.m_as(ureg.dimensionless), veff_vals)
 
-        params = ms._params_phase
+        params = traverse(ms.phase)[1].data
         for key in ["nodes", "phase_mueller", "grid_start", "sigma_s_weight"]:
             assert key in params

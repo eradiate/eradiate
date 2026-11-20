@@ -36,13 +36,16 @@ def test_heterogeneous_atm_flags(
     exp = eradiate.experiments.AtmosphereExperiment(
         surface={"type": "rpv"},
         atmosphere={
-            "type": "heterogeneous",
-            "molecular_atmosphere": molecular,
-            "particle_components": {
-                "tau_ref": 0.2,
-                "bottom": 0.0,
-                "top": 10.0 * ureg.km,
-            },
+            "type": "atmosphere",
+            "components": [
+                molecular,
+                {
+                    "type": "particle_ot",
+                    "tau_ref": 0.2,
+                    "bottom": 0.0,
+                    "top": 10.0 * ureg.km,
+                },
+            ],
         },
         illumination={
             "type": "directional",

@@ -6,8 +6,8 @@ from eradiate import unit_registry as ureg
 from eradiate.contexts import KernelContext
 from eradiate.grid import CartesianGrid
 from eradiate.scenes.atmosphere import (
-    HeterogeneousAtmosphere,
-    MolecularAtmosphere,
+    Atmosphere,
+    MolecularComponent,
     ParticleOTComponent,
 )
 from eradiate.scenes.geometry import PlaneParallelGeometry
@@ -34,11 +34,6 @@ def default_spectral_index(atmosphere):
     return SpectralIndex.new(**kwargs)
 
 
-def test_gridded_empty(modes_all_double):
-    with pytest.raises(ValueError):
-        HeterogeneousAtmosphere()
-
-
 @pytest.mark.parametrize(
     "geometry",
     [
@@ -53,21 +48,16 @@ def test_gridded_empty(modes_all_double):
 @pytest.mark.parametrize(
     "atm_params",
     [
-        lambda: {"molecular_atmosphere": MolecularAtmosphere()},
-        lambda: {
-            "molecular_atmosphere": None,
-            "particle_components": ParticleOTComponent(),
-        },
+        lambda: {"components": [MolecularComponent()]},
+        lambda: {"components": [ParticleOTComponent()]},
     ],
     ids=["molecular", "particle"],
 )
 def test_gridded_single_mono(
     mode_mono, geometry, atm_params, atmosphere_us_standard_mono
 ):
-    atmosphere = HeterogeneousAtmosphere(geometry=geometry, **atm_params())
+    atmosphere = Atmosphere(geometry=geometry, **atm_params())
     kernel_context = KernelContext()
-    if atmosphere.molecular_atmosphere:
-        kernel_context = KernelContext(
-            default_spectral_index(atmosphere.molecular_atmosphere)
-        )
+    if atmosphere.absorption_data is not None:
+        kernel_context = KernelContext(default_spectral_index(atmosphere))
     check_scene_element(atmosphere, ctx=kernel_context)

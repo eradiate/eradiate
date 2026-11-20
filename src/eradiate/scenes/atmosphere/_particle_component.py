@@ -16,17 +16,15 @@ import pint
 import pinttrs
 import xarray as xr
 
-from ._core import AbstractHeterogeneousAtmosphere, atmosphere_factory
+from ._core import AtmosphereComponent, AtmosphereComponentFlag, atmosphere_factory
 from ._particle_dist import (
     ArrayParticleDistribution,
     ParticleDistribution,
     particle_distribution_factory,
 )
-from ..core import traverse
 from ..phase import ParticlePhaseFunction, PhaseFunction, phase_function_factory
 from ...attrs import define, documented
 from ...grid import SpatialGrid
-from ...kernel import SceneParameter
 from ...radprops import ParticleProperties
 from ...spectral.index import CKDSpectralIndex, MonoSpectralIndex, SpectralIndex
 from ...units import to_quantity
@@ -53,8 +51,10 @@ def _particle_distribution_converter(value):
 
 
 @define(eq=False, slots=False)
-class ParticleComponent(AbstractHeterogeneousAtmosphere, ABC):
+class ParticleComponent(AtmosphereComponent, ABC):
     """Abstract base class for particulate media."""
+
+    flags = AtmosphereComponentFlag.PARTICLE
 
     @classmethod
     def convert(cls, value: Any) -> ParticleComponent:
@@ -547,23 +547,13 @@ class ParticleOTComponent(ParticleComponent):
         return self.eval_sigma_s_mono(si, grid)
 
     # --------------------------------------------------------------------------
-    #                       Kernel dictionary generation
+    #                             Phase function
     # --------------------------------------------------------------------------
 
     @property
     def phase(self) -> ParticlePhaseFunction:
         # Inherit docstring
         return self._phase
-
-    @property
-    def _template_phase(self) -> dict:
-        result, _ = traverse(self.phase)
-        return result.data
-
-    @property
-    def _params_phase(self) -> dict[str, SceneParameter]:
-        _, result = traverse(self.phase)
-        return result.data
 
     @classmethod
     def from_ms_voxel(
@@ -939,20 +929,10 @@ class ParticleExtinctionComponent(ParticleComponent):
         return np.full_like(sigma_t.m, fill) * ureg.dimensionless
 
     # --------------------------------------------------------------------------
-    #                       Kernel dictionary generation
+    #                             Phase function
     # --------------------------------------------------------------------------
 
     @property
     def phase(self) -> PhaseFunction:
         # Inherit docstring
         return self._phase
-
-    @property
-    def _template_phase(self) -> dict:
-        result, _ = traverse(self.phase)
-        return result.data
-
-    @property
-    def _params_phase(self) -> dict[str, SceneParameter]:
-        _, result = traverse(self.phase)
-        return result.data

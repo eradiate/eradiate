@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from eradiate.scenes.atmosphere import HeterogeneousAtmosphere, eval_transmittance_ckd
+from eradiate.scenes.atmosphere import Atmosphere, eval_transmittance_ckd
 from eradiate.spectral import CKDSpectralGrid
 
 
@@ -9,9 +9,7 @@ from eradiate.spectral import CKDSpectralGrid
 @pytest.mark.filterwarnings("ignore:An advanced spectral quadrature configuration")
 @pytest.mark.parametrize("policy", ["fixed", "error_threshold"])
 def test_eval_transmittance_ckd(mode_ckd, atmosphere_us_standard_ckd, policy):
-    atmosphere = HeterogeneousAtmosphere(
-        molecular_atmosphere=atmosphere_us_standard_ckd
-    )
+    atmosphere = Atmosphere(components=[atmosphere_us_standard_ckd])
     spectral_grid = CKDSpectralGrid.from_absorption_database(
         atmosphere.absorption_data
     ).select({"type": "uniform", "wmin": 545.0, "wmax": 555.0})

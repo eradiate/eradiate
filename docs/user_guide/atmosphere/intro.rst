@@ -85,13 +85,16 @@ Atmosphere types
 Atmosphere types are defined based on radiative properties uniformness
 and nature of atmospheric constituents.
 
-============  ===============================  =================================
-Constituents  Uniform radiative properties     Non-uniform radiative properties
-============  ===============================  =================================
-Molecules     N/A                              :class:`.MolecularAtmosphere`
-Particles     N/A                              :class:`.ParticleOTComponent`
-Both          :class:`.HomogeneousAtmosphere`  :class:`.HeterogeneousAtmosphere`
-============  ===============================  =================================
+============  ==============================  =================================
+Constituents  Uniform radiative properties    Non-uniform radiative properties
+============  ==============================  =================================
+Molecules     N/A                             :class:`.MolecularComponent`
+Particles     N/A                             :class:`.ParticleOTComponent`
+Both          :class:`.HomogeneousComponent`  N/A
+============  ==============================  =================================
+
+Components are assembled by an :class:`.Atmosphere`, which can mix any of
+them.
 
 Volume interactions
 ^^^^^^^^^^^^^^^^^^^

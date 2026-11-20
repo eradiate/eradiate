@@ -69,20 +69,20 @@ a user can override them if it seems more convenient in their context.
 
       >>> import eradiate
       >>> from eradiate import unit_context_config as ucc
-      >>> from eradiate.scenes.atmosphere import HomogeneousAtmosphere
+      >>> from eradiate.scenes.atmosphere import ParticleOTComponent
       >>> eradiate.set_mode("mono")
       >>> with ucc.override(length="km"):  # Temporarily set default length unit to kilometre
-      ...     my_atmosphere = HomogeneousAtmosphere(top=100.0)
-      >>> my_atmosphere.top
+      ...     my_layer = ParticleOTComponent(top=100.0)
+      >>> my_layer.top
       <Quantity(100.0, 'kilometer')>
 
-   This will create a :class:`.HomogeneousAtmosphere` object with a
-   height of 100 km. It is equivalent to the default
+   This will create a :class:`.ParticleOTComponent` object with a
+   top altitude of 100 km. It is equivalent to the default
 
    .. doctest::
 
-      >>> my_atmosphere = HomogeneousAtmosphere(top=100e3)
-      >>> my_atmosphere.top
+      >>> my_layer = ParticleOTComponent(top=100e3)
+      >>> my_layer.top
       <Quantity(100000.0, 'meter')>
 
 Fields specified as "unit-enabled" are stored as Pint :class:`~pint.Quantity`
@@ -100,14 +100,13 @@ abbreviated as ``ureg``), which must be used to define units.
      :func:`pint.set_application_registry` will not propagate to Eradiate and will
      break Eradiate's unit support.
 
-Another way of initializing our 100 km-high atmosphere would then
-be
+Another way of initializing our 100 km-high layer would then be
 
 .. doctest::
 
    >>> from eradiate import unit_registry as ureg
-   >>> my_atmosphere = HomogeneousAtmosphere(top=100.0 * ureg.km)
-   >>> my_atmosphere.top
+   >>> my_layer = ParticleOTComponent(top=100.0 * ureg.km)
+   >>> my_layer.top
    <Quantity(100.0, 'kilometer')>
 
 If one tries to set ``top`` with a value which has wrong units, a
@@ -115,7 +114,7 @@ If one tries to set ``top`` with a value which has wrong units, a
 
 .. doctest::
 
-   >>> HomogeneousAtmosphere(top=100.0 * ureg.s)
+   >>> ParticleOTComponent(top=100.0 * ureg.s)
    Traceback (most recent call last):
        ...
    pint.errors.DimensionalityError: Cannot convert from 'kilometer' ([length]) to 'second' ([time])

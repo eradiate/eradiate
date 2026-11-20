@@ -4,7 +4,10 @@ import xarray as xr
 
 from eradiate import unit_registry as ureg
 from eradiate.grid import CartesianGrid
-from eradiate.scenes.atmosphere import ParticleExtinctionComponent
+from eradiate.scenes.atmosphere import (
+    Atmosphere,
+    ParticleExtinctionComponent,
+)
 from eradiate.scenes.geometry import PlaneParallelGeometry
 from eradiate.scenes.phase import IsotropicPhaseFunction
 from eradiate.spectral.index import SpectralIndex
@@ -64,12 +67,13 @@ class TestParticleExtinctionComponent:
         grid = _make_grid()
         sigma_t, albedo = _make_data(grid, [550.0] * ureg.nm, 1.0, 0.8)
         particles = ParticleExtinctionComponent(
-            geometry=_make_geometry(grid),
             sigma_t=sigma_t,
             albedo=albedo,
             phase_spec={"type": "isotropic"},
         )
-        check_scene_element(particles)
+        check_scene_element(
+            Atmosphere(geometry=_make_geometry(grid), components=[particles])
+        )
 
     def test_phase_spec_instance(self):
         """phase_spec accepts an already-constructed PhaseFunction instance."""
