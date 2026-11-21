@@ -113,6 +113,34 @@ def _mode_registry() -> dict[str, Mode]:
                 "mi_double_precision": True,
                 "mi_polarized": True,
             },
+            "llvm_mono_double": {
+                "spectral_mode": "mono",
+                "mi_backend": "llvm",
+                "mi_color_mode": "mono",
+                "mi_double_precision": True,
+                "mi_polarized": False,
+            },
+            "llvm_mono_polarized_double": {
+                "spectral_mode": "mono",
+                "mi_backend": "llvm",
+                "mi_color_mode": "mono",
+                "mi_double_precision": True,
+                "mi_polarized": True,
+            },
+            "llvm_ckd_double": {
+                "spectral_mode": "ckd",
+                "mi_backend": "llvm",
+                "mi_color_mode": "mono",
+                "mi_double_precision": True,
+                "mi_polarized": False,
+            },
+            "llvm_ckd_polarized_double": {
+                "spectral_mode": "ckd",
+                "mi_backend": "llvm",
+                "mi_color_mode": "mono",
+                "mi_double_precision": True,
+                "mi_polarized": True,
+            },
         }.items()
     }
 
@@ -361,6 +389,13 @@ class Mode:
         * ``ckd_polarized_single``: CKD, polarized, single-precision
         * ``ckd_double``: CKD, double-precision
         * ``ckd_polarized_double``: CKD, polarized, double-precision
+        * ``llvm_mono_double``: Monochromatic, double-precision, LLVM backend
+          (experimental)
+        * ``llvm_mono_polarized_double``: Monochromatic, polarized,
+          double-precision, LLVM backend (experimental)
+        * ``llvm_ckd_double``: CKD, double-precision, LLVM backend (experimental)
+        * ``llvm_ckd_polarized_double``: CKD, polarized, double-precision, LLVM
+          backend (experimental)
 
         Parameters
         ----------
@@ -562,6 +597,13 @@ def set_mode(mode_id: str):
        * ``ckd_polarized_single``: CKD, polarized, single-precision
        * ``ckd_double``: CKD, double-precision
        * ``ckd_polarized_double``: CKD, polarized, double-precision
+       * ``llvm_mono_double``: Monochromatic, double-precision, LLVM backend
+         (experimental)
+       * ``llvm_mono_polarized_double``: Monochromatic, polarized,
+         double-precision, LLVM backend (experimental)
+       * ``llvm_ckd_double``: CKD, double-precision, LLVM backend (experimental)
+       * ``llvm_ckd_polarized_double``: CKD, polarized, double-precision, LLVM
+         backend (experimental)
        * ``none`` (no mode selected)
 
     Parameters

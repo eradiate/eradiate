@@ -161,7 +161,13 @@ def generate_fixture_group(name, modes):
     globals()["modes_" + name] = fixture
 
 
-variants = [x for x in eradiate.modes() if x not in {"mono", "ckd"}]  # Remove aliases
+# Remove aliases and experimental LLVM modes (individual mode_<id> fixtures are
+# still generated for the latter)
+variants = [
+    x
+    for x in eradiate.modes()
+    if x not in {"mono", "ckd"} and not x.startswith("llvm_")
+]
 variant_groups = {
     "all_mono": [x for x in variants if x.startswith("mono")],
     "all_ckd": [x for x in variants if x.startswith("ckd")],

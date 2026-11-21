@@ -52,6 +52,25 @@ def test_mode_none():
     assert eradiate.get_mode(raise_exc=False) is None
 
 
+@pytest.mark.parametrize(
+    "mode_id, expected",
+    [
+        ("mono_single", "scalar_mono"),
+        ("mono_double", "scalar_mono_double"),
+        ("mono_polarized_double", "scalar_mono_polarized_double"),
+        ("ckd_double", "scalar_mono_double"),
+        ("llvm_mono_double", "llvm_mono_double"),
+        ("llvm_mono_polarized_double", "llvm_mono_polarized_double"),
+        ("llvm_ckd_double", "llvm_mono_double"),
+        ("llvm_ckd_polarized_double", "llvm_mono_polarized_double"),
+    ],
+)
+def test_mode_mi_variant(mode_id, expected):
+    # Does not activate the variant: LLVM variants may be missing from the
+    # kernel build
+    assert eradiate.Mode.new(mode_id).mi_variant == expected
+
+
 def test_modes():
     import mitsuba
 
