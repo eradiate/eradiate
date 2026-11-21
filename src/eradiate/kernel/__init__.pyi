@@ -19,5 +19,6 @@ from ._render import mi_traverse as mi_traverse
 from ._versions import check_kernel as check_kernel
 from .gridvolume import read_binary_grid3d as read_binary_grid3d
 from .gridvolume import write_binary_grid3d as write_binary_grid3d
+from .transform import coordinate_system as coordinate_system
 from .transform import map_cube as map_cube
 from .transform import map_unit_cube as map_unit_cube

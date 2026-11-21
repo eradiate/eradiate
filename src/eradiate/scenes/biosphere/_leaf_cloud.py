@@ -16,7 +16,7 @@ from ..core import SceneElement, traverse
 from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented, get_doc
-from ...kernel import SceneParameter, SearchSceneParameter
+from ...kernel import SceneParameter, SearchSceneParameter, coordinate_system
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -1162,7 +1162,7 @@ class LeafCloud(CanopyElement):
                 self.leaf_radii.m_as(length_units),
             )
         ):
-            _, up = mi.coordinate_system(normal)
+            _, up = coordinate_system(normal)
             to_world = mi.ScalarTransform4f().look_at(
                 origin=position, target=position + normal, up=up
             ) @ mi.ScalarTransform4f().scale(float(radius))

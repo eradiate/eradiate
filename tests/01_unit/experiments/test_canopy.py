@@ -1,3 +1,4 @@
+import drjit as dr
 import mitsuba as mi
 import numpy as np
 import pytest
@@ -73,7 +74,7 @@ def test_canopy_experiment_kernel_dict(modes_all_double, padding):
         exp.scene, mi.Scene, drop_parameters=False
     )  # Don't drop untracked params at this stage: we want to check the surface transform
 
-    assert np.allclose(
+    dr.assert_allclose(
         mi_wrapper.parameters["surface_shape.to_world"] @ mi.Point3f(1, -1, 0),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )

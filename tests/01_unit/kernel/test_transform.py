@@ -35,7 +35,7 @@ def test_map_unit_cube(mode_mono):
     ]
 
     for vertex, new_vertex in zip(vertices, new_vertices):
-        assert dr.allclose(transform @ mi.Point3f(vertex), new_vertex)
+        assert dr.allclose(transform @ mi.ScalarPoint3f(vertex), new_vertex)
 
 
 def test_map_cube(mode_mono):
@@ -68,7 +68,7 @@ def test_map_cube(mode_mono):
     ]
 
     for vertex, new_vertex in zip(vertices, new_vertices):
-        assert dr.allclose(transform @ mi.Point3f(vertex), new_vertex)
+        assert dr.allclose(transform @ mi.ScalarPoint3f(vertex), new_vertex)
 
 
 def test_transform_affine(mode_mono):

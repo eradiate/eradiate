@@ -1,3 +1,4 @@
+import drjit as dr
 import mitsuba as mi
 import numpy as np
 import pytest
@@ -104,7 +105,7 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
     mi_wrapper = check_scene_element(
         exp.scene, mi.Scene, drop_parameters=False
     )  # Do not drop untracked parameters: we want to check the surface transform
-    assert np.allclose(
+    dr.assert_allclose(
         mi_wrapper.parameters["surface_shape.to_world"] @ mi.Point3f(1, -1, 0),
         [5 * (2 * padding + 1), -5 * (2 * padding + 1), 0],
     )
@@ -128,7 +129,7 @@ def test_canopy_atmosphere_experiment_kernel_dict(mode_mono, padding):
     mi_wrapper = check_scene_element(
         exp.scene, mi.Scene, drop_parameters=False
     )  # Do not drop untracked parameters: we want to check the surface transform
-    assert np.allclose(
+    dr.assert_allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f().scale([21000, 21000, 1]).matrix,
     )

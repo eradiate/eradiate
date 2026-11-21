@@ -16,6 +16,7 @@ from ..._factory import Factory
 from ...attrs import define, documented, get_doc
 from ...config import settings
 from ...frame import AzimuthConvention, angles_to_direction
+from ...kernel import coordinate_system
 from ...units import unit_context_config as ucc
 from ...units import unit_registry as ureg
 from ...validators import has_quantity, is_positive
@@ -156,9 +157,9 @@ class AbstractDirectionalIllumination(Illumination, ABC):
     )
 
     @property
-    def _to_world(self) -> mi.ScalarTransorm4f:
+    def _to_world(self) -> mi.ScalarTransform4f:
         direction = dr.normalize(mi.ScalarVector3f(self.direction))
-        up, _ = mi.coordinate_system(direction)
+        up, _ = coordinate_system(direction)
         return mi.ScalarTransform4f().look_at(origin=0.0, target=direction, up=up)
 
     @property

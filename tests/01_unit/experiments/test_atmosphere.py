@@ -1,5 +1,6 @@
 import warnings
 
+import drjit as dr
 import mitsuba as mi
 import numpy as np
 import pytest
@@ -109,7 +110,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
         exp.scene, mi.Scene, drop_parameters=False
     )  # Do not drop untracked parameters: we want to check the `to_world` transform
     # -- Surface width is inherited from geometry
-    assert np.allclose(
+    dr.assert_allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f().scale([21000, 21000, 1]).matrix,
     )
@@ -130,7 +131,7 @@ def test_atmosphere_experiment_kernel_dict(mode_mono):
     )
     # -- Surface width has default value
     mi_wrapper = check_scene_element(exp.scene, mi.Scene, drop_parameters=False)
-    assert np.allclose(
+    dr.assert_allclose(
         mi_wrapper.parameters["surface_shape.to_world"].matrix,
         mi.ScalarTransform4f().scale([5e8, 5e8, 1]).matrix,
     )

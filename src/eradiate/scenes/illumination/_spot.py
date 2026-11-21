@@ -16,6 +16,7 @@ from ..spectra import Spectrum, spectrum_factory
 from ... import validators
 from ...attrs import define, documented
 from ...converters import resolve_path
+from ...kernel import coordinate_system
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
 from ...units import unit_registry as ureg
@@ -94,7 +95,7 @@ class SpotIllumination(Illumination):
                 - self.target.m_as(ucc.get("length"))
             )
         )
-        return mi.coordinate_system(direction)[0]
+        return coordinate_system(direction)[0]
 
     @up.validator
     def _up_validator(self, attribute, value):

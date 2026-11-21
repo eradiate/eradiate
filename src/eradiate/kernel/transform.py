@@ -118,3 +118,34 @@ def transform_affine(t, x):
     r = r[:3, ...].T
 
     return r
+
+
+def coordinate_system(
+    n: mi.ScalarVector3f | np.typing.ArrayLike,
+) -> tuple[mi.ScalarVector3f, mi.ScalarVector3f]:
+    """
+    Complete a unit vector into an orthonormal basis.
+
+    This is a scalar counterpart of :func:`mitsuba.coordinate_system`, which
+    returns JIT-compiled vectors in JIT variants and therefore cannot be used to
+    build :class:`mitsuba.ScalarTransform4f` instances. It uses the same
+    algorithm (Duff et al., 2017) and returns the same vectors.
+
+    Parameters
+    ----------
+    n : mi.ScalarVector3f or array-like
+        Unit vector of shape (3,).
+
+    Returns
+    -------
+    s, t : mi.ScalarVector3f
+        Unit vectors such that ``(s, t, n)`` is a right-handed orthonormal
+        basis.
+    """
+    x, y, z = (float(v) for v in n)
+    sign = 1.0 if z >= 0.0 else -1.0
+    a = -1.0 / (sign + z)
+    b = x * y * a
+    s = mi.ScalarVector3f(x * x * a * sign + 1.0, b * sign, -x * sign)
+    t = mi.ScalarVector3f(b, y * y * a + sign, -y)
+    return s, t

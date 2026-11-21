@@ -9,6 +9,7 @@ from ._distant import AbstractDistantMeasure
 from ... import frame, validators
 from ...attrs import define, documented
 from ...config import settings
+from ...kernel import coordinate_system
 from ...units import symbol
 from ...units import unit_context_config as ucc
 from ...units import unit_context_kernel as uck
@@ -134,7 +135,7 @@ class DistantFluxMeasure(AbstractDistantMeasure):
         # Inherit docstring
         result = super().template
 
-        _, up = mi.coordinate_system(self.direction)
+        _, up = coordinate_system(self.direction)
         result["to_world"] = mi.ScalarTransform4f().look_at(
             origin=[0, 0, 0],
             target=mi.ScalarVector3f(self.direction),
