@@ -4,31 +4,7 @@ from ...experiments import AtmosphereExperiment
 from ...units import unit_registry as ureg
 
 
-# TODO : This probably needs to go somewhere else or get called by fixtures
-def absorption_database_error_handler_config():
-    """
-    Error handler configuration for absorption coefficient interpolation.
-
-    Notes
-    -----
-    This configuration is chosen to ignore all interpolation issues (except
-    bounds error along the mole fraction dimension) because warnings are
-    captured by pytest which will raise.
-    Ignoring the bounds on pressure and temperature is safe because
-    out-of-bounds values usually correspond to locations in the atmosphere
-    that are so high that the contribution to the absorption coefficient
-    are negligible at these heights.
-    The bounds error for the 'x' (mole fraction) coordinate is considered
-    fatal.
-    """
-    return {
-        "p": {"missing": "raise", "scalar": "raise", "bounds": "ignore"},
-        "t": {"missing": "raise", "scalar": "raise", "bounds": "ignore"},
-        "x": {"missing": "ignore", "scalar": "ignore", "bounds": "raise"},
-    }
-
-
-def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_config):
+def create_rpv_afgl1986_continental_brfpp():
     r"""
     *RPV AFGL1986 Aerosol*
 
@@ -66,7 +42,6 @@ def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_conf
                     "additional_molecules": False,
                 },
                 "absorption_data": "monotropa",
-                "error_handler_config": absorption_database_error_handler_config,
             },
             "particle_components": {
                 "type": "particle_ot",
@@ -80,7 +55,7 @@ def create_rpv_afgl1986_continental_brfpp(absorption_database_error_handler_conf
     )
 
 
-def create_rpv_afgl1986_brfpp(absorption_database_error_handler_config):
+def create_rpv_afgl1986_brfpp():
     r"""
     *RPV AFGL1986*
 
@@ -118,7 +93,6 @@ def create_rpv_afgl1986_brfpp(absorption_database_error_handler_config):
                     "additional_molecules": False,
                 },
                 "absorption_data": "monotropa",
-                "error_handler_config": absorption_database_error_handler_config,
             },
         },
         ckd_quad_config={"ng_max": 16},

@@ -58,9 +58,7 @@ def test_molecular_atmosphere_absorption_data_param_error(modes_all_unpolarized_
         MolecularAtmosphere(absorption_data="doesnt_exist")
 
 
-def test_molecular_atmosphere_scale(
-    mode_mono, absorption_database_error_handler_config
-):
+def test_molecular_atmosphere_scale(mode_mono):
     atmosphere = MolecularAtmosphere(
         thermoprops={
             "identifier": "afgl_1986-us_standard",
@@ -68,7 +66,6 @@ def test_molecular_atmosphere_scale(
             "additional_molecules": False,
         },
         absorption_data="komodo",
-        error_handler_config=absorption_database_error_handler_config,
         scale=2.0,
     )
     template, _ = traverse(atmosphere)
@@ -77,9 +74,7 @@ def test_molecular_atmosphere_scale(
     assert kernel_dict["medium_atmosphere"]["scale"] == 2.0
 
 
-def test_molecular_atmosphere_kernel_dict(
-    mode_ckd, absorption_database_error_handler_config
-):
+def test_molecular_atmosphere_kernel_dict(mode_ckd):
     """Constructor produces a valid kernel dictionary."""
 
     atmosphere = MolecularAtmosphere(
@@ -89,7 +84,6 @@ def test_molecular_atmosphere_kernel_dict(
             "additional_molecules": False,
         },
         absorption_data="monotropa",
-        error_handler_config=absorption_database_error_handler_config,
         geometry={
             "type": "spherical_shell",
             "ground_altitude": 0 * ureg.km,
@@ -112,14 +106,11 @@ def test_molecular_atmosphere_kernel_dict(
         mi_params.update(params.render(ctx))
 
 
-def test_molecular_atmosphere_switches(
-    mode_mono, absorption_database_error_handler_config
-):
+def test_molecular_atmosphere_switches(mode_mono):
     # Absorption can be deactivated
     atmosphere = MolecularAtmosphere(
         absorption_data="komodo",
         has_absorption=False,
-        error_handler_config=absorption_database_error_handler_config,
     )
     ctx = KernelContext()
     radprops = atmosphere.eval_radprops(ctx.si, optional_fields=True)
@@ -134,7 +125,6 @@ def test_molecular_atmosphere_switches(
             "additional_molecules": False,
         },
         has_scattering=False,
-        error_handler_config=absorption_database_error_handler_config,
     )
 
     si = _default_spectral_index(atmosphere)
@@ -147,7 +137,6 @@ def test_molecular_atmosphere_switches(
             absorption_data="komodo",
             has_absorption=False,
             has_scattering=False,
-            error_handler_config=absorption_database_error_handler_config,
         )
 
 

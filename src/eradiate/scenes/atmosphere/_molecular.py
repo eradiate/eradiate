@@ -9,7 +9,7 @@ import joseki
 import numpy as np
 import pint
 import xarray as xr
-from axsdb import AbsorptionDatabase, ErrorHandlingConfiguration
+from axsdb import AbsorptionDatabase
 
 from ._core import AbstractHeterogeneousAtmosphere
 from ..core import traverse
@@ -20,9 +20,15 @@ from ...grid import SpatialGrid
 from ...radprops import AtmosphereRadProfile, RadProfile, get_default_absdb
 from ...spectral.index import SpectralIndex
 from ...units import unit_registry as ureg
+from ...util.deprecation import deprecated_kwargs
 from ...util.misc import summary_repr
 
 
+@deprecated_kwargs(
+    {"error_handler_config": None},
+    deprecated_in="1.3.1",
+    removed_in="2.0.0",
+)
 @define(eq=False, slots=False)
 class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
     """
@@ -48,7 +54,12 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
 
     Special care must be taken that the absorption data is able to accomodate
     the specified thermophysical profile, especially along the constituent mole
-    fractions axes (see also ``error_handler_config``).
+    fractions axes. Interpolation errors are handled according to the
+    absorption database's ``error_handling_config`` attribute. Databases
+    loaded by name or by default use the ``absorption_database.error_handling``
+    configuration section; to use another policy, pass an
+    :class:`.AbsorptionDatabase` instance created with the
+    ``error_handling_config`` argument.
     Note that the absoprtion data is able to support one spectral mode at a
     time. As a result, the Eradiate mode must be selected before instantiating
     this class, and the relevant absorption data must be provided.
@@ -156,22 +167,6 @@ class MolecularAtmosphere(AbstractHeterogeneousAtmosphere):
         type=".RadProfile or None",
         init_type=".RadProfile or None",
         default="None",
-    )
-
-    error_handler_config: ErrorHandlingConfiguration | None = documented(
-        attrs.field(
-            kw_only=True,
-            default=None,
-            converter=ErrorHandlingConfiguration.convert,
-            validator=attrs.validators.optional(
-                attrs.validators.instance_of(ErrorHandlingConfiguration)
-            ),
-        ),
-        doc="Error handler configuration for absorption data interpolation. If "
-        "unset, the global configuration specified in the "
-        "``absorption_database.error_handling`` section is used. ",
-        type=".ErrorHandlingConfiguration or None",
-        init_type="dict or .ErrorHandlingConfiguration, optional",
     )
 
     #: For debugging purposes only

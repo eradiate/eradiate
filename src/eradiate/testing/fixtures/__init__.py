@@ -38,45 +38,16 @@ def plugin_checker(request):
 
 
 @pytest.fixture
-def absorption_database_error_handler_config():
-    """
-    Error handler configuration for absorption coefficient interpolation.
-
-    Notes
-    -----
-    This configuration is chosen to ignore all interpolation issues (except
-    bounds error along the mole fraction dimension) because warnings are
-    captured by pytest which will raise.
-    Ignoring the bounds on pressure and temperature is safe because
-    out-of-bounds values usually correspond to locations in the atmosphere
-    that are so high that the contribution to the absorption coefficient
-    are negligible at these heights.
-    The bounds error for the 'x' (mole fraction) coordinate is considered
-    fatal.
-    """
-    return {
-        "p": {"missing": "raise", "scalar": "raise", "bounds": "ignore"},
-        "t": {"missing": "raise", "scalar": "raise", "bounds": "ignore"},
-        "x": {"missing": "ignore", "scalar": "ignore", "bounds": "raise"},
-    }
-
-
-@pytest.fixture
-def atmosphere_us_standard_ckd(
-    thermoprops_us_standard, absorption_database_error_handler_config
-):
+def atmosphere_us_standard_ckd(thermoprops_us_standard):
     return {
         "type": "molecular",
         "thermoprops": thermoprops_us_standard,
         "absorption_data": "monotropa",
-        "error_handler_config": absorption_database_error_handler_config,
     }
 
 
 @pytest.fixture
-def atmosphere_us_standard_mono(
-    thermoprops_us_standard, absorption_database_error_handler_config
-):
+def atmosphere_us_standard_mono(thermoprops_us_standard):
     """
     AFGL (1986) U.S. Standard atmosphere with monochromatic absorption data.
 
@@ -90,12 +61,11 @@ def atmosphere_us_standard_mono(
         "type": "molecular",
         "thermoprops": thermoprops_us_standard,
         "absorption_data": "komodo",
-        "error_handler_config": absorption_database_error_handler_config,
     }
 
 
 @pytest.fixture
-def atmosphere_cams_lybia4_ckd(absorption_database_error_handler_config):
+def atmosphere_cams_lybia4_ckd():
     """
     CAMS Lybia4 atmosphere with CKD absorption data.
 
@@ -113,7 +83,6 @@ def atmosphere_cams_lybia4_ckd(absorption_database_error_handler_config):
         "type": "molecular",
         "thermoprops": thermoprops,
         "absorption_data": "monotropa",
-        "error_handler_config": absorption_database_error_handler_config,
     }
 
 
