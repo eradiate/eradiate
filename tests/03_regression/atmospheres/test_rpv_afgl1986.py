@@ -7,8 +7,8 @@ from eradiate.testing.util import append_doc
 
 
 @pytest.fixture
-def exp(absorption_database_error_handler_config):
-    yield create_rpv_afgl1986_brfpp(absorption_database_error_handler_config)
+def exp():
+    yield create_rpv_afgl1986_brfpp()
 
 
 @append_doc(create_rpv_afgl1986_brfpp, prepend=True)

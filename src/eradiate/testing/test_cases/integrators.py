@@ -5,9 +5,7 @@ from ...experiments import AtmosphereExperiment, CanopyAtmosphereExperiment
 from ...units import unit_registry as ureg
 
 
-def _create_integrator_surface(
-    absorption_database_error_handler_config, integrator_dict
-):
+def _create_integrator_surface(integrator_dict):
     r"""
     *Scene setup*
 
@@ -44,7 +42,6 @@ def _create_integrator_surface(
                     "additional_molecules": False,
                 },
                 "absorption_data": "monotropa",
-                "error_handler_config": absorption_database_error_handler_config,
             },
             "particle_components": {
                 "type": "particle_ot",
@@ -59,7 +56,7 @@ def _create_integrator_surface(
     )
 
 
-def create_integrator_canopy(absorption_database_error_handler_config, integrator_dict):
+def create_integrator_canopy(integrator_dict):
     r"""
     *Scene setup*
 
@@ -110,7 +107,6 @@ def create_integrator_canopy(absorption_database_error_handler_config, integrato
                     "additional_molecules": False,
                 },
                 "absorption_data": "monotropa",
-                "error_handler_config": absorption_database_error_handler_config,
             },
             "particle_components": {
                 "type": "particle_ot",
@@ -140,7 +136,7 @@ def create_integrator_canopy(absorption_database_error_handler_config, integrato
 
 
 @append_doc(_create_integrator_surface, prepend=True)
-def create_eovolpath_surface(absorption_database_error_handler_config):
+def create_eovolpath_surface():
     r"""
     *EOVolpath Integrator*
 
@@ -148,13 +144,11 @@ def create_eovolpath_surface(absorption_database_error_handler_config):
 
     integrator = {"type": "eovolpath", "use_vroom": True, "moment": True}
 
-    return _create_integrator_surface(
-        absorption_database_error_handler_config, integrator
-    )
+    return _create_integrator_surface(integrator)
 
 
 @append_doc(_create_integrator_surface, prepend=True)
-def create_volpath_surface(absorption_database_error_handler_config):
+def create_volpath_surface():
     r"""
     *Volpath Integrator*
 
@@ -162,13 +156,11 @@ def create_volpath_surface(absorption_database_error_handler_config):
 
     integrator = {"type": "volpath", "moment": True}
 
-    return _create_integrator_surface(
-        absorption_database_error_handler_config, integrator
-    )
+    return _create_integrator_surface(integrator)
 
 
 @append_doc(create_integrator_canopy, prepend=True)
-def create_eovolpath_canopy(absorption_database_error_handler_config):
+def create_eovolpath_canopy():
     r"""
     *EOVolpath Integrator*
 
@@ -176,13 +168,11 @@ def create_eovolpath_canopy(absorption_database_error_handler_config):
 
     integrator = {"type": "eovolpath", "use_vroom": True, "moment": True}
 
-    return create_integrator_canopy(
-        absorption_database_error_handler_config, integrator
-    )
+    return create_integrator_canopy(integrator)
 
 
 @append_doc(create_integrator_canopy, prepend=True)
-def create_volpath_canopy(absorption_database_error_handler_config):
+def create_volpath_canopy():
     r"""
     *Volpath Integrator*
 
@@ -190,6 +180,4 @@ def create_volpath_canopy(absorption_database_error_handler_config):
 
     integrator = {"type": "volpath", "moment": True}
 
-    return create_integrator_canopy(
-        absorption_database_error_handler_config, integrator
-    )
+    return create_integrator_canopy(integrator)

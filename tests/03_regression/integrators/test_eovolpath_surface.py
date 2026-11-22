@@ -9,9 +9,7 @@ from eradiate.testing.util import append_doc
 
 
 @append_doc(create_eovolpath_surface, prepend=True)
-def test_eovolpath_surface(
-    mode_ckd_double, absorption_database_error_handler_config, dataset_regression
-):
+def test_eovolpath_surface(mode_ckd_double, dataset_regression):
     """
     *Expected behaviour*
 
@@ -22,10 +20,10 @@ def test_eovolpath_surface(
 
     if dataset_regression.reference_path("eovolpath_surface_ref") is None:
         # Ensure that volpath is used when creating a reference
-        exp = create_volpath_surface(absorption_database_error_handler_config)
+        exp = create_volpath_surface()
         spp = 1_600_000
     else:
-        exp = create_eovolpath_surface(absorption_database_error_handler_config)
+        exp = create_eovolpath_surface()
         spp = 160_000
 
     result = eradiate.run(exp, spp=spp)
