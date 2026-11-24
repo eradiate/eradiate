@@ -1,17 +1,18 @@
-from axsdb import ErrorHandlingAction, ErrorHandlingConfiguration
+from axsdb import ErrorHandlingAction
 
-from eradiate.radprops._absorption import DEFAULT_DATABASES, _init_absdb_factory
+from eradiate.config import settings
+from eradiate.radprops import absdb_factory
+from eradiate.radprops._absorption import DEFAULT_DATABASES
 
 
-def test_init_absdb_factory(mode_mono):
-    # Check that the error handling policy applied to the absorption database
-    # factory propagates to created instances
+def test_absdb_factory_error_handling_config(mode_mono, monkeypatch):
+    # The error handling setting is read when a database is created
+    error_handling = settings["ABSORPTION_DATABASE"]["ERROR_HANDLING"]
     for action in ["warn", "raise"]:
-        error_handling_config = ErrorHandlingConfiguration.convert(
-            {"t": {"missing": action}}
+        monkeypatch.setitem(
+            error_handling, "t", {**error_handling["t"], "missing": action}
         )
-        factory = _init_absdb_factory(error_handling_config=error_handling_config)
-        absdb = factory.create(DEFAULT_DATABASES["mono"])
+        absdb = absdb_factory.create(DEFAULT_DATABASES["mono"])
         assert (
             absdb.error_handling_config.t.missing is ErrorHandlingAction[action.upper()]
         )
