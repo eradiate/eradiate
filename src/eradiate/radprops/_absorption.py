@@ -60,25 +60,28 @@ KNOWN_DATABASES = {
 DEFAULT_DATABASES = {"mono": "komodo", "ckd": "monotropa"}
 
 
-def _init_absdb_factory(
-    error_handling_config: ErrorHandlingConfiguration | None = None,
-) -> AbsorptionDatabaseFactory:
+def _init_absdb_factory() -> AbsorptionDatabaseFactory:
     """
-    Initialize ``absdb_factory`` according to configuration defaults.
+    Initialize ``absdb_factory`` with the known databases. The
+    ``absorption_database.error_handling`` setting is read each time a database
+    is created.
     """
     absdb_factory = AbsorptionDatabaseFactory()
-    error_handling_config = error_handling_config or get_error_handling_config()
 
     for k, v in KNOWN_DATABASES.items():
 
         def resolve_path(path=str(v["path"])):
             return fresolver.resolve(path)
 
-        kwargs = {"error_handling_config": error_handling_config}
-        if "kwargs" in v:
-            kwargs.update(v["kwargs"])
+        def resolve_kwargs(v=v):
+            return {
+                "error_handling_config": get_error_handling_config(),
+                **v.get("kwargs", {}),
+            }
 
-        absdb_factory.register(name=k, cls=v["cls"], path=resolve_path, kwargs=kwargs)
+        absdb_factory.register(
+            name=k, cls=v["cls"], path=resolve_path, kwargs=resolve_kwargs
+        )
 
     return absdb_factory
 
