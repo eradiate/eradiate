@@ -37,6 +37,9 @@ except (
     for mod_name in MOCK_MODULES:
         sys.modules[mod_name] = mock.Mock()
 
+    # Otherwise the kernel version check receives a Mock instead of a string
+    sys.modules["mitsuba"].ERADIATE_MI_VERSION = None
+
 # -- Path setup ----------------------------------------------------------------
 
 # sys.path.insert(0, os.path.abspath('.'))
