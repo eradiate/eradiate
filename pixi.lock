@@ -10739,7 +10739,6 @@ packages:
   - scipy
   - typer>=0.9.0
   - tqdm
-  - shellingham!=1.5.1
   - xarray>=2023
   - eradiate-mitsuba>=0.6.0,<0.7.0 ; extra == 'kernel'
   - aabbtree ; extra == 'recommended'

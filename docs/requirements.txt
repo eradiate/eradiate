@@ -444,9 +444,7 @@ send2trash==2.1.0
 sgp4==2.27
     # via skyfield
 shellingham==1.5.4
-    # via
-    #   eradiate (pyproject.toml)
-    #   typer
+    # via typer
 shibuya==2026.7.12
     # via eradiate (pyproject.toml:docs)
 six==1.17.0
