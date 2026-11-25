@@ -199,10 +199,15 @@ docs-linkcheck = { cmd = "make -C docs linkcheck" }
 docs-render-tutorials = { cmd = "python docs/tutorials/run.py --root-dir docs/tutorials run" }
 # -- Important: If the Python version changes, do not forget to sync it with the
 #    'build.tools.python' entry in .readthedocs.yml
+# Versions are pinned to those of the docs pixi environment (resolved for
+# linux-64, the RTD platform)
 docs-lock = { cmd = """
-  uv pip compile --upgrade --quiet --no-progress \
-    --python-version 3.11 --group docs --extra recommended \
-    --output-file docs/requirements.txt pyproject.toml
+  pixi list -e docs --platform linux-64 --json \
+    | python -c "import json, sys; print(*(f\\"{p['name']}=={p['version']}\\" for p in json.load(sys.stdin) if p['kind'] == 'pypi' and p['name'] != 'eradiate'), sep='\\n')" \
+    | uv pip compile --quiet --no-progress \
+      --python-version 3.11 --python-platform x86_64-manylinux_2_28 \
+      --group docs --extra recommended --constraint - \
+      --output-file docs/requirements.txt pyproject.toml
 """ }
 
 [tool.pixi.feature.dev.dependencies]
