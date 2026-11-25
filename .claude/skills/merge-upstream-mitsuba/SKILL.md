@@ -219,20 +219,19 @@ under `docs_eradiate/` as `Update docstrings and API docs`.
   `uvx bump-my-version bump minor` from `ext/mitsuba` and commit as
   `Bump eradiate-mitsuba version`. This header is included everywhere, so a
   rebuild follows.
-- Parent `src/eradiate/kernel/_versions.py`: `REQUIRED_MITSUBA_VERSION` and
-  `REQUIRED_MITSUBA_PATCH_VERSION` (checked against `mitsuba.MI_VERSION` and
-  `mitsuba.ERADIATE_MI_VERSION` at import).
 - Parent `pyproject.toml` `kernel` extra (`eradiate-mitsuba>=...`): leave it
   unless the new wheel is already on PyPI. Pixi solves all environments,
   including ones with the `kernel` extra, so an unpublished version breaks
-  every `pixi run`. Tell the user to raise it at release time.
+  every `pixi run`. Tell the user to raise it at release time. Until then,
+  `eradiate.kernel.check_kernel()` warns at import that the kernel version
+  is outside this range: it checks `mitsuba.ERADIATE_MI_VERSION` against it.
 - Links to versioned Mitsuba docs in `docs/` (grep for the old version).
 
 ## 8. Parent repo and Eradiate tests
 
 ```shell
 git switch -c merge_<ver> <parent base>
-git add src/eradiate/kernel/_versions.py ext/mitsuba
+git add ext/mitsuba
 git commit -m "Upgrade kernel to Mitsuba v<X.Y.Z>"
 pixi run test
 ```

@@ -70,32 +70,6 @@ def get_mi_header_versions(header_path):
     return result
 
 
-def get_kernel_requirements(module_path):
-    with open(module_path) as f:
-        contents = f.read()
-
-    mi_version = re.search(
-        r"REQUIRED\_MITSUBA\_VERSION\ =\ "
-        r"\"(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\"",
-        contents,
-    ).groupdict()
-    eradiate_mi_version = re.search(
-        r"REQUIRED\_MITSUBA\_PATCH\_VERSION\ =\ "
-        r"\"(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\"",
-        contents,
-    ).groupdict()
-
-    result = {
-        "mitsuba_version": Version(
-            f"{mi_version['major']}.{mi_version['minor']}.{mi_version['patch']}",
-        ),
-        "mitsuba_patch_version": Version(
-            f"{eradiate_mi_version['major']}.{eradiate_mi_version['minor']}.{eradiate_mi_version['patch']}",
-        ),
-    }
-    return result
-
-
 def get_git_describe(cwd):
     cmd = ["git", "describe", "--dirty", "--tags", "--long", "--match", "v[0-9]*"]
     s = _run(cmd, cwd)
@@ -155,24 +129,11 @@ def _check_mitsuba_requirements(
     info["mi_header_mitsuba_version"] = mi_header_versions["mi_version"]
     info["mi_header_mitsuba_patch_version"] = mi_header_versions["eradiate_mi_version"]
 
-    # Get Eradiate kernel requirements
-    print("Getting Eradiate kernel requirements ...")
-    eradiate_kernel_versions = get_kernel_requirements(
-        eradiate_root_dir / "src/eradiate/kernel/_versions.py"
-    )
-    info["eradiate_kernel_mitsuba_version"] = eradiate_kernel_versions[
-        "mitsuba_version"
-    ]
-    info["eradiate_kernel_mitsuba_patch_version"] = eradiate_kernel_versions[
-        "mitsuba_patch_version"
-    ]
-
     # Display diagnostics and how to fix issues
     diagnostics = {}
 
     specifier = info["required_mitsuba_package_optional"]
     exact_mitsuba_versions = {
-        info["eradiate_kernel_mitsuba_patch_version"],
         info["mi_header_mitsuba_patch_version"],
         info["submodule_latest_tag_version"],
     }
@@ -188,23 +149,8 @@ def _check_mitsuba_requirements(
             "  retrieved from 'pyproject.toml' ('optional' group)\n"
             f"* mitsuba submodule patch version [{info['mi_header_mitsuba_patch_version']}]\n"
             "  retrieved from 'mitsuba.h'\n"
-            f"* mitsuba patch requirement [{info['eradiate_kernel_mitsuba_patch_version']}]\n"
-            "  retrieved from 'eradiate.kernel._versions'\n"
             f"* latest mitsuba submodule tag [{info['submodule_latest_tag_version']}]\n"
             "  retrieved with the 'git describe' command"
-        )
-
-    mitsuba_upstream_versions = {
-        info["eradiate_kernel_mitsuba_version"],
-        info["mi_header_mitsuba_version"],
-    }
-    if len(mitsuba_upstream_versions) > 1:
-        diagnostics["mitsuba_upstream_version_mismatch"] = (
-            "The following versions are not aligned:\n"
-            f"* mitsuba upstream version [{info['mi_header_mitsuba_version']}]\n"
-            "  retrieved from 'mitsuba.h'\n"
-            f"* mitsuba upstream requirement [{info['eradiate_kernel_mitsuba_version']}]\n"
-            "  retrieved from 'eradiate.kernel._versions'"
         )
 
     if info["submodule_hash_mismatch"] is True:

@@ -2,11 +2,33 @@
 Upon import, this module checks if the kernel dependencies are correctly set up.
 """
 
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import PackageNotFoundError, requires, version
 
-# Internal constants
-REQUIRED_MITSUBA_VERSION = "3.9.1"
-REQUIRED_MITSUBA_PATCH_VERSION = "0.6.0"
+from packaging.requirements import Requirement
+from packaging.specifiers import SpecifierSet
+
+
+def required_kernel_specifier() -> SpecifierSet | None:
+    """
+    Retrieve the ``eradiate-mitsuba`` version specifier declared in the Eradiate
+    package metadata (generated from ``pyproject.toml``).
+
+    Returns
+    -------
+    SpecifierSet or None
+        The version specifier, or ``None`` if Eradiate package metadata are
+        unavailable or do not declare the requirement.
+    """
+    try:
+        reqs = requires("eradiate") or []
+    except PackageNotFoundError:
+        return None
+
+    for req in map(Requirement, reqs):
+        if req.name == "eradiate-mitsuba":
+            return req.specifier
+
+    return None
 
 
 def find_drjit():
@@ -114,16 +136,19 @@ def check_kernel():
             "Make sure to use the Eradiate-specific version of Mitsuba, compiled "
             "with the appropriate variants and plugins."
         )
-    elif (
-        patch_version != REQUIRED_MITSUBA_PATCH_VERSION
-        or mitsuba_version != REQUIRED_MITSUBA_VERSION
-    ):
-        warnings.append(
-            f"Found incompatible kernel version "
-            f"{patch_version}, based on Mitsuba {mitsuba_version}. "
-            f"Required: {REQUIRED_MITSUBA_PATCH_VERSION}, based on Mitsuba "
-            f"{REQUIRED_MITSUBA_VERSION}."
-        )
+    else:
+        specifier = required_kernel_specifier()
+        if specifier is None:
+            warnings.append(
+                "Could not retrieve the required kernel version from Eradiate "
+                "package metadata; skipping kernel version check."
+            )
+        elif not specifier.contains(patch_version, prereleases=True):
+            warnings.append(
+                f"Found incompatible kernel version "
+                f"{patch_version}, based on Mitsuba {mitsuba_version}. "
+                f"Required: {specifier}."
+            )
 
     return warnings
 

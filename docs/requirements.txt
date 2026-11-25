@@ -39,7 +39,7 @@ attrs==26.1.0
     #   referencing
 axsdb==0.2.1
     # via eradiate (pyproject.toml)
-babel==2.18.0
+babel==2.19.0
     # via
     #   jupyterlab-server
     #   sphinx
@@ -64,7 +64,7 @@ cffi==2.1.1
     # via argon2-cffi-bindings
 cftime==1.6.6.1
     # via netcdf4
-charset-normalizer==3.5.2
+charset-normalizer==3.5.3
     # via requests
 click==8.5.1
     # via
@@ -130,7 +130,7 @@ iniconfig==2.3.1
     # via pytest
 ipykernel==7.4.0
     # via jupyterlab
-ipython==9.18.1
+ipython==9.19.1
     # via
     #   eradiate (pyproject.toml)
     #   eradiate (pyproject.toml:docs)
@@ -285,8 +285,9 @@ numpy==2.4.6
     #   xarray
 overrides==7.7.0
     # via jupyter-server
-packaging==26.3
+packaging==26.4
     # via
+    #   eradiate (pyproject.toml)
     #   ipykernel
     #   jupyter-events
     #   jupyter-server
